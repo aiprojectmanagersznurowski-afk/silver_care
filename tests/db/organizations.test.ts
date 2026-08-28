@@ -12,7 +12,7 @@ describe('Database RLS: organizations (ORG-ISOLATION)', () => {
 
   beforeAll(async () => {
     // connect with superuser direct string to set up test environment if needed
-    sql = postgres(process.env.DATABASE_URL as string);
+    sql = postgres(process.env.DATABASE_URL as string, { prepare: false });
     // Clean up any dirty state from connection pooler
     await sql`RESET ROLE`;
     await sql`RESET ALL`;
