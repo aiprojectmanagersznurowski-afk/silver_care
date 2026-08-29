@@ -44,7 +44,7 @@ describe('Database Provisioning (ORG-PROVISION)', () => {
     await sql.begin(async (tx) => {
       // 1. Authenticate as super_admin
       await tx`SET LOCAL ROLE authenticated`;
-      await tx`SELECT set_config('request.jwt.claims', '{"app_metadata": {"role": "super_admin"}}', true)`;
+      await tx`SELECT set_config('request.jwt.claims', '{"app_metadata": {"role": "super_admin"}, "aal": "aal2"}', true)`;
       
       // 2. Call the RPC to provision
       const result = await tx`SELECT public.provision_organization('Nowa Placowka', 'admin@nowaplacowka.pl') as org_id`;

@@ -18,11 +18,11 @@ describe('Database Consent Logic (CONSENT-*)', () => {
   it('allows inserting valid consent, prevents UPDATE/DELETE, and revokes properly @REQ: CONSENT-GRANTOR @REQ: CONSENT-REVOKE @REQ: CONSENT-LEDGER-IMMUTABLE', async () => {
     await sql.begin(async (tx) => {
       await tx`SET LOCAL ROLE authenticated`;
-      await tx`SELECT set_config('request.jwt.claims', '{"app_metadata": {"role": "super_admin"}}', true)`;
+      await tx`SELECT set_config('request.jwt.claims', '{"app_metadata": {"role": "super_admin"}, "aal": "aal2"}', true)`;
       const org = await tx`INSERT INTO organizations (name) VALUES ('Test Org Consent') RETURNING id`;
       const orgId = org[0].id;
 
-      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}}`}, true)`;
+      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
       const resident = await tx`INSERT INTO residents (organization_id, first_name, last_name, pesel_hash) VALUES (${orgId}, 'Anna', 'Kowalska', 'hash_consent') RETURNING id`;
       const resId = resident[0].id;
 

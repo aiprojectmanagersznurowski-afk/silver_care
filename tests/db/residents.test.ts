@@ -39,12 +39,12 @@ describe('Database Residents (ADM-RESIDENT-ADD)', () => {
     await sql.begin(async (tx) => {
       // Create organization as super_admin
       await tx`SET LOCAL ROLE authenticated`;
-      await tx`SELECT set_config('request.jwt.claims', '{"app_metadata": {"role": "super_admin"}}', true)`;
+      await tx`SELECT set_config('request.jwt.claims', '{"app_metadata": {"role": "super_admin"}, "aal": "aal2"}', true)`;
       const org = await tx`INSERT INTO organizations (name) VALUES ('Test Org') RETURNING id`;
       const orgId = org[0].id;
 
       // Switch to org_admin
-      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}}`}, true)`;
+      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
 
       // Wstawmy testowy pokój i łóżko
       const room = await tx`INSERT INTO rooms (name, organization_id) VALUES ('Pokoj 101', ${orgId}) RETURNING id`;
@@ -78,12 +78,12 @@ describe('Database Residents (ADM-RESIDENT-ADD)', () => {
     await sql.begin(async (tx) => {
       // Create organization as super_admin
       await tx`SET LOCAL ROLE authenticated`;
-      await tx`SELECT set_config('request.jwt.claims', '{"app_metadata": {"role": "super_admin"}}', true)`;
+      await tx`SELECT set_config('request.jwt.claims', '{"app_metadata": {"role": "super_admin"}, "aal": "aal2"}', true)`;
       const org = await tx`INSERT INTO organizations (name) VALUES ('Test Org') RETURNING id`;
       const orgId = org[0].id;
 
       // Switch to org_admin
-      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}}`}, true)`;
+      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
       
       const resident = await tx`INSERT INTO residents (organization_id, first_name, last_name, pesel_hash) VALUES (${orgId}, 'Jan', 'Kowalski', 'hash1') RETURNING id`;
       

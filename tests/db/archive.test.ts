@@ -18,11 +18,11 @@ describe('Database Resident Archive (ADM-ARCHIVE)', () => {
   it('prevents editing after archive, blocks ingest, and handles hard delete @REQ: ADM-ARCHIVE', async () => {
     await sql.begin(async (tx) => {
       await tx`SET LOCAL ROLE authenticated`;
-      await tx`SELECT set_config('request.jwt.claims', '{"app_metadata": {"role": "super_admin"}}', true)`;
+      await tx`SELECT set_config('request.jwt.claims', '{"app_metadata": {"role": "super_admin"}, "aal": "aal2"}', true)`;
       const org = await tx`INSERT INTO organizations (name) VALUES ('Test Org Archive') RETURNING id`;
       const orgId = org[0].id;
 
-      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}}`}, true)`;
+      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
       const resident = await tx`INSERT INTO residents (organization_id, first_name, last_name, pesel_hash) VALUES (${orgId}, 'Jan', 'Kowalski', 'hash_arch') RETURNING id`;
       
       // Insert audit log manually for testing hard delete

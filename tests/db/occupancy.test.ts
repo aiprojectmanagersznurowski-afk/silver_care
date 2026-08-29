@@ -18,11 +18,11 @@ describe('Database Facility Occupancy (ADM-FACILITY-OCCUPANCY)', () => {
   it('computes free_beds and occupied_beds correctly instantly @REQ: ADM-FACILITY-OCCUPANCY', async () => {
     await sql.begin(async (tx) => {
       await tx`SET LOCAL ROLE authenticated`;
-      await tx`SELECT set_config('request.jwt.claims', '{"app_metadata": {"role": "super_admin"}}', true)`;
+      await tx`SELECT set_config('request.jwt.claims', '{"app_metadata": {"role": "super_admin"}, "aal": "aal2"}', true)`;
       const org = await tx`INSERT INTO organizations (name) VALUES ('Test Org Occupancy') RETURNING id`;
       const orgId = org[0].id;
 
-      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}}`}, true)`;
+      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
       const room = await tx`INSERT INTO rooms (name, organization_id) VALUES ('Pokoj 201', ${orgId}) RETURNING id`;
       
       const bed1 = await tx`INSERT INTO beds (room_id, label) VALUES (${room[0].id}, 'Lozko 1') RETURNING id`;

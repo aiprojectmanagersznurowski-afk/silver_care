@@ -18,11 +18,11 @@ describe('Database Facility Management (ADM-FACILITY-MANAGE)', () => {
   it('rejects duplicate room names in the same organization @REQ: ADM-FACILITY-MANAGE', async () => {
     await sql.begin(async (tx) => {
       await tx`SET LOCAL ROLE authenticated`;
-      await tx`SELECT set_config('request.jwt.claims', '{"app_metadata": {"role": "super_admin"}}', true)`;
+      await tx`SELECT set_config('request.jwt.claims', '{"app_metadata": {"role": "super_admin"}, "aal": "aal2"}', true)`;
       const org = await tx`INSERT INTO organizations (name) VALUES ('Test Org Facility') RETURNING id`;
       const orgId = org[0].id;
 
-      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}}`}, true)`;
+      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
 
       await tx`INSERT INTO rooms (name, organization_id) VALUES ('Pokoj 1', ${orgId})`;
 
@@ -39,9 +39,9 @@ describe('Database Facility Management (ADM-FACILITY-MANAGE)', () => {
       expect((err as any).message).toMatch(/duplicate key value/);
 
       // Check different org can have same room name
-      await tx`SELECT set_config('request.jwt.claims', '{"app_metadata": {"role": "super_admin"}}', true)`;
+      await tx`SELECT set_config('request.jwt.claims', '{"app_metadata": {"role": "super_admin"}, "aal": "aal2"}', true)`;
       const org2 = await tx`INSERT INTO organizations (name) VALUES ('Other Org') RETURNING id`;
-      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${org2[0].id}"}}`}, true)`;
+      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${org2[0].id}"}, "aal": "aal2"}`}, true)`;
       
       // Should not throw
       await tx`INSERT INTO rooms (name, organization_id) VALUES ('Pokoj 1', ${org2[0].id})`;
@@ -55,11 +55,11 @@ describe('Database Facility Management (ADM-FACILITY-MANAGE)', () => {
   it('rejects duplicate bed labels in the same room @REQ: ADM-FACILITY-MANAGE', async () => {
     await sql.begin(async (tx) => {
       await tx`SET LOCAL ROLE authenticated`;
-      await tx`SELECT set_config('request.jwt.claims', '{"app_metadata": {"role": "super_admin"}}', true)`;
+      await tx`SELECT set_config('request.jwt.claims', '{"app_metadata": {"role": "super_admin"}, "aal": "aal2"}', true)`;
       const org = await tx`INSERT INTO organizations (name) VALUES ('Test Org') RETURNING id`;
       const orgId = org[0].id;
 
-      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}}`}, true)`;
+      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
       const room = await tx`INSERT INTO rooms (name, organization_id) VALUES ('Pokoj 2', ${orgId}) RETURNING id`;
 
       await tx`INSERT INTO beds (room_id, label) VALUES (${room[0].id}, 'Lozko A')`;
@@ -89,11 +89,11 @@ describe('Database Facility Management (ADM-FACILITY-MANAGE)', () => {
   it('prevents deactivation of a bed with an active assignment @REQ: ADM-FACILITY-MANAGE', async () => {
     await sql.begin(async (tx) => {
       await tx`SET LOCAL ROLE authenticated`;
-      await tx`SELECT set_config('request.jwt.claims', '{"app_metadata": {"role": "super_admin"}}', true)`;
+      await tx`SELECT set_config('request.jwt.claims', '{"app_metadata": {"role": "super_admin"}, "aal": "aal2"}', true)`;
       const org = await tx`INSERT INTO organizations (name) VALUES ('Test Org') RETURNING id`;
       const orgId = org[0].id;
 
-      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}}`}, true)`;
+      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
       const room = await tx`INSERT INTO rooms (name, organization_id) VALUES ('Pokoj', ${orgId}) RETURNING id`;
       const bed = await tx`INSERT INTO beds (room_id, label) VALUES (${room[0].id}, 'Lozko A') RETURNING id`;
       
@@ -125,11 +125,11 @@ describe('Database Facility Management (ADM-FACILITY-MANAGE)', () => {
   it('computes bed_count correctly without manual updates @REQ: ADM-FACILITY-MANAGE', async () => {
     await sql.begin(async (tx) => {
       await tx`SET LOCAL ROLE authenticated`;
-      await tx`SELECT set_config('request.jwt.claims', '{"app_metadata": {"role": "super_admin"}}', true)`;
+      await tx`SELECT set_config('request.jwt.claims', '{"app_metadata": {"role": "super_admin"}, "aal": "aal2"}', true)`;
       const org = await tx`INSERT INTO organizations (name) VALUES ('Test Org') RETURNING id`;
       const orgId = org[0].id;
 
-      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}}`}, true)`;
+      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
       const room = await tx`INSERT INTO rooms (name, organization_id) VALUES ('Pokoj', ${orgId}) RETURNING id`;
       
       let res = await tx`SELECT id, name, bed_count(rooms) FROM rooms WHERE id = ${room[0].id}`;
