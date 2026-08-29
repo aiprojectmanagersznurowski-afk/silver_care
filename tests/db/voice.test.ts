@@ -19,8 +19,7 @@ describe('Database Voice Drafts (VOICE-DRAFT-ISOLATION)', () => {
   it('allows nurse to create and read own draft, but blocks family @REQ: VOICE-DRAFT-ISOLATION', async () => {
     await sql.begin(async (tx) => {
       // 1. Setup org & resident as super_admin
-      await tx`SET LOCAL ROLE authenticated`;
-      await tx`SELECT set_config('request.jwt.claims', '{"app_metadata": {"role": "super_admin"}, "aal": "aal2"}', true)`;
+      await tx`SET LOCAL ROLE postgres`;
       
       const org = await tx`INSERT INTO organizations (name) VALUES ('Org Voice') RETURNING id`;
       const orgId = org[0].id;
@@ -29,6 +28,7 @@ describe('Database Voice Drafts (VOICE-DRAFT-ISOLATION)', () => {
       const resId = res[0].id;
 
       // 2. Insert draft as nurse A
+      await tx`SET LOCAL ROLE authenticated`;
       const nurseA = '11111111-1111-1111-1111-111111111111';
       await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "${nurseA}", "app_metadata": {"role": "nurse", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
       
@@ -59,12 +59,12 @@ describe('Database Voice Drafts (VOICE-DRAFT-ISOLATION)', () => {
 
   it('auto deletes drafts older than 30 days @REQ: VOICE-RETENTION', async () => {
     await sql.begin(async (tx) => {
-      await tx`SET LOCAL ROLE authenticated`;
-      await tx`SELECT set_config('request.jwt.claims', '{"app_metadata": {"role": "super_admin"}, "aal": "aal2"}', true)`;
+      await tx`SET LOCAL ROLE postgres`;
       
       const org = await tx`INSERT INTO organizations (name) VALUES ('Org Ret') RETURNING id`;
       const res = await tx`INSERT INTO residents (organization_id, first_name, last_name, pesel_hash) VALUES (${org[0].id}, 'Anna', 'Nowak', 'hash456') RETURNING id`;
       
+      await tx`SET LOCAL ROLE authenticated`;
       const nurseA = '11111111-1111-1111-1111-111111111111';
       await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "${nurseA}", "app_metadata": {"role": "nurse", "organization_id": "${org[0].id}"}, "aal": "aal2"}`}, true)`;
       
