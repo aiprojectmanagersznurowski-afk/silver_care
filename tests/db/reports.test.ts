@@ -9,7 +9,7 @@ describe('Database Reports (REPORT-APPROVAL, CARE-REPORTS-CORE)', () => {
   let sql: postgres.Sql;
 
   beforeAll(() => {
-    sql = postgres(process.env.DATABASE_URL as string);
+    sql = postgres(process.env.DATABASE_URL as string, { prepare: false });
   });
 
   afterAll(async () => {
@@ -46,7 +46,7 @@ describe('Database Reports (REPORT-APPROVAL, CARE-REPORTS-CORE)', () => {
       // Note: we might need a link in resident_relative_links for family to read anything.
       // Setup the link first via postgres
       await tx`SET LOCAL ROLE postgres`;
-      await tx`INSERT INTO resident_relative_links (resident_id, relative_id, role) VALUES (${resId}, ${familySub}, 'family')`;
+      await tx`INSERT INTO resident_relative_links (resident_id, relative_user_id, relationship_code, role) VALUES (${resId}, ${familySub}, 'son', 'family')`;
 
       await tx`SET LOCAL ROLE authenticated`;
       await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "${familySub}", "app_metadata": {"role": "family"}}`}, true)`;

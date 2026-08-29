@@ -9,7 +9,7 @@ describe('Database Voice Drafts (VOICE-DRAFT-ISOLATION)', () => {
   let sql: postgres.Sql;
 
   beforeAll(() => {
-    sql = postgres(process.env.DATABASE_URL as string);
+    sql = postgres(process.env.DATABASE_URL as string, { prepare: false });
   });
 
   afterAll(async () => {
