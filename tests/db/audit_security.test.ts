@@ -31,11 +31,11 @@ describe('Audit Logs Security', () => {
       const logId = log[0].id;
 
       // Attempt to UPDATE as postgres (should be blocked by trigger/rule)
-      const updatePromise = tx.unsafe('UP' + 'DATE audit_logs SET action = $1 WHERE id = $2', ['HACKED', logId]);
+      const updatePromise = tx.savepoint(sp => sp.unsafe('UP' + 'DATE audit_logs SET action = $1 WHERE id = $2', ['HACKED', logId]));
       await expect(updatePromise).rejects.toThrowError(/audit_logs is append-only/);
 
       // Attempt to DELETE as postgres (should be blocked by trigger/rule)
-      const deletePromise = tx.unsafe('DEL' + 'ETE FROM audit_logs WHERE id = $1', [logId]);
+      const deletePromise = tx.savepoint(sp => sp.unsafe('DEL' + 'ETE FROM audit_logs WHERE id = $1', [logId]));
       await expect(deletePromise).rejects.toThrowError(/audit_logs is append-only/);
 
       throw new Error('ROLLBACK');
@@ -52,21 +52,19 @@ describe('Audit Logs Security', () => {
       const orgId = org[0].id;
 
       // Inserting with 'first_name' in payload
-      const p1 = tx`INSERT INTO audit_logs (organization_id, action, payload) VALUES (${orgId}, 'TEST_ACTION', '{"first_name": "Jan"}')`;
+      const p1 = tx.savepoint(sp => sp`INSERT INTO audit_logs (organization_id, action, payload) VALUES (${orgId}, 'TEST_ACTION', '{"first_name": "Jan"}')`);
       await expect(p1).rejects.toThrowError(/violates check constraint/);
 
       // Inserting with 'last_name' in payload
-      const p2 = tx`INSERT INTO audit_logs (organization_id, action, payload) VALUES (${orgId}, 'TEST_ACTION', '{"last_name": "Kowalski"}')`;
+      const p2 = tx.savepoint(sp => sp`INSERT INTO audit_logs (organization_id, action, payload) VALUES (${orgId}, 'TEST_ACTION', '{"last_name": "Kowalski"}')`);
       await expect(p2).rejects.toThrowError(/violates check constraint/);
 
       // Inserting with 'pesel' in payload
-      const p3 = tx`INSERT INTO audit_logs (organization_id, action, payload) VALUES (${orgId}, 'TEST_ACTION', '{"pesel": "12345678901"}')`;
+      const p3 = tx.savepoint(sp => sp`INSERT INTO audit_logs (organization_id, action, payload) VALUES (${orgId}, 'TEST_ACTION', '{"pesel": "12345678901"}')`);
       await expect(p3).rejects.toThrowError(/violates check constraint/);
 
       // Inserting with nested PII
-      const p4 = tx`INSERT INTO audit_logs (organization_id, action, payload) VALUES (${orgId}, 'TEST_ACTION', '{"user": {"first_name": "Jan"}}')`;
-      // Usually CHECK constraint uses ? or similar top-level check, or regex. We will see how it's implemented. 
-      // A robust check: `payload::text NOT ILIKE '%"first_name"%'`
+      const p4 = tx.savepoint(sp => sp`INSERT INTO audit_logs (organization_id, action, payload) VALUES (${orgId}, 'TEST_ACTION', '{"user": {"first_name": "Jan"}}')`);
       await expect(p4).rejects.toThrowError(/violates check constraint/);
 
       // Inserting valid log (e.g. pesel_hash is OK)

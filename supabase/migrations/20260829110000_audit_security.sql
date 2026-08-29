@@ -6,6 +6,9 @@ CREATE OR REPLACE FUNCTION public.prevent_audit_modification()
 RETURNS TRIGGER LANGUAGE plpgsql AS $$
 BEGIN
   IF current_setting('audit.allow_redact', true) = 'true' THEN
+    IF TG_OP = 'DELETE' THEN
+      RETURN OLD;
+    END IF;
     RETURN NEW;
   END IF;
   RAISE EXCEPTION 'audit_logs is append-only';
