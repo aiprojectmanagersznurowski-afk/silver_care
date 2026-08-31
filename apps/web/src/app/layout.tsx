@@ -14,6 +14,8 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
 };
 
+import { PwaRegister } from "@/components/PwaRegister";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -23,6 +25,7 @@ export default function RootLayout({
     <html lang="pl" className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-background text-foreground">
         {children}
+        <PwaRegister />
       </body>
     </html>
   );
