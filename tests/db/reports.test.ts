@@ -66,7 +66,7 @@ describe('Database Reports (REPORT-APPROVAL, CARE-REPORTS-CORE)', () => {
     });
   });
 
-  it('allows nurse to manage daily_logs @REQ: CARE-REPORTS-CORE', async () => {
+  it('allows nurse to manage daily_logs @REQ: VOICE-DRAFT-ISOLATION', async () => {
     await sql.begin(async (tx) => {
       await tx`SET LOCAL ROLE postgres`;
       

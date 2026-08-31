@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { createClient } from '@/lib/supabase/client'
 
 function RegisterForm() {
   const [password, setPassword] = useState('')
@@ -99,6 +100,41 @@ function RegisterForm() {
           disabled={!token || isSubmitting}
         >
           {isSubmitting ? 'Trwa rejestracja...' : 'Utwórz konto'}
+        </Button>
+
+        <div className="relative w-full py-2">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">
+              Albo
+            </span>
+          </div>
+        </div>
+
+        <Button 
+          type="button" 
+          variant="outline" 
+          className="w-full" 
+          disabled={!token || isSubmitting}
+          onClick={async () => {
+            if (!token) return
+            setIsSubmitting(true)
+            
+            // Zapisz token w ciasteczku przed przekierowaniem do OAuth
+            document.cookie = `invite_token=${token}; path=/; max-age=3600; SameSite=Lax`
+            
+            const supabase = createClient()
+            await supabase.auth.signInWithOAuth({
+              provider: 'google',
+              options: {
+                redirectTo: `${window.location.origin}/auth/callback`
+              }
+            })
+          }}
+        >
+          Zarejestruj się przez Google
         </Button>
       </form>
     </CardContent>

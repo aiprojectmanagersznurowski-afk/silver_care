@@ -28,6 +28,7 @@ describe('Database RLS: organizations (ORG-ISOLATION)', () => {
       await tx`RESET ROLE`;
       // Supabase sets role to authenticated for logged in users
       await tx`SET LOCAL ROLE authenticated`;
+      await tx`SET LOCAL request.jwt.claims TO '{"sub": "00000000-0000-0000-0000-000000000000"}'`;
       const result = await tx`SELECT * FROM organizations`;
       expect(result.length).toBe(0);
     });

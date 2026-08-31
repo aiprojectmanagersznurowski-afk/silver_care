@@ -25,7 +25,7 @@ const walk = (d, out = []) => {
 
 const covered = new Map();
 const orphans = [];
-for (const root of ['apps', 'packages', 'e2e', 'supabase']) {
+for (const root of ['apps', 'packages', 'e2e', 'supabase', 'tests']) {
   for (const f of walk(join(ROOT, root))) {
     const txt = readFileSync(f, 'utf8');
     const tags = [...txt.matchAll(/@REQ:\s*([A-Z0-9-]+)/g)].map((m) => m[1]);

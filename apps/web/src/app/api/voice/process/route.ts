@@ -37,11 +37,13 @@ export async function POST(req: Request) {
     // 2. Groq LLM (Krok 1: Klasyfikator i Redaktor)
     // Model: llama3-70b-8192 for high quality parsing, JSON mode
     const systemPrompt1 = `Przeanalizuj poniższy transkrypt z opieki nad podopiecznym. 
+Tryb ZERO-GUESSING: Wyciągaj wyłącznie twarde fakty z nagrania. Nie zmyślaj, nie domyślaj się, nie dopowiadaj historii, która nie padła w nagraniu.
+
 Podziel informacje na 3 kategorie i zwróć DOKŁADNIE TEN FORMAT JSON (bez znaczników markdown, czysty JSON):
 {
-  "medical": "leki, rozpoznania chorobowe, wyniki badań, parametry życiowe, dawki (albo null jeśli brak)",
-  "discomfort": "wymioty, biegunka, nietrzymanie - opisz bardzo ogólnie (albo null jeśli brak)",
-  "behavioral": "zachowanie, nastrój, apetyt, udział w zajęciach, sen (albo null jeśli brak)"
+  "medical": "Wszystkie dane medyczne trafiają TYLKO tutaj! Leki, rozpoznania chorobowe, wyniki badań, parametry życiowe, dawki (albo null jeśli brak).",
+  "discomfort": "wymioty, biegunka, nietrzymanie, ból - opisz fakty ogólnie (albo null jeśli brak).",
+  "behavioral": "zachowanie, nastrój, apetyt, udział w zajęciach, sen (albo null jeśli brak)."
 }
 Nie dopisuj komentarzy, tylko surowy, poprawny JSON.`
 

@@ -18,13 +18,20 @@ export function AddResidentDialog() {
   const [open, setOpen] = useState(false)
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
+  const [pesel, setPesel] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!firstName.trim() || !lastName.trim()) {
-      setError('Imię i nazwisko są wymagane.')
+    if (!firstName.trim() || !lastName.trim() || !pesel.trim()) {
+      setError('Imię, nazwisko i PESEL są wymagane.')
+      return
+    }
+    
+    // Prosta walidacja długości PESEL
+    if (pesel.trim().length !== 11 || !/^\d+$/.test(pesel.trim())) {
+      setError('PESEL musi składać się z 11 cyfr.')
       return
     }
 
@@ -35,7 +42,11 @@ export function AddResidentDialog() {
       const res = await fetch('/api/residents', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ first_name: firstName.trim(), last_name: lastName.trim() }),
+        body: JSON.stringify({ 
+          first_name: firstName.trim(), 
+          last_name: lastName.trim(),
+          pesel: pesel.trim() 
+        }),
       })
 
       const data = await res.json()
@@ -43,6 +54,7 @@ export function AddResidentDialog() {
       if (res.ok && data.success) {
         setFirstName('')
         setLastName('')
+        setPesel('')
         setOpen(false)
         // Refresh the page to show new resident
         window.location.reload()
@@ -88,6 +100,20 @@ export function AddResidentDialog() {
               onChange={(e) => setLastName(e.target.value)}
               required
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="pesel">PESEL</Label>
+            <Input
+              id="pesel"
+              placeholder="np. 45010112345"
+              value={pesel}
+              onChange={(e) => setPesel(e.target.value)}
+              required
+              maxLength={11}
+            />
+            <p className="text-xs text-text-tertiary">
+              PESEL jest szyfrowany i używany wyłącznie do identyfikacji i połączenia z danymi medycznymi.
+            </p>
           </div>
           {error && (
             <p className="text-sm font-medium text-destructive">{error}</p>
