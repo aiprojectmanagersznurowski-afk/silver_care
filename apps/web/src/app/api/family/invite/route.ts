@@ -49,8 +49,9 @@ export async function POST(request: Request) {
     }
 
     // Mock sending email
-    const reqUrl = new URL(request.url)
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || `${reqUrl.protocol}//${reqUrl.host}`
+    const host = request.headers.get('host') || 'localhost:3000'
+    const protocol = request.headers.get('x-forwarded-proto') || 'http'
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || `${protocol}://${host}`
     const registerUrl = `${baseUrl}/register?token=${data.id}`
     console.log(`[MOCK EMAIL] Wysyłanie e-maila z linkiem do rejestracji: ${registerUrl}`)
 
