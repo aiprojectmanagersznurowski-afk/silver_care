@@ -17,6 +17,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Imię i nazwisko są wymagane' }, { status: 400 })
     }
 
+    // Debug: log role info (no PII, only role identifiers)
+    const appRole = user.app_metadata?.role
+    const userRole = user.user_metadata?.role
+    const orgId = user.app_metadata?.organization_id
+    console.log(`DEBUG insert: app_role=${appRole}, user_role=${userRole}, org_id=${orgId}`)
+
     const { data, error } = await supabase
       .from('residents')
       .insert({
@@ -27,8 +33,12 @@ export async function POST(request: Request) {
       .single()
 
     if (error) {
-      console.error('Insert error: Database insert failed')
-      return NextResponse.json({ error: 'Błąd podczas dodawania pensjonariusza' }, { status: 500 })
+      console.error(`Insert error: code=${error.code}, hint=${error.hint}`)
+      return NextResponse.json({ 
+        error: `Błąd: ${error.code} — ${error.message}`,
+        hint: error.hint,
+        details: error.details
+      }, { status: 500 })
     }
 
     return NextResponse.json({ success: true, id: data.id })
