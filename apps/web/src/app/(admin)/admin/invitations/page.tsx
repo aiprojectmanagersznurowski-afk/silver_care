@@ -1,12 +1,32 @@
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { InviteFamilyDialog } from '@/components/InviteFamilyDialog'
+import { redirect } from 'next/navigation'
 
 export default async function AdminInvitationsPage() {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
 
+  if (!user) {
+    redirect('/')
+  }
+
+  const role = user?.user_metadata?.role || user?.app_metadata?.role
+  const orgId = user?.app_metadata?.organization_id
+
+  if (!orgId || (role !== 'admin' && role !== 'org_admin')) {
+    redirect('/')
+  }
+
+  // Get residents for the dropdown
+  const { data: residents } = await supabase
+    .from('residents')
+    .select('id, first_name, last_name')
+    .eq('organization_id', orgId)
+
+  // Get invitations
   const { data: invitations } = await supabase
-    .from('family_invitations')
+    .from('resident_invitations')
     .select(`
       *,
       residents (
@@ -14,6 +34,7 @@ export default async function AdminInvitationsPage() {
         last_name
       )
     `)
+    .eq('organization_id', orgId)
     .order('created_at', { ascending: false })
 
   return (
@@ -25,7 +46,7 @@ export default async function AdminInvitationsPage() {
           </h2>
           <p className="text-text-secondary">Zarządzaj dostępem dla bliskich pensjonariuszy.</p>
         </div>
-        <Button>Zaproś członka rodziny</Button>
+        <InviteFamilyDialog residents={residents || []} />
       </div>
 
       <Card>
@@ -47,17 +68,21 @@ export default async function AdminInvitationsPage() {
                 {invitations?.map((inv) => (
                   <tr key={inv.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
                     <td className="p-4 align-middle font-medium">
-                      {inv.invited_email}
+                      {inv.email}
                     </td>
                     <td className="p-4 align-middle">
                       {inv.residents?.first_name} {inv.residents?.last_name}
                     </td>
                     <td className="p-4 align-middle">
-                      {inv.accepted_at ? (
+                      {inv.claimed_at ? (
                         <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-primary text-primary-foreground">
-                          Zaakceptowane
+                          Zrealizowane
                         </span>
-                      ) : inv.expires_at < new Date().toISOString() ? (
+                      ) : inv.revoked_at ? (
+                        <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-destructive/10 text-destructive">
+                          Odwołane
+                        </span>
+                      ) : new Date(inv.expires_at) < new Date() ? (
                         <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-destructive/10 text-destructive">
                           Wygasłe
                         </span>
