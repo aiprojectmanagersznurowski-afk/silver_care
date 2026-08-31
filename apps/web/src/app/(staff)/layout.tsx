@@ -6,7 +6,8 @@ export default async function StaffLayout({ children }: { children: ReactNode })
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user || (user.user_metadata?.role !== 'nurse' && user.user_metadata?.role !== 'paramedic' && user.user_metadata?.role !== 'admin' && user.user_metadata?.role !== 'facility_manager')) {
+  const role = user?.user_metadata?.role || user?.app_metadata?.role
+  if (!user || (role !== 'nurse' && role !== 'paramedic' && role !== 'admin' && role !== 'org_admin' && role !== 'facility_manager')) {
     redirect('/')
   }
 

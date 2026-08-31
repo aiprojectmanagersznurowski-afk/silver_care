@@ -6,10 +6,10 @@ export default async function HomePage() {
   const { data: { user } } = await supabase.auth.getUser()
 
   if (user) {
-    const role = user.user_metadata?.role
+    const role = user.user_metadata?.role || user.app_metadata?.role
     if (role === 'family') redirect('/dashboard')
     if (role === 'nurse' || role === 'paramedic') redirect('/staff')
-    if (role === 'admin' || role === 'facility_manager') redirect('/admin')
+    if (role === 'admin' || role === 'org_admin' || role === 'facility_manager') redirect('/admin')
   }
 
   // Not logged in -> show a simple welcome / redirect to login

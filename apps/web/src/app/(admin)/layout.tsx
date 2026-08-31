@@ -6,7 +6,8 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user || (user.user_metadata?.role !== 'admin' && user.user_metadata?.role !== 'facility_manager')) {
+  const role = user?.user_metadata?.role || user?.app_metadata?.role
+  if (!user || (role !== 'admin' && role !== 'org_admin' && role !== 'facility_manager')) {
     redirect('/')
   }
 
