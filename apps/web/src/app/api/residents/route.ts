@@ -19,7 +19,7 @@ export async function POST(request: Request) {
 
     // Debug: log role info (no PII, only role identifiers)
     const appRole = user.app_metadata?.role
-    const userRole = user.user_metadata?.role
+    const userRole = user.user_metadata?.role || user.app_metadata?.role
     const orgId = user.app_metadata?.organization_id
     console.log(`DEBUG insert: app_role=${appRole}, user_role=${userRole}, org_id=${orgId}`)
 
