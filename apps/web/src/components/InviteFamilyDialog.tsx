@@ -62,8 +62,8 @@ export function InviteFamilyDialog({ residents }: { residents: Resident[] }) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>Zaproś członka rodziny</Button>
+      <DialogTrigger render={<Button />}>
+        Zaproś członka rodziny
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
