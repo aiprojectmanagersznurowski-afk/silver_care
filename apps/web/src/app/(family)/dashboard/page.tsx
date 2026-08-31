@@ -18,11 +18,13 @@ export default async function FamilyDashboard() {
         id,
         first_name,
         last_name
-      )
-    `)
+      )`)
     .eq('relative_user_id', user.id)
 
-  const resident = links?.[0]?.residents
+  type ResidentType = { id: string; first_name: string; last_name: string };
+  const resident = Array.isArray(links?.[0]?.residents) 
+    ? (links[0].residents[0] as unknown as ResidentType) 
+    : (links?.[0]?.residents as unknown as ResidentType)
 
   if (!resident) {
     return (

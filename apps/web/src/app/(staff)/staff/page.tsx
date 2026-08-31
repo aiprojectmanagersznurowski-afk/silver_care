@@ -29,8 +29,8 @@ export default async function StaffDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <Button asChild className="w-full mt-4" variant="outline">
-                <a href={`/staff/voice?resident=${resident.id}`}>Nagranie głosowe (Groq)</a>
+              <Button className="w-full mt-4" variant="outline">
+                <a href={`/staff/voice?resident=${resident.id}`} className="w-full text-center block">Nagranie głosowe (Groq)</a>
               </Button>
             </CardContent>
           </Card>
