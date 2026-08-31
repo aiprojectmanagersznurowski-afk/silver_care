@@ -122,7 +122,12 @@ Informacje o dyskomforcie: ${classified.discomfort}`
     }
 
     const json2 = await resp2.json()
-    const reportText = json2.choices[0].message.content
+    let reportText = json2.choices[0].message.content
+
+    // Strip out <think>...</think> tags if they exist
+    if (reportText.includes('</think>')) {
+        reportText = reportText.split('</think>')[1].trim()
+    }
 
     // 5. Zapis szkicu do daily_reports
     const { error: reportError } = await supabase.from('daily_reports').insert({
