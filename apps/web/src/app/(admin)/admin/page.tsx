@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { AddResidentDialog } from '@/components/AddResidentDialog'
 
 export default async function AdminDashboard() {
   const supabase = await createClient()
@@ -20,7 +20,7 @@ export default async function AdminDashboard() {
           </h2>
           <p className="text-text-secondary">Zarządzaj bazą podopiecznych w swojej placówce.</p>
         </div>
-        <Button>Dodaj pensjonariusza</Button>
+        <AddResidentDialog />
       </div>
 
       <Card>

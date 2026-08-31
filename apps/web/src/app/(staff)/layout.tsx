@@ -18,11 +18,11 @@ export default async function StaffLayout({ children }: { children: ReactNode })
           <h1 className="font-semibold text-foreground">Panel Personelu</h1>
         </div>
         <nav className="flex-1 space-y-1 p-4">
-          <a href="/dashboard" className="block rounded-md bg-accent-soft px-3 py-2 text-sm font-medium text-accent-foreground">
-            Tablica Zadań
+          <a href="/staff" className="block rounded-md bg-accent-soft px-3 py-2 text-sm font-medium text-accent-foreground">
+            Pensjonariusze
           </a>
-          <a href="/voice" className="block rounded-md px-3 py-2 text-sm font-medium text-text-secondary hover:bg-surface-sunken hover:text-foreground">
-            Notatki Głosowe
+          <a href="/reports" className="block rounded-md px-3 py-2 text-sm font-medium text-text-secondary hover:bg-surface-sunken hover:text-foreground">
+            Raporty
           </a>
         </nav>
         <div className="p-4 border-t border-border">
