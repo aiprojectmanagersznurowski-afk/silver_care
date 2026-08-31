@@ -14,7 +14,9 @@ export default function VoiceNotePage() {
   const [isRecording, setIsRecording] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [transcription, setTranscription] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [draftId, setDraftId] = useState<string | null>(null)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [finalReport, setFinalReport] = useState<string | null>(null)
   
   const mediaRecorder = useRef<MediaRecorder | null>(null)
   const audioChunks = useRef<Blob[]>([])
@@ -50,6 +52,8 @@ export default function VoiceNotePage() {
       setIsRecording(true)
       setError(null)
       setTranscription(null)
+      setDraftId(null)
+      setFinalReport(null)
     } catch (err) {
       console.error('Error accessing microphone:', err)
       setError('Brak dostępu do mikrofonu. Upewnij się, że udzieliłeś pozwoleń.')
@@ -74,7 +78,6 @@ export default function VoiceNotePage() {
     setError(null)
 
     const formData = new FormData()
-    // Vercel Edge / FormData handles Blob, but it's good to give it a filename
     formData.append('file', audioBlob, 'recording.webm')
     formData.append('resident_id', residentId)
 
@@ -88,6 +91,7 @@ export default function VoiceNotePage() {
 
       if (response.ok && data.success) {
         setTranscription(data.text)
+        setDraftId(data.draftId)
       } else {
         setError(data.error || 'Wystąpił błąd podczas transkrypcji.')
       }
@@ -96,6 +100,35 @@ export default function VoiceNotePage() {
       setError('Błąd sieci podczas wysyłania nagrania.')
     } finally {
       setIsProcessing(false)
+    }
+  }
+
+  const generateAIReport = async () => {
+    if (!draftId) return
+    setIsGenerating(true)
+    setError(null)
+
+    try {
+      const response = await fetch('/api/voice/process', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ draftId })
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        setFinalReport(data.report)
+      } else {
+        setError(data.error || 'Wystąpił błąd podczas generowania raportu.')
+      }
+    } catch (err) {
+      console.error('Generate error:', err)
+      setError('Błąd sieci podczas wywoływania AI.')
+    } finally {
+      setIsGenerating(false)
     }
   }
 
@@ -118,40 +151,67 @@ export default function VoiceNotePage() {
         <CardHeader>
           <CardTitle className="text-lg">Zaraportuj status</CardTitle>
           <CardDescription>
-            Nagraj wiadomość, a sztuczna inteligencja ztranskrybuje ją do bazy danych.
+            Nagraj wiadomość, a sztuczna inteligencja ztranskrybuje ją do bazy danych i przygotuje gotowy raport.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6 flex flex-col items-center">
           
-          <div className="flex justify-center space-x-4">
-            {!isRecording ? (
-              <Button onClick={startRecording} disabled={isProcessing} size="lg" className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                Rozpocznij nagrywanie
-              </Button>
-            ) : (
-              <Button onClick={stopRecording} size="lg" variant="outline" className="animate-pulse border-destructive text-destructive">
-                Zatrzymaj nagrywanie
-              </Button>
-            )}
-          </div>
+          {!finalReport && (
+            <div className="flex justify-center space-x-4">
+              {!isRecording ? (
+                <Button onClick={startRecording} disabled={isProcessing || isGenerating} size="lg" className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                  Rozpocznij nagrywanie
+                </Button>
+              ) : (
+                <Button onClick={stopRecording} size="lg" variant="outline" className="animate-pulse border-destructive text-destructive">
+                  Zatrzymaj nagrywanie
+                </Button>
+              )}
+            </div>
+          )}
 
           {isProcessing && (
-             <p className="text-sm text-text-secondary animate-pulse">Przetwarzanie i transkrypcja...</p>
+             <p className="text-sm text-text-secondary animate-pulse">Przetwarzanie i transkrypcja audio...</p>
+          )}
+          
+          {isGenerating && (
+             <p className="text-sm text-text-secondary animate-pulse">AI przetwarza dane medyczne i buduje empatyczny raport...</p>
           )}
 
           {error && (
             <p className="text-sm font-medium text-destructive">{error}</p>
           )}
 
-          {transcription && (
-            <div className="w-full mt-6 rounded-lg bg-surface-sunken p-4">
-              <h4 className="text-sm font-semibold mb-2">Wynik transkrypcji:</h4>
-              <p className="text-sm">{transcription}</p>
-              <div className="mt-4">
-                 <Button variant="outline" size="sm" onClick={() => setTranscription(null)}>
-                   Nagraj ponownie
-                 </Button>
+          {transcription && !finalReport && !isGenerating && (
+            <div className="w-full mt-6 rounded-lg bg-surface-sunken p-4 border border-border">
+              <h4 className="text-sm font-semibold mb-2">Surowa transkrypcja:</h4>
+              <p className="text-sm mb-4">{transcription}</p>
+              
+              <div className="flex space-x-2">
+                <Button onClick={generateAIReport} className="flex-1">
+                  Rozdziel medycznie i buduj raport dla rodziny
+                </Button>
+                <Button variant="outline" onClick={() => setTranscription(null)}>
+                  Odrzuć
+                </Button>
               </div>
+            </div>
+          )}
+
+          {finalReport && (
+            <div className="w-full mt-6 rounded-lg bg-primary/5 p-4 border border-primary/20">
+              <div className="flex items-center space-x-2 mb-2">
+                <div className="h-2 w-2 rounded-full bg-primary animate-pulse"></div>
+                <h4 className="text-sm font-semibold text-primary">Szkic raportu dla rodziny gotowy</h4>
+              </div>
+              <p className="text-sm mb-4">{finalReport}</p>
+              <p className="text-xs text-text-tertiary mb-4">
+                Twarde dane medyczne (np. leki) zostały usunięte z powyższego tekstu i bezpiecznie zarchiwizowane w logach wewnętrznych. Szkic możesz zatwierdzić w zakładce "Raporty".
+              </p>
+              
+              <Button variant="default" className="w-full" asChild>
+                <a href="/reports">Przejdź do weryfikacji</a>
+              </Button>
             </div>
           )}
 

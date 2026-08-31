@@ -36,8 +36,7 @@ export async function POST(req: Request) {
     })
 
     if (!response.ok) {
-      const err = await response.text()
-      console.error('Groq API Error:', err)
+      console.error('Groq API Error: API returned error')
       return NextResponse.json({ error: 'Błąd podczas transkrypcji Groq' }, { status: 500 })
     }
 
@@ -46,7 +45,7 @@ export async function POST(req: Request) {
 
     // Zapisujemy draft (brudnopis) w naszej bazie
     // Faza 3: "Voice notes — nagrywanie + transkrypcja"
-    const { error: dbError } = await supabase
+    const { data: dbData, error: dbError } = await supabase
       .from('voice_draft_notes')
       .insert({
         resident_id: residentId,
@@ -54,16 +53,18 @@ export async function POST(req: Request) {
         transcription: transcription,
         raw_audio_path: 'local-only', // Na MVP nie trzymamy audio, od razu przetwarzamy (wymóg Zero Retention)
       })
+      .select('id')
+      .single()
 
-    if (dbError) {
-      console.error('DB Error:', dbError)
+    if (dbError || !dbData) {
+      console.error('DB Error: Database insert failed')
       return NextResponse.json({ error: 'Błąd podczas zapisu transkrypcji do bazy' }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true, text: transcription })
+    return NextResponse.json({ success: true, text: transcription, draftId: dbData.id })
 
   } catch (error: any) {
-    console.error('Error:', error)
+    console.error('Error: An unexpected error occurred')
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
