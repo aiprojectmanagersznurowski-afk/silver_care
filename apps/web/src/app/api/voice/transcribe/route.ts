@@ -50,14 +50,14 @@ export async function POST(req: Request) {
       .insert({
         resident_id: residentId,
         nurse_id: user.id,
-        transcription: transcription,
-        raw_audio_path: 'local-only', // Na MVP nie trzymamy audio, od razu przetwarzamy (wymóg Zero Retention)
+        transcript: transcription,
+        audio_url: 'local-only', // Na MVP nie trzymamy audio, od razu przetwarzamy (wymóg Zero Retention)
       })
       .select('id')
       .single()
 
     if (dbError || !dbData) {
-      console.error('DB Error: Database insert failed')
+      console.error('DB Error: Database insert failed', dbError)
       return NextResponse.json({ error: 'Błąd podczas zapisu transkrypcji do bazy' }, { status: 500 })
     }
 
