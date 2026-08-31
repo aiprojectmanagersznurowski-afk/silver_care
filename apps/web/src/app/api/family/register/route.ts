@@ -41,7 +41,8 @@ export async function POST(request: Request) {
       password: password,
       email_confirm: true,
       app_metadata: {
-        role: 'family'
+        role: 'family',
+        organization_id: invitation.organization_id
       }
     })
 
