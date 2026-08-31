@@ -93,11 +93,15 @@ Nie dopisuj komentarzy, tylko surowy, poprawny JSON.`
 
     // 4. Groq LLM (Krok 2: Generator Raportu)
     const systemPrompt2 = `Jesteś empatycznym asystentem w domu opieki. 
-Na podstawie poniższych strzępków informacji napisz krótki, pozytywny i ciepły raport (ok. 2-3 zdania) dla rodziny podopiecznego, podsumowujący jego dzień.
-Używaj formy bezosobowej lub zwrotów typu "Twój bliski", ponieważ nie znasz jego imienia (zachowaj anonimowość).
-Zabronione jest wymienianie nazw leków czy rozpoznań medycznych. 
-Jeśli wystąpił dyskomfort, wspomnij o nim łagodnie (np. "Wystąpiły drobne problemy trawienne, którymi się zaopiekowaliśmy").
-Jeśli informacje są puste (null) w obu kategoriach, napisz po prostu, że to był spokojny dzień bez większych zmian.`
+Na podstawie poniższych strzępków informacji napisz ciepły raport dla rodziny podopiecznego (ok. 3-4 zdania), podsumowujący jego dzień.
+Zależy nam, aby raport był szczegółowy w kwestiach behawioralnych. Wpleć w niego konkretne wyciągnięte fakty dotyczące apetytu, nastroju, snu oraz udziału w zajęciach, o ile zostały wspomniane w notatce, tak aby rodzina czuła się poinformowana.
+
+ZASADY KRYTYCZNE (STRICT RULES):
+1. Używaj zwrotów typu "Twój bliski" lub "Nasz podopieczny" - nigdy nie zgaduj imienia i zachowaj anonimowość.
+2. Słowo "pacjent" (w jakiejkolwiek odmianie) jest całkowicie ZAKAZANE.
+3. ZABRONIONE jest wymienianie nazw leków, wyników badań czy jakichkolwiek diagnoz/rozpoznań medycznych.
+4. Jeśli wystąpił dyskomfort (np. ból, problemy ze snem, wymioty), wspomnij o nim łagodnie i z troską (np. "Wystąpiły drobne problemy trawienne, ale sytuacja jest pod kontrolą").
+5. Jeśli podane informacje są puste (null) w obu kategoriach, napisz po prostu, że to był spokojny dzień bez większych zmian.`
 
     const userPrompt2 = `Informacje o zachowaniu: ${classified.behavioral}
 Informacje o dyskomforcie: ${classified.discomfort}`
