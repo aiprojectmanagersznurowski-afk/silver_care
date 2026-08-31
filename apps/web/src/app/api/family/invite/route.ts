@@ -49,7 +49,8 @@ export async function POST(request: Request) {
     }
 
     // Mock sending email
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+    const reqUrl = new URL(request.url)
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || `${reqUrl.protocol}//${reqUrl.host}`
     const registerUrl = `${baseUrl}/register?token=${data.id}`
     console.log(`[MOCK EMAIL] Wysyłanie e-maila z linkiem do rejestracji: ${registerUrl}`)
 
