@@ -17,6 +17,7 @@ export default function VoiceNotePage() {
   const [draftId, setDraftId] = useState<string | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [finalReport, setFinalReport] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
   
   const mediaRecorder = useRef<MediaRecorder | null>(null)
   const audioChunks = useRef<Blob[]>([])
@@ -209,9 +210,11 @@ export default function VoiceNotePage() {
                 Twarde dane medyczne (np. leki) zostały usunięte z powyższego tekstu i bezpiecznie zarchiwizowane w logach wewnętrznych. Szkic możesz zatwierdzić w zakładce "Raporty".
               </p>
               
-              <Button variant="default" className="w-full" asChild>
-                <a href="/reports">Przejdź do weryfikacji</a>
-              </Button>
+              <a href="/reports" className="block w-full">
+                <Button variant="default" className="w-full">
+                  Przejdź do weryfikacji
+                </Button>
+              </a>
             </div>
           )}
 
