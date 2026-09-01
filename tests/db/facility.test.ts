@@ -24,12 +24,12 @@ describe('Database Facility Management (ADM-FACILITY-MANAGE)', () => {
 
       await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
 
-      await tx`INSERT INTO rooms (name, organization_id) VALUES ('Pokoj 1', ${orgId})`;
+      await tx`INSERT INTO rooms (number, floor, organization_id) VALUES ('Pokoj 1', '1', ${orgId})`;
 
       let err;
       await tx`SAVEPOINT room_savepoint`;
       try {
-        await tx`INSERT INTO rooms (name, organization_id) VALUES ('Pokoj 1', ${orgId})`;
+        await tx`INSERT INTO rooms (number, floor, organization_id) VALUES ('Pokoj 1', '1', ${orgId})`;
       } catch (e) {
         err = e;
         await tx`ROLLBACK TO room_savepoint`;
@@ -44,7 +44,7 @@ describe('Database Facility Management (ADM-FACILITY-MANAGE)', () => {
       await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${org2[0].id}"}, "aal": "aal2"}`}, true)`;
       
       // Should not throw
-      await tx`INSERT INTO rooms (name, organization_id) VALUES ('Pokoj 1', ${org2[0].id})`;
+      await tx`INSERT INTO rooms (number, floor, organization_id) VALUES ('Pokoj 1', '1', ${org2[0].id})`;
 
       throw new Error('ROLLBACK');
     }).catch(e => {
@@ -60,7 +60,7 @@ describe('Database Facility Management (ADM-FACILITY-MANAGE)', () => {
       const orgId = org[0].id;
 
       await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
-      const room = await tx`INSERT INTO rooms (name, organization_id) VALUES ('Pokoj 2', ${orgId}) RETURNING id`;
+      const room = await tx`INSERT INTO rooms (number, floor, organization_id) VALUES ('Pokoj 2', '1', ${orgId}) RETURNING id`;
 
       await tx`INSERT INTO beds (room_id, label) VALUES (${room[0].id}, 'Lozko A')`;
 
@@ -77,7 +77,7 @@ describe('Database Facility Management (ADM-FACILITY-MANAGE)', () => {
       expect((err as any).message).toMatch(/duplicate key value/);
 
       // Different room, same label is allowed
-      const room2 = await tx`INSERT INTO rooms (name, organization_id) VALUES ('Pokoj 3', ${orgId}) RETURNING id`;
+      const room2 = await tx`INSERT INTO rooms (number, floor, organization_id) VALUES ('Pokoj 3', '1', ${orgId}) RETURNING id`;
       await tx`INSERT INTO beds (room_id, label) VALUES (${room2[0].id}, 'Lozko A')`;
 
       throw new Error('ROLLBACK');
@@ -94,7 +94,7 @@ describe('Database Facility Management (ADM-FACILITY-MANAGE)', () => {
       const orgId = org[0].id;
 
       await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
-      const room = await tx`INSERT INTO rooms (name, organization_id) VALUES ('Pokoj', ${orgId}) RETURNING id`;
+      const room = await tx`INSERT INTO rooms (number, floor, organization_id) VALUES ('Pokoj', '1', ${orgId}) RETURNING id`;
       const bed = await tx`INSERT INTO beds (room_id, label) VALUES (${room[0].id}, 'Lozko A') RETURNING id`;
       
       const resident = await tx`INSERT INTO residents (organization_id, first_name, last_name, pesel_hash) VALUES (${orgId}, 'Jan', 'K', 'h') RETURNING id`;
@@ -103,7 +103,7 @@ describe('Database Facility Management (ADM-FACILITY-MANAGE)', () => {
       let err;
       await tx`SAVEPOINT deactivate_savepoint`;
       try {
-        await tx`UPDATE beds SET deactivated_at = now() WHERE id = ${bed[0].id}`;
+        await tx`UPDATE beds SET is_active = false WHERE id = ${bed[0].id}`;
       } catch (e) {
         err = e;
         await tx`ROLLBACK TO deactivate_savepoint`;
@@ -114,7 +114,7 @@ describe('Database Facility Management (ADM-FACILITY-MANAGE)', () => {
 
       // Verify closing the assignment allows deactivation
       await tx`UPDATE bed_assignments SET unassigned_at = now() WHERE bed_id = ${bed[0].id}`;
-      await tx`UPDATE beds SET deactivated_at = now() WHERE id = ${bed[0].id}`; // should succeed now
+      await tx`UPDATE beds SET is_active = false WHERE id = ${bed[0].id}`; // should succeed now
 
       throw new Error('ROLLBACK');
     }).catch(e => {
@@ -130,9 +130,9 @@ describe('Database Facility Management (ADM-FACILITY-MANAGE)', () => {
       const orgId = org[0].id;
 
       await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
-      const room = await tx`INSERT INTO rooms (name, organization_id) VALUES ('Pokoj', ${orgId}) RETURNING id`;
+      const room = await tx`INSERT INTO rooms (number, floor, organization_id) VALUES ('Pokoj', '1', ${orgId}) RETURNING id`;
       
-      let res = await tx`SELECT id, name, bed_count(rooms) FROM rooms WHERE id = ${room[0].id}`;
+      let res = await tx`SELECT id, number, bed_count(rooms) FROM rooms WHERE id = ${room[0].id}`;
       expect(res[0].bed_count).toBe(0);
 
       const bed1 = await tx`INSERT INTO beds (room_id, label) VALUES (${room[0].id}, 'Lozko 1') RETURNING id`;
@@ -144,7 +144,7 @@ describe('Database Facility Management (ADM-FACILITY-MANAGE)', () => {
       // Deactivated beds should still count as beds? 
       // The requirement doesn't explicitly state whether deactivated beds subtract from bed_count.
       // We assume bed_count is all beds that are NOT deactivated.
-      await tx`UPDATE beds SET deactivated_at = now() WHERE id = ${bed1[0].id}`;
+      await tx`UPDATE beds SET is_active = false WHERE id = ${bed1[0].id}`;
       res = await tx`SELECT bed_count(rooms) FROM rooms WHERE id = ${room[0].id}`;
       expect(res[0].bed_count).toBe(1);
 

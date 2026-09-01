@@ -23,7 +23,7 @@ describe('Database Facility Occupancy (ADM-FACILITY-OCCUPANCY)', () => {
       const orgId = org[0].id;
 
       await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
-      const room = await tx`INSERT INTO rooms (name, organization_id) VALUES ('Pokoj 201', ${orgId}) RETURNING id`;
+      const room = await tx`INSERT INTO rooms (number, floor, organization_id) VALUES ('Pokoj 201', '2', ${orgId}) RETURNING id`;
       
       const bed1 = await tx`INSERT INTO beds (room_id, label) VALUES (${room[0].id}, 'Lozko 1') RETURNING id`;
       const bed2 = await tx`INSERT INTO beds (room_id, label) VALUES (${room[0].id}, 'Lozko 2') RETURNING id`;
@@ -51,7 +51,7 @@ describe('Database Facility Occupancy (ADM-FACILITY-OCCUPANCY)', () => {
       expect(Number(result[0].f)).toBe(1);
 
       // 4. Deactivate the empty bed (bed1) -> bed_count=1, occupied=1, free=0
-      await tx`UPDATE beds SET deactivated_at = now() WHERE id = ${bed1[0].id}`;
+      await tx`UPDATE beds SET is_active = false WHERE id = ${bed1[0].id}`;
       result = await tx`SELECT public.bed_count(r) as b, public.occupied_beds(r) as o, public.free_beds(r) as f FROM rooms r WHERE id = ${room[0].id}`;
       expect(Number(result[0].b)).toBe(1);
       expect(Number(result[0].o)).toBe(1);

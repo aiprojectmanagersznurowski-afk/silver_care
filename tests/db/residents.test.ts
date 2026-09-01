@@ -47,7 +47,7 @@ describe('Database Residents (ADM-RESIDENT-ADD)', () => {
       await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
 
       // Wstawmy testowy pokój i łóżko
-      const room = await tx`INSERT INTO rooms (name, organization_id) VALUES ('Pokoj 101', ${orgId}) RETURNING id`;
+      const room = await tx`INSERT INTO rooms (number, floor, organization_id) VALUES ('Pokoj 101', '1', ${orgId}) RETURNING id`;
       const bed = await tx`INSERT INTO beds (room_id, label) VALUES (${room[0].id}, 'Lozko A') RETURNING id`;
       
       const resident1 = await tx`INSERT INTO residents (organization_id, first_name, last_name, pesel_hash) VALUES (${orgId}, 'Jan', 'Kowalski', 'hash1') RETURNING id`;

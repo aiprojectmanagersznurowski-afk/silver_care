@@ -82,7 +82,7 @@ describe('Database RLS: organizations (ORG-ISOLATION)', () => {
       await tx`SELECT set_config('request.jwt.claims', ${JSON.stringify({ app_metadata: { organization_id: orgIdA } })}, true)`;
 
       // Try to insert a room without explicitly providing organization_id
-      const [room] = await tx`INSERT INTO rooms (name) VALUES ('Room 101') RETURNING *`;
+      const [room] = await tx`INSERT INTO rooms (number, floor) VALUES ('Room 101', '1') RETURNING *`;
       
       expect(room.organization_id).toBe(orgIdA);
       

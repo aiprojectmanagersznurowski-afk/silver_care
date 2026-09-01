@@ -28,6 +28,9 @@ export default async function AdminLayout({ children }: { children: ReactNode })
           <a href="/admin/invitations" className="block rounded-md px-3 py-2 text-sm font-medium text-text-secondary hover:bg-surface-sunken hover:text-foreground">
             Zaproszenia
           </a>
+          <a href="/admin/facility" className="block rounded-md px-3 py-2 text-sm font-medium text-text-secondary hover:bg-surface-sunken hover:text-foreground">
+            Placówka
+          </a>
           <a href="/admin/audit" className="block rounded-md px-3 py-2 text-sm font-medium text-text-secondary hover:bg-surface-sunken hover:text-foreground">
             Rejestr Audytowy
           </a>

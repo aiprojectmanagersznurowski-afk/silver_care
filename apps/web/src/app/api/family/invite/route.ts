@@ -56,7 +56,7 @@ export async function POST(request: Request) {
     const registerUrl = `${baseUrl}/register?token=${data.id}`
     
     if (process.env.EMAIL_PROVIDER_KEY) {
-      console.log(`[EMAIL] Wysyłanie zaproszenia do ${email.trim()}...`)
+      console.log(`[EMAIL] Wysyłanie zaproszenia...`)
       
       const emailRes = await fetch('https://send.api.mailtrap.io/api/send', {
         method: 'POST',
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
         },
         body: JSON.stringify({
           to: [{ email: email.trim() }],
-          from: { email: 'hello@demomailtrap.com', name: 'Silver Care' },
+          from: { email: 'noreply@silvercare.space', name: 'Silver Care' },
           subject: 'Zaproszenie do portalu rodziny Silver Care',
           text: `Zostałeś zaproszony do portalu rodziny Silver Care. Kliknij w poniższy link, aby utworzyć konto i śledzić postępy Twojego bliskiego:\n\n${registerUrl}\n\nTen link jest jednorazowy i ważny przez 7 dni.`
         })

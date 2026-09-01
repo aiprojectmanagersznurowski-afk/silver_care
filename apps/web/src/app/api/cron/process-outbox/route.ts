@@ -72,7 +72,7 @@ export async function GET(request: Request) {
                 
                 // Wyślij SMS
                 if (phone && smsapiToken) {
-                  console.log(`Wysyłanie SMS do: ${phone}...`)
+                  console.log(`Wysyłanie SMS do: [UKRYTY_NUMER]...`)
                   
                   const smsParams = new URLSearchParams()
                   smsParams.append('to', phone)
@@ -91,16 +91,16 @@ export async function GET(request: Request) {
 
                   const smsData = await smsRes.json()
                   if (!smsRes.ok || smsData.error) {
-                    console.error(`Błąd SMSAPI dla nr ${phone}:`, smsData)
+                    console.error(`Błąd SMSAPI dla nr [UKRYTY_NUMER]:`, smsData)
                   } else {
-                    console.log(`SMS wysłany pomyślnie do ${phone}.`)
+                    console.log(`SMS wysłany pomyślnie do [UKRYTY_NUMER].`)
                   }
                 }
 
                 // Wyślij E-mail
                 const mailtrapToken = process.env.EMAIL_PROVIDER_KEY
                 if (email && mailtrapToken) {
-                  console.log(`Wysyłanie E-maila do: ${email}...`)
+                  console.log(`Wysyłanie E-maila do: [UKRYTY_EMAIL]...`)
                   
                   const emailRes = await fetch('https://send.api.mailtrap.io/api/send', {
                     method: 'POST',
@@ -110,7 +110,7 @@ export async function GET(request: Request) {
                     },
                     body: JSON.stringify({
                       to: [{ email: email }],
-                      from: { email: 'hello@demomailtrap.com', name: 'Silver Care' },
+                      from: { email: 'noreply@silvercare.space', name: 'Silver Care' },
                       subject: 'Nowy raport w Silver Care',
                       text: smsMessage
                     })
@@ -118,9 +118,9 @@ export async function GET(request: Request) {
 
                   if (!emailRes.ok) {
                     const errorData = await emailRes.text()
-                    console.error(`Błąd Mailtrap API dla ${email}:`, errorData)
+                    console.error(`Błąd Mailtrap API dla [UKRYTY_EMAIL]:`, errorData)
                   } else {
-                    console.log(`E-mail wysłany pomyślnie do ${email}.`)
+                    console.log(`E-mail wysłany pomyślnie do [UKRYTY_EMAIL].`)
                   }
                 }
               }
