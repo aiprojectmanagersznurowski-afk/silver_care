@@ -63,7 +63,7 @@ export async function updateSession(request: NextRequest) {
   } else {
     // Brak usera - jeśli nie jest na stronie logowania / publicznej, redirect do root
     const path = request.nextUrl.pathname
-    if (path !== '/' && !path.startsWith('/login') && !path.startsWith('/auth')) {
+    if (path !== '/' && !path.startsWith('/login') && !path.startsWith('/auth') && !path.startsWith('/register') && !path.startsWith('/api')) {
       const url = request.nextUrl.clone()
       url.pathname = '/'
       return NextResponse.redirect(url)
