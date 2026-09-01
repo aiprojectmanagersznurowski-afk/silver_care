@@ -61,11 +61,9 @@ export default function AddRoomDialog({ onRoomAdded }: AddRoomDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="w-4 h-4 mr-2" />
-          Dodaj pokój
-        </Button>
+      <DialogTrigger render={<Button />}>
+        <Plus className="w-4 h-4 mr-2" />
+        Dodaj pokój
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit}>

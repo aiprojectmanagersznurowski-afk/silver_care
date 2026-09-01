@@ -58,11 +58,9 @@ export default function AddBedDialog({ roomId, onBedAdded }: AddBedDialogProps) 
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <Plus className="w-4 h-4 mr-2" />
-          Dodaj łóżko
-        </Button>
+      <DialogTrigger render={<Button variant="outline" size="sm" />}>
+        <Plus className="w-4 h-4 mr-2" />
+        Dodaj łóżko
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit}>
