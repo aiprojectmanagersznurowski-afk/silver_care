@@ -23,6 +23,7 @@ type Resident = {
 export function InviteFamilyDialog({ residents }: { residents: Resident[] }) {
   const [open, setOpen] = useState(false)
   const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
   const [residentId, setResidentId] = useState(residents[0]?.id || '')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -41,13 +42,14 @@ export function InviteFamilyDialog({ residents }: { residents: Resident[] }) {
       const res = await fetch('/api/family/invite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), resident_id: residentId }),
+        body: JSON.stringify({ email: email.trim(), phone: phone.trim(), resident_id: residentId }),
       })
 
       const data = await res.json()
 
       if (res.ok && data.success) {
         setEmail('')
+        setPhone('')
         setOpen(false)
         window.location.reload()
       } else {
@@ -96,6 +98,16 @@ export function InviteFamilyDialog({ residents }: { residents: Resident[] }) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="phone">Numer telefonu (opcjonalnie do powiadomień SMS)</Label>
+            <Input
+              id="phone"
+              type="tel"
+              placeholder="np. +48123456789"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
             />
           </div>
           {error && (

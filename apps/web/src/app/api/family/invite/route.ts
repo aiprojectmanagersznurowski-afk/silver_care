@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { email, resident_id } = body
+    const { email, phone, resident_id } = body
 
     if (!email?.trim() || !resident_id) {
       return NextResponse.json({ error: 'Adres e-mail i ID pensjonariusza są wymagane' }, { status: 400 })
@@ -38,7 +38,8 @@ export async function POST(request: Request) {
         organization_id: orgId,
         resident_id: resident_id,
         role: 'family',
-        email: email.trim()
+        email: email.trim(),
+        phone: phone?.trim() || null
       })
       .select('id')
       .single()
@@ -48,12 +49,38 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // Mock sending email
+    // Send invitation email via Mailtrap
     const host = request.headers.get('host') || 'localhost:3000'
     const protocol = request.headers.get('x-forwarded-proto') || 'http'
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || `${protocol}://${host}`
     const registerUrl = `${baseUrl}/register?token=${data.id}`
-    console.log(`[MOCK EMAIL] Wysyłanie e-maila z linkiem do rejestracji: ${registerUrl}`)
+    
+    if (process.env.EMAIL_PROVIDER_KEY) {
+      console.log(`[EMAIL] Wysyłanie zaproszenia do ${email.trim()}...`)
+      
+      const emailRes = await fetch('https://send.api.mailtrap.io/api/send', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.EMAIL_PROVIDER_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          to: [{ email: email.trim() }],
+          from: { email: 'hello@demomailtrap.com', name: 'Silver Care' },
+          subject: 'Zaproszenie do portalu rodziny Silver Care',
+          text: `Zostałeś zaproszony do portalu rodziny Silver Care. Kliknij w poniższy link, aby utworzyć konto i śledzić postępy Twojego bliskiego:\n\n${registerUrl}\n\nTen link jest jednorazowy i ważny przez 7 dni.`
+        })
+      })
+
+      if (!emailRes.ok) {
+        const errorData = await emailRes.text()
+        console.error('Błąd Mailtrap API:', errorData)
+      } else {
+        console.log(`[EMAIL] Zaproszenie wysłane pomyślnie.`)
+      }
+    } else {
+      console.log(`[MOCK EMAIL] Brak EMAIL_PROVIDER_KEY. Link: ${registerUrl}`)
+    }
 
     return NextResponse.json({ success: true, url: registerUrl }) // Returning url for testing purposes
   } catch (error: any) {

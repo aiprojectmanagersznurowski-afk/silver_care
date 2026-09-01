@@ -69,6 +69,9 @@ export async function GET(request: Request) {
 
       // 2. Aktualizacja app_metadata użytkownika
       const { error: updateError } = await adminClient.auth.admin.updateUserById(user.id, {
+        user_metadata: {
+          phone: invitation.phone || null
+        },
         app_metadata: {
           role: 'family',
           organization_id: invitation.organization_id
