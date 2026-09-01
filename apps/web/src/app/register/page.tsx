@@ -11,6 +11,8 @@ import { createClient } from '@/lib/supabase/client'
 function RegisterForm() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [acceptTerms, setAcceptTerms] = useState(false)
+  const [acceptDataProcessing, setAcceptDataProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   
@@ -23,6 +25,8 @@ function RegisterForm() {
       setError('Brak tokena rejestracji. Upewnij się, że używasz linku z e-maila.')
     }
   }, [token])
+
+  const consentsValid = acceptTerms && acceptDataProcessing
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -38,6 +42,11 @@ function RegisterForm() {
       return
     }
 
+    if (!consentsValid) {
+      setError('Akceptacja regulaminu i zgoda na przetwarzanie danych są wymagane.')
+      return
+    }
+
     setIsSubmitting(true)
     setError(null)
 
@@ -45,7 +54,7 @@ function RegisterForm() {
       const res = await fetch('/api/family/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, password }),
+        body: JSON.stringify({ token, password, consentsAccepted: true }),
       })
 
       const data = await res.json()
@@ -94,10 +103,39 @@ function RegisterForm() {
             required
           />
         </div>
+
+        <div className="space-y-3 rounded-md border border-border p-3 bg-surface-sunken">
+          <p className="text-xs font-medium text-text-secondary uppercase tracking-wide">Wymagane zgody</p>
+          <label className="flex items-start gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={acceptTerms}
+              onChange={(e) => setAcceptTerms(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-gray-300"
+              disabled={!token || isSubmitting}
+            />
+            <span className="text-sm text-foreground">
+              Akceptuję regulamin korzystania z platformy Silver Care.
+            </span>
+          </label>
+          <label className="flex items-start gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={acceptDataProcessing}
+              onChange={(e) => setAcceptDataProcessing(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-gray-300"
+              disabled={!token || isSubmitting}
+            />
+            <span className="text-sm text-foreground">
+              Wyrażam zgodę na przetwarzanie danych osobowych mojego bliskiego w zakresie niezbędnym do świadczenia usługi.
+            </span>
+          </label>
+        </div>
+
         <Button 
           type="submit" 
           className="w-full" 
-          disabled={!token || isSubmitting}
+          disabled={!token || isSubmitting || !consentsValid}
         >
           {isSubmitting ? 'Trwa rejestracja...' : 'Utwórz konto'}
         </Button>

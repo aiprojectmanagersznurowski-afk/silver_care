@@ -4,10 +4,14 @@ import { createAdminClient } from '@/lib/supabase/admin'
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { token, password } = body
+    const { token, password, consentsAccepted } = body
 
     if (!token || !password) {
       return NextResponse.json({ error: 'Brak tokena lub hasła' }, { status: 400 })
+    }
+
+    if (!consentsAccepted) {
+      return NextResponse.json({ error: 'Akceptacja regulaminu i zgód jest wymagana' }, { status: 400 })
     }
 
     const adminClient = createAdminClient()
