@@ -24,6 +24,7 @@ export function InviteFamilyDialog({ residents }: { residents: Resident[] }) {
   const [open, setOpen] = useState(false)
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
+  const [countryCode, setCountryCode] = useState('48')
   const [residentId, setResidentId] = useState(residents[0]?.id || '')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -35,6 +36,17 @@ export function InviteFamilyDialog({ residents }: { residents: Resident[] }) {
       return
     }
 
+    let finalPhone = ''
+    if (phone.trim()) {
+      // Usunięcie wszystkich znaków niebędących cyframi
+      const cleanPhone = phone.replace(/\D/g, '')
+      if (cleanPhone.length < 7) {
+        setError('Podany numer telefonu wydaje się zbyt krótki.')
+        return
+      }
+      finalPhone = `${countryCode}${cleanPhone}`
+    }
+
     setIsSubmitting(true)
     setError(null)
 
@@ -42,7 +54,7 @@ export function InviteFamilyDialog({ residents }: { residents: Resident[] }) {
       const res = await fetch('/api/family/invite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), phone: phone.trim(), resident_id: residentId }),
+        body: JSON.stringify({ email: email.trim(), phone: finalPhone, resident_id: residentId }),
       })
 
       const data = await res.json()
@@ -102,13 +114,28 @@ export function InviteFamilyDialog({ residents }: { residents: Resident[] }) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="phone">Numer telefonu (opcjonalnie do powiadomień SMS)</Label>
-            <Input
-              id="phone"
-              type="tel"
-              placeholder="np. +48123456789"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-            />
+            <div className="flex gap-2">
+              <select
+                value={countryCode}
+                onChange={(e) => setCountryCode(e.target.value)}
+                className="flex h-10 w-[120px] items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              >
+                <option value="48">🇵🇱 +48</option>
+                <option value="44">🇬🇧 +44</option>
+                <option value="49">🇩🇪 +49</option>
+                <option value="380">🇺🇦 +380</option>
+                <option value="1">🇺🇸 +1</option>
+              </select>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="np. 123 456 789"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="flex-1"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">Podaj numer bez początkowego zera (np. 123456789).</p>
           </div>
           {error && (
             <p className="text-sm font-medium text-destructive">{error}</p>
