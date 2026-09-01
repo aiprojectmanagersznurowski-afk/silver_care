@@ -14,7 +14,7 @@ export default async function StaffDashboard() {
         beds (
           label,
           rooms (
-            name
+            number
           )
         )
       )
@@ -35,7 +35,7 @@ export default async function StaffDashboard() {
         {residents?.map((resident) => {
           const activeAssignment = resident.bed_assignments?.find((a: any) => a.unassigned_at === null);
           const bedLabel = activeAssignment?.beds?.label;
-          const roomName = activeAssignment?.beds?.rooms?.name;
+          const roomNumber = activeAssignment?.beds?.rooms?.number;
           
           return (
             <Card key={resident.id} className="group hover:border-primary/40 transition-colors flex flex-col">
@@ -49,9 +49,9 @@ export default async function StaffDashboard() {
                   </div>
                 </CardTitle>
                 <div className="text-sm text-text-tertiary mt-1">
-                  {roomName && bedLabel ? (
+                  {roomNumber && bedLabel ? (
                     <span className="inline-flex items-center rounded-full bg-surface-sunken px-2.5 py-0.5 text-xs font-medium">
-                      Pokój {roomName}, Łóżko {bedLabel}
+                      Pokój {roomNumber}, Łóżko {bedLabel}
                     </span>
                   ) : (
                     <span className="inline-flex items-center rounded-full bg-destructive/10 text-destructive px-2.5 py-0.5 text-xs font-medium">
