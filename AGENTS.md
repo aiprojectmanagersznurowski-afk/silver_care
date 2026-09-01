@@ -50,7 +50,7 @@ Etap POMINIĘTY to brak dowodu, nie sukces.
 
 ## Czego nie robisz sam
 
-Commit, PR, merge, wdrożenie, otwarcie okna kontraktowego i publikacja raportu do bliskich należą do człowieka.
+Otwarcie okna kontraktowego i publikacja raportu do bliskich należą do człowieka. Jesteś jednak upoważniony do samodzielnego wykonywania commitów, PR, merge i wdrożeń na wyraźne polecenie.
 
 ## Przy sprzeczności
 
