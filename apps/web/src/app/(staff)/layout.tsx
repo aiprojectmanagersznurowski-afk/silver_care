@@ -22,6 +22,9 @@ export default async function StaffLayout({ children }: { children: ReactNode })
           <a href="/staff" className="block rounded-md bg-accent-soft px-3 py-2 text-sm font-medium text-accent-foreground">
             Pensjonariusze
           </a>
+          <a href="/staff/agenda" className="block rounded-md px-3 py-2 text-sm font-medium text-text-secondary hover:bg-surface-sunken hover:text-foreground">
+            Plan dnia
+          </a>
           <a href="/reports" className="block rounded-md px-3 py-2 text-sm font-medium text-text-secondary hover:bg-surface-sunken hover:text-foreground">
             Raporty
           </a>
