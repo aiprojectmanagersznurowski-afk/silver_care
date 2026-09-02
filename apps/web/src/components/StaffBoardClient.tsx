@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { AgendaView } from '@/components/AgendaView'
 import { Search, X } from 'lucide-react'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 type NoteStatus = 'ready' | 'draft' | 'none'
 
@@ -245,9 +246,14 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center gap-2 justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-bold">
-                      {(resident.first_name as string)?.[0]}{(resident.last_name as string)?.[0]}
-                    </span>
+                    <Avatar className="h-8 w-8 border">
+                      {resident.avatar_url && (
+                        <AvatarImage src={resident.avatar_url as string} alt={`${resident.first_name} ${resident.last_name}`} />
+                      )}
+                      <AvatarFallback className="bg-primary/10 text-primary text-sm font-bold">
+                        {(resident.first_name as string)?.[0]}{(resident.last_name as string)?.[0]}
+                      </AvatarFallback>
+                    </Avatar>
                     <span className="truncate">{resident.first_name as string} {resident.last_name as string}</span>
                   </div>
                 </CardTitle>

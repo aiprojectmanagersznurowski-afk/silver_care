@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { first_name, last_name, pesel } = body
+    const { first_name, last_name, pesel, avatar_url } = body
 
     if (!first_name?.trim() || !last_name?.trim() || !pesel?.trim()) {
       return NextResponse.json({ error: 'Imię, nazwisko i PESEL są wymagane' }, { status: 400 })
@@ -69,7 +69,8 @@ export async function POST(request: Request) {
       .insert({
         first_name: first_name.trim(),
         last_name: last_name.trim(),
-        pesel_hash: peselHash
+        pesel_hash: peselHash,
+        avatar_url: avatar_url || null
       })
       .select('id')
       .single()

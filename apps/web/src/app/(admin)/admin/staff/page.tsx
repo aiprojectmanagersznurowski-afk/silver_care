@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import { deleteStaffAction } from '@/actions/admin'
 import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 export default async function AdminStaffPage() {
   const supabase = await createClient()
@@ -66,12 +67,24 @@ export default async function AdminStaffPage() {
                 {staff.map((staffUser) => (
                   <tr key={staffUser.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
                     <td className="p-4 align-middle font-medium">
-                      {staffUser.email}
-                      {staffUser.app_metadata?.is_active === false && (
-                        <span className="ml-2 inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold bg-muted text-muted-foreground">
-                          Zarchiwizowany
-                        </span>
-                      )}
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-8 w-8">
+                          {staffUser.user_metadata?.avatar_url && (
+                            <AvatarImage src={staffUser.user_metadata.avatar_url} alt={staffUser.email} />
+                          )}
+                          <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                            {staffUser.email?.charAt(0).toUpperCase() || 'S'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div>{staffUser.email}</div>
+                          {staffUser.app_metadata?.is_active === false && (
+                            <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold bg-muted text-muted-foreground mt-1">
+                              Zarchiwizowany
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </td>
                     <td className="p-4 align-middle">
                       {staffUser.app_metadata?.role === 'nurse' ? 'Pielęgniarka / Pielęgniarz' : 'Sanitariusz / Sanitariuszka'}

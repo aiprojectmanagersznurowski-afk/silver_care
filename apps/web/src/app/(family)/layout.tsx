@@ -22,13 +22,14 @@ export default async function FamilyLayout({ children }: { children: ReactNode }
       residents (
         id,
         first_name,
-        last_name
+        last_name,
+        avatar_url
       )`)
     .eq('relative_user_id', user.id)
 
   const residents = (links || []).map(link => 
     Array.isArray(link.residents) ? link.residents[0] : link.residents
-  ).filter(Boolean) as { id: string; first_name: string; last_name: string }[]
+  ).filter(Boolean) as { id: string; first_name: string; last_name: string; avatar_url: string | null }[]
 
   return (
     <div className="flex min-h-screen flex-col bg-surface-sunken">

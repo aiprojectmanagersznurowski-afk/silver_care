@@ -3,10 +3,13 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+
 interface Resident {
   id: string
   first_name: string
   last_name: string
+  avatar_url?: string | null
 }
 
 function getCookie(name: string) {
@@ -66,9 +69,14 @@ export function GlobalResidentSwitcher({ residents }: { residents: Resident[] })
             }
           `}
         >
-          <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${r.id === selectedId ? 'bg-white/20' : 'bg-primary/10 text-primary'}`}>
-            {r.first_name[0]}{r.last_name[0]}
-          </span>
+          <Avatar className={`h-6 w-6 border ${r.id === selectedId ? 'border-primary-foreground/20' : 'border-transparent'}`}>
+            {r.avatar_url && (
+              <AvatarImage src={r.avatar_url} alt={`${r.first_name} ${r.last_name}`} />
+            )}
+            <AvatarFallback className={`text-xs font-bold ${r.id === selectedId ? 'bg-white/20 text-white' : 'bg-primary/10 text-primary'}`}>
+              {r.first_name[0]}{r.last_name[0]}
+            </AvatarFallback>
+          </Avatar>
           {r.first_name} {r.last_name}
         </button>
       ))}

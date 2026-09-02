@@ -12,6 +12,7 @@ export default async function StaffDashboard() {
       id,
       first_name,
       last_name,
+      avatar_url,
       archived_at,
       bed_assignments (
         unassigned_at,

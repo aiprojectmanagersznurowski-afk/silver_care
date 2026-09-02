@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { createClient } from '@/lib/supabase/client'
 import {
   Dialog,
   DialogContent,
@@ -18,6 +19,7 @@ export function InviteStaffDialog() {
   const [open, setOpen] = useState(false)
   const [email, setEmail] = useState('')
   const [role, setRole] = useState('nurse')
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [generatedUrl, setGeneratedUrl] = useState<string | null>(null)
@@ -32,11 +34,37 @@ export function InviteStaffDialog() {
     setIsSubmitting(true)
     setError(null)
 
+    let avatar_url = null
+    if (avatarFile) {
+      try {
+        const supabase = createClient()
+        const fileExt = avatarFile.name.split('.').pop()
+        const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`
+        const filePath = `staff/${fileName}`
+        
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(filePath, avatarFile)
+          
+        if (uploadError) throw uploadError
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(filePath)
+          
+        avatar_url = publicUrl
+      } catch (err) {
+        setError('Wystąpił błąd podczas wgrywania zdjęcia.')
+        setIsSubmitting(false)
+        return
+      }
+    }
+
     try {
       const res = await fetch('/api/staff/invite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), role }),
+        body: JSON.stringify({ email: email.trim(), role, avatar_url }),
       })
 
       const data = await res.json()
@@ -45,6 +73,7 @@ export function InviteStaffDialog() {
         setGeneratedUrl(data.url)
         setEmail('')
         setRole('nurse')
+        setAvatarFile(null)
         // setOpen(false)
         // window.location.reload()
       } else {
@@ -92,6 +121,16 @@ export function InviteStaffDialog() {
               <option value="nurse">Pielęgniarka / Pielęgniarz</option>
               <option value="paramedic">Sanitariusz / Sanitariuszka</option>
             </select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="avatar">Zdjęcie profilowe (opcjonalnie)</Label>
+            <Input
+              id="avatar"
+              type="file"
+              accept="image/*"
+              onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
+              className="cursor-pointer file:cursor-pointer"
+            />
           </div>
           {error && (
             <p className="text-sm font-medium text-destructive">{error}</p>

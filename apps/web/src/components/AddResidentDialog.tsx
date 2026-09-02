@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { createClient } from '@/lib/supabase/client'
 import {
   Dialog,
   DialogContent,
@@ -19,6 +20,7 @@ export function AddResidentDialog() {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [pesel, setPesel] = useState('')
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -38,6 +40,32 @@ export function AddResidentDialog() {
     setIsSubmitting(true)
     setError(null)
 
+    let avatar_url = null
+    if (avatarFile) {
+      try {
+        const supabase = createClient()
+        const fileExt = avatarFile.name.split('.').pop()
+        const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`
+        const filePath = `residents/${fileName}`
+        
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(filePath, avatarFile)
+          
+        if (uploadError) throw uploadError
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(filePath)
+          
+        avatar_url = publicUrl
+      } catch (err) {
+        setError('Wystąpił błąd podczas wgrywania zdjęcia.')
+        setIsSubmitting(false)
+        return
+      }
+    }
+
     try {
       const res = await fetch('/api/residents', {
         method: 'POST',
@@ -45,7 +73,8 @@ export function AddResidentDialog() {
         body: JSON.stringify({ 
           first_name: firstName.trim(), 
           last_name: lastName.trim(),
-          pesel: pesel.trim() 
+          pesel: pesel.trim(),
+          avatar_url
         }),
       })
 
@@ -55,6 +84,7 @@ export function AddResidentDialog() {
         setFirstName('')
         setLastName('')
         setPesel('')
+        setAvatarFile(null)
         setOpen(false)
         // Refresh the page to show new resident
         window.location.reload()
@@ -114,6 +144,16 @@ export function AddResidentDialog() {
             <p className="text-xs text-text-tertiary">
               PESEL jest szyfrowany i używany wyłącznie do identyfikacji i połączenia z danymi medycznymi.
             </p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="avatar">Zdjęcie (opcjonalnie)</Label>
+            <Input
+              id="avatar"
+              type="file"
+              accept="image/*"
+              onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
+              className="cursor-pointer file:cursor-pointer"
+            />
           </div>
           {error && (
             <p className="text-sm font-medium text-destructive">{error}</p>

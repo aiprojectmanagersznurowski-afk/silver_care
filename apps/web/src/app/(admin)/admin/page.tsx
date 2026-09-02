@@ -5,6 +5,7 @@ import { AdminMessagesInbox } from '@/components/AdminMessagesInbox'
 import { deleteResidentAction } from '@/actions/admin'
 import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 export default async function AdminDashboard() {
   const supabase = await createClient()
@@ -49,7 +50,17 @@ export default async function AdminDashboard() {
                     {residents?.map((resident) => (
                       <tr key={resident.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
                         <td className="p-4 align-middle">
-                          {resident.first_name} {resident.last_name}
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-8 w-8">
+                              {resident.avatar_url && (
+                                <AvatarImage src={resident.avatar_url} alt={`${resident.first_name} ${resident.last_name}`} />
+                              )}
+                              <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                                {resident.first_name?.charAt(0)}{resident.last_name?.charAt(0)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="font-medium">{resident.first_name} {resident.last_name}</span>
+                          </div>
                         </td>
                         <td className="p-4 align-middle">
                           {resident.archived_at ? (

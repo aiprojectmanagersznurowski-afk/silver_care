@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { email, role } = body
+    const { email, role, avatar_url } = body
 
     if (!email?.trim()) {
       return NextResponse.json({ error: 'Adres e-mail jest wymagany' }, { status: 400 })
@@ -48,7 +48,8 @@ export async function POST(request: Request) {
       },
       user_metadata: {
         role: role,
-        organization_id: orgId
+        organization_id: orgId,
+        avatar_url: avatar_url || null
       }
     })
 
