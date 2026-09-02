@@ -36,7 +36,8 @@ export default function StaffAgendaPage() {
   const [time, setTime] = useState('')
   const [type, setType] = useState('other')
   const [isRecurring, setIsRecurring] = useState(true)
-  const [itemDate, setItemDate] = useState(new Date().toISOString().slice(0, 10))
+  const [itemDates, setItemDates] = useState<string[]>([new Date().toISOString().slice(0, 10)])
+  const [currentDateInput, setCurrentDateInput] = useState(new Date().toISOString().slice(0, 10))
   const [submitting, setSubmitting] = useState(false)
 
   const fetchItems = async () => {
@@ -52,6 +53,8 @@ export default function StaffAgendaPage() {
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!title || !time || !type) return
+    if (!isRecurring && itemDates.length === 0) return
+    
     setSubmitting(true)
     await fetch('/api/staff/agenda', {
       method: 'POST',
@@ -60,12 +63,13 @@ export default function StaffAgendaPage() {
         title, 
         time, 
         type, 
-        target_date: isRecurring ? null : itemDate 
+        target_dates: isRecurring ? [] : itemDates 
       }),
     })
     setTitle('')
     setTime('')
     setType('other')
+    setItemDates([new Date().toISOString().slice(0, 10)])
     setSubmitting(false)
     fetchItems()
   }
@@ -73,6 +77,16 @@ export default function StaffAgendaPage() {
   const handleDelete = async (id: string) => {
     await fetch(`/api/staff/agenda?id=${id}`, { method: 'DELETE' })
     fetchItems()
+  }
+
+  const addDate = () => {
+    if (currentDateInput && !itemDates.includes(currentDateInput)) {
+      setItemDates([...itemDates, currentDateInput].sort())
+    }
+  }
+
+  const removeDate = (dateToRemove: string) => {
+    setItemDates(itemDates.filter(d => d !== dateToRemove))
   }
 
   return (
@@ -170,19 +184,44 @@ export default function StaffAgendaPage() {
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input type="radio" name="recurring" checked={!isRecurring} onChange={() => setIsRecurring(false)} className="h-4 w-4" />
-                      <span className="text-sm">Jednorazowo (konkretny dzień)</span>
+                      <span className="text-sm">Wybrane dni</span>
                     </label>
                   </div>
                 </div>
 
                 {!isRecurring && (
-                  <div className="space-y-1 animate-in fade-in slide-in-from-top-1">
-                    <Label htmlFor="agenda-date">Wybierz datę</Label>
-                    <Input id="agenda-date" type="date" value={itemDate} onChange={e => setItemDate(e.target.value)} required />
+                  <div className="space-y-3 animate-in fade-in slide-in-from-top-1 bg-muted/50 p-3 rounded-md border border-border">
+                    <div className="space-y-1">
+                      <Label htmlFor="agenda-date">Wybierz daty</Label>
+                      <div className="flex gap-2">
+                        <Input 
+                          id="agenda-date" 
+                          type="date" 
+                          value={currentDateInput} 
+                          onChange={e => setCurrentDateInput(e.target.value)} 
+                          className="flex-1"
+                        />
+                        <Button type="button" variant="secondary" onClick={addDate}>Dodaj</Button>
+                      </div>
+                    </div>
+                    {itemDates.length > 0 ? (
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {itemDates.map(d => (
+                          <span key={d} className="inline-flex items-center gap-1 bg-background border border-border text-xs px-2 py-1 rounded">
+                            {new Date(d).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' })}
+                            <button type="button" onClick={() => removeDate(d)} className="text-muted-foreground hover:text-foreground">
+                              &times;
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-destructive">Wybierz co najmniej jedną datę.</p>
+                    )}
                   </div>
                 )}
 
-                <Button type="submit" className="w-full mt-2" disabled={submitting}>
+                <Button type="submit" className="w-full mt-2" disabled={submitting || (!isRecurring && itemDates.length === 0)}>
                   {submitting ? 'Dodawanie...' : 'Dodaj wpis'}
                 </Button>
               </form>

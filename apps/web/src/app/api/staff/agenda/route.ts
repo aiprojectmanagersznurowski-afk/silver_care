@@ -36,7 +36,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json()
-    const { title, time, type, resident_id, target_date } = body
+    const { title, time, type, resident_id, target_date, target_dates } = body
 
     if (!title || !time || !type) {
       return NextResponse.json({ error: 'Missing title, time, or type' }, { status: 400 })
@@ -48,17 +48,33 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Brak przypisania do organizacji' }, { status: 403 })
     }
 
-    const { error: insertError } = await supabase
-      .from('agenda_items')
-      .insert({
+    let rowsToInsert: any[] = []
+
+    if (Array.isArray(target_dates) && target_dates.length > 0) {
+      rowsToInsert = target_dates.map(date => ({
         organization_id: orgId,
         title,
         time,
         type,
-        resident_id: resident_id || null, // null = dotyczy wszystkich
-        target_date: target_date || null, // null = wszystkie dni
-        is_template: !target_date, // Zachowujemy dla kompatybilności wstecznej jeśli trzeba
-      })
+        resident_id: resident_id || null,
+        target_date: date,
+        is_template: false,
+      }))
+    } else {
+      rowsToInsert = [{
+        organization_id: orgId,
+        title,
+        time,
+        type,
+        resident_id: resident_id || null,
+        target_date: target_date || null,
+        is_template: !target_date,
+      }]
+    }
+
+    const { error: insertError } = await supabase
+      .from('agenda_items')
+      .insert(rowsToInsert)
 
     if (insertError) {
       return NextResponse.json({ error: 'Failed to create agenda item' }, { status: 500 })
