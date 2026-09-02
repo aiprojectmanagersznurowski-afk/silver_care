@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -14,6 +14,14 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+
+  useEffect(() => {
+    // Jeśli użytkownik trafia tutaj po kliknięciu w link zaproszenia, w hashu URL znajduje się token
+    const hash = window.location.hash
+    if (hash.includes('type=invite') || hash.includes('type=recovery')) {
+      router.push(`/update-password${hash}`)
+    }
+  }, [router])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
