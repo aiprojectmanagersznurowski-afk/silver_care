@@ -3,6 +3,9 @@ import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { InviteStaffDialog } from '@/components/InviteStaffDialog'
 import { redirect } from 'next/navigation'
+import { deleteStaffAction } from '@/actions/admin'
+import { Trash2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 export default async function AdminStaffPage() {
   const supabase = await createClient()
@@ -56,6 +59,7 @@ export default async function AdminStaffPage() {
                   <th className="h-12 px-4 text-left align-middle font-medium text-text-secondary">E-mail</th>
                   <th className="h-12 px-4 text-left align-middle font-medium text-text-secondary">Rola</th>
                   <th className="h-12 px-4 text-left align-middle font-medium text-text-secondary">Ostatnie logowanie</th>
+                  <th className="h-12 px-4 text-right align-middle font-medium text-text-secondary">Akcje</th>
                 </tr>
               </thead>
               <tbody className="[&_tr:last-child]:border-0">
@@ -73,11 +77,19 @@ export default async function AdminStaffPage() {
                         : 'Nigdy'
                       }
                     </td>
+                    <td className="p-4 align-middle text-right">
+                      <form action={deleteStaffAction}>
+                        <input type="hidden" name="id" value={staffUser.id} />
+                        <Button variant="ghost" size="icon" type="submit" title="Usuń konto personelu" className="text-destructive hover:bg-destructive/10 h-8 w-8">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </form>
+                    </td>
                   </tr>
                 ))}
                 {staff.length === 0 && (
                   <tr>
-                    <td colSpan={3} className="p-4 text-center text-text-secondary">
+                    <td colSpan={4} className="p-4 text-center text-text-secondary">
                       Brak przypisanego personelu.
                     </td>
                   </tr>

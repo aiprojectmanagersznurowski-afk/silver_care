@@ -2,6 +2,9 @@ import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { AddResidentDialog } from '@/components/AddResidentDialog'
 import { AdminMessagesInbox } from '@/components/AdminMessagesInbox'
+import { deleteResidentAction } from '@/actions/admin'
+import { Trash2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 export default async function AdminDashboard() {
   const supabase = await createClient()
@@ -39,6 +42,7 @@ export default async function AdminDashboard() {
                       <th className="h-12 px-4 text-left align-middle font-medium text-text-secondary">Imię i nazwisko</th>
                       <th className="h-12 px-4 text-left align-middle font-medium text-text-secondary">Status</th>
                       <th className="h-12 px-4 text-left align-middle font-medium text-text-secondary">Utworzono</th>
+                      <th className="h-12 px-4 text-right align-middle font-medium text-text-secondary">Akcje</th>
                     </tr>
                   </thead>
                   <tbody className="[&_tr:last-child]:border-0">
@@ -61,11 +65,19 @@ export default async function AdminDashboard() {
                         <td className="p-4 align-middle text-text-secondary">
                           {new Date(resident.created_at).toLocaleDateString('pl-PL')}
                         </td>
+                        <td className="p-4 align-middle text-right">
+                          <form action={deleteResidentAction}>
+                            <input type="hidden" name="id" value={resident.id} />
+                            <Button variant="ghost" size="icon" type="submit" title="Usuń pensjonariusza i zwolnij łóżko" className="text-destructive hover:bg-destructive/10 h-8 w-8">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </form>
+                        </td>
                       </tr>
                     ))}
                     {(!residents || residents.length === 0) && (
                       <tr>
-                        <td colSpan={3} className="p-4 text-center text-text-secondary">
+                        <td colSpan={4} className="p-4 text-center text-text-secondary">
                           Brak pensjonariuszy w bazie.
                         </td>
                       </tr>
