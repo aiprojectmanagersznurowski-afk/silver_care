@@ -42,7 +42,8 @@ files['packages/contracts/src/generated/presentation.ts'] = BANNER
   + emit('MDR_GUARDRAILS', pres.MDR_GUARDRAILS)
   + emit('REQUIRED_UI_STATES', pres.REQUIRED_UI_STATES)
   + `export const AI_DISCLOSURE_LABEL = ${JSON.stringify(pres.AI_DISCLOSURE_LABEL)} as const;\n\n`
-  + `export type FamilyMetric = typeof FAMILY_VISIBLE_METRICS[number]['id'];\n\n`
+  + `export type FamilyMetric = typeof FAMILY_VISIBLE_METRICS[number]['id'];\n`
+  + `export type UIState = typeof REQUIRED_UI_STATES[number];\n\n`
   + `/** Strażnik czasu wykonania dla granicy MDR (ADR-005). */\n`
   + `export function assertFamilyVisible(field: string): void {\n`
   + `  if ((PHYSIOLOGICAL_FIELDS as readonly string[]).includes(field)) {\n`

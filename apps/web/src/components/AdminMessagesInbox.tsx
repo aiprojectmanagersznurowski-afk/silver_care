@@ -1,3 +1,4 @@
+"use client";
 import React, { useEffect, useState } from 'react';
 import { UIState } from '@silvercare/contracts/src/generated/presentation';
 

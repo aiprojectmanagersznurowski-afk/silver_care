@@ -110,6 +110,7 @@ export const REQUIRED_UI_STATES = [
 export const AI_DISCLOSURE_LABEL = "Podsumowanie generowane przy wsparciu AI, zatwierdzone przez personel placówki" as const;
 
 export type FamilyMetric = typeof FAMILY_VISIBLE_METRICS[number]['id'];
+export type UIState = typeof REQUIRED_UI_STATES[number];
 
 /** Strażnik czasu wykonania dla granicy MDR (ADR-005). */
 export function assertFamilyVisible(field: string): void {

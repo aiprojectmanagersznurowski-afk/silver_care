@@ -1,0 +1,6 @@
+{
+  "name": "@silvercare/contracts",
+  "version": "1.0.0",
+  "main": "src/generated/presentation.ts",
+  "types": "src/generated/presentation.ts"
+}

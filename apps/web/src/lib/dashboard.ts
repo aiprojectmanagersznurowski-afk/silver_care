@@ -1,4 +1,4 @@
-import { PHYSIOLOGICAL_FIELDS } from '../../../../packages/contracts/src/generated/presentation';
+import { PHYSIOLOGICAL_FIELDS } from '@silvercare/contracts/src/generated/presentation';
 
 export function maskPhysiologicalData(content: any): any {
   if (!content || typeof content !== 'object') {

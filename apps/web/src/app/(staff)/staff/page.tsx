@@ -39,8 +39,8 @@ export default async function StaffDashboard() {
   // Extract unique floors for filter
   const floorSet = new Set<string>()
   for (const r of residents || []) {
-    const active = r.bed_assignments?.find((a: Record<string, unknown>) => a.unassigned_at === null)
-    const floorLabel = (active as Record<string, unknown>)?.beds?.rooms?.floors?.label
+    const active = r.bed_assignments?.find((a: any) => a.unassigned_at === null)
+    const floorLabel = (active as any)?.beds?.rooms?.floors?.label
     if (floorLabel) floorSet.add(floorLabel)
   }
 
