@@ -35,11 +35,15 @@ export async function POST(request: Request) {
 
     const adminClient = createAdminClient()
 
-    // Inviting user
-    const { data, error } = await adminClient.auth.admin.inviteUserByEmail(email.trim(), {
-      data: {
-        role: role,
-        organization_id: orgId
+    // Inviting user through generating link directly, bypassing automatic supabase email
+    const { data, error } = await adminClient.auth.admin.generateLink({
+      type: 'invite',
+      email: email.trim(),
+      options: {
+        data: {
+          role: role,
+          organization_id: orgId
+        }
       }
     })
 
@@ -63,7 +67,7 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, url: data?.properties?.action_link || null })
   } catch (error: any) {
     console.error('API error: An unexpected error occurred')
     return NextResponse.json({ error: error.message }, { status: 500 })

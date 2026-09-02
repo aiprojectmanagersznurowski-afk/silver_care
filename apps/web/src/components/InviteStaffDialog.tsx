@@ -20,6 +20,7 @@ export function InviteStaffDialog() {
   const [role, setRole] = useState('nurse')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [generatedUrl, setGeneratedUrl] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,10 +42,11 @@ export function InviteStaffDialog() {
       const data = await res.json()
 
       if (res.ok && data.success) {
+        setGeneratedUrl(data.url)
         setEmail('')
         setRole('nurse')
-        setOpen(false)
-        window.location.reload()
+        // setOpen(false)
+        // window.location.reload()
       } else {
         setError(data.error || 'Wystąpił błąd.')
       }
@@ -94,11 +96,50 @@ export function InviteStaffDialog() {
           {error && (
             <p className="text-sm font-medium text-destructive">{error}</p>
           )}
-          <DialogFooter>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Wysyłanie...' : 'Wyślij zaproszenie'}
-            </Button>
-          </DialogFooter>
+          {generatedUrl && (
+            <div className="mt-4 p-4 border border-green-500/30 bg-green-500/10 rounded-md space-y-2">
+              <p className="text-sm font-semibold text-green-600 dark:text-green-400">
+                Zaproszenie wygenerowane pomyślnie!
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Wyślij poniższy link pracownikowi, aby umożliwić założenie konta:
+              </p>
+              <div className="flex items-center gap-2 mt-2">
+                <Input readOnly value={generatedUrl} className="text-xs font-mono h-8" />
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm" 
+                  className="h-8"
+                  onClick={() => {
+                    navigator.clipboard.writeText(generatedUrl)
+                    alert('Skopiowano do schowka!')
+                  }}
+                >
+                  Kopiuj
+                </Button>
+              </div>
+              <Button 
+                type="button" 
+                variant="default" 
+                className="w-full mt-2" 
+                onClick={() => {
+                  setOpen(false)
+                  window.location.reload()
+                }}
+              >
+                Zamknij i odśwież
+              </Button>
+            </div>
+          )}
+
+          {!generatedUrl && (
+            <DialogFooter>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Wysyłanie...' : 'Wyślij zaproszenie'}
+              </Button>
+            </DialogFooter>
+          )}
         </form>
       </DialogContent>
     </Dialog>
