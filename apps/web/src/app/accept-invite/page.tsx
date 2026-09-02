@@ -1,11 +1,20 @@
-import { redirect } from 'next/navigation'
+'use client'
+
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button, buttonVariants } from '@/components/ui/button'
+import { Button } from '@/components/ui/button'
 
 export default function AcceptInvitePage({ searchParams }: { searchParams: { url?: string } }) {
-  if (!searchParams.url) {
-    redirect('/')
-  }
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!searchParams.url) {
+      router.push('/')
+    }
+  }, [searchParams.url, router])
+
+  if (!searchParams.url) return null
   
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/40 p-4">
@@ -20,9 +29,14 @@ export default function AcceptInvitePage({ searchParams }: { searchParams: { url
           <p className="text-sm text-muted-foreground">
             Kliknij poniższy przycisk, aby zaakceptować zaproszenie i zalogować się do swojego konta.
           </p>
-          <a href={searchParams.url} className={buttonVariants({ className: "w-full" })}>
+          <Button 
+            className="w-full" 
+            onClick={() => {
+              window.location.href = searchParams.url as string
+            }}
+          >
             Akceptuj zaproszenie
-          </a>
+          </Button>
         </CardContent>
       </Card>
     </div>
