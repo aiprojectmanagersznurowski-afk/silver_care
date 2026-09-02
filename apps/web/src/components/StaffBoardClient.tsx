@@ -247,8 +247,8 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                 <CardTitle className="text-lg flex items-center gap-2 justify-between">
                   <div className="flex items-center gap-2">
                     <Avatar className="h-8 w-8 border">
-                      {resident.avatar_url && (
-                        <AvatarImage src={resident.avatar_url as string} alt={`${resident.first_name} ${resident.last_name}`} />
+                      {(resident.avatar_url as string) && (
+                        <AvatarImage src={resident.avatar_url as string} alt={`${resident.first_name as string} ${resident.last_name as string}`} />
                       )}
                       <AvatarFallback className="bg-primary/10 text-primary text-sm font-bold">
                         {(resident.first_name as string)?.[0]}{(resident.last_name as string)?.[0]}
