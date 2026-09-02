@@ -4,5 +4,8 @@
       "path": "/api/cron/process-outbox",
       "schedule": "* * * * *"
     }
-  ]
+  ],
+  "buildCommand": "pnpm build",
+  "installCommand": "pnpm install --no-frozen-lockfile --ignore-scripts",
+  "framework": "nextjs"
 }
