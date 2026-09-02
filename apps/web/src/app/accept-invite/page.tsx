@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 
 export default function AcceptInvitePage({ searchParams }: { searchParams: { url?: string } }) {
   if (!searchParams.url) {
@@ -20,11 +20,9 @@ export default function AcceptInvitePage({ searchParams }: { searchParams: { url
           <p className="text-sm text-muted-foreground">
             Kliknij poniższy przycisk, aby zaakceptować zaproszenie i zalogować się do swojego konta.
           </p>
-          <Button asChild className="w-full">
-            <a href={searchParams.url}>
-              Akceptuj zaproszenie
-            </a>
-          </Button>
+          <a href={searchParams.url} className={buttonVariants({ className: "w-full" })}>
+            Akceptuj zaproszenie
+          </a>
         </CardContent>
       </Card>
     </div>
