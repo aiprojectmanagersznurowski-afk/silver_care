@@ -17,6 +17,7 @@ export async function POST(req: Request) {
     const file = formData.get('file') as File
     const residentId = formData.get('resident_id') as string
     const draftId = formData.get('draft_id') as string | null
+    const clientUuid = formData.get('client_uuid') as string | null
 
     if (!file || !residentId) {
       return NextResponse.json({ error: 'Brak pliku lub id pensjonariusza' }, { status: 400 })
@@ -77,13 +78,14 @@ export async function POST(req: Request) {
           nurse_id: user.id,
           transcript: transcription,
           audio_url: 'local-only', 
+          client_uuid: clientUuid
         })
         .select('id')
         .single()
 
       if (dbError || !dbData) {
         console.error('DB Error: Database insert failed', dbError)
-        return NextResponse.json({ error: 'Błąd podczas zapisu transkrypcji do bazy' }, { status: 500 })
+        return NextResponse.json({ error: 'Błąd podczas zapisu transkrypcji do bazy (np. zduplikowany client_uuid dla offline)' }, { status: 500 })
       }
       finalDraftId = dbData.id
     }
