@@ -22,7 +22,9 @@ export async function GET(
       content,
       created_at,
       resident_id,
-      relative_user_id
+      relative_user_id,
+      is_from_family,
+      staff_user_id
     `)
     .eq('resident_id', resident_id)
     .order('created_at', { ascending: false });

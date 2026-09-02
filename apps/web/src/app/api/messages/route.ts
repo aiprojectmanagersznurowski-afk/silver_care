@@ -2,6 +2,36 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { isSpamLimitExceeded } from '@/lib/messages';
 
+export async function GET(request: Request) {
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // Fetch messages where this family member is involved
+  const { data, error } = await supabase
+    .from('family_messages')
+    .select(`
+      id,
+      content,
+      created_at,
+      resident_id,
+      relative_user_id,
+      is_from_family,
+      staff_user_id
+    `)
+    .eq('relative_user_id', user.id)
+    .order('created_at', { ascending: true }); // Chronologicznie do czatu
+
+  if (error) {
+    return NextResponse.json({ error: 'Failed to fetch messages' }, { status: 500 });
+  }
+
+  return NextResponse.json({ messages: data }, { status: 200 });
+}
+
 export async function POST(request: Request) {
   const supabase = await createClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
