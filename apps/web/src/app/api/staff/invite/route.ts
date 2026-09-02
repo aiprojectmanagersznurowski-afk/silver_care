@@ -35,6 +35,8 @@ export async function POST(request: Request) {
 
     const adminClient = createAdminClient()
 
+    const origin = request.headers.get('origin') || 'https://silver-care-six.vercel.app'
+    
     // Inviting user through generating link directly, bypassing automatic supabase email
     const { data, error } = await adminClient.auth.admin.generateLink({
       type: 'invite',
@@ -43,7 +45,8 @@ export async function POST(request: Request) {
         data: {
           role: role,
           organization_id: orgId
-        }
+        },
+        redirectTo: `${origin}/dashboard`
       }
     })
 
@@ -67,7 +70,10 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({ success: true, url: data?.properties?.action_link || null })
+    const actionLink = data?.properties?.action_link
+    const proxyUrl = actionLink ? `${origin}/accept-invite?url=${encodeURIComponent(actionLink)}` : null
+
+    return NextResponse.json({ success: true, url: proxyUrl })
   } catch (error: any) {
     console.error('API error: An unexpected error occurred')
     return NextResponse.json({ error: error.message }, { status: 500 })
