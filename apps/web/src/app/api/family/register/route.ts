@@ -55,7 +55,7 @@ export async function POST(request: Request) {
 
     if (createError) {
       console.error(`User creation error:`, createError)
-      return NextResponse.json({ error: 'Konto z tym e-mailem prawdopodobnie już istnieje.' }, { status: 400 })
+      return NextResponse.json({ error: createError.message || 'Wystąpił błąd przy tworzeniu konta (np. zbyt słabe hasło lub konto istnieje).' }, { status: 400 })
     }
 
     const userId = userData.user.id
