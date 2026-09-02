@@ -83,7 +83,7 @@ export function FamilyDashboardClient({ resident, reports }: FamilyDashboardClie
         <p className="text-text-secondary">Najnowsze informacje z placówki</p>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 mb-6">
         <span
           className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-semibold"
           style={{ background: "rgba(52,199,89,0.12)", color: "#248A3D" }}
@@ -100,130 +100,114 @@ export function FamilyDashboardClient({ resident, reports }: FamilyDashboardClie
       </div>
 
       <div
-        className="grid grid-cols-1 md:grid-cols-2 gap-6"
+        className="space-y-4"
         style={{ opacity: loaded ? 1 : 0, transition: "opacity 0.4s ease" }}
       >
-        <div className="space-y-6">
-          {/* Activity rings card */}
-          {hasMetrics && (
-            <div className="rounded-2xl" style={{ background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.04)" }}>
-              <div className="p-5">
-                <p className="text-[11px] font-bold uppercase tracking-widest mb-4" style={{ color: "#8E8E93", letterSpacing: "0.1em" }}>
-                  Aktywność dzienna
-                </p>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-6">
-                  <div className="flex-shrink-0 flex justify-center sm:justify-start">
-                    <ActivityRings
-                      stepsProgress={stepsProgress}
-                      activityProgress={activityProgress}
-                      sleepProgress={sleepProgress}
-                    />
-                  </div>
-                  <div className="flex flex-col gap-4 flex-1">
-                    {ringLegend.map((item) => (
-                      <div key={item.label} className="flex items-center gap-3">
-                        <div
-                          className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                          style={{ background: item.color }}
-                        />
-                        <div>
-                          <p className="text-[13px] font-medium" style={{ color: "#8E8E93" }}>{item.label}</p>
-                          <p className="text-[16px] font-bold" style={{ color: "#1C1C1E" }}>{item.value}</p>
-                          <p className="text-[11px]" style={{ color: "#C7C7CC" }}>{item.sub}</p>
-                        </div>
+        {/* Activity rings card */}
+        {hasMetrics && (
+          <div className="rounded-2xl" style={{ background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.04)" }}>
+            <div className="p-5">
+              <p className="text-[11px] font-bold uppercase tracking-widest mb-4" style={{ color: "#8E8E93", letterSpacing: "0.1em" }}>
+                Aktywność dzienna
+              </p>
+              <div className="flex items-center gap-6">
+                <div className="flex-shrink-0">
+                  <ActivityRings
+                    stepsProgress={stepsProgress}
+                    activityProgress={activityProgress}
+                    sleepProgress={sleepProgress}
+                  />
+                </div>
+                <div className="flex flex-col gap-4 flex-1">
+                  {ringLegend.map((item) => (
+                    <div key={item.label} className="flex items-center gap-3">
+                      <div
+                        className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                        style={{ background: item.color }}
+                      />
+                      <div>
+                        <p className="text-[13px] font-medium" style={{ color: "#8E8E93" }}>{item.label}</p>
+                        <p className="text-[16px] font-bold" style={{ color: "#1C1C1E" }}>{item.value}</p>
+                        <p className="text-[11px]" style={{ color: "#C7C7CC" }}>{item.sub}</p>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Wellbeing summary */}
-          <div className="rounded-2xl" style={{ background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.04)" }}>
-            <div className="p-5">
-              <div className="flex items-start justify-between mb-3">
-                <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: "#8E8E93", letterSpacing: "0.1em" }}>
-                  Samopoczucie
-                </p>
-                <span className="text-[12px] font-medium" style={{ color: "#C7C7CC" }}>dzisiaj</span>
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  { icon: "😴", label: "Sen", value: "Dobry" },
-                  { icon: "🍽️", label: "Apetyt", value: "Bardzo dobry" },
-                  { icon: "😊", label: "Nastrój", value: "Pogodny" },
-                ].map((item) => (
-                  <div
-                    key={item.label}
-                    className="rounded-xl p-3 text-center"
-                    style={{ background: "#F2F2F7" }}
-                  >
-                    <div className="text-xl mb-1">{item.icon}</div>
-                    <p className="text-[11px] font-medium mb-0.5" style={{ color: "#8E8E93" }}>{item.label}</p>
-                    <p className="text-[12px] font-bold" style={{ color: "#1C1C1E" }}>{item.value}</p>
-                  </div>
-                ))}
-              </div>
+        {/* Wellbeing summary */}
+        <div className="rounded-2xl" style={{ background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.04)" }}>
+          <div className="p-5">
+            <div className="flex items-start justify-between mb-3">
+              <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: "#8E8E93", letterSpacing: "0.1em" }}>
+                Samopoczucie
+              </p>
+              <span className="text-[12px] font-medium" style={{ color: "#C7C7CC" }}>dzisiaj</span>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { icon: "😴", label: "Sen", value: "Dobry" },
+                { icon: "🍽️", label: "Apetyt", value: "Bardzo dobry" },
+                { icon: "😊", label: "Nastrój", value: "Pogodny" },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="rounded-xl p-3 text-center"
+                  style={{ background: "#F2F2F7" }}
+                >
+                  <div className="text-xl mb-1">{item.icon}</div>
+                  <p className="text-[11px] font-medium mb-0.5" style={{ color: "#8E8E93" }}>{item.label}</p>
+                  <p className="text-[12px] font-bold" style={{ color: "#1C1C1E" }}>{item.value}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
-        <div className="space-y-6">
-          {/* Caregiver report */}
-          <div className="rounded-2xl h-fit" style={{ background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.04)" }}>
-            <div className="p-5">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: "#8E8E93", letterSpacing: "0.1em" }}>
-                  Notatka opiekuna
-                </p>
-                {latestReport && (
-                  <span
-                    className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                    style={{ background: "rgba(0,122,255,0.1)", color: "#007AFF" }}
-                  >
-                    Nowa
-                  </span>
-                )}
-              </div>
-              {latestReport ? (
-                <div
-                  className="rounded-xl p-4"
-                  style={{ background: "linear-gradient(135deg, #F9F9FB 0%, #F2F2F7 100%)", borderLeft: `3px solid #007AFF` }}
+        {/* Caregiver report */}
+        <div className="rounded-2xl" style={{ background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.04)" }}>
+          <div className="p-5">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: "#8E8E93", letterSpacing: "0.1em" }}>
+                Notatka opiekuna
+              </p>
+              {latestReport && (
+                <span
+                  className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                  style={{ background: "rgba(255,107,71,0.1)", color: "#FF6B47" }}
                 >
-                  <p className="text-[14px] font-medium leading-relaxed whitespace-pre-wrap" style={{ color: "#3A3A3C" }}>
-                    {latestReport.content.text || 'Brak treści raportu.'}
-                  </p>
-                  <div className="flex items-center gap-2 mt-3">
-                    <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white" style={{ background: "#8E8E93" }}>
-                      PO
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-semibold" style={{ color: "#3A3A3C" }}>Personel Opiekuńczy</p>
-                      <p className="text-[10px]" style={{ color: "#8E8E93" }}>
-                        Opiekun • dzisiaj, {format(new Date(latestReport.created_at), "HH:mm")}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="py-8 text-center text-sm" style={{ color: "#8E8E93" }}>
-                  Brak opublikowanych raportów.
-                </div>
+                  Nowa
+                </span>
               )}
             </div>
-          </div>
-
-          <div className="rounded-2xl" style={{ background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.04)" }}>
-            <div className="p-5 border-b border-border/40">
-              <h3 className="text-lg font-bold" style={{ color: "#1C1C1E" }}>Kontakt z administracją</h3>
-              <p className="text-sm" style={{ color: "#8E8E93" }}>
-                Zostaw wiadomość dla personelu placówki.
-              </p>
-            </div>
-            <div className="p-0">
-              <FamilyMessageForm residentId={resident.id} />
-            </div>
+            {latestReport ? (
+              <div
+                className="rounded-xl p-4"
+                style={{ background: "linear-gradient(135deg, #F9F9FB 0%, #F2F2F7 100%)", borderLeft: `3px solid #FF6B47` }}
+              >
+                <p className="text-[14px] font-medium leading-relaxed whitespace-pre-wrap" style={{ color: "#3A3A3C" }}>
+                  {latestReport.content.text || 'Brak treści raportu.'}
+                </p>
+                <div className="flex items-center gap-2 mt-3">
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white" style={{ background: "#8E8E93" }}>
+                    PO
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold" style={{ color: "#3A3A3C" }}>Personel Opiekuńczy</p>
+                    <p className="text-[10px]" style={{ color: "#8E8E93" }}>
+                      Opiekun • dzisiaj, {format(new Date(latestReport.created_at), "HH:mm")}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="py-8 text-center text-sm" style={{ color: "#8E8E93" }}>
+                Brak opublikowanych raportów.
+              </div>
+            )}
           </div>
         </div>
       </div>
