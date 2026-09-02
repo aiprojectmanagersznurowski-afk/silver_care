@@ -1,4 +1,3 @@
-import { Card, CardContent } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
 import { FamilyMessageForm } from '@/components/FamilyMessageForm'
@@ -38,11 +37,9 @@ export default async function FamilyMessagesPage() {
         <p className="text-text-secondary">Kontakt z personelem opiekuńczym.</p>
       </div>
 
-      <Card>
-        <CardContent className="p-0 sm:p-0">
-          <FamilyMessageForm residentId={activeResident.id} />
-        </CardContent>
-      </Card>
+      <div className="max-w-3xl mx-auto w-full">
+        <FamilyMessageForm residentId={activeResident.id} />
+      </div>
     </div>
   )
 }

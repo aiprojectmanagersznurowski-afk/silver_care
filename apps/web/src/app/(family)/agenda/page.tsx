@@ -4,7 +4,8 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { ChevronLeft, ChevronRight, CalendarX } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { AgendaTimelineClient } from '@/components/AgendaTimelineClient'
 
 export default async function FamilyAgendaPage(props: { searchParams: Promise<{ date?: string }> | { date?: string } }) {
   const supabase = await createClient()
@@ -82,38 +83,7 @@ export default async function FamilyAgendaPage(props: { searchParams: Promise<{ 
         </Link>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Harmonogram</CardTitle>
-          <CardDescription>Oto, jak wygląda zaplanowany dzień.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {!agendaItems || agendaItems.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-              <CalendarX className="h-12 w-12 mb-4 opacity-20" />
-              <p className="text-sm font-medium">Brak zaplanowanych wydarzeń na ten dzień.</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {agendaItems.map((item: any) => (
-                <div key={item.id} className="flex border-b border-border pb-4 last:border-0 last:pb-0">
-                  <div className="w-20 font-semibold text-text-secondary">
-                    {item.time.substring(0, 5)}
-                  </div>
-                  <div>
-                    <div className="font-medium">{item.title}</div>
-                    {item.resident_id && (
-                      <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded mt-1 inline-block">
-                        Indywidualne
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <AgendaTimelineClient items={agendaItems} viewDateStr={viewDateStr} />
     </div>
   )
 }
