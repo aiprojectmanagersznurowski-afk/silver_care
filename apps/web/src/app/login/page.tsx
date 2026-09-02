@@ -20,6 +20,16 @@ export default function LoginPage() {
     const hash = window.location.hash
     if (hash.includes('access_token')) {
       router.push(`/update-password${hash}`)
+    } else if (hash.includes('error=access_denied')) {
+      const params = new URLSearchParams(hash.replace('#', '?'))
+      const errorDescription = params.get('error_description')
+      if (errorDescription) {
+        setError(errorDescription.replace(/\+/g, ' '))
+      } else {
+        setError('Link wygasł lub jest nieprawidłowy.')
+      }
+      // Oczyść hash
+      window.history.replaceState(null, '', window.location.pathname)
     }
   }, [router])
 

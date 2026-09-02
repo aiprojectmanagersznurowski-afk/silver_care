@@ -14,8 +14,8 @@ export function RootRedirector() {
       // Jeśli tak, przekierowujemy na stronę ustawiania hasła, przekazując token
       router.push(`/update-password${hash}`)
     } else {
-      // Jeśli nie, to zwykły niezalogowany użytkownik wchodzący na stronę główną - na login
-      router.push('/login')
+      // Jeśli nie, to zwykły niezalogowany użytkownik wchodzący na stronę główną - na login, przekazujemy hash w razie ewentualnych błędów z Supabase
+      router.push(`/login${hash}`)
     }
   }, [router])
 
