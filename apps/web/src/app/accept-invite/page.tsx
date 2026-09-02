@@ -1,20 +1,22 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 
-export default function AcceptInvitePage({ searchParams }: { searchParams: { url?: string } }) {
+export default function AcceptInvitePage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const url = searchParams.get('url')
 
   useEffect(() => {
-    if (!searchParams.url) {
+    if (!url) {
       router.push('/')
     }
-  }, [searchParams.url, router])
+  }, [url, router])
 
-  if (!searchParams.url) return null
+  if (!url) return null
   
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/40 p-4">
@@ -32,7 +34,7 @@ export default function AcceptInvitePage({ searchParams }: { searchParams: { url
           <Button 
             className="w-full" 
             onClick={() => {
-              window.location.href = searchParams.url as string
+              window.location.href = url as string
             }}
           >
             Akceptuj zaproszenie
