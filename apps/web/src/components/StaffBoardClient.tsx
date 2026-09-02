@@ -28,8 +28,7 @@ function getFloorLabel(resident: Record<string, unknown>): string | null {
   if (!active) return null
   const beds = active.beds as Record<string, unknown> | undefined
   const rooms = beds?.rooms as Record<string, unknown> | undefined
-  const floors = rooms?.floors as Record<string, string> | undefined
-  return floors?.label || null
+  return (rooms?.floor as string) || null
 }
 
 function getRoomNumber(resident: Record<string, unknown>): string | null {

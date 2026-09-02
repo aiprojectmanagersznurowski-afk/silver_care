@@ -5,7 +5,6 @@ export const dynamic = 'force-dynamic'
 
 export default async function StaffDashboard() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
 
   const { data: residents, error } = await supabase
     .from('residents')
@@ -20,10 +19,7 @@ export default async function StaffDashboard() {
           label,
           rooms (
             number,
-            floor_id,
-            floors (
-              label
-            )
+            floor
           )
         )
       ),
@@ -42,29 +38,17 @@ export default async function StaffDashboard() {
   // Extract unique floors for filter
   const floorSet = new Set<string>()
   for (const r of residents || []) {
-    const active = r.bed_assignments?.find((a: any) => a.unassigned_at === null)
-    const floorLabel = (active as any)?.beds?.rooms?.floors?.label
+    const active = (r.bed_assignments as Record<string, unknown>[])?.find((a) => a.unassigned_at === null)
+    const beds = active?.beds as Record<string, unknown> | undefined
+    const rooms = beds?.rooms as Record<string, unknown> | undefined
+    const floorLabel = rooms?.floor as string | undefined
     if (floorLabel) floorSet.add(floorLabel)
   }
 
   return (
-    <>
-      <div className="bg-yellow-50 text-yellow-800 text-xs p-2 mb-4 border border-yellow-200">
-        Debug Info: Zalogowany jako: {user?.email || 'BRAK SESJI SERWERA!'} | 
-        OrgID (app): {user?.app_metadata?.organization_id || 'brak'} |
-        Błędy zapytania: {error ? JSON.stringify(error) : 'brak'} | 
-        Znalezieni pensjonariusze: {residents?.length || 0}
-      </div>
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
-          <strong className="font-bold">Error loading residents: </strong>
-          <span className="block sm:inline">{error.message} (Code: {error.code})</span>
-        </div>
-      )}
-      <StaffBoardClient
-        residents={(residents || []) as Record<string, unknown>[]}
-        floors={Array.from(floorSet).sort()}
-      />
-    </>
+    <StaffBoardClient
+      residents={(residents || []) as Record<string, unknown>[]}
+      floors={Array.from(floorSet).sort()}
+    />
   )
 }
