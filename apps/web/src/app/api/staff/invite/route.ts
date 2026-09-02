@@ -37,37 +37,42 @@ export async function POST(request: Request) {
 
     const origin = request.headers.get('origin') || 'https://silver-care-six.vercel.app'
     
-    // Inviting user through generating link directly, bypassing automatic supabase email
+    // Tworzymy użytkownika od razu z odpowiednimi metadanymi, aby nie używać updateUserById, 
+    // które unieważnia wygenerowany token zaproszenia.
+    const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
+      email: email.trim(),
+      email_confirm: false,
+      app_metadata: {
+        role: role,
+        organization_id: orgId
+      },
+      user_metadata: {
+        role: role,
+        organization_id: orgId
+      }
+    })
+
+    if (createError) {
+      // Jeśli użytkownik już istnieje, spróbujmy mimo to wygenerować link 
+      // (Supabase na to pozwala dla unconfirmed users lub wyśle magic link)
+      if (createError.code !== 'user_already_exists') {
+        console.error(`Create user error:`, createError)
+        return NextResponse.json({ error: 'Nie udało się utworzyć konta: ' + createError.message }, { status: 500 })
+      }
+    }
+
+    // Generujemy link bez wysyłania e-maila
     const { data, error } = await adminClient.auth.admin.generateLink({
       type: 'invite',
       email: email.trim(),
       options: {
-        data: {
-          role: role,
-          organization_id: orgId
-        },
-        redirectTo: `${origin}/dashboard`
+        redirectTo: `${origin}/login`
       }
     })
 
     if (error) {
       console.error(`Invite error:`, error)
       return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    // Assign app_metadata to ensure security rules apply immediately
-    if (data.user) {
-      const { error: updateError } = await adminClient.auth.admin.updateUserById(data.user.id, {
-        app_metadata: {
-          role: role,
-          organization_id: orgId
-        }
-      })
-
-      if (updateError) {
-        console.error(`Failed to update app_metadata:`, updateError)
-        return NextResponse.json({ error: 'Zaproszono użytkownika, ale wystąpił błąd podczas nadawania uprawnień.' }, { status: 500 })
-      }
     }
 
     const actionLink = data?.properties?.action_link
