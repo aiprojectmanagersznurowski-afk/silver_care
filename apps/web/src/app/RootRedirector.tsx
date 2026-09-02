@@ -11,11 +11,12 @@ export function RootRedirector() {
     // Sprawdzamy czy w URL znajduje się token sesji (np. po kliknięciu w link zaproszenia)
     const hash = window.location.hash
     if (hash.includes('access_token')) {
-      // Jeśli tak, przekierowujemy na stronę ustawiania hasła, przekazując token
-      router.push(`/update-password${hash}`)
+      // Jeśli tak, przekierowujemy na stronę ustawiania hasła, przekazując token. 
+      // Używamy window.location.assign, by ominąć router Next.js, który bywa kapryśny przy przekazywaniu potężnych hashów między stronami na kliencie.
+      window.location.assign(`/update-password${hash}`)
     } else {
       // Jeśli nie, to zwykły niezalogowany użytkownik wchodzący na stronę główną - na login, przekazujemy hash w razie ewentualnych błędów z Supabase
-      router.push(`/login${hash}`)
+      window.location.assign(`/login${hash}`)
     }
   }, [router])
 

@@ -1,10 +1,13 @@
 import { createClient } from '@/lib/supabase/server'
 import { StaffBoardClient } from '@/components/StaffBoardClient'
 
+export const dynamic = 'force-dynamic'
+
 export default async function StaffDashboard() {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
 
-  const { data: residents } = await supabase
+  const { data: residents, error } = await supabase
     .from('residents')
     .select(`
       id,
@@ -45,9 +48,23 @@ export default async function StaffDashboard() {
   }
 
   return (
-    <StaffBoardClient
-      residents={(residents || []) as Record<string, unknown>[]}
-      floors={Array.from(floorSet).sort()}
-    />
+    <>
+      <div className="bg-yellow-50 text-yellow-800 text-xs p-2 mb-4 border border-yellow-200">
+        Debug Info: Zalogowany jako: {user?.email || 'BRAK SESJI SERWERA!'} | 
+        OrgID (app): {user?.app_metadata?.organization_id || 'brak'} |
+        Błędy zapytania: {error ? JSON.stringify(error) : 'brak'} | 
+        Znalezieni pensjonariusze: {residents?.length || 0}
+      </div>
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+          <strong className="font-bold">Error loading residents: </strong>
+          <span className="block sm:inline">{error.message} (Code: {error.code})</span>
+        </div>
+      )}
+      <StaffBoardClient
+        residents={(residents || []) as Record<string, unknown>[]}
+        floors={Array.from(floorSet).sort()}
+      />
+    </>
   )
 }
