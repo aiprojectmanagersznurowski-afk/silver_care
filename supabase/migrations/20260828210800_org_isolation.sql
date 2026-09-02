@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS public.organizations (
 -- 3. Enable RLS on organizations
 ALTER TABLE public.organizations ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Isolated access for organizations" ON public.organizations;
 CREATE POLICY "Isolated access for organizations"
     ON public.organizations
     FOR ALL
@@ -41,6 +42,7 @@ CREATE TABLE IF NOT EXISTS public.rooms (
 -- 5. Enable RLS on rooms
 ALTER TABLE public.rooms ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Isolated access for rooms" ON public.rooms;
 CREATE POLICY "Isolated access for rooms"
     ON public.rooms
     FOR ALL

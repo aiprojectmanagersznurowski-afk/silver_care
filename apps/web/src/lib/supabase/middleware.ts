@@ -42,11 +42,11 @@ export async function updateSession(request: NextRequest) {
         const url = request.nextUrl.clone()
         url.pathname = '/dashboard'
         return NextResponse.redirect(url)
-      } else if (role === 'nurse' || role === 'paramedic') {
+      } else if (role === 'nurse') {
         const url = request.nextUrl.clone()
         url.pathname = '/staff'
         return NextResponse.redirect(url)
-      } else if (role === 'admin' || role === 'facility_manager') {
+      } else if (role === 'super_admin' || role === 'org_admin') {
         const url = request.nextUrl.clone()
         url.pathname = '/admin'
         return NextResponse.redirect(url)
@@ -54,10 +54,10 @@ export async function updateSession(request: NextRequest) {
     }
     
     // Zabezpieczenie ścieżek
-    if (path.startsWith('/admin') && role !== 'admin' && role !== 'facility_manager') {
+    if (path.startsWith('/admin') && role !== 'super_admin' && role !== 'org_admin') {
        return NextResponse.redirect(new URL('/unauthorized', request.url))
     }
-    if (path.startsWith('/staff') && role !== 'nurse' && role !== 'paramedic' && role !== 'admin') {
+    if (path.startsWith('/staff') && role !== 'nurse' && role !== 'super_admin' && role !== 'org_admin') {
        return NextResponse.redirect(new URL('/unauthorized', request.url))
     }
   } else {
