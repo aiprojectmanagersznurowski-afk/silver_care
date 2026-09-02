@@ -36,6 +36,39 @@ interface FamilyDashboardClientProps {
 /**
  * Widok kliencki dashboardu rodziny.
  */
+function deriveWellbeing(text?: string) {
+  if (!text) return { sleep: "Brak danych", appetite: "Brak danych", mood: "Brak danych" };
+  const lower = text.toLowerCase();
+
+  let sleep = "W normie";
+  let appetite = "W normie";
+  let mood = "Neutralny";
+
+  // Analiza Snu
+  if (lower.includes("sen") || lower.includes("spa") || lower.includes("noc")) {
+    if (lower.match(/(dobrze|spokojnie|przespa|długo)/)) sleep = "Dobry";
+    else if (lower.match(/(wybudza|zły|niespokojny|nie spa|przerwa)/)) sleep = "Przerywany";
+  }
+
+  // Analiza Apetytu
+  if (lower.includes("apetyt") || lower.includes("jad") || lower.includes("posił") || lower.includes("obiad")) {
+    if (lower.match(/(dopisywał|chętnie|cały|smakiem|bardzo dobry|dobry)/)) appetite = "Bardzo dobry";
+    else if (lower.match(/(brak|nie chcia|mało|odmówi|słaby)/)) appetite = "Słaby";
+  }
+
+  // Analiza Nastroju
+  if (lower.match(/(nastr|humor|samopoczucie|czuje)/)) {
+    if (lower.match(/(dobrym|świetnym|pogodny|uśmiechnię|wesoł|dobrze)/)) mood = "Pogodny";
+    else if (lower.match(/(smutn|apatyczn|zdenerwowan|zły|niespokojn|pobudzon|napięt|płacz)/)) mood = "Obniżony";
+  } else {
+    // Jeżeli nie ma słowa "nastrój", ale jest "pogodny" lub inne silne pozytywy w całym tekście:
+    if (lower.match(/(pogodny|uśmiechnięt|wesoł|zadowolon)/)) mood = "Pogodny";
+    if (lower.match(/(smutn|apatyczn|zdenerwowan|pobudzon)/)) mood = "Obniżony";
+  }
+
+  return { sleep, appetite, mood };
+}
+
 export function FamilyDashboardClient({ resident, reports }: FamilyDashboardClientProps) {
   const [loaded, setLoaded] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -149,9 +182,9 @@ export function FamilyDashboardClient({ resident, reports }: FamilyDashboardClie
             </div>
             <div className="grid grid-cols-3 gap-3">
               {[
-                { icon: "😴", label: "Sen", value: "Dobry" },
-                { icon: "🍽️", label: "Apetyt", value: "Bardzo dobry" },
-                { icon: "😊", label: "Nastrój", value: "Pogodny" },
+                { icon: "😴", label: "Sen", value: deriveWellbeing(latestReport?.content?.text).sleep },
+                { icon: "🍽️", label: "Apetyt", value: deriveWellbeing(latestReport?.content?.text).appetite },
+                { icon: "😊", label: "Nastrój", value: deriveWellbeing(latestReport?.content?.text).mood },
               ].map((item) => (
                 <div
                   key={item.label}
