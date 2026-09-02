@@ -16,6 +16,7 @@ export async function POST(req: Request) {
     const formData = await req.formData()
     const file = formData.get('file') as File
     const residentId = formData.get('resident_id') as string
+    const draftId = formData.get('draft_id') as string | null
 
     if (!file || !residentId) {
       return NextResponse.json({ error: 'Brak pliku lub id pensjonariusza' }, { status: 400 })
@@ -43,25 +44,52 @@ export async function POST(req: Request) {
     const result = await response.json()
     const transcription = result.text
 
-    // Zapisujemy draft (brudnopis) w naszej bazie
-    // Faza 3: "Voice notes — nagrywanie + transkrypcja"
-    const { data: dbData, error: dbError } = await supabase
-      .from('voice_draft_notes')
-      .insert({
-        resident_id: residentId,
-        nurse_id: user.id,
-        transcript: transcription,
-        audio_url: 'local-only', // Na MVP nie trzymamy audio, od razu przetwarzamy (wymóg Zero Retention)
-      })
-      .select('id')
-      .single()
+    let finalDraftId = draftId
 
-    if (dbError || !dbData) {
-      console.error('DB Error: Database insert failed', dbError)
-      return NextResponse.json({ error: 'Błąd podczas zapisu transkrypcji do bazy' }, { status: 500 })
+    if (draftId) {
+      // Pobieramy stary draft i dopisujemy nowy tekst
+      const { data: oldDraft } = await supabase
+        .from('voice_draft_notes')
+        .select('transcript')
+        .eq('id', draftId)
+        .single()
+        
+      const newTranscript = (oldDraft?.transcript || '') + '\n[UZUPEŁNIENIE:] ' + transcription
+
+      const { error: updateError } = await supabase
+        .from('voice_draft_notes')
+        .update({
+          transcript: newTranscript,
+          status: 'DRAFT',
+          followup_question: null
+        })
+        .eq('id', draftId)
+
+      if (updateError) {
+        return NextResponse.json({ error: 'Błąd aktualizacji transkrypcji' }, { status: 500 })
+      }
+    } else {
+      // Tworzymy nowy wpis
+      const { data: dbData, error: dbError } = await supabase
+        .from('voice_draft_notes')
+        .insert({
+          resident_id: residentId,
+          nurse_id: user.id,
+          transcript: transcription,
+          audio_url: 'local-only', 
+        })
+        .select('id')
+        .single()
+
+      if (dbError || !dbData) {
+        console.error('DB Error: Database insert failed', dbError)
+        return NextResponse.json({ error: 'Błąd podczas zapisu transkrypcji do bazy' }, { status: 500 })
+      }
+      finalDraftId = dbData.id
     }
 
-    return NextResponse.json({ success: true, text: transcription, draftId: dbData.id })
+    // Zwracamy sam text z obecnego wysłanego pliku w polu text, dla podglądu, chociaż w drafcie jest połączony.
+    return NextResponse.json({ success: true, text: transcription, draftId: finalDraftId })
 
   } catch (error: any) {
     console.error('Error: An unexpected error occurred')

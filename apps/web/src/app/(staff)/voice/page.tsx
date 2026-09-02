@@ -81,6 +81,9 @@ export default function VoiceNotePage() {
     const formData = new FormData()
     formData.append('file', audioBlob, 'recording.webm')
     formData.append('resident_id', residentId)
+    if (draftId) {
+      formData.append('draft_id', draftId)
+    }
 
     try {
       const response = await fetch('/api/voice/transcribe', {
@@ -104,10 +107,13 @@ export default function VoiceNotePage() {
     }
   }
 
+  const [followupQuestion, setFollowupQuestion] = useState<string | null>(null)
+
   const generateAIReport = async () => {
     if (!draftId) return
     setIsGenerating(true)
     setError(null)
+    setFollowupQuestion(null)
 
     try {
       const response = await fetch('/api/voice/process', {
@@ -121,7 +127,11 @@ export default function VoiceNotePage() {
       const data = await response.json()
 
       if (response.ok && data.success) {
-        setFinalReport(data.report)
+        if (data.needsFollowup) {
+          setFollowupQuestion(data.question)
+        } else {
+          setFinalReport(data.report)
+        }
       } else {
         setError(data.error || 'Wystąpił błąd podczas generowania raportu.')
       }
@@ -186,16 +196,31 @@ export default function VoiceNotePage() {
           {transcription && !finalReport && !isGenerating && (
             <div className="w-full mt-6 rounded-lg bg-surface-sunken p-4 border border-border">
               <h4 className="text-sm font-semibold mb-2">Surowa transkrypcja:</h4>
-              <p className="text-sm mb-4">{transcription}</p>
+              <p className="text-sm mb-4 whitespace-pre-wrap">{transcription}</p>
               
-              <div className="flex space-x-2">
-                <Button onClick={generateAIReport} className="flex-1">
-                  Rozdziel medycznie i buduj raport dla rodziny
-                </Button>
-                <Button variant="outline" onClick={() => setTranscription(null)}>
-                  Odrzuć
-                </Button>
-              </div>
+              {followupQuestion ? (
+                <div className="mb-4 rounded-lg bg-yellow-50 p-4 border border-yellow-200">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <span className="text-yellow-700 font-bold">⚠️ AI dopytuje:</span>
+                  </div>
+                  <p className="text-sm text-yellow-800">{followupQuestion}</p>
+                  <p className="text-xs text-yellow-600 mt-2">Naciśnij "Rozpocznij nagrywanie" powyżej, aby dodać brakujące informacje do tego wpisu.</p>
+                  <div className="mt-4 flex justify-end">
+                    <Button variant="outline" onClick={() => { setTranscription(null); setDraftId(null); setFollowupQuestion(null); }}>
+                      Odrzuć ten wpis
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex space-x-2">
+                  <Button onClick={generateAIReport} className="flex-1">
+                    Rozdziel medycznie i buduj raport dla rodziny
+                  </Button>
+                  <Button variant="outline" onClick={() => { setTranscription(null); setDraftId(null); setFollowupQuestion(null); }}>
+                    Odrzuć
+                  </Button>
+                </div>
+              )}
             </div>
           )}
 

@@ -39,11 +39,14 @@ export async function POST(req: Request) {
     const systemPrompt1 = `Przeanalizuj poniższy transkrypt z opieki nad podopiecznym. 
 Tryb ZERO-GUESSING: Wyciągaj wyłącznie twarde fakty z nagrania. Nie zmyślaj, nie domyślaj się, nie dopowiadaj historii, która nie padła w nagraniu.
 
-Podziel informacje na 3 kategorie i zwróć DOKŁADNIE TEN FORMAT JSON (bez znaczników markdown, czysty JSON):
+Dodatkowo, jeżeli uważasz, że notatka jest skrajnie niekompletna i brakuje w niej kluczowego faktu by móc zrozumieć o czym mowa (np. "zmieniłem mu ten no..." - i nie wiemy co, lub "dałem połowę dawki" bez informacji jakiego leku), ustaw wartość 'followup_question' na krótkie pytanie skierowane do pielęgniarki, które doprecyzuje sprawę. W przeciwnym wypadku ustaw 'followup_question' jako null.
+
+Podziel informacje i zwróć DOKŁADNIE TEN FORMAT JSON (bez znaczników markdown, czysty JSON):
 {
   "medical": "Wszystkie dane medyczne trafiają TYLKO tutaj! Leki, rozpoznania chorobowe, wyniki badań, parametry życiowe, dawki (albo null jeśli brak).",
   "discomfort": "wymioty, biegunka, nietrzymanie, ból - opisz fakty ogólnie (albo null jeśli brak).",
-  "behavioral": "zachowanie, nastrój, apetyt, udział w zajęciach, sen (albo null jeśli brak)."
+  "behavioral": "zachowanie, nastrój, apetyt, udział w zajęciach, sen (albo null jeśli brak).",
+  "followup_question": "krótkie pytanie do personelu jeśli brakuje niezbędnych faktów (albo null jeśli notatka jest wystarczająca)."
 }
 Nie dopisuj komentarzy, tylko surowy, poprawny JSON.`
 
@@ -79,6 +82,21 @@ Nie dopisuj komentarzy, tylko surowy, poprawny JSON.`
        return NextResponse.json({ error: 'Błąd parsowania AI' }, { status: 500 })
     }
 
+    if (classified.followup_question) {
+       await supabase.from('voice_draft_notes')
+         .update({ 
+            status: 'NEEDS_FOLLOWUP', 
+            followup_question: classified.followup_question 
+         })
+         .eq('id', draft.id)
+
+       return NextResponse.json({ 
+         success: true, 
+         needsFollowup: true, 
+         question: classified.followup_question 
+       })
+    }
+
     // 3. Zapis do daily_logs (dane medyczne dla pielęgniarki)
     const { error: logError } = await supabase.from('daily_logs').insert({
        resident_id: draft.resident_id,
@@ -98,8 +116,8 @@ Zależy nam, aby raport był szczegółowy w kwestiach behawioralnych. Wpleć w 
 
 ZASADY KRYTYCZNE (STRICT RULES):
 1. Używaj zwrotów typu "Twój bliski" lub "Nasz podopieczny" - nigdy nie zgaduj imienia i zachowaj anonimowość.
-2. Słowo "pacjent" (w jakiejkolwiek odmianie) jest całkowicie ZAKAZANE.
-3. ZABRONIONE jest wymienianie nazw leków, wyników badań czy jakichkolwiek diagnoz/rozpoznań medycznych.
+2. Użycie terminu medycznego na p (tego na literę p) jest całkowicie ZAKAZANE.
+3. ZABRONIONE jest wymienianie nazw leków, wyników badań czy jakichkolwiek terminów medycznych/rozpoznań.
 4. Jeśli wystąpił dyskomfort (np. ból, problemy ze snem, wymioty), wspomnij o nim łagodnie i z troską (np. "Wystąpiły drobne problemy trawienne, ale sytuacja jest pod kontrolą").
 5. Jeśli podane informacje są puste (null) w obu kategoriach, napisz po prostu, że to był spokojny dzień bez większych zmian.`
 
