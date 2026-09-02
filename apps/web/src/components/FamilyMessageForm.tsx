@@ -68,12 +68,13 @@ export function FamilyMessageForm({ residentId }: FamilyMessageFormProps) {
   };
 
   return (
-    <div className="flex flex-col h-[500px] bg-white dark:bg-card rounded-2xl overflow-hidden relative" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.02), 0 4px 12px rgba(0,0,0,0.02)" }}>
+    <div className="flex flex-col h-[500px] relative" style={{ background: "#fff" }}>
       
       {/* Okno czatu */}
       <div 
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-4 space-y-4 pb-20"
+        className="flex-1 overflow-y-auto px-5 py-4 space-y-2 pb-20"
+        style={{ background: "#F2F2F7" }}
       >
         {loadingHistory ? (
           <div className="flex items-center justify-center h-full">
@@ -85,10 +86,10 @@ export function FamilyMessageForm({ residentId }: FamilyMessageFormProps) {
           </div>
         ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-4">
-            <div className="w-16 h-16 rounded-full bg-surface-sunken mb-4 flex items-center justify-center text-2xl">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center text-3xl mb-4" style={{ background: "#E5E5EA" }}>
               👋
             </div>
-            <p className="text-[13px] text-text-secondary">
+            <p className="text-[13px]" style={{ color: "#8E8E93" }}>
               Napisz wiadomość do personelu.<br/>Odpiszemy najszybciej jak to możliwe.
             </p>
           </div>
@@ -107,19 +108,24 @@ export function FamilyMessageForm({ residentId }: FamilyMessageFormProps) {
                     </span>
                   </div>
                 )}
-                <div className={`flex flex-col max-w-[75%] ${isFamily ? 'ml-auto items-end' : 'mr-auto items-start'}`}>
+                <div className={`flex flex-col ${isFamily ? 'items-end' : 'items-start'}`}>
                   <div 
-                    className={`px-4 py-2.5 text-[15px] leading-snug shadow-sm ${
-                      isFamily 
-                        ? 'bg-primary text-white rounded-2xl rounded-tr-sm' 
-                        : 'bg-surface-sunken dark:bg-muted text-foreground rounded-2xl rounded-tl-sm'
-                    }`}
+                    className="max-w-[78%] px-4 py-2.5 rounded-2xl"
+                    style={{
+                      background: isFamily ? "#007AFF" : "#fff",
+                      color: isFamily ? "#fff" : "#1C1C1E",
+                      borderBottomRightRadius: isFamily ? 6 : 18,
+                      borderBottomLeftRadius: isFamily ? 18 : 6,
+                      boxShadow: isFamily ? "none" : "0 1px 2px rgba(0,0,0,0.08)",
+                    }}
                   >
-                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                    <p className="text-[14px] leading-relaxed font-400 whitespace-pre-wrap">{msg.content}</p>
                   </div>
-                  <span className="text-[10px] text-text-tertiary mt-1 mx-1">
-                    {format(new Date(msg.created_at), "HH:mm")} • {isFamily ? 'Ty' : 'Personel'}
-                  </span>
+                  <div className="flex items-center gap-1 mt-0.5 px-1">
+                    <span className="text-[10px]" style={{ color: "#8E8E93" }}>
+                      {format(new Date(msg.created_at), "HH:mm")} • {isFamily ? 'Ty' : 'Personel'}
+                    </span>
+                  </div>
                 </div>
               </React.Fragment>
             );
@@ -128,14 +134,26 @@ export function FamilyMessageForm({ residentId }: FamilyMessageFormProps) {
       </div>
 
       {/* Formularz wprowadzania */}
-      <div className="absolute bottom-0 left-0 right-0 p-3 bg-white/80 dark:bg-card/80 backdrop-blur-xl border-t border-border/50">
-        <form 
-          onSubmit={handleSubmit} 
-          className="flex items-end gap-2 bg-surface-sunken dark:bg-muted rounded-2xl px-1.5 py-1.5 border border-border/50 transition-shadow focus-within:ring-2 focus-within:ring-primary/20"
+      <div
+        className="absolute bottom-0 left-0 right-0 px-4 py-3 flex items-center gap-3"
+        style={{
+          background: "rgba(242,242,247,0.92)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          borderTop: "0.5px solid rgba(0,0,0,0.1)",
+        }}
+      >
+        <div
+          className="flex-1 flex items-center rounded-full px-4 py-2.5"
+          style={{
+            background: "#fff",
+            border: "0.5px solid rgba(0,0,0,0.1)",
+            boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+          }}
         >
-          <textarea
-            className="flex-1 max-h-[120px] bg-transparent px-3 py-2 text-[15px] text-foreground placeholder:text-text-tertiary focus:outline-none resize-y self-center min-h-[40px]"
-            rows={1}
+          <input
+            className="flex-1 text-[14px] font-400 bg-transparent outline-none"
+            style={{ color: "#1C1C1E" }}
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Napisz wiadomość..."
@@ -147,15 +165,21 @@ export function FamilyMessageForm({ residentId }: FamilyMessageFormProps) {
               }
             }}
           />
-          <button
-            type="submit"
-            disabled={sendState === 'loading' || !content.trim()}
-            className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center disabled:opacity-50 disabled:bg-primary/50 transition-colors mb-0.5"
-          >
-            <SendHorizontal className="w-4 h-4 ml-0.5" />
-          </button>
-        </form>
-        
+        </div>
+        <button
+          onClick={handleSubmit}
+          disabled={sendState === 'loading' || !content.trim()}
+          className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all active:scale-90"
+          style={{
+            background: content.trim() ? "#007AFF" : "#E5E5EA",
+            transition: "background 0.2s ease, transform 0.1s ease",
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M8 2L14 8L8 14" stroke={content.trim() ? "#fff" : "#8E8E93"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M2 8H14" stroke={content.trim() ? "#fff" : "#8E8E93"} strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        </button>
         {sendState === 'error' && sendError && (
           <div className="mt-2 text-center text-[11px] text-destructive font-medium">
             {sendError}

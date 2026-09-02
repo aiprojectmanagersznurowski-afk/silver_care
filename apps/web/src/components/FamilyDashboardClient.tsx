@@ -94,6 +94,9 @@ export function FamilyDashboardClient({ resident, reports }: FamilyDashboardClie
           />
           Aktywny dzisiaj
         </span>
+        <span className="text-[12px]" style={{ color: "#8E8E93" }}>
+          Ostatnia aktywność: 14:32
+        </span>
       </div>
 
       <div
@@ -103,9 +106,9 @@ export function FamilyDashboardClient({ resident, reports }: FamilyDashboardClie
         <div className="space-y-6">
           {/* Activity rings card */}
           {hasMetrics && (
-            <Card className="rounded-2xl shadow-sm border-0 bg-white dark:bg-card">
+            <div className="rounded-2xl" style={{ background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.04)" }}>
               <div className="p-5">
-                <p className="text-[11px] font-bold uppercase tracking-widest mb-4 text-text-tertiary" style={{ letterSpacing: "0.1em" }}>
+                <p className="text-[11px] font-bold uppercase tracking-widest mb-4" style={{ color: "#8E8E93", letterSpacing: "0.1em" }}>
                   Aktywność dzienna
                 </p>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-6">
@@ -124,26 +127,26 @@ export function FamilyDashboardClient({ resident, reports }: FamilyDashboardClie
                           style={{ background: item.color }}
                         />
                         <div>
-                          <p className="text-[13px] font-medium text-text-secondary">{item.label}</p>
-                          <p className="text-[16px] font-bold text-foreground">{item.value}</p>
-                          <p className="text-[11px] text-text-tertiary">{item.sub}</p>
+                          <p className="text-[13px] font-medium" style={{ color: "#8E8E93" }}>{item.label}</p>
+                          <p className="text-[16px] font-bold" style={{ color: "#1C1C1E" }}>{item.value}</p>
+                          <p className="text-[11px]" style={{ color: "#C7C7CC" }}>{item.sub}</p>
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
               </div>
-            </Card>
+            </div>
           )}
 
           {/* Wellbeing summary */}
-          <Card className="rounded-2xl shadow-sm border-0 bg-white dark:bg-card">
+          <div className="rounded-2xl" style={{ background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.04)" }}>
             <div className="p-5">
               <div className="flex items-start justify-between mb-3">
-                <p className="text-[11px] font-bold uppercase tracking-widest text-text-tertiary" style={{ letterSpacing: "0.1em" }}>
+                <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: "#8E8E93", letterSpacing: "0.1em" }}>
                   Samopoczucie
                 </p>
-                <span className="text-[12px] font-medium text-text-tertiary">dzisiaj</span>
+                <span className="text-[12px] font-medium" style={{ color: "#C7C7CC" }}>dzisiaj</span>
               </div>
               <div className="grid grid-cols-3 gap-3">
                 {[
@@ -153,72 +156,75 @@ export function FamilyDashboardClient({ resident, reports }: FamilyDashboardClie
                 ].map((item) => (
                   <div
                     key={item.label}
-                    className="rounded-xl p-3 text-center bg-surface-sunken dark:bg-muted"
+                    className="rounded-xl p-3 text-center"
+                    style={{ background: "#F2F2F7" }}
                   >
                     <div className="text-xl mb-1">{item.icon}</div>
-                    <p className="text-[11px] font-medium mb-0.5 text-text-secondary">{item.label}</p>
-                    <p className="text-[12px] font-bold text-foreground">{item.value}</p>
+                    <p className="text-[11px] font-medium mb-0.5" style={{ color: "#8E8E93" }}>{item.label}</p>
+                    <p className="text-[12px] font-bold" style={{ color: "#1C1C1E" }}>{item.value}</p>
                   </div>
                 ))}
               </div>
             </div>
-          </Card>
+          </div>
         </div>
 
         <div className="space-y-6">
           {/* Caregiver report */}
-          <Card className="rounded-2xl shadow-sm border-0 bg-white dark:bg-card h-fit">
+          <div className="rounded-2xl h-fit" style={{ background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.04)" }}>
             <div className="p-5">
               <div className="flex items-center justify-between mb-3">
-                <p className="text-[11px] font-bold uppercase tracking-widest text-text-tertiary" style={{ letterSpacing: "0.1em" }}>
+                <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: "#8E8E93", letterSpacing: "0.1em" }}>
                   Notatka opiekuna
                 </p>
                 {latestReport && (
                   <span
-                    className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary"
+                    className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                    style={{ background: "rgba(0,122,255,0.1)", color: "#007AFF" }}
                   >
-                    {format(new Date(latestReport.created_at), "d MMMM", { locale: pl })}
+                    Nowa
                   </span>
                 )}
               </div>
               {latestReport ? (
                 <div
-                  className="rounded-xl p-4 border-l-[3px] border-l-primary bg-gradient-to-br from-surface-sunken to-muted/20"
+                  className="rounded-xl p-4"
+                  style={{ background: "linear-gradient(135deg, #F9F9FB 0%, #F2F2F7 100%)", borderLeft: `3px solid #007AFF` }}
                 >
-                  <p className="text-[14px] font-medium leading-relaxed text-foreground whitespace-pre-wrap">
+                  <p className="text-[14px] font-medium leading-relaxed whitespace-pre-wrap" style={{ color: "#3A3A3C" }}>
                     {latestReport.content.text || 'Brak treści raportu.'}
                   </p>
-                  <div className="flex items-center gap-2 mt-4">
-                    <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white bg-primary/40">
+                  <div className="flex items-center gap-2 mt-3">
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white" style={{ background: "#8E8E93" }}>
                       PO
                     </div>
                     <div>
-                      <p className="text-[11px] font-semibold text-foreground">Personel Opiekuńczy</p>
-                      <p className="text-[10px] text-text-tertiary">
-                        {format(new Date(latestReport.created_at), "HH:mm")}
+                      <p className="text-[11px] font-semibold" style={{ color: "#3A3A3C" }}>Personel Opiekuńczy</p>
+                      <p className="text-[10px]" style={{ color: "#8E8E93" }}>
+                        Opiekun • dzisiaj, {format(new Date(latestReport.created_at), "HH:mm")}
                       </p>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="py-8 text-center text-text-secondary text-sm">
+                <div className="py-8 text-center text-sm" style={{ color: "#8E8E93" }}>
                   Brak opublikowanych raportów.
                 </div>
               )}
             </div>
-          </Card>
+          </div>
 
-          <Card className="rounded-2xl shadow-sm border-0 bg-white dark:bg-card">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Kontakt z administracją</CardTitle>
-              <CardDescription>
+          <div className="rounded-2xl" style={{ background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.04)" }}>
+            <div className="p-5 border-b border-border/40">
+              <h3 className="text-lg font-bold" style={{ color: "#1C1C1E" }}>Kontakt z administracją</h3>
+              <p className="text-sm" style={{ color: "#8E8E93" }}>
                 Zostaw wiadomość dla personelu placówki.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+              </p>
+            </div>
+            <div className="p-0">
               <FamilyMessageForm residentId={resident.id} />
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>
