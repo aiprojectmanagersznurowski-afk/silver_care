@@ -18,7 +18,7 @@ export default function LoginPage() {
   useEffect(() => {
     // Jeśli użytkownik trafia tutaj po kliknięciu w link zaproszenia, w hashu URL znajduje się token
     const hash = window.location.hash
-    if (hash.includes('type=invite') || hash.includes('type=recovery')) {
+    if (hash.includes('access_token')) {
       router.push(`/update-password${hash}`)
     }
   }, [router])
