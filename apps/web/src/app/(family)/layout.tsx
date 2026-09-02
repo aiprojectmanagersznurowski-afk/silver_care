@@ -1,8 +1,9 @@
-export const dynamic = 'force-dynamic'
-import { ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { GlobalResidentSwitcher } from '@/components/GlobalResidentSwitcher'
+import { ReactNode } from 'react'
 
+export const dynamic = 'force-dynamic'
 export default async function FamilyLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -10,9 +11,24 @@ export default async function FamilyLayout({ children }: { children: ReactNode }
   const role = user?.user_metadata?.role || user?.app_metadata?.role
 
   if (!user || role !== 'family') {
-    // Teoretycznie middleware już to zabezpiecza, ale dla pewności rzutujemy.
     redirect('/')
   }
+
+  // Fetch linked residents for the user
+  const { data: links } = await supabase
+    .from('resident_relative_links')
+    .select(`
+      resident_id,
+      residents (
+        id,
+        first_name,
+        last_name
+      )`)
+    .eq('relative_user_id', user.id)
+
+  const residents = (links || []).map(link => 
+    Array.isArray(link.residents) ? link.residents[0] : link.residents
+  ).filter(Boolean) as { id: string; first_name: string; last_name: string }[]
 
   return (
     <div className="flex min-h-screen flex-col bg-surface-sunken">
@@ -41,6 +57,12 @@ export default async function FamilyLayout({ children }: { children: ReactNode }
           </nav>
         </div>
       </header>
+
+      {residents.length > 0 && (
+        <div className="mx-auto w-full max-w-2xl">
+          <GlobalResidentSwitcher residents={residents} />
+        </div>
+      )}
 
       {/* Main content area */}
       <main className="flex-1 px-4 py-6">

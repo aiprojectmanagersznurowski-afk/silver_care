@@ -28,32 +28,21 @@ interface Report {
 }
 
 interface FamilyDashboardClientProps {
-  residents: Resident[]
+  resident: Resident
   reports: Report[]
 }
 
 /**
  * Widok kliencki dashboardu rodziny.
- * Przełącznik kontekstu (FAM-MULTI-RESIDENT) pojawia się wyłącznie
- * gdy rodzina ma więcej niż jednego aktywnego podopiecznego.
- * Zmiana kontekstu przeładowuje dane wyłącznie wybranego pensjonariusza.
  */
-export function FamilyDashboardClient({ residents, reports }: FamilyDashboardClientProps) {
-  const [selectedId, setSelectedId] = useState(residents[0]?.id)
-  const resident = residents.find(r => r.id === selectedId)
-
+export function FamilyDashboardClient({ resident, reports }: FamilyDashboardClientProps) {
   if (!resident) return null
 
-  const latestReport = reports.find(r => r.resident_id === selectedId)
+  const latestReport = reports[0] // We know it's ordered by created_at DESC from the server
 
   return (
     <div className="space-y-6">
       <OnboardingModal />
-      <ResidentSwitcher
-        residents={residents}
-        selectedId={selectedId}
-        onSelect={setSelectedId}
-      />
 
       <div>
         <h2 className="text-2xl font-semibold tracking-tight text-foreground">
@@ -109,7 +98,7 @@ export function FamilyDashboardClient({ residents, reports }: FamilyDashboardCli
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <FamilyMessageForm residentId={selectedId} />
+            <FamilyMessageForm residentId={resident.id} />
           </CardContent>
         </Card>
       </div>

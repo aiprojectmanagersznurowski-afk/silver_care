@@ -121,7 +121,7 @@ export default function VoiceNotePage() {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ draftId })
+        body: JSON.stringify({ draftId, editedTranscription: transcription })
       })
 
       const data = await response.json()
@@ -195,8 +195,16 @@ export default function VoiceNotePage() {
 
           {transcription && !finalReport && !isGenerating && (
             <div className="w-full mt-6 rounded-lg bg-surface-sunken p-4 border border-border">
-              <h4 className="text-sm font-semibold mb-2">Surowa transkrypcja:</h4>
-              <p className="text-sm mb-4 whitespace-pre-wrap">{transcription}</p>
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-sm font-semibold">Rozpoznany tekst:</h4>
+                <span className="text-xs text-text-tertiary">Możesz go poprawić przed wysłaniem</span>
+              </div>
+              
+              <textarea 
+                className="w-full min-h-[120px] rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-y mb-4"
+                value={transcription}
+                onChange={(e) => setTranscription(e.target.value)}
+              />
               
               {followupQuestion ? (
                 <div className="mb-4 rounded-lg bg-yellow-50 p-4 border border-yellow-200">

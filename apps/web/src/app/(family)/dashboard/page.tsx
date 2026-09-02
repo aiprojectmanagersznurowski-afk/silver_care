@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { FamilyDashboardClient } from '@/components/FamilyDashboardClient'
+import { cookies } from 'next/headers'
 
 type ResidentType = { id: string; first_name: string; last_name: string };
 
@@ -36,13 +37,16 @@ export default async function FamilyDashboard() {
     )
   }
 
-  // Pobieramy raporty dla wszystkich powiązanych pensjonariuszy
-  const residentIds = residents.map(r => r.id)
-  
+  // Odczyt wybranego podopiecznego z ciasteczka (ustawianego przez GlobalResidentSwitcher)
+  const cookieStore = await cookies()
+  const cookieResidentId = cookieStore.get('family_resident_id')?.value
+  const activeResident = residents.find(r => r.id === cookieResidentId) || residents[0]
+
+  // Pobieramy raporty tylko dla wybranego pensjonariusza
   const { data: reports } = await supabase
     .from('daily_reports')
     .select('*')
-    .in('resident_id', residentIds)
+    .eq('resident_id', activeResident.id)
     .eq('status', 'PUBLISHED')
     .order('created_at', { ascending: false })
 
@@ -61,7 +65,7 @@ export default async function FamilyDashboard() {
 
   return (
     <FamilyDashboardClient
-      residents={residents}
+      resident={activeResident}
       reports={(reports || []) as Report[]}
     />
   )

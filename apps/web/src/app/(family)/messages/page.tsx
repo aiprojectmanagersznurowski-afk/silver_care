@@ -1,19 +1,46 @@
 import { Card, CardContent } from '@/components/ui/card'
+import { createClient } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
+import { FamilyMessageForm } from '@/components/FamilyMessageForm'
+import { redirect } from 'next/navigation'
 
-export default function FamilyMessagesPage() {
+export default async function FamilyMessagesPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return redirect('/')
+
+  // Read linked residents
+  const { data: links } = await supabase
+    .from('resident_relative_links')
+    .select('resident_id, residents(id, first_name, last_name)')
+    .eq('relative_user_id', user.id)
+
+  const residents = (links || []).map(link => 
+    Array.isArray(link.residents) ? link.residents[0] : link.residents
+  ).filter(Boolean) as { id: string; first_name: string; last_name: string }[]
+
+  if (residents.length === 0) {
+    return (
+      <div className="text-center py-12">Brak powiązanych pensjonariuszy.</div>
+    )
+  }
+
+  const cookieStore = await cookies()
+  const cookieResidentId = cookieStore.get('family_resident_id')?.value
+  const activeResident = residents.find(r => r.id === cookieResidentId) || residents[0]
+
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-          Wiadomości
+          Wiadomości — {activeResident.first_name} {activeResident.last_name}
         </h2>
         <p className="text-text-secondary">Kontakt z personelem opiekuńczym.</p>
       </div>
 
       <Card>
-        <CardContent className="py-12 text-center text-text-secondary">
-          <p>Funkcja wiadomości będzie dostępna wkrótce.</p>
-          <p className="text-sm mt-2">W pilnych przypadkach prosimy o kontakt telefoniczny z placówką.</p>
+        <CardContent className="p-0 sm:p-0">
+          <FamilyMessageForm residentId={activeResident.id} />
         </CardContent>
       </Card>
     </div>

@@ -67,6 +67,11 @@ export default async function AdminStaffPage() {
                   <tr key={staffUser.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
                     <td className="p-4 align-middle font-medium">
                       {staffUser.email}
+                      {staffUser.app_metadata?.is_active === false && (
+                        <span className="ml-2 inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold bg-muted text-muted-foreground">
+                          Zarchiwizowany
+                        </span>
+                      )}
                     </td>
                     <td className="p-4 align-middle">
                       {staffUser.app_metadata?.role === 'nurse' ? 'Pielęgniarka / Pielęgniarz' : 'Sanitariusz / Sanitariuszka'}
@@ -78,12 +83,14 @@ export default async function AdminStaffPage() {
                       }
                     </td>
                     <td className="p-4 align-middle text-right">
-                      <form action={deleteStaffAction}>
-                        <input type="hidden" name="id" value={staffUser.id} />
-                        <Button variant="ghost" size="icon" type="submit" title="Usuń konto personelu" className="text-destructive hover:bg-destructive/10 h-8 w-8">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </form>
+                      {staffUser.app_metadata?.is_active !== false && (
+                        <form action={deleteStaffAction}>
+                          <input type="hidden" name="id" value={staffUser.id} />
+                          <Button variant="ghost" size="icon" type="submit" title="Zarchiwizuj konto personelu" className="text-destructive hover:bg-destructive/10 h-8 w-8">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </form>
+                      )}
                     </td>
                   </tr>
                 ))}

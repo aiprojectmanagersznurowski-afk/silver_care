@@ -11,7 +11,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { draftId } = await req.json()
+    const { draftId, editedTranscription } = await req.json()
     if (!draftId) {
       return NextResponse.json({ error: 'Brak draftId' }, { status: 400 })
     }
@@ -32,7 +32,12 @@ export async function POST(req: Request) {
        return NextResponse.json({ error: 'Notatka została już przetworzona' }, { status: 400 })
     }
 
-    const transcription = draft.transcription || ''
+    const transcription = typeof editedTranscription === 'string' ? editedTranscription : (draft.transcription || '')
+
+    if (typeof editedTranscription === 'string' && editedTranscription !== draft.transcription) {
+      // Update DB with the edited transcription so we have the history
+      await supabase.from('voice_draft_notes').update({ transcription: editedTranscription }).eq('id', draft.id)
+    }
 
     // 2. Groq LLM (Krok 1: Klasyfikator i Redaktor)
     // Model: llama3-70b-8192 for high quality parsing, JSON mode

@@ -40,9 +40,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing title, time, or type' }, { status: 400 })
     }
 
+    const orgId = user.app_metadata?.organization_id
+
+    if (!orgId) {
+      return NextResponse.json({ error: 'Brak przypisania do organizacji' }, { status: 403 })
+    }
+
     const { error: insertError } = await supabase
       .from('agenda_items')
       .insert({
+        organization_id: orgId,
         title,
         time,
         type,

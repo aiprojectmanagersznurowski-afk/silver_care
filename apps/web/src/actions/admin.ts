@@ -42,8 +42,14 @@ export async function deleteStaffAction(formData: FormData) {
   // Nie pozwalamy adminowi usunąć samego siebie, ani innych org_admin / super_admin
   if (targetAppMeta.role !== 'nurse' && targetAppMeta.role !== 'paramedic') return 
 
-  // Hard Delete w Auth Supabase
-  await adminClient.auth.admin.deleteUser(userId)
+  // Soft delete: Zablokuj użytkownika (ban na 10 lat) i zaktualizuj app_metadata
+  await adminClient.auth.admin.updateUserById(userId, {
+    ban_duration: '87600h',
+    app_metadata: {
+      ...targetAppMeta,
+      is_active: false
+    }
+  })
   
   revalidatePath('/admin/staff')
 }
