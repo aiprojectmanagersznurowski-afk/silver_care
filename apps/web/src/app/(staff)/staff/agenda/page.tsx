@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { CalendarX, X, Trash2 } from 'lucide-react'
 
 interface AgendaItem {
   id: string
@@ -90,7 +91,7 @@ export default function StaffAgendaPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in duration-500">
       <div>
         <h2 className="text-2xl font-semibold tracking-tight text-foreground">Plan Dnia</h2>
         <p className="text-text-secondary">Zarządzaj harmonogramem placówki. Cykliczne wpisy pokazują się każdego dnia.</p>
@@ -125,7 +126,11 @@ export default function StaffAgendaPage() {
               {loading ? (
                 <p className="text-sm text-text-secondary">Ładowanie...</p>
               ) : items.length === 0 ? (
-                <p className="text-sm text-text-secondary py-4 text-center">Brak wpisów na ten dzień.</p>
+                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                  <CalendarX className="h-12 w-12 mb-4 opacity-20" />
+                  <p className="text-sm font-medium">Brak wpisów na ten dzień.</p>
+                  <p className="text-xs mt-1 text-center max-w-[200px]">Zarządzaj harmonogramem dodając nowe wpisy z panelu po prawej stronie.</p>
+                </div>
               ) : (
                 <div className="space-y-3">
                   {items.map(item => (
@@ -143,7 +148,9 @@ export default function StaffAgendaPage() {
                           </div>
                         </div>
                       </div>
-                      <button onClick={() => handleDelete(item.id)} className="text-xs text-destructive hover:underline">Usuń</button>
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)} className="text-destructive hover:bg-destructive/10 hover:text-destructive">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   ))}
                 </div>
@@ -170,21 +177,23 @@ export default function StaffAgendaPage() {
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="agenda-type">Typ</Label>
-                  <select id="agenda-type" value={type} onChange={e => setType(e.target.value)} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                  <select id="agenda-type" value={type} onChange={e => setType(e.target.value)} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
                     {ITEM_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                   </select>
                 </div>
                 
                 <div className="pt-2 pb-1 border-t mt-2">
-                  <Label className="mb-2 block">Częstotliwość</Label>
-                  <div className="space-y-2">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="radio" name="recurring" checked={isRecurring} onChange={() => setIsRecurring(true)} className="h-4 w-4" />
-                      <span className="text-sm">Codziennie (wszystkie dni)</span>
+                  <Label className="mb-3 block">Częstotliwość</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className={`flex flex-col items-center justify-center rounded-lg border-2 p-3 cursor-pointer transition-all ${isRecurring ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted'}`}>
+                      <input type="radio" name="recurring" checked={isRecurring} onChange={() => setIsRecurring(true)} className="sr-only" />
+                      <span className="text-sm font-medium">Codziennie</span>
+                      <span className="text-xs text-muted-foreground mt-0.5">Wszystkie dni</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="radio" name="recurring" checked={!isRecurring} onChange={() => setIsRecurring(false)} className="h-4 w-4" />
-                      <span className="text-sm">Wybrane dni</span>
+                    <label className={`flex flex-col items-center justify-center rounded-lg border-2 p-3 cursor-pointer transition-all ${!isRecurring ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted'}`}>
+                      <input type="radio" name="recurring" checked={!isRecurring} onChange={() => setIsRecurring(false)} className="sr-only" />
+                      <span className="text-sm font-medium">Wybrane dni</span>
+                      <span className="text-xs text-muted-foreground mt-0.5">Konkretne daty</span>
                     </label>
                   </div>
                 </div>
@@ -207,10 +216,10 @@ export default function StaffAgendaPage() {
                     {itemDates.length > 0 ? (
                       <div className="flex flex-wrap gap-2 pt-1">
                         {itemDates.map(d => (
-                          <span key={d} className="inline-flex items-center gap-1 bg-background border border-border text-xs px-2 py-1 rounded">
+                          <span key={d} className="inline-flex items-center gap-1 bg-background border border-border text-xs pl-2 pr-1 py-1 rounded-md shadow-sm">
                             {new Date(d).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' })}
-                            <button type="button" onClick={() => removeDate(d)} className="text-muted-foreground hover:text-foreground">
-                              &times;
+                            <button type="button" onClick={() => removeDate(d)} className="text-muted-foreground hover:text-foreground p-0.5 rounded-sm hover:bg-muted transition-colors">
+                              <X className="h-3 w-3" />
                             </button>
                           </span>
                         ))}

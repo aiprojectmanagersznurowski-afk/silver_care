@@ -4,7 +4,7 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, CalendarX } from 'lucide-react'
 
 export default async function FamilyAgendaPage(props: { searchParams: Promise<{ date?: string }> | { date?: string } }) {
   const supabase = await createClient()
@@ -61,7 +61,7 @@ export default async function FamilyAgendaPage(props: { searchParams: Promise<{ 
   )
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in duration-500">
       <div>
         <h2 className="text-2xl font-semibold tracking-tight text-foreground">
           Plan Dnia — {activeResident.first_name} {activeResident.last_name}
@@ -89,8 +89,9 @@ export default async function FamilyAgendaPage(props: { searchParams: Promise<{ 
         </CardHeader>
         <CardContent>
           {!agendaItems || agendaItems.length === 0 ? (
-            <div className="py-6 text-center text-muted-foreground">
-              Brak zaplanowanych wydarzeń na ten dzień.
+            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+              <CalendarX className="h-12 w-12 mb-4 opacity-20" />
+              <p className="text-sm font-medium">Brak zaplanowanych wydarzeń na ten dzień.</p>
             </div>
           ) : (
             <div className="space-y-4">
