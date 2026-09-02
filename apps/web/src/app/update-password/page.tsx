@@ -17,12 +17,28 @@ export default function UpdatePasswordPage() {
   const supabase = createClient()
 
   useEffect(() => {
-    // Sprawdzamy czy użytkownik faktycznie jest zalogowany (z tokenem z zaproszenia)
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) {
-        // Jeśli nie ma sesji, ale w URL jest hash z tokenem, musimy poczekać aż Supabase go przetworzy
         const hash = window.location.hash
-        if (!hash.includes('access_token')) {
+        if (hash.includes('access_token')) {
+          // Ręcznie parsujemy hash, ponieważ czasami klient SSR nie chwyta z niego sesji automatycznie
+          const params = new URLSearchParams(hash.replace('#', '?'))
+          const access_token = params.get('access_token')
+          const refresh_token = params.get('refresh_token')
+          
+          if (access_token && refresh_token) {
+            const { error } = await supabase.auth.setSession({
+              access_token,
+              refresh_token
+            })
+            if (error) {
+              setError('Nie udało się zalogować przy użyciu tego linku: ' + error.message)
+            } else {
+              // Wyczyść hash po udanym logowaniu
+              window.history.replaceState(null, '', window.location.pathname)
+            }
+          }
+        } else {
           router.push('/login')
         }
       }
