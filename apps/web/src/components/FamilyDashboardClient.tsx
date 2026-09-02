@@ -6,6 +6,7 @@ import { format } from 'date-fns'
 import { pl } from 'date-fns/locale'
 import { FamilyMessageForm } from '@/components/FamilyMessageForm'
 import { ResidentSwitcher } from '@/components/ResidentSwitcher'
+import { OnboardingModal } from '@/components/OnboardingModal'
 
 interface Resident {
   id: string
@@ -47,6 +48,7 @@ export function FamilyDashboardClient({ residents, reports }: FamilyDashboardCli
 
   return (
     <div className="space-y-6">
+      <OnboardingModal />
       <ResidentSwitcher
         residents={residents}
         selectedId={selectedId}

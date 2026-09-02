@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { AgendaView } from '@/components/AgendaView'
 
 type NoteStatus = 'ready' | 'draft' | 'none'
 
@@ -56,6 +57,8 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
         </h2>
         <p className="text-text-secondary">Status notatek dziennych, filtrowanie po piętrze.</p>
       </div>
+
+      <AgendaView residents={residents} />
 
       {/* Floor filter */}
       {floors.length > 0 && (

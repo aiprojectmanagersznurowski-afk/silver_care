@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
 // Domyślnie body parser jest wyłączony, żeby można było pobrać form data z plikiem
-export const runtime = 'edge'
+export const runtime = 'nodejs'
 
 export async function POST(req: Request) {
   try {

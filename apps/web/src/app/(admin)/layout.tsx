@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
