@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
-export async function GET() {
+export async function GET(request: Request) {
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
 
@@ -9,12 +9,14 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const today = new Date().toISOString().slice(0, 10)
+  const { searchParams } = new URL(request.url)
+  const dateStr = searchParams.get('date') || new Date().toISOString().slice(0, 10)
 
-  // Get today's items and templates
+  // Get items for the requested date, or recurring items (target_date is null)
   const { data, error } = await supabase
     .from('agenda_items')
     .select('*')
+    .or(`target_date.eq.${dateStr},target_date.is.null`)
     .order('time', { ascending: true })
 
   if (error) {
@@ -34,7 +36,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json()
-    const { title, time, type, resident_id, is_template } = body
+    const { title, time, type, resident_id, target_date } = body
 
     if (!title || !time || !type) {
       return NextResponse.json({ error: 'Missing title, time, or type' }, { status: 400 })
@@ -54,7 +56,8 @@ export async function POST(request: Request) {
         time,
         type,
         resident_id: resident_id || null, // null = dotyczy wszystkich
-        is_template: is_template || false,
+        target_date: target_date || null, // null = wszystkie dni
+        is_template: !target_date, // Zachowujemy dla kompatybilności wstecznej jeśli trzeba
       })
 
     if (insertError) {

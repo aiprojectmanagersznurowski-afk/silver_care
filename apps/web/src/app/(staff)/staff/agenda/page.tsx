@@ -12,7 +12,7 @@ interface AgendaItem {
   time: string
   type: string
   resident_id: string | null
-  is_template: boolean
+  target_date: string | null
 }
 
 const ITEM_TYPES = [
@@ -27,22 +27,27 @@ const ITEM_TYPES = [
 export default function StaffAgendaPage() {
   const [items, setItems] = useState<AgendaItem[]>([])
   const [loading, setLoading] = useState(true)
+  
+  // Date viewing state
+  const [viewDate, setViewDate] = useState(new Date().toISOString().slice(0, 10))
 
   // Form state
   const [title, setTitle] = useState('')
   const [time, setTime] = useState('')
   const [type, setType] = useState('other')
-  const [isTemplate, setIsTemplate] = useState(false)
+  const [isRecurring, setIsRecurring] = useState(true)
+  const [itemDate, setItemDate] = useState(new Date().toISOString().slice(0, 10))
   const [submitting, setSubmitting] = useState(false)
 
   const fetchItems = async () => {
-    const res = await fetch('/api/staff/agenda')
+    setLoading(true)
+    const res = await fetch(`/api/staff/agenda?date=${viewDate}`)
     const data = await res.json()
     setItems(data.items || [])
     setLoading(false)
   }
 
-  useEffect(() => { fetchItems() }, [])
+  useEffect(() => { fetchItems() }, [viewDate])
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -51,12 +56,16 @@ export default function StaffAgendaPage() {
     await fetch('/api/staff/agenda', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, time, type, is_template: isTemplate }),
+      body: JSON.stringify({ 
+        title, 
+        time, 
+        type, 
+        target_date: isRecurring ? null : itemDate 
+      }),
     })
     setTitle('')
     setTime('')
     setType('other')
-    setIsTemplate(false)
     setSubmitting(false)
     fetchItems()
   }
@@ -66,58 +75,54 @@ export default function StaffAgendaPage() {
     fetchItems()
   }
 
-  const applyTemplate = async () => {
-    const templates = items.filter(i => i.is_template)
-    for (const t of templates) {
-      await fetch('/api/staff/agenda', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: t.title, time: t.time, type: t.type, is_template: false }),
-      })
-    }
-    fetchItems()
-  }
-
-  const todayItems = items.filter(i => !i.is_template)
-  const templateItems = items.filter(i => i.is_template)
-
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-semibold tracking-tight text-foreground">Plan Dnia</h2>
-        <p className="text-text-secondary">Zarządzaj harmonogramem placówki. Wpisy bez przypisanego pensjonariusza dotyczą wszystkich.</p>
+        <p className="text-text-secondary">Zarządzaj harmonogramem placówki. Cykliczne wpisy pokazują się każdego dnia.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Today's agenda */}
+        {/* Agenda View */}
         <div className="lg:col-span-2 space-y-4">
           <Card>
             <CardHeader>
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                 <div>
-                  <CardTitle>Dzisiejszy harmonogram</CardTitle>
-                  <CardDescription>{new Date().toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' })}</CardDescription>
+                  <CardTitle>Harmonogram</CardTitle>
+                  <CardDescription>
+                    {new Date(viewDate).toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' })}
+                  </CardDescription>
                 </div>
-                {templateItems.length > 0 && (
-                  <Button variant="outline" size="sm" onClick={applyTemplate}>
-                    Zastosuj szablon ({templateItems.length})
+                <div className="flex items-center gap-2">
+                  <Input 
+                    type="date" 
+                    value={viewDate} 
+                    onChange={e => setViewDate(e.target.value)}
+                    className="w-auto h-9"
+                  />
+                  <Button variant="outline" size="sm" onClick={() => setViewDate(new Date().toISOString().slice(0, 10))}>
+                    Dziś
                   </Button>
-                )}
+                </div>
               </div>
             </CardHeader>
             <CardContent>
               {loading ? (
                 <p className="text-sm text-text-secondary">Ładowanie...</p>
-              ) : todayItems.length === 0 ? (
-                <p className="text-sm text-text-secondary py-4 text-center">Brak wpisów na dziś. Dodaj nowy lub zastosuj szablon.</p>
+              ) : items.length === 0 ? (
+                <p className="text-sm text-text-secondary py-4 text-center">Brak wpisów na ten dzień.</p>
               ) : (
                 <div className="space-y-3">
-                  {todayItems.map(item => (
+                  {items.map(item => (
                     <div key={item.id} className="flex items-center justify-between border-b border-border pb-3 last:border-0">
                       <div className="flex items-center gap-3">
                         <div className="w-14 text-sm font-semibold text-text-secondary">{item.time.slice(0, 5)}</div>
                         <div>
-                          <div className="text-sm font-medium">{item.title}</div>
+                          <div className="text-sm font-medium">
+                            {item.title} 
+                            {!item.target_date && <span className="ml-2 text-[10px] font-normal uppercase bg-muted px-1.5 py-0.5 rounded text-muted-foreground">Codziennie</span>}
+                          </div>
                           <div className="text-xs text-text-tertiary">
                             {ITEM_TYPES.find(t => t.value === item.type)?.label || item.type}
                             {!item.resident_id && ' · Wszyscy'}
@@ -155,11 +160,29 @@ export default function StaffAgendaPage() {
                     {ITEM_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                   </select>
                 </div>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={isTemplate} onChange={e => setIsTemplate(e.target.checked)} className="h-4 w-4 rounded border-gray-300" />
-                  <span className="text-sm">Zapisz jako szablon (do ponownego użycia)</span>
-                </label>
-                <Button type="submit" className="w-full" disabled={submitting}>
+                
+                <div className="pt-2 pb-1 border-t mt-2">
+                  <Label className="mb-2 block">Częstotliwość</Label>
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="recurring" checked={isRecurring} onChange={() => setIsRecurring(true)} className="h-4 w-4" />
+                      <span className="text-sm">Codziennie (wszystkie dni)</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="recurring" checked={!isRecurring} onChange={() => setIsRecurring(false)} className="h-4 w-4" />
+                      <span className="text-sm">Jednorazowo (konkretny dzień)</span>
+                    </label>
+                  </div>
+                </div>
+
+                {!isRecurring && (
+                  <div className="space-y-1 animate-in fade-in slide-in-from-top-1">
+                    <Label htmlFor="agenda-date">Wybierz datę</Label>
+                    <Input id="agenda-date" type="date" value={itemDate} onChange={e => setItemDate(e.target.value)} required />
+                  </div>
+                )}
+
+                <Button type="submit" className="w-full mt-2" disabled={submitting}>
                   {submitting ? 'Dodawanie...' : 'Dodaj wpis'}
                 </Button>
               </form>

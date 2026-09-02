@@ -2,8 +2,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { createClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import Link from 'next/link'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
-export default async function FamilyAgendaPage() {
+export default async function FamilyAgendaPage(props: { searchParams: Promise<{ date?: string }> | { date?: string } }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return redirect('/')
@@ -28,12 +31,34 @@ export default async function FamilyAgendaPage() {
   const cookieResidentId = cookieStore.get('family_resident_id')?.value
   const activeResident = residents.find(r => r.id === cookieResidentId) || residents[0]
 
-  // Fetch agenda items (facility-wide OR resident-specific)
-  const { data: agendaItems } = await supabase
+  // Resolve searchParams (Next.js 15 compatible)
+  const resolvedParams = await Promise.resolve(props.searchParams)
+  const dateParam = typeof resolvedParams.date === 'string' ? resolvedParams.date : undefined
+  const viewDateStr = dateParam || new Date().toISOString().slice(0, 10)
+  
+  // Calculate prev/next days
+  const viewDateObj = new Date(viewDateStr)
+  const prevDate = new Date(viewDateObj)
+  prevDate.setDate(prevDate.getDate() - 1)
+  const nextDate = new Date(viewDateObj)
+  nextDate.setDate(nextDate.getDate() + 1)
+
+  const prevDateStr = prevDate.toISOString().slice(0, 10)
+  const nextDateStr = nextDate.toISOString().slice(0, 10)
+  const todayStr = new Date().toISOString().slice(0, 10)
+
+  // Fetch agenda items (facility-wide OR resident-specific) AND (recurring OR specific date)
+  // We need to use nested ORs or just fetch all for resident/null and then filter in memory if PostgREST doesn't support complex AND/OR.
+  // Actually, we can just fetch items where resident matches, and then filter by date in JS to be safe.
+  const { data: allItems } = await supabase
     .from('agenda_items')
     .select('*')
     .or(`resident_id.is.null,resident_id.eq.${activeResident.id}`)
     .order('time', { ascending: true })
+
+  const agendaItems = (allItems || []).filter(item => 
+    item.target_date === null || item.target_date === viewDateStr
+  )
 
   return (
     <div className="space-y-6">
@@ -41,18 +66,31 @@ export default async function FamilyAgendaPage() {
         <h2 className="text-2xl font-semibold tracking-tight text-foreground">
           Plan Dnia — {activeResident.first_name} {activeResident.last_name}
         </h2>
-        <p className="text-text-secondary">Przewidywany harmonogram dnia w placówce.</p>
+        <p className="text-text-secondary">Przewidywany harmonogram w placówce.</p>
+      </div>
+
+      <div className="flex items-center justify-between bg-card border border-border p-2 rounded-lg">
+        <Link href={`/agenda?date=${prevDateStr}`}>
+          <Button variant="ghost" size="icon"><ChevronLeft className="h-5 w-5" /></Button>
+        </Link>
+        <div className="text-center font-medium">
+          {new Date(viewDateStr).toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' })}
+          {viewDateStr === todayStr && <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">Dziś</span>}
+        </div>
+        <Link href={`/agenda?date=${nextDateStr}`}>
+          <Button variant="ghost" size="icon"><ChevronRight className="h-5 w-5" /></Button>
+        </Link>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Dzisiejszy harmonogram</CardTitle>
-          <CardDescription>Oto, jak zazwyczaj wygląda dzień Twojego bliskiego.</CardDescription>
+          <CardTitle>Harmonogram</CardTitle>
+          <CardDescription>Oto, jak wygląda zaplanowany dzień.</CardDescription>
         </CardHeader>
         <CardContent>
           {!agendaItems || agendaItems.length === 0 ? (
             <div className="py-6 text-center text-muted-foreground">
-              Brak zaplanowanych wydarzeń na dziś.
+              Brak zaplanowanych wydarzeń na ten dzień.
             </div>
           ) : (
             <div className="space-y-4">
