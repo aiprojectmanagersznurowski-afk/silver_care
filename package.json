@@ -1,12 +1,23 @@
 {
-	"scripts": {
-		"test": "vitest run --passWithNoTests"
-	},
-	"devDependencies": {
-		"@playwright/test": "^1.62.1",
-		"@vitest/coverage-v8": "^4.1.11",
-		"dotenv": "^17.4.2",
-		"postgres": "^3.4.9",
-		"vitest": "^4.1.11"
-	}
+  "name": "silver-care",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "vitest run --passWithNoTests",
+    "build": "pnpm --filter web build",
+    "dev": "pnpm --filter web dev"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@vitest/coverage-v8": "^4.1.11",
+    "dotenv": "^17.4.2",
+    "postgres": "^3.4.9",
+    "vitest": "^4.1.11"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "@swc/core"
+    ]
+  }
 }
