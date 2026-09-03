@@ -258,7 +258,7 @@ function VoiceNoteContent() {
                     className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-sage px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-sage-dark transition-colors"
                   >
                     <Sparkles className="h-4 w-4" />
-                    Przetwórz medycznie i buduj raport
+                    Buduj raport
                   </button>
                   <button 
                     onClick={() => { setTranscription(null); setDraftId(null); setFollowupQuestion(null); }}

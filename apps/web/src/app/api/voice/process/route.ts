@@ -62,7 +62,7 @@ Nie dopisuj komentarzy, tylko surowy, poprawny JSON.`
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'qwen/qwen3.6-27b', // using available model for this API key
+        model: 'llama3-8b-8192', // using available model for this API key
         response_format: { type: "json_object" },
         messages: [
           { role: 'system', content: systemPrompt1 },
@@ -136,7 +136,7 @@ Informacje o dyskomforcie: ${classified.discomfort}`
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'qwen/qwen3.6-27b',
+        model: 'llama3-8b-8192',
         messages: [
           { role: 'system', content: systemPrompt2 },
           { role: 'user', content: userPrompt2 }
