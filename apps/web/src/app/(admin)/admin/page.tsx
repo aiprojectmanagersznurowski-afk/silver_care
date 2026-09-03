@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Users, Bed, BedDouble, ShieldAlert, CheckCircle2 } from 'lucide-react'
+import { Users, Bed, BedDouble, ShieldAlert, CheckCircle2, Building2 } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function AdminDashboard() {
