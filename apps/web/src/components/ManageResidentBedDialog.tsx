@@ -23,31 +23,44 @@ interface ManageResidentBedDialogProps {
 export function ManageResidentBedDialog({ residentId, currentBedLabel, currentRoomNumber }: ManageResidentBedDialogProps) {
   const [open, setOpen] = useState(false)
   const [bedId, setBedId] = useState('')
-  const [rooms, setRooms] = useState<any[]>([])
+  const [beds, setBeds] = useState<any[]>([])
+  const [rooms, setRooms] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
   const [isFetching, setIsFetching] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
   useEffect(() => {
-    if (open && rooms.length === 0) {
-      const fetchRooms = async () => {
+    if (open && beds.length === 0) {
+      const fetchData = async () => {
         setIsFetching(true)
         try {
-          const res = await fetch('/api/facility/rooms')
-          if (res.ok) {
-            const data = await res.json()
-            setRooms(data.rooms || [])
+          const [bedsRes, roomsRes] = await Promise.all([
+            fetch('/api/facility/beds'),
+            fetch('/api/facility/rooms')
+          ])
+          
+          if (bedsRes.ok && roomsRes.ok) {
+            const bedsData = await bedsRes.json()
+            const roomsData = await roomsRes.json()
+            
+            const roomsMap: Record<string, string> = {}
+            roomsData.rooms?.forEach((r: any) => {
+              roomsMap[r.id] = r.number
+            })
+            
+            setRooms(roomsMap)
+            setBeds(bedsData.beds || [])
           }
         } catch (err) {
-          console.error('Failed to fetch rooms', err)
+          console.error('Failed to fetch data', err)
         } finally {
           setIsFetching(false)
         }
       }
-      fetchRooms()
+      fetchData()
     }
-  }, [open, rooms.length])
+  }, [open, beds.length])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -87,14 +100,13 @@ export function ManageResidentBedDialog({ residentId, currentBedLabel, currentRo
     }
   }
 
-  // Get available beds from fetched rooms
-  const availableBeds = rooms.flatMap((r: any) => 
-    (r.bed_list || []).filter((b: any) => b.is_active && (!b.active_assignment || b.active_assignment.resident?.id === residentId))
-      .map((b: any) => ({
-        ...b,
-        roomNumber: r.number,
-      }))
-  )
+  // Get available beds
+  const availableBeds = beds
+    .filter((b: any) => b.is_active && (!b.active_assignment || b.active_assignment.resident?.id === residentId))
+    .map((b: any) => ({
+      ...b,
+      roomNumber: rooms[b.room_id] || 'Nieznana',
+    }))
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
