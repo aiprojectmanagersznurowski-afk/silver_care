@@ -8,7 +8,6 @@ import { DailySummaryHero } from './DailySummaryHero'
 import { ServiceActivityFeed } from './ServiceActivityFeed'
 import { HealthRingInsight } from './HealthRingInsight'
 import { CommunicationWidget } from './CommunicationWidget'
-import { TimeRangeFilter, type TimeRange } from './TimeRangeFilter'
 
 interface Resident {
   id: string
@@ -41,7 +40,6 @@ type TabType = 'DASHBOARD' | 'AGENDA' | 'GALERIA';
 
 export function FamilyDashboardClient({ resident, reports, todaysMedia = [], agenda = [] }: FamilyDashboardClientProps) {
   const [activeTab, setActiveTab] = useState<TabType>('DASHBOARD');
-  const [range, setRange] = useState<TimeRange>("Dzień");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -54,17 +52,16 @@ export function FamilyDashboardClient({ resident, reports, todaysMedia = [], age
 
   return (
     <div className="min-h-screen w-full bg-cream text-slate font-sans relative">
-      <main className="mx-auto max-w-[1240px] px-4 pb-24 pt-6 sm:px-6 sm:pb-28 sm:pt-8">
+      <main className="mx-auto max-w-[1600px] px-4 pb-24 pt-6 sm:px-6 sm:pb-28 sm:pt-8">
         <div className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1 className="text-[1.75rem] text-slate sm:text-[2rem] font-display">
-              Dzień dobry, Ewo
+              Dzień dobry
             </h1>
             <p className="mt-1 text-[1rem] text-slate-soft sm:text-[1.05rem]">
               Oto najnowsze informacje o podopiecznym: {resident.first_name} {resident.last_name}.
             </p>
           </div>
-          <TimeRangeFilter value={range} onChange={setRange} />
         </div>
 
         {/* Tab Navigation */}

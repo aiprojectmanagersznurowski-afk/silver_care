@@ -30,7 +30,7 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
 
   return (
     <header className="sticky top-0 z-30 border-b border-border/70 bg-cream/80 backdrop-blur-md">
-      <div className="mx-auto flex max-w-[1240px] items-center gap-4 px-4 py-3 sm:gap-6 sm:px-6 sm:py-4">
+      <div className="mx-auto flex max-w-[1600px] items-center gap-4 px-4 py-3 sm:gap-6 sm:px-6 sm:py-4">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-sage text-primary-foreground shadow-sm sm:h-11 sm:w-11">
             <HeartHandshake className="h-5 w-5 sm:h-6 sm:w-6" />
