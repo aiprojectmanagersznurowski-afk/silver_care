@@ -63,10 +63,27 @@ export default async function FamilyDashboard() {
     }
   }
 
+  // Pobieramy zdjęcia pensjonariusza (dzisiejsze)
+  const today = new Date().toISOString().split('T')[0]
+  const { data: media } = await supabase
+    .from('resident_media')
+    .select('storage_path')
+    .eq('resident_id', activeResident.id)
+    .eq('captured_at', today)
+    .order('created_at', { ascending: false })
+
+  const signedUrls = await Promise.all(
+    (media || []).map(async (m) => {
+      const { data } = await supabase.storage.from('resident-media').createSignedUrl(m.storage_path, 3600)
+      return data?.signedUrl
+    })
+  )
+
   return (
     <FamilyDashboardClient
       resident={activeResident}
       reports={(reports || []) as Report[]}
+      todaysMedia={signedUrls.filter(Boolean) as string[]}
     />
   )
 }

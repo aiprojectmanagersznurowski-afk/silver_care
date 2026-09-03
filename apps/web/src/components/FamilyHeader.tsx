@@ -1,3 +1,5 @@
+'use client'
+
 import { useState } from "react";
 import { HeartHandshake, ChevronDown, Bell, Check } from "lucide-react";
 import {
@@ -10,26 +12,20 @@ import {
 } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
-const navItems = ["Pulpit", "Usługi", "Zdrowie", "Wiadomości"];
+const navItems = ["Pulpit", "Plan Dnia", "Wiadomości"];
 
-const seniors = [
-  {
-    id: "eleanor",
-    name: "Katarzyna Wiśniewska",
-    relation: "Mama · Willowbrook, apart. 12",
-    img: "https://images.unsplash.com/photo-1566616213894-2d4e1baee5d8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=200",
-  },
-  {
-    id: "arthur",
-    name: "Artur Bennett",
-    relation: "Tata · Skrzydło Klonowe, pok. 4",
-    img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=200",
-  },
-];
+interface Resident {
+  id: string;
+  first_name: string;
+  last_name: string;
+  avatar_url: string | null;
+}
 
-export function FamilyHeader() {
+export function FamilyHeader({ residents }: { residents: Resident[] }) {
   const [active, setActive] = useState("Pulpit");
-  const [current, setCurrent] = useState(seniors[0]);
+  const [current, setCurrent] = useState<Resident>(residents[0]);
+
+  if (!current) return null;
 
   return (
     <header className="sticky top-0 z-30 border-b border-border/70 bg-cream/80 backdrop-blur-md">
@@ -48,8 +44,9 @@ export function FamilyHeader() {
 
         <nav className="ml-4 hidden items-center gap-1 md:flex">
           {navItems.map((item) => (
-            <button
+            <a
               key={item}
+              href={item === "Pulpit" ? "/dashboard" : item === "Plan Dnia" ? "/agenda" : "/messages"}
               onClick={() => setActive(item)}
               className={`rounded-full px-5 py-2.5 transition-colors ${
                 active === item
@@ -58,7 +55,7 @@ export function FamilyHeader() {
               }`}
             >
               {item}
-            </button>
+            </a>
           ))}
         </nav>
 
@@ -71,11 +68,11 @@ export function FamilyHeader() {
           <DropdownMenu>
             <DropdownMenuTrigger className="flex items-center gap-3 rounded-full bg-card py-1.5 pl-1.5 pr-3 ring-1 ring-border transition-shadow hover:shadow-sm">
                 <Avatar className="h-9 w-9">
-                  <AvatarImage src={current.img} alt={current.name} />
-                  <AvatarFallback>{current.name[0]}</AvatarFallback>
+                  <AvatarImage src={current.avatar_url || ""} alt={`${current.first_name} ${current.last_name}`} />
+                  <AvatarFallback>{current.first_name[0]}</AvatarFallback>
                 </Avatar>
                 <div className="hidden text-left leading-tight sm:block">
-                  <p className="text-[0.95rem] text-slate">{current.name}</p>
+                  <p className="text-[0.95rem] text-slate">{current.first_name} {current.last_name}</p>
                   <p className="text-[0.72rem] text-slate-soft">Wyświetlany profil</p>
                 </div>
                 <ChevronDown className="h-4 w-4 text-slate-soft" />
@@ -83,23 +80,29 @@ export function FamilyHeader() {
             <DropdownMenuContent align="end" className="w-72 rounded-2xl p-2">
               <DropdownMenuLabel className="text-slate-soft">Zmień bliską osobę</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              {seniors.map((s) => (
+              {residents.map((s) => (
                 <DropdownMenuItem
                   key={s.id}
                   onClick={() => setCurrent(s)}
-                  className="flex items-center gap-3 rounded-xl py-2.5"
+                  className="flex items-center gap-3 rounded-xl py-2.5 cursor-pointer"
                 >
                   <Avatar className="h-9 w-9">
-                    <AvatarImage src={s.img} alt={s.name} />
-                    <AvatarFallback>{s.name[0]}</AvatarFallback>
+                    <AvatarImage src={s.avatar_url || ""} alt={`${s.first_name} ${s.last_name}`} />
+                    <AvatarFallback>{s.first_name[0]}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 leading-tight">
-                    <p className="text-slate">{s.name}</p>
-                    <p className="text-[0.75rem] text-slate-soft">{s.relation}</p>
+                    <p className="text-slate">{s.first_name} {s.last_name}</p>
                   </div>
                   {current.id === s.id && <Check className="h-4 w-4 text-sage" />}
                 </DropdownMenuItem>
               ))}
+              
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="py-2.5 cursor-pointer">
+                <form action="/auth/signout" method="post" className="w-full">
+                  <button type="submit" className="w-full text-left text-destructive font-medium">Wyloguj się</button>
+                </form>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

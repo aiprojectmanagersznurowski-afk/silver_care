@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { AgendaView } from '@/components/AgendaView'
 import { Search, X } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { MediaUploader } from '@/components/MediaUploader'
 
 type NoteStatus = 'ready' | 'draft' | 'none'
 
@@ -290,12 +291,15 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                 
                 {/* Opcja podglądu raportu jeśli istnieje */}
                 {noteStatus !== 'none' && (
-                  <a href={`/reports?resident=${resident.id}`} className="block w-full">
+                  <a href={`/reports?resident=${resident.id}`} className="block w-full mb-2">
                      <Button className="w-full text-xs h-8" variant="ghost">
                         Podgląd notatek
                      </Button>
                   </a>
                 )}
+                
+                {/* Media uploader */}
+                <MediaUploader residentId={resident.id as string} />
               </CardFooter>
             </Card>
           )

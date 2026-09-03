@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { format } from 'date-fns'
 import { pl } from 'date-fns/locale'
 
-import { FamilyHeader } from './FamilyHeader'
 import { DailySummaryHero } from './DailySummaryHero'
 import { ServiceActivityFeed } from './ServiceActivityFeed'
 import { HealthRingInsight } from './HealthRingInsight'
@@ -34,11 +33,12 @@ interface Report {
 interface FamilyDashboardClientProps {
   resident: Resident
   reports: Report[]
+  todaysMedia?: string[]
 }
 
 type TabType = 'DASHBOARD' | 'AGENDA' | 'GALERIA';
 
-export function FamilyDashboardClient({ resident, reports }: FamilyDashboardClientProps) {
+export function FamilyDashboardClient({ resident, reports, todaysMedia = [] }: FamilyDashboardClientProps) {
   const [activeTab, setActiveTab] = useState<TabType>('DASHBOARD');
   const [range, setRange] = useState<TimeRange>("Dzień");
   const [mounted, setMounted] = useState(false);
@@ -53,8 +53,6 @@ export function FamilyDashboardClient({ resident, reports }: FamilyDashboardClie
 
   return (
     <div className="min-h-screen w-full bg-cream text-slate font-sans relative">
-      <FamilyHeader />
-
       <main className="mx-auto max-w-[1240px] px-4 pb-24 pt-6 sm:px-6 sm:pb-28 sm:pt-8">
         <div className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -125,15 +123,25 @@ export function FamilyDashboardClient({ resident, reports }: FamilyDashboardClie
                        <h3 className="font-medium text-lg mb-3">
                          {format(new Date(report.created_at), 'EEEE, d MMMM', { locale: pl })}
                        </h3>
-                       {/* Galeria Grid (mock images) */}
-                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-                          <img src={`https://images.unsplash.com/photo-1566616213894-2d4e1baee5d8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400&random=${report.id}1`} className="rounded-xl w-full h-32 object-cover" />
-                          <img src={`https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400&random=${report.id}2`} className="rounded-xl w-full h-32 object-cover" />
-                          <img src={`https://images.unsplash.com/photo-1444312645910-ffa973656eba?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400&random=${report.id}3`} className="rounded-xl w-full h-32 object-cover" />
-                          <div className="rounded-xl w-full h-32 bg-slate/5 flex items-center justify-center text-slate-soft cursor-pointer hover:bg-slate/10 transition-colors">
-                            +2 zdjęcia
+                       {/* Galeria Grid */}
+                       <div className="flex w-max space-x-4 p-4">
+                        {todaysMedia.length > 0 ? (
+                          todaysMedia.map((url, i) => (
+                            <div key={i} className="group relative h-[250px] w-[350px] overflow-hidden rounded-3xl shrink-0 cursor-pointer shadow-sm">
+                              <img
+                                src={url}
+                                alt="Zdjęcie z dzisiaj"
+                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                            </div>
+                          ))
+                        ) : (
+                          <div className="flex h-[250px] w-full items-center justify-center rounded-3xl border border-dashed border-border text-slate-soft p-8">
+                            Brak zdjęć z dzisiejszego dnia
                           </div>
-                       </div>
+                        )}
+                      </div>
                        {/* Raport */}
                        <div className="bg-white p-4 rounded-xl border border-border/30">
                          <p className="text-sm font-medium text-sage mb-1">Notatka pielęgniarska</p>
