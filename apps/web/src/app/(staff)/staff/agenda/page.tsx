@@ -1,11 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { CalendarX, X, Trash2 } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
+import { CalendarX, X, Trash2, Calendar as CalendarIcon, Clock, Plus } from 'lucide-react'
 
 interface AgendaItem {
   id: string
@@ -91,66 +88,82 @@ export default function StaffAgendaPage() {
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-semibold tracking-tight text-foreground">Plan Dnia</h2>
-        <p className="text-text-secondary">Zarządzaj harmonogramem placówki. Cykliczne wpisy pokazują się każdego dnia.</p>
+        <h2 className="text-3xl font-display font-semibold tracking-tight text-slate">Plan Dnia</h2>
+        <p className="mt-2 text-slate-soft">Zarządzaj harmonogramem placówki. Cykliczne wpisy pokazują się każdego dnia.</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Agenda View */}
-        <div className="lg:col-span-2 space-y-4">
-          <Card>
-            <CardHeader>
-              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-                <div>
-                  <CardTitle>Harmonogram</CardTitle>
-                  <CardDescription>
-                    {new Date(viewDate).toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' })}
-                  </CardDescription>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Input 
-                    type="date" 
-                    value={viewDate} 
-                    onChange={e => setViewDate(e.target.value)}
-                    className="w-auto h-9"
-                  />
-                  <Button variant="outline" size="sm" onClick={() => setViewDate(new Date().toISOString().slice(0, 10))}>
-                    Dziś
-                  </Button>
-                </div>
+        <div className="lg:col-span-2 space-y-6">
+          <Card className="rounded-3xl border-none shadow-sm ring-1 ring-slate/5 bg-white overflow-hidden">
+            <div className="p-6 border-b border-slate/5 flex flex-col sm:flex-row justify-between sm:items-center gap-4 bg-slate/5">
+              <div>
+                <h3 className="text-lg font-semibold text-slate flex items-center gap-2">
+                  <CalendarIcon className="h-5 w-5 text-sage-dark" />
+                  Harmonogram
+                </h3>
+                <p className="text-sm font-medium text-slate-soft mt-1">
+                  {new Date(viewDate).toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' })}
+                </p>
               </div>
-            </CardHeader>
-            <CardContent>
+              <div className="flex items-center gap-3">
+                <input 
+                  type="date" 
+                  value={viewDate} 
+                  onChange={e => setViewDate(e.target.value)}
+                  className="rounded-xl border border-slate/10 bg-white px-3 py-2 text-sm text-slate shadow-sm focus:outline-none focus:ring-2 focus:ring-sage"
+                />
+                <button 
+                  onClick={() => setViewDate(new Date().toISOString().slice(0, 10))}
+                  className="rounded-xl bg-white px-4 py-2 text-sm font-medium text-slate shadow-sm ring-1 ring-inset ring-slate/10 hover:bg-slate/5 transition-colors"
+                >
+                  Dziś
+                </button>
+              </div>
+            </div>
+            <CardContent className="p-0">
               {loading ? (
-                <p className="text-sm text-text-secondary">Ładowanie...</p>
+                <div className="p-12 text-center text-sm font-medium text-slate-soft">Ładowanie harmonogramu...</div>
               ) : items.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                  <CalendarX className="h-12 w-12 mb-4 opacity-20" />
-                  <p className="text-sm font-medium">Brak wpisów na ten dzień.</p>
-                  <p className="text-xs mt-1 text-center max-w-[200px]">Zarządzaj harmonogramem dodając nowe wpisy z panelu po prawej stronie.</p>
+                <div className="flex flex-col items-center justify-center py-16 px-4">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate/5 text-slate-soft mb-4">
+                    <CalendarX className="h-8 w-8" />
+                  </div>
+                  <p className="text-base font-medium text-slate">Brak wpisów na ten dzień.</p>
+                  <p className="text-sm mt-2 text-slate-soft text-center max-w-sm">Zarządzaj harmonogramem dodając nowe wpisy z panelu po prawej stronie.</p>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="divide-y divide-slate/5">
                   {items.map(item => (
-                    <div key={item.id} className="flex items-center justify-between border-b border-border pb-3 last:border-0">
-                      <div className="flex items-center gap-3">
-                        <div className="w-14 text-sm font-semibold text-text-secondary">{item.time.slice(0, 5)}</div>
-                        <div>
-                          <div className="text-sm font-medium">
-                            {item.title} 
-                            {!item.target_date && <span className="ml-2 text-[10px] font-normal uppercase bg-muted px-1.5 py-0.5 rounded text-muted-foreground">Codziennie</span>}
+                    <div key={item.id} className="group flex items-center justify-between p-6 transition-colors hover:bg-slate/5">
+                      <div className="flex items-start gap-4">
+                        <div className="flex flex-col items-center justify-center rounded-xl bg-sage/10 w-16 h-16 shrink-0">
+                          <span className="text-lg font-bold text-sage-dark">{item.time.slice(0, 5)}</span>
+                        </div>
+                        <div className="py-1">
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-base font-semibold text-slate">{item.title}</h4>
+                            {!item.target_date && (
+                              <span className="inline-flex items-center rounded-md bg-slate/10 px-2 py-0.5 text-xs font-medium text-slate-soft uppercase tracking-wider">
+                                Codziennie
+                              </span>
+                            )}
                           </div>
-                          <div className="text-xs text-text-tertiary">
+                          <div className="text-sm font-medium text-slate-soft mt-1">
                             {ITEM_TYPES.find(t => t.value === item.type)?.label || item.type}
-                            {!item.resident_id && ' · Wszyscy'}
+                            {!item.resident_id && ' · Ogólnoplacówkowe'}
                           </div>
                         </div>
                       </div>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)} className="text-destructive hover:bg-destructive/10 hover:text-destructive">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <button 
+                        onClick={() => handleDelete(item.id)} 
+                        className="flex h-10 w-10 items-center justify-center rounded-xl text-slate-soft opacity-0 transition-all group-hover:opacity-100 hover:bg-rose-50 hover:text-rose-600"
+                        title="Usuń wpis"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -160,79 +173,119 @@ export default function StaffAgendaPage() {
         </div>
 
         {/* Add new item */}
-        <div className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Nowy wpis</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleAdd} className="space-y-3">
-                <div className="space-y-1">
-                  <Label htmlFor="agenda-title">Tytuł</Label>
-                  <Input id="agenda-title" value={title} onChange={e => setTitle(e.target.value)} placeholder="Np. Śniadanie" required />
+        <div className="space-y-6">
+          <Card className="rounded-3xl border-none shadow-sm ring-1 ring-slate/5 bg-white">
+            <div className="p-6 border-b border-slate/5">
+              <h3 className="text-lg font-semibold text-slate flex items-center gap-2">
+                <Plus className="h-5 w-5 text-sage-dark" />
+                Nowy wpis
+              </h3>
+            </div>
+            <CardContent className="p-6">
+              <form onSubmit={handleAdd} className="space-y-5">
+                <div className="space-y-2">
+                  <label htmlFor="agenda-title" className="text-sm font-medium text-slate">Tytuł</label>
+                  <input 
+                    id="agenda-title" 
+                    value={title} 
+                    onChange={e => setTitle(e.target.value)} 
+                    placeholder="Np. Śniadanie" 
+                    required 
+                    className="w-full rounded-xl border border-slate/20 bg-white px-4 py-2.5 text-sm text-slate shadow-sm focus:outline-none focus:ring-2 focus:ring-sage"
+                  />
                 </div>
-                <div className="space-y-1">
-                  <Label htmlFor="agenda-time">Godzina</Label>
-                  <Input id="agenda-time" type="time" value={time} onChange={e => setTime(e.target.value)} required />
+                
+                <div className="space-y-2">
+                  <label htmlFor="agenda-time" className="text-sm font-medium text-slate flex items-center gap-1">
+                    <Clock className="h-4 w-4 text-slate-soft" /> Godzina
+                  </label>
+                  <input 
+                    id="agenda-time" 
+                    type="time" 
+                    value={time} 
+                    onChange={e => setTime(e.target.value)} 
+                    required 
+                    className="w-full rounded-xl border border-slate/20 bg-white px-4 py-2.5 text-sm text-slate shadow-sm focus:outline-none focus:ring-2 focus:ring-sage"
+                  />
                 </div>
-                <div className="space-y-1">
-                  <Label htmlFor="agenda-type">Typ</Label>
-                  <select id="agenda-type" value={type} onChange={e => setType(e.target.value)} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+                
+                <div className="space-y-2">
+                  <label htmlFor="agenda-type" className="text-sm font-medium text-slate">Typ wydarzenia</label>
+                  <select 
+                    id="agenda-type" 
+                    value={type} 
+                    onChange={e => setType(e.target.value)} 
+                    className="w-full rounded-xl border border-slate/20 bg-white px-4 py-2.5 text-sm text-slate shadow-sm focus:outline-none focus:ring-2 focus:ring-sage"
+                  >
                     {ITEM_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                   </select>
                 </div>
                 
-                <div className="pt-2 pb-1 border-t mt-2">
-                  <Label className="mb-3 block">Częstotliwość</Label>
+                <div className="pt-4 border-t border-slate/10 mt-6">
+                  <label className="text-sm font-medium text-slate mb-3 block">Częstotliwość</label>
                   <div className="grid grid-cols-2 gap-3">
-                    <label className={`flex flex-col items-center justify-center rounded-lg border-2 p-3 cursor-pointer transition-all ${isRecurring ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted'}`}>
+                    <label className={`flex flex-col items-center justify-center rounded-xl p-4 cursor-pointer transition-all ${isRecurring ? 'bg-sage/10 ring-2 ring-sage-dark' : 'bg-slate/5 hover:bg-slate/10 ring-1 ring-slate/10'}`}>
                       <input type="radio" name="recurring" checked={isRecurring} onChange={() => setIsRecurring(true)} className="sr-only" />
-                      <span className="text-sm font-medium">Codziennie</span>
-                      <span className="text-xs text-muted-foreground mt-0.5">Wszystkie dni</span>
+                      <span className={`text-sm font-semibold ${isRecurring ? 'text-sage-dark' : 'text-slate'}`}>Codziennie</span>
+                      <span className="text-xs text-slate-soft mt-1">Wszystkie dni</span>
                     </label>
-                    <label className={`flex flex-col items-center justify-center rounded-lg border-2 p-3 cursor-pointer transition-all ${!isRecurring ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted'}`}>
+                    <label className={`flex flex-col items-center justify-center rounded-xl p-4 cursor-pointer transition-all ${!isRecurring ? 'bg-sage/10 ring-2 ring-sage-dark' : 'bg-slate/5 hover:bg-slate/10 ring-1 ring-slate/10'}`}>
                       <input type="radio" name="recurring" checked={!isRecurring} onChange={() => setIsRecurring(false)} className="sr-only" />
-                      <span className="text-sm font-medium">Wybrane dni</span>
-                      <span className="text-xs text-muted-foreground mt-0.5">Konkretne daty</span>
+                      <span className={`text-sm font-semibold ${!isRecurring ? 'text-sage-dark' : 'text-slate'}`}>Jednorazowo</span>
+                      <span className="text-xs text-slate-soft mt-1">Wybrane daty</span>
                     </label>
                   </div>
                 </div>
 
                 {!isRecurring && (
-                  <div className="space-y-3 animate-in fade-in slide-in-from-top-1 bg-muted/50 p-3 rounded-md border border-border">
-                    <div className="space-y-1">
-                      <Label htmlFor="agenda-date">Wybierz daty</Label>
+                  <div className="space-y-4 animate-in fade-in slide-in-from-top-1 bg-slate/5 p-4 rounded-2xl ring-1 ring-slate/10">
+                    <div className="space-y-2">
+                      <label htmlFor="agenda-date" className="text-sm font-medium text-slate">Wybierz daty</label>
                       <div className="flex gap-2">
-                        <Input 
+                        <input 
                           id="agenda-date" 
                           type="date" 
                           value={currentDateInput} 
                           onChange={e => setCurrentDateInput(e.target.value)} 
-                          className="flex-1"
+                          className="flex-1 rounded-xl border border-slate/20 bg-white px-3 py-2 text-sm text-slate shadow-sm focus:outline-none focus:ring-2 focus:ring-sage"
                         />
-                        <Button type="button" variant="secondary" onClick={addDate}>Dodaj</Button>
+                        <button 
+                          type="button" 
+                          onClick={addDate}
+                          className="rounded-xl bg-white px-4 py-2 text-sm font-medium text-slate shadow-sm ring-1 ring-inset ring-slate/10 hover:bg-slate/5 transition-colors"
+                        >
+                          Dodaj
+                        </button>
                       </div>
                     </div>
                     {itemDates.length > 0 ? (
-                      <div className="flex flex-wrap gap-2 pt-1">
+                      <div className="flex flex-wrap gap-2">
                         {itemDates.map(d => (
-                          <span key={d} className="inline-flex items-center gap-1 bg-background border border-border text-xs pl-2 pr-1 py-1 rounded-md shadow-sm">
+                          <span key={d} className="inline-flex items-center gap-1.5 bg-white border border-slate/10 text-xs font-medium text-slate pl-2.5 pr-1.5 py-1.5 rounded-lg shadow-sm">
                             {new Date(d).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' })}
-                            <button type="button" onClick={() => removeDate(d)} className="text-muted-foreground hover:text-foreground p-0.5 rounded-sm hover:bg-muted transition-colors">
-                              <X className="h-3 w-3" />
+                            <button 
+                              type="button" 
+                              onClick={() => removeDate(d)} 
+                              className="text-slate-soft hover:text-rose-600 rounded-md hover:bg-rose-50 p-0.5 transition-colors"
+                            >
+                              <X className="h-3.5 w-3.5" />
                             </button>
                           </span>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-xs text-destructive">Wybierz co najmniej jedną datę.</p>
+                      <p className="text-xs font-medium text-rose-600">Wybierz co najmniej jedną datę.</p>
                     )}
                   </div>
                 )}
 
-                <Button type="submit" className="w-full mt-2" disabled={submitting || (!isRecurring && itemDates.length === 0)}>
-                  {submitting ? 'Dodawanie...' : 'Dodaj wpis'}
-                </Button>
+                <button 
+                  type="submit" 
+                  disabled={submitting || (!isRecurring && itemDates.length === 0)}
+                  className="w-full mt-6 rounded-xl bg-sage px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-sage-dark transition-colors disabled:opacity-50 disabled:hover:bg-sage"
+                >
+                  {submitting ? 'Dodawanie...' : 'Dodaj wpis do harmonogramu'}
+                </button>
               </form>
             </CardContent>
           </Card>

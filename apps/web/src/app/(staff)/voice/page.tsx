@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/client'
+import { Card, CardContent } from '@/components/ui/card'
+import { Mic, Square, Loader2, Sparkles, AlertTriangle, ArrowRight, X } from 'lucide-react'
+import Link from 'next/link'
 
-export default function VoiceNotePage() {
+function VoiceNoteContent() {
   const searchParams = useSearchParams()
   const residentId = searchParams.get('resident')
   const [resident, setResident] = useState<any>(null)
@@ -18,6 +19,7 @@ export default function VoiceNotePage() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [finalReport, setFinalReport] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [followupQuestion, setFollowupQuestion] = useState<string | null>(null)
   
   const mediaRecorder = useRef<MediaRecorder | null>(null)
   const audioChunks = useRef<Blob[]>([])
@@ -71,7 +73,7 @@ export default function VoiceNotePage() {
 
   const processAudio = async (audioBlob: Blob) => {
     if (!residentId) {
-      setError('Nie wybrano pensjonariusza.')
+      setError('Nie wybrano podopiecznego.')
       return
     }
 
@@ -106,8 +108,6 @@ export default function VoiceNotePage() {
       setIsProcessing(false)
     }
   }
-
-  const [followupQuestion, setFollowupQuestion] = useState<string | null>(null)
 
   const generateAIReport = async () => {
     if (!draftId) return
@@ -144,115 +144,169 @@ export default function VoiceNotePage() {
   }
 
   if (!residentId) {
-    return <div className="p-4 text-center">Brak ID pensjonariusza w linku. Wróć do tablicy.</div>
+    return (
+      <div className="flex h-[400px] items-center justify-center rounded-2xl border border-dashed border-slate/20 bg-white">
+        <p className="text-slate-soft">Brak ID podopiecznego. Wróć do tablicy.</p>
+      </div>
+    )
   }
 
   return (
-    <div className="mx-auto max-w-xl space-y-6">
+    <div className="mx-auto max-w-2xl space-y-8">
       <div>
-        <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+        <h2 className="text-3xl font-display font-semibold tracking-tight text-slate">
           Notatka Głosowa
         </h2>
         {resident && (
-          <p className="text-text-secondary">Dla: {resident.first_name} {resident.last_name}</p>
+          <p className="mt-2 text-slate-soft text-lg">
+            Dla: <span className="font-semibold text-slate">{resident.first_name} {resident.last_name}</span>
+          </p>
         )}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Zaraportuj status</CardTitle>
-          <CardDescription>
-            Nagraj wiadomość, a sztuczna inteligencja ztranskrybuje ją do bazy danych i przygotuje gotowy raport.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6 flex flex-col items-center">
+      <Card className="overflow-hidden rounded-3xl border-none shadow-sm ring-1 ring-slate/5 bg-white">
+        <CardContent className="p-8 space-y-8 flex flex-col items-center">
           
+          <div className="text-center space-y-2 max-w-md">
+            <h3 className="font-medium text-slate text-lg">Zaraportuj status</h3>
+            <p className="text-sm text-slate-soft">
+              Nagraj wiadomość, a sztuczna inteligencja ztranskrybuje ją i przygotuje gotowy raport dla rodziny.
+            </p>
+          </div>
+
           {!finalReport && (
-            <div className="flex justify-center space-x-4">
+            <div className="flex justify-center w-full mt-4">
               {!isRecording ? (
-                <Button onClick={startRecording} disabled={isProcessing || isGenerating} size="lg" className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                  Rozpocznij nagrywanie
-                </Button>
+                <button 
+                  onClick={startRecording} 
+                  disabled={isProcessing || isGenerating} 
+                  className="group relative flex h-24 w-24 items-center justify-center rounded-full bg-rose-100 text-rose-600 transition-all hover:bg-rose-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+                >
+                  <div className="absolute inset-0 rounded-full ring-4 ring-rose-100/50 group-hover:animate-ping"></div>
+                  <Mic className="h-10 w-10 relative z-10" />
+                </button>
               ) : (
-                <Button onClick={stopRecording} size="lg" variant="outline" className="animate-pulse border-destructive text-destructive">
-                  Zatrzymaj nagrywanie
-                </Button>
+                <button 
+                  onClick={stopRecording} 
+                  className="flex h-24 w-24 items-center justify-center rounded-full bg-rose-600 text-white shadow-lg shadow-rose-600/30 transition-all animate-pulse hover:scale-105"
+                >
+                  <Square className="h-8 w-8 fill-current" />
+                </button>
               )}
             </div>
           )}
 
           {isProcessing && (
-             <p className="text-sm text-text-secondary animate-pulse">Przetwarzanie i transkrypcja audio...</p>
+            <div className="flex items-center gap-3 text-slate-soft">
+              <Loader2 className="h-5 w-5 animate-spin text-sage-dark" />
+              <p className="text-sm font-medium">Przetwarzanie i transkrypcja audio...</p>
+            </div>
           )}
           
           {isGenerating && (
-             <p className="text-sm text-text-secondary animate-pulse">AI przetwarza dane medyczne i buduje empatyczny raport...</p>
+            <div className="flex items-center gap-3 text-slate-soft">
+              <Sparkles className="h-5 w-5 animate-pulse text-sage-dark" />
+              <p className="text-sm font-medium">AI analizuje notatkę i buduje raport...</p>
+            </div>
           )}
 
           {error && (
-            <p className="text-sm font-medium text-destructive">{error}</p>
+            <div className="w-full rounded-2xl bg-rose-50 p-4 border border-rose-200 text-center">
+              <p className="text-sm font-medium text-rose-700">{error}</p>
+            </div>
           )}
 
           {transcription && !finalReport && !isGenerating && (
-            <div className="w-full mt-6 rounded-lg bg-surface-sunken p-4 border border-border">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-sm font-semibold">Rozpoznany tekst:</h4>
-                <span className="text-xs text-text-tertiary">Możesz go poprawić przed wysłaniem</span>
+            <div className="w-full rounded-2xl bg-slate/5 p-6 border border-slate/10 shadow-inner">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-sm font-semibold text-slate">Rozpoznany tekst:</h4>
+                <span className="text-xs font-medium text-slate-soft">Możesz edytować</span>
               </div>
               
               <textarea 
-                className="w-full min-h-[120px] rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-y mb-4"
+                className="w-full min-h-[140px] rounded-xl border border-slate/20 bg-white px-4 py-3 text-sm text-slate shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage resize-y mb-6 transition-all"
                 value={transcription}
                 onChange={(e) => setTranscription(e.target.value)}
               />
               
               {followupQuestion ? (
-                <div className="mb-4 rounded-lg bg-yellow-50 p-4 border border-yellow-200">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <span className="text-yellow-700 font-bold">⚠️ AI dopytuje:</span>
+                <div className="mb-6 rounded-2xl bg-amber-50 p-5 ring-1 ring-inset ring-amber-600/20">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="text-amber-800 font-bold text-sm block mb-1">AI dopytuje:</span>
+                      <p className="text-sm text-amber-900">{followupQuestion}</p>
+                      <p className="text-xs text-amber-700/80 mt-2 font-medium">
+                        Naciśnij mikrofon powyżej, aby dodać brakujące informacje do tego wpisu.
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-sm text-yellow-800">{followupQuestion}</p>
-                  <p className="text-xs text-yellow-600 mt-2">Naciśnij "Rozpocznij nagrywanie" powyżej, aby dodać brakujące informacje do tego wpisu.</p>
                   <div className="mt-4 flex justify-end">
-                    <Button variant="outline" onClick={() => { setTranscription(null); setDraftId(null); setFollowupQuestion(null); }}>
+                    <button 
+                      onClick={() => { setTranscription(null); setDraftId(null); setFollowupQuestion(null); }}
+                      className="inline-flex items-center gap-2 rounded-xl bg-amber-100/50 px-4 py-2 text-sm font-medium text-amber-800 hover:bg-amber-200 transition-colors"
+                    >
+                      <X className="h-4 w-4" />
                       Odrzuć ten wpis
-                    </Button>
+                    </button>
                   </div>
                 </div>
               ) : (
-                <div className="flex space-x-2">
-                  <Button onClick={generateAIReport} className="flex-1">
-                    Rozdziel medycznie i buduj raport dla rodziny
-                  </Button>
-                  <Button variant="outline" onClick={() => { setTranscription(null); setDraftId(null); setFollowupQuestion(null); }}>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button 
+                    onClick={generateAIReport} 
+                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-sage px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-sage-dark transition-colors"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    Przetwórz medycznie i buduj raport
+                  </button>
+                  <button 
+                    onClick={() => { setTranscription(null); setDraftId(null); setFollowupQuestion(null); }}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-medium text-slate-soft hover:text-slate hover:bg-slate/5 ring-1 ring-inset ring-slate/10 transition-colors"
+                  >
                     Odrzuć
-                  </Button>
+                  </button>
                 </div>
               )}
             </div>
           )}
 
           {finalReport && (
-            <div className="w-full mt-6 rounded-lg bg-primary/5 p-4 border border-primary/20">
-              <div className="flex items-center space-x-2 mb-2">
-                <div className="h-2 w-2 rounded-full bg-primary animate-pulse"></div>
-                <h4 className="text-sm font-semibold text-primary">Szkic raportu dla rodziny gotowy</h4>
+            <div className="w-full rounded-2xl bg-emerald-50 p-6 ring-1 ring-inset ring-emerald-600/20">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                  <Sparkles className="h-4 w-4" />
+                </div>
+                <h4 className="text-base font-semibold text-emerald-900">Szkic raportu gotowy</h4>
               </div>
-              <p className="text-sm mb-4">{finalReport}</p>
-              <p className="text-xs text-text-tertiary mb-4">
-                Twarde dane medyczne (np. leki) zostały usunięte z powyższego tekstu i bezpiecznie zarchiwizowane w logach wewnętrznych. Szkic możesz zatwierdzić w zakładce "Raporty".
-              </p>
+              <p className="text-sm text-emerald-800 mb-6 leading-relaxed bg-white/60 p-4 rounded-xl">{finalReport}</p>
               
-              <a href="/reports" className="block w-full">
-                <Button variant="default" className="w-full">
-                  Przejdź do weryfikacji
-                </Button>
-              </a>
+              <div className="flex items-start gap-3 mb-6 p-4 rounded-xl bg-amber-50 ring-1 ring-inset ring-amber-600/20">
+                <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-800 font-medium leading-relaxed">
+                  Twarde dane medyczne (np. parametry, leki) zostały usunięte z powyższego tekstu i bezpiecznie zarchiwizowane. Szkic możesz zatwierdzić w zakładce Raporty.
+                </p>
+              </div>
+              
+              <Link href="/staff/reports" className="block w-full">
+                <button className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 transition-colors">
+                  Przejdź do weryfikacji raportów
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </Link>
             </div>
           )}
 
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function VoiceNotePage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center p-8"><Loader2 className="h-6 w-6 animate-spin text-sage" /></div>}>
+      <VoiceNoteContent />
+    </Suspense>
   )
 }

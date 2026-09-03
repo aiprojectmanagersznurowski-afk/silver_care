@@ -1,13 +1,12 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { AgendaView } from '@/components/AgendaView'
-import { Search, X } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
+import { Search, X, Mic, FileText, Bed } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { MediaUploader } from '@/components/MediaUploader'
+import { AgendaView } from '@/components/AgendaView'
+import Link from 'next/link'
 
 type NoteStatus = 'ready' | 'draft' | 'none'
 
@@ -42,9 +41,9 @@ function getRoomNumber(resident: Record<string, unknown>): string | null {
 }
 
 const STATUS_CONFIG: Record<NoteStatus, { label: string; className: string }> = {
-  ready: { label: 'Raport gotowy', className: 'bg-green-100 text-green-800' },
-  draft: { label: 'Wersja robocza', className: 'bg-yellow-100 text-yellow-800' },
-  none: { label: 'Brak wpisu', className: 'bg-red-100 text-red-800' },
+  ready: { label: 'Raport gotowy', className: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20' },
+  draft: { label: 'Wersja robocza', className: 'bg-amber-50 text-amber-700 ring-amber-600/20' },
+  none: { label: 'Brak wpisu', className: 'bg-rose-50 text-rose-700 ring-rose-600/20' },
 }
 
 interface StaffBoardClientProps {
@@ -112,127 +111,137 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
   const activeFiltersCount = (floorFilter !== 'all' ? 1 : 0) + (roomFilter !== 'all' ? 1 : 0) + (statusFilter !== 'all' ? 1 : 0) + (searchFilter !== '' ? 1 : 0)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            Tablica Pensjonariuszy
+          <h2 className="text-3xl font-display font-semibold tracking-tight text-slate">
+            Podopieczni
           </h2>
-          <p className="text-text-secondary">Status notatek dziennych, filtrowanie po piętrze, sali i wpisach.</p>
+          <p className="mt-2 text-slate-soft">Szybki dostęp do notatek i statusów.</p>
         </div>
         {activeFiltersCount > 0 && (
-          <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground h-8 px-2 lg:px-3">
+          <button 
+            onClick={clearFilters}
+            className="inline-flex items-center gap-2 rounded-xl bg-slate/5 px-3 py-2 text-sm font-medium text-slate-soft hover:bg-slate/10 hover:text-slate transition-colors"
+          >
             Wyczyść filtry ({activeFiltersCount})
-            <X className="ml-2 h-4 w-4" />
-          </Button>
+            <X className="h-4 w-4" />
+          </button>
         )}
       </div>
 
+      {/* Agenda View */}
       <AgendaView residents={residents} />
 
-      <Card className="p-4 bg-surface-sunken border-none space-y-4">
-        {/* Szukajka */}
-        <div className="relative max-w-md">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="Szukaj pensjonariusza..." 
-            className="pl-9 bg-background" 
-            value={searchFilter}
-            onChange={(e) => setSearchFilter(e.target.value)}
-          />
-        </div>
+      {/* Filtry */}
+      <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5 bg-white">
+        <CardContent className="p-6 space-y-6">
+          {/* Szukajka */}
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-soft" />
+            <input 
+              placeholder="Szukaj podopiecznego..." 
+              className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate/10 bg-slate/5 text-slate placeholder:text-slate-soft focus:outline-none focus:ring-2 focus:ring-sage focus:border-transparent transition-all"
+              value={searchFilter}
+              onChange={(e) => setSearchFilter(e.target.value)}
+            />
+          </div>
 
-        {/* Filtr pięter */}
-        {floors.length > 0 && (
-          <div className="flex flex-wrap gap-2 items-center">
-            <span className="text-xs uppercase font-medium text-muted-foreground mr-2">Piętro:</span>
-            <button
-              onClick={() => setFloorFilter('all')}
-              className={`rounded-full px-3 py-1 text-sm font-medium transition-all ${
-                floorFilter === 'all' ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground border hover:bg-muted/80'
-              }`}
-            >
-              Wszystkie
-            </button>
-            {floors.map(f => (
+          <div className="flex flex-col gap-4">
+            {/* Filtr pięter */}
+            {floors.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm font-medium text-slate-soft w-16">Piętro:</span>
+                <button
+                  onClick={() => setFloorFilter('all')}
+                  className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                    floorFilter === 'all' ? 'bg-slate text-white' : 'bg-slate/5 text-slate-soft hover:bg-slate/10 hover:text-slate'
+                  }`}
+                >
+                  Wszystkie
+                </button>
+                {floors.map(f => (
+                  <button
+                    key={f}
+                    onClick={() => setFloorFilter(f)}
+                    className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                      floorFilter === f ? 'bg-slate text-white' : 'bg-slate/5 text-slate-soft hover:bg-slate/10 hover:text-slate'
+                    }`}
+                  >
+                    {f}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Filtr pokoi */}
+            {floorFilter !== 'all' && roomsForCurrentFloor.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm font-medium text-slate-soft w-16">Sala:</span>
+                <button
+                  onClick={() => setRoomFilter('all')}
+                  className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                    roomFilter === 'all' ? 'bg-slate text-white' : 'bg-slate/5 text-slate-soft hover:bg-slate/10 hover:text-slate'
+                  }`}
+                >
+                  Wszystkie
+                </button>
+                {roomsForCurrentFloor.map(r => (
+                  <button
+                    key={r}
+                    onClick={() => setRoomFilter(r)}
+                    className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                      roomFilter === r ? 'bg-slate text-white' : 'bg-slate/5 text-slate-soft hover:bg-slate/10 hover:text-slate'
+                    }`}
+                  >
+                    {r}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Filtr Statusów */}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-medium text-slate-soft w-16">Status:</span>
               <button
-                key={f}
-                onClick={() => setFloorFilter(f)}
-                className={`rounded-full px-3 py-1 text-sm font-medium transition-all ${
-                  floorFilter === f ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground border hover:bg-muted/80'
+                onClick={() => setStatusFilter('all')}
+                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                  statusFilter === 'all' ? 'bg-slate text-white' : 'bg-slate/5 text-slate-soft hover:bg-slate/10 hover:text-slate'
                 }`}
               >
-                {f}
+                Wszystkie
               </button>
-            ))}
-          </div>
-        )}
-
-        {/* Filtr pokoi */}
-        {floorFilter !== 'all' && roomsForCurrentFloor.length > 0 && (
-          <div className="flex flex-wrap gap-2 items-center">
-            <span className="text-xs uppercase font-medium text-muted-foreground mr-2">Sala:</span>
-            <button
-              onClick={() => setRoomFilter('all')}
-              className={`rounded-full px-3 py-1 text-sm font-medium transition-all ${
-                roomFilter === 'all' ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground border hover:bg-muted/80'
-              }`}
-            >
-              Wszystkie
-            </button>
-            {roomsForCurrentFloor.map(r => (
               <button
-                key={r}
-                onClick={() => setRoomFilter(r)}
-                className={`rounded-full px-3 py-1 text-sm font-medium transition-all ${
-                  roomFilter === r ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground border hover:bg-muted/80'
+                onClick={() => setStatusFilter('none')}
+                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                  statusFilter === 'none' ? 'bg-rose-500 text-white' : 'bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-600/20 hover:bg-rose-100'
                 }`}
               >
-                {r}
+                Brak wpisu
               </button>
-            ))}
+              <button
+                onClick={() => setStatusFilter('draft')}
+                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                  statusFilter === 'draft' ? 'bg-amber-500 text-white' : 'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20 hover:bg-amber-100'
+                }`}
+              >
+                Wersja robocza
+              </button>
+              <button
+                onClick={() => setStatusFilter('ready')}
+                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                  statusFilter === 'ready' ? 'bg-emerald-500 text-white' : 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20 hover:bg-emerald-100'
+                }`}
+              >
+                Raport gotowy
+              </button>
+            </div>
           </div>
-        )}
-
-        {/* Filtr Statusów */}
-        <div className="flex flex-wrap gap-2 items-center">
-            <span className="text-xs uppercase font-medium text-muted-foreground mr-2">Status:</span>
-            <button
-              onClick={() => setStatusFilter('all')}
-              className={`rounded-full px-3 py-1 text-sm font-medium transition-all ${
-                statusFilter === 'all' ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground border hover:bg-muted/80'
-              }`}
-            >
-              Wszystkie
-            </button>
-            <button
-              onClick={() => setStatusFilter('none')}
-              className={`rounded-full px-3 py-1 text-sm font-medium transition-all ${
-                statusFilter === 'none' ? 'bg-red-500 text-white' : 'bg-background text-red-600 border border-red-200 hover:bg-red-50'
-              }`}
-            >
-              Brak wpisu
-            </button>
-            <button
-              onClick={() => setStatusFilter('draft')}
-              className={`rounded-full px-3 py-1 text-sm font-medium transition-all ${
-                statusFilter === 'draft' ? 'bg-yellow-500 text-white' : 'bg-background text-yellow-600 border border-yellow-200 hover:bg-yellow-50'
-              }`}
-            >
-              Wersja robocza
-            </button>
-            <button
-              onClick={() => setStatusFilter('ready')}
-              className={`rounded-full px-3 py-1 text-sm font-medium transition-all ${
-                statusFilter === 'ready' ? 'bg-green-500 text-white' : 'bg-background text-green-600 border border-green-200 hover:bg-green-50'
-              }`}
-            >
-              Raport gotowy
-            </button>
-        </div>
+        </CardContent>
       </Card>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Lista Podopiecznych */}
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {filtered.map((resident) => {
           const active = getActiveAssignment(resident)
           const beds = active?.beds as Record<string, unknown> | undefined
@@ -243,77 +252,77 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
           const statusCfg = STATUS_CONFIG[noteStatus]
 
           return (
-            <Card key={resident.id as string} className="group hover:border-primary/40 transition-colors flex flex-col">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center gap-2 justify-between">
-                  <div className="flex items-center gap-2">
-                    <Avatar className="h-8 w-8 border">
+            <Card key={resident.id as string} className="group relative overflow-hidden rounded-2xl border-none shadow-sm ring-1 ring-slate/5 bg-white transition-all hover:shadow-md hover:ring-sage/30 flex flex-col">
+              <CardContent className="p-0 flex flex-col h-full">
+                <div className="p-5 flex-grow space-y-4">
+                  <div className="flex items-start justify-between">
+                    <Avatar className="h-12 w-12 border border-slate/10 shadow-sm">
                       {(resident.avatar_url as string) && (
                         <AvatarImage src={resident.avatar_url as string} alt={`${resident.first_name as string} ${resident.last_name as string}`} />
                       )}
-                      <AvatarFallback className="bg-primary/10 text-primary text-sm font-bold">
+                      <AvatarFallback className="bg-sage/10 text-sage-dark font-semibold">
                         {(resident.first_name as string)?.[0]}{(resident.last_name as string)?.[0]}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="truncate">{resident.first_name as string} {resident.last_name as string}</span>
+                    <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${statusCfg.className}`}>
+                      {statusCfg.label}
+                    </span>
                   </div>
-                </CardTitle>
-                <div className="text-sm text-text-tertiary mt-1">
-                  {roomNumber && bedLabel ? (
-                    <span className="inline-flex items-center rounded-full bg-surface-sunken px-2.5 py-0.5 text-xs font-medium">
-                      Pokój {roomNumber}, Łóżko {bedLabel}
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center rounded-full bg-destructive/10 text-destructive px-2.5 py-0.5 text-xs font-medium">
-                      Brak przypisanego łóżka
-                    </span>
-                  )}
+                  
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate truncate">
+                      {resident.first_name as string} {resident.last_name as string}
+                    </h3>
+                    <div className="mt-1 flex items-center text-sm text-slate-soft">
+                      <Bed className="h-4 w-4 mr-1.5 shrink-0" />
+                      {roomNumber && bedLabel ? (
+                        <span>Pokój {roomNumber}, Łóżko {bedLabel}</span>
+                      ) : (
+                        <span className="text-rose-500">Brak przypisanego łóżka</span>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-2 flex-grow">
-                <div className="text-sm">
-                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusCfg.className}`}>
-                    {statusCfg.label}
-                  </span>
+
+                <div className="border-t border-slate/5 p-4 bg-slate/5 flex flex-col gap-3">
+                  <Link href={`/staff/voice?resident=${resident.id}`} className="block w-full">
+                    <button className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-sage px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-sage-dark transition-colors">
+                      <Mic className="h-4 w-4" />
+                      Nagraj notatkę
+                    </button>
+                  </Link>
+                  
+                  {noteStatus !== 'none' && (
+                    <Link href={`/staff/reports?resident=${resident.id}`} className="block w-full">
+                       <button className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-medium text-slate shadow-sm ring-1 ring-inset ring-slate/10 hover:bg-slate/5 transition-colors">
+                         <FileText className="h-4 w-4 text-slate-soft" />
+                         Podgląd raportu
+                       </button>
+                    </Link>
+                  )}
+                  
+                  {/* Media uploader */}
+                  <div className="mt-1">
+                    <MediaUploader residentId={resident.id as string} />
+                  </div>
                 </div>
               </CardContent>
-              <CardFooter className="pt-2 flex flex-col gap-2">
-                <a href={`/voice?resident=${resident.id}`} className="block w-full">
-                  <Button className="w-full" variant="outline">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
-                      <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                      <line x1="12" x2="12" y1="19" y2="22"/>
-                    </svg>
-                    Nagranie głosowe
-                  </Button>
-                </a>
-                
-                {/* Opcja podglądu raportu jeśli istnieje */}
-                {noteStatus !== 'none' && (
-                  <a href={`/reports?resident=${resident.id}`} className="block w-full mb-2">
-                     <Button className="w-full text-xs h-8" variant="ghost">
-                        Podgląd notatek
-                     </Button>
-                  </a>
-                )}
-                
-                {/* Media uploader */}
-                <MediaUploader residentId={resident.id as string} />
-              </CardFooter>
             </Card>
           )
         })}
         {filtered.length === 0 && (
-          <div className="col-span-full py-12 text-center bg-surface-sunken rounded-lg border border-dashed">
-            <h3 className="text-sm font-medium text-foreground mb-1">Brak pensjonariuszy</h3>
-            <p className="text-sm text-text-secondary">
-              Spróbuj zmienić parametry filtrów albo wyczyścić je wszystkie.
+          <div className="col-span-full py-16 text-center rounded-2xl border border-dashed border-slate/20 bg-slate/5">
+            <h3 className="text-sm font-medium text-slate mb-1">Brak podopiecznych</h3>
+            <p className="text-sm text-slate-soft">
+              Nie znaleziono osób spełniających kryteria wyszukiwania.
             </p>
             {activeFiltersCount > 0 && (
-              <Button onClick={clearFilters} variant="outline" className="mt-4">
-                 Wyczyść filtry
-              </Button>
+              <button 
+                onClick={clearFilters} 
+                className="mt-6 inline-flex items-center rounded-xl bg-white px-4 py-2 text-sm font-medium text-slate shadow-sm ring-1 ring-inset ring-slate/10 hover:bg-slate/5 transition-colors"
+              >
+                 Wyczyść wszystkie filtry
+              </button>
             )}
           </div>
         )}
