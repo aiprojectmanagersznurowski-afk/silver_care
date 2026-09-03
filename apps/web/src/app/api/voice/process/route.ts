@@ -62,8 +62,7 @@ Nie dopisuj komentarzy, tylko surowy, poprawny JSON.`
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'llama3-8b-8192', // using available model for this API key
-        response_format: { type: "json_object" },
+        model: 'qwen/qwen3.6-27b', // using available model for this API key
         messages: [
           { role: 'system', content: systemPrompt1 },
           { role: 'user', content: transcription }
@@ -78,7 +77,12 @@ Nie dopisuj komentarzy, tylko surowy, poprawny JSON.`
     }
 
     const json1 = await resp1.json()
-    const content1 = json1.choices[0].message.content
+    let content1 = json1.choices[0].message.content
+    // Strip out <think>...</think> tags
+    content1 = content1.replace(/<think>[\s\S]*?(<\/think>|$)/g, '').trim()
+    // Strip out markdown code blocks if any
+    content1 = content1.replace(/^```json/i, '').replace(/```$/, '').trim()
+    
     let classified;
     try {
        classified = JSON.parse(content1)
@@ -136,7 +140,7 @@ Informacje o dyskomforcie: ${classified.discomfort}`
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'llama3-8b-8192',
+        model: 'qwen/qwen3.6-27b',
         messages: [
           { role: 'system', content: systemPrompt2 },
           { role: 'user', content: userPrompt2 }
