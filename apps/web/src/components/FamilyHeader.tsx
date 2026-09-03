@@ -111,11 +111,10 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
               
               <DropdownMenuSeparator />
               <form action="/auth/signout" method="post" className="w-full">
-                <DropdownMenuItem 
-                  className="py-2.5 cursor-pointer w-full text-left text-destructive font-medium" 
-                  render={<button type="submit" />}
-                >
-                  Wyloguj się
+                <DropdownMenuItem asChild>
+                  <button type="submit" className="flex w-full cursor-pointer items-center py-2.5 text-left font-medium text-destructive">
+                    Wyloguj się
+                  </button>
                 </DropdownMenuItem>
               </form>
             </DropdownMenuContent>

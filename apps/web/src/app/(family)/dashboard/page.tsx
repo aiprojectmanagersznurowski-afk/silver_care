@@ -5,7 +5,8 @@ import { mergeAndSortAgenda, AgendaItem } from '@/lib/agenda'
 
 type ResidentType = { id: string; first_name: string; last_name: string };
 
-export default async function FamilyDashboard() {
+export default async function FamilyDashboard(props: { searchParams: Promise<{ date?: string }> }) {
+  const searchParams = await props.searchParams;
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -64,13 +65,13 @@ export default async function FamilyDashboard() {
     }
   }
 
-  // Pobieramy zdjęcia pensjonariusza (dzisiejsze)
-  const today = new Date().toISOString().split('T')[0]
+  // Pobieramy zdjęcia pensjonariusza z wybranego dnia
+  const selectedDate = searchParams?.date || new Date().toISOString().split('T')[0]
   const { data: media } = await supabase
     .from('resident_media')
     .select('storage_path')
     .eq('resident_id', activeResident.id)
-    .eq('captured_at', today)
+    .eq('captured_at', selectedDate)
     .order('created_at', { ascending: false })
 
   const signedUrls = await Promise.all(
@@ -103,8 +104,9 @@ export default async function FamilyDashboard() {
     <FamilyDashboardClient
       resident={activeResident}
       reports={(reports || []) as Report[]}
-      todaysMedia={signedUrls.filter(Boolean) as string[]}
+      selectedDateMedia={signedUrls.filter(Boolean) as string[]}
       agenda={sortedAgenda}
+      selectedDate={selectedDate}
     />
   )
 }

@@ -37,8 +37,8 @@ export default async function FamilyLayout({ children }: { children: ReactNode }
       <FamilyHeader residents={residents} />
       
       {/* Main content area */}
-      <main className="flex-1 px-4 py-6">
-        <div className="mx-auto max-w-2xl">
+      <main className="flex-1 px-4 py-8">
+        <div className="mx-auto max-w-7xl">
           {children}
         </div>
       </main>

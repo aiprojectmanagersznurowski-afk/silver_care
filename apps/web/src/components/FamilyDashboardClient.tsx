@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { format } from 'date-fns'
 import { pl } from 'date-fns/locale'
+import { useRouter } from 'next/navigation'
+import { Sparkles, Camera } from 'lucide-react'
 
 import { DailySummaryHero } from './DailySummaryHero'
 import { ServiceActivityFeed } from './ServiceActivityFeed'
@@ -32,15 +34,17 @@ interface Report {
 interface FamilyDashboardClientProps {
   resident: Resident
   reports: Report[]
-  todaysMedia?: string[]
+  selectedDateMedia?: string[]
   agenda?: Array<{ id: string; title: string; time: string; type: string; resident_id: string | null }>
+  selectedDate: string
 }
 
 type TabType = 'DASHBOARD' | 'AGENDA' | 'GALERIA';
 
-export function FamilyDashboardClient({ resident, reports, todaysMedia = [], agenda = [] }: FamilyDashboardClientProps) {
+export function FamilyDashboardClient({ resident, reports, selectedDateMedia = [], agenda = [], selectedDate }: FamilyDashboardClientProps) {
   const [activeTab, setActiveTab] = useState<TabType>('DASHBOARD');
   const [mounted, setMounted] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
@@ -123,46 +127,52 @@ export function FamilyDashboardClient({ resident, reports, todaysMedia = [], age
                  <input 
                    type="date" 
                    className="rounded-xl border border-border px-4 py-2 text-sm text-slate focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20 bg-card"
-                   defaultValue={new Date().toISOString().split('T')[0]}
+                   value={selectedDate}
+                   onChange={(e) => {
+                     const url = new URL(window.location.href);
+                     url.searchParams.set('date', e.target.value);
+                     router.push(url.pathname + url.search);
+                   }}
                  />
                </div>
                
-               <div className="grid gap-6">
-                 {/* Przykład dni z galerii */}
-                 {reports.map((report) => (
-                    <div key={report.id} className="border border-border/50 rounded-2xl p-5 bg-cream-deep/50">
-                       <h3 className="font-medium text-lg mb-3">
-                         {format(new Date(report.created_at), 'EEEE, d MMMM', { locale: pl })}
-                       </h3>
-                       {/* Galeria Grid */}
-                       <div className="flex w-max space-x-4 p-4">
-                        {todaysMedia.length > 0 ? (
-                          todaysMedia.map((url, i) => (
-                            <div key={i} className="group relative h-[250px] w-[350px] overflow-hidden rounded-3xl shrink-0 cursor-pointer shadow-sm">
-                              <img
-                                src={url}
-                                alt="Zdjęcie z dzisiaj"
-                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                              />
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                            </div>
-                          ))
-                        ) : (
-                          <div className="flex h-[250px] w-full items-center justify-center rounded-3xl border border-dashed border-border text-slate-soft p-8">
-                            Brak zdjęć z dzisiejszego dnia
-                          </div>
-                        )}
+                {/* Displaying media for the selected date */}
+                <div className="border border-border/50 rounded-2xl p-5 bg-cream-deep/50 mt-6">
+                  <h3 className="font-medium text-lg mb-3">
+                    {format(new Date(selectedDate), 'EEEE, d MMMM', { locale: pl })}
+                  </h3>
+                  
+                  {/* Gallery Grid */}
+                  <div className="flex w-full space-x-4 py-4 overflow-x-auto custom-scrollbar">
+                    {selectedDateMedia.length > 0 ? (
+                      selectedDateMedia.map((url, i) => (
+                        <div key={i} className="group relative h-[250px] w-[350px] overflow-hidden rounded-3xl shrink-0 cursor-pointer shadow-sm">
+                          <img
+                            src={url}
+                            alt="Zdjęcie z tego dnia"
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                        </div>
+                      ))
+                    ) : (
+                      <div className="flex h-[250px] w-full items-center justify-center rounded-3xl border border-dashed border-border/70 bg-white/50 text-slate-soft p-8 text-center flex-col gap-2">
+                        <Camera className="h-8 w-8 opacity-20" />
+                        <p>Brak zdjęć w wybranym dniu</p>
                       </div>
-                       {/* Raport */}
-                       <div className="bg-white p-4 rounded-xl border border-border/30">
-                         <p className="text-sm font-medium text-sage mb-1">Notatka pielęgniarska</p>
-                         <p className="text-slate leading-relaxed overflow-y-auto max-h-48 pr-2 custom-scrollbar">
-                           {report.content.text || "Brak treści raportu."}
-                         </p>
-                       </div>
-                    </div>
-                 ))}
-               </div>
+                    )}
+                  </div>
+                  
+                  {/* Raport */}
+                  <div className="bg-white p-5 rounded-xl border border-border/30 mt-4 shadow-sm">
+                    <p className="text-sm font-semibold text-sage mb-2 flex items-center gap-2">
+                      <Sparkles className="h-4 w-4" /> Notatka
+                    </p>
+                    <p className="text-slate leading-relaxed overflow-y-auto max-h-48 pr-2 custom-scrollbar">
+                      {reports.find(r => r.created_at.startsWith(selectedDate))?.content?.text || "Brak treści raportu z tego dnia."}
+                    </p>
+                  </div>
+                </div>
              </div>
           )}
         </div>
