@@ -20,7 +20,11 @@ export async function GET() {
       resident_id,
       relative_user_id,
       is_from_family,
-      staff_user_id
+      staff_user_id,
+      residents (
+        first_name,
+        last_name
+      )
     `)
     .order('created_at', { ascending: false });
 

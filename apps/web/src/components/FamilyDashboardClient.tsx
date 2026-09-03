@@ -61,7 +61,7 @@ export function FamilyDashboardClient({ resident, reports, todaysMedia = [], age
               Dzień dobry, Ewo
             </h1>
             <p className="mt-1 text-[1rem] text-slate-soft sm:text-[1.05rem]">
-              Oto najnowsze informacje o tym, co u {resident.first_name}.
+              Oto najnowsze informacje o podopiecznym: {resident.first_name} {resident.last_name}.
             </p>
           </div>
           <TimeRangeFilter value={range} onChange={setRange} />

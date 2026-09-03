@@ -11,6 +11,10 @@ interface FamilyMessage {
   resident_id: string;
   relative_user_id: string;
   is_from_family: boolean;
+  residents?: {
+    first_name: string;
+    last_name: string;
+  };
 }
 
 export function AdminMessagesInbox() {
@@ -96,7 +100,7 @@ export function AdminMessagesInbox() {
   return (
     <div className="flex gap-6 h-[600px]">
       {/* Lista wątków */}
-      <div className="w-1/3 border border-border rounded-lg overflow-y-auto bg-card">
+      <div className="w-[300px] border border-border rounded-lg overflow-y-auto bg-card flex-shrink-0">
         <div className="p-4 border-b border-border bg-muted/20">
           <h2 className="font-semibold text-lg">Skrzynka wiadomości</h2>
         </div>
@@ -113,14 +117,14 @@ export function AdminMessagesInbox() {
                 }}
               >
                 <div className="flex justify-between items-start mb-1">
-                  <span className="text-sm font-medium text-foreground">
-                    Pensjonariusz: {msg.resident_id.substring(0, 8)}...
+                  <span className="text-sm font-medium text-foreground truncate max-w-[160px]" title={msg.residents ? `${msg.residents.first_name} ${msg.residents.last_name}` : msg.resident_id.substring(0, 8)}>
+                    {msg.residents ? `${msg.residents.first_name} ${msg.residents.last_name}` : `Pensjonariusz: ${msg.resident_id.substring(0, 8)}...`}
                   </span>
-                  <span className="text-[10px] text-muted-foreground whitespace-nowrap ml-2">
+                  <span className="text-[10px] text-muted-foreground whitespace-nowrap ml-2 shrink-0">
                     {format(new Date(msg.created_at), "d MMM, HH:mm", { locale: pl })}
                   </span>
                 </div>
-                <p className="text-xs text-muted-foreground line-clamp-2">
+                <p className="text-xs text-muted-foreground truncate">
                   {msg.is_from_family ? 'Rodzina: ' : 'Ty: '}
                   {msg.content}
                 </p>

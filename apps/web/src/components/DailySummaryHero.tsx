@@ -43,7 +43,8 @@ function WellbeingRing({ score }: { score: number }) {
           cy="65"
           r={r}
           fill="none"
-          stroke="#fffdf8"
+          stroke="currentColor"
+          className="text-cream"
           strokeWidth="12"
           strokeLinecap="round"
           strokeDasharray={c}
@@ -95,7 +96,7 @@ export function DailySummaryHero({ resident, report }: { resident: any, report: 
               <h2 className="text-[1.4rem] text-primary-foreground sm:text-[1.6rem]">Podsumowanie Dnia</h2>
               {/* Więcej miejsca na notatki glosowe */}
               <div className="mt-3 max-w-lg bg-white/10 rounded-2xl p-4 border border-white/20 backdrop-blur-sm">
-                <p className="text-[1rem] leading-relaxed opacity-95 text-left">
+                <p className="text-[1rem] leading-relaxed opacity-95 text-left max-h-48 overflow-y-auto custom-scrollbar pr-2">
                   {reportText}
                 </p>
               </div>
