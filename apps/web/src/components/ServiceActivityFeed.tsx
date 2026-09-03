@@ -19,7 +19,7 @@ const allActivities = [
     time: "10:00",
     detail: "Poranne tabletki przyjęte z wodą. Bez uwag.",
     status: "completed" as Status,
-    tint: "bg-[#eef2f7] text-[#4f6f8f]",
+    tint: "bg-slate-100 text-slate-700",
   },
   {
     id: 3,
@@ -28,7 +28,7 @@ const allActivities = [
     time: "12:30",
     detail: "Grillowany łosoś, gotowane warzywa, komosa ryżowa i sałatka owocowa.",
     status: "menu" as Status,
-    tint: "bg-[#dceaf6] text-[#3f74b0]",
+    tint: "bg-blue-100 text-blue-800",
     isMenu: true
   },
   {
@@ -38,21 +38,69 @@ const allActivities = [
     time: "14:00",
     detail: "Relaksacyjny masaż z aromaterapią w sali wellness.",
     status: "upcoming" as Status,
-    tint: "bg-[#e6ecf7] text-[#5a6bad]",
+    tint: "bg-indigo-100 text-indigo-800",
   },
 ];
 
 const statusStyles: Record<Status, { label: string; cls: string }> = {
   completed: { label: "Ukończono", cls: "bg-sage text-primary-foreground" },
   upcoming: { label: "Nadchodzi", cls: "bg-muted text-slate-soft" },
-  menu: { label: "Menu", cls: "bg-[#dceaf6] text-[#3f74b0]" },
+  menu: { label: "Wspólne", cls: "bg-blue-100 text-blue-800" },
 };
 
-export function ServiceActivityFeed({ compact = false, showMenu = false }: { compact?: boolean, showMenu?: boolean }) {
-  let activities = allActivities;
+function getIconForType(type: string) {
+  switch (type?.toLowerCase()) {
+    case 'meal': return UtensilsCrossed;
+    case 'medical': return Pill;
+    case 'activity': return Dumbbell;
+    default: return Sparkles;
+  }
+}
+
+function getTintForType(type: string) {
+  switch (type?.toLowerCase()) {
+    case 'meal': return "bg-blue-100 text-blue-800";
+    case 'medical': return "bg-slate-100 text-slate-700";
+    case 'activity': return "bg-sage-soft text-sage-deep";
+    default: return "bg-indigo-100 text-indigo-800";
+  }
+}
+
+export function ServiceActivityFeed({ 
+  compact = false, 
+  showMenu = false, 
+  agenda 
+}: { 
+  compact?: boolean, 
+  showMenu?: boolean,
+  agenda?: Array<{ id: string; title: string; time: string; type: string; resident_id: string | null }>
+}) {
+  let activities: Array<{
+    id: string | number;
+    icon: any;
+    title: string;
+    time: string;
+    detail: string;
+    status: Status;
+    tint: string;
+    isMenu?: boolean;
+  }> = allActivities;
   
+  if (agenda && agenda.length > 0) {
+    activities = agenda.map(item => ({
+      id: item.id,
+      icon: getIconForType(item.type),
+      title: item.title,
+      time: item.time,
+      detail: item.type === 'meal' ? "Jadłospis" : "Zaplanowane wydarzenie",
+      status: (item.resident_id === null ? "menu" : "upcoming") as Status,
+      tint: getTintForType(item.type),
+      isMenu: item.resident_id === null
+    }));
+  }
+
   if (compact) {
-    activities = allActivities.slice(0, 3);
+    activities = activities.slice(0, 3);
   }
   
   if (!showMenu) {

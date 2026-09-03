@@ -34,11 +34,12 @@ interface FamilyDashboardClientProps {
   resident: Resident
   reports: Report[]
   todaysMedia?: string[]
+  agenda?: Array<{ id: string; title: string; time: string; type: string; resident_id: string | null }>
 }
 
 type TabType = 'DASHBOARD' | 'AGENDA' | 'GALERIA';
 
-export function FamilyDashboardClient({ resident, reports, todaysMedia = [] }: FamilyDashboardClientProps) {
+export function FamilyDashboardClient({ resident, reports, todaysMedia = [], agenda = [] }: FamilyDashboardClientProps) {
   const [activeTab, setActiveTab] = useState<TabType>('DASHBOARD');
   const [range, setRange] = useState<TimeRange>("Dzień");
   const [mounted, setMounted] = useState(false);
@@ -94,8 +95,10 @@ export function FamilyDashboardClient({ resident, reports, todaysMedia = [] }: F
               <DailySummaryHero resident={resident} report={latestReport} />
 
               <div className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
-                {/* Ograniczony widok agendy na stronie głównej */}
-                <ServiceActivityFeed compact />
+                {/* Agenda i Zdarzenia */}
+                <div className="flex-1 min-w-0">
+                  <ServiceActivityFeed compact agenda={agenda} />
+                </div>
                 
                 {latestReport?.content?.metrics && (
                   <HealthRingInsight metrics={latestReport.content.metrics} />
@@ -107,7 +110,7 @@ export function FamilyDashboardClient({ resident, reports, todaysMedia = [] }: F
           {activeTab === 'AGENDA' && (
              <div className="bg-white rounded-3xl p-6 shadow-sm border border-border">
                <h2 className="text-xl font-display mb-6 text-slate">Pełny harmonogram i jadłospis</h2>
-               <ServiceActivityFeed showMenu={true} />
+               <ServiceActivityFeed showMenu={true} agenda={agenda} />
              </div>
           )}
 
@@ -145,8 +148,8 @@ export function FamilyDashboardClient({ resident, reports, todaysMedia = [] }: F
                        {/* Raport */}
                        <div className="bg-white p-4 rounded-xl border border-border/30">
                          <p className="text-sm font-medium text-sage mb-1">Notatka pielęgniarska</p>
-                         <p className="text-slate text-[0.95rem] leading-relaxed">
-                            {report.content.text || "Brak notatki dla tego dnia."}
+                         <p className="text-slate leading-relaxed overflow-y-auto max-h-48 pr-2 custom-scrollbar">
+                           {report.content.text || "Brak treści raportu."}
                          </p>
                        </div>
                     </div>

@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { FamilyDashboardClient } from '@/components/FamilyDashboardClient'
 import { cookies } from 'next/headers'
+import { mergeAndSortAgenda, AgendaItem } from '@/lib/agenda'
 
 type ResidentType = { id: string; first_name: string; last_name: string };
 
@@ -79,11 +80,31 @@ export default async function FamilyDashboard() {
     })
   )
 
+  // Fetch agenda
+  const { data: agendaData } = await supabase
+    .from('agenda_items')
+    .select('id, title, time, type, resident_id')
+    .or(`resident_id.eq.${activeResident.id},resident_id.is.null`)
+
+  const common: AgendaItem[] = []
+  const individual: AgendaItem[] = []
+  
+  ;(agendaData || []).forEach(item => {
+    if (item.resident_id === null) {
+      common.push(item as AgendaItem)
+    } else {
+      individual.push(item as AgendaItem)
+    }
+  })
+  
+  const sortedAgenda = mergeAndSortAgenda(common, individual)
+
   return (
     <FamilyDashboardClient
       resident={activeResident}
       reports={(reports || []) as Report[]}
       todaysMedia={signedUrls.filter(Boolean) as string[]}
+      agenda={sortedAgenda}
     />
   )
 }
