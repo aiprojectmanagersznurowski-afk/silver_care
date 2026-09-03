@@ -153,10 +153,8 @@ Informacje o dyskomforcie: ${classified.discomfort}`
     const json2 = await resp2.json()
     let reportText = json2.choices[0].message.content
 
-    // Strip out <think>...</think> tags if they exist
-    if (reportText.includes('</think>')) {
-        reportText = reportText.split('</think>')[1].trim()
-    }
+    // Strip out <think>...</think> tags if they exist, even if truncated
+    reportText = reportText.replace(/<think>[\s\S]*?(<\/think>|$)/g, '').trim()
 
     // 5. Zapis szkicu do daily_reports
     const { error: reportError } = await supabase.from('daily_reports').insert({
