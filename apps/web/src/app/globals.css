@@ -40,6 +40,15 @@
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-full: 999px;
+
+  /* Family Portal (Senior Care Family Dashboard) Tokens */
+  --color-cream: var(--cream);
+  --color-cream-deep: var(--cream-deep);
+  --color-sage: var(--sage);
+  --color-sage-deep: var(--sage-deep);
+  --color-sage-soft: var(--sage-soft);
+  --color-slate: var(--slate);
+  --color-slate-soft: var(--slate-soft);
 }
 
 :root {
@@ -63,6 +72,15 @@
   --border: #E8E4DD;
   --input: #E8E4DD;
   --ring: #2F6F5E;
+
+  /* Family Portal (Senior Care Family Dashboard) Tokens */
+  --cream: #ffffff;
+  --cream-deep: #f8fafc;
+  --sage: #1e3a8a;
+  --sage-deep: #172554;
+  --sage-soft: #eff6ff;
+  --slate: #0f172a;
+  --slate-soft: #64748b;
 }
 
 .dark {
@@ -86,6 +104,15 @@
   --border: #38342F;
   --input: #38342F;
   --ring: #7FBCA8;
+
+  /* Family Portal (Senior Care Family Dashboard) Tokens - Dark Mode Equivalents if needed, defaulting to original for now */
+  --cream: oklch(0.145 0 0);
+  --cream-deep: oklch(0.205 0 0);
+  --sage: #3b82f6;
+  --sage-deep: #60a5fa;
+  --sage-soft: #1e3a8a;
+  --slate: #f1f5f9;
+  --slate-soft: #cbd5e1;
 }
 
 @layer base {

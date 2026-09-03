@@ -1,0 +1,10 @@
+{
+  "description": "This app allows family members to monitor their loved ones' wellbeing through lifestyle metrics, daily agendas, and direct communication with caregivers.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
