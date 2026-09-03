@@ -12,7 +12,7 @@ function Dialog({ ...props }: DialogPrimitive.Root.Props) {
 }
 
 const DialogTrigger = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Trigger>,
+  HTMLButtonElement,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Trigger>
 >(({ ...props }, ref) => (
   <DialogPrimitive.Trigger ref={ref} data-slot="dialog-trigger" {...props} />
@@ -24,7 +24,7 @@ function DialogPortal({ ...props }: DialogPrimitive.Portal.Props) {
 }
 
 const DialogClose = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Close>,
+  HTMLButtonElement,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Close>
 >(({ ...props }, ref) => (
   <DialogPrimitive.Close ref={ref} data-slot="dialog-close" {...props} />

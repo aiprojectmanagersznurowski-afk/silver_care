@@ -14,7 +14,7 @@ function DropdownMenuPortal({ ...props }: MenuPrimitive.Portal.Props) {
 }
 
 const DropdownMenuTrigger = React.forwardRef<
-  React.ElementRef<typeof MenuPrimitive.Trigger>,
+  HTMLButtonElement,
   React.ComponentPropsWithoutRef<typeof MenuPrimitive.Trigger>
 >(({ ...props }, ref) => (
   <MenuPrimitive.Trigger ref={ref} data-slot="dropdown-menu-trigger" {...props} />
@@ -96,7 +96,7 @@ function DropdownMenuSub({ ...props }: MenuPrimitive.SubmenuRoot.Props) {
 }
 
 const DropdownMenuSubTrigger = React.forwardRef<
-  React.ElementRef<typeof MenuPrimitive.SubmenuTrigger>,
+  HTMLButtonElement,
   MenuPrimitive.SubmenuTrigger.Props & { inset?: boolean }
 >(({ className, inset, children, ...props }, ref) => (
   <MenuPrimitive.SubmenuTrigger
