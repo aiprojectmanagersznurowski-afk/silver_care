@@ -285,7 +285,7 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                 </div>
 
                 <div className="border-t border-slate/5 p-4 bg-slate/5 flex flex-col gap-3">
-                  <Link href={`/staff/voice?resident=${resident.id}`} className="block w-full">
+                  <Link href={`/voice?resident=${resident.id}`} className="block w-full">
                     <button className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-sage px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-sage-dark transition-colors">
                       <Mic className="h-4 w-4" />
                       Nagraj notatkę
