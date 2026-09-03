@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { AddResidentDialog } from '@/components/AddResidentDialog'
 import { AdminMessagesInbox } from '@/components/AdminMessagesInbox'
+import { ManageResidentBedDialog } from '@/components/ManageResidentBedDialog'
 import { deleteResidentAction } from '@/actions/admin'
 import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -13,7 +14,7 @@ export default async function AdminDashboard() {
   // Pobieramy wszystkich pensjonariuszy z organizacji tego admina
   const { data: residents } = await supabase
     .from('residents')
-    .select('*')
+    .select('*, bed_assignments(id, unassigned_at, beds(id, label, rooms(number)))')
     .order('created_at', { ascending: false })
 
   return (
@@ -77,12 +78,28 @@ export default async function AdminDashboard() {
                           {new Date(resident.created_at).toLocaleDateString('pl-PL')}
                         </td>
                         <td className="p-4 align-middle text-right">
-                          <form action={deleteResidentAction}>
-                            <input type="hidden" name="id" value={resident.id} />
-                            <Button variant="ghost" size="icon" type="submit" title="Usuń pensjonariusza i zwolnij łóżko" className="text-destructive hover:bg-destructive/10 h-8 w-8">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </form>
+                          <div className="flex justify-end gap-2">
+                            {(() => {
+                              const activeAssignments = Array.isArray(resident.bed_assignments)
+                                ? resident.bed_assignments.filter((a: any) => a.unassigned_at === null)
+                                : []
+                              const activeBed = activeAssignments.length > 0 ? activeAssignments[0].beds : null
+                              
+                              return (
+                                <ManageResidentBedDialog 
+                                  residentId={resident.id}
+                                  currentBedLabel={activeBed?.label}
+                                  currentRoomNumber={activeBed?.rooms?.number}
+                                />
+                              )
+                            })()}
+                            <form action={deleteResidentAction}>
+                              <input type="hidden" name="id" value={resident.id} />
+                              <Button variant="ghost" size="icon" type="submit" title="Usuń pensjonariusza i zwolnij łóżko" className="text-destructive hover:bg-destructive/10 h-8 w-8">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </form>
+                          </div>
                         </td>
                       </tr>
                     ))}
