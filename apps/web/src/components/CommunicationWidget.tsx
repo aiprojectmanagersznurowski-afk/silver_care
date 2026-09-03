@@ -83,7 +83,7 @@ export function CommunicationWidget({ residentId }: { residentId?: string }) {
             <div className="leading-tight">
               <p className="text-[1.1rem]">Zespół opieki</p>
               <p className="flex items-center gap-1.5 text-[0.78rem] opacity-90">
-                <span className="h-2 w-2 rounded-full bg-[#a7e0b0]" /> Silver Care · dostępny
+                <span className="h-2 w-2 rounded-full bg-emerald-400" /> Silver Care · dostępny
               </p>
             </div>
             <button
@@ -115,10 +115,10 @@ export function CommunicationWidget({ residentId }: { residentId?: string }) {
           </div>
 
           {/* body */}
-          <div className="flex-1 space-y-4 overflow-y-auto p-4" ref={scrollRef}>
+          <div className="flex-1 flex flex-col overflow-y-auto p-4" ref={scrollRef}>
             {tab === "chat" ? (
               messages.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-center px-4">
+                <div className="flex flex-col items-center justify-center flex-1 text-center px-4">
                   <div className="w-16 h-16 rounded-full flex items-center justify-center text-3xl mb-4 bg-muted">
                     👋
                   </div>
@@ -127,8 +127,9 @@ export function CommunicationWidget({ residentId }: { residentId?: string }) {
                   </p>
                 </div>
               ) : (
-                messages.map((m, idx) => {
-                  const isFamily = m.is_from_family;
+                <div className="mt-auto flex flex-col space-y-4">
+                  {messages.map((m, idx) => {
+                    const isFamily = m.is_from_family;
                   const prevMsg = messages[idx - 1];
                   const showTime = !prevMsg || !isSameDay(new Date(m.created_at), new Date(prevMsg.created_at));
 
@@ -166,17 +167,20 @@ export function CommunicationWidget({ residentId }: { residentId?: string }) {
                       )}
                     </div>
                   );
-                })
+                })}
+                </div>
               )
             ) : (
-              mockNotes.map((n) => (
-                <div key={n.id} className="rounded-2xl bg-[#f6efe0] p-4 ring-1 ring-[#e8dcc0]">
-                  <p className="text-[0.92rem] leading-relaxed text-slate">{n.text}</p>
-                  <p className="mt-2 text-[0.72rem] text-slate-soft">
-                    {n.author} · {n.time}
-                  </p>
-                </div>
-              ))
+              <div className="space-y-4">
+                {mockNotes.map((n) => (
+                  <div key={n.id} className="rounded-2xl bg-amber-50 p-4 ring-1 ring-amber-200">
+                    <p className="text-[0.92rem] leading-relaxed text-slate">{n.text}</p>
+                    <p className="mt-2 text-[0.72rem] text-slate-soft">
+                      {n.author} · {n.time}
+                    </p>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
 

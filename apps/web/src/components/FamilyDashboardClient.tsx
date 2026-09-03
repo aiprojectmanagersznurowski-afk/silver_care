@@ -94,14 +94,16 @@ export function FamilyDashboardClient({ resident, reports, todaysMedia = [], age
             <>
               <DailySummaryHero resident={resident} report={latestReport} />
 
-              <div className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
+              <div className="grid gap-5 lg:grid-cols-[1.5fr_1fr] items-start">
                 {/* Agenda i Zdarzenia */}
                 <div className="flex-1 min-w-0">
                   <ServiceActivityFeed compact agenda={agenda} />
                 </div>
                 
                 {latestReport?.content?.metrics && (
-                  <HealthRingInsight metrics={latestReport.content.metrics} />
+                  <div className="sticky top-24">
+                    <HealthRingInsight metrics={latestReport.content.metrics} />
+                  </div>
                 )}
               </div>
             </>
@@ -116,8 +118,17 @@ export function FamilyDashboardClient({ resident, reports, todaysMedia = [], age
 
           {activeTab === 'GALERIA' && (
              <div className="bg-white rounded-3xl p-6 shadow-sm border border-border">
-               <h2 className="text-xl font-display mb-2 text-slate">Galeria i Wspomnienia</h2>
-               <p className="text-slate-soft mb-6">Wybierz dzień, aby zobaczyć zdjęcia z zajęć i przeczytać pełny raport dzienny.</p>
+               <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                 <div>
+                   <h2 className="text-xl font-display mb-2 text-slate">Galeria i Wspomnienia</h2>
+                   <p className="text-slate-soft">Wybierz dzień, aby zobaczyć zdjęcia z zajęć i przeczytać pełny raport dzienny.</p>
+                 </div>
+                 <input 
+                   type="date" 
+                   className="rounded-xl border border-border px-4 py-2 text-sm text-slate focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20 bg-card"
+                   defaultValue={new Date().toISOString().split('T')[0]}
+                 />
+               </div>
                
                <div className="grid gap-6">
                  {/* Przykład dni z galerii */}

@@ -1,4 +1,4 @@
-import { Sparkles, CheckCircle2, Sun, Footprints, Camera } from "lucide-react";
+import { Sparkles, CheckCircle2, Sun, Footprints, Camera, Activity } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { format } from 'date-fns'
 import { pl } from 'date-fns/locale'
@@ -67,7 +67,7 @@ export function DailySummaryHero({ resident, report }: { resident: any, report: 
 
   const quickStats = [
     { icon: CheckCircle2, label: "Sen", value: wb.sleep },
-    { icon: Footprints, label: "Kroki dzisiaj", value: report?.content?.metrics?.steps ? `${report.content.metrics.steps}` : "Brak opaski" },
+    { icon: report?.content?.metrics?.steps ? Footprints : Activity, label: "Kroki dzisiaj", value: report?.content?.metrics?.steps ? `${report.content.metrics.steps}` : "Brak opaski" },
     { icon: Sun, label: "Apetyt", value: wb.appetite },
   ];
 
@@ -93,7 +93,7 @@ export function DailySummaryHero({ resident, report }: { resident: any, report: 
           <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:items-start sm:text-left">
             <WellbeingRing score={wb.mood === "Radosny" ? 95 : wb.mood === "Obniżony" ? 65 : 82} />
             <div className="flex-1">
-              <h2 className="text-[1.4rem] text-primary-foreground sm:text-[1.6rem]">Podsumowanie Dnia</h2>
+              <h2 className="text-[1.4rem] leading-tight break-words text-primary-foreground sm:text-[1.6rem]">Podsumowanie Dnia</h2>
               {/* Więcej miejsca na notatki glosowe */}
               <div className="mt-3 max-w-lg bg-white/10 rounded-2xl p-4 border border-white/20 backdrop-blur-sm">
                 <p className="text-[1rem] leading-relaxed opacity-95 text-left max-h-48 overflow-y-auto custom-scrollbar pr-2">

@@ -1,4 +1,4 @@
-import { Dumbbell, UtensilsCrossed, Sparkles, Pill, ChevronRight } from "lucide-react";
+import { Dumbbell, Utensils, Sparkles, Pill, ChevronRight } from "lucide-react";
 
 type Status = "completed" | "upcoming" | "menu";
 
@@ -23,7 +23,7 @@ const allActivities = [
   },
   {
     id: 3,
-    icon: UtensilsCrossed,
+    icon: Utensils,
     title: "Zbilansowany obiad",
     time: "12:30",
     detail: "Grillowany łosoś, gotowane warzywa, komosa ryżowa i sałatka owocowa.",
@@ -50,7 +50,7 @@ const statusStyles: Record<Status, { label: string; cls: string }> = {
 
 function getIconForType(type: string) {
   switch (type?.toLowerCase()) {
-    case 'meal': return UtensilsCrossed;
+    case 'meal': return Utensils;
     case 'medical': return Pill;
     case 'activity': return Dumbbell;
     default: return Sparkles;
@@ -91,7 +91,7 @@ export function ServiceActivityFeed({
       id: item.id,
       icon: getIconForType(item.type),
       title: item.title,
-      time: item.time,
+      time: item.time ? item.time.slice(0, 5) : item.time,
       detail: item.type === 'meal' ? "Jadłospis" : "Zaplanowane wydarzenie",
       status: (item.resident_id === null ? "menu" : "upcoming") as Status,
       tint: getTintForType(item.type),
