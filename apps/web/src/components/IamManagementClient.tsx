@@ -3,8 +3,19 @@
 import { useState, useTransition } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { updateUserRoleAction } from '@/actions/iam'
-import { Shield, ShieldAlert, CheckCircle2, UserCog, History, RefreshCw, AlertCircle } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { updateUserRoleAction, createUserWithRoleAction } from '@/actions/iam'
+import { Shield, ShieldAlert, CheckCircle2, UserCog, History, RefreshCw, AlertCircle, UserPlus, Key, Copy, Check } from 'lucide-react'
 
 export interface UserItem {
   id: string
@@ -21,7 +32,7 @@ export interface AuditLogItem {
   payload: {
     target_user_id?: string
     new_role?: string
-    previous_role?: string
+    previous_role?: string | null
     changed_at?: string
   }
   created_at: string
@@ -34,13 +45,20 @@ interface IamManagementClientProps {
   errorMessage?: string
 }
 
-const AVAILABLE_ROLES = [
-  { id: 'super_admin', label: 'Super Admin (Globalny)' },
-  { id: 'org_admin', label: 'Administrator Placówki (Org Admin)' },
-  { id: 'nurse', label: 'Personel Opiekuńczy (Nurse)' },
-  { id: 'legal_guardian', label: 'Opiekun Prawny (Legal Guardian)' },
-  { id: 'family', label: 'Członek Rodziny (Family)' },
-]
+import { ROLES } from '@silvercare/contracts/src/generated/roles'
+
+const ROLE_LABELS: Record<string, string> = {
+  super_admin: 'Super Admin (Globalny)',
+  org_admin: 'Administrator Placówki (Org Admin)',
+  nurse: 'Personel Opiekuńczy (Nurse)',
+  legal_guardian: 'Opiekun Prawny (Legal Guardian)',
+  family: 'Członek Rodziny (Family)',
+}
+
+const AVAILABLE_ROLES = ROLES.map(r => ({
+  id: r.id,
+  label: ROLE_LABELS[r.id] || r.id,
+}))
 
 export function IamManagementClient({
   initialUsers,
@@ -53,6 +71,20 @@ export function IamManagementClient({
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [selectedRoles, setSelectedRoles] = useState<Record<string, string>>({})
   const [isPending, startTransition] = useTransition()
+
+  // Stan dialogu dodawania użytkownika
+  const [isAddUserOpen, setIsAddUserOpen] = useState(false)
+  const [newEmail, setNewEmail] = useState('')
+  const [newRole, setNewRole] = useState('nurse')
+  const [newPassword, setNewPassword] = useState('')
+  const [newOrgId, setNewOrgId] = useState('')
+  const [addUserError, setAddUserError] = useState<string | null>(null)
+  const [createdCredentials, setCreatedCredentials] = useState<{
+    email: string
+    role: string
+    temporaryPassword?: string
+  } | null>(null)
+  const [copiedPassword, setCopiedPassword] = useState(false)
 
   // Stan UI wymuszany przez prop (np. w Storybooku / testach) lub obliczany
   const currentState = forcedState || (errorMessage ? 'error' : users.length === 0 ? 'empty' : 'success')
@@ -77,6 +109,80 @@ export function IamManagementClient({
       } else {
         setStatusMessage({ type: 'success', text: `Pomyślnie zaktualizowano rolę dla użytkownika.` })
         setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u))
+      }
+    })
+  }
+
+  const handleCreateUser = (e: React.FormEvent) => {
+    e.preventDefault()
+    setAddUserError(null)
+
+    if (!newEmail.trim()) {
+      setAddUserError('Adres e-mail jest wymagany.')
+      return
+    }
+
+    startTransition(async () => {
+      const formData = new FormData()
+      formData.set('email', newEmail.trim())
+      formData.set('role', newRole)
+      if (newPassword.trim()) {
+        formData.set('password', newPassword.trim())
+      }
+      if (newOrgId.trim()) {
+        formData.set('organizationId', newOrgId.trim())
+      }
+
+      const result = await createUserWithRoleAction(formData)
+      if (result?.error) {
+        setAddUserError(result.error)
+      } else if (result?.user) {
+        const u = result.user
+        setUsers(prev => [
+          {
+            id: u.id,
+            email: u.email,
+            role: u.role,
+            organizationId: u.organizationId,
+            lastSignInAt: u.lastSignInAt
+          },
+          ...prev
+        ])
+
+        // Dopisanie do lokalnego widoku audytu
+        setAuditLogs(prev => [
+          {
+            id: `local-${Date.now()}`,
+            action: 'role_change',
+            performed_by: 'super_admin',
+            payload: {
+              target_user_id: u.id,
+              new_role: u.role,
+              previous_role: null,
+              changed_at: new Date().toISOString()
+            },
+            created_at: new Date().toISOString()
+          },
+          ...prev
+        ])
+
+        setCreatedCredentials({
+          email: u.email,
+          role: u.role,
+          temporaryPassword: u.temporaryPassword
+        })
+
+        setStatusMessage({
+          type: 'success',
+          text: `Pomyślnie utworzono użytkownika ${u.email} z rolą ${u.role}.`
+        })
+
+        // Reset pól formularza
+        setNewEmail('')
+        setNewPassword('')
+        setNewOrgId('')
+        setNewRole('nurse')
+        setIsAddUserOpen(false)
       }
     })
   }
@@ -150,20 +256,152 @@ export function IamManagementClient({
         </div>
       )}
 
+      {createdCredentials && (
+        <div className="rounded-2xl border border-sage/30 bg-sage/5 p-6 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sage font-semibold">
+              <Key className="h-5 w-5" />
+              <span>Utworzono nowe konto użytkownika!</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setCreatedCredentials(null)}
+              className="text-slate-soft hover:text-slate text-sm font-medium"
+            >
+              Zamknij powiadomienie
+            </button>
+          </div>
+          <p className="text-sm text-slate-soft">
+            Przekaż poniższe dane logowania użytkownikowi. Hasło tymczasowe nie będzie ponownie widoczne w panelu.
+          </p>
+          <div className="flex flex-wrap items-center gap-4 bg-white p-3 rounded-xl border border-slate/10 font-mono text-xs">
+            <div><strong>E-mail:</strong> {createdCredentials.email}</div>
+            <div><strong>Rola:</strong> {createdCredentials.role}</div>
+            {createdCredentials.temporaryPassword && (
+              <div className="flex items-center gap-2">
+                <strong>Hasło:</strong> 
+                <span className="bg-slate/5 px-2 py-1 rounded select-all">{createdCredentials.temporaryPassword}</span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => {
+                    navigator.clipboard.writeText(createdCredentials.temporaryPassword || '')
+                    setCopiedPassword(true)
+                    setTimeout(() => setCopiedPassword(false), 2000)
+                  }}
+                >
+                  {copiedPassword ? <Check className="h-3 w-3 text-sage mr-1" /> : <Copy className="h-3 w-3 mr-1" />}
+                  {copiedPassword ? 'Skopiowano' : 'Kopiuj hasło'}
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Sekcja 1: Użytkownicy i Uprawnienia */}
       <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5 overflow-hidden">
-        <CardHeader className="border-b border-slate/5 bg-white px-6 py-5">
+        <CardHeader className="border-b border-slate/5 bg-white px-6 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sage/10 text-sage">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sage/10 text-sage shrink-0">
               <Shield className="h-5 w-5" />
             </div>
             <div>
               <CardTitle className="text-lg font-semibold text-slate">Użytkownicy i Role</CardTitle>
               <CardDescription className="text-slate-soft">
-                Zarządzaj przypisaniem ról systemowych (dostęp wyłącznie dla Super Admina).
+                Zarządzaj przypisaniem ról systemowych oraz twórz nowe konta (dostęp wyłącznie dla Super Admina).
               </CardDescription>
             </div>
           </div>
+
+          <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
+            <DialogTrigger render={<Button />}>
+              <UserPlus className="h-4 w-4 mr-2" />
+              Dodaj użytkownika
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Utwórz użytkownika i nadaj rolę</DialogTitle>
+                <DialogDescription>
+                  Załóż nowe konto w systemie i natychmiast przypisz uprawnienia platformowe.
+                </DialogDescription>
+              </DialogHeader>
+
+              <form onSubmit={handleCreateUser} className="space-y-4 py-2">
+                <div className="space-y-2">
+                  <Label htmlFor="new-user-email">Adres e-mail *</Label>
+                  <Input
+                    id="new-user-email"
+                    type="email"
+                    placeholder="np. jan.kowalski@placowka.pl"
+                    value={newEmail}
+                    onChange={e => setNewEmail(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="new-user-role">Rola systemowa *</Label>
+                  <select
+                    id="new-user-role"
+                    value={newRole}
+                    onChange={e => setNewRole(e.target.value)}
+                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  >
+                    {AVAILABLE_ROLES.map(r => (
+                      <option key={r.id} value={r.id}>
+                        {r.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="new-user-password">Hasło początkowe (opcjonalne)</Label>
+                  <Input
+                    id="new-user-password"
+                    type="text"
+                    placeholder="Zostaw puste, aby wygenerować automatycznie"
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
+                  />
+                  <p className="text-[0.75rem] text-slate-soft">
+                    Jeśli nie podasz hasła, system wygeneruje bezpieczny ciąg znaków i wyświetli go po utworzeniu.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="new-user-org">ID Placówki / Organizacji (opcjonalne)</Label>
+                  <Input
+                    id="new-user-org"
+                    type="text"
+                    placeholder="UUID placówki (pozostaw puste dla ról globalnych)"
+                    value={newOrgId}
+                    onChange={e => setNewOrgId(e.target.value)}
+                  />
+                </div>
+
+                {addUserError && (
+                  <p className="text-sm font-medium text-destructive">{addUserError}</p>
+                )}
+
+                <DialogFooter className="pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsAddUserOpen(false)}
+                  >
+                    Anuluj
+                  </Button>
+                  <Button type="submit" disabled={isPending} className="bg-sage text-white hover:bg-sage/90">
+                    {isPending ? 'Tworzenie...' : 'Utwórz i nadaj rolę'}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -267,9 +505,15 @@ export function IamManagementClient({
                       {log.payload?.target_user_id || 'nieznany'}
                     </td>
                     <td className="px-6 py-4">
-                      <span className="font-medium text-slate-soft line-through mr-2">
-                        {log.payload?.previous_role || 'brak'}
-                      </span>
+                      {log.payload?.previous_role ? (
+                        <span className="font-medium text-slate-soft line-through mr-2">
+                          {log.payload.previous_role}
+                        </span>
+                      ) : (
+                        <span className="inline-block rounded bg-slate/10 px-1.5 py-0.5 text-xs text-slate-soft mr-2">
+                          Nowe konto
+                        </span>
+                      )}
                       <span className="font-semibold text-sage">
                         → {log.payload?.new_role}
                       </span>

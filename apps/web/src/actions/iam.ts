@@ -4,11 +4,12 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 
-const VALID_ROLES = ['super_admin', 'org_admin', 'nurse', 'legal_guardian', 'family'] as const
-type ValidRole = typeof VALID_ROLES[number]
+import { ROLES } from '@silvercare/contracts/src/generated/roles'
+
+type ValidRole = typeof ROLES[number]['id']
 
 function isValidRole(role: string): role is ValidRole {
-  return (VALID_ROLES as readonly string[]).includes(role)
+  return ROLES.some(r => r.id === role)
 }
 
 export async function updateUserRoleAction(formData: FormData) {
@@ -70,3 +71,87 @@ export async function updateUserRoleAction(formData: FormData) {
   revalidatePath('/admin/iam')
   return { success: true }
 }
+
+export async function createUserWithRoleAction(formData: FormData) {
+  const email = (formData.get('email') as string)?.trim()
+  const role = (formData.get('role') as string)?.trim()
+  const passwordInput = (formData.get('password') as string)?.trim()
+  const organizationIdInput = (formData.get('organizationId') as string)?.trim()
+
+  if (!email || !role) {
+    return { error: 'E-mail oraz rola są polami wymaganymi.' }
+  }
+
+  if (!isValidRole(role)) {
+    return { error: 'Nieprawidłowa rola użytkownika.' }
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(email)) {
+    return { error: 'Podano nieprawidłowy adres e-mail.' }
+  }
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const callerRole = user?.app_metadata?.role || user?.user_metadata?.role
+  if (!user || callerRole !== 'super_admin') {
+    return { error: 'Brak uprawnień. Wymagana rola super_admin.' }
+  }
+
+  // Generuj bezpieczne hasło, jeśli nie podano
+  const password = passwordInput && passwordInput.length >= 8
+    ? passwordInput
+    : Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-4) + 'A1!'
+
+  const organizationId = organizationIdInput && organizationIdInput.length > 0
+    ? organizationIdInput
+    : null
+
+  const adminClient = createAdminClient()
+  const { data: createdData, error: createErr } = await adminClient.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    app_metadata: {
+      provider: 'email',
+      providers: ['email'],
+      role,
+      ...(organizationId ? { organization_id: organizationId } : {})
+    }
+  })
+
+  if (createErr || !createdData?.user) {
+    console.error('Błąd tworzenia użytkownika:', createErr)
+    return { error: 'Błąd tworzenia użytkownika: ' + (createErr?.message || 'Nieznany błąd') }
+  }
+
+  const newUser = createdData.user
+
+  // Rejestracja w audit_logs przez RPC log_role_change (previous_role = null)
+  const { error: rpcErr } = await supabase.rpc('log_role_change', {
+    p_target_user_id: newUser.id,
+    p_new_role: role,
+    p_previous_role: null,
+    p_organization_id: organizationId
+  })
+
+  if (rpcErr) {
+    console.error('Błąd audytu przy tworzeniu użytkownika:', rpcErr)
+  }
+
+  revalidatePath('/admin/iam')
+
+  return {
+    success: true,
+    user: {
+      id: newUser.id,
+      email: newUser.email || email,
+      role,
+      organizationId,
+      lastSignInAt: null,
+      temporaryPassword: password
+    }
+  }
+}
+

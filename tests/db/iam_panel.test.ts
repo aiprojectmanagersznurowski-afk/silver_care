@@ -82,4 +82,28 @@ describe('IAM Panel & Role Management (SUP-IAM-PANEL)', () => {
       if (e.message !== 'ROLLBACK') throw e;
     });
   });
+
+  it('logs user creation role assignment without previous_role @REQ: SUP-IAM-PANEL', async () => {
+    await sql.begin(async (tx) => {
+      await tx`SET LOCAL ROLE postgres`;
+      const superAdminId = '11111111-1111-1111-1111-111111111111';
+      const newUserId = '66666666-6666-6666-6666-666666666666';
+
+      await tx`SET LOCAL ROLE authenticated`;
+      await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "${superAdminId}", "app_metadata": {"role": "super_admin"}, "aal": "aal2"}`}, true)`;
+
+      await tx`SELECT public.log_role_change(${newUserId}, 'nurse', NULL, NULL)`;
+
+      const logged = await tx`SELECT * FROM audit_logs WHERE action = 'role_change' AND performed_by = ${superAdminId}`;
+      expect(logged.length).toBe(1);
+      expect(logged[0].payload.new_role).toBe('nurse');
+      expect(logged[0].payload.previous_role).toBeNull();
+      expect(logged[0].payload.target_user_id).toBe(newUserId);
+
+      throw new Error('ROLLBACK');
+    }).catch(e => {
+      if (e.message !== 'ROLLBACK') throw e;
+    });
+  });
 });
+

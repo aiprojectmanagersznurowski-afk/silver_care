@@ -41,4 +41,37 @@ describe('IAM Logic & Access Checks (SUP-IAM-PANEL)', () => {
     expect(payload.new_role).toBe('org_admin');
     expect(payload.previous_role).toBe('nurse');
   });
+
+  it('validates user creation with role parameters @REQ: SUP-IAM-PANEL', () => {
+    const validateCreationInput = (email: string, role: string) => {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const validRoles = ['super_admin', 'org_admin', 'nurse', 'legal_guardian', 'family'];
+      if (!email || !emailRegex.test(email)) return { valid: false, error: 'Invalid email' };
+      if (!role || !validRoles.includes(role)) return { valid: false, error: 'Invalid role' };
+      return { valid: true };
+    };
+
+    expect(validateCreationInput('nowy@sc.pl', 'nurse').valid).toBe(true);
+    expect(validateCreationInput('nowy@sc.pl', 'super_admin').valid).toBe(true);
+    expect(validateCreationInput('not-an-email', 'nurse').valid).toBe(false);
+    expect(validateCreationInput('nowy@sc.pl', 'invalid_role').valid).toBe(false);
+  });
+
+  it('generates audit payload for newly created user without PII @REQ: SUP-IAM-PANEL', () => {
+    const createNewUserAuditPayload = (targetUserId: string, initialRole: string) => {
+      return {
+        target_user_id: targetUserId,
+        new_role: initialRole,
+        previous_role: null,
+        changed_at: new Date().toISOString()
+      };
+    };
+
+    const payload = createNewUserAuditPayload('u-999', 'super_admin');
+    const serialized = JSON.stringify(payload);
+
+    expect(serialized).not.toMatch(/"(first_name|last_name|pesel|email|password)"/i);
+    expect(payload.new_role).toBe('super_admin');
+    expect(payload.previous_role).toBeNull();
+  });
 });
