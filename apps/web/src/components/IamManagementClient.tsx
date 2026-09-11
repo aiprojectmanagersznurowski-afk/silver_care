@@ -14,7 +14,7 @@ import {
   DialogFooter,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { updateUserRoleAction, createUserWithRoleAction } from '@/actions/iam'
+import { updateUserRoleAction, createUserWithRoleAction, resetUserPasswordAction } from '@/actions/iam'
 import { Shield, ShieldAlert, CheckCircle2, UserCog, History, RefreshCw, AlertCircle, UserPlus, Key, Copy, Check } from 'lucide-react'
 
 export interface UserItem {
@@ -85,6 +85,67 @@ export function IamManagementClient({
     temporaryPassword?: string
   } | null>(null)
   const [copiedPassword, setCopiedPassword] = useState(false)
+
+  // Stan dialogu resetowania / nadawania hasła
+  const [resetPasswordUser, setResetPasswordUser] = useState<UserItem | null>(null)
+  const [customPassword, setCustomPassword] = useState('')
+  const [resetPasswordError, setResetPasswordError] = useState<string | null>(null)
+  const [resetPasswordSuccess, setResetPasswordSuccess] = useState<{
+    email: string
+    newPassword?: string
+  } | null>(null)
+  const [copiedResetPassword, setCopiedResetPassword] = useState(false)
+
+  const handleResetPassword = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!resetPasswordUser) return
+    setResetPasswordError(null)
+
+    if (customPassword.trim() && customPassword.trim().length < 6) {
+      setResetPasswordError('Nowe hasło musi mieć co najmniej 6 znaków.')
+      return
+    }
+
+    startTransition(async () => {
+      const formData = new FormData()
+      formData.set('userId', resetPasswordUser.id)
+      if (customPassword.trim()) {
+        formData.set('password', customPassword.trim())
+      }
+
+      const result = await resetUserPasswordAction(formData)
+      if (result?.error) {
+        setResetPasswordError(result.error)
+      } else if (result?.newPassword) {
+        setResetPasswordSuccess({
+          email: resetPasswordUser.email,
+          newPassword: result.newPassword
+        })
+
+        setAuditLogs(prev => [
+          {
+            id: `local-pw-${Date.now()}`,
+            action: 'password_reset',
+            performed_by: 'super_admin',
+            payload: {
+              target_user_id: resetPasswordUser.id,
+              changed_at: new Date().toISOString()
+            },
+            created_at: new Date().toISOString()
+          },
+          ...prev
+        ])
+
+        setStatusMessage({
+          type: 'success',
+          text: `Pomyślnie zaktualizowano hasło dla użytkownika ${resetPasswordUser.email}.`
+        })
+
+        setResetPasswordUser(null)
+        setCustomPassword('')
+      }
+    })
+  }
 
   // Stan UI wymuszany przez prop (np. w Storybooku / testach) lub obliczany
   const currentState = forcedState || (errorMessage ? 'error' : users.length === 0 ? 'empty' : 'success')
@@ -301,6 +362,50 @@ export function IamManagementClient({
         </div>
       )}
 
+      {resetPasswordSuccess && (
+        <div className="rounded-2xl border border-sage/30 bg-sage/5 p-6 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sage font-semibold">
+              <Key className="h-5 w-5" />
+              <span>Zaktualizowano hasło użytkownika!</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setResetPasswordSuccess(null)}
+              className="text-slate-soft hover:text-slate text-sm font-medium"
+            >
+              Zamknij powiadomienie
+            </button>
+          </div>
+          <p className="text-sm text-slate-soft">
+            Hasło dla konta <strong>{resetPasswordSuccess.email}</strong> zostało zresetowane. Przekaż nowe dane logowania użytkownikowi:
+          </p>
+          <div className="flex flex-wrap items-center gap-4 bg-white p-3 rounded-xl border border-slate/10 font-mono text-xs">
+            <div><strong>E-mail:</strong> {resetPasswordSuccess.email}</div>
+            {resetPasswordSuccess.newPassword && (
+              <div className="flex items-center gap-2">
+                <strong>Nowe hasło:</strong>
+                <span className="bg-slate/5 px-2 py-1 rounded select-all font-semibold text-slate">{resetPasswordSuccess.newPassword}</span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => {
+                    navigator.clipboard.writeText(resetPasswordSuccess.newPassword || '')
+                    setCopiedResetPassword(true)
+                    setTimeout(() => setCopiedResetPassword(false), 2000)
+                  }}
+                >
+                  {copiedResetPassword ? <Check className="h-3 w-3 text-sage mr-1" /> : <Copy className="h-3 w-3 mr-1" />}
+                  {copiedResetPassword ? 'Skopiowano' : 'Kopiuj hasło'}
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Sekcja 1: Użytkownicy i Uprawnienia */}
       <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5 overflow-hidden">
         <CardHeader className="border-b border-slate/5 bg-white px-6 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -449,13 +554,30 @@ export function IamManagementClient({
                         </select>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <Button
-                          disabled={!hasChanged || isPending}
-                          onClick={() => handleApplyRole(user.id)}
-                          className="min-h-[44px] rounded-xl bg-sage px-4 text-sm font-medium text-white shadow-sm hover:bg-sage/90 disabled:opacity-40"
-                        >
-                          Zastosuj
-                        </Button>
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setResetPasswordUser(user)
+                              setCustomPassword('')
+                              setResetPasswordError(null)
+                            }}
+                            className="min-h-[40px] rounded-xl border-slate/20 text-slate hover:bg-slate/5"
+                            title="Resetuj lub nadaj nowe hasło"
+                          >
+                            <Key className="h-4 w-4 mr-1.5 text-slate-soft" />
+                            Hasło
+                          </Button>
+                          <Button
+                            disabled={!hasChanged || isPending}
+                            onClick={() => handleApplyRole(user.id)}
+                            className="min-h-[40px] rounded-xl bg-sage px-4 text-sm font-medium text-white shadow-sm hover:bg-sage/90 disabled:opacity-40"
+                          >
+                            Zastosuj
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   )
@@ -465,6 +587,51 @@ export function IamManagementClient({
           </div>
         </CardContent>
       </Card>
+
+      {/* Dialog resetowania hasła użytkownika */}
+      <Dialog open={!!resetPasswordUser} onOpenChange={(open) => !open && setResetPasswordUser(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Resetuj lub nadaj nowe hasło</DialogTitle>
+            <DialogDescription>
+              Ustaw nowe hasło dla konta <strong>{resetPasswordUser?.email}</strong>.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleResetPassword} className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="reset-new-password">Nowe hasło (opcjonalne)</Label>
+              <Input
+                id="reset-new-password"
+                type="text"
+                placeholder="Zostaw puste, aby wygenerować automatycznie"
+                value={customPassword}
+                onChange={e => setCustomPassword(e.target.value)}
+              />
+              <p className="text-[0.75rem] text-slate-soft">
+                Wpisz hasło (minimum 6 znaków) lub pozostaw to pole puste, aby system wygenerował bezpieczne hasło losowe.
+              </p>
+            </div>
+
+            {resetPasswordError && (
+              <p className="text-sm font-medium text-destructive">{resetPasswordError}</p>
+            )}
+
+            <DialogFooter className="pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setResetPasswordUser(null)}
+              >
+                Anuluj
+              </Button>
+              <Button type="submit" disabled={isPending} className="bg-sage text-white hover:bg-sage/90">
+                {isPending ? 'Zapisywanie...' : 'Zapisz nowe hasło'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* Sekcja 2: Zintegrowany Rejestr Audytu Zmian Uprawnień */}
       <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5 overflow-hidden">
@@ -476,7 +643,7 @@ export function IamManagementClient({
             <div>
               <CardTitle className="text-lg font-semibold text-slate">Rejestr Zmian Uprawnień (audit_logs)</CardTitle>
               <CardDescription className="text-slate-soft">
-                Niezmienny rejestr audytowy (append-only) wszystkich modyfikacji ról w systemie.
+                Niezmienny rejestr audytowy (append-only) wszystkich modyfikacji ról i poświadczeń w systemie.
               </CardDescription>
             </div>
           </div>
@@ -489,7 +656,7 @@ export function IamManagementClient({
                   <th scope="col" className="px-6 py-4 font-medium">Data i czas</th>
                   <th scope="col" className="px-6 py-4 font-medium">Aktor (performed_by)</th>
                   <th scope="col" className="px-6 py-4 font-medium">Użytkownik docelowy</th>
-                  <th scope="col" className="px-6 py-4 font-medium">Zmiana roli</th>
+                  <th scope="col" className="px-6 py-4 font-medium">Akcja / Zmiana</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate/5 bg-white">
@@ -505,18 +672,30 @@ export function IamManagementClient({
                       {log.payload?.target_user_id || 'nieznany'}
                     </td>
                     <td className="px-6 py-4">
-                      {log.payload?.previous_role ? (
-                        <span className="font-medium text-slate-soft line-through mr-2">
-                          {log.payload.previous_role}
+                      {log.action === 'password_reset' ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-lg bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                          <Key className="h-3 w-3" />
+                          Reset hasła
                         </span>
+                      ) : log.payload?.previous_role ? (
+                        <>
+                          <span className="font-medium text-slate-soft line-through mr-2">
+                            {log.payload.previous_role}
+                          </span>
+                          <span className="font-semibold text-sage">
+                            → {log.payload?.new_role}
+                          </span>
+                        </>
                       ) : (
-                        <span className="inline-block rounded bg-slate/10 px-1.5 py-0.5 text-xs text-slate-soft mr-2">
-                          Nowe konto
-                        </span>
+                        <>
+                          <span className="inline-block rounded bg-slate/10 px-1.5 py-0.5 text-xs text-slate-soft mr-2">
+                            Nowe konto
+                          </span>
+                          <span className="font-semibold text-sage">
+                            → {log.payload?.new_role}
+                          </span>
+                        </>
                       )}
-                      <span className="font-semibold text-sage">
-                        → {log.payload?.new_role}
-                      </span>
                     </td>
                   </tr>
                 ))}

@@ -73,7 +73,7 @@ export async function updateUserRoleAction(formData: FormData) {
 }
 
 export async function createUserWithRoleAction(formData: FormData) {
-  const email = (formData.get('email') as string)?.trim()
+  const email = (formData.get('email') as string)?.trim().toLowerCase()
   const role = (formData.get('role') as string)?.trim()
   const passwordInput = (formData.get('password') as string)?.trim()
   const organizationIdInput = (formData.get('organizationId') as string)?.trim()
@@ -91,6 +91,10 @@ export async function createUserWithRoleAction(formData: FormData) {
     return { error: 'Podano nieprawidłowy adres e-mail.' }
   }
 
+  if (passwordInput && passwordInput.length < 6) {
+    return { error: 'Podane hasło jest za krótkie (wymagane minimum 6 znaków).' }
+  }
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -99,8 +103,8 @@ export async function createUserWithRoleAction(formData: FormData) {
     return { error: 'Brak uprawnień. Wymagana rola super_admin.' }
   }
 
-  // Generuj bezpieczne hasło, jeśli nie podano
-  const password = passwordInput && passwordInput.length >= 8
+  // Użyj podanego hasła (min 6 znaków) lub wygeneruj bezpieczne losowe
+  const password = passwordInput && passwordInput.length >= 6
     ? passwordInput
     : Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-4) + 'A1!'
 
@@ -113,6 +117,9 @@ export async function createUserWithRoleAction(formData: FormData) {
     email,
     password,
     email_confirm: true,
+    user_metadata: {
+      email_verified: true
+    },
     app_metadata: {
       provider: 'email',
       providers: ['email'],
@@ -154,4 +161,73 @@ export async function createUserWithRoleAction(formData: FormData) {
     }
   }
 }
+
+export async function resetUserPasswordAction(formData: FormData) {
+  const targetUserId = (formData.get('userId') as string)?.trim()
+  const passwordInput = (formData.get('password') as string)?.trim()
+
+  if (!targetUserId) {
+    return { error: 'Brak identyfikatora użytkownika.' }
+  }
+
+  if (passwordInput && passwordInput.length < 6) {
+    return { error: 'Nowe hasło musi mieć co najmniej 6 znaków.' }
+  }
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const callerRole = user?.app_metadata?.role || user?.user_metadata?.role
+  if (!user || callerRole !== 'super_admin') {
+    return { error: 'Brak uprawnień. Wymagana rola super_admin.' }
+  }
+
+  const adminClient = createAdminClient()
+  const { data: targetUserData, error: fetchErr } = await adminClient.auth.admin.getUserById(targetUserId)
+
+  if (fetchErr || !targetUserData?.user) {
+    return { error: 'Nie znaleziono wskazanego użytkownika.' }
+  }
+
+  const newPassword = passwordInput && passwordInput.length >= 6
+    ? passwordInput
+    : Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-4) + 'A1!'
+
+  const orgId = targetUserData.user.app_metadata?.organization_id || null
+
+  // 1. Rejestracja w audit_logs przez RPC log_password_reset (brak haseł ani PII w audycie)
+  const { error: rpcErr } = await supabase.rpc('log_password_reset', {
+    p_target_user_id: targetUserId,
+    p_organization_id: orgId
+  })
+
+  if (rpcErr) {
+    console.error('Błąd audytu przy resecie hasła:', rpcErr)
+  }
+
+  // 2. Aktualizacja hasła użytkownika
+  const { error: updateErr } = await adminClient.auth.admin.updateUserById(targetUserId, {
+    password: newPassword,
+    email_confirm: true,
+    user_metadata: {
+      ...targetUserData.user.user_metadata,
+      email_verified: true
+    }
+  })
+
+  if (updateErr) {
+    console.error('Błąd aktualizacji hasła:', updateErr)
+    return { error: 'Błąd resetu hasła: ' + updateErr.message }
+  }
+
+  revalidatePath('/admin/iam')
+
+  return {
+    success: true,
+    userId: targetUserId,
+    email: targetUserData.user.email,
+    newPassword
+  }
+}
+
 

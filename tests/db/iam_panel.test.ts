@@ -105,5 +105,34 @@ describe('IAM Panel & Role Management (SUP-IAM-PANEL)', () => {
       if (e.message !== 'ROLLBACK') throw e;
     });
   });
+
+  it('logs password reset securely and rejects unauthorized callers @REQ: SUP-IAM-PANEL', async () => {
+    await sql.begin(async (tx) => {
+      await tx`SET LOCAL ROLE postgres`;
+      const superAdminId = '11111111-1111-1111-1111-111111111111';
+      const intruderId = '44444444-4444-4444-4444-444444444444';
+      const targetUserId = '77777777-7777-7777-7777-777777777777';
+
+      // 1. Non-super_admin fails
+      await tx`SET LOCAL ROLE authenticated`;
+      await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "${intruderId}", "app_metadata": {"role": "nurse"}, "aal": "aal2"}`}, true)`;
+
+      const intruderCall = tx.savepoint(sp => sp`SELECT public.log_password_reset(${targetUserId}, NULL)`);
+      await expect(intruderCall).rejects.toThrowError(/super_admin/);
+
+      // 2. super_admin succeeds
+      await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "${superAdminId}", "app_metadata": {"role": "super_admin"}, "aal": "aal2"}`}, true)`;
+      await tx`SELECT public.log_password_reset(${targetUserId}, NULL)`;
+
+      const logged = await tx`SELECT * FROM audit_logs WHERE action = 'password_reset' AND performed_by = ${superAdminId}`;
+      expect(logged.length).toBe(1);
+      expect(logged[0].payload.target_user_id).toBe(targetUserId);
+      expect(logged[0].payload.password).toBeUndefined();
+
+      throw new Error('ROLLBACK');
+    }).catch(e => {
+      if (e.message !== 'ROLLBACK') throw e;
+    });
+  });
 });
 
