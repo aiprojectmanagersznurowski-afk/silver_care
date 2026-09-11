@@ -86,13 +86,14 @@ Krój: `-apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui, sans-
 
 Bazowy rozmiar 17px · minimalny kontrast 4.5:1 · cel dotykowy 48px
 
-## Wymagania (49)
+## Wymagania (50)
 
 | ID | Domena | Ryzyko | Treść |
 |---|---|---|---|
 | ORG-ISOLATION | tenancy | HIGH | Każda placówka ma własny organization_id, a wszystkie polityki RLS izolują do niego dane. |
 | ORG-PROVISION | tenancy | MEDIUM | Utworzenie placówki tworzy pierwszego org_admin i wysyła mu zaproszenie. |
 | SUP-IMPERSONATION | tenancy | HIGH | Super admin może działać jako administrator placówki w celu diagnostyki. |
+| SUP-IAM-PANEL | tenancy | HIGH | Super admin (Power Admin) posiada panel do zarządzania uprawnieniami, rolami użytkowników i ogólnym dostępem do systemu. |
 | ADM-RESIDENT-ADD | residents | HIGH | Administrator dodaje pensjonariusza, przypisuje bliskich i przypisuje łóżko. |
 | ADM-FACILITY-MANAGE | facility | MEDIUM | Administrator zarządza rejestrem pokoi i łóżek placówki. |
 | ADM-BED-ASSIGNMENT | facility | HIGH | Jedno łóżko ma co najwyżej jednego aktywnego pensjonariusza; jeden pensjonariusz ma co najwyżej jedno aktywne łóżko. |
