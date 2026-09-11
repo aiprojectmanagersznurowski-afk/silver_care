@@ -49,12 +49,12 @@ export async function GET(request: Request) {
             .single()
 
           if (report && report.resident_id) {
-            // Znajdź rodzinę dla tego pensjonariusza
+            // Znajdź bliskich i opiekunów prawnych dla tego pensjonariusza
             const { data: familyLinks } = await adminClient
               .from('resident_relative_links')
               .select('relative_user_id')
               .eq('resident_id', report.resident_id)
-              .eq('role', 'family')
+              .in('role', ['family', 'legal_guardian'])
 
             if (familyLinks && familyLinks.length > 0) {
               const host = request.headers.get('host') || 'localhost:3000'

@@ -24,7 +24,17 @@ export default async function FamilyAgendaPage(props: { searchParams: Promise<{ 
 
   if (residents.length === 0) {
     return (
-      <div className="text-center py-12">Brak powiązanych pensjonariuszy.</div>
+      <Card className="max-w-md mx-auto my-12 border-border shadow-sm text-center">
+        <CardContent className="py-12 space-y-3">
+          <div className="mx-auto w-12 h-12 rounded-full bg-surface-sunken flex items-center justify-center text-2xl">
+            📅
+          </div>
+          <h3 className="text-lg font-semibold text-foreground">Brak powiązanych podopiecznych</h3>
+          <p className="text-sm text-text-secondary max-w-xs mx-auto">
+            Twoje konto nie ma jeszcze przypisanego podopiecznego w placówce. Skontaktuj się z personelem, aby aktywować powiązanie.
+          </p>
+        </CardContent>
+      </Card>
     )
   }
 

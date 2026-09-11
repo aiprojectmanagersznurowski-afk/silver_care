@@ -68,13 +68,12 @@ export function FamilyMessageForm({ residentId }: FamilyMessageFormProps) {
   };
 
   return (
-    <div className="flex flex-col h-[500px] relative" style={{ background: "#fff" }}>
+    <div className="flex flex-col h-[500px] relative bg-card rounded-2xl border border-border overflow-hidden">
       
       {/* Okno czatu */}
       <div 
         ref={scrollRef}
-        className="flex-1 overflow-y-auto px-5 py-4 space-y-2 pb-20"
-        style={{ background: "#F2F2F7" }}
+        className="flex-1 overflow-y-auto px-5 py-4 space-y-2 pb-20 bg-surface-sunken"
       >
         {loadingHistory ? (
           <div className="flex items-center justify-center h-full">
@@ -86,10 +85,10 @@ export function FamilyMessageForm({ residentId }: FamilyMessageFormProps) {
           </div>
         ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-4">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center text-3xl mb-4" style={{ background: "#E5E5EA" }}>
+            <div className="w-16 h-16 rounded-full flex items-center justify-center text-3xl mb-4 bg-surface border border-border">
               👋
             </div>
-            <p className="text-[13px]" style={{ color: "#8E8E93" }}>
+            <p className="text-[13px] text-text-secondary">
               Napisz wiadomość do personelu.<br/>Odpiszemy najszybciej jak to możliwe.
             </p>
           </div>
@@ -110,19 +109,16 @@ export function FamilyMessageForm({ residentId }: FamilyMessageFormProps) {
                 )}
                 <div className={`flex flex-col ${isFamily ? 'items-end' : 'items-start'}`}>
                   <div 
-                    className="max-w-[78%] px-4 py-2.5 rounded-2xl"
-                    style={{
-                      background: isFamily ? "#007AFF" : "#fff",
-                      color: isFamily ? "#fff" : "#1C1C1E",
-                      borderBottomRightRadius: isFamily ? 6 : 18,
-                      borderBottomLeftRadius: isFamily ? 18 : 6,
-                      boxShadow: isFamily ? "none" : "0 1px 2px rgba(0,0,0,0.08)",
-                    }}
+                    className={`max-w-[78%] px-4 py-2.5 rounded-2xl shadow-sm ${
+                      isFamily 
+                        ? 'bg-primary text-primary-foreground rounded-br-sm' 
+                        : 'bg-card text-foreground border border-border rounded-bl-sm'
+                    }`}
                   >
-                    <p className="text-[14px] leading-relaxed font-400 whitespace-pre-wrap">{msg.content}</p>
+                    <p className="text-[14px] leading-relaxed font-normal whitespace-pre-wrap">{msg.content}</p>
                   </div>
                   <div className="flex items-center gap-1 mt-0.5 px-1">
-                    <span className="text-[10px]" style={{ color: "#8E8E93" }}>
+                    <span className="text-[10px] text-text-secondary">
                       {format(new Date(msg.created_at), "HH:mm")} • {isFamily ? 'Ty' : 'Personel'}
                     </span>
                   </div>
@@ -133,27 +129,22 @@ export function FamilyMessageForm({ residentId }: FamilyMessageFormProps) {
         )}
       </div>
 
+      {/* Komunikat o błędzie (np. limit wiadomości) */}
+      {sendState === 'error' && sendError && (
+        <div className="absolute bottom-[64px] left-4 right-4 bg-destructive/10 border border-destructive/20 rounded-xl p-2.5 text-center text-[12px] text-destructive font-medium shadow-sm z-20 animate-in fade-in slide-in-from-bottom-2">
+          {sendError}
+        </div>
+      )}
+
       {/* Formularz wprowadzania */}
       <div
-        className="absolute bottom-0 left-0 right-0 px-4 py-3 flex items-center gap-3"
-        style={{
-          background: "rgba(242,242,247,0.92)",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-          borderTop: "0.5px solid rgba(0,0,0,0.1)",
-        }}
+        className="absolute bottom-0 left-0 right-0 px-4 py-3 flex items-center gap-3 bg-surface/90 backdrop-blur-md border-t border-border"
       >
         <div
-          className="flex-1 flex items-center rounded-full px-4 py-2.5"
-          style={{
-            background: "#fff",
-            border: "0.5px solid rgba(0,0,0,0.1)",
-            boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-          }}
+          className="flex-1 flex items-center rounded-full px-4 py-2.5 bg-background border border-border shadow-sm"
         >
           <input
-            className="flex-1 text-[14px] font-400 bg-transparent outline-none"
-            style={{ color: "#1C1C1E" }}
+            className="flex-1 text-[14px] font-normal bg-transparent text-foreground outline-none"
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Napisz wiadomość..."
@@ -169,22 +160,12 @@ export function FamilyMessageForm({ residentId }: FamilyMessageFormProps) {
         <button
           onClick={handleSubmit}
           disabled={sendState === 'loading' || !content.trim()}
-          className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all active:scale-90"
-          style={{
-            background: content.trim() ? "#007AFF" : "#E5E5EA",
-            transition: "background 0.2s ease, transform 0.1s ease",
-          }}
+          className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all active:scale-90 ${
+            content.trim() ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+          }`}
         >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M8 2L14 8L8 14" stroke={content.trim() ? "#fff" : "#8E8E93"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M2 8H14" stroke={content.trim() ? "#fff" : "#8E8E93"} strokeWidth="2" strokeLinecap="round" />
-          </svg>
+          <SendHorizontal className="h-4 w-4" />
         </button>
-        {sendState === 'error' && sendError && (
-          <div className="mt-2 text-center text-[11px] text-destructive font-medium">
-            {sendError}
-          </div>
-        )}
       </div>
     </div>
   );

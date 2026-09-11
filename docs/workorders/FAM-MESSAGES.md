@@ -32,3 +32,9 @@ Umożliwienie osobom bliskim zostawiania krótkich, asynchronicznych wiadomości
 ### 4. Testy (Vitest)
 - Test bazodanowy (Vitest) potwierdzający, że rodzina nie może wysłać wiadomości dla nieswojego podopiecznego (RLS) ani usunąć wysłanej wiadomości.
 - Test logiki API sprawdzający odrzucanie 4. wiadomości w ciągu tej samej godziny.
+
+## Podsumowanie Realizacji
+- **ZREALIZOWANE:** Polityka `family_messages_family_insert` weryfikuje powiązanie w `resident_relative_links`. Tabela jest append-only (brak update/delete).
+- **LIMIT RATE:** API `/api/messages` sprawdza limit 3 wiadomości na godzinę (`isSpamLimitExceeded`) i zwraca 429 z czytelnym komunikatem.
+- **UI:** `FamilyMessageForm` prezentuje błąd w dedykowanym banerze nad polem wprowadzania wiadomości.
+

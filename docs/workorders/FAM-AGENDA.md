@@ -37,5 +37,6 @@ W migracji `20260901143000_family_module_features.sql` dodano już bazową tabel
 - Test bazodanowy (jeśli aktualizujemy RLS) weryfikujący, że rodzina A nie widzi pozycji indywidualnych z agendy dla seniora B.
 - Test jednostkowy dla komponentu (lub przynajmniej dla wyliczania agendy), aby potwierdzić prawidłowe połączenie pozycji wspólnych (bez `resident_id`) z pozycjami indywidualnymi.
 
-## Otwarte Pytania / WYMAGA DECYZJI
-- **WYMAGA DECYZJI:** Tabela `agenda_items` w obecnym formacie ma politykę RLS "agenda_items_isolation" na całe `organization_id`. Dla roli `family` doprowadzi to do możliwości odczytania planów wszystkich pensjonariuszy z tej samej placówki. Musimy zacieśnić RLS dla roli `family` (wymaga powiązania z podopiecznym). Proponuję napisać dodatkową migrację zawężającą dostęp dla ról nienależących do personelu. Czy zatwierdzasz stworzenie nowej migracji zaostrzającej RLS na `agenda_items` dla rodzin?
+## Podjęte Decyzje / Zrealizowane
+- **ZREALIZOWANE:** Polityka RLS `agenda_items_family_select` w migracji `20260901220500_family_agenda_rls.sql` ściśle ogranicza rolę `family` do pozycji wspólnych (`resident_id IS NULL`) oraz pozycji dedykowanych podopiecznym powiązanym przez `resident_relative_links`. Test `agenda_items.test.ts` weryfikuje brak wycieku danych pomiędzy seniorami w placówce.
+- **UI-FOUR-STATES:** Dodano dedykowaną obsługę stanu pustego zarówno przy braku powiązanych pensjonariuszy, jak i przy braku wpisów w agendzie na dany dzień.
