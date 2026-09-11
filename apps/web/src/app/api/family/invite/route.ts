@@ -23,12 +23,13 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { email, phone, resident_id } = body
+    const { email, phone, resident_id, role } = body
 
     if (!email?.trim() || !resident_id) {
       return NextResponse.json({ error: 'Adres e-mail i ID pensjonariusza są wymagane' }, { status: 400 })
     }
 
+    const assignedRole = role === 'legal_guardian' ? 'legal_guardian' : 'family'
     const adminClient = createAdminClient()
 
     // Create invitation record (bypassing RLS for simplicity, but we still inject orgId)
@@ -37,7 +38,7 @@ export async function POST(request: Request) {
       .insert({
         organization_id: orgId,
         resident_id: resident_id,
-        role: 'family',
+        role: assignedRole,
         email: email.trim(),
         phone: phone?.trim() || null
       })
