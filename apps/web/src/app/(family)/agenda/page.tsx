@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { AgendaTimelineClient } from '@/components/AgendaTimelineClient'
 
-export default async function FamilyAgendaPage(props: { searchParams: Promise<{ date?: string }> | { date?: string } }) {
+export default async function FamilyAgendaPage(props: { searchParams: Promise<{ date?: string }> }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return redirect('/')
