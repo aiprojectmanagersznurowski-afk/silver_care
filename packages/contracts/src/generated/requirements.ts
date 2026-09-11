@@ -41,6 +41,19 @@ export const REQUIREMENTS = [
     ]
   },
   {
+    "id": "SUP-IAM-PANEL",
+    "status": "TODO",
+    "risk": "HIGH",
+    "source": "SC-SUP-04",
+    "domain": "tenancy",
+    "statement": "Super admin (Power Admin) posiada panel do zarządzania uprawnieniami, rolami użytkowników i ogólnym dostępem do systemu.",
+    "acceptance": [
+      "Panel widoczny i dostępny wyłącznie dla konta o roli super_admin",
+      "Możliwość zarządzania przypisaniem ról do kont użytkowników",
+      "Widok audytu zmian uprawnień zintegrowany z audit_logs"
+    ]
+  },
+  {
     "id": "ADM-RESIDENT-ADD",
     "status": "TODO",
     "risk": "HIGH",

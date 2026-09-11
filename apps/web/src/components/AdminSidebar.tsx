@@ -2,9 +2,9 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Users, UserPlus, Building2, ShieldAlert, LogOut, LayoutDashboard } from 'lucide-react'
+import { Users, UserPlus, Building2, ShieldAlert, LogOut, LayoutDashboard, ShieldCheck } from 'lucide-react'
 
-export function AdminSidebar({ userEmail }: { userEmail: string }) {
+export function AdminSidebar({ userEmail, role }: { userEmail: string; role?: string }) {
   const pathname = usePathname()
 
   const links = [
@@ -13,13 +13,16 @@ export function AdminSidebar({ userEmail }: { userEmail: string }) {
     { href: '/admin/staff', label: 'Personel', icon: UserPlus },
     { href: '/admin/facility', label: 'Struktura Placówki', icon: Building2 },
     { href: '/admin/audit', label: 'Rejestr Audytowy', icon: ShieldAlert },
+    ...(role === 'super_admin' ? [{ href: '/admin/iam', label: 'Uprawnienia (IAM)', icon: ShieldCheck }] : []),
   ]
 
   return (
     <aside className="hidden w-72 flex-col border-r border-slate/10 bg-white md:flex">
       <div className="flex h-20 items-center border-b border-slate/10 px-6">
         <h1 className="font-display text-2xl font-semibold text-slate">Silver Care</h1>
-        <span className="ml-2 rounded-md bg-sage/10 px-2 py-1 text-xs font-medium text-sage">Admin</span>
+        <span className="ml-2 rounded-md bg-sage/10 px-2 py-1 text-xs font-medium text-sage">
+          {role === 'super_admin' ? 'Super Admin' : 'Admin'}
+        </span>
       </div>
       <nav className="flex-1 space-y-2 p-4">
         {links.map((link) => {

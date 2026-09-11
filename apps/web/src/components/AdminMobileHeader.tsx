@@ -4,7 +4,7 @@ import { LogOut, Menu } from 'lucide-react'
 import { useState } from 'react'
 import Link from 'next/link'
 
-export function AdminMobileHeader({ userEmail }: { userEmail: string }) {
+export function AdminMobileHeader({ userEmail, role }: { userEmail: string; role?: string }) {
   const [isOpen, setIsOpen] = useState(false)
 
   return (
@@ -12,7 +12,9 @@ export function AdminMobileHeader({ userEmail }: { userEmail: string }) {
       <header className="flex h-16 items-center justify-between border-b border-slate/10 bg-white px-4 md:hidden">
         <div className="flex items-center gap-2">
           <h1 className="font-display text-xl font-semibold text-slate">Silver Care</h1>
-          <span className="rounded-md bg-sage/10 px-1.5 py-0.5 text-[0.65rem] font-medium text-sage uppercase tracking-wider">Admin</span>
+          <span className="rounded-md bg-sage/10 px-1.5 py-0.5 text-[0.65rem] font-medium text-sage uppercase tracking-wider">
+            {role === 'super_admin' ? 'Super Admin' : 'Admin'}
+          </span>
         </div>
         <div className="flex items-center gap-4">
            <form action="/auth/signout" method="post">
@@ -33,6 +35,9 @@ export function AdminMobileHeader({ userEmail }: { userEmail: string }) {
             <Link href="/admin/staff" onClick={() => setIsOpen(false)} className="rounded-xl px-4 py-3 text-sm font-medium text-slate hover:bg-slate/5">Personel</Link>
             <Link href="/admin/facility" onClick={() => setIsOpen(false)} className="rounded-xl px-4 py-3 text-sm font-medium text-slate hover:bg-slate/5">Struktura Placówki</Link>
             <Link href="/admin/audit" onClick={() => setIsOpen(false)} className="rounded-xl px-4 py-3 text-sm font-medium text-slate hover:bg-slate/5">Rejestr Audytowy</Link>
+            {role === 'super_admin' && (
+              <Link href="/admin/iam" onClick={() => setIsOpen(false)} className="rounded-xl px-4 py-3 text-sm font-medium text-slate hover:bg-slate/5">Uprawnienia (IAM)</Link>
+            )}
           </nav>
         </div>
       )}

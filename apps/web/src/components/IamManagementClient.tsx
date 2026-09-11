@@ -1,0 +1,293 @@
+'use client'
+
+import { useState, useTransition } from 'react'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { updateUserRoleAction } from '@/actions/iam'
+import { Shield, ShieldAlert, CheckCircle2, UserCog, History, RefreshCw, AlertCircle } from 'lucide-react'
+
+export interface UserItem {
+  id: string
+  email: string
+  role: string
+  organizationId?: string | null
+  lastSignInAt?: string | null
+}
+
+export interface AuditLogItem {
+  id: string
+  action: string
+  performed_by?: string | null
+  payload: {
+    target_user_id?: string
+    new_role?: string
+    previous_role?: string
+    changed_at?: string
+  }
+  created_at: string
+}
+
+interface IamManagementClientProps {
+  initialUsers: UserItem[]
+  initialAuditLogs: AuditLogItem[]
+  forcedState?: 'loading' | 'empty' | 'success' | 'error'
+  errorMessage?: string
+}
+
+const AVAILABLE_ROLES = [
+  { id: 'super_admin', label: 'Super Admin (Globalny)' },
+  { id: 'org_admin', label: 'Administrator Placówki (Org Admin)' },
+  { id: 'nurse', label: 'Personel Opiekuńczy (Nurse)' },
+  { id: 'legal_guardian', label: 'Opiekun Prawny (Legal Guardian)' },
+  { id: 'family', label: 'Członek Rodziny (Family)' },
+]
+
+export function IamManagementClient({
+  initialUsers,
+  initialAuditLogs,
+  forcedState,
+  errorMessage
+}: IamManagementClientProps) {
+  const [users, setUsers] = useState<UserItem[]>(initialUsers)
+  const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>(initialAuditLogs)
+  const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [selectedRoles, setSelectedRoles] = useState<Record<string, string>>({})
+  const [isPending, startTransition] = useTransition()
+
+  // Stan UI wymuszany przez prop (np. w Storybooku / testach) lub obliczany
+  const currentState = forcedState || (errorMessage ? 'error' : users.length === 0 ? 'empty' : 'success')
+
+  const handleRoleSelect = (userId: string, newRole: string) => {
+    setSelectedRoles(prev => ({ ...prev, [userId]: newRole }))
+  }
+
+  const handleApplyRole = (userId: string) => {
+    const newRole = selectedRoles[userId]
+    if (!newRole) return
+
+    setStatusMessage(null)
+    startTransition(async () => {
+      const formData = new FormData()
+      formData.set('userId', userId)
+      formData.set('role', newRole)
+
+      const result = await updateUserRoleAction(formData)
+      if (result?.error) {
+        setStatusMessage({ type: 'error', text: result.error })
+      } else {
+        setStatusMessage({ type: 'success', text: `Pomyślnie zaktualizowano rolę dla użytkownika.` })
+        setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u))
+      }
+    })
+  }
+
+  // 1. Stan LOADING (Szkielet UI)
+  if (currentState === 'loading') {
+    return (
+      <div className="space-y-8 animate-pulse" aria-busy="true" aria-label="Ładowanie panelu uprawnień">
+        <div className="h-10 w-72 rounded-xl bg-slate/10" />
+        <div className="h-64 rounded-2xl bg-slate/10" />
+        <div className="h-64 rounded-2xl bg-slate/10" />
+      </div>
+    )
+  }
+
+  // 2. Stan ERROR (Błąd z opcją ponowienia)
+  if (currentState === 'error') {
+    return (
+      <Card className="rounded-2xl border-destructive/20 bg-destructive/5 p-8 text-center" role="alert">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/10 text-destructive mb-4">
+          <AlertCircle className="h-8 w-8" />
+        </div>
+        <h3 className="text-xl font-semibold text-slate mb-2">Błąd wczytywania danych IAM</h3>
+        <p className="text-slate-soft max-w-md mx-auto mb-6">
+          {errorMessage || 'Wystąpił problem podczas pobierania rejestru uprawnień lub użytkowników.'}
+        </p>
+        <Button
+          onClick={() => window.location.reload()}
+          className="min-h-[48px] rounded-xl px-6 bg-slate text-white hover:bg-slate/90"
+        >
+          <RefreshCw className="mr-2 h-4 w-4" />
+          Spróbuj ponownie
+        </Button>
+      </Card>
+    )
+  }
+
+  // 3. Stan EMPTY (Stan pusty z czytelnym wyjaśnieniem)
+  if (currentState === 'empty') {
+    return (
+      <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5 p-12 text-center">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-sage/10 text-sage mb-4">
+          <UserCog className="h-8 w-8" />
+        </div>
+        <h3 className="text-xl font-semibold text-slate mb-2">Brak zarejestrowanych kont</h3>
+        <p className="text-slate-soft max-w-md mx-auto">
+          W systemie nie odnaleziono jeszcze żadnych kont użytkowników. Gdy administratorzy placówek lub personel dołączą do platformy, pojawią się w tym panelu.
+        </p>
+      </Card>
+    )
+  }
+
+  // 4. Stan SUCCESS (Pełny, interaktywny panel IAM i rejestr audytowy)
+  return (
+    <div className="space-y-8">
+      {statusMessage && (
+        <div
+          role="status"
+          className={`flex items-center gap-3 rounded-2xl p-4 text-sm font-medium ${
+            statusMessage.type === 'success'
+              ? 'bg-sage/10 text-sage border border-sage/20'
+              : 'bg-destructive/10 text-destructive border border-destructive/20'
+          }`}
+        >
+          {statusMessage.type === 'success' ? (
+            <CheckCircle2 className="h-5 w-5 shrink-0" />
+          ) : (
+            <ShieldAlert className="h-5 w-5 shrink-0" />
+          )}
+          <span>{statusMessage.text}</span>
+        </div>
+      )}
+
+      {/* Sekcja 1: Użytkownicy i Uprawnienia */}
+      <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5 overflow-hidden">
+        <CardHeader className="border-b border-slate/5 bg-white px-6 py-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sage/10 text-sage">
+              <Shield className="h-5 w-5" />
+            </div>
+            <div>
+              <CardTitle className="text-lg font-semibold text-slate">Użytkownicy i Role</CardTitle>
+              <CardDescription className="text-slate-soft">
+                Zarządzaj przypisaniem ról systemowych (dostęp wyłącznie dla Super Admina).
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm" aria-label="Tabela użytkowników i ról IAM">
+              <thead className="bg-slate/5 text-slate-soft">
+                <tr>
+                  <th scope="col" className="px-6 py-4 font-medium">Użytkownik</th>
+                  <th scope="col" className="px-6 py-4 font-medium">Placówka</th>
+                  <th scope="col" className="px-6 py-4 font-medium">Aktualna rola</th>
+                  <th scope="col" className="px-6 py-4 font-medium">Nowa rola</th>
+                  <th scope="col" className="px-6 py-4 font-medium text-right">Akcja</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate/5 bg-white">
+                {users.map(user => {
+                  const currentSelected = selectedRoles[user.id] || user.role
+                  const hasChanged = currentSelected !== user.role
+
+                  return (
+                    <tr key={user.id} className="transition-colors hover:bg-slate/5">
+                      <td className="px-6 py-4">
+                        <div className="font-medium text-slate text-base">{user.email}</div>
+                        <div className="font-mono text-xs text-slate-soft">{user.id}</div>
+                      </td>
+                      <td className="px-6 py-4 text-slate-soft font-mono text-xs">
+                        {user.organizationId || 'Globalna / Brak'}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center rounded-lg bg-slate/10 px-2.5 py-1 text-xs font-medium text-slate">
+                          {user.role}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <select
+                          aria-label={`Wybierz rolę dla ${user.email}`}
+                          value={currentSelected}
+                          onChange={e => handleRoleSelect(user.id, e.target.value)}
+                          className="min-h-[44px] rounded-xl border border-slate/20 bg-white px-3 py-2 text-sm text-slate focus:border-sage focus:outline-none focus:ring-1 focus:ring-sage"
+                        >
+                          {AVAILABLE_ROLES.map(r => (
+                            <option key={r.id} value={r.id}>
+                              {r.label}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <Button
+                          disabled={!hasChanged || isPending}
+                          onClick={() => handleApplyRole(user.id)}
+                          className="min-h-[44px] rounded-xl bg-sage px-4 text-sm font-medium text-white shadow-sm hover:bg-sage/90 disabled:opacity-40"
+                        >
+                          Zastosuj
+                        </Button>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Sekcja 2: Zintegrowany Rejestr Audytu Zmian Uprawnień */}
+      <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5 overflow-hidden">
+        <CardHeader className="border-b border-slate/5 bg-white px-6 py-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate/10 text-slate">
+              <History className="h-5 w-5" />
+            </div>
+            <div>
+              <CardTitle className="text-lg font-semibold text-slate">Rejestr Zmian Uprawnień (audit_logs)</CardTitle>
+              <CardDescription className="text-slate-soft">
+                Niezmienny rejestr audytowy (append-only) wszystkich modyfikacji ról w systemie.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm" aria-label="Rejestr audytowy zmian ról">
+              <thead className="bg-slate/5 text-slate-soft">
+                <tr>
+                  <th scope="col" className="px-6 py-4 font-medium">Data i czas</th>
+                  <th scope="col" className="px-6 py-4 font-medium">Aktor (performed_by)</th>
+                  <th scope="col" className="px-6 py-4 font-medium">Użytkownik docelowy</th>
+                  <th scope="col" className="px-6 py-4 font-medium">Zmiana roli</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate/5 bg-white">
+                {auditLogs.map(log => (
+                  <tr key={log.id} className="transition-colors hover:bg-slate/5">
+                    <td className="px-6 py-4 text-slate-soft whitespace-nowrap">
+                      {new Date(log.created_at).toLocaleString('pl-PL')}
+                    </td>
+                    <td className="px-6 py-4 font-mono text-xs text-slate">
+                      {log.performed_by || 'system'}
+                    </td>
+                    <td className="px-6 py-4 font-mono text-xs text-slate">
+                      {log.payload?.target_user_id || 'nieznany'}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="font-medium text-slate-soft line-through mr-2">
+                        {log.payload?.previous_role || 'brak'}
+                      </span>
+                      <span className="font-semibold text-sage">
+                        → {log.payload?.new_role}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+                {auditLogs.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-10 text-center text-slate-soft">
+                      Brak zarejestrowanych zmian uprawnień w rejestrze audytowym.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
