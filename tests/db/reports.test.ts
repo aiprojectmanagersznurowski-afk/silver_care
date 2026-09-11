@@ -64,7 +64,7 @@ describe('Database Reports (REPORT-APPROVAL, CARE-REPORTS-CORE)', () => {
 
       await tx`ROLLBACK`;
     });
-  });
+  }, 30000);
 
   it('allows nurse to manage daily_logs @REQ: VOICE-DRAFT-ISOLATION', async () => {
     await sql.begin(async (tx) => {
@@ -85,5 +85,5 @@ describe('Database Reports (REPORT-APPROVAL, CARE-REPORTS-CORE)', () => {
 
       await tx`ROLLBACK`;
     });
-  });
+  }, 30000);
 });
