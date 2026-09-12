@@ -33,20 +33,20 @@ export async function updateSession(request: NextRequest) {
 
   // Proste reguły routingowe na podstawie roli
   if (user) {
-    const role = user.user_metadata?.role || user.app_metadata?.role
+    const role = user.app_metadata?.role || user.user_metadata?.role
     const path = request.nextUrl.pathname
 
     // Jeśli użytkownik jest zalogowany, a próbuje wejść na główną stronę logowania, przekieruj go
     if (path === '/' || path.startsWith('/login')) {
-      if (role === 'family') {
+      if (role === 'family' || role === 'legal_guardian') {
         const url = request.nextUrl.clone()
         url.pathname = '/dashboard'
         return NextResponse.redirect(url)
-      } else if (role === 'nurse') {
+      } else if (role === 'nurse' || role === 'paramedic' || role === 'caregiver') {
         const url = request.nextUrl.clone()
         url.pathname = '/staff'
         return NextResponse.redirect(url)
-      } else if (role === 'super_admin' || role === 'org_admin') {
+      } else if (role === 'super_admin' || role === 'org_admin' || role === 'admin' || role === 'facility_manager') {
         const url = request.nextUrl.clone()
         url.pathname = '/admin'
         return NextResponse.redirect(url)
@@ -54,13 +54,14 @@ export async function updateSession(request: NextRequest) {
     }
     
     // Zabezpieczenie ścieżek
-    if (path.startsWith('/admin') && role !== 'super_admin' && role !== 'org_admin') {
+    if (path.startsWith('/admin') && role !== 'super_admin' && role !== 'org_admin' && role !== 'admin' && role !== 'facility_manager') {
        return NextResponse.redirect(new URL('/unauthorized', request.url))
     }
-    if (path.startsWith('/staff') && role !== 'nurse' && role !== 'super_admin' && role !== 'org_admin') {
+    if (path.startsWith('/staff') && role !== 'nurse' && role !== 'paramedic' && role !== 'caregiver' && role !== 'super_admin' && role !== 'org_admin' && role !== 'admin') {
        return NextResponse.redirect(new URL('/unauthorized', request.url))
     }
-  } else {
+  }
+ else {
     // Brak usera - jeśli nie jest na stronie logowania / publicznej, redirect do root
     const path = request.nextUrl.pathname
     const isPublicRoute = 

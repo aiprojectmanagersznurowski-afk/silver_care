@@ -13,7 +13,7 @@ export default async function IamPage() {
     redirect('/login')
   }
 
-  const role = user?.user_metadata?.role || user?.app_metadata?.role
+  const role = user?.app_metadata?.role || user?.user_metadata?.role
 
   // AC1: Panel widoczny i dostępny wyłącznie dla konta o roli super_admin
   if (role !== 'super_admin') {

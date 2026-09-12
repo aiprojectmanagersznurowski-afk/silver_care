@@ -55,10 +55,14 @@ export async function updateUserRoleAction(formData: FormData) {
     return { error: 'Błąd audytu: ' + rpcErr.message }
   }
 
-  // 2. Aktualizacja roli w Supabase Auth app_metadata
+  // 2. Aktualizacja roli w Supabase Auth app_metadata oraz user_metadata
   const { error: updateErr } = await adminClient.auth.admin.updateUserById(targetUserId, {
     app_metadata: {
       ...targetUser.user.app_metadata,
+      role: newRole
+    },
+    user_metadata: {
+      ...targetUser.user.user_metadata,
       role: newRole
     }
   })

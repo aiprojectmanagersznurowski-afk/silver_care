@@ -11,7 +11,7 @@ export default async function AdminInvitationsPage() {
     redirect('/')
   }
 
-  const role = user?.user_metadata?.role || user?.app_metadata?.role
+  const role = user?.app_metadata?.role || user?.user_metadata?.role
   const orgId = user?.app_metadata?.organization_id
 
   if (!user || (role !== 'admin' && role !== 'org_admin' && role !== 'super_admin')) {

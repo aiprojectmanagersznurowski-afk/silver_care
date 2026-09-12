@@ -9,9 +9,9 @@ export default async function FamilyLayout({ children }: { children: ReactNode }
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const role = user?.user_metadata?.role || user?.app_metadata?.role
+  const role = user?.app_metadata?.role || user?.user_metadata?.role
 
-  if (!user || role !== 'family') {
+  if (!user || (role !== 'family' && role !== 'legal_guardian')) {
     redirect('/')
   }
 
