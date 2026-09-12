@@ -28,13 +28,17 @@ export function MediaUploader({ residentId }: { residentId: string }) {
 
       if (uploadError) throw uploadError
 
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Brak autoryzacji')
+
       // Zapisz wpis w resident_media
       const { error: dbError } = await supabase
         .from('resident_media')
         .insert({
           resident_id: residentId,
           storage_path: uploadData.path,
-          content_type: file.type
+          content_type: file.type,
+          uploaded_by: user.id
         })
 
       if (dbError) throw dbError

@@ -25,7 +25,8 @@ export async function POST(req: Request) {
 
     // Wywołanie Groq API do transkrypcji (Whisper-large-v3)
     const groqFormData = new FormData()
-    groqFormData.append('file', file)
+    const filename = file.name || 'recording.webm'
+    groqFormData.append('file', file, filename)
     groqFormData.append('model', 'whisper-large-v3')
     groqFormData.append('language', 'pl') // wymuszamy polski, żeby poprawić skuteczność na MVP
 
@@ -38,8 +39,16 @@ export async function POST(req: Request) {
     })
 
     if (!response.ok) {
-      console.error('Groq API Error: API returned error')
-      return NextResponse.json({ error: 'Błąd podczas transkrypcji Groq' }, { status: 500 })
+      const errorText = await response.text()
+      console.error('Groq API Error:', response.status, errorText)
+      let parsedMsg = 'Błąd podczas transkrypcji Groq'
+      try {
+        const parsed = JSON.parse(errorText)
+        if (parsed.error?.message) {
+          parsedMsg = `Błąd Groq API: ${parsed.error.message}`
+        }
+      } catch {}
+      return NextResponse.json({ error: parsedMsg }, { status: response.status || 500 })
     }
 
     const result = await response.json()
