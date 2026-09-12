@@ -34,7 +34,7 @@ AS $$
       re.event_date,
       COUNT(*) FILTER (WHERE re.event_type = 'death') AS deaths,
       COUNT(*) FILTER (WHERE re.event_type = 'contract_signed') AS contracts_signed,
-      COUNT(*) FILTER (WHERE re.event_type = 'contract_ended') AS contracts_ended
+      COUNT(*) FILTER (WHERE re.event_type = 'contract_ended' AND COALESCE(re.event_reason, '') <> 'death') AS contracts_ended
     FROM public.resident_events re
     WHERE re.organization_id = p_org_id
       AND re.event_date >= make_date(p_year, p_month, 1)
@@ -169,7 +169,7 @@ AS $$
     SELECT
       COUNT(*) FILTER (WHERE event_type = 'death') AS deaths,
       COUNT(*) FILTER (WHERE event_type = 'contract_signed') AS signed,
-      COUNT(*) FILTER (WHERE event_type = 'contract_ended') AS ended
+      COUNT(*) FILTER (WHERE event_type = 'contract_ended' AND COALESCE(event_reason, '') <> 'death') AS ended
     FROM public.resident_events
     WHERE organization_id = p_org_id
       AND event_date >= date_trunc('month', CURRENT_DATE)::date
