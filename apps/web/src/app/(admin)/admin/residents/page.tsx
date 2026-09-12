@@ -4,6 +4,7 @@ import { AddResidentDialog } from '@/components/AddResidentDialog'
 import { UserCircle2, ChevronRight } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
+import { ResidentZsnCheckbox } from '@/components/ResidentZsnCheckbox'
 import Link from 'next/link'
 import { CARE_LEVEL_LABELS, CARE_LEVEL_COLORS, type CareLevel } from '@/lib/reporting-constants'
 import { format } from 'date-fns'
@@ -38,6 +39,7 @@ export default async function AdminResidentsPage() {
                 <tr>
                   <th className="px-6 py-4 font-medium">Imię i nazwisko</th>
                   <th className="px-6 py-4 font-medium">Stan</th>
+                  <th className="px-6 py-4 font-medium">ZSN</th>
                   <th className="px-6 py-4 font-medium">Status</th>
                   <th className="px-6 py-4 font-medium">Pokój</th>
                   <th className="px-6 py-4 font-medium">Data przyjęcia</th>
@@ -87,6 +89,13 @@ export default async function AdminResidentsPage() {
                         )}
                       </td>
                       <td className="px-6 py-4">
+                        <ResidentZsnCheckbox
+                          residentId={resident.id}
+                          initialValue={Boolean(resident.is_zsn)}
+                          variant="compact"
+                        />
+                      </td>
+                      <td className="px-6 py-4">
                         {resident.archived_at ? (
                           <Badge className="bg-slate/10 text-slate-soft border-none text-xs">
                             Zarchiwizowany
@@ -127,7 +136,7 @@ export default async function AdminResidentsPage() {
                 })}
                 {(!residents || residents.length === 0) && (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-slate-soft">
+                    <td colSpan={7} className="px-6 py-12 text-center text-slate-soft">
                       Brak podopiecznych w bazie. Kliknij przycisk powyżej, aby dodać pierwszą osobę.
                     </td>
                   </tr>

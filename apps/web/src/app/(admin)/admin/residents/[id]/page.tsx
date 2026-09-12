@@ -18,6 +18,7 @@ import {
 } from '@/lib/reporting-constants'
 import { differenceInYears, differenceInDays, format } from 'date-fns'
 import { pl } from 'date-fns/locale'
+import { ResidentZsnCheckbox } from '@/components/ResidentZsnCheckbox'
 
 export default async function ResidentProfilePage({
   params,
@@ -132,6 +133,11 @@ export default async function ResidentProfilePage({
                       {CARE_LEVEL_LABELS[careLevel]}
                     </Badge>
                   )}
+                  {resident.is_zsn && (
+                    <Badge className="bg-amber-50 text-amber-800 border-amber-200 border">
+                      ZSN: Znaczny stopień niepełnosprawności
+                    </Badge>
+                  )}
                 </div>
 
                 {/* Quick stats row */}
@@ -163,6 +169,13 @@ export default async function ResidentProfilePage({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left column: Personal data + Contract */}
         <div className="space-y-6 lg:col-span-2">
+          {/* ZSN Checkbox Toggle */}
+          <ResidentZsnCheckbox
+            residentId={resident.id}
+            initialValue={Boolean(resident.is_zsn)}
+            variant="full"
+          />
+
           {/* Personal data */}
           <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5">
             <CardHeader>

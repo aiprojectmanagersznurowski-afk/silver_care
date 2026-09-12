@@ -449,12 +449,13 @@ async function seed() {
           birth_date, gender, admission_date, contract_start_date,
           contract_end_date, contract_end_reason, death_date,
           care_level, contract_source, contract_monthly_rate, notes,
-          created_at
+          is_zsn, created_at
         ) VALUES (
           ${orgId}, ${def.firstName}, ${def.lastName}, ${peselHash},
           ${def.birthDate}, ${def.gender}, ${def.admissionDate}, ${def.contractStart},
           ${def.contractEnd}, ${def.endReason}, ${def.deathDate},
           ${def.careLevel}, ${def.source}, ${def.monthlyRate}, ${def.notes},
+          ${Boolean(def.careLevel === 'hospice' || def.careLevel === 'bedridden' || def.packageType === 'zsn')},
           ${def.admissionDate}::timestamptz
         ) RETURNING id
       `;
@@ -472,7 +473,8 @@ async function seed() {
           care_level = ${def.careLevel},
           contract_source = ${def.source},
           contract_monthly_rate = ${def.monthlyRate},
-          notes = ${def.notes}
+          notes = ${def.notes},
+          is_zsn = ${Boolean(def.careLevel === 'hospice' || def.careLevel === 'bedridden' || def.packageType === 'zsn')}
         WHERE id = ${resident.id}
       `;
     }

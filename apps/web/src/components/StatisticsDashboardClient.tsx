@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Users, Bed, Heart, Activity,
-  BarChart3, PieChart
+  BarChart3, PieChart, ShieldCheck
 } from 'lucide-react'
 import {
   CARE_LEVEL_LABELS, CARE_LEVEL_COLORS,
@@ -27,6 +27,8 @@ interface OccupancyKpi {
   free_beds: number
   occupancy_rate: number
   active_residents: number
+  zsn_count: number
+  zsn_percentage: number
   deaths_this_month: number
   contracts_signed_this_month: number
   contracts_ended_this_month: number
@@ -174,7 +176,7 @@ export function StatisticsDashboardClient({
     <div className="space-y-6">
       {/* KPI Row */}
       {occupancyKpi && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-9 gap-3">
           <KpiCard icon={Users} label="Aktywni" value={occupancyKpi.active_residents} />
           <KpiCard icon={Bed} label="Łóżka" value={`${occupancyKpi.occupied_beds}/${occupancyKpi.total_beds}`} />
           <KpiCard
@@ -184,6 +186,12 @@ export function StatisticsDashboardClient({
             color={occupancyKpi.occupancy_rate > 90 ? 'text-emerald-600' : 'text-slate'}
           />
           <KpiCard icon={Bed} label="Wolne" value={occupancyKpi.free_beds} />
+          <KpiCard
+            icon={ShieldCheck}
+            label="ZSN"
+            value={`${occupancyKpi.zsn_count ?? 0} (${occupancyKpi.zsn_percentage ?? 0}%)`}
+            color="text-amber-700"
+          />
           <KpiCard icon={Heart} label="Zgony (msc)" value={occupancyKpi.deaths_this_month} color="text-red-500" />
           <KpiCard
             icon={Users}

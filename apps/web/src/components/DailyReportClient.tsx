@@ -10,6 +10,7 @@ import { MONTH_LABELS_PL } from '@/lib/reporting-constants'
 interface DailyRow {
   report_date: string
   total_residents: number
+  zsn_count: number
   deaths: number
   contracts_signed: number
   contracts_ended: number
@@ -20,6 +21,7 @@ interface DailyRow {
 
 interface MonthlySummary {
   avg_residents: number
+  avg_zsn: number
   total_deaths: number
   total_contracts_signed: number
   total_contracts_ended: number
@@ -38,6 +40,7 @@ interface MetricRow {
 
 const metricRows: MetricRow[] = [
   { key: 'total_residents', label: 'ILOŚĆ PODOPIECZNYCH OGÓŁEM', summaryKey: 'avg_residents' },
+  { key: 'zsn_count', label: 'ZSN: Znaczny stopień niepełnosprawności', summaryKey: 'avg_zsn' },
   { key: 'deaths', label: 'Zgony', summaryKey: 'total_deaths' },
   { key: 'contracts_signed', label: 'Podpisane umowy', summaryKey: 'total_contracts_signed' },
   { key: 'contracts_ended', label: 'Zakończone umowy', summaryKey: 'total_contracts_ended' },
@@ -112,10 +115,11 @@ export function DailyReportClient({ organizationId }: { organizationId?: string 
 
   const exportCSV = () => {
     if (data.length === 0) return
-    const headers = ['Data', 'Podopieczni', 'Zgony', 'Podpisane umowy', 'Zakończone umowy', 'Delta', 'Dostępne miejsca', 'Zajęte']
+    const headers = ['Data', 'Podopieczni', 'ZSN', 'Zgony', 'Podpisane umowy', 'Zakończone umowy', 'Delta', 'Dostępne miejsca', 'Zajęte']
     const rows = data.map(r => [
       r.report_date,
       r.total_residents,
+      r.zsn_count,
       r.deaths,
       r.contracts_signed,
       r.contracts_ended,
@@ -157,8 +161,9 @@ export function DailyReportClient({ organizationId }: { organizationId?: string 
 
       {/* Summary KPI cards */}
       {summary && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           <SummaryCard label="Średnia podopiecznych" value={summary.avg_residents?.toFixed(1)} />
+          <SummaryCard label="Średnio ZSN" value={summary.avg_zsn ? summary.avg_zsn.toFixed(1) : '0'} />
           <SummaryCard label="Zgony" value={summary.total_deaths} variant="danger" />
           <SummaryCard label="Podpisane umowy" value={summary.total_contracts_signed} variant="success" />
           <SummaryCard label="Zakończone umowy" value={summary.total_contracts_ended} variant="warning" />
