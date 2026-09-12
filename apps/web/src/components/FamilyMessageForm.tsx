@@ -58,9 +58,9 @@ export function FamilyMessageForm({ residentId }: FamilyMessageFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!content.trim()) return;
-    await sendMessage(content);
+    const ok = await sendMessage(content);
     
-    if (sendState !== 'error') {
+    if (ok) {
       setContent('');
       // Optimistic update lub proste zaciągnięcie
       await loadMessages();

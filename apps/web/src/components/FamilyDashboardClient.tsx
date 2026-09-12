@@ -93,7 +93,12 @@ export function FamilyDashboardClient({ resident, reports, selectedDateMedia = [
         <div className="space-y-6">
           {activeTab === 'DASHBOARD' && (
             <>
-              <DailySummaryHero resident={resident} report={latestReport} />
+              <DailySummaryHero 
+                resident={resident} 
+                report={latestReport} 
+                selectedDateMedia={selectedDateMedia}
+                onOpenGallery={() => setActiveTab('GALERIA')}
+              />
 
               <div className="grid gap-5 lg:grid-cols-[1.5fr_1fr] items-start">
                 {/* Agenda i Zdarzenia */}

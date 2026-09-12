@@ -5,7 +5,7 @@ export function useSendFamilyMessage(residentId: string) {
   const [state, setState] = useState<UIState>('empty');
   const [error, setError] = useState<string | null>(null);
 
-  const sendMessage = async (content: string) => {
+  const sendMessage = async (content: string): Promise<boolean> => {
     setState('loading');
     setError(null);
     try {
@@ -24,9 +24,11 @@ export function useSendFamilyMessage(residentId: string) {
       }
 
       setState('success');
+      return true;
     } catch (err: any) {
       setError(err.message);
       setState('error');
+      return false;
     }
   };
 

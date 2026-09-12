@@ -1,4 +1,4 @@
-import { Sparkles, CheckCircle2, Sun, Footprints, Camera, Activity } from "lucide-react";
+import { Sparkles, CheckCircle2, Sun, Footprints, Camera, Activity, Heart } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { format } from 'date-fns'
 import { pl } from 'date-fns/locale'
@@ -30,40 +30,44 @@ function deriveWellbeing(text?: string) {
   return { sleep, appetite, mood, moodEmoji };
 }
 
-function WellbeingRing({ score }: { score: number }) {
-  const r = 52;
-  const c = 2 * Math.PI * r;
-  const offset = c - (score / 100) * c;
+function WellbeingMoodIndicator({ mood, moodEmoji }: { mood: string; moodEmoji: string }) {
   return (
-    <div className="relative h-[140px] w-[140px] shrink-0">
-      <svg className="h-full w-full -rotate-90" viewBox="0 0 130 130">
-        <circle cx="65" cy="65" r={r} fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="12" />
-        <circle
-          cx="65"
-          cy="65"
-          r={r}
-          fill="none"
-          stroke="currentColor"
-          className="text-cream"
-          strokeWidth="12"
-          strokeLinecap="round"
-          strokeDasharray={c}
-          strokeDashoffset={offset}
-        />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-primary-foreground">
-        <span style={{ fontFamily: "var(--font-display)" }} className="text-[2.4rem] leading-none">
-          {score}
-        </span>
-        <span className="text-[0.8rem] opacity-90">na 100</span>
-      </div>
+    <div className="relative flex h-[140px] w-[140px] shrink-0 flex-col items-center justify-center rounded-3xl bg-white/15 p-4 backdrop-blur-sm border border-white/20 shadow-inner">
+      <span className="text-[3rem] leading-none select-none filter drop-shadow-sm">{moodEmoji}</span>
+      <span className="mt-2 text-[0.85rem] font-semibold text-primary-foreground tracking-wide text-center">
+        {mood}
+      </span>
+      <span className="text-[0.7rem] opacity-80 text-primary-foreground/90 uppercase tracking-wider">
+        Samopoczucie
+      </span>
     </div>
   );
 }
 
-export function DailySummaryHero({ resident, report }: { resident: any, report: any }) {
+interface DailySummaryHeroProps {
+  resident: {
+    id?: string;
+    first_name: string;
+    last_name: string;
+  };
+  report?: {
+    id?: string;
+    created_at?: string;
+    content?: {
+      text?: string;
+      metrics?: {
+        steps?: number;
+        sleep_hours?: number;
+      };
+    };
+  } | null;
+  selectedDateMedia?: string[];
+  onOpenGallery?: () => void;
+}
+
+export function DailySummaryHero({ resident, report, selectedDateMedia = [], onOpenGallery }: DailySummaryHeroProps) {
   const reportText = report?.content?.text || 'Brak dzisiejszego raportu od personelu. Czekamy na pierwsze wpisy.';
-  const wb = deriveWellbeing(reportText);
+  const wb = deriveWellbeing(report?.content?.text);
 
   const quickStats = [
     { icon: CheckCircle2, label: "Sen", value: wb.sleep },
@@ -83,7 +87,7 @@ export function DailySummaryHero({ resident, report }: { resident: any, report: 
               <Sparkles className="h-5 w-5" />
               <p className="text-[0.95rem] opacity-90">Dzisiaj · {format(new Date(), 'EEEE, d MMMM', { locale: pl })}</p>
             </div>
-            {report && (
+            {report?.created_at && (
               <span className="text-[10px] uppercase font-bold tracking-widest px-3 py-1 rounded-full bg-white/20">
                 Opublikowano {format(new Date(report.created_at), 'HH:mm')}
               </span>
@@ -91,22 +95,16 @@ export function DailySummaryHero({ resident, report }: { resident: any, report: 
           </div>
 
           <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:items-start sm:text-left">
-            <WellbeingRing score={wb.mood === "Radosny" ? 95 : wb.mood === "Obniżony" ? 65 : 82} />
-            <div className="flex-1">
+            <WellbeingMoodIndicator mood={wb.mood} moodEmoji={wb.moodEmoji} />
+            <div className="flex-1 min-w-0">
               <h2 className="text-[1.4rem] leading-tight break-words text-primary-foreground sm:text-[1.6rem]">Podsumowanie Dnia</h2>
-              {/* Więcej miejsca na notatki glosowe */}
-              <div className="mt-3 max-w-lg bg-white/10 rounded-2xl p-4 border border-white/20 backdrop-blur-sm">
-                <p className="text-[1rem] leading-relaxed opacity-95 text-left max-h-48 overflow-y-auto custom-scrollbar pr-2">
+              <div className="mt-3 bg-white/10 rounded-2xl p-4 border border-white/20 backdrop-blur-sm">
+                <p className="text-[1rem] leading-relaxed opacity-95 text-left max-h-48 overflow-y-auto custom-scrollbar pr-2 whitespace-pre-wrap">
                   {reportText}
                 </p>
-              </div>
-              
-              <div className="mt-5 flex items-center justify-center gap-3 sm:justify-start">
-                <span className="text-[2.2rem] leading-none">{wb.moodEmoji}</span>
-                <div className="text-left">
-                  <p className="text-[0.8rem] uppercase tracking-wide opacity-80">Aktualny nastrój</p>
-                  <p className="text-[1.15rem] font-medium">{wb.mood}</p>
-                </div>
+                <p className="mt-3 border-t border-white/15 pt-2 text-[0.72rem] opacity-80 italic text-left">
+                  Podsumowanie generowane przy wsparciu AI, zatwierdzone przez personel placówki.
+                </p>
               </div>
             </div>
           </div>
@@ -128,38 +126,90 @@ export function DailySummaryHero({ resident, report }: { resident: any, report: 
         </div>
       </div>
 
-      {/* Gallery check-in card (Replaces static mood card) */}
-      <div className="flex flex-col rounded-[1.75rem] bg-card p-6 ring-1 ring-border shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-           <h3 className="text-[1.15rem] text-slate font-display flex items-center gap-2">
-             <Camera className="h-5 w-5 text-sage" />
-             Galeria zdjęć z dzisiaj
-           </h3>
+      {/* Gallery check-in card */}
+      <div className="flex flex-col rounded-[1.75rem] bg-card p-6 ring-1 border border-border shadow-sm justify-between">
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-[1.15rem] text-slate font-display flex items-center gap-2">
+              <Camera className="h-5 w-5 text-sage" />
+              Galeria zdjęć z dzisiaj
+            </h3>
+            {selectedDateMedia.length > 0 && onOpenGallery && (
+              <button 
+                onClick={onOpenGallery}
+                className="text-xs font-semibold text-sage hover:underline"
+              >
+                Otwórz pełną galerię
+              </button>
+            )}
+          </div>
+          
+          {selectedDateMedia.length > 0 ? (
+            <div className="grid grid-cols-2 gap-2">
+              <div 
+                onClick={onOpenGallery}
+                className="col-span-2 overflow-hidden rounded-2xl h-32 relative group cursor-pointer shadow-inner bg-slate/5"
+              >
+                <img
+                  src={selectedDateMedia[0]}
+                  alt={`Zdjęcie z aktywności`}
+                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+              </div>
+              {selectedDateMedia.length > 1 ? (
+                <div 
+                  onClick={onOpenGallery}
+                  className="overflow-hidden rounded-2xl h-24 relative group cursor-pointer shadow-inner bg-slate/5"
+                >
+                  <img
+                    src={selectedDateMedia[1]}
+                    alt="Zdjęcie z aktywności"
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                </div>
+              ) : (
+                <div 
+                  onClick={onOpenGallery}
+                  className="overflow-hidden rounded-2xl h-24 relative group cursor-pointer bg-slate/5 flex items-center justify-center hover:bg-slate/10 transition-colors"
+                >
+                  <span className="text-sage font-medium text-xs">Zobacz więcej</span>
+                </div>
+              )}
+              <div 
+                onClick={onOpenGallery}
+                className="overflow-hidden rounded-2xl h-24 relative group cursor-pointer bg-slate/5 flex items-center justify-center hover:bg-slate/10 transition-colors"
+              >
+                <span className="text-sage font-medium text-sm">
+                  {selectedDateMedia.length > 2 ? `+ ${selectedDateMedia.length - 2} więcej` : "Zobacz galerię"}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-8 px-4 text-center bg-slate/5 rounded-2xl">
+              <div className="h-12 w-12 rounded-full bg-sage-soft flex items-center justify-center mb-2">
+                <Camera className="h-6 w-6 text-sage-deep" />
+              </div>
+              <p className="text-sm font-semibold text-slate">Brak nowych zdjęć z dzisiaj</p>
+              <p className="text-xs text-slate-soft mt-1 max-w-[220px] leading-relaxed">
+                Personel placówki dodaje zdjęcia podczas warsztatów, spacerów i wydarzeń.
+              </p>
+              {onOpenGallery && (
+                <button
+                  onClick={onOpenGallery}
+                  className="mt-4 rounded-full bg-card px-4 py-1.5 text-xs font-medium text-sage border border-border hover:bg-sage-soft/60 transition-colors shadow-sm"
+                >
+                  Przeglądaj wcześniejsze zdjęcia →
+                </button>
+              )}
+            </div>
+          )}
         </div>
-        
-        <div className="grid grid-cols-2 gap-2 h-full">
-          <div className="col-span-2 overflow-hidden rounded-2xl h-32 relative group cursor-pointer">
-            <ImageWithFallback
-              src="https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800"
-              alt={`${resident.first_name} podczas zajęć`}
-              className="h-full w-full object-cover transition-transform group-hover:scale-105"
-            />
-          </div>
-          <div className="overflow-hidden rounded-2xl h-24 relative group cursor-pointer">
-            <ImageWithFallback
-              src="https://images.unsplash.com/photo-1444312645910-ffa973656eba?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400"
-              alt="Spacer"
-              className="h-full w-full object-cover transition-transform group-hover:scale-105"
-            />
-          </div>
-          <div className="overflow-hidden rounded-2xl h-24 relative group cursor-pointer bg-slate/5 flex items-center justify-center">
-             <span className="text-sage font-medium text-sm">+ Zobacz więcej</span>
-          </div>
-        </div>
-        
-        <p className="mt-4 text-[0.85rem] text-slate-soft text-center bg-slate/5 py-2 rounded-xl">
-           3 nowe zdjęcia dodane o 14:30
-        </p>
+
+        {selectedDateMedia.length > 0 && (
+          <p className="mt-4 text-[0.85rem] text-slate-soft text-center bg-slate/5 py-2 rounded-xl">
+            {selectedDateMedia.length === 1 ? "1 zdjęcie dodane dzisiaj" : `${selectedDateMedia.length} zdjęć dodanych dzisiaj`}
+          </p>
+        )}
       </div>
     </section>
   );

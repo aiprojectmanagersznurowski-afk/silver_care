@@ -1,8 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { GlobalResidentSwitcher } from '@/components/GlobalResidentSwitcher'
 import { ReactNode } from 'react'
 import { FamilyHeader } from '@/components/FamilyHeader'
+import { OnboardingModal } from '@/components/OnboardingModal'
 
 export const dynamic = 'force-dynamic'
 export default async function FamilyLayout({ children }: { children: ReactNode }) {
@@ -35,9 +35,10 @@ export default async function FamilyLayout({ children }: { children: ReactNode }
   return (
     <div className="flex min-h-screen flex-col bg-surface-sunken">
       <FamilyHeader residents={residents} />
+      <OnboardingModal />
       
       {/* Main content area */}
-      <main className="flex-1 px-4 py-8">
+      <main className="flex-1 px-4 py-8 pb-24 md:pb-8">
         <div className="mx-auto max-w-7xl">
           {children}
         </div>
