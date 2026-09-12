@@ -6,12 +6,24 @@ export const runtime = 'nodejs'
 
 export async function POST(req: Request) {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const authHeader = req.headers.get('authorization')
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7).trim() : undefined
+    const supabase = await createClient(token)
+
+    let user = null
+    if (token) {
+      const { data: authData } = await supabase.auth.getUser(token)
+      user = authData?.user || null
+    }
+    if (!user) {
+      const { data: cookieAuthData } = await supabase.auth.getUser()
+      user = cookieAuthData?.user || null
+    }
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
 
     const formData = await req.formData()
     const file = formData.get('file') as File

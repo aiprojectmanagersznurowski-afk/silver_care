@@ -10,7 +10,8 @@ import Link from 'next/link'
 function VoiceNoteContent() {
   const searchParams = useSearchParams()
   const residentId = searchParams.get('resident')
-  const [resident, setResident] = useState<any>(null)
+  const [resident, setResident] = useState<{ id: string; first_name?: string; last_name?: string } | null>(null)
+
   
   const [isRecording, setIsRecording] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
@@ -71,6 +72,19 @@ function VoiceNoteContent() {
     }
   }
 
+  const getAuthHeaders = async (): Promise<Record<string, string>> => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const headers: Record<string, string> = {}
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`
+      }
+      return headers
+    } catch {
+      return {}
+    }
+  }
+
   const processAudio = async (audioBlob: Blob) => {
     if (!residentId) {
       setError('Nie wybrano podopiecznego.')
@@ -88,10 +102,20 @@ function VoiceNoteContent() {
     }
 
     try {
+      const headers = await getAuthHeaders()
       const response = await fetch('/api/voice/transcribe', {
         method: 'POST',
+        headers,
         body: formData,
       })
+
+      if (response.status === 401) {
+        setError('Sesja wygasła. Zaloguj się ponownie, aby zapisać notatkę.')
+        setTimeout(() => {
+          window.location.href = '/login'
+        }, 2000)
+        return
+      }
 
       const data = await response.json()
 
@@ -116,13 +140,22 @@ function VoiceNoteContent() {
     setFollowupQuestion(null)
 
     try {
+      const headers = await getAuthHeaders()
+      headers['Content-Type'] = 'application/json'
+
       const response = await fetch('/api/voice/process', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers,
         body: JSON.stringify({ draftId, editedTranscription: transcription })
       })
+
+      if (response.status === 401) {
+        setError('Sesja wygasła. Zaloguj się ponownie, aby kontynuować.')
+        setTimeout(() => {
+          window.location.href = '/login'
+        }, 2000)
+        return
+      }
 
       const data = await response.json()
 
@@ -142,6 +175,7 @@ function VoiceNoteContent() {
       setIsGenerating(false)
     }
   }
+
 
   if (!residentId) {
     return (
