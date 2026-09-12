@@ -19,7 +19,7 @@ export default async function AdminStaffPage() {
   const role = user?.user_metadata?.role || user?.app_metadata?.role
   const orgId = user?.app_metadata?.organization_id
 
-  if (!orgId || (role !== 'admin' && role !== 'org_admin')) {
+  if (!user || (role !== 'admin' && role !== 'org_admin' && role !== 'super_admin')) {
     redirect('/')
   }
 
@@ -31,7 +31,7 @@ export default async function AdminStaffPage() {
   }
 
   const staff = (users || []).filter(u => 
-    u.app_metadata?.organization_id === orgId &&
+    (!orgId || u.app_metadata?.organization_id === orgId) &&
     (u.app_metadata?.role === 'nurse' || u.app_metadata?.role === 'paramedic')
   )
 

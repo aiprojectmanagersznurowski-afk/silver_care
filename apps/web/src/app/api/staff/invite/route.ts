@@ -12,10 +12,16 @@ export async function POST(request: Request) {
     }
 
     const appRole = user.app_metadata?.role
-    const orgId = user.app_metadata?.organization_id
+    let orgId = user.app_metadata?.organization_id
 
-    if (appRole !== 'org_admin' && appRole !== 'admin') {
+    if (appRole !== 'org_admin' && appRole !== 'admin' && appRole !== 'super_admin') {
       return NextResponse.json({ error: 'Brak uprawnień administratora' }, { status: 403 })
+    }
+
+    if (!orgId && appRole === 'super_admin') {
+      const adminClient = createAdminClient()
+      const { data: org } = await adminClient.from('organizations').select('id').limit(1).maybeSingle()
+      orgId = org?.id
     }
 
     if (!orgId) {

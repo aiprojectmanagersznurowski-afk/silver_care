@@ -33,6 +33,7 @@ export function AdminMobileHeader({ userEmail, role }: { userEmail: string; role
             <Link href="/admin" onClick={() => setIsOpen(false)} className="rounded-xl px-4 py-3 text-sm font-medium text-slate hover:bg-slate/5">Pulpit</Link>
             <Link href="/admin/residents" onClick={() => setIsOpen(false)} className="rounded-xl px-4 py-3 text-sm font-medium text-slate hover:bg-slate/5">Podopieczni</Link>
             <Link href="/admin/staff" onClick={() => setIsOpen(false)} className="rounded-xl px-4 py-3 text-sm font-medium text-slate hover:bg-slate/5">Personel</Link>
+            <Link href="/admin/invitations" onClick={() => setIsOpen(false)} className="rounded-xl px-4 py-3 text-sm font-medium text-slate hover:bg-slate/5">Zaproszenia</Link>
             <Link href="/admin/facility" onClick={() => setIsOpen(false)} className="rounded-xl px-4 py-3 text-sm font-medium text-slate hover:bg-slate/5">Struktura Placówki</Link>
             <Link href="/admin/audit" onClick={() => setIsOpen(false)} className="rounded-xl px-4 py-3 text-sm font-medium text-slate hover:bg-slate/5">Rejestr Audytowy</Link>
             {role === 'super_admin' && (

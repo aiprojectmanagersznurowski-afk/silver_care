@@ -12,14 +12,10 @@ export async function POST(request: Request) {
     }
 
     const appRole = user.app_metadata?.role
-    const orgId = user.app_metadata?.organization_id
+    let orgId = user.app_metadata?.organization_id
 
-    if (appRole !== 'org_admin' && appRole !== 'admin') {
+    if (appRole !== 'org_admin' && appRole !== 'admin' && appRole !== 'super_admin') {
       return NextResponse.json({ error: 'Brak uprawnień administratora' }, { status: 403 })
-    }
-
-    if (!orgId) {
-      return NextResponse.json({ error: 'Brak przypisania do organizacji' }, { status: 400 })
     }
 
     const body = await request.json()
@@ -29,8 +25,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Adres e-mail i ID pensjonariusza są wymagane' }, { status: 400 })
     }
 
-    const assignedRole = role === 'legal_guardian' ? 'legal_guardian' : 'family'
     const adminClient = createAdminClient()
+
+    if (!orgId) {
+      const { data: resident } = await adminClient
+        .from('residents')
+        .select('organization_id')
+        .eq('id', resident_id)
+        .maybeSingle()
+      orgId = resident?.organization_id
+    }
+
+    if (!orgId) {
+      return NextResponse.json({ error: 'Brak przypisania do organizacji' }, { status: 400 })
+    }
+
+    const assignedRole = role === 'legal_guardian' ? 'legal_guardian' : 'family'
 
     // Create invitation record (bypassing RLS for simplicity, but we still inject orgId)
     const { data, error } = await adminClient

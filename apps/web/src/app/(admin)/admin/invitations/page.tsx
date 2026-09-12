@@ -14,18 +14,18 @@ export default async function AdminInvitationsPage() {
   const role = user?.user_metadata?.role || user?.app_metadata?.role
   const orgId = user?.app_metadata?.organization_id
 
-  if (!orgId || (role !== 'admin' && role !== 'org_admin')) {
+  if (!user || (role !== 'admin' && role !== 'org_admin' && role !== 'super_admin')) {
     redirect('/')
   }
 
   // Get residents for the dropdown
-  const { data: residents } = await supabase
+  let residentsQuery = supabase
     .from('residents')
     .select('id, first_name, last_name')
-    .eq('organization_id', orgId)
+    .is('archived_at', null)
 
   // Get invitations
-  const { data: invitations } = await supabase
+  let invitationsQuery = supabase
     .from('resident_invitations')
     .select(`
       *,
@@ -34,8 +34,15 @@ export default async function AdminInvitationsPage() {
         last_name
       )
     `)
-    .eq('organization_id', orgId)
     .order('created_at', { ascending: false })
+
+  if (orgId) {
+    residentsQuery = residentsQuery.eq('organization_id', orgId)
+    invitationsQuery = invitationsQuery.eq('organization_id', orgId)
+  }
+
+  const { data: residents } = await residentsQuery
+  const { data: invitations } = await invitationsQuery
 
   return (
     <div className="space-y-6">
