@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Users, UserPlus, Building2, ShieldAlert, LogOut, LayoutDashboard, ShieldCheck, Mail } from 'lucide-react'
+import { Users, UserPlus, Building2, ShieldAlert, LogOut, LayoutDashboard, ShieldCheck, Mail, CalendarDays, BarChart3 } from 'lucide-react'
 
 export function AdminSidebar({ userEmail, role }: { userEmail: string; role?: string }) {
   const pathname = usePathname()
@@ -10,6 +10,8 @@ export function AdminSidebar({ userEmail, role }: { userEmail: string; role?: st
   const links = [
     { href: '/admin', label: 'Pulpit', icon: LayoutDashboard },
     { href: '/admin/residents', label: 'Podopieczni', icon: Users },
+    { href: '/admin/reports/daily', label: 'Dane Dzienne', icon: CalendarDays },
+    { href: '/admin/reports/statistics', label: 'Statystyka', icon: BarChart3 },
     { href: '/admin/staff', label: 'Personel', icon: UserPlus },
     { href: '/admin/invitations', label: 'Zaproszenia', icon: Mail },
     { href: '/admin/facility', label: 'Struktura Placówki', icon: Building2 },

@@ -32,6 +32,8 @@ export function AdminMobileHeader({ userEmail, role }: { userEmail: string; role
           <nav className="flex flex-col p-4 space-y-2">
             <Link href="/admin" onClick={() => setIsOpen(false)} className="rounded-xl px-4 py-3 text-sm font-medium text-slate hover:bg-slate/5">Pulpit</Link>
             <Link href="/admin/residents" onClick={() => setIsOpen(false)} className="rounded-xl px-4 py-3 text-sm font-medium text-slate hover:bg-slate/5">Podopieczni</Link>
+            <Link href="/admin/reports/daily" onClick={() => setIsOpen(false)} className="rounded-xl px-4 py-3 text-sm font-medium text-slate hover:bg-slate/5">Dane Dzienne</Link>
+            <Link href="/admin/reports/statistics" onClick={() => setIsOpen(false)} className="rounded-xl px-4 py-3 text-sm font-medium text-slate hover:bg-slate/5">Statystyka</Link>
             <Link href="/admin/staff" onClick={() => setIsOpen(false)} className="rounded-xl px-4 py-3 text-sm font-medium text-slate hover:bg-slate/5">Personel</Link>
             <Link href="/admin/invitations" onClick={() => setIsOpen(false)} className="rounded-xl px-4 py-3 text-sm font-medium text-slate hover:bg-slate/5">Zaproszenia</Link>
             <Link href="/admin/facility" onClick={() => setIsOpen(false)} className="rounded-xl px-4 py-3 text-sm font-medium text-slate hover:bg-slate/5">Struktura Placówki</Link>
