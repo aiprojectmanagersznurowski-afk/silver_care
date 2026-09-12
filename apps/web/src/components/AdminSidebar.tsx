@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { 
@@ -49,9 +50,18 @@ export function AdminSidebar({ userEmail, role }: { userEmail: string; role?: st
 
   return (
     <aside className="hidden w-72 flex-col border-r border-slate/10 bg-white md:flex">
-      <div className="flex h-20 items-center border-b border-slate/10 px-6">
-        <h1 className="font-display text-2xl font-semibold text-slate">Silver Care</h1>
-        <span className="ml-2 rounded-md bg-sage/10 px-2 py-1 text-xs font-medium text-sage">
+      <div className="flex h-20 items-center justify-between border-b border-slate/10 px-6">
+        <Link href="/admin" className="flex items-center hover:opacity-90 transition-opacity">
+          <Image
+            src="/logo.png"
+            alt="Silver Care"
+            width={130}
+            height={38}
+            className="h-8 w-auto object-contain"
+            priority
+          />
+        </Link>
+        <span className="rounded-md bg-sage/10 px-2 py-1 text-xs font-medium text-sage">
           {role === 'super_admin' ? 'Super Admin' : 'Admin'}
         </span>
       </div>

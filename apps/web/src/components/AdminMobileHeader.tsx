@@ -3,6 +3,7 @@
 import { LogOut, Menu, ChevronDown, CalendarDays, BarChart3, TrendingUp, Building2, Users, UserPlus, Mail, ShieldAlert, ShieldCheck, LayoutDashboard } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 
 export function AdminMobileHeader({ userEmail, role }: { userEmail: string; role?: string }) {
@@ -21,7 +22,16 @@ export function AdminMobileHeader({ userEmail, role }: { userEmail: string; role
     <>
       <header className="flex h-16 items-center justify-between border-b border-slate/10 bg-white px-4 md:hidden">
         <div className="flex items-center gap-2">
-          <h1 className="font-display text-xl font-semibold text-slate">Silver Care</h1>
+          <Link href="/admin" className="flex items-center hover:opacity-90 transition-opacity">
+            <Image
+              src="/logo.png"
+              alt="Silver Care"
+              width={110}
+              height={32}
+              className="h-7 w-auto object-contain"
+              priority
+            />
+          </Link>
           <span className="rounded-md bg-sage/10 px-1.5 py-0.5 text-[0.65rem] font-medium text-sage uppercase tracking-wider">
             {role === 'super_admin' ? 'Super Admin' : 'Admin'}
           </span>

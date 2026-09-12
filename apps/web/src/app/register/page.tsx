@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Image from 'next/image'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -226,8 +227,15 @@ function RegisterContent() {
   return (
     <Card className="w-full max-w-md shadow-lg border-border">
       <CardHeader className="space-y-1 text-center">
-        <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-          {isGuardian ? <ShieldCheck className="h-5 w-5" /> : <HeartHandshake className="h-5 w-5" />}
+        <div className="mx-auto mb-3 flex justify-center">
+          <Image
+            src="/logo.png"
+            alt="Silver Care"
+            width={150}
+            height={42}
+            className="h-9 w-auto object-contain"
+            priority
+          />
         </div>
         <CardTitle className="text-2xl font-bold text-foreground">Dołącz do Silver Care</CardTitle>
         <CardDescription className="text-text-secondary">

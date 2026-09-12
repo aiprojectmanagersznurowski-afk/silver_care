@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -57,7 +58,17 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-sm">
         <form onSubmit={handleLogin}>
-          <CardHeader>
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-3 flex justify-center">
+              <Image
+                src="/logo.png"
+                alt="Silver Care"
+                width={150}
+                height={42}
+                className="h-9 w-auto object-contain"
+                priority
+              />
+            </div>
             <CardTitle className="text-2xl">Zaloguj się</CardTitle>
             <CardDescription>
               Wprowadź swoje dane, aby uzyskać dostęp do panelu Silver Care.

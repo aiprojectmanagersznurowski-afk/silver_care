@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { HeartHandshake, ChevronDown, Bell, Check, LayoutDashboard, Calendar, MessageSquare } from "lucide-react";
+import Image from "next/image";
+import { ChevronDown, Bell, Check, LayoutDashboard, Calendar, MessageSquare } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -55,15 +56,17 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
       <header className="sticky top-0 z-30 border-b border-border/70 bg-cream/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-[1600px] items-center gap-4 px-4 py-3 sm:gap-6 sm:px-6 sm:py-4">
           <Link href="/dashboard" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-sage text-primary-foreground shadow-sm sm:h-11 sm:w-11">
-              <HeartHandshake className="h-5 w-5 sm:h-6 sm:w-6" />
-            </div>
-            <div className="leading-tight">
-              <p style={{ fontFamily: "var(--font-display)" }} className="text-[1.15rem] text-slate sm:text-[1.35rem]">
-                Silver Care
-              </p>
-              <p className="hidden text-[0.8rem] text-slate-soft sm:block">Portal rodzinnej opieki</p>
-            </div>
+            <Image
+              src="/logo.png"
+              alt="Silver Care"
+              width={140}
+              height={40}
+              className="h-8 sm:h-9 w-auto object-contain"
+              priority
+            />
+            <span className="hidden text-[0.8rem] text-slate-soft sm:inline-block border-l border-slate/15 pl-3">
+              Portal rodzinnej opieki
+            </span>
           </Link>
 
           {/* Desktop Navigation */}

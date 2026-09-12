@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { Menu, X, Users, Calendar, FileText, LogOut } from 'lucide-react'
 
@@ -19,9 +20,18 @@ export function StaffMobileHeader({ userEmail }: { userEmail: string | undefined
   return (
     <div className="lg:hidden sticky top-0 z-40 bg-cream/80 backdrop-blur-md border-b border-slate/10">
       <div className="flex items-center justify-between px-4 h-16">
-        <div className="flex items-center">
-          <span className="text-xl font-display font-semibold text-slate tracking-tight">Silver Care</span>
-          <span className="ml-2 rounded-full bg-sage/20 px-2 py-0.5 text-[10px] font-medium text-sage-dark uppercase tracking-wider">
+        <div className="flex items-center gap-2">
+          <Link href="/staff" className="flex items-center hover:opacity-90 transition-opacity">
+            <Image
+              src="/logo.png"
+              alt="Silver Care"
+              width={110}
+              height={32}
+              className="h-7 w-auto object-contain"
+              priority
+            />
+          </Link>
+          <span className="rounded-full bg-sage/20 px-2 py-0.5 text-[10px] font-medium text-sage-dark uppercase tracking-wider">
             Personel
           </span>
         </div>

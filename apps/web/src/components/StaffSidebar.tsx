@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { Users, Calendar, FileText, LogOut } from 'lucide-react'
 
@@ -17,9 +18,18 @@ export function StaffSidebar({ userEmail }: { userEmail: string | undefined }) {
   return (
     <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
       <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-slate/10 bg-cream px-6 pb-4">
-        <div className="flex h-16 shrink-0 items-center">
-          <span className="text-xl font-display font-semibold text-slate tracking-tight">Silver Care</span>
-          <span className="ml-2 rounded-full bg-sage/20 px-2.5 py-0.5 text-xs font-medium text-sage-dark">Personel</span>
+        <div className="flex h-16 shrink-0 items-center justify-between">
+          <Link href="/staff" className="flex items-center hover:opacity-90 transition-opacity">
+            <Image
+              src="/logo.png"
+              alt="Silver Care"
+              width={120}
+              height={34}
+              className="h-7 w-auto object-contain"
+              priority
+            />
+          </Link>
+          <span className="rounded-full bg-sage/20 px-2.5 py-0.5 text-xs font-medium text-sage-dark">Personel</span>
         </div>
         <nav className="flex flex-1 flex-col">
           <ul role="list" className="flex flex-1 flex-col gap-y-7">

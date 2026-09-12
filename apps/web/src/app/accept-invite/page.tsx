@@ -2,6 +2,7 @@
 
 import { useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Image from 'next/image'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
@@ -23,6 +24,16 @@ function AcceptInviteContent() {
     <div className="min-h-screen flex items-center justify-center bg-muted/40 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
+          <div className="mx-auto mb-3 flex justify-center">
+            <Image
+              src="/logo.png"
+              alt="Silver Care"
+              width={150}
+              height={42}
+              className="h-9 w-auto object-contain"
+              priority
+            />
+          </div>
           <CardTitle>Zaproszenie do placówki</CardTitle>
           <CardDescription>
             Zostałeś zaproszony do dołączenia do systemu Silver Care.
