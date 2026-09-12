@@ -164,7 +164,9 @@ export async function POST(req: Request) {
     const systemPrompt1 = `Przeanalizuj poniższy transkrypt z opieki nad podopiecznym. 
 Tryb ZERO-GUESSING: Wyciągaj wyłącznie twarde fakty z nagrania. Nie zmyślaj, nie domyślaj się, nie dopowiadaj historii, która nie padła w nagraniu.
 
-Dodatkowo, jeżeli uważasz, że notatka jest skrajnie niekompletna i brakuje w niej kluczowego faktu by móc zrozumieć o czym mowa (np. "zmieniłem mu ten no..." - i nie wiemy co, lub "dałem połowę dawki" bez informacji jakiego leku), ustaw wartość 'followup_question' na krótkie pytanie skierowane do pielęgniarki, które doprecyzuje sprawę. W przeciwnym wypadku ustaw 'followup_question' jako null.
+Notatka może zawierać sekcję [UZUPEŁNIENIE:], która stanowi dopowiedź lub odpowiedź personelu na wcześniejsze pytanie (np. o dawkę leku, godzinę, szczegół). Połącz wszystkie fakty ze wszystkich części notatki w spójną całość.
+
+Dodatkowo, jeżeli uważasz, że notatka jest skrajnie niekompletna i brakuje w niej kluczowego faktu by móc zrozumieć o czym mowa (np. "zmieniłem mu ten no..." - i nie wiemy co, lub "dałem połowę dawki" bez informacji jakiego leku), ustaw wartość 'followup_question' na krótkie pytanie skierowane do pielęgniarki, które doprecyzuje sprawę. Jeśli notatka lub jej uzupełnienie wyjaśnia sprawę (np. podano już dawkę lub nazwę leku, podano parametry), BEZWZGLĘDNIE ustaw 'followup_question' jako null.
 
 Podziel informacje i zwróć DOKŁADNIE TEN FORMAT JSON (bez znaczników markdown, czysty JSON):
 {
@@ -262,7 +264,7 @@ Informacje o dyskomforcie: ${classified.discomfort || 'Brak'}`
 
     // 6. Aktualizacja draftu
     await supabase.from('voice_draft_notes')
-      .update({ status: 'PROCESSED' })
+      .update({ status: 'PROCESSED', followup_question: null })
       .eq('id', draft.id)
 
     return NextResponse.json({ success: true, report: reportText })

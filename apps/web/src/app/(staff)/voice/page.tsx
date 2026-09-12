@@ -17,6 +17,7 @@ function VoiceNoteContent() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [transcription, setTranscription] = useState<string | null>(null)
   const [draftId, setDraftId] = useState<string | null>(null)
+  const draftIdRef = useRef<string | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [finalReport, setFinalReport] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -26,6 +27,19 @@ function VoiceNoteContent() {
   const audioChunks = useRef<Blob[]>([])
   
   const supabase = createClient()
+
+  const updateDraftId = (id: string | null) => {
+    draftIdRef.current = id
+    setDraftId(id)
+  }
+
+  const resetNote = () => {
+    updateDraftId(null)
+    setTranscription(null)
+    setFollowupQuestion(null)
+    setFinalReport(null)
+    setError(null)
+  }
 
   useEffect(() => {
     if (residentId) {
@@ -55,9 +69,12 @@ function VoiceNoteContent() {
       mediaRecorder.current.start()
       setIsRecording(true)
       setError(null)
-      setTranscription(null)
-      setDraftId(null)
-      setFinalReport(null)
+      // Jeśli użytkownik nagrywa od zera (brak draftId), czyścimy poprzednie wyniki
+      if (!draftIdRef.current) {
+        setTranscription(null)
+        setFinalReport(null)
+        setFollowupQuestion(null)
+      }
     } catch (err) {
       console.error('Error accessing microphone:', err)
       setError('Brak dostępu do mikrofonu. Upewnij się, że udzieliłeś pozwoleń.')
@@ -97,8 +114,9 @@ function VoiceNoteContent() {
     const formData = new FormData()
     formData.append('file', audioBlob, 'recording.webm')
     formData.append('resident_id', residentId)
-    if (draftId) {
-      formData.append('draft_id', draftId)
+    const currentDraftId = draftIdRef.current
+    if (currentDraftId) {
+      formData.append('draft_id', currentDraftId)
     }
 
     try {
@@ -121,7 +139,8 @@ function VoiceNoteContent() {
 
       if (response.ok && data.success) {
         setTranscription(data.text)
-        setDraftId(data.draftId)
+        updateDraftId(data.draftId)
+        setFollowupQuestion(null) // dograno odpowiedź na pytanie AI — czyścimy blokadę dopytywania
       } else {
         setError(data.error || 'Wystąpił błąd podczas transkrypcji.')
       }
@@ -134,7 +153,8 @@ function VoiceNoteContent() {
   }
 
   const generateAIReport = async () => {
-    if (!draftId) return
+    const currentDraftId = draftIdRef.current || draftId
+    if (!currentDraftId) return
     setIsGenerating(true)
     setError(null)
     setFollowupQuestion(null)
@@ -146,7 +166,7 @@ function VoiceNoteContent() {
       const response = await fetch('/api/voice/process', {
         method: 'POST',
         headers,
-        body: JSON.stringify({ draftId, editedTranscription: transcription })
+        body: JSON.stringify({ draftId: currentDraftId, editedTranscription: transcription })
       })
 
       if (response.status === 401) {
@@ -164,6 +184,7 @@ function VoiceNoteContent() {
           setFollowupQuestion(data.question)
         } else {
           setFinalReport(data.report)
+          setFollowupQuestion(null)
         }
       } else {
         setError(data.error || 'Wystąpił błąd podczas generowania raportu.')
@@ -209,12 +230,12 @@ function VoiceNoteContent() {
           </div>
 
           {!finalReport && (
-            <div className="flex justify-center w-full mt-4">
+            <div className="flex flex-col items-center justify-center w-full mt-4 space-y-3">
               {!isRecording ? (
                 <button 
                   onClick={startRecording} 
                   disabled={isProcessing || isGenerating} 
-                  className="group relative flex h-24 w-24 items-center justify-center rounded-full bg-rose-100 text-rose-600 transition-all hover:bg-rose-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+                  className="group relative flex h-24 w-24 items-center justify-center rounded-full bg-rose-100 text-rose-600 transition-all hover:bg-rose-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 shadow-sm"
                 >
                   <div className="absolute inset-0 rounded-full ring-4 ring-rose-100/50 group-hover:animate-ping"></div>
                   <Mic className="h-10 w-10 relative z-10" />
@@ -227,6 +248,13 @@ function VoiceNoteContent() {
                   <Square className="h-8 w-8 fill-current" />
                 </button>
               )}
+              <span className="text-xs font-medium text-slate-soft">
+                {isRecording 
+                  ? 'Nagrywanie... Naciśnij kwadrat, aby zatrzymać' 
+                  : draftId 
+                    ? (followupQuestion ? 'Naciśnij mikrofon, aby dograć odpowiedź' : 'Naciśnij mikrofon, aby dograć uzupełnienie') 
+                    : 'Naciśnij mikrofon, aby nagrać notatkę'}
+              </span>
             </div>
           )}
 
@@ -253,8 +281,8 @@ function VoiceNoteContent() {
           {transcription && !finalReport && !isGenerating && (
             <div className="w-full rounded-2xl bg-slate/5 p-6 border border-slate/10 shadow-inner">
               <div className="flex items-center justify-between mb-4">
-                <h4 className="text-sm font-semibold text-slate">Rozpoznany tekst:</h4>
-                <span className="text-xs font-medium text-slate-soft">Możesz edytować</span>
+                <h4 className="text-sm font-semibold text-slate">Treść notatki:</h4>
+                <span className="text-xs font-medium text-slate-soft">Możesz edytować lub dopisać tekst</span>
               </div>
               
               <textarea 
@@ -263,45 +291,39 @@ function VoiceNoteContent() {
                 onChange={(e) => setTranscription(e.target.value)}
               />
               
-              {followupQuestion ? (
+              {followupQuestion && (
                 <div className="mb-6 rounded-2xl bg-amber-50 p-5 ring-1 ring-inset ring-amber-600/20">
                   <div className="flex items-start gap-3">
                     <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-                    <div>
+                    <div className="flex-1">
                       <span className="text-amber-800 font-bold text-sm block mb-1">AI dopytuje:</span>
-                      <p className="text-sm text-amber-900">{followupQuestion}</p>
+                      <p className="text-sm text-amber-900 font-semibold">{followupQuestion}</p>
                       <p className="text-xs text-amber-700/80 mt-2 font-medium">
-                        Naciśnij mikrofon powyżej, aby dodać brakujące informacje do tego wpisu.
+                        Możesz nagrać odpowiedź mikrofonem powyżej LUB dopisać brakujące dane bezpośrednio w polu tekstowym powyżej i zatwierdzić raport.
                       </p>
                     </div>
                   </div>
-                  <div className="mt-4 flex justify-end">
-                    <button 
-                      onClick={() => { setTranscription(null); setDraftId(null); setFollowupQuestion(null); }}
-                      className="inline-flex items-center gap-2 rounded-xl bg-amber-100/50 px-4 py-2 text-sm font-medium text-amber-800 hover:bg-amber-200 transition-colors"
-                    >
-                      <X className="h-4 w-4" />
-                      Odrzuć ten wpis
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <button 
-                    onClick={generateAIReport} 
-                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-sage px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-sage-dark transition-colors"
-                  >
-                    <Sparkles className="h-4 w-4" />
-                    Buduj raport
-                  </button>
-                  <button 
-                    onClick={() => { setTranscription(null); setDraftId(null); setFollowupQuestion(null); }}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-medium text-slate-soft hover:text-slate hover:bg-slate/5 ring-1 ring-inset ring-slate/10 transition-colors"
-                  >
-                    Odrzuć
-                  </button>
                 </div>
               )}
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button 
+                  onClick={generateAIReport} 
+                  disabled={isGenerating || isProcessing || isRecording}
+                  className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-sage px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-sage-dark transition-colors disabled:opacity-50"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  {followupQuestion ? 'Zatwierdź uzupełnienie i buduj raport' : 'Buduj raport'}
+                </button>
+                <button 
+                  onClick={resetNote}
+                  disabled={isGenerating || isProcessing || isRecording}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-medium text-slate-soft hover:text-slate hover:bg-slate/5 ring-1 ring-inset ring-slate/10 transition-colors disabled:opacity-50"
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Zacznij od nowa
+                </button>
+              </div>
             </div>
           )}
 
@@ -322,12 +344,20 @@ function VoiceNoteContent() {
                 </p>
               </div>
               
-              <Link href="/staff/reports" className="block w-full">
-                <button className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 transition-colors">
-                  Przejdź do weryfikacji raportów
-                  <ArrowRight className="h-4 w-4" />
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link href="/staff/reports" className="flex-1">
+                  <button className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 transition-colors">
+                    Przejdź do weryfikacji raportów
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                </Link>
+                <button 
+                  onClick={resetNote}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-medium text-slate-soft hover:text-slate hover:bg-slate/5 ring-1 ring-inset ring-slate/10 transition-colors"
+                >
+                  Nagraj nową notatkę
                 </button>
-              </Link>
+              </div>
             </div>
           )}
 

@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     const clientUuid = formData.get('client_uuid') as string | null
 
     if (!file || !residentId) {
-      return NextResponse.json({ error: 'Brak pliku lub id pensjonariusza' }, { status: 400 })
+      return NextResponse.json({ error: 'Brak pliku lub id podopiecznego' }, { status: 400 })
     }
 
     // Wywołanie Groq API do transkrypcji (Whisper-large-v3)
@@ -64,9 +64,10 @@ export async function POST(req: Request) {
     }
 
     const result = await response.json()
-    const transcription = result.text
+    const transcription = (result.text || '').trim()
 
     let finalDraftId = draftId
+    let finalTranscript = transcription
 
     if (draftId) {
       // Pobieramy stary draft i dopisujemy nowy tekst
@@ -76,12 +77,15 @@ export async function POST(req: Request) {
         .eq('id', draftId)
         .single()
         
-      const newTranscript = (oldDraft?.transcript || '') + '\n[UZUPEŁNIENIE:] ' + transcription
+      const oldText = (oldDraft?.transcript || '').trim()
+      finalTranscript = oldText
+        ? `${oldText}\n\n[UZUPEŁNIENIE:] ${transcription}`
+        : transcription
 
       const { error: updateError } = await supabase
         .from('voice_draft_notes')
         .update({
-          transcript: newTranscript,
+          transcript: finalTranscript,
           status: 'DRAFT',
           followup_question: null
         })
@@ -111,11 +115,17 @@ export async function POST(req: Request) {
       finalDraftId = dbData.id
     }
 
-    // Zwracamy sam text z obecnego wysłanego pliku w polu text, dla podglądu, chociaż w drafcie jest połączony.
-    return NextResponse.json({ success: true, text: transcription, draftId: finalDraftId })
+    // Zwracamy połączony pełny tekst notatki, aby frontend i kolejny krok AI miały pełen kontekst
+    return NextResponse.json({
+      success: true,
+      text: finalTranscript,
+      newChunk: transcription,
+      draftId: finalDraftId
+    })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error: An unexpected error occurred')
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    const errMsg = error instanceof Error ? error.message : 'Wystąpił nieoczekiwany błąd'
+    return NextResponse.json({ error: errMsg }, { status: 500 })
   }
 }
