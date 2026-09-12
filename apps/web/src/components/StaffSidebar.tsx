@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Users, Calendar, LogOut } from 'lucide-react'
+import { Users, Calendar, FileText, LogOut } from 'lucide-react'
 
 export function StaffSidebar({ userEmail }: { userEmail: string | undefined }) {
   const pathname = usePathname()
@@ -10,7 +10,9 @@ export function StaffSidebar({ userEmail }: { userEmail: string | undefined }) {
   const navItems = [
     { name: 'Podopieczni', href: '/staff', icon: Users },
     { name: 'Plan Dnia', href: '/staff/agenda', icon: Calendar },
+    { name: 'Raporty', href: '/staff/reports', icon: FileText },
   ]
+
 
   return (
     <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">

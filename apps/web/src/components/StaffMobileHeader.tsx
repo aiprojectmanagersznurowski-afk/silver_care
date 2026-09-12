@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X, Users, Calendar, LogOut } from 'lucide-react'
+import { Menu, X, Users, Calendar, FileText, LogOut } from 'lucide-react'
 
 export function StaffMobileHeader({ userEmail }: { userEmail: string | undefined }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -12,7 +12,9 @@ export function StaffMobileHeader({ userEmail }: { userEmail: string | undefined
   const navItems = [
     { name: 'Podopieczni', href: '/staff', icon: Users },
     { name: 'Plan Dnia', href: '/staff/agenda', icon: Calendar },
+    { name: 'Raporty', href: '/staff/reports', icon: FileText },
   ]
+
 
   return (
     <div className="lg:hidden sticky top-0 z-40 bg-cream/80 backdrop-blur-md border-b border-slate/10">

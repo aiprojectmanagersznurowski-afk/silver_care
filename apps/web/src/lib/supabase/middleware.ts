@@ -57,9 +57,10 @@ export async function updateSession(request: NextRequest) {
     if (path.startsWith('/admin') && role !== 'super_admin' && role !== 'org_admin' && role !== 'admin' && role !== 'facility_manager') {
        return NextResponse.redirect(new URL('/unauthorized', request.url))
     }
-    if (path.startsWith('/staff') && role !== 'nurse' && role !== 'paramedic' && role !== 'caregiver' && role !== 'super_admin' && role !== 'org_admin' && role !== 'admin') {
+    if ((path.startsWith('/staff') || path.startsWith('/voice') || path.startsWith('/reports')) && role !== 'nurse' && role !== 'paramedic' && role !== 'caregiver' && role !== 'super_admin' && role !== 'org_admin' && role !== 'admin') {
        return NextResponse.redirect(new URL('/unauthorized', request.url))
     }
+
   }
  else {
     // Brak usera - jeśli nie jest na stronie logowania / publicznej, redirect do root
