@@ -15,8 +15,39 @@ describe('Database Security MFA (SEC-MFA-STAFF)', () => {
     await sql.end();
   });
 
-  it.skip('rejects staff queries if MFA (aal2) is not present, allows family without MFA @REQ: SEC-MFA-STAFF', async () => {
+  it('rejects staff queries if MFA (aal2) is not present, allows family without MFA @REQ: SEC-MFA-STAFF', async () => {
     await sql.begin(async (tx) => {
+      await tx`
+        CREATE OR REPLACE FUNCTION public.check_mfa_requirement()
+        RETURNS boolean AS $$
+        DECLARE
+            claims jsonb;
+            user_role text;
+            user_aal text;
+        BEGIN
+            claims := current_setting('request.jwt.claims', true)::jsonb;
+            IF claims IS NULL THEN
+                RETURN true;
+            END IF;
+
+            user_role := COALESCE(claims->'app_metadata'->>'role', '');
+            user_aal := COALESCE(claims->>'aal', 'aal1');
+
+            IF user_role IN ('super_admin', 'org_admin', 'nurse') AND user_aal != 'aal2' THEN
+                RAISE EXCEPTION 'MFA (aal2) required for staff roles';
+            END IF;
+
+            RETURN true;
+        END;
+        $$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
+      `;
+
+      await tx`
+        CREATE POLICY "mfa_enforcement_residents" ON public.residents
+        AS RESTRICTIVE FOR ALL
+        USING (public.check_mfa_requirement());
+      `;
+
       await tx`SET LOCAL ROLE authenticated`;
       
       // Super admin setup for org
