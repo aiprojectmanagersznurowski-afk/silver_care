@@ -45,7 +45,10 @@ export function AdminSidebar({ userEmail, role }: { userEmail: string; role?: st
 
   const bottomLinks = [
     { href: '/admin/audit', label: 'Rejestr Audytowy', icon: ShieldAlert },
-    ...(role === 'super_admin' ? [{ href: '/admin/iam', label: 'Uprawnienia (IAM)', icon: ShieldCheck }] : []),
+    ...(role === 'super_admin' ? [
+      { href: '/admin/organizations', label: 'Placówki', icon: Building2 },
+      { href: '/admin/iam', label: 'Uprawnienia (IAM)', icon: ShieldCheck }
+    ] : []),
   ]
 
   return (
