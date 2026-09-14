@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { OrganizationsManagementClient, OrganizationSummaryItem } from '@/components/OrganizationsManagementClient'
+import { CreateOrganizationDialog } from '@/components/CreateOrganizationDialog'
 
 export default async function OrganizationsPage() {
   const supabase = await createClient()
@@ -54,11 +55,13 @@ export default async function OrganizationsPage() {
             Globalny rejestr ośrodków i monitorowanie zasobów platformy (widok wyłącznie dla Super Admina).
           </p>
         </div>
+        <CreateOrganizationDialog />
       </div>
 
       <OrganizationsManagementClient
         initialOrganizations={organizations}
         errorMessage={errorMessage}
+        renderActionSlot={<CreateOrganizationDialog />}
       />
     </div>
   )
