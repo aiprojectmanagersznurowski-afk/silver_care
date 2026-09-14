@@ -1,10 +1,22 @@
 import { createClient } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Users, Bed, BedDouble, ShieldAlert, CheckCircle2, Building2 } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function AdminDashboard() {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const role = user?.app_metadata?.role || user?.user_metadata?.role
+  const cookieStore = await cookies()
+  const isImpersonating = !!cookieStore.get('sc_impersonation')?.value
+
+  // Super Admin bez aktywnej sesji impersonacji zarządza platformą (placówki)
+  if (role === 'super_admin' && !isImpersonating) {
+    redirect('/admin/organizations')
+  }
   
   // 1. Get total residents
   const { count: residentsCount } = await supabase

@@ -19,7 +19,15 @@ import {
   ChevronDown
 } from 'lucide-react'
 
-export function AdminSidebar({ userEmail, role }: { userEmail: string; role?: string }) {
+export function AdminSidebar({ 
+  userEmail, 
+  role, 
+  isImpersonating = false 
+}: { 
+  userEmail: string 
+  role?: string 
+  isImpersonating?: boolean 
+}) {
   const pathname = usePathname()
   const isAnalysisActive = pathname.startsWith('/admin/reports')
   const [isAnalysisOpen, setIsAnalysisOpen] = useState(isAnalysisActive)
@@ -30,8 +38,16 @@ export function AdminSidebar({ userEmail, role }: { userEmail: string; role?: st
     }
   }, [isAnalysisActive])
 
-  const topLinks = [
-    { href: '/admin', label: 'Pulpit', icon: LayoutDashboard },
+  // Globalne linki dla Super Admina (zarządzanie całą platformą)
+  const platformLinks = [
+    { href: '/admin/organizations', label: 'Placówki', icon: Building2 },
+    { href: '/admin/iam', label: 'Uprawnienia (IAM)', icon: ShieldCheck },
+    { href: '/admin/audit', label: 'Rejestr Audytowy', icon: ShieldAlert },
+  ]
+
+  // Linki operacyjne w placówce (dla lokalnego personelu/admina lub Super Admina w trybie impersonacji)
+  const facilityTopLinks = [
+    { href: '/admin', label: 'Pulpit Placówki', icon: LayoutDashboard },
     { href: '/admin/facility', label: 'Struktura Placówki', icon: Building2 },
     { href: '/admin/residents', label: 'Podopieczni', icon: Users },
     { href: '/admin/staff', label: 'Personel', icon: UserPlus },
@@ -43,12 +59,8 @@ export function AdminSidebar({ userEmail, role }: { userEmail: string; role?: st
     { href: '/admin/reports/statistics', label: 'Statystyka', icon: BarChart3 },
   ]
 
-  const bottomLinks = [
-    { href: '/admin/audit', label: 'Rejestr Audytowy', icon: ShieldAlert },
-    ...(role === 'super_admin' ? [
-      { href: '/admin/organizations', label: 'Placówki', icon: Building2 },
-      { href: '/admin/iam', label: 'Uprawnienia (IAM)', icon: ShieldCheck }
-    ] : []),
+  const facilityBottomLinks = [
+    { href: '/admin/audit', label: 'Rejestr Placówki', icon: ShieldAlert },
   ]
 
   return (
@@ -68,95 +80,133 @@ export function AdminSidebar({ userEmail, role }: { userEmail: string; role?: st
           {role === 'super_admin' ? 'Super Admin' : 'Admin'}
         </span>
       </div>
-      <nav className="flex-1 space-y-1.5 p-4 overflow-y-auto">
-        {topLinks.map((link) => {
-          const Icon = link.icon
-          const isActive = pathname === link.href || (link.href !== '/admin' && pathname.startsWith(link.href))
-          
-          return (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`flex items-center gap-3 rounded-xl px-4 py-3 text-[0.95rem] font-medium transition-colors ${
-                isActive 
-                  ? 'bg-sage text-white shadow-sm' 
-                  : 'text-slate-soft hover:bg-slate/5 hover:text-slate'
-              }`}
-            >
-              <Icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-slate-soft'}`} />
-              {link.label}
-            </Link>
-          )
-        })}
-
-        {/* Rozwijane menu Analiza */}
-        <div className="space-y-1">
-          <button
-            type="button"
-            onClick={() => setIsAnalysisOpen((prev) => !prev)}
-            className={`flex w-full items-center justify-between rounded-xl px-4 py-3 text-[0.95rem] font-medium transition-colors ${
-              isAnalysisActive && !isAnalysisOpen
-                ? 'bg-sage/10 text-sage font-semibold'
-                : isAnalysisActive
-                ? 'text-slate font-semibold bg-slate/5'
-                : 'text-slate-soft hover:bg-slate/5 hover:text-slate'
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <TrendingUp className={`h-5 w-5 ${isAnalysisActive ? 'text-sage' : 'text-slate-soft'}`} />
-              <span>Analiza</span>
+      <nav className="flex-1 space-y-4 p-4 overflow-y-auto">
+        {/* Widok Platformowy Super Admina */}
+        {role === 'super_admin' && !isImpersonating && (
+          <div className="space-y-1.5">
+            <div className="px-4 pb-1 text-[0.7rem] font-semibold tracking-wider text-slate-soft/70 uppercase">
+              Zarządzanie Platformą
             </div>
-            <ChevronDown
-              className={`h-4 w-4 transition-transform duration-200 ${
-                isAnalysisOpen ? 'rotate-180 text-slate' : 'text-slate-soft'
-              }`}
-            />
-          </button>
+            {platformLinks.map((link) => {
+              const Icon = link.icon
+              const isActive = pathname === link.href || (link.href !== '/admin' && pathname.startsWith(link.href))
 
-          {isAnalysisOpen && (
-            <div className="ml-4 space-y-1 border-l-2 border-slate/10 pl-3 pt-1">
-              {analysisSubLinks.map((subLink) => {
-                const SubIcon = subLink.icon
-                const isSubActive = pathname === subLink.href || pathname.startsWith(subLink.href)
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`flex items-center gap-3 rounded-xl px-4 py-3 text-[0.95rem] font-medium transition-colors ${
+                    isActive
+                      ? 'bg-sage text-white shadow-sm'
+                      : 'text-slate-soft hover:bg-slate/5 hover:text-slate'
+                  }`}
+                >
+                  <Icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-slate-soft'}`} />
+                  {link.label}
+                </Link>
+              )
+            })}
+          </div>
+        )}
 
-                return (
-                  <Link
-                    key={subLink.href}
-                    href={subLink.href}
-                    className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                      isSubActive
-                        ? 'bg-sage text-white shadow-sm'
-                        : 'text-slate-soft hover:bg-slate/5 hover:text-slate'
-                    }`}
-                  >
-                    <SubIcon className={`h-4 w-4 ${isSubActive ? 'text-white' : 'text-slate-soft'}`} />
-                    {subLink.label}
-                  </Link>
-                )
-              })}
+        {/* Widok Operacyjny Placówki (Dla personelu placówki lub podczas impersonacji) */}
+        {(role !== 'super_admin' || isImpersonating) && (
+          <div className="space-y-1.5">
+            {isImpersonating && (
+              <div className="px-4 pb-1 text-[0.7rem] font-semibold tracking-wider text-amber-600 uppercase">
+                Operacje Placówki (Podgląd)
+              </div>
+            )}
+            {facilityTopLinks.map((link) => {
+              const Icon = link.icon
+              const isActive = pathname === link.href || (link.href !== '/admin' && pathname.startsWith(link.href))
+
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`flex items-center gap-3 rounded-xl px-4 py-3 text-[0.95rem] font-medium transition-colors ${
+                    isActive
+                      ? 'bg-sage text-white shadow-sm'
+                      : 'text-slate-soft hover:bg-slate/5 hover:text-slate'
+                  }`}
+                >
+                  <Icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-slate-soft'}`} />
+                  {link.label}
+                </Link>
+              )
+            })}
+
+            {/* Rozwijane menu Analiza */}
+            <div className="space-y-1">
+              <button
+                type="button"
+                onClick={() => setIsAnalysisOpen((prev) => !prev)}
+                className={`flex w-full items-center justify-between rounded-xl px-4 py-3 text-[0.95rem] font-medium transition-colors ${
+                  isAnalysisActive && !isAnalysisOpen
+                    ? 'bg-sage/10 text-sage font-semibold'
+                    : isAnalysisActive
+                    ? 'text-slate font-semibold bg-slate/5'
+                    : 'text-slate-soft hover:bg-slate/5 hover:text-slate'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <TrendingUp className={`h-5 w-5 ${isAnalysisActive ? 'text-sage' : 'text-slate-soft'}`} />
+                  <span>Analiza</span>
+                </div>
+                <ChevronDown
+                  className={`h-4 w-4 transition-transform duration-200 ${
+                    isAnalysisOpen ? 'rotate-180 text-slate' : 'text-slate-soft'
+                  }`}
+                />
+              </button>
+
+              {isAnalysisOpen && (
+                <div className="ml-4 space-y-1 border-l-2 border-slate/10 pl-3 pt-1">
+                  {analysisSubLinks.map((subLink) => {
+                    const SubIcon = subLink.icon
+                    const isSubActive = pathname === subLink.href || pathname.startsWith(subLink.href)
+
+                    return (
+                      <Link
+                        key={subLink.href}
+                        href={subLink.href}
+                        className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                          isSubActive
+                            ? 'bg-sage text-white shadow-sm'
+                            : 'text-slate-soft hover:bg-slate/5 hover:text-slate'
+                        }`}
+                      >
+                        <SubIcon className={`h-4 w-4 ${isSubActive ? 'text-white' : 'text-slate-soft'}`} />
+                        {subLink.label}
+                      </Link>
+                    )
+                  })}
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        {bottomLinks.map((link) => {
-          const Icon = link.icon
-          const isActive = pathname === link.href || (link.href !== '/admin' && pathname.startsWith(link.href))
-          
-          return (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`flex items-center gap-3 rounded-xl px-4 py-3 text-[0.95rem] font-medium transition-colors ${
-                isActive 
-                  ? 'bg-sage text-white shadow-sm' 
-                  : 'text-slate-soft hover:bg-slate/5 hover:text-slate'
-              }`}
-            >
-              <Icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-slate-soft'}`} />
-              {link.label}
-            </Link>
-          )
-        })}
+            {facilityBottomLinks.map((link) => {
+              const Icon = link.icon
+              const isActive = pathname === link.href || (link.href !== '/admin' && pathname.startsWith(link.href))
+
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`flex items-center gap-3 rounded-xl px-4 py-3 text-[0.95rem] font-medium transition-colors ${
+                    isActive
+                      ? 'bg-sage text-white shadow-sm'
+                      : 'text-slate-soft hover:bg-slate/5 hover:text-slate'
+                  }`}
+                >
+                  <Icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-slate-soft'}`} />
+                  {link.label}
+                </Link>
+              )
+            })}
+          </div>
+        )}
       </nav>
       <div className="p-4 border-t border-slate/10 bg-slate/5">
         <div className="mb-4 px-2 text-xs font-medium text-slate-soft truncate">

@@ -78,7 +78,7 @@ export function OrganizationsManagementClient({
         </div>
         <h3 className="text-xl font-semibold text-slate mb-2">Brak zarejestrowanych placówek</h3>
         <p className="text-slate-soft max-w-md mx-auto mb-6">
-          W systemie nie utworzono jeszcze żadnej placówki. Jako Super Admin możesz utworzyć pierwszy ośrodek.
+          W systemie nie zarejestrowano jeszcze żadnego ośrodka. Utwórz pierwszą placówkę, aby rozpocząć konfigurację platformy.
         </p>
         {renderActionSlot && (
           <div className="flex justify-center">

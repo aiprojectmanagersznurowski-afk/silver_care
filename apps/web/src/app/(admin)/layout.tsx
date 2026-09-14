@@ -34,12 +34,20 @@ export default async function AdminLayout({ children }: { children: ReactNode })
 
       <div className="flex flex-1 min-h-0">
         {/* Sidebar for desktop */}
-        <AdminSidebar userEmail={user.email || ''} role={role} />
+        <AdminSidebar 
+          userEmail={user.email || ''} 
+          role={role} 
+          isImpersonating={!!impersonationSession} 
+        />
 
         {/* Main content */}
         <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {/* Mobile header */}
-          <AdminMobileHeader userEmail={user.email || ''} role={role} />
+          <AdminMobileHeader 
+            userEmail={user.email || ''} 
+            role={role} 
+            isImpersonating={!!impersonationSession} 
+          />
           
           <div className="flex-1 overflow-y-auto p-4 sm:p-8 lg:p-12">
             <div className="mx-auto max-w-7xl">
