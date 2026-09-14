@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Building2, ArrowLeft, Users, UserCog, UserCheck, Calendar, MapPin, Mail, ShieldAlert } from 'lucide-react'
+import { startImpersonationAction } from '@/actions/impersonation'
 
 export default async function OrganizationDetailsPage({
   params,
@@ -191,15 +192,21 @@ export default async function OrganizationDetailsPage({
                       }
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="rounded-xl border-slate/20 text-slate hover:bg-slate/5 text-xs h-9"
-                        disabled
-                        title="Dostępne w module impersonacji (Story 4)"
-                      >
-                        Zaloguj jako
-                      </Button>
+                      <form action={startImpersonationAction}>
+                        <input type="hidden" name="targetAdminId" value={admin.id} />
+                        <input type="hidden" name="targetOrgId" value={organization.id} />
+                        <input type="hidden" name="targetOrgName" value={organization.name} />
+                        <input type="hidden" name="adminEmail" value={admin.email || ''} />
+                        <Button
+                          type="submit"
+                          variant="outline"
+                          size="sm"
+                          className="rounded-xl border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100 text-xs h-9 font-medium"
+                          title="Zaloguj jako ten administrator placówki"
+                        >
+                          Zaloguj jako
+                        </Button>
+                      </form>
                     </td>
                   </tr>
                 ))}

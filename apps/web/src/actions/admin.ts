@@ -3,10 +3,18 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
+import { cookies } from 'next/headers'
 
 export async function deleteResidentAction(formData: FormData) {
   const residentId = formData.get('id') as string
   if (!residentId) return
+
+  // AC4: Blokada akcji destrukcyjnych w trakcie impersonacji
+  const cookieStore = await cookies()
+  if (cookieStore.get('sc_impersonation')) {
+    console.warn('Blokada usuwania pensjonariusza w trakcie impersonacji')
+    return
+  }
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -22,6 +30,13 @@ export async function deleteResidentAction(formData: FormData) {
 export async function deleteStaffAction(formData: FormData) {
   const userId = formData.get('id') as string
   if (!userId) return
+
+  // AC4: Blokada akcji destrukcyjnych w trakcie impersonacji
+  const cookieStore = await cookies()
+  if (cookieStore.get('sc_impersonation')) {
+    console.warn('Blokada usuwania personelu w trakcie impersonacji')
+    return
+  }
   
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
