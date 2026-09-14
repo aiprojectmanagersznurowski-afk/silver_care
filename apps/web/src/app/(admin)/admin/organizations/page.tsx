@@ -52,7 +52,7 @@ export default async function OrganizationsPage() {
             Zarządzanie Placówkami
           </h2>
           <p className="mt-2 text-slate-soft">
-            Globalny rejestr ośrodków i monitorowanie zasobów platformy (widok wyłącznie dla Super Admina).
+            Rejestr ośrodków, monitorowanie wykorzystania limitów oraz zarządzanie infrastrukturą platformy.
           </p>
         </div>
         <CreateOrganizationDialog />
@@ -61,7 +61,6 @@ export default async function OrganizationsPage() {
       <OrganizationsManagementClient
         initialOrganizations={organizations}
         errorMessage={errorMessage}
-        renderActionSlot={<CreateOrganizationDialog />}
       />
     </div>
   )

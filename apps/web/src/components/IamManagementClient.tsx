@@ -416,7 +416,7 @@ export function IamManagementClient({
             <div>
               <CardTitle className="text-lg font-semibold text-slate">Użytkownicy i Role</CardTitle>
               <CardDescription className="text-slate-soft">
-                Zarządzaj przypisaniem ról systemowych oraz twórz nowe konta (dostęp wyłącznie dla Super Admina).
+                Zarządzaj kontami użytkowników, przydziałem ról i uprawnień dostępowych.
               </CardDescription>
             </div>
           </div>

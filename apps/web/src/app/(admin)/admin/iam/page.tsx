@@ -65,7 +65,7 @@ export default async function IamPage() {
           Zarządzanie Dostępem i Tożsamością (IAM)
         </h2>
         <p className="mt-2 text-slate-soft">
-          Panel główny Super Admina: kontrola ról użytkowników oraz niezmienny rejestr audytowy zmian uprawnień.
+          Kontrola ról systemowych, zarządzanie dostępami użytkowników oraz rejestr audytowy zmian uprawnień.
         </p>
       </div>
 
