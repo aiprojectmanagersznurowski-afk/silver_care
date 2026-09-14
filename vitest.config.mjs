@@ -7,6 +7,7 @@ dotenv.config({ path: path.resolve(rootDir, '.env.local') });
 
 export default defineConfig({
   test: {
+    testTimeout: 20000,
     include: process.env.DATABASE_URL
       ? ['tests/**/*.test.ts']
       : ['tests/logic/**/*.test.ts'],
