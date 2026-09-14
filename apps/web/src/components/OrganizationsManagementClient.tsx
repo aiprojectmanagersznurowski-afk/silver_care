@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -30,7 +29,7 @@ export function OrganizationsManagementClient({
   forcedState,
   renderActionSlot
 }: OrganizationsManagementClientProps) {
-  const [organizations] = useState<OrganizationSummaryItem[]>(initialOrganizations)
+  const organizations = initialOrganizations
 
   const currentState = forcedState || (errorMessage ? 'error' : organizations.length === 0 ? 'empty' : 'success')
 

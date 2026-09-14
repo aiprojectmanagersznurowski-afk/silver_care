@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   Dialog,
   DialogContent,
@@ -14,9 +15,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { createOrganizationAction } from '@/actions/organizations'
-import { Building2, Plus, CheckCircle2, AlertCircle } from 'lucide-react'
+import { Building2, Plus, CheckCircle2, AlertCircle, Copy, Check } from 'lucide-react'
 
 export function CreateOrganizationDialog() {
+  const router = useRouter()
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [orgName, setOrgName] = useState('')
@@ -25,7 +27,13 @@ export function CreateOrganizationDialog() {
   const [adminEmail, setAdminEmail] = useState('')
   const [adminFullName, setAdminFullName] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const [successInfo, setSuccessInfo] = useState<{ orgName: string; adminEmail: string } | null>(null)
+  const [successInfo, setSuccessInfo] = useState<{
+    orgName: string
+    adminEmail: string
+    inviteUrl?: string | null
+    emailSent?: boolean
+  } | null>(null)
+  const [copied, setCopied] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -56,7 +64,9 @@ export function CreateOrganizationDialog() {
       } else if (result?.success) {
         setSuccessInfo({
           orgName: result.orgName || orgName,
-          adminEmail: result.adminEmail || adminEmail
+          adminEmail: result.adminEmail || adminEmail,
+          inviteUrl: result.inviteUrl,
+          emailSent: result.emailSent
         })
 
         // Wyczyść formularz
@@ -66,32 +76,69 @@ export function CreateOrganizationDialog() {
         setAdminEmail('')
         setAdminFullName('')
         setOpen(false)
+
+        // Odśwież widok placówek w tle natychmiast
+        router.refresh()
       }
     })
+  }
+
+  const handleCopy = (url: string) => {
+    navigator.clipboard.writeText(url)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2500)
   }
 
   return (
     <>
       {successInfo && (
-        <div className="rounded-2xl border border-sage/30 bg-sage/5 p-4 flex items-start justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <CheckCircle2 className="h-5 w-5 text-sage shrink-0" />
-            <div>
-              <p className="text-sm font-semibold text-slate">
-                Placówka „{successInfo.orgName}” została pomyślnie utworzona!
-              </p>
-              <p className="text-xs text-slate-soft mt-0.5">
-                Konto pierwszego administratora ({successInfo.adminEmail}) zostało przygotowane do aktywacji.
-              </p>
+        <div className="rounded-2xl border border-sage/30 bg-sage/5 p-5 flex flex-col gap-3">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <CheckCircle2 className="h-5 w-5 text-sage shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-slate">
+                  Placówka „{successInfo.orgName}” została pomyślnie utworzona!
+                </p>
+                <p className="text-xs text-slate-soft mt-0.5">
+                  {successInfo.emailSent
+                    ? `Wysłano e-mail z zaproszeniem na adres ${successInfo.adminEmail}.`
+                    : `Konto pierwszego administratora (${successInfo.adminEmail}) zostało przygotowane.`
+                  }
+                </p>
+              </div>
             </div>
+            <button
+              type="button"
+              onClick={() => setSuccessInfo(null)}
+              className="text-xs text-slate-soft hover:text-slate font-medium"
+            >
+              Zamknij
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => setSuccessInfo(null)}
-            className="text-xs text-slate-soft hover:text-slate font-medium"
-          >
-            Zamknij
-          </button>
+
+          {successInfo.inviteUrl && (
+            <div className="pt-2 border-t border-sage/10 flex flex-col sm:flex-row sm:items-center gap-2">
+              <span className="text-xs text-slate-soft font-medium shrink-0">
+                Link aktywacyjny:
+              </span>
+              <input
+                readOnly
+                value={successInfo.inviteUrl}
+                className="text-xs font-mono bg-white px-3 py-1.5 rounded-lg border border-slate/10 flex-1 truncate text-slate"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => handleCopy(successInfo.inviteUrl!)}
+                className="h-8 text-xs shrink-0 rounded-lg gap-1.5"
+              >
+                {copied ? <Check className="h-3.5 w-3.5 text-sage" /> : <Copy className="h-3.5 w-3.5" />}
+                {copied ? 'Skopiowano' : 'Kopiuj link'}
+              </Button>
+            </div>
+          )}
         </div>
       )}
 

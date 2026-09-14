@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Building2, ArrowLeft, Users, UserCog, UserCheck, Calendar, MapPin, Mail, ShieldAlert } from 'lucide-react'
 import { startImpersonationAction } from '@/actions/impersonation'
+import { ResendAdminInviteButton, AddAdminToOrgDialog } from '@/components/AdminInviteActions'
 
 export default async function OrganizationDetailsPage({
   params,
@@ -150,13 +151,21 @@ export default async function OrganizationDetailsPage({
       {/* Sekcja Administratorzy */}
       <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5 overflow-hidden">
         <CardHeader className="border-b border-slate/5 bg-white px-6 py-5">
-          <div className="flex items-center gap-2 text-slate font-semibold">
-            <UserCog className="h-5 w-5 text-sage" />
-            <CardTitle className="text-lg">Administratorzy Ośrodka (org_admin)</CardTitle>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 text-slate font-semibold">
+                <UserCog className="h-5 w-5 text-sage" />
+                <CardTitle className="text-lg">Administratorzy Ośrodka (org_admin)</CardTitle>
+              </div>
+              <CardDescription className="text-slate-soft">
+                Konta posiadające uprawnienia do zarządzania personelem, podopiecznymi i salami w tej placówce.
+              </CardDescription>
+            </div>
+            <AddAdminToOrgDialog
+              organizationId={organization.id}
+              organizationName={organization.name}
+            />
           </div>
-          <CardDescription className="text-slate-soft">
-            Konta posiadające uprawnienia do zarządzania personelem, podopiecznymi i salami w tej placówce.
-          </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -192,21 +201,28 @@ export default async function OrganizationDetailsPage({
                       }
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <form action={startImpersonationAction}>
-                        <input type="hidden" name="targetAdminId" value={admin.id} />
-                        <input type="hidden" name="targetOrgId" value={organization.id} />
-                        <input type="hidden" name="targetOrgName" value={organization.name} />
-                        <input type="hidden" name="adminEmail" value={admin.email || ''} />
-                        <Button
-                          type="submit"
-                          variant="outline"
-                          size="sm"
-                          className="rounded-xl border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100 text-xs h-9 font-medium"
-                          title="Zaloguj jako ten administrator placówki"
-                        >
-                          Zaloguj jako
-                        </Button>
-                      </form>
+                      <div className="flex items-center justify-end gap-2">
+                        <ResendAdminInviteButton
+                          adminEmail={admin.email || ''}
+                          organizationId={organization.id}
+                          organizationName={organization.name}
+                        />
+                        <form action={startImpersonationAction}>
+                          <input type="hidden" name="targetAdminId" value={admin.id} />
+                          <input type="hidden" name="targetOrgId" value={organization.id} />
+                          <input type="hidden" name="targetOrgName" value={organization.name} />
+                          <input type="hidden" name="adminEmail" value={admin.email || ''} />
+                          <Button
+                            type="submit"
+                            variant="outline"
+                            size="sm"
+                            className="rounded-xl border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100 text-xs h-9 font-medium"
+                            title="Zaloguj jako ten administrator placówki"
+                          >
+                            Zaloguj jako
+                          </Button>
+                        </form>
+                      </div>
                     </td>
                   </tr>
                 ))}
