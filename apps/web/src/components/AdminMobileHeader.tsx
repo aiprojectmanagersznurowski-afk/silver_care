@@ -166,16 +166,28 @@ export function AdminMobileHeader({ userEmail, role }: { userEmail: string; role
               Rejestr Audytowy
             </Link>
             {role === 'super_admin' && (
-              <Link
-                href="/admin/iam"
-                onClick={() => setIsOpen(false)}
-                className={`flex items-center gap-2.5 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors ${
-                  pathname.startsWith('/admin/iam') ? 'bg-sage text-white' : 'text-slate hover:bg-slate/5'
-                }`}
-              >
-                <ShieldCheck className="h-4 w-4" />
-                Uprawnienia (IAM)
-              </Link>
+              <>
+                <Link
+                  href="/admin/organizations"
+                  onClick={() => setIsOpen(false)}
+                  className={`flex items-center gap-2.5 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors ${
+                    pathname.startsWith('/admin/organizations') ? 'bg-sage text-white' : 'text-slate hover:bg-slate/5'
+                  }`}
+                >
+                  <Building2 className="h-4 w-4" />
+                  Placówki
+                </Link>
+                <Link
+                  href="/admin/iam"
+                  onClick={() => setIsOpen(false)}
+                  className={`flex items-center gap-2.5 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors ${
+                    pathname.startsWith('/admin/iam') ? 'bg-sage text-white' : 'text-slate hover:bg-slate/5'
+                  }`}
+                >
+                  <ShieldCheck className="h-4 w-4" />
+                  Uprawnienia (IAM)
+                </Link>
+              </>
             )}
           </nav>
         </div>
