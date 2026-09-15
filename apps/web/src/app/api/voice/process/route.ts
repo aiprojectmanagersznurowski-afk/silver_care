@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { callEuLlmCompletion } from '@/lib/eu-llm-client'
 
 export const runtime = 'nodejs'
 
@@ -8,60 +9,6 @@ interface ClassifiedNote {
   discomfort: string | null
   behavioral: string | null
   followup_question: string | null
-}
-
-const CANDIDATE_MODELS = [
-  'groq/compound-mini',
-  'openai/gpt-oss-120b',
-  'qwen/qwen3.8-27b',
-  'openai/gpt-oss-20b'
-]
-
-async function callGroqCompletion(
-  messages: Array<{ role: string; content: string }>,
-  temperature: number = 0.1,
-  maxTokens: number = 600
-): Promise<string> {
-  const apiKey = process.env.GROQ_API_KEY
-  if (!apiKey) {
-    throw new Error('Brak konfiguracji GROQ_API_KEY')
-  }
-
-  let lastError: Error | null = null
-
-  for (const model of CANDIDATE_MODELS) {
-    try {
-      const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model,
-          messages,
-          temperature,
-          max_tokens: maxTokens
-        })
-      })
-
-      if (!resp.ok) {
-        lastError = new Error(`Groq model ${model} status ${resp.status}`)
-        continue
-      }
-
-      const json = await resp.json()
-      const content = json.choices?.[0]?.message?.content
-      if (typeof content === 'string' && content.trim().length > 0) {
-        return content
-      }
-    } catch (err: unknown) {
-      const errName = err instanceof Error ? err.name : 'UnknownError'
-      lastError = new Error(`Groq error: ${errName}`)
-    }
-  }
-
-  throw lastError || new Error('Wszystkie modele Groq zakończyły się błędem')
 }
 
 function extractJson(raw: string, fallbackText: string): ClassifiedNote {
@@ -160,8 +107,8 @@ export async function POST(req: Request) {
       await supabase.from('voice_draft_notes').update({ transcript: editedTranscription.trim() }).eq('id', draft.id)
     }
 
-    // 2. Groq LLM (Krok 1: Klasyfikator i Redaktor)
-    const systemPrompt1 = `Przeanalizuj poniższy transkrypt z opieki nad podopiecznym. 
+    // 2. Europejski LLM w EOG (Krok 1: Klasyfikator i Redakcja Medyczna - ADR-009)
+    const systemPrompt1 = `Przeanalizuj poniższy transkrypt z opieki nad podopiecznym.
 Tryb ZERO-GUESSING: Wyciągaj wyłącznie twarde fakty z nagrania. Nie zmyślaj, nie domyślaj się, nie dopowiadaj historii, która nie padła w nagraniu.
 
 Notatka może zawierać sekcję [UZUPEŁNIENIE:], która stanowi dopowiedź lub odpowiedź personelu na wcześniejsze pytanie (np. o dawkę leku, godzinę, szczegół). Połącz wszystkie fakty ze wszystkich części notatki w spójną całość.
@@ -177,7 +124,7 @@ Podziel informacje i zwróć DOKŁADNIE TEN FORMAT JSON (bez znaczników markdow
 }
 Nie dopisuj komentarzy, tylko surowy, poprawny JSON.`
 
-    const raw1 = await callGroqCompletion([
+    const raw1 = await callEuLlmCompletion([
       { role: 'system', content: systemPrompt1 },
       { role: 'user', content: transcription }
     ], 0.1, 800)
@@ -217,7 +164,7 @@ Nie dopisuj komentarzy, tylko surowy, poprawny JSON.`
       return NextResponse.json({ error: 'Błąd zapisu logów personelu' }, { status: 500 })
     }
 
-    // 4. Groq LLM (Krok 2: Generator Raportu)
+    // 4. Europejski LLM w EOG (Krok 2: Generator Raportu dla Bliskich - ADR-009)
     const systemPrompt2 = `Jesteś empatycznym asystentem w placówce opiekuńczej. 
 Na podstawie poniższych informacji napisz ciepły raport dla rodziny podopiecznego (ok. 3-4 zdania), podsumowujący jego dzień.
 Zależy nam, aby raport był szczegółowy w kwestiach behawioralnych. Wpleć w niego konkretne wyciągnięte fakty dotyczące apetytu, nastroju, snu oraz udziału w zajęciach, o ile zostały wspomniane w notatce, tak aby rodzina czuła się poinformowana.
@@ -232,7 +179,7 @@ ZASADY KRYTYCZNE (STRICT RULES):
     const userPrompt2 = `Informacje o zachowaniu: ${classified.behavioral || 'Brak szczególnych uwag'}
 Informacje o dyskomforcie: ${classified.discomfort || 'Brak'}`
 
-    const raw2 = await callGroqCompletion([
+    const raw2 = await callEuLlmCompletion([
       { role: 'system', content: systemPrompt2 },
       { role: 'user', content: userPrompt2 }
     ], 0.4, 600)
