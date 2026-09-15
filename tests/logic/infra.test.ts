@@ -25,3 +25,20 @@ describe('Infrastructure & Security Config (INFRA-EU-REGION, INFRA-GROQ-TRANSCRI
     expect(config.sessionTimeoutMinutes).toBeLessThanOrEqual(60);
   });
 });
+
+import { getEuLlmConfig } from '../../apps/web/src/lib/eu-llm-client';
+
+describe('Voice LLM Sovereignty & Regional Conformance (@REQ: INFRA-EU-REGION @REQ: INFRA-GROQ-TRANSCRIPTION)', () => {
+  it('enforces EU residency for classification and report generation LLM', () => {
+    const config = getEuLlmConfig();
+    expect(config.region).toBe('EU');
+    expect(config.endpoint).toBeDefined();
+    // Sprawdzenie, że endpoint wskazuje na europejski region / dostawcę
+    const isEuEndpoint = 
+      config.endpoint.includes('.mistral.ai') || 
+      config.endpoint.includes('eu-') || 
+      config.endpoint.includes('europe') ||
+      config.endpoint.startsWith('http://localhost');
+    expect(isEuEndpoint).toBe(true);
+  });
+});
