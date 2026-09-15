@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent } from '@/components/ui/card'
 import { AddResidentDialog } from '@/components/AddResidentDialog'
+import { AdmissionWizard } from '@/components/AdmissionWizard'
 import { UserCircle2, ChevronRight } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -28,7 +29,10 @@ export default async function AdminResidentsPage() {
           </h2>
           <p className="mt-2 text-slate-soft">Zarządzaj bazą podopiecznych w swojej placówce.</p>
         </div>
-        <AddResidentDialog />
+        <div className="flex items-center gap-3">
+          <AdmissionWizard />
+          <AddResidentDialog />
+        </div>
       </div>
 
       <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5 overflow-hidden">
