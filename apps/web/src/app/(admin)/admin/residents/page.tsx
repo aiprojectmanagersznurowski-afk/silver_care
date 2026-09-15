@@ -7,9 +7,11 @@ import { ExportDataDialog } from '@/components/ExportDataDialog'
 import { UserCircle2, ChevronRight } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
+import { ResidentInlineCareLevel } from '@/components/ResidentInlineCareLevel'
+import { ResidentEditSheet } from '@/components/ResidentEditSheet'
 import { ResidentZsnCheckbox } from '@/components/ResidentZsnCheckbox'
 import Link from 'next/link'
-import { CARE_LEVEL_LABELS, CARE_LEVEL_COLORS, type CareLevel } from '@/lib/reporting-constants'
+import { type CareLevel } from '@/lib/reporting-constants'
 import { format } from 'date-fns'
 import { pl } from 'date-fns/locale'
 
@@ -51,7 +53,7 @@ export default async function AdminResidentsPage() {
                   <th className="px-6 py-4 font-medium">Status</th>
                   <th className="px-6 py-4 font-medium">Pokój</th>
                   <th className="px-6 py-4 font-medium">Data przyjęcia</th>
-                  <th className="px-6 py-4 font-medium w-10"></th>
+                  <th className="px-6 py-4 font-medium w-24 text-right">Akcje</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate/5 bg-white">
@@ -60,7 +62,6 @@ export default async function AdminResidentsPage() {
                     ? resident.bed_assignments.filter((a: any) => a.unassigned_at === null)
                     : []
                   const activeBed = activeAssignments.length > 0 ? activeAssignments[0].beds : null
-                  const careLevel = (resident.care_level || 'unknown') as CareLevel | 'unknown'
 
                   return (
                     <tr key={resident.id} className="transition-colors hover:bg-slate/5 group">
@@ -80,21 +81,10 @@ export default async function AdminResidentsPage() {
                         </Link>
                       </td>
                       <td className="px-6 py-4">
-                        {resident.care_level ? (
-                          <Badge
-                            variant="outline"
-                            style={{
-                              backgroundColor: `${CARE_LEVEL_COLORS[careLevel]}15`,
-                              color: CARE_LEVEL_COLORS[careLevel],
-                              borderColor: `${CARE_LEVEL_COLORS[careLevel]}40`,
-                            }}
-                            className="text-xs"
-                          >
-                            {CARE_LEVEL_LABELS[careLevel]}
-                          </Badge>
-                        ) : (
-                          <span className="text-slate-soft/50 text-xs">—</span>
-                        )}
+                        <ResidentInlineCareLevel
+                          residentId={resident.id}
+                          initialCareLevel={resident.care_level as CareLevel | null}
+                        />
                       </td>
                       <td className="px-6 py-4">
                         <ResidentZsnCheckbox
@@ -134,10 +124,17 @@ export default async function AdminResidentsPage() {
                             ? format(new Date(resident.created_at), 'd MMM yyyy', { locale: pl })
                             : '—'}
                       </td>
-                      <td className="px-6 py-4">
-                        <Link href={`/admin/residents/${resident.id}`}>
-                          <ChevronRight className="h-5 w-5 text-slate-soft/30 group-hover:text-sage transition-colors" />
-                        </Link>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <ResidentEditSheet resident={resident} />
+                          <Link
+                            href={`/admin/residents/${resident.id}`}
+                            className="p-2 text-slate-soft/50 hover:text-sage transition-colors min-h-[48px] min-w-[48px] inline-flex items-center justify-center"
+                            title="Profil 360°"
+                          >
+                            <ChevronRight className="h-5 w-5" />
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   )
