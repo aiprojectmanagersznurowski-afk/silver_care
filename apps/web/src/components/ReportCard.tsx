@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { CheckCircle2, Clock, Edit3, Send, Save, X } from 'lucide-react'
+import { CheckCircle2, Clock, Edit3, Send, Save, X, Sparkles, AlertCircle, Check } from 'lucide-react'
+import { analyzeReportCompleteness } from '@/lib/completeness-gate'
 
 export interface ReportItem {
   id: string
@@ -30,6 +31,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
   const supabase = createClient()
 
   const isPublished = report.status === 'PUBLISHED'
+  const completeness = analyzeReportCompleteness(content)
 
   const handlePublish = async () => {
     setLoading(true)
@@ -101,6 +103,52 @@ export function ReportCard({ report }: { report: ReportItem }) {
         ) : (
           <div className="p-4 bg-slate/[0.03] rounded-xl text-sm leading-relaxed text-slate whitespace-pre-wrap border border-slate/5">
             {content || 'Brak treści raportu.'}
+          </div>
+        )}
+
+        {/* Strażnik kompletności raportu opiekuńczego (AI Quality Gate) */}
+        {!isPublished && (
+          <div className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-3 space-y-2.5 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="font-semibold text-slate-700 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                Kompletność informacji dla rodziny ({completeness.scorePercent}%)
+              </span>
+              <span className={`px-2 py-0.5 rounded-full font-medium ${
+                completeness.isComplete 
+                  ? 'bg-emerald-100 text-emerald-800' 
+                  : 'bg-amber-100 text-amber-800'
+              }`}>
+                {completeness.isComplete ? 'Wszystkie kluczowe obszary' : `Brak: ${completeness.missingLabels.join(', ')}`}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {completeness.dimensions.map((dim) => (
+                <div
+                  key={dim.id}
+                  className={`p-2 rounded-lg border flex items-center gap-1.5 transition-colors ${
+                    dim.isCovered
+                      ? 'bg-emerald-50/60 border-emerald-200 text-emerald-800'
+                      : 'bg-white border-slate-200 text-slate-500'
+                  }`}
+                  title={dim.isCovered ? 'Obszar zawarty w raporcie' : dim.suggestion}
+                >
+                  {dim.isCovered ? (
+                    <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  ) : (
+                    <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                  )}
+                  <span className="truncate">{dim.label}</span>
+                </div>
+              ))}
+            </div>
+
+            {!completeness.isComplete && (
+              <p className="text-slate-500 italic text-[11px] pt-0.5">
+                Podpowiedź asystenta: Bliscy najbardziej wyczekują informacji o apetycie, samopoczuciu i aktywności. Możesz uzupełnić treść lub opublikować raport w obecnym kształcie.
+              </p>
+            )}
           </div>
         )}
 
