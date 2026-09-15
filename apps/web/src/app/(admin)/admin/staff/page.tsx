@@ -7,6 +7,7 @@ import { deleteStaffAction } from '@/actions/admin'
 import { Trash2, UserCog } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { StaffActionsMenu } from '@/components/StaffActionsMenu'
 
 export default async function AdminStaffPage() {
   const supabase = await createClient()
@@ -93,14 +94,11 @@ export default async function AdminStaffPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex justify-end gap-2 items-center">
-                        {staffUser.app_metadata?.is_active !== false && (
-                          <form action={deleteStaffAction}>
-                            <input type="hidden" name="id" value={staffUser.id} />
-                            <Button variant="ghost" size="icon" type="submit" title="Zarchiwizuj konto personelu" className="text-destructive hover:bg-destructive/10 hover:text-destructive h-9 w-9 rounded-xl">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </form>
-                        )}
+                        <StaffActionsMenu
+                          staffId={staffUser.id}
+                          email={staffUser.email}
+                          isActive={staffUser.app_metadata?.is_active !== false}
+                        />
                       </div>
                     </td>
                   </tr>
