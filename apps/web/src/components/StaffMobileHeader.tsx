@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { Menu, X, Users, Calendar, FileText, LogOut } from 'lucide-react'
+import { StaffCommandPalette } from '@/components/StaffCommandPalette'
 
 export function StaffMobileHeader({ userEmail }: { userEmail: string | undefined }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -36,10 +37,12 @@ export function StaffMobileHeader({ userEmail }: { userEmail: string | undefined
           </span>
         </div>
         
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-slate-soft hover:text-slate"
-        >
+        <div className="flex items-center gap-2">
+          <StaffCommandPalette />
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-slate-soft hover:text-slate min-h-[44px] min-w-[44px]"
+          >
           <span className="sr-only">Otwórz menu</span>
           {isOpen ? (
             <X className="h-6 w-6" aria-hidden="true" />
@@ -47,6 +50,7 @@ export function StaffMobileHeader({ userEmail }: { userEmail: string | undefined
             <Menu className="h-6 w-6" aria-hidden="true" />
           )}
         </button>
+        </div>
       </div>
 
       {/* Mobile Menu Dropdown */}

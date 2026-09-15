@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { Users, Calendar, FileText, LogOut } from 'lucide-react'
+import { StaffCommandPalette } from '@/components/StaffCommandPalette'
 
 export function StaffSidebar({ userEmail }: { userEmail: string | undefined }) {
   const pathname = usePathname()
@@ -30,6 +31,9 @@ export function StaffSidebar({ userEmail }: { userEmail: string | undefined }) {
             />
           </Link>
           <span className="rounded-full bg-sage/20 px-2.5 py-0.5 text-xs font-medium text-sage-dark">Personel</span>
+        </div>
+        <div className="pt-1">
+          <StaffCommandPalette />
         </div>
         <nav className="flex flex-1 flex-col">
           <ul role="list" className="flex flex-1 flex-col gap-y-7">
