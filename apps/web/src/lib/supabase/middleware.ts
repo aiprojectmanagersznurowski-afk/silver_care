@@ -33,7 +33,7 @@ export async function updateSession(request: NextRequest) {
 
   // Proste reguły routingowe na podstawie roli
   if (user) {
-    const role = user.app_metadata?.role || user.user_metadata?.role
+    const role = user.app_metadata?.role
     const path = request.nextUrl.pathname
 
     // Jeśli użytkownik jest zalogowany, a próbuje wejść na główną stronę logowania, przekieruj go
