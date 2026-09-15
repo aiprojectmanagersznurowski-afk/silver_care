@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { ReportCard } from '@/components/ReportCard'
+import { BulkReportApprover } from '@/components/BulkReportApprover'
 import Link from 'next/link'
 import { ArrowLeft, Mic, FileText } from 'lucide-react'
 
@@ -46,6 +47,7 @@ export default async function StaffReportsPage({ searchParams }: StaffReportsPag
   }
 
   const { data: reports } = await query
+  const draftReports = (reports || []).filter((r) => r.status === 'DRAFT')
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
@@ -85,6 +87,10 @@ export default async function StaffReportsPage({ searchParams }: StaffReportsPag
           </div>
         )}
       </div>
+
+      {draftReports.length > 0 && (
+        <BulkReportApprover draftReports={draftReports} />
+      )}
 
       <div className="grid gap-4">
         {reports && reports.length > 0 ? (
