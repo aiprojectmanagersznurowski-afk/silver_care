@@ -1,36 +1,30 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { withAuth } from '@/lib/api-auth'
+import { ApiError } from '@/lib/api-errors'
 
-export async function GET(request: Request) {
-  try {
-    const supabase = await createClient()
+/**
+ * @REQ: ADM-FACILITY-OCCUPANCY
+ * @REQ: SEC-SESSION
+ * @REQ: ORG-ISOLATION
+ */
+export const GET = withAuth(async (_request, { supabase }) => {
+  const { data: rooms, error } = await supabase
+    .from('rooms')
+    .select('*, beds:bed_count, occupied:occupied_beds, free:free_beds')
+    .order('number', { ascending: true })
 
-    // public.bed_count and public.occupied_beds and public.free_beds are available on rooms
-    const { data: rooms, error } = await supabase
-      .from('rooms')
-      .select('*, beds:bed_count, occupied:occupied_beds, free:free_beds')
-      .order('number', { ascending: true })
+  if (error) throw error
 
-    if (error) {
-      console.error('Failed to fetch rooms:', error)
-      return NextResponse.json({ error: 'Nie udało się pobrać pokoi' }, { status: 500 })
-    }
+  return NextResponse.json({ rooms })
+})
 
-    return NextResponse.json({ rooms })
-  } catch (error: any) {
-    console.error('API error:', error)
-    return NextResponse.json({ error: 'Wystąpił nieoczekiwany błąd serwera' }, { status: 500 })
-  }
-}
-
-export async function POST(request: Request) {
-  try {
-    const supabase = await createClient()
+export const POST = withAuth(
+  async (request, { supabase }) => {
     const body = await request.json()
     const { number, floor, sector } = body
 
     if (!number || !floor) {
-      return NextResponse.json({ error: 'Brak wymaganych danych (number, floor)' }, { status: 400 })
+      throw new ApiError('Brak wymaganych danych (number, floor)', 400, 'VALIDATION_ERROR')
     }
 
     const { data: room, error } = await supabase
@@ -38,23 +32,14 @@ export async function POST(request: Request) {
       .insert({
         number,
         floor,
-        sector: sector || null
+        sector: sector || null,
       })
       .select()
       .single()
 
-    if (error) {
-      console.error('Failed to create room:', error)
-      // Check if duplicate key
-      if (error.code === '23505') {
-        return NextResponse.json({ error: 'Pokój o tym numerze już istnieje' }, { status: 400 })
-      }
-      return NextResponse.json({ error: 'Nie udało się utworzyć pokoju' }, { status: 500 })
-    }
+    if (error) throw error
 
     return NextResponse.json({ room })
-  } catch (error: any) {
-    console.error('API error:', error)
-    return NextResponse.json({ error: 'Wystąpił nieoczekiwany błąd serwera' }, { status: 500 })
-  }
-}
+  },
+  { roles: ['org_admin', 'super_admin'] }
+)
