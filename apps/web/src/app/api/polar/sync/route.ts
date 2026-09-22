@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { checkRateLimit } from '@/lib/rate-limiter'
 import { 
   fetchPolarDailyActivity, 
   fetchPolarSleep, 
@@ -27,6 +28,15 @@ export async function POST(req: Request) {
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1'
+    const rateCheck = checkRateLimit(`polar-sync:${user.id || ip}`, 20, 60000)
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { error: 'Przekroczono limit synchronizacji opaski (max 20/min)' },
+        { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfterSeconds) } }
+      )
     }
 
     const body = await req.json().catch(() => ({}))

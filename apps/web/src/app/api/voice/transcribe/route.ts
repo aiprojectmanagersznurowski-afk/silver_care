@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { checkRateLimit } from '@/lib/rate-limiter'
 
 // Domyślnie body parser jest wyłączony, żeby można było pobrać form data z plikiem
 export const runtime = 'nodejs'
@@ -22,6 +23,15 @@ export async function POST(req: Request) {
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1'
+    const rateCheck = checkRateLimit(`transcribe:${user.id || ip}`, 30, 60000)
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { error: 'Przekroczono limit zapytań transkrypcji audio (max 30/min)' },
+        { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfterSeconds) } }
+      )
     }
 
     const apiKey = process.env.GROQ_API_KEY

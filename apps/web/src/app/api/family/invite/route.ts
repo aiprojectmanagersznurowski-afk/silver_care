@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { checkRateLimit } from '@/lib/rate-limiter'
 
 export async function POST(request: Request) {
   try {
@@ -19,6 +20,15 @@ export async function POST(request: Request) {
     
     if (!user) {
       return NextResponse.json({ error: 'Brak autoryzacji' }, { status: 401 })
+    }
+
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1'
+    const rateCheck = checkRateLimit(`invite:${user.id || ip}`, 15, 60000)
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { error: 'Przekroczono limit wysyłki zaproszeń (max 15/min)' },
+        { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfterSeconds) } }
+      )
     }
 
     const appRole = user.app_metadata?.role

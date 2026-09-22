@@ -2,9 +2,16 @@ import { createClient } from '@supabase/supabase-js'
 
 // Ten klient omija RLS, pozwala na zapraszanie uzytkownikow i modyfikacje auth.users
 export function createAdminClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!url || !serviceRoleKey) {
+    throw new Error('Brak wymaganych zmiennych środowiskowych SUPABASE_URL lub SUPABASE_SERVICE_ROLE_KEY')
+  }
+
   return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || 'https://placeholder.supabase.co',
-    process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder',
+    url,
+    serviceRoleKey,
     {
       auth: {
         autoRefreshToken: false,
