@@ -39,7 +39,7 @@ describe('Database Ingest Preconditions (INT-INGEST-PRECONDITIONS)', () => {
       expect(ingestData.length).toBe(0);
 
       // Check audit log
-      const logs = await tx`SELECT * FROM audit_logs WHERE action = 'INGEST_REJECTED'`;
+      const logs = await tx`SELECT * FROM audit_logs WHERE action = 'INGEST_REJECTED' AND resident_id = ${resId}`;
       expect(logs.length).toBe(1);
       expect(logs[0].payload.reason).toBe('No active consent');
 
