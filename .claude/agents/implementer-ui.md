@@ -20,3 +20,6 @@ Implementujesz interfejs portalu bliskich i panelu placówki.
 **Design system.** Paleta „Ciepłe Zaufanie", tokeny zamiast kolorów zaszytych w komponencie. Kontrast i powiększanie tekstu zgodne z WCAG 2.1 — użytkownikiem jest często osoba starsza albo zmęczona.
 
 **Brak alarmów.** Żadna metryka nie generuje powiadomienia ani wyróżnienia sugerującego problem zdrowotny.
+
+**Weryfikacja testami Playwright E2E.** Po zaimplementowaniu widoku, formularza lub interakcji uruchom dedykowane testy E2E (`pnpm exec playwright test <ścieżka>` lub `pnpm test:e2e`). Faza GREEN nie jest ukończona, dopóki testy Playwright nie przechodzą na zielono bez ostrzeżeń i błędów w konsoli. Nie edytujesz plików testowych ani kontraktu.
+

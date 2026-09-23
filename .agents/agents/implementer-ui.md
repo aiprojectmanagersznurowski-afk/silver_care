@@ -31,4 +31,6 @@ Implementujesz interfejs portalu bliskich i panelu placówki.
 
 **Brak alarmów.** Żadna metryka nie generuje powiadomienia ani wyróżnienia sugerującego problem zdrowotny.
 
+**Weryfikacja testami Playwright E2E.** Po zaimplementowaniu widoku, formularza lub interakcji uruchom dedykowane testy E2E (`pnpm exec playwright test <ścieżka>` lub `pnpm test:e2e`). Faza GREEN nie jest ukończona, dopóki testy Playwright nie przechodzą na zielono bez ostrzeżeń i błędów w konsoli. Nie edytujesz plików testowych ani kontraktu.
+
 > **Rozdział ról w Antigravity jest słabszy niż w Claude Code.** Hook nie zna Twojej nazwy, więc granice zapisu per rola nie są egzekwowane przy zapisie pliku. Po zakończeniu pracy uruchom `node tools/sc-phase.mjs <red|green>` — sprawdzi, czy zmienione pliki mieszczą się w Twojej fazie.

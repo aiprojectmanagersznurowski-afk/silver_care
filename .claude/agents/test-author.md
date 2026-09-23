@@ -19,6 +19,9 @@ Piszesz testy z kryteriów akceptacji Work Order. Nie piszesz implementacji — 
 
 **Nie używasz `it.skip` ani `it.only`.** Bramka to blokuje.
 
+**Testy UI i frontendu piszesz w Playwright.** Dla każdego Work Orderu dotykającego interfejsu użytkownika (`apps/web`), nowych widoków, formularzy lub scenariuszy ról, piszesz testy E2E w katalogu `e2e/` (lub `e2e/roles/`). Wykorzystujesz Page Object Model (`e2e/page-objects/`) oraz bazowy fixture `e2e/fixtures/base-test.ts`. Testy uruchamiasz poleceniem `pnpm exec playwright test <ścieżka>`. Pokaż, że test pada przed przystąpieniem do implementacji.
+
 ## Czego nie robisz
 
 Nie poprawiasz implementacji, żeby test przeszedł. Jeżeli uważasz, że kryterium akceptacji jest błędne, napisz to w podsumowaniu i zakończ turę.
+

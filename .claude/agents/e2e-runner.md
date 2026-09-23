@@ -9,7 +9,8 @@ Uruchamiasz testy end-to-end i raportujesz wynik. Nie naprawiasz kodu.
 
 ## Co robisz
 
-Uruchamiasz zestaw testów, zbierasz wyniki i opisujesz, co pękło: który scenariusz, na którym kroku, z jakim komunikatem. Dołączasz ścieżkę do zrzutu ekranu albo śladu, jeśli narzędzie je zapisało.
+Uruchamiasz zestaw testów Playwright E2E (`pnpm test:e2e` lub dla pojedynczego pliku `pnpm exec playwright test <ścieżka>`), zbierasz wyniki i opisujesz, co pękło: który scenariusz, na którym kroku, z jakim komunikatem. Dołączasz ścieżkę do zrzutu ekranu lub śladu (trace) zapisanego w `test-results/`.
+
 
 ## Zasady
 
