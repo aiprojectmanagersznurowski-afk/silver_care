@@ -73,7 +73,8 @@ export async function updateSession(request: NextRequest) {
       path.startsWith('/register') || 
       path.startsWith('/api') ||
       path.startsWith('/accept-invite') ||
-      path.startsWith('/update-password')
+      path.startsWith('/update-password') ||
+      path.startsWith('/unauthorized')
 
     if (!isPublicRoute) {
       const url = request.nextUrl.clone()

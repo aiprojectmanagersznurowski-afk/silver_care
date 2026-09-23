@@ -57,10 +57,10 @@ const DropdownMenuGroup = React.forwardRef<
 DropdownMenuGroup.displayName = "DropdownMenuGroup"
 
 const DropdownMenuLabel = React.forwardRef<
-  React.ElementRef<typeof MenuPrimitive.GroupLabel>,
-  React.ComponentPropsWithoutRef<typeof MenuPrimitive.GroupLabel> & { inset?: boolean }
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & { inset?: boolean }
 >(({ className, inset, ...props }, ref) => (
-  <MenuPrimitive.GroupLabel
+  <div
     ref={ref}
     data-slot="dropdown-menu-label"
     data-inset={inset}
@@ -72,6 +72,7 @@ const DropdownMenuLabel = React.forwardRef<
   />
 ))
 DropdownMenuLabel.displayName = "DropdownMenuLabel"
+
 
 const DropdownMenuItem = React.forwardRef<
   React.ElementRef<typeof MenuPrimitive.Item>,
