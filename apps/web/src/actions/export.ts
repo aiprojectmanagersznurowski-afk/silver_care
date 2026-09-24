@@ -112,11 +112,10 @@ export async function exportResidentsDataAction(options: ExportFilterOptions): P
   // Rejestracja w audit_logs
   await adminClient.from('audit_logs').insert({
     organization_id: orgId,
-    user_id: user.id,
+    resident_id: null,
     action: 'RESIDENTS_DATA_EXPORT',
-    target_table: 'residents',
-    target_id: orgId,
-    details: {
+    performed_by: user.id,
+    payload: {
       exported_count: formattedRows.length,
       filters: options,
     },

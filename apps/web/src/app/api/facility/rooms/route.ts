@@ -26,6 +26,17 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Brak autoryzacji' }, { status: 401 })
+    }
+
+    const role = user.app_metadata?.role as string | undefined
+    if (!['org_admin', 'super_admin', 'admin'].includes(role || '')) {
+      return NextResponse.json({ error: 'Brak uprawnień administratora placówki' }, { status: 403 })
+    }
+
+    const orgId = user.app_metadata?.organization_id as string | undefined
     const body = await request.json()
     const { number, floor, sector } = body
 
@@ -36,9 +47,10 @@ export async function POST(request: Request) {
     const { data: room, error } = await supabase
       .from('rooms')
       .insert({
-        number,
-        floor,
-        sector: sector || null
+        organization_id: orgId,
+        number: number.toString().trim(),
+        floor: floor.toString().trim(),
+        sector: sector ? sector.toString().trim() : null
       })
       .select()
       .single()
@@ -50,6 +62,18 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Pokój o tym numerze już istnieje' }, { status: 400 })
       }
       return NextResponse.json({ error: 'Nie udało się utworzyć pokoju' }, { status: 500 })
+    }
+
+    if (room && orgId) {
+      const { createAdminClient } = await import('@/lib/supabase/admin')
+      const adminClient = createAdminClient()
+      await adminClient.from('audit_logs').insert({
+        organization_id: orgId,
+        resident_id: null,
+        action: 'ROOM_CREATED',
+        performed_by: user.id,
+        payload: { room_id: room.id, number: room.number, floor: room.floor }
+      })
     }
 
     return NextResponse.json({ room })
