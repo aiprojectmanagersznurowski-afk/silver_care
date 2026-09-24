@@ -1,48 +1,33 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { withAuth } from '@/lib/api-auth'
+import { ApiError } from '@/lib/api-errors'
 
-export async function GET(request: Request) {
-  try {
-    const supabase = await createClient()
+/**
+ * @REQ: ADM-FACILITY-OCCUPANCY
+ * @REQ: SEC-SESSION
+ * @REQ: ORG-ISOLATION
+ */
+export const GET = withAuth(async (_request, { supabase }) => {
+  const { data: rooms, error } = await supabase
+    .from('rooms')
+    .select('*, beds:bed_count, occupied:occupied_beds, free:free_beds')
+    .order('number', { ascending: true })
 
-    // public.bed_count and public.occupied_beds and public.free_beds are available on rooms
-    const { data: rooms, error } = await supabase
-      .from('rooms')
-      .select('*, beds:bed_count, occupied:occupied_beds, free:free_beds')
-      .order('number', { ascending: true })
+  if (error) throw error
 
-    if (error) {
-      console.error('Failed to fetch rooms:', error)
-      return NextResponse.json({ error: 'Nie udało się pobrać pokoi' }, { status: 500 })
-    }
+  return NextResponse.json({ rooms })
+})
 
-    return NextResponse.json({ rooms })
-  } catch (error: any) {
-    console.error('API error:', error)
-    return NextResponse.json({ error: 'Wystąpił nieoczekiwany błąd serwera' }, { status: 500 })
-  }
-}
-
-export async function POST(request: Request) {
-  try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Brak autoryzacji' }, { status: 401 })
-    }
-
-    const role = user.app_metadata?.role as string | undefined
-    if (!['org_admin', 'super_admin', 'admin'].includes(role || '')) {
-      return NextResponse.json({ error: 'Brak uprawnień administratora placówki' }, { status: 403 })
-    }
-
-    const orgId = user.app_metadata?.organization_id as string | undefined
+export const POST = withAuth(
+  async (request, { supabase, user }) => {
     const body = await request.json()
     const { number, floor, sector } = body
 
     if (!number || !floor) {
-      return NextResponse.json({ error: 'Brak wymaganych danych (number, floor)' }, { status: 400 })
+      throw new ApiError('Brak wymaganych danych (number, floor)', 400, 'VALIDATION_ERROR')
     }
+
+    const orgId = user.organizationId || (user.rawUser as { app_metadata?: { organization_id?: string } })?.app_metadata?.organization_id
 
     const { data: room, error } = await supabase
       .from('rooms')
@@ -50,19 +35,12 @@ export async function POST(request: Request) {
         organization_id: orgId,
         number: number.toString().trim(),
         floor: floor.toString().trim(),
-        sector: sector ? sector.toString().trim() : null
+        sector: sector ? sector.toString().trim() : null,
       })
       .select()
       .single()
 
-    if (error) {
-      console.error('Failed to create room:', error)
-      // Check if duplicate key
-      if (error.code === '23505') {
-        return NextResponse.json({ error: 'Pokój o tym numerze już istnieje' }, { status: 400 })
-      }
-      return NextResponse.json({ error: 'Nie udało się utworzyć pokoju' }, { status: 500 })
-    }
+    if (error) throw error
 
     if (room && orgId) {
       const { createAdminClient } = await import('@/lib/supabase/admin')
@@ -77,8 +55,6 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ room })
-  } catch (error: any) {
-    console.error('API error:', error)
-    return NextResponse.json({ error: 'Wystąpił nieoczekiwany błąd serwera' }, { status: 500 })
-  }
-}
+  },
+  { roles: ['org_admin', 'super_admin'] }
+)

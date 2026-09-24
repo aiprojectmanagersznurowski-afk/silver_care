@@ -19,6 +19,7 @@ describe('Audit Logs Security', () => {
   it('prevents any UPDATE or DELETE on audit_logs @REQ: SEC-AUDIT-APPEND-ONLY', async () => {
     await sql.begin(async (tx) => {
       await tx`SET LOCAL ROLE postgres`;
+      await tx`SET LOCAL audit.allow_redact = 'false'`;
       
       const org = await tx`INSERT INTO organizations (name) VALUES ('Org Audit') RETURNING id`;
       const orgId = org[0].id;
@@ -31,11 +32,11 @@ describe('Audit Logs Security', () => {
       const logId = log[0].id;
 
       // Attempt to UPDATE as postgres (should be blocked by trigger/rule)
-      const updatePromise = tx.savepoint(sp => sp.unsafe('UP' + 'DATE audit_logs SET action = $1 WHERE id = $2', ['HACKED', logId]));
+      const updatePromise = tx.savepoint(sp => sp.unsafe('UP' + 'DATE audit_logs SET action = \'HACKED\' WHERE id = \'' + logId + '\''));
       await expect(updatePromise).rejects.toThrowError(/audit_logs is append-only/);
 
       // Attempt to DELETE as postgres (should be blocked by trigger/rule)
-      const deletePromise = tx.savepoint(sp => sp.unsafe('DEL' + 'ETE FROM audit_logs WHERE id = $1', [logId]));
+      const deletePromise = tx.savepoint(sp => sp.unsafe('DEL' + 'ETE FROM audit_logs WHERE id = \'' + logId + '\''));
       await expect(deletePromise).rejects.toThrowError(/audit_logs is append-only/);
 
       throw new Error('ROLLBACK');

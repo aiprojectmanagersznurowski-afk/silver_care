@@ -1,6 +1,16 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { callEuLlmCompletion } from '@/lib/eu-llm-client'
+import { 
+  VOICE_PROCESSING_PROMPT, 
+  FAMILY_REPORT_PROMPT, 
+  ZERO_GUESSING_DIRECTIVE 
+} from '@silvercare/contracts/src/prompts'
+import { 
+  validateReportText, 
+  validateNoMedicalDataInReport 
+} from '@silvercare/contracts/src/validation'
+import { AI_DISCLOSURE_LABEL } from '@silvercare/contracts/src/generated/presentation'
 
 export const runtime = 'nodejs'
 
@@ -11,10 +21,10 @@ interface ClassifiedNote {
   followup_question: string | null
 }
 
+const REPORT_LLM_MODEL = process.env.REPORT_LLM_MODEL || 'mistralai/mistral-small-24b-instruct-2501'
+
 function extractJson(raw: string, fallbackText: string): ClassifiedNote {
-  // Usuń ewentualne tagi myślenia <think>...</think>
   let cleaned = raw.replace(/<think>[\s\S]*?(<\/think>|$)/gi, '').trim()
-  // Usuń bloki markdown typu ```json ... ```
   cleaned = cleaned.replace(/```(?:json)?\s*/gi, '').replace(/```\s*/g, '').trim()
 
   const firstBrace = cleaned.indexOf('{')
@@ -25,22 +35,22 @@ function extractJson(raw: string, fallbackText: string): ClassifiedNote {
       const jsonStr = cleaned.slice(firstBrace, lastBrace + 1)
       const parsed = JSON.parse(jsonStr)
       return {
-        medical: parsed.medical || null,
-        discomfort: parsed.discomfort || null,
-        behavioral: parsed.behavioral || null,
+        medical: parsed.medical || (parsed.extracted_streams?.medical ? parsed.extracted_streams.medical.join('; ') : null),
+        discomfort: parsed.discomfort || (parsed.extracted_streams?.discomfort ? parsed.extracted_streams.discomfort.join('; ') : null),
+        behavioral: parsed.behavioral || (parsed.extracted_streams?.behavioral ? parsed.extracted_streams.behavioral.join('; ') : null),
         followup_question: parsed.followup_question || null
       }
     } catch {
-      // ignore and fallback
+      // fallback
     }
   }
 
   try {
     const parsed = JSON.parse(cleaned)
     return {
-      medical: parsed.medical || null,
-      discomfort: parsed.discomfort || null,
-      behavioral: parsed.behavioral || null,
+      medical: parsed.medical || (parsed.extracted_streams?.medical ? parsed.extracted_streams.medical.join('; ') : null),
+      discomfort: parsed.discomfort || (parsed.extracted_streams?.discomfort ? parsed.extracted_streams.discomfort.join('; ') : null),
+      behavioral: parsed.behavioral || (parsed.extracted_streams?.behavioral ? parsed.extracted_streams.behavioral.join('; ') : null),
       followup_question: parsed.followup_question || null
     }
   } catch {
@@ -73,7 +83,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-
     const { draftId, editedTranscription } = await req.json()
     if (!draftId) {
       return NextResponse.json({ error: 'Brak draftId' }, { status: 400 })
@@ -88,6 +97,11 @@ export async function POST(req: Request) {
 
     if (draftError || !draft) {
       return NextResponse.json({ error: 'Nie znaleziono notatki' }, { status: 404 })
+    }
+
+    // Strict zero-guessing: resident_id must exist as UUID on the draft
+    if (!draft.resident_id) {
+      return NextResponse.json({ error: 'Brak wymaganego identyfikatora resident_id na notatce' }, { status: 400 })
     }
 
     // Jeśli już przetworzone
@@ -107,22 +121,19 @@ export async function POST(req: Request) {
       await supabase.from('voice_draft_notes').update({ transcript: editedTranscription.trim() }).eq('id', draft.id)
     }
 
-    // 2. Europejski LLM w EOG (Krok 1: Klasyfikator i Redakcja Medyczna - ADR-009)
-    const systemPrompt1 = `Przeanalizuj poniższy transkrypt z opieki nad podopiecznym.
-Tryb ZERO-GUESSING: Wyciągaj wyłącznie twarde fakty z nagrania. Nie zmyślaj, nie domyślaj się, nie dopowiadaj historii, która nie padła w nagraniu.
+    // 2. Europejski LLM w EOG (Krok 1: Klasyfikator i Redakcja Medyczna wg VOICE_PROCESSING_PROMPT)
+    // Tryb ZERO-GUESSING: Wyciągaj wyłącznie twarde fakty z nagrania.
+    const systemPrompt1 = `${VOICE_PROCESSING_PROMPT}\n${ZERO_GUESSING_DIRECTIVE}\n
+Notatka może zawierać sekcję [UZUPEŁNIENIE:], która stanowi dopowiedź personelu. Połącz wszystkie fakty ze wszystkich części notatki.
+Jeżeli notatka jest skrajnie niekompletna, ustaw wartość 'followup_question' na krótkie pytanie doprecyzowujące (albo null jeśli wystarczająca).
 
-Notatka może zawierać sekcję [UZUPEŁNIENIE:], która stanowi dopowiedź lub odpowiedź personelu na wcześniejsze pytanie (np. o dawkę leku, godzinę, szczegół). Połącz wszystkie fakty ze wszystkich części notatki w spójną całość.
-
-Dodatkowo, jeżeli uważasz, że notatka jest skrajnie niekompletna i brakuje w niej kluczowego faktu by móc zrozumieć o czym mowa (np. "zmieniłem mu ten no..." - i nie wiemy co, lub "dałem połowę dawki" bez informacji jakiego leku), ustaw wartość 'followup_question' na krótkie pytanie skierowane do pielęgniarki, które doprecyzuje sprawę. Jeśli notatka lub jej uzupełnienie wyjaśnia sprawę (np. podano już dawkę lub nazwę leku, podano parametry), BEZWZGLĘDNIE ustaw 'followup_question' jako null.
-
-Podziel informacje i zwróć DOKŁADNIE TEN FORMAT JSON (bez znaczników markdown, czysty JSON):
+Podziel informacje i zwróć czysty format JSON:
 {
-  "medical": "Wszystkie dane medyczne trafiają TYLKO tutaj! Leki, rozpoznania chorobowe, wyniki badań, parametry życiowe, dawki (albo null jeśli brak).",
-  "discomfort": "wymioty, biegunka, nietrzymanie, ból - opisz fakty ogólnie (albo null jeśli brak).",
-  "behavioral": "zachowanie, nastrój, apetyt, udział w zajęciach, sen (albo null jeśli brak).",
-  "followup_question": "krótkie pytanie do personelu jeśli brakuje niezbędnych faktów (albo null jeśli notatka jest wystarczająca)."
-}
-Nie dopisuj komentarzy, tylko surowy, poprawny JSON.`
+  "medical": "dane medyczne (leki, dawki, rozpoznania, parametry, wyniki badań) lub null",
+  "discomfort": "ogólny opis dyskomfortu (zmęczenie, ból, złe samopoczucie) lub null",
+  "behavioral": "fakty behawioralne (posiłki, aktywności, spacery, sen, nastrój) lub null",
+  "followup_question": "krótkie pytanie lub null"
+}`
 
     const raw1 = await callEuLlmCompletion([
       { role: 'system', content: systemPrompt1 },
@@ -152,7 +163,7 @@ Nie dopisuj komentarzy, tylko surowy, poprawny JSON.`
       })
     }
 
-    // 3. Zapis do daily_logs (dane medyczne dla personelu)
+    // 3. Zapis do daily_logs (dane medyczne dla personelu — brudnopis)
     const { error: logError } = await supabase.from('daily_logs').insert({
       resident_id: draft.resident_id,
       nurse_id: user.id,
@@ -160,21 +171,17 @@ Nie dopisuj komentarzy, tylko surowy, poprawny JSON.`
     })
     
     if (logError) {
-      console.error('Log error: Database insert failed')
       return NextResponse.json({ error: 'Błąd zapisu logów personelu' }, { status: 500 })
     }
 
-    // 4. Europejski LLM w EOG (Krok 2: Generator Raportu dla Bliskich - ADR-009)
-    const systemPrompt2 = `Jesteś empatycznym asystentem w placówce opiekuńczej. 
-Na podstawie poniższych informacji napisz ciepły raport dla rodziny podopiecznego (ok. 3-4 zdania), podsumowujący jego dzień.
-Zależy nam, aby raport był szczegółowy w kwestiach behawioralnych. Wpleć w niego konkretne wyciągnięte fakty dotyczące apetytu, nastroju, snu oraz udziału w zajęciach, o ile zostały wspomniane w notatce, tak aby rodzina czuła się poinformowana.
-
-ZASADY KRYTYCZNE (STRICT RULES):
+    // 4. GENERATE (Krok 2: Generator Raportu dla Bliskich) — ETAP REDACT: classified.medical ZOSTANIE POMINIĘTY
+    const systemPrompt2 = `${FAMILY_REPORT_PROMPT}\n${ZERO_GUESSING_DIRECTIVE}\n
+Pamiętaj:
 1. Używaj zwrotów typu "Twój bliski" lub "Nasz podopieczny" - nigdy nie zgaduj imienia i zachowaj anonimowość.
 2. Zastosowanie określenia na literę p (pod żadnym pozorem) jest ZAKAZANE.
 3. ZABRONIONE jest wymienianie nazw leków, wyników badań czy jakichkolwiek terminów medycznych/rozpoznań.
-4. Jeśli wystąpił dyskomfort (np. ból, problemy ze snem, wymioty), wspomnij o nim łagodnie i z troską (np. "Wystąpiły drobne trudności, ale sytuacja jest w pełni zaopiekowana").
-5. Jeśli podane informacje są puste (null) w obu kategoriach, napisz po prostu, że to był spokojny dzień bez większych zmian.`
+4. Jeśli wystąpił dyskomfort, wspomnij o nim łagodnie i z troską.
+5. Dołącz informację: "${AI_DISCLOSURE_LABEL}".`
 
     const userPrompt2 = `Informacje o zachowaniu: ${classified.behavioral || 'Brak szczególnych uwag'}
 Informacje o dyskomforcie: ${classified.discomfort || 'Brak'}`
@@ -195,17 +202,33 @@ Informacje o dyskomforcie: ${classified.discomfort || 'Brak'}`
       .replace(/\bpacjent[\w]*\b/gi, 'podopieczny')
       .replace(/\bPacjent[\w]*\b/gi, 'Podopieczny')
 
-    // 5. Zapis szkicu do daily_reports
+    // Upewnij się, że etykieta AI Act jest dołączona
+    if (!reportText.includes(AI_DISCLOSURE_LABEL)) {
+      reportText = `${reportText}\n\n${AI_DISCLOSURE_LABEL}`
+    }
+
+    // Post-generation validation (MDR-NO-INTERPRETATION & VOICE-MEDICAL-STRIP)
+    const mdrValidation = validateReportText(reportText)
+    const medicalCheck = validateNoMedicalDataInReport(reportText)
+
+    if (!mdrValidation.valid || medicalCheck.hasMedical) {
+      // Sanitize or fallback to clean generic statement if guardrail violated
+      reportText = `Twój bliski spędził dzisiaj spokojny dzień w placówce pod troskliwą opieką naszego personelu.\n\n${AI_DISCLOSURE_LABEL}`
+    }
+
+    // 5. REJOIN: Złączenie z tożsamością pensjonariusza i zapis szkicu do daily_reports z AI provenance
     const { error: insertReportError } = await supabase.from('daily_reports').insert({
       resident_id: draft.resident_id,
       author_id: user.id,
       content: { text: reportText },
       status: 'DRAFT',
-      ai_generated: true
+      ai_generated: true,
+      ai_model: REPORT_LLM_MODEL,
+      ai_prompt_version: 'v1.0.0-mdr-compliant',
+      ai_generated_at: new Date().toISOString()
     })
 
     if (insertReportError) {
-      console.error('Draft error: Database insert failed')
       return NextResponse.json({ error: 'Błąd zapisu raportu' }, { status: 500 })
     }
 
@@ -216,7 +239,6 @@ Informacje o dyskomforcie: ${classified.discomfort || 'Brak'}`
 
     return NextResponse.json({ success: true, report: reportText })
   } catch (error: unknown) {
-    console.error('Process Error: An unexpected error occurred')
     const errMsg = error instanceof Error ? error.message : 'Wystąpił nieoczekiwany błąd'
     return NextResponse.json({ error: errMsg }, { status: 500 })
   }

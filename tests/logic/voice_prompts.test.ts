@@ -1,16 +1,20 @@
 import { describe, it, expect } from 'vitest';
-import { VOICE_PROCESSING_PROMPT } from '../../packages/contracts/src/prompts';
+import { VOICE_PROCESSING_PROMPT, FAMILY_REPORT_PROMPT } from '../../packages/contracts/src/prompts';
+import { AI_DISCLOSURE_LABEL } from '../../packages/contracts/src/generated/presentation';
 
 describe('Voice Prompts (MDR-NO-INTERPRETATION, VOICE-ZERO-GUESSING, VOICE-MEDICAL-STRIP)', () => {
 
   it('contains strict extraction rules to prevent guessing @REQ: VOICE-ZERO-GUESSING', () => {
     expect(VOICE_PROCESSING_PROMPT).toMatch(/Extract facts only/i);
     expect(VOICE_PROCESSING_PROMPT).toMatch(/Do not guess/i);
+    expect(FAMILY_REPORT_PROMPT).toMatch(/never guess/i);
   });
 
   it('contains ban on medical interpretation and diagnosis @REQ: MDR-NO-INTERPRETATION', () => {
     expect(VOICE_PROCESSING_PROMPT).toMatch(/does not evaluate health/i);
     expect(VOICE_PROCESSING_PROMPT).toMatch(/Do not diagnose/i);
+    expect(FAMILY_REPORT_PROMPT).toMatch(/NO MEDICAL INTERPRETATION/i);
+    expect(FAMILY_REPORT_PROMPT).toContain(AI_DISCLOSURE_LABEL);
   });
 
   it('forces 3-stream segregation (MEDICAL, DISCOMFORT, BEHAVIORAL) @REQ: VOICE-MEDICAL-STRIP', () => {
