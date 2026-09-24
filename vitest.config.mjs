@@ -9,6 +9,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(rootDir, 'apps/web/src'),
+      'next/server': path.resolve(rootDir, 'apps/web/node_modules/next/server.js'),
     },
   },
   test: {

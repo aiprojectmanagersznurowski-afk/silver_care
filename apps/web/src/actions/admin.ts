@@ -20,6 +20,17 @@ export async function deleteResidentAction(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user || user.app_metadata?.role !== 'org_admin') return
 
+  // Rejestracja w audit_logs przed usunięciem rekordu (R14-audit-append-only, bez PII)
+  const orgId = user.app_metadata?.organization_id
+  if (orgId) {
+    await supabase.from('audit_logs').insert({
+      organization_id: orgId,
+      resident_id: residentId,
+      action: 'RESIDENT_DELETED',
+      payload: { deleted_by: user.id }
+    })
+  }
+
   // Kasuje fizycznie z tabeli residents. Kaskadowe usuwanie (ON DELETE CASCADE) zwolni łóżko
   // oraz wyczyści tabelę links dla członków rodziny.
   await supabase.from('residents').delete().eq('id', residentId)

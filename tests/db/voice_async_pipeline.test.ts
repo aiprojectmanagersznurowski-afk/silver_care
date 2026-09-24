@@ -37,6 +37,7 @@ describe('Voice Async Pipeline & Queueing (@REQ: VOICE-ZERO-GUESSING @REQ: VOICE
       await sql`DELETE FROM public.voice_draft_notes WHERE resident_id = ${testResidentId};`
       await sql`DELETE FROM public.residents WHERE id = ${testResidentId};`
       await sql`DELETE FROM public.organizations WHERE id = ${testOrgId};`
+      await sql`SELECT set_config('audit.allow_redact', 'false', false);`
     }
     await sql.end()
   })

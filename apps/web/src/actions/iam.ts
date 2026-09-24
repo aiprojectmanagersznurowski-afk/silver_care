@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { generateSecureTemporaryPassword } from '@/lib/staff-helpers'
 import { revalidatePath } from 'next/cache'
 
 import { ROLES } from '@silvercare/contracts/src/generated/roles'
@@ -110,7 +111,7 @@ export async function createUserWithRoleAction(formData: FormData) {
   // Użyj podanego hasła (min 6 znaków) lub wygeneruj bezpieczne losowe
   const password = passwordInput && passwordInput.length >= 6
     ? passwordInput
-    : Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-4) + 'A1!'
+    : generateSecureTemporaryPassword(16)
 
   const organizationId = organizationIdInput && organizationIdInput.length > 0
     ? organizationIdInput
@@ -195,7 +196,7 @@ export async function resetUserPasswordAction(formData: FormData) {
 
   const newPassword = passwordInput && passwordInput.length >= 6
     ? passwordInput
-    : Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-4) + 'A1!'
+    : generateSecureTemporaryPassword(16)
 
   const orgId = targetUserData.user.app_metadata?.organization_id || null
 

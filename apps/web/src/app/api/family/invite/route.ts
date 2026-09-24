@@ -1,14 +1,34 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { checkRateLimit } from '@/lib/rate-limiter'
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const authHeader = request.headers.get('authorization')
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7).trim() : undefined
+    const supabase = await createClient(token)
+    let user = null
+    if (token) {
+      const { data: authData } = await supabase.auth.getUser(token)
+      user = authData?.user || null
+    }
+    if (!user) {
+      const { data: cookieAuthData } = await supabase.auth.getUser()
+      user = cookieAuthData?.user || null
+    }
     
     if (!user) {
       return NextResponse.json({ error: 'Brak autoryzacji' }, { status: 401 })
+    }
+
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1'
+    const rateCheck = checkRateLimit(`invite:${user.id || ip}`, 15, 60000)
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { error: 'Przekroczono limit wysyłki zaproszeń (max 15/min)' },
+        { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfterSeconds) } }
+      )
     }
 
     const appRole = user.app_metadata?.role
@@ -93,7 +113,7 @@ export async function POST(request: Request) {
       console.log(`[MOCK EMAIL] Brak EMAIL_PROVIDER_KEY. Link: ${registerUrl}`)
     }
 
-    return NextResponse.json({ success: true, url: registerUrl }) // Returning url for testing purposes
+    return NextResponse.json({ success: true, url: registerUrl, id: data.id }) // Returning url and id for testing purposes
   } catch (error: any) {
     console.error('API error:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
