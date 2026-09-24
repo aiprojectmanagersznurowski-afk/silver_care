@@ -23,4 +23,14 @@ describe('Voice Prompts (MDR-NO-INTERPRETATION, VOICE-ZERO-GUESSING, VOICE-MEDIC
     expect(VOICE_PROCESSING_PROMPT).toContain('BEHAVIORAL:');
   });
 
+  it('FAMILY_REPORT_PROMPT forbids omitting discomfort and enforces dignity translation @REQ: MDR-NO-INTERPRETATION', () => {
+    expect(FAMILY_REPORT_PROMPT).not.toMatch(/OMIT it from the report/i);
+    expect(FAMILY_REPORT_PROMPT).toMatch(/DIGNITY TRANSLATION/i);
+    expect(FAMILY_REPORT_PROMPT).toMatch(/STATUS AND ACTION RESOLUTION/i);
+  });
+
+  it('FAMILY_REPORT_PROMPT forbids hallucinating calm day when data is empty @REQ: VOICE-ZERO-GUESSING', () => {
+    expect(FAMILY_REPORT_PROMPT).toMatch(/NO FABRICATION/i);
+  });
+
 });
