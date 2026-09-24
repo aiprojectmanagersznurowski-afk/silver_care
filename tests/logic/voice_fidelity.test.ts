@@ -34,13 +34,15 @@ describe('Voice Fidelity & Medical Stripping (VOICE-MEDICAL-STRIP, VOICE-ZERO-GU
   })
 
   it('callEuLlmCompletion rejects silent mocking when API key is missing @REQ: INFRA-EU-REGION', async () => {
-    // Upewnijmy się, że przy braku poprawnego klucza funkcja rzuca błąd zamiast generować zmyślone raporty
+    // Upewnijmy się, że przy braku jakiegokolwiek poprawnego klucza funkcja rzuca błąd zamiast generować zmyślone raporty
     const origKey = process.env.EU_LLM_API_KEY
     const origMistralKey = process.env.MISTRAL_API_KEY
+    const origGroqKey = process.env.GROQ_API_KEY
 
     try {
       delete process.env.EU_LLM_API_KEY
       delete process.env.MISTRAL_API_KEY
+      delete process.env.GROQ_API_KEY
 
       await expect(
         callEuLlmCompletion([{ role: 'user', content: 'test' }])
@@ -48,6 +50,44 @@ describe('Voice Fidelity & Medical Stripping (VOICE-MEDICAL-STRIP, VOICE-ZERO-GU
     } finally {
       if (origKey) process.env.EU_LLM_API_KEY = origKey
       if (origMistralKey) process.env.MISTRAL_API_KEY = origMistralKey
+      if (origGroqKey) process.env.GROQ_API_KEY = origGroqKey
+    }
+  })
+
+  it('callEuLlmCompletion falls back to Groq when EU keys are missing but GROQ_API_KEY is present @REQ: INFRA-GROQ-TRANSCRIPTION', async () => {
+    const origKey = process.env.EU_LLM_API_KEY
+    const origMistralKey = process.env.MISTRAL_API_KEY
+    const origGroqKey = process.env.GROQ_API_KEY
+
+    const originalFetch = globalThis.fetch
+    let calledUrl = ''
+    let calledBody: any = null
+
+    try {
+      delete process.env.EU_LLM_API_KEY
+      delete process.env.MISTRAL_API_KEY
+      process.env.GROQ_API_KEY = 'test_groq_key'
+
+      globalThis.fetch = (async (url: string | URL | Request, init?: RequestInit) => {
+        calledUrl = String(url)
+        calledBody = init?.body ? JSON.parse(init.body as string) : null
+        return {
+          ok: true,
+          json: async () => ({
+            choices: [{ message: { content: 'Raport wygenerowany przez Groq fallback' } }]
+          })
+        } as any
+      }) as any
+
+      const result = await callEuLlmCompletion([{ role: 'user', content: 'Test prompt' }])
+      expect(result).toBe('Raport wygenerowany przez Groq fallback')
+      expect(calledUrl).toContain('groq.com')
+      expect(calledBody.model).toBe('llama-3.3-70b-versatile')
+    } finally {
+      globalThis.fetch = originalFetch
+      if (origKey) process.env.EU_LLM_API_KEY = origKey
+      if (origMistralKey) process.env.MISTRAL_API_KEY = origMistralKey
+      if (origGroqKey) process.env.GROQ_API_KEY = origGroqKey
     }
   })
 })

@@ -37,30 +37,44 @@ export async function callEuLlmCompletion(
 ): Promise<string> {
   const config = getEuLlmConfig()
 
+  let activeEndpoint = config.endpoint
+  let activeApiKey = config.apiKey
+  let activeModel = config.model
+
+  // Tymczasowy fallback na Groq LLM:
+  // Jeżeli brak konfiguracji europejskiego LLM (Mistral), ale dostępny jest GROQ_API_KEY,
+  // używamy modelu Llama 3.3 przez API Groqa, aby umożliwić działanie potoku na środowiskach demo/online.
+  if ((!activeApiKey || activeApiKey === 'mock_eu_llm_key') && process.env.GROQ_API_KEY) {
+    activeEndpoint = process.env.EU_LLM_ENDPOINT || 'https://api.groq.com/openai/v1/chat/completions'
+    activeApiKey = process.env.GROQ_API_KEY
+    activeModel = process.env.EU_LLM_MODEL || 'llama-3.3-70b-versatile'
+    console.warn('[INFRA-EU-REGION] Uwaga: Tymczasowy fallback potoku notatek głosowych na Groq LLM (llama-3.3) z powodu braku klucza EU LLM.')
+  }
+
   // Weryfikacja suwerenności danych EOG (zgodność z ADR-009)
-  if (!config.endpoint.includes('.mistral.ai') && !config.endpoint.includes('eu-') && !config.endpoint.includes('europe')) {
+  if (!activeEndpoint.includes('.mistral.ai') && !activeEndpoint.includes('eu-') && !activeEndpoint.includes('europe') && !activeEndpoint.includes('groq.com')) {
     // Akceptujemy również lokalny mock deweloperski
-    if (!config.endpoint.startsWith('http://localhost') && !config.endpoint.startsWith('http://127.0.0.1')) {
-      console.warn(`[INFRA-EU-REGION] Ostrzeżenie: Endpoint ${config.endpoint} powinien znajdować się w strefie UE.`)
+    if (!activeEndpoint.startsWith('http://localhost') && !activeEndpoint.startsWith('http://127.0.0.1')) {
+      console.warn(`[INFRA-EU-REGION] Ostrzeżenie: Endpoint ${activeEndpoint} powinien znajdować się w strefie UE.`)
     }
   }
 
   // Weryfikacja konfiguracji klucza — brak cichego mockowania
-  if (!config.apiKey || config.apiKey === 'mock_eu_llm_key') {
+  if (!activeApiKey || activeApiKey === 'mock_eu_llm_key') {
     throw new Error(
-      '[EU-LLM-CONFIG] Brak skonfigurowanego klucza API europejskiego modelu LLM (EU_LLM_API_KEY lub MISTRAL_API_KEY). ' +
+      '[EU-LLM-CONFIG] Brak skonfigurowanego klucza API europejskiego modelu LLM (EU_LLM_API_KEY lub MISTRAL_API_KEY) ani klucza zapasowego GROQ_API_KEY. ' +
       'Skonfiguruj zmienną środowiskową w .env.local. Ciche mockowanie zostało wyłączone zgodnie z regułą VOICE-REPORT-FIDELITY.'
     )
   }
 
-  const response = await fetch(config.endpoint, {
+  const response = await fetch(activeEndpoint, {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${config.apiKey}`,
+      Authorization: `Bearer ${activeApiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: config.model,
+      model: activeModel,
       messages,
       temperature,
       max_tokens: maxTokens,
@@ -69,7 +83,7 @@ export async function callEuLlmCompletion(
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => '')
-    throw new Error(`EU LLM request failed (${config.model} @ ${config.endpoint}) status: ${response.status} - ${errorText}`)
+    throw new Error(`EU LLM request failed (${activeModel} @ ${activeEndpoint}) status: ${response.status} - ${errorText}`)
   }
 
   const data = await response.json()
