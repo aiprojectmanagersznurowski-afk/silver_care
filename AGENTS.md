@@ -35,25 +35,33 @@ Rdzeń: `organizations`, `residents`. Identyfikatory dostawców żyją w `extern
 ## Pętla
 
 ```
-PLAN → CONTRACT (jeśli trzeba) → RED → GREEN → VERIFY → REVIEW → INTEGRATE
+PLAN → CONTRACT (jeśli trzeba) → RED → GREEN → VERIFY → REVIEW → PR CREATED (HANDOFF) → REVIEWER MERGE
 ```
 
 `node tools/sc-phase.mjs red|green|contract` pilnuje granicy faz. Każdy test niesie `@REQ: <ID>`.
 
 Dla zmian i scenariuszy w warstwie frontendu (`apps/web`): faza RED wymaga testów Playwright E2E w `e2e/` z Page Object Model, a weryfikacja obejmuje `pnpm test:e2e`.
 
+## Przed zamknięciem zadania (INFRA-SDLC-WORKFLOW)
 
-## Przed zamknięciem zadania
-
+1. Bramka jakościowa:
 ```bash
 bash scripts/verify.sh --full
 ```
-
 Etap POMINIĘTY to brak dowodu, nie sukces.
+
+2. Przekazanie do review (Handoff):
+```bash
+node tools/sc-pr-handoff.mjs <CARD-ID>
+```
+Zawsze na koniec pracy:
+- Przenieś kartę na Trello do listy **PR Created / In Review** i przypisz ją do drugiej osoby (Darek ↔ Michał).
+- Otwórz lub zaktualizuj Pull Request na GitHubie i przypisz partnera jako recenzenta.
 
 ## Czego nie robisz sam
 
-Otwarcie okna kontraktowego i publikacja raportu do bliskich należą do człowieka. Jesteś jednak upoważniony do samodzielnego wykonywania commitów, PR, merge i wdrożeń na wyraźne polecenie.
+Otwarcie okna kontraktowego i publikacja raportu do bliskich należą do człowieka.
+**Zakaz samodzielnego merge do gałęzi głównej (`main`):** Autor nigdy nie wykonuje merge własnego Pull Requesta. Merge'a i przeniesienia karty do 'Done' dokonuje wyłącznie druga osoba z zespołu (Darek lub Michał) po pozytywnym Code Review.
 
 ## Przy sprzeczności
 

@@ -51,7 +51,7 @@ Powód: jeden pensjonariusz może jutro mieć drugie urządzenie innego producen
 ## Pętla pracy
 
 ```
-PLAN → CONTRACT (jeśli trzeba) → RED → GREEN → VERIFY → REVIEW → INTEGRATE
+PLAN → CONTRACT (jeśli trzeba) → RED → GREEN → VERIFY → REVIEW → PR CREATED (HANDOFF) → REVIEWER MERGE
 ```
 
 W fazie RED powstaje wyłącznie test i musi być czerwony. W fazie GREEN wyłącznie implementacja. Sprawdzenie granicy faz:
@@ -68,14 +68,21 @@ Każde nowe story, widok, formularz lub zmiana interakcji w warstwie UI musi pos
 - Faza **GREEN** doprowadza test do zieleni bez modyfikacji asercji testowych.
 - Faza **VERIFY** przed zamknięciem zadania wymaga potwierdzenia wykonania `pnpm test:e2e`.
 
+## Zanim zamkniesz zadanie (INFRA-SDLC-WORKFLOW)
 
-## Zanim zamkniesz zadanie
-
+1. Bramka jakościowa:
 ```bash
 bash scripts/verify.sh --full
 ```
-
 Etap oznaczony jako POMINIĘTY to brak dowodu, a nie sukces. Jeżeli bramka nie mogła się wykonać, powiedz to wprost zamiast raportować zieleń.
+
+2. Przekazanie do review (Handoff):
+```bash
+node tools/sc-pr-handoff.mjs <CARD-ID>
+```
+Zawsze na koniec pracy:
+- Przenieś kartę na Trello do listy **PR Created / In Review** i przypisz ją do drugiej osoby (Darek ↔ Michał).
+- Otwórz lub zaktualizuj Pull Request na GitHubie i przypisz partnera jako recenzenta.
 
 ## Tryb autonomiczny (ADR-010)
 
@@ -111,7 +118,8 @@ Styl: czysty i minimalistyczny, oparty na typografii i przestrzeni. Jedna rodzin
 
 ## Czego nie robisz sam
 
-Commit, PR, merge, wdrożenie, otwarcie okna kontraktowego i publikacja raportu do bliskich należą do człowieka. Przygotuj zmianę i opisz ją.
+Otwarcie okna kontraktowego i publikacja raportu do bliskich należą do człowieka.
+**Zakaz samodzielnego merge do gałęzi głównej (`main`):** Autor nigdy nie wykonuje merge własnego Pull Requesta. Merge'a i przeniesienia karty do 'Done' dokonuje wyłącznie druga osoba z zespołu (Darek lub Michał) po pozytywnym Code Review.
 
 ## Przy sprzeczności — zatrzymaj się
 
