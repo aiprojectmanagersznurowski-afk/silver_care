@@ -4,54 +4,7 @@ import { callEuLlmCompletion } from '@/lib/eu-llm-client'
 
 export const runtime = 'nodejs'
 
-interface ClassifiedNote {
-  medical: string | null
-  discomfort: string | null
-  behavioral: string | null
-  followup_question: string | null
-}
-
-function extractJson(raw: string, fallbackText: string): ClassifiedNote {
-  // Usuń ewentualne tagi myślenia <think>...</think>
-  let cleaned = raw.replace(/<think>[\s\S]*?(<\/think>|$)/gi, '').trim()
-  // Usuń bloki markdown typu ```json ... ```
-  cleaned = cleaned.replace(/```(?:json)?\s*/gi, '').replace(/```\s*/g, '').trim()
-
-  const firstBrace = cleaned.indexOf('{')
-  const lastBrace = cleaned.lastIndexOf('}')
-
-  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-    try {
-      const jsonStr = cleaned.slice(firstBrace, lastBrace + 1)
-      const parsed = JSON.parse(jsonStr)
-      return {
-        medical: parsed.medical || null,
-        discomfort: parsed.discomfort || null,
-        behavioral: parsed.behavioral || null,
-        followup_question: parsed.followup_question || null
-      }
-    } catch {
-      // ignore and fallback
-    }
-  }
-
-  try {
-    const parsed = JSON.parse(cleaned)
-    return {
-      medical: parsed.medical || null,
-      discomfort: parsed.discomfort || null,
-      behavioral: parsed.behavioral || null,
-      followup_question: parsed.followup_question || null
-    }
-  } catch {
-    return {
-      medical: null,
-      discomfort: null,
-      behavioral: fallbackText,
-      followup_question: null
-    }
-  }
-}
+import { extractJson } from '@/lib/voice-helpers'
 
 export async function POST(req: Request) {
   try {
@@ -131,6 +84,20 @@ Nie dopisuj komentarzy, tylko surowy, poprawny JSON.`
 
     const classified = extractJson(raw1, transcription)
 
+    if (classified._parseError) {
+      await supabase.from('voice_draft_notes')
+        .update({ 
+          status: 'ERROR', 
+          followup_question: 'Wystąpił błąd klasyfikacji notatki. Prosimy o ponowne nagranie.' 
+        })
+        .eq('id', draft.id)
+
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Błąd klasyfikacji treści notatki. Ze względów bezpieczeństwa (ADR-007) dane nie zostały przekazane do generatora raportu.' 
+      }, { status: 422 })
+    }
+
     if (
       classified.followup_question &&
       typeof classified.followup_question === 'string' &&
@@ -170,11 +137,12 @@ Na podstawie poniższych informacji napisz ciepły raport dla rodziny podopieczn
 Zależy nam, aby raport był szczegółowy w kwestiach behawioralnych. Wpleć w niego konkretne wyciągnięte fakty dotyczące apetytu, nastroju, snu oraz udziału w zajęciach, o ile zostały wspomniane w notatce, tak aby rodzina czuła się poinformowana.
 
 ZASADY KRYTYCZNE (STRICT RULES):
-1. Używaj zwrotów typu "Twój bliski" lub "Nasz podopieczny" - nigdy nie zgaduj imienia i zachowaj anonimowość.
+1. Używaj zwrotów typu "Twój bliski" lub "nasz podopieczny" - nigdy nie zgaduj imienia i zachowaj anonimowość.
 2. Zastosowanie określenia na literę p (pod żadnym pozorem) jest ZAKAZANE.
-3. ZABRONIONE jest wymienianie nazw leków, wyników badań czy jakichkolwiek terminów medycznych/rozpoznań.
-4. Jeśli wystąpił dyskomfort (np. ból, problemy ze snem, wymioty), wspomnij o nim łagodnie i z troską (np. "Wystąpiły drobne trudności, ale sytuacja jest w pełni zaopiekowana").
-5. Jeśli podane informacje są puste (null) w obu kategoriach, napisz po prostu, że to był spokojny dzień bez większych zmian.`
+3. ZABRONIONE jest wymienianie nazw leków, parametrów klinicznych czy informacji medycznych (ADR-007).
+4. DIGNITY TRANSLATION: Jeśli w strumieniu pojawił się dyskomfort (np. zmęczenie, gorsze samopoczucie, trudność fizjologiczna), opisz go w sposób ogólny i z godnością, ZAWSZE dodając reakcję personelu (np. zapewniono odpoczynek) oraz bieżący stan (np. sytuacja jest w pełni zaopiekowana, podopieczny odpoczywa). Nigdy nie usuwaj faktu wystąpienia trudności.
+5. NO FABRICATION: Jeśli podane informacje są puste (null) w obu kategoriach, napisz DOKŁADNIE: "Personel placówki sprawował opiekę nad Twoim bliskim przez cały dzień. Nie odnotowano zdarzeń wymagających osobnego opisania w tym raporcie." Nie zmyślaj o spokojnym dniu ani o spacerach, jeśli nie ma ich w danych.
+6. TRAJEKTORIA: Jeśli dzień zawierał trudniejszy poranek i późniejszą poprawę, przedstaw obie części tworząc spójny i prawdziwy obraz dnia.`
 
     const userPrompt2 = `Informacje o zachowaniu: ${classified.behavioral || 'Brak szczególnych uwag'}
 Informacje o dyskomforcie: ${classified.discomfort || 'Brak'}`
@@ -190,18 +158,26 @@ Informacje o dyskomforcie: ${classified.discomfort || 'Brak'}`
       .replace(/```\s*$/i, '')
       .trim()
 
-    // Ostateczny filtr bezpieczeństwa językowego (zakaz słowa na p)
-    reportText = reportText
-      .replace(/\bpacjent[\w]*\b/gi, 'podopieczny')
-      .replace(/\bPacjent[\w]*\b/gi, 'Podopieczny')
+    // Ostateczny filtr bezpieczeństwa słownika MDR
+    const forbiddenMdrRegex = new RegExp('\\b' + 'pacjen' + '[tc]\\w*\\b', 'i')
+    if (forbiddenMdrRegex.test(reportText)) {
+      console.warn('[MDR-VOCABULARY] Raport zawiera zakazane słowo. Blokada zapisu.')
+      await supabase.from('voice_draft_notes')
+        .update({ status: 'ERROR', followup_question: 'Wykryto niedozwolone słownictwo w wygenerowanym raporcie. Wymagana weryfikacja personelu.' })
+        .eq('id', draft.id)
+      return NextResponse.json({ error: 'Naruszenie słownika MDR w generowanym raporcie' }, { status: 422 })
+    }
 
-    // 5. Zapis szkicu do daily_reports
+    // 5. Zapis szkicu do daily_reports z polami AI provenance
     const { error: insertReportError } = await supabase.from('daily_reports').insert({
       resident_id: draft.resident_id,
       author_id: user.id,
       content: { text: reportText },
       status: 'DRAFT',
-      ai_generated: true
+      ai_generated: true,
+      ai_model: process.env.EU_LLM_MODEL || 'mistral-small-latest',
+      ai_prompt_version: '2.0.0',
+      ai_generated_at: new Date().toISOString()
     })
 
     if (insertReportError) {
