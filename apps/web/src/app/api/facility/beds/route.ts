@@ -1,60 +1,74 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { withAuth } from '@/lib/api-auth'
+import { ApiError } from '@/lib/api-errors'
 
-export async function GET(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url)
-    const roomId = searchParams.get('roomId')
-
-    const supabase = await createClient()
-    let query = supabase.from('beds').select(`
-      id, room_id, label, is_active, created_at,
-      assignments:bed_assignments(id, assigned_at, unassigned_at, resident_id, residents(first_name, last_name, pesel_hash))
-    `).order('label', { ascending: true })
-    
-    if (roomId) {
-      query = query.eq('room_id', roomId)
-    }
-
-    const { data: beds, error } = await query
-
-    if (error) {
-      console.error('Failed to fetch beds:', error)
-      return NextResponse.json({ error: 'Nie udało się pobrać łóżek' }, { status: 500 })
-    }
-
-    // Filter out historical assignments (we only care about active ones)
-    const formattedBeds = beds?.map(bed => {
-      const activeAssignment = bed.assignments?.find((a: any) => !a.unassigned_at)
-      return {
-        id: bed.id,
-        room_id: bed.room_id,
-        label: bed.label,
-        is_active: bed.is_active,
-        created_at: bed.created_at,
-        active_assignment: activeAssignment ? {
-          id: activeAssignment.id,
-          assigned_at: activeAssignment.assigned_at,
-          resident: activeAssignment.residents
-        } : null
-      }
-    })
-
-    return NextResponse.json({ beds: formattedBeds })
-  } catch (error: any) {
-    console.error('API error:', error)
-    return NextResponse.json({ error: 'Wystąpił nieoczekiwany błąd serwera' }, { status: 500 })
-  }
+interface BedAssignmentData {
+  id: string
+  assigned_at: string
+  unassigned_at: string | null
+  resident_id: string
+  residents: {
+    first_name: string
+    last_name: string
+    pesel_hash: string
+  } | null
 }
 
-export async function POST(request: Request) {
-  try {
-    const supabase = await createClient()
+/**
+ * @REQ: ADM-FACILITY-OCCUPANCY
+ * @REQ: SEC-SESSION
+ * @REQ: ORG-ISOLATION
+ */
+export const GET = withAuth(async (request, { supabase }) => {
+  const { searchParams } = new URL(request.url)
+  const roomId = searchParams.get('roomId')
+
+  let query = supabase
+    .from('beds')
+    .select(`
+      id, room_id, label, is_active, created_at,
+      assignments:bed_assignments(id, assigned_at, unassigned_at, resident_id, residents(first_name, last_name, pesel_hash))
+    `)
+    .order('label', { ascending: true })
+
+  if (roomId) {
+    query = query.eq('room_id', roomId)
+  }
+
+  const { data: beds, error } = await query
+  if (error) throw error
+
+  // Filter out historical assignments (we only care about active ones)
+  const formattedBeds = (beds || []).map((bed) => {
+    const activeAssignment = bed.assignments?.find((a) => !a.unassigned_at)
+    return {
+      id: bed.id,
+      room_id: bed.room_id,
+      label: bed.label,
+      is_active: bed.is_active,
+      created_at: bed.created_at,
+      active_assignment: activeAssignment
+        ? {
+            id: activeAssignment.id,
+            assigned_at: activeAssignment.assigned_at,
+            resident: Array.isArray(activeAssignment.residents)
+              ? activeAssignment.residents[0]
+              : activeAssignment.residents,
+          }
+        : null,
+    }
+  })
+
+  return NextResponse.json({ beds: formattedBeds })
+})
+
+export const POST = withAuth(
+  async (request, { supabase }) => {
     const body = await request.json()
     const { room_id, label } = body
 
     if (!room_id || !label) {
-      return NextResponse.json({ error: 'Brak wymaganych danych (room_id, label)' }, { status: 400 })
+      throw new ApiError('Brak wymaganych danych (room_id, label)', 400, 'VALIDATION_ERROR')
     }
 
     const { data: bed, error } = await supabase
@@ -62,22 +76,14 @@ export async function POST(request: Request) {
       .insert({
         room_id,
         label,
-        is_active: true
+        is_active: true,
       })
       .select()
       .single()
 
-    if (error) {
-      console.error('Failed to create bed:', error)
-      if (error.code === '23505') {
-        return NextResponse.json({ error: 'Łóżko z tą etykietą już istnieje w tym pokoju' }, { status: 400 })
-      }
-      return NextResponse.json({ error: 'Nie udało się utworzyć łóżka' }, { status: 500 })
-    }
+    if (error) throw error
 
     return NextResponse.json({ bed })
-  } catch (error: any) {
-    console.error('API error:', error)
-    return NextResponse.json({ error: 'Wystąpił nieoczekiwany błąd serwera' }, { status: 500 })
-  }
-}
+  },
+  { roles: ['org_admin', 'super_admin'] }
+)

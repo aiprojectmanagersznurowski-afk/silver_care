@@ -1,21 +1,15 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogTrigger,
-} from '@/components/ui/dialog'
 import { updateUserRoleAction, createUserWithRoleAction, resetUserPasswordAction } from '@/actions/iam'
-import { Shield, ShieldAlert, CheckCircle2, UserCog, History, RefreshCw, AlertCircle, UserPlus, Key, Copy, Check } from 'lucide-react'
+import { ShieldAlert, CheckCircle2, UserCog, RefreshCw, AlertCircle, Key, Copy, Check } from 'lucide-react'
+import { ROLES } from '@silvercare/contracts/src/generated/roles'
+
+import { UserTable } from './iam/UserTable'
+import { ResetPasswordDialog } from './iam/ResetPasswordDialog'
+import { AuditLogTable } from './iam/AuditLogTable'
 
 export interface UserItem {
   id: string
@@ -38,14 +32,12 @@ export interface AuditLogItem {
   created_at: string
 }
 
-interface IamManagementClientProps {
+export interface IamManagementClientProps {
   initialUsers: UserItem[]
   initialAuditLogs: AuditLogItem[]
   forcedState?: 'loading' | 'empty' | 'success' | 'error'
   errorMessage?: string
 }
-
-import { ROLES } from '@silvercare/contracts/src/generated/roles'
 
 const ROLE_LABELS: Record<string, string> = {
   super_admin: 'Super Admin (Globalny)',
@@ -407,310 +399,54 @@ export function IamManagementClient({
       )}
 
       {/* Sekcja 1: Użytkownicy i Uprawnienia */}
-      <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5 overflow-hidden">
-        <CardHeader className="border-b border-slate/5 bg-white px-6 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sage/10 text-sage shrink-0">
-              <Shield className="h-5 w-5" />
-            </div>
-            <div>
-              <CardTitle className="text-lg font-semibold text-slate">Użytkownicy i Role</CardTitle>
-              <CardDescription className="text-slate-soft">
-                Zarządzaj kontami użytkowników, przydziałem ról i uprawnień dostępowych.
-              </CardDescription>
-            </div>
-          </div>
+      <UserTable
+        users={users}
+        selectedRoles={selectedRoles}
+        onRoleSelect={handleRoleSelect}
+        onApplyRole={handleApplyRole}
+        onResetPasswordClick={user => {
+          setResetPasswordUser(user)
+          setCustomPassword('')
+          setResetPasswordError(null)
+        }}
+        isPending={isPending}
+        availableRoles={AVAILABLE_ROLES}
+        addUserProps={{
+          isOpen: isAddUserOpen,
+          onOpenChange: setIsAddUserOpen,
+          newEmail,
+          onEmailChange: setNewEmail,
+          newRole,
+          onRoleChange: setNewRole,
+          newPassword,
+          onPasswordChange: setNewPassword,
+          newOrgId,
+          onOrgIdChange: setNewOrgId,
+          availableRoles: AVAILABLE_ROLES,
+          error: addUserError,
+          isPending,
+          onSubmit: handleCreateUser,
+        }}
+      />
 
-          <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
-            <DialogTrigger render={<Button />}>
-              <UserPlus className="h-4 w-4 mr-2" />
-              Dodaj użytkownika
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Utwórz użytkownika i nadaj rolę</DialogTitle>
-                <DialogDescription>
-                  Załóż nowe konto w systemie i natychmiast przypisz uprawnienia platformowe.
-                </DialogDescription>
-              </DialogHeader>
-
-              <form onSubmit={handleCreateUser} className="space-y-4 py-2">
-                <div className="space-y-2">
-                  <Label htmlFor="new-user-email">Adres e-mail *</Label>
-                  <Input
-                    id="new-user-email"
-                    type="email"
-                    placeholder="np. jan.kowalski@placowka.pl"
-                    value={newEmail}
-                    onChange={e => setNewEmail(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="new-user-role">Rola systemowa *</Label>
-                  <select
-                    id="new-user-role"
-                    value={newRole}
-                    onChange={e => setNewRole(e.target.value)}
-                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                  >
-                    {AVAILABLE_ROLES.map(r => (
-                      <option key={r.id} value={r.id}>
-                        {r.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="new-user-password">Hasło początkowe (opcjonalne)</Label>
-                  <Input
-                    id="new-user-password"
-                    type="text"
-                    placeholder="Zostaw puste, aby wygenerować automatycznie"
-                    value={newPassword}
-                    onChange={e => setNewPassword(e.target.value)}
-                  />
-                  <p className="text-[0.75rem] text-slate-soft">
-                    Jeśli nie podasz hasła, system wygeneruje bezpieczny ciąg znaków i wyświetli go po utworzeniu.
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="new-user-org">ID Placówki / Organizacji (opcjonalne)</Label>
-                  <Input
-                    id="new-user-org"
-                    type="text"
-                    placeholder="UUID placówki (pozostaw puste dla ról globalnych)"
-                    value={newOrgId}
-                    onChange={e => setNewOrgId(e.target.value)}
-                  />
-                </div>
-
-                {addUserError && (
-                  <p className="text-sm font-medium text-destructive">{addUserError}</p>
-                )}
-
-                <DialogFooter className="pt-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsAddUserOpen(false)}
-                  >
-                    Anuluj
-                  </Button>
-                  <Button type="submit" disabled={isPending} className="bg-sage text-white hover:bg-sage/90">
-                    {isPending ? 'Tworzenie...' : 'Utwórz i nadaj rolę'}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm" aria-label="Tabela użytkowników i ról IAM">
-              <thead className="bg-slate/5 text-slate-soft">
-                <tr>
-                  <th scope="col" className="px-6 py-4 font-medium">Użytkownik</th>
-                  <th scope="col" className="px-6 py-4 font-medium">Placówka</th>
-                  <th scope="col" className="px-6 py-4 font-medium">Aktualna rola</th>
-                  <th scope="col" className="px-6 py-4 font-medium">Nowa rola</th>
-                  <th scope="col" className="px-6 py-4 font-medium text-right">Akcja</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate/5 bg-white">
-                {users.map(user => {
-                  const currentSelected = selectedRoles[user.id] || user.role
-                  const hasChanged = currentSelected !== user.role
-
-                  return (
-                    <tr key={user.id} className="transition-colors hover:bg-slate/5">
-                      <td className="px-6 py-4">
-                        <div className="font-medium text-slate text-base">{user.email}</div>
-                        <div className="font-mono text-xs text-slate-soft">{user.id}</div>
-                      </td>
-                      <td className="px-6 py-4 text-slate-soft font-mono text-xs">
-                        {user.organizationId || 'Globalna / Brak'}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center rounded-lg bg-slate/10 px-2.5 py-1 text-xs font-medium text-slate">
-                          {user.role}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <select
-                          aria-label={`Wybierz rolę dla ${user.email}`}
-                          value={currentSelected}
-                          onChange={e => handleRoleSelect(user.id, e.target.value)}
-                          className="min-h-[44px] rounded-xl border border-slate/20 bg-white px-3 py-2 text-sm text-slate focus:border-sage focus:outline-none focus:ring-1 focus:ring-sage"
-                        >
-                          {AVAILABLE_ROLES.map(r => (
-                            <option key={r.id} value={r.id}>
-                              {r.label}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setResetPasswordUser(user)
-                              setCustomPassword('')
-                              setResetPasswordError(null)
-                            }}
-                            className="min-h-[40px] rounded-xl border-slate/20 text-slate hover:bg-slate/5"
-                            title="Resetuj lub nadaj nowe hasło"
-                          >
-                            <Key className="h-4 w-4 mr-1.5 text-slate-soft" />
-                            Hasło
-                          </Button>
-                          <Button
-                            disabled={!hasChanged || isPending}
-                            onClick={() => handleApplyRole(user.id)}
-                            className="min-h-[40px] rounded-xl bg-sage px-4 text-sm font-medium text-white shadow-sm hover:bg-sage/90 disabled:opacity-40"
-                          >
-                            Zastosuj
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Dialog resetowania hasła użytkownika */}
-      <Dialog open={!!resetPasswordUser} onOpenChange={(open) => !open && setResetPasswordUser(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Resetuj lub nadaj nowe hasło</DialogTitle>
-            <DialogDescription>
-              Ustaw nowe hasło dla konta <strong>{resetPasswordUser?.email}</strong>.
-            </DialogDescription>
-          </DialogHeader>
-
-          <form onSubmit={handleResetPassword} className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label htmlFor="reset-new-password">Nowe hasło (opcjonalne)</Label>
-              <Input
-                id="reset-new-password"
-                type="text"
-                placeholder="Zostaw puste, aby wygenerować automatycznie"
-                value={customPassword}
-                onChange={e => setCustomPassword(e.target.value)}
-              />
-              <p className="text-[0.75rem] text-slate-soft">
-                Wpisz hasło (minimum 6 znaków) lub pozostaw to pole puste, aby system wygenerował bezpieczne hasło losowe.
-              </p>
-            </div>
-
-            {resetPasswordError && (
-              <p className="text-sm font-medium text-destructive">{resetPasswordError}</p>
-            )}
-
-            <DialogFooter className="pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setResetPasswordUser(null)}
-              >
-                Anuluj
-              </Button>
-              <Button type="submit" disabled={isPending} className="bg-sage text-white hover:bg-sage/90">
-                {isPending ? 'Zapisywanie...' : 'Zapisz nowe hasło'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {/* Dialog resetowania hasła */}
+      <ResetPasswordDialog
+        user={resetPasswordUser}
+        customPassword={customPassword}
+        onCustomPasswordChange={setCustomPassword}
+        error={resetPasswordError}
+        isPending={isPending}
+        onSubmit={handleResetPassword}
+        onClose={() => setResetPasswordUser(null)}
+      />
 
       {/* Sekcja 2: Zintegrowany Rejestr Audytu Zmian Uprawnień */}
-      <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5 overflow-hidden">
-        <CardHeader className="border-b border-slate/5 bg-white px-6 py-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate/10 text-slate">
-              <History className="h-5 w-5" />
-            </div>
-            <div>
-              <CardTitle className="text-lg font-semibold text-slate">Rejestr Zmian Uprawnień (audit_logs)</CardTitle>
-              <CardDescription className="text-slate-soft">
-                Niezmienny rejestr audytowy (append-only) wszystkich modyfikacji ról i poświadczeń w systemie.
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm" aria-label="Rejestr audytowy zmian ról">
-              <thead className="bg-slate/5 text-slate-soft">
-                <tr>
-                  <th scope="col" className="px-6 py-4 font-medium">Data i czas</th>
-                  <th scope="col" className="px-6 py-4 font-medium">Aktor (performed_by)</th>
-                  <th scope="col" className="px-6 py-4 font-medium">Użytkownik docelowy</th>
-                  <th scope="col" className="px-6 py-4 font-medium">Akcja / Zmiana</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate/5 bg-white">
-                {auditLogs.map(log => (
-                  <tr key={log.id} className="transition-colors hover:bg-slate/5">
-                    <td className="px-6 py-4 text-slate-soft whitespace-nowrap">
-                      {new Date(log.created_at).toLocaleString('pl-PL')}
-                    </td>
-                    <td className="px-6 py-4 font-mono text-xs text-slate">
-                      {log.performed_by || 'system'}
-                    </td>
-                    <td className="px-6 py-4 font-mono text-xs text-slate">
-                      {log.payload?.target_user_id || 'nieznany'}
-                    </td>
-                    <td className="px-6 py-4">
-                      {log.action === 'password_reset' ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-lg bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-700">
-                          <Key className="h-3 w-3" />
-                          Reset hasła
-                        </span>
-                      ) : log.payload?.previous_role ? (
-                        <>
-                          <span className="font-medium text-slate-soft line-through mr-2">
-                            {log.payload.previous_role}
-                          </span>
-                          <span className="font-semibold text-sage">
-                            → {log.payload?.new_role}
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="inline-block rounded bg-slate/10 px-1.5 py-0.5 text-xs text-slate-soft mr-2">
-                            Nowe konto
-                          </span>
-                          <span className="font-semibold text-sage">
-                            → {log.payload?.new_role}
-                          </span>
-                        </>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-                {auditLogs.length === 0 && (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-10 text-center text-slate-soft">
-                      Brak zarejestrowanych zmian uprawnień w rejestrze audytowym.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+      <AuditLogTable
+        auditLogs={auditLogs}
+        users={users}
+        availableRoles={AVAILABLE_ROLES}
+        formatDateTime={dtString => dtString ? new Date(dtString).toLocaleString('pl-PL') : '—'}
+      />
     </div>
   )
 }

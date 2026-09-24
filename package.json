@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "test": "vitest run --passWithNoTests",
+    "db:types": "node tools/sc-generate-types.mjs",
     "build": "pnpm --filter web build",
     "dev": "pnpm --filter web dev"
   },

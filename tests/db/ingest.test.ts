@@ -13,8 +13,8 @@ describe('Database Ingest Preconditions (INT-INGEST-PRECONDITIONS)', () => {
   });
 
   afterAll(async () => {
-    await sql.end();
-  });
+    await sql.end({ timeout: 5 });
+  }, 15000);
 
   it('rejects ingest if no active consent exists and logs it @REQ: INT-INGEST-PRECONDITIONS', async () => {
     await sql.begin(async (tx) => {
