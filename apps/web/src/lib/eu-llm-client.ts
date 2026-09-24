@@ -45,20 +45,12 @@ export async function callEuLlmCompletion(
     }
   }
 
-  // W trybie testowym lub przy braku klucza produkcyjnego symulujemy odpowiedź, aby zachować ciągłość
-  if (config.apiKey === 'mock_eu_llm_key' || process.env.NODE_ENV === 'test') {
-    // Sprawdzamy czy to prompt klasyfikacji (krok 1) czy raportu (krok 2)
-    const isClassification = messages.some((m) => m.content.includes('medical') || m.content.includes('klasyfikator'))
-    if (isClassification) {
-      return JSON.stringify({
-        medical: 'Podano lek zgodnie z zaleceniem lekarza.',
-        discomfort: null,
-        behavioral: 'Podopieczny zjadł obiad z apetytem i uczestniczył w popołudniowym spacerze w ogrodzie.',
-        followup_question: null,
-      })
-    } else {
-      return 'Dzień minął spokojnie i w miłej atmosferze. Nasz podopieczny miał dobry apetyt podczas posiłków i chętnie brał udział w popołudniowym spacerze na świeżym powietrzu. Nie zaobserwowano żadnych trudności.'
-    }
+  // Weryfikacja konfiguracji klucza — brak cichego mockowania
+  if (!config.apiKey || config.apiKey === 'mock_eu_llm_key') {
+    throw new Error(
+      '[EU-LLM-CONFIG] Brak skonfigurowanego klucza API europejskiego modelu LLM (EU_LLM_API_KEY lub MISTRAL_API_KEY). ' +
+      'Skonfiguruj zmienną środowiskową w .env.local. Ciche mockowanie zostało wyłączone zgodnie z regułą VOICE-REPORT-FIDELITY.'
+    )
   }
 
   const response = await fetch(config.endpoint, {

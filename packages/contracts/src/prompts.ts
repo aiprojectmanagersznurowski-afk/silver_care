@@ -47,11 +47,25 @@ CRITICAL RULES FOR GENERATION:
    The tone must be warm, respectful, and calm. DO NOT use poetic, exaggerated, or artificially enthusiastic language. Write naturally, like a professional but caring nurse.
 3. HIGH SPECIFICITY:
    You MUST include the specific, mundane details mentioned in the provided streams (e.g., exact activities, specific meals, who they talked to). Do not use general statements like "had a good day" without backing it up with extracted facts.
-4. FAMILY FILTER (NO ALARMING INFO):
-   Information from the DISCOMFORT stream can only be included if it's minor and framed gently (e.g., "był dzisiaj trochę bardziej śpiący"). If a discomfort fact is alarming, OMIT it from the report.
+4. DIGNITY TRANSLATION (DISCOMFORT): 
+   - All discomfort facts MUST appear in the report, translated into dignified, general language.
+   - Minor discomfort: describe gently (e.g., "był dzisiaj trochę bardziej śpiący" / "was a bit more tired today").
+   - Serious discomfort (vomiting, incontinence, injury, distress): use a dignified, respectful general description PLUS the staff response PLUS the current resolved status.
+   - Example: instead of graphic physiological details, write: "Nasz podopieczny miał chwilowe dolegliwości, którymi natychmiast zaopiekowali się opiekunowie. Sytuacja jest w pełni opanowana i podopieczny odpoczywa spokojnie."
+   - NEVER omit a discomfort fact entirely. The family must receive an honest, trustworthy picture of the day.
 5. NO MEDICAL INTERPRETATION (MDR-NO-INTERPRETATION):
-   Do not evaluate health status. Do not diagnose, do not mention medication, clinical signs, or medical conditions. Describe behaviors, not medical conditions.
-6. MANDATORY AI DISCLOSURE (EU AI Act):
+   Do not evaluate health status. Do not diagnose, do not mention medication, clinical signs, or medical conditions. Describe behaviors and care, not clinical diagnoses or disease progression.
+6. STATUS AND ACTION RESOLUTION:
+   - For every discomfort or difficulty mentioned, you MUST include:
+     (a) what the staff did in response (e.g. provided comforting care, assistance, hydration)
+     (b) the current status (e.g. resting peacefully, feeling better, under attentive care).
+7. DAILY ARC (TEMPORAL COHERENCE):
+   - If the day included a difficult morning followed by an afternoon improvement, reflect both parts clearly to provide full context.
+8. NO FABRICATION (when streams are empty):
+   - If both behavioral and discomfort streams are empty or null, DO NOT fabricate a story about "spokojny dzień". Write factually: "Personel placówki sprawował opiekę nad Twoim bliskim przez cały dzień. Nie odnotowano zdarzeń wymagających osobnego opisania w tym raporcie."
+9. VOCABULARY RESTRICTION:
+   - NEVER use the forbidden word "pacjent" in any grammatical form. Use "Twój bliski", "nasz podopieczny", or contextual pronouns.
+10. MANDATORY AI DISCLOSURE (EU AI Act):
    Each report must end with the required disclosure notice:
    "${AI_DISCLOSURE_LABEL}"
 

@@ -8,6 +8,7 @@ export interface RawResidentRow {
   careLevel?: string
   isZsn?: boolean | string
   notes?: string
+  admissionDate?: string
 }
 
 export interface ValidatedResidentRow {
@@ -20,6 +21,7 @@ export interface ValidatedResidentRow {
   careLevel: 'walking' | 'sitting' | 'bedridden' | 'hospice'
   isZsn: boolean
   notes: string | null
+  admissionDate?: string | null
   isValid: boolean
   errors: string[]
 }
@@ -94,6 +96,7 @@ export function validateResidentRows(
 
     const isZsn = isZsnRaw === true || isZsnRaw === 'true' || isZsnRaw === '1' || isZsnRaw === 'tak' || isZsnRaw === 'yes'
     const notes = raw.notes ? raw.notes.toString().trim() : null
+    const admissionDate = raw.admissionDate ? raw.admissionDate.toString().trim() : null
 
     rows.push({
       rowNumber: rowNum,
@@ -105,6 +108,7 @@ export function validateResidentRows(
       careLevel,
       isZsn,
       notes,
+      admissionDate,
       isValid: errors.length === 0,
       errors,
     })

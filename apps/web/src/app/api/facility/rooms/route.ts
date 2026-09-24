@@ -19,7 +19,7 @@ export const GET = withAuth(async (_request, { supabase }) => {
 })
 
 export const POST = withAuth(
-  async (request, { supabase }) => {
+  async (request, { supabase, user }) => {
     const body = await request.json()
     const { number, floor, sector } = body
 
@@ -27,17 +27,32 @@ export const POST = withAuth(
       throw new ApiError('Brak wymaganych danych (number, floor)', 400, 'VALIDATION_ERROR')
     }
 
+    const orgId = user.organizationId || (user.rawUser as { app_metadata?: { organization_id?: string } })?.app_metadata?.organization_id
+
     const { data: room, error } = await supabase
       .from('rooms')
       .insert({
-        number,
-        floor,
-        sector: sector || null,
+        organization_id: orgId,
+        number: number.toString().trim(),
+        floor: floor.toString().trim(),
+        sector: sector ? sector.toString().trim() : null,
       })
       .select()
       .single()
 
     if (error) throw error
+
+    if (room && orgId) {
+      const { createAdminClient } = await import('@/lib/supabase/admin')
+      const adminClient = createAdminClient()
+      await adminClient.from('audit_logs').insert({
+        organization_id: orgId,
+        resident_id: null,
+        action: 'ROOM_CREATED',
+        performed_by: user.id,
+        payload: { room_id: room.id, number: room.number, floor: room.floor }
+      })
+    }
 
     return NextResponse.json({ room })
   },

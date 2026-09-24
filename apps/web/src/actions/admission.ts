@@ -49,17 +49,20 @@ export async function getBedSuggestionsAction(residentGender: 'M' | 'F', careLev
     return { error: 'Błąd pobierania pokoi: ' + (roomsErr?.message || '') }
   }
 
-  // Pobierz aktywne przypisania
+  const rawRooms = (rooms as unknown as RoomRecord[]) || []
+  const orgBedIds = rawRooms.flatMap((r) => (r.beds || []).map((b) => b.id))
+
+  // Pobierz aktywne przypisania w tej placówce
   const { data: activeAssignments } = await adminClient
     .from('bed_assignments')
     .select('bed_id, resident_id, residents(gender)')
+    .in('bed_id', orgBedIds.length > 0 ? orgBedIds : ['00000000-0000-0000-0000-000000000000'])
     .is('unassigned_at', null)
 
   const rawAssignments = (activeAssignments as unknown as ActiveAssignmentRecord[]) || []
   const occupiedBedIds = new Set(rawAssignments.map((a) => a.bed_id))
 
   const candidates: BedCandidate[] = []
-  const rawRooms = (rooms as unknown as RoomRecord[]) || []
 
   for (const room of rawRooms) {
     const roomBeds = room.beds || []
