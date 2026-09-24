@@ -10,22 +10,51 @@ import { Badge } from '@/components/ui/badge'
 import { ResidentInlineCareLevel } from '@/components/ResidentInlineCareLevel'
 import { ResidentEditSheet } from '@/components/ResidentEditSheet'
 import { ResidentZsnCheckbox } from '@/components/ResidentZsnCheckbox'
+import { ResidentMobileCard } from '@/components/ResidentMobileCard'
 import Link from 'next/link'
 import { type CareLevel } from '@/lib/reporting-constants'
 import { format } from 'date-fns'
 import { pl } from 'date-fns/locale'
 
+interface BedAssignmentItem {
+  id: string
+  unassigned_at: string | null
+  beds: {
+    id: string
+    label: string
+    rooms: {
+      number: string
+    } | null
+  } | null
+}
+
+interface ResidentWithAssignments {
+  id: string
+  first_name: string
+  last_name: string
+  avatar_url?: string | null
+  care_level?: CareLevel | null
+  is_zsn?: boolean
+  archived_at?: string | null
+  death_date?: string | null
+  admission_date?: string | null
+  created_at: string
+  bed_assignments?: BedAssignmentItem[]
+}
+
 export default async function AdminResidentsPage() {
   const supabase = await createClient()
 
   // Pobieramy wszystkich pensjonariuszy z organizacji tego admina
-  const { data: residents } = await supabase
+  const { data: rawResidents } = await supabase
     .from('residents')
     .select('*, bed_assignments(id, unassigned_at, beds(id, label, rooms(number)))')
     .order('created_at', { ascending: false })
 
+  const residents = rawResidents as unknown as ResidentWithAssignments[] | null
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-display font-semibold tracking-tight text-slate">
@@ -33,7 +62,7 @@ export default async function AdminResidentsPage() {
           </h2>
           <p className="mt-2 text-slate-soft">Zarządzaj bazą podopiecznych w swojej placówce.</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <ExportDataDialog />
           <BulkImportDialog />
           <AdmissionWizard />
@@ -41,7 +70,20 @@ export default async function AdminResidentsPage() {
         </div>
       </div>
 
-      <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5 overflow-hidden">
+      {/* Widok mobilny — lista kart (< sm) */}
+      <div className="block sm:hidden space-y-3">
+        {residents?.map((resident) => (
+          <ResidentMobileCard key={resident.id} resident={resident} />
+        ))}
+        {(!residents || residents.length === 0) && (
+          <div className="rounded-2xl bg-white p-8 text-center text-slate-soft ring-1 ring-slate/5">
+            Brak podopiecznych w bazie. Kliknij przycisk powyżej, aby dodać pierwszą osobę.
+          </div>
+        )}
+      </div>
+
+      {/* Widok desktopowy — pełna tabela (>= sm) */}
+      <Card className="hidden sm:block rounded-2xl border-none shadow-sm ring-1 ring-slate/5 overflow-hidden">
         <CardContent className="p-0">
           <div className="relative w-full overflow-auto">
             <table className="w-full text-sm text-left">
@@ -59,7 +101,7 @@ export default async function AdminResidentsPage() {
               <tbody className="divide-y divide-slate/5 bg-white">
                 {residents?.map((resident) => {
                   const activeAssignments = Array.isArray(resident.bed_assignments)
-                    ? resident.bed_assignments.filter((a: any) => a.unassigned_at === null)
+                    ? resident.bed_assignments.filter((a) => a.unassigned_at === null)
                     : []
                   const activeBed = activeAssignments.length > 0 ? activeAssignments[0].beds : null
 
@@ -83,7 +125,7 @@ export default async function AdminResidentsPage() {
                       <td className="px-6 py-4">
                         <ResidentInlineCareLevel
                           residentId={resident.id}
-                          initialCareLevel={resident.care_level as CareLevel | null}
+                          initialCareLevel={resident.care_level ?? null}
                         />
                       </td>
                       <td className="px-6 py-4">

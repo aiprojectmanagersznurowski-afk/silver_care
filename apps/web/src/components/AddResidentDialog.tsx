@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -16,24 +17,25 @@ import {
 } from '@/components/ui/dialog'
 
 export function AddResidentDialog() {
+  const router = useRouter()
   const [open, setOpen] = useState(false)
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
-  const [pesel, setPesel] = useState('')
+  const [nationalId, setNationalId] = useState('')
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!firstName.trim() || !lastName.trim() || !pesel.trim()) {
-      setError('Imię, nazwisko i PESEL są wymagane.')
+    if (!firstName.trim() || !lastName.trim() || !nationalId.trim()) {
+      setError('Imię, nazwisko i numer identyfikacyjny są wymagane.')
       return
     }
     
-    // Prosta walidacja długości PESEL
-    if (pesel.trim().length !== 11 || !/^\d+$/.test(pesel.trim())) {
-      setError('PESEL musi składać się z 11 cyfr.')
+    // Prosta walidacja długości 11 cyfr
+    if (nationalId.trim().length !== 11 || !/^\d+$/.test(nationalId.trim())) {
+      setError('Numer identyfikacyjny musi składać się z 11 cyfr.')
       return
     }
 
@@ -73,7 +75,7 @@ export function AddResidentDialog() {
         body: JSON.stringify({ 
           first_name: firstName.trim(), 
           last_name: lastName.trim(),
-          pesel: pesel.trim(),
+          national_id: nationalId.trim(),
           avatar_url
         }),
       })
@@ -83,11 +85,11 @@ export function AddResidentDialog() {
       if (res.ok && data.success) {
         setFirstName('')
         setLastName('')
-        setPesel('')
+        setNationalId('')
         setAvatarFile(null)
         setOpen(false)
         // Refresh the page to show new resident
-        window.location.reload()
+        router.refresh()
       } else {
         setError(data.error || 'Wystąpił błąd.')
       }
@@ -132,17 +134,17 @@ export function AddResidentDialog() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="pesel">PESEL</Label>
+            <Label htmlFor="nationalId">PESEL</Label>
             <Input
-              id="pesel"
+              id="nationalId"
               placeholder="np. 45010112345"
-              value={pesel}
-              onChange={(e) => setPesel(e.target.value)}
+              value={nationalId}
+              onChange={(e) => setNationalId(e.target.value)}
               required
               maxLength={11}
             />
             <p className="text-xs text-text-tertiary">
-              PESEL jest szyfrowany i używany wyłącznie do identyfikacji i połączenia z danymi medycznymi.
+              Numer identyfikacyjny jest haszowany i chroniony zgodnie z SEC-PESEL-HASH.
             </p>
           </div>
           <div className="space-y-2">

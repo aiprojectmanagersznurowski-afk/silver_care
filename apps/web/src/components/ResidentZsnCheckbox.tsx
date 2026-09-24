@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Check, Loader2, ShieldAlert } from 'lucide-react'
+import { Check, Loader2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 
 interface ResidentZsnCheckboxProps {
@@ -60,8 +60,11 @@ export function ResidentZsnCheckbox({
         type="button"
         onClick={handleToggle}
         disabled={loading}
+        role="checkbox"
+        aria-checked={checked}
+        aria-label={checked ? 'ZSN: Znaczny stopień niepełnosprawności (Aktywny)' : 'Brak ZSN — kliknij, aby zaznaczyć'}
         title={checked ? 'ZSN: Znaczny stopień niepełnosprawności (Aktywny)' : 'Brak ZSN — kliknij, aby zaznaczyć'}
-        className="group/zsn inline-flex items-center gap-1.5 focus:outline-none"
+        className="group/zsn inline-flex items-center gap-1.5 min-h-[44px] min-w-[44px] p-2 rounded-lg hover:bg-slate/5 focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-colors"
       >
         <div
           className={`flex h-5 w-5 items-center justify-center rounded border transition-colors ${
@@ -87,9 +90,13 @@ export function ResidentZsnCheckbox({
 
   // Full variant for 360° card
   return (
-    <div
+    <button
+      type="button"
       onClick={handleToggle}
-      className={`relative flex cursor-pointer items-start gap-3.5 rounded-xl border p-4 transition-colors ${
+      role="checkbox"
+      aria-checked={checked}
+      aria-label="ZSN: Znaczny stopień niepełnosprawności"
+      className={`relative w-full text-left flex cursor-pointer items-start gap-3.5 rounded-xl border p-4 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 ${
         checked
           ? 'bg-amber-50/50 border-amber-200/80 hover:bg-amber-50'
           : 'bg-white border-slate/10 hover:border-slate/20 hover:bg-slate/5'
@@ -133,6 +140,6 @@ export function ResidentZsnCheckbox({
           </span>
         )}
       </div>
-    </div>
+    </button>
   )
 }

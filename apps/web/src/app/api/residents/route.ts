@@ -36,26 +36,27 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { first_name, last_name, pesel, avatar_url } = body
+    const { first_name, last_name, national_id, avatar_url } = body
+    const rawId = (national_id || '').toString().trim()
 
-    if (!first_name?.trim() || !last_name?.trim() || !pesel?.trim()) {
-      return NextResponse.json({ error: 'Imię, nazwisko i PESEL są wymagane' }, { status: 400 })
+    if (!first_name?.trim() || !last_name?.trim() || !rawId) {
+      return NextResponse.json({ error: 'Imię, nazwisko i numer identyfikacyjny są wymagane' }, { status: 400 })
     }
 
     // Validation
-    if (pesel.trim().length !== 11 || !/^\d+$/.test(pesel.trim())) {
-      return NextResponse.json({ error: 'PESEL musi składać się z 11 cyfr.' }, { status: 400 })
+    if (rawId.length !== 11 || !/^\d+$/.test(rawId)) {
+      return NextResponse.json({ error: 'Numer musi składać się z 11 cyfr.' }, { status: 400 })
     }
 
-    // PESEL Hashing
+    // Hashing
     const salt = process.env.PESEL_HASH_SALT
     if (!salt) {
       console.error('Missing PESEL_HASH_SALT in environment variables')
       return NextResponse.json({ error: 'Błąd konfiguracji serwera' }, { status: 500 })
     }
     
-    const peselHash = createHmac('sha256', salt)
-      .update(pesel.trim())
+    const pesel_hash = createHmac('sha256', salt)
+      .update(rawId)
       .digest('hex')
 
     // Debug: log role info (no PII, only role identifiers)
@@ -69,7 +70,7 @@ export async function POST(request: Request) {
       .insert({
         first_name: first_name.trim(),
         last_name: last_name.trim(),
-        pesel_hash: peselHash,
+        pesel_hash,
         avatar_url: avatar_url || null
       })
       .select('id')
