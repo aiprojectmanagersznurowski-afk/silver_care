@@ -9,3 +9,5 @@ supabase/.temp/
 .vercel
 dostępy
 .claude/state/
+playwright-report/
+test-results/

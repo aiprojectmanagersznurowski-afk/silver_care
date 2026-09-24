@@ -62,6 +62,13 @@ node tools/sc-phase.mjs red    # albo green, albo contract
 
 Każdy test niesie znacznik `@REQ: <ID>` wskazujący wymaganie z rejestru. Test bez znacznika nie przechodzi bramki.
 
+**Obowiązek testów E2E dla frontendu (`apps/web`):**
+Każde nowe story, widok, formularz lub zmiana interakcji w warstwie UI musi posiadać testy E2E w Playwright:
+- Faza **RED** obejmuje utworzenie lub rozszerzenie testu w `e2e/` (lub dedykowanego zestawu roli w `e2e/roles/`) w oparciu o Page Object Model (`e2e/page-objects/`) ze znacznikiem `@REQ: <ID>`. Test musi być najpierw czerwony.
+- Faza **GREEN** doprowadza test do zieleni bez modyfikacji asercji testowych.
+- Faza **VERIFY** przed zamknięciem zadania wymaga potwierdzenia wykonania `pnpm test:e2e`.
+
+
 ## Zanim zamkniesz zadanie
 
 ```bash

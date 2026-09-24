@@ -93,7 +93,8 @@ export async function updateSession(request: NextRequest) {
       path.startsWith('/auth') || 
       path.startsWith('/register') || 
       path.startsWith('/accept-invite') ||
-      path.startsWith('/update-password')
+      path.startsWith('/update-password') ||
+      path.startsWith('/unauthorized')
 
     if (!isPublicPage) {
       const redirectUrl = request.nextUrl.clone()

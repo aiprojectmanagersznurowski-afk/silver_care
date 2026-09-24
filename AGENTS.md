@@ -40,6 +40,9 @@ PLAN → CONTRACT (jeśli trzeba) → RED → GREEN → VERIFY → REVIEW → IN
 
 `node tools/sc-phase.mjs red|green|contract` pilnuje granicy faz. Każdy test niesie `@REQ: <ID>`.
 
+Dla zmian i scenariuszy w warstwie frontendu (`apps/web`): faza RED wymaga testów Playwright E2E w `e2e/` z Page Object Model, a weryfikacja obejmuje `pnpm test:e2e`.
+
+
 ## Przed zamknięciem zadania
 
 ```bash
