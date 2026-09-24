@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { Plus, Users, Bed, DoorClosed, Building2 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import AddRoomDialog from '@/components/facility/AddRoomDialog'
+import { FacilityImportExportDialog } from '@/components/facility/FacilityImportExportDialog'
+import { BedAllocationOptimizerDialog } from '@/components/facility/BedAllocationOptimizerDialog'
 import RoomList from '@/components/facility/RoomList'
 
 export default function FacilityManagementPage() {
@@ -44,7 +46,11 @@ export default function FacilityManagementPage() {
             Zarządzaj pokojami i łóżkami w twojej placówce.
           </p>
         </div>
-        <AddRoomDialog onRoomAdded={fetchRooms} />
+        <div className="flex items-center gap-2">
+          <FacilityImportExportDialog onStructureChanged={fetchRooms} />
+          <BedAllocationOptimizerDialog onAllocationChanged={fetchRooms} />
+          <AddRoomDialog onRoomAdded={fetchRooms} />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">

@@ -75,6 +75,7 @@ export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[
     care_level: r.careLevel,
     is_zsn: r.isZsn,
     notes: r.notes,
+    admission_date: r.admissionDate || new Date().toISOString().substring(0, 10),
   }))
 
   // Wstawianie w batchach po 50 rekordów
@@ -97,11 +98,10 @@ export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[
   // Wpis do audit_logs
   await adminClient.from('audit_logs').insert({
     organization_id: orgId,
-    user_id: user.id,
+    resident_id: null,
     action: 'RESIDENTS_BULK_IMPORT',
-    target_table: 'residents',
-    target_id: orgId,
-    details: {
+    performed_by: user.id,
+    payload: {
       imported_count: totalImported,
       source: 'excel_csv_import',
     },
