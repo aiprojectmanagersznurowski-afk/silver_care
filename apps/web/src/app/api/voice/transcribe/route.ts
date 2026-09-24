@@ -41,12 +41,12 @@ export async function POST(req: Request) {
 
     const formData = await req.formData()
     const file = formData.get('file') as File
-    const residentId = formData.get('resident_id') as string
+    const residentId = formData.get('resident_id') as string | null
     const draftId = formData.get('draft_id') as string | null
     const clientUuid = formData.get('client_uuid') as string | null
 
-    if (!file || !residentId) {
-      return NextResponse.json({ error: 'Brak pliku lub id podopiecznego' }, { status: 400 })
+    if (!file) {
+      return NextResponse.json({ error: 'Brak pliku dźwiękowego' }, { status: 400 })
     }
 
     // Monitor Groq rate limits (INFRA-GROQ-TRANSCRIPTION: 2000 req/day, 8h audio/day)
@@ -81,6 +81,13 @@ export async function POST(req: Request) {
 
     const result = await response.json()
     const transcription = (result.text || '').trim()
+
+    if (!residentId) {
+      return NextResponse.json({
+        success: true,
+        text: transcription,
+      })
+    }
 
     let finalDraftId = draftId
     let finalTranscript = transcription
