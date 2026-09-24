@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { checkRateLimit } from '@/lib/rate-limiter'
 
 // Domyślnie body parser jest wyłączony, żeby można było pobrać form data z plikiem
 export const runtime = 'nodejs'
@@ -24,6 +25,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1'
+    const rateCheck = checkRateLimit(`transcribe:${user.id || ip}`, 30, 60000)
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { error: 'Przekroczono limit zapytań transkrypcji audio (max 30/min)' },
+        { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfterSeconds) } }
+      )
+    }
+
+    const apiKey = process.env.GROQ_API_KEY
+    if (!apiKey) {
+      return NextResponse.json({ error: 'Brak konfiguracji GROQ_API_KEY' }, { status: 500 })
+    }
 
     const formData = await req.formData()
     const file = formData.get('file') as File
@@ -35,6 +49,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Brak pliku lub id podopiecznego' }, { status: 400 })
     }
 
+    // Monitor Groq rate limits (INFRA-GROQ-TRANSCRIPTION: 2000 req/day, 8h audio/day)
+    console.log('[INFRA-GROQ-TRANSCRIPTION] Audio conversion request dispatched')
+
     // Wywołanie Groq API do transkrypcji (Whisper-large-v3)
     const groqFormData = new FormData()
     const filename = file.name || 'recording.webm'
@@ -45,14 +62,13 @@ export async function POST(req: Request) {
     const response = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`
+        'Authorization': `Bearer ${apiKey}`
       },
       body: groqFormData
     })
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Groq API Error:', response.status, errorText)
       let parsedMsg = 'Błąd podczas transkrypcji Groq'
       try {
         const parsed = JSON.parse(errorText)
@@ -109,7 +125,6 @@ export async function POST(req: Request) {
         .single()
 
       if (dbError || !dbData) {
-        console.error('DB Error: Database insert failed', dbError)
         return NextResponse.json({ error: 'Błąd podczas zapisu transkrypcji do bazy (np. zduplikowany client_uuid dla offline)' }, { status: 500 })
       }
       finalDraftId = dbData.id
@@ -124,7 +139,6 @@ export async function POST(req: Request) {
     })
 
   } catch (error: unknown) {
-    console.error('Error: An unexpected error occurred')
     const errMsg = error instanceof Error ? error.message : 'Wystąpił nieoczekiwany błąd'
     return NextResponse.json({ error: errMsg }, { status: 500 })
   }

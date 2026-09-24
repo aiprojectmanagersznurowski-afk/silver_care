@@ -1,12 +1,19 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import type { Database } from '@/types/database.types'
 
 export async function createClient(accessToken?: string) {
   const cookieStore = await cookies()
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+
+  if (!url || !anonKey) {
+    throw new Error('Brak wymaganych zmiennych środowiskowych SUPABASE_URL lub SUPABASE_ANON_KEY')
+  }
 
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || 'https://placeholder.supabase.co',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || 'placeholder',
+    url,
+    anonKey,
     {
       global: accessToken ? { headers: { Authorization: `Bearer ${accessToken}` } } : undefined,
       cookies: {
@@ -20,12 +27,9 @@ export async function createClient(accessToken?: string) {
             )
           } catch {
             // The `setAll` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
           }
         },
       },
     }
   )
 }
-

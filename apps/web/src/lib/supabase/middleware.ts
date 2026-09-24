@@ -6,16 +6,23 @@ export async function updateSession(request: NextRequest) {
     request,
   })
 
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+
+  if (!url || !anonKey) {
+    return supabaseResponse
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || 'https://placeholder.supabase.co',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || 'placeholder',
+    url,
+    anonKey,
     {
       cookies: {
         getAll() {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           supabaseResponse = NextResponse.next({
             request,
           })
@@ -31,55 +38,68 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Proste reguły routingowe na podstawie roli
+  const path = request.nextUrl.pathname
+
+  // 1. Użytkownik zalogowany — reguły RBAC
   if (user) {
     const role = user.app_metadata?.role
-    const path = request.nextUrl.pathname
 
-    // Jeśli użytkownik jest zalogowany, a próbuje wejść na główną stronę logowania, przekieruj go
+    // Jeśli zalogowany próbuje wejść na stronę główną/logowania, przekieruj do jego panelu
     if (path === '/' || path.startsWith('/login')) {
       if (role === 'family' || role === 'legal_guardian') {
-        const url = request.nextUrl.clone()
-        url.pathname = '/dashboard'
-        return NextResponse.redirect(url)
+        const redirectUrl = request.nextUrl.clone()
+        redirectUrl.pathname = '/dashboard'
+        return NextResponse.redirect(redirectUrl)
       } else if (role === 'nurse' || role === 'paramedic' || role === 'caregiver') {
-        const url = request.nextUrl.clone()
-        url.pathname = '/staff'
-        return NextResponse.redirect(url)
+        const redirectUrl = request.nextUrl.clone()
+        redirectUrl.pathname = '/staff'
+        return NextResponse.redirect(redirectUrl)
       } else if (role === 'super_admin' || role === 'org_admin' || role === 'admin' || role === 'facility_manager') {
-        const url = request.nextUrl.clone()
-        url.pathname = '/admin'
-        return NextResponse.redirect(url)
+        const redirectUrl = request.nextUrl.clone()
+        redirectUrl.pathname = '/admin'
+        return NextResponse.redirect(redirectUrl)
       }
     }
     
-    // Zabezpieczenie ścieżek
+    // Zabezpieczenie ścieżek panelowych
     if (path.startsWith('/admin') && role !== 'super_admin' && role !== 'org_admin' && role !== 'admin' && role !== 'facility_manager') {
        return NextResponse.redirect(new URL('/unauthorized', request.url))
     }
     if ((path.startsWith('/staff') || path.startsWith('/voice') || path.startsWith('/reports')) && role !== 'nurse' && role !== 'paramedic' && role !== 'caregiver' && role !== 'super_admin' && role !== 'org_admin' && role !== 'admin') {
        return NextResponse.redirect(new URL('/unauthorized', request.url))
     }
+  } else {
+    // 2. Brak sesji ciasteczkowej
+    const hasBearerAuth = Boolean(request.headers.get('authorization')?.startsWith('Bearer '))
 
-  }
- else {
-    // Brak usera - jeśli nie jest na stronie logowania / publicznej, redirect do root
-    const path = request.nextUrl.pathname
-    const isPublicRoute = 
+    // Precyzyjna biała lista publicznych tras API
+    const isPublicApiRoute =
+      path === '/api/family/invite/validate' ||
+      path === '/api/family/register' ||
+      path === '/api/polar/webhook'
+
+    if (path.startsWith('/api')) {
+      // Jeśli to trasa API, zezwól wyłącznie na publiczne lub z nagłówkiem Bearer
+      if (!isPublicApiRoute && !hasBearerAuth) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
+      return supabaseResponse
+    }
+
+    const isPublicPage = 
       path === '/' || 
       path === '/manifest.json' ||
       path.startsWith('/login') || 
       path.startsWith('/auth') || 
       path.startsWith('/register') || 
-      path.startsWith('/api') ||
       path.startsWith('/accept-invite') ||
       path.startsWith('/update-password') ||
       path.startsWith('/unauthorized')
 
-    if (!isPublicRoute) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/'
-      return NextResponse.redirect(url)
+    if (!isPublicPage) {
+      const redirectUrl = request.nextUrl.clone()
+      redirectUrl.pathname = '/'
+      return NextResponse.redirect(redirectUrl)
     }
   }
 

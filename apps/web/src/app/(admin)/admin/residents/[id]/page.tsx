@@ -19,6 +19,7 @@ import {
 import { differenceInYears, differenceInDays, format } from 'date-fns'
 import { pl } from 'date-fns/locale'
 import { ResidentZsnCheckbox } from '@/components/ResidentZsnCheckbox'
+import { PolarWearableCard } from '@/components/PolarWearableCard'
 
 export default async function ResidentProfilePage({
   params,
@@ -40,6 +41,14 @@ export default async function ResidentProfilePage({
     `)
     .eq('id', id)
     .single()
+
+  // Fetch wearable device link (Polar)
+  const { data: polarLink } = await supabase
+    .from('external_wearable_links')
+    .select('id, provider, external_user_id, created_at')
+    .eq('resident_id', id)
+    .eq('provider', 'POLAR')
+    .maybeSingle()
 
   if (error || !resident) {
     notFound()
@@ -363,6 +372,14 @@ export default async function ResidentProfilePage({
               )}
             </CardContent>
           </Card>
+
+          {/* Polar 360 Wearable Device */}
+          <PolarWearableCard
+            residentId={resident.id}
+            initialLinked={Boolean(polarLink)}
+            externalUserId={polarLink?.external_user_id}
+            linkedAt={polarLink?.created_at}
+          />
 
           {/* Relatives */}
           <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5">
