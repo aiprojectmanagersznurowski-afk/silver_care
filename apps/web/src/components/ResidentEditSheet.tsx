@@ -112,6 +112,7 @@ export function ResidentEditSheet({ resident, onUpdated }: ResidentEditSheetProp
         className="p-2 rounded-lg text-slate-soft/70 hover:text-slate hover:bg-slate/5 focus:outline-none focus:ring-2 focus:ring-sage/50 min-h-[48px] min-w-[48px] inline-flex items-center justify-center transition-colors"
         title={`Edytuj dane: ${resident.first_name} ${resident.last_name}`}
         aria-label={`Edytuj dane podopiecznego ${resident.first_name} ${resident.last_name}`}
+        data-testid="resident-edit-btn"
       >
         <Pencil className="h-4 w-4" />
       </button>
