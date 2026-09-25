@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
+import { renderAdminInviteEmail } from '@/lib/notification-templates'
 
 async function sendAdminInviteEmail(adminEmail: string, orgName: string): Promise<{ inviteUrl: string | null; emailSent: boolean; error?: string }> {
   try {
@@ -57,6 +58,7 @@ async function sendAdminInviteEmail(adminEmail: string, orgName: string): Promis
     const emailProviderKey = process.env.EMAIL_PROVIDER_KEY
     if (emailProviderKey) {
       try {
+        const emailTemplate = renderAdminInviteEmail({ inviteUrl, organizationName: orgName })
         const emailRes = await fetch('https://send.api.mailtrap.io/api/send', {
           method: 'POST',
           headers: {
@@ -66,8 +68,9 @@ async function sendAdminInviteEmail(adminEmail: string, orgName: string): Promis
           body: JSON.stringify({
             to: [{ email: adminEmail }],
             from: { email: 'noreply@silvercare.space', name: 'Silver Care' },
-            subject: `Zaproszenie do zarządzania placówką ${orgName} w Silver Care`,
-            text: `Dzień dobry,\n\nZostałeś mianowany administratorem placówki „${orgName}” w systemie Silver Care.\n\nAby aktywować swoje konto i uzyskać dostęp do panelu zarządzania placówką, przejdź pod poniższy link:\n\n${inviteUrl}\n\nLink jest aktywny przez 7 dni.\n\nPozdrawiamy,\nZespół Silver Care`
+            subject: emailTemplate.subject,
+            text: emailTemplate.text,
+            html: emailTemplate.html,
           })
         })
 
