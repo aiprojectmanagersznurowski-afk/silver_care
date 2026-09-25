@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Building2, Users, UserCog, UserCheck, Calendar, MapPin, ChevronRight, AlertCircle, RefreshCw } from 'lucide-react'
+import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 
 export interface OrganizationSummaryItem {
   organization_id: string
@@ -172,9 +173,7 @@ export function OrganizationsManagementClient({
                   <Calendar className="h-3 w-3" />
                   <span>W systemie od: {new Date(org.created_at).toLocaleDateString('pl-PL')}</span>
                 </div>
-                <span className="font-mono text-[10px] text-slate-soft/70 truncate max-w-[140px]">
-                  ID: {org.organization_id}
-                </span>
+                <BusinessIdBadge type="organization" id={org.organization_id} />
               </div>
             </Link>
           )
