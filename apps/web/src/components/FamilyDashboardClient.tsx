@@ -68,7 +68,7 @@ export function FamilyDashboardClient({ resident, reports, selectedDateMedia = [
     setGalleryModalOpen(true);
   };
 
-  const activeReport = reports.find(r => r.created_at.startsWith(selectedDate)) || reports[0];
+  const activeReport = reports.find(r => r.created_at.startsWith(selectedDate)) || null;
 
   return (
     <div className="min-h-screen w-full bg-cream text-slate font-sans relative">
