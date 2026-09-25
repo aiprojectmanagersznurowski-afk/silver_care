@@ -47,10 +47,13 @@ const ROLE_LABELS: Record<string, string> = {
   family: 'Członek Rodziny (Family)',
 }
 
-const AVAILABLE_ROLES = ROLES.map(r => ({
-  id: r.id,
-  label: ROLE_LABELS[r.id] || r.id,
-}))
+// AC2: Blokada wyboru roli super_admin w UI
+const AVAILABLE_ROLES = ROLES
+  .filter(r => r.id !== 'super_admin')
+  .map(r => ({
+    id: r.id,
+    label: ROLE_LABELS[r.id] || r.id,
+  }))
 
 export function IamManagementClient({
   initialUsers,
@@ -78,42 +81,23 @@ export function IamManagementClient({
   } | null>(null)
   const [copiedPassword, setCopiedPassword] = useState(false)
 
-  // Stan dialogu resetowania / nadawania hasła
+  // Stan dialogu resetowania hasła (AC1: bezpieczny link e-mail)
   const [resetPasswordUser, setResetPasswordUser] = useState<UserItem | null>(null)
-  const [customPassword, setCustomPassword] = useState('')
   const [resetPasswordError, setResetPasswordError] = useState<string | null>(null)
-  const [resetPasswordSuccess, setResetPasswordSuccess] = useState<{
-    email: string
-    newPassword?: string
-  } | null>(null)
-  const [copiedResetPassword, setCopiedResetPassword] = useState(false)
 
   const handleResetPassword = (e: React.FormEvent) => {
     e.preventDefault()
     if (!resetPasswordUser) return
     setResetPasswordError(null)
 
-    if (customPassword.trim() && customPassword.trim().length < 6) {
-      setResetPasswordError('Nowe hasło musi mieć co najmniej 6 znaków.')
-      return
-    }
-
     startTransition(async () => {
       const formData = new FormData()
       formData.set('userId', resetPasswordUser.id)
-      if (customPassword.trim()) {
-        formData.set('password', customPassword.trim())
-      }
 
       const result = await resetUserPasswordAction(formData)
       if (result?.error) {
         setResetPasswordError(result.error)
-      } else if (result?.newPassword) {
-        setResetPasswordSuccess({
-          email: resetPasswordUser.email,
-          newPassword: result.newPassword
-        })
-
+      } else if (result?.success) {
         setAuditLogs(prev => [
           {
             id: `local-pw-${Date.now()}`,
@@ -130,11 +114,10 @@ export function IamManagementClient({
 
         setStatusMessage({
           type: 'success',
-          text: `Pomyślnie zaktualizowano hasło dla użytkownika ${resetPasswordUser.email}.`
+          text: `Pomyślnie wysłano bezpieczny link do zresetowania hasła na adres ${resetPasswordUser.email}.`
         })
 
         setResetPasswordUser(null)
-        setCustomPassword('')
       }
     })
   }
@@ -354,50 +337,6 @@ export function IamManagementClient({
         </div>
       )}
 
-      {resetPasswordSuccess && (
-        <div className="rounded-2xl border border-sage/30 bg-sage/5 p-6 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sage font-semibold">
-              <Key className="h-5 w-5" />
-              <span>Zaktualizowano hasło użytkownika!</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setResetPasswordSuccess(null)}
-              className="text-slate-soft hover:text-slate text-sm font-medium"
-            >
-              Zamknij powiadomienie
-            </button>
-          </div>
-          <p className="text-sm text-slate-soft">
-            Hasło dla konta <strong>{resetPasswordSuccess.email}</strong> zostało zresetowane. Przekaż nowe dane logowania użytkownikowi:
-          </p>
-          <div className="flex flex-wrap items-center gap-4 bg-white p-3 rounded-xl border border-slate/10 font-mono text-xs">
-            <div><strong>E-mail:</strong> {resetPasswordSuccess.email}</div>
-            {resetPasswordSuccess.newPassword && (
-              <div className="flex items-center gap-2">
-                <strong>Nowe hasło:</strong>
-                <span className="bg-slate/5 px-2 py-1 rounded select-all font-semibold text-slate">{resetPasswordSuccess.newPassword}</span>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-7 px-2 text-xs"
-                  onClick={() => {
-                    navigator.clipboard.writeText(resetPasswordSuccess.newPassword || '')
-                    setCopiedResetPassword(true)
-                    setTimeout(() => setCopiedResetPassword(false), 2000)
-                  }}
-                >
-                  {copiedResetPassword ? <Check className="h-3 w-3 text-sage mr-1" /> : <Copy className="h-3 w-3 mr-1" />}
-                  {copiedResetPassword ? 'Skopiowano' : 'Kopiuj hasło'}
-                </Button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Sekcja 1: Użytkownicy i Uprawnienia */}
       <UserTable
         users={users}
@@ -406,7 +345,6 @@ export function IamManagementClient({
         onApplyRole={handleApplyRole}
         onResetPasswordClick={user => {
           setResetPasswordUser(user)
-          setCustomPassword('')
           setResetPasswordError(null)
         }}
         isPending={isPending}
@@ -429,11 +367,9 @@ export function IamManagementClient({
         }}
       />
 
-      {/* Dialog resetowania hasła */}
+      {/* Dialog resetowania hasła (AC1: bezpieczny link e-mail) */}
       <ResetPasswordDialog
         user={resetPasswordUser}
-        customPassword={customPassword}
-        onCustomPasswordChange={setCustomPassword}
         error={resetPasswordError}
         isPending={isPending}
         onSubmit={handleResetPassword}

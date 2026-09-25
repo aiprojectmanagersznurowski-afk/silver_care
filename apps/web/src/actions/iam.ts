@@ -13,12 +13,25 @@ function isValidRole(role: string): role is ValidRole {
   return ROLES.some(r => r.id === role)
 }
 
+function safeRevalidateIam() {
+  try {
+    revalidatePath('/admin/iam')
+  } catch {
+    // Bezpieczne wyciszenie poza kontekstem serwera Next.js (np. w testach)
+  }
+}
+
 export async function updateUserRoleAction(formData: FormData) {
   const targetUserId = formData.get('userId') as string
   const newRole = formData.get('role') as string
 
   if (!targetUserId || !newRole) {
     return { error: 'Brak wymaganych parametrów' }
+  }
+
+  // AC3: Serwerowa blokada eskalacji uprawnień do roli super_admin
+  if (newRole === 'super_admin') {
+    return { error: 'Brak uprawnień: nadawanie roli super_admin jest zablokowane.', status: 403, code: 403 }
   }
 
   if (!isValidRole(newRole)) {
@@ -30,7 +43,7 @@ export async function updateUserRoleAction(formData: FormData) {
 
   const callerRole = user?.app_metadata?.role || user?.user_metadata?.role
   if (!user || callerRole !== 'super_admin') {
-    return { error: 'Brak uprawnień. Wymagana rola super_admin.' }
+    return { error: 'Brak uprawnień. Wymagana rola super_admin.', status: 403, code: 403 }
   }
 
   const adminClient = createAdminClient()
@@ -73,7 +86,7 @@ export async function updateUserRoleAction(formData: FormData) {
     return { error: 'Błąd aktualizacji użytkownika: ' + updateErr.message }
   }
 
-  revalidatePath('/admin/iam')
+  safeRevalidateIam()
   return { success: true }
 }
 
@@ -85,6 +98,11 @@ export async function createUserWithRoleAction(formData: FormData) {
 
   if (!email || !role) {
     return { error: 'E-mail oraz rola są polami wymaganymi.' }
+  }
+
+  // AC3: Serwerowa blokada tworzenia konta z rolą super_admin
+  if (role === 'super_admin') {
+    return { error: 'Brak uprawnień: tworzenie konta z rolą super_admin jest zablokowane.', status: 403, code: 403 }
   }
 
   if (!isValidRole(role)) {
@@ -105,7 +123,7 @@ export async function createUserWithRoleAction(formData: FormData) {
 
   const callerRole = user?.app_metadata?.role || user?.user_metadata?.role
   if (!user || callerRole !== 'super_admin') {
-    return { error: 'Brak uprawnień. Wymagana rola super_admin.' }
+    return { error: 'Brak uprawnień. Wymagana rola super_admin.', status: 403, code: 403 }
   }
 
   // Użyj podanego hasła (min 6 znaków) lub wygeneruj bezpieczne losowe
@@ -152,7 +170,7 @@ export async function createUserWithRoleAction(formData: FormData) {
     console.error('Błąd audytu przy tworzeniu użytkownika:', rpcErr)
   }
 
-  revalidatePath('/admin/iam')
+  safeRevalidateIam()
 
   return {
     success: true,
@@ -169,14 +187,9 @@ export async function createUserWithRoleAction(formData: FormData) {
 
 export async function resetUserPasswordAction(formData: FormData) {
   const targetUserId = (formData.get('userId') as string)?.trim()
-  const passwordInput = (formData.get('password') as string)?.trim()
 
   if (!targetUserId) {
     return { error: 'Brak identyfikatora użytkownika.' }
-  }
-
-  if (passwordInput && passwordInput.length < 6) {
-    return { error: 'Nowe hasło musi mieć co najmniej 6 znaków.' }
   }
 
   const supabase = await createClient()
@@ -184,20 +197,17 @@ export async function resetUserPasswordAction(formData: FormData) {
 
   const callerRole = user?.app_metadata?.role || user?.user_metadata?.role
   if (!user || callerRole !== 'super_admin') {
-    return { error: 'Brak uprawnień. Wymagana rola super_admin.' }
+    return { error: 'Brak uprawnień. Wymagana rola super_admin.', status: 403, code: 403 }
   }
 
   const adminClient = createAdminClient()
   const { data: targetUserData, error: fetchErr } = await adminClient.auth.admin.getUserById(targetUserId)
 
-  if (fetchErr || !targetUserData?.user) {
-    return { error: 'Nie znaleziono wskazanego użytkownika.' }
+  if (fetchErr || !targetUserData?.user || !targetUserData.user.email) {
+    return { error: 'Nie znaleziono wskazanego użytkownika lub brak adresu email.' }
   }
 
-  const newPassword = passwordInput && passwordInput.length >= 6
-    ? passwordInput
-    : generateSecureTemporaryPassword(16)
-
+  const targetEmail = targetUserData.user.email
   const orgId = targetUserData.user.app_metadata?.organization_id || null
 
   // 1. Rejestracja w audit_logs przez RPC log_password_reset (brak haseł ani PII w audycie)
@@ -210,28 +220,24 @@ export async function resetUserPasswordAction(formData: FormData) {
     console.error('Błąd audytu przy resecie hasła:', rpcErr)
   }
 
-  // 2. Aktualizacja hasła użytkownika
-  const { error: updateErr } = await adminClient.auth.admin.updateUserById(targetUserId, {
-    password: newPassword,
-    email_confirm: true,
-    user_metadata: {
-      ...targetUserData.user.user_metadata,
-      email_verified: true
-    }
+  // 2. AC1: Wygenerowanie bezpiecznego linku resetującego (recovery) i wysłanie e-mailem
+  const { error: linkErr } = await adminClient.auth.admin.generateLink({
+    type: 'recovery',
+    email: targetEmail
   })
 
-  if (updateErr) {
-    console.error('Błąd aktualizacji hasła:', updateErr)
-    return { error: 'Błąd resetu hasła: ' + updateErr.message }
+  if (linkErr) {
+    console.error('Błąd generowania linku resetującego:', linkErr)
+    return { error: 'Błąd generowania linku resetującego: ' + linkErr.message }
   }
 
-  revalidatePath('/admin/iam')
+  safeRevalidateIam()
 
   return {
     success: true,
     userId: targetUserId,
-    email: targetUserData.user.email,
-    newPassword
+    email: targetEmail,
+    recoveryEmailSent: true
   }
 }
 

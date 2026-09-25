@@ -9,14 +9,11 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { MailCheck } from 'lucide-react'
 import type { UserItem } from '@/components/IamManagementClient'
 
 interface ResetPasswordDialogProps {
   user: UserItem | null
-  customPassword: string
-  onCustomPasswordChange: (value: string) => void
   error: string | null
   isPending: boolean
   onSubmit: (e: React.FormEvent) => void
@@ -25,8 +22,6 @@ interface ResetPasswordDialogProps {
 
 export function ResetPasswordDialog({
   user,
-  customPassword,
-  onCustomPasswordChange,
   error,
   isPending,
   onSubmit,
@@ -38,23 +33,19 @@ export function ResetPasswordDialog({
         <DialogHeader>
           <DialogTitle>Resetuj hasło użytkownika</DialogTitle>
           <DialogDescription>
-            Ustaw nowe hasło dla konta <strong>{user?.email}</strong> lub wygeneruj hasło losowe.
+            Wyślij bezpieczny link resetujący na adres e-mail konta <strong>{user?.email}</strong>.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={onSubmit} className="space-y-4 py-2">
-          <div className="space-y-2">
-            <Label htmlFor="reset-new-password">Nowe hasło (opcjonalne)</Label>
-            <Input
-              id="reset-new-password"
-              type="text"
-              placeholder="Zostaw puste, aby wygenerować automatycznie"
-              value={customPassword}
-              onChange={e => onCustomPasswordChange(e.target.value)}
-            />
-            <p className="text-[0.75rem] text-slate-soft">
-              Wpisz hasło (minimum 6 znaków) lub pozostaw to pole puste, aby system wygenerował bezpieczne hasło losowe.
-            </p>
+          <div className="rounded-xl border border-slate/10 bg-slate/5 p-4 flex items-start gap-3 text-sm text-slate">
+            <MailCheck className="h-5 w-5 text-sage shrink-0 mt-0.5" />
+            <div>
+              <p className="font-medium text-slate">Procedura bezpiecznego resetu hasła (IAM Hardening)</p>
+              <p className="mt-1 text-xs text-slate-soft leading-relaxed">
+                Zgodnie z zasadami bezpieczeństwa hasło nie jest ustalane ręcznie przez administratora. Po potwierdzeniu na adres <strong>{user?.email}</strong> zostanie wygenerowany i przesłany bezpieczny link do zresetowania hasła. Użytkownik samodzielnie zdefiniuje nowe hasło.
+              </p>
+            </div>
           </div>
 
           {error && (
@@ -66,11 +57,12 @@ export function ResetPasswordDialog({
               type="button"
               variant="outline"
               onClick={onClose}
+              disabled={isPending}
             >
               Anuluj
             </Button>
             <Button type="submit" disabled={isPending} className="bg-sage text-white hover:bg-sage/90">
-              {isPending ? 'Zapisywanie...' : 'Zapisz nowe hasło'}
+              {isPending ? 'Wysyłanie linku...' : 'Wyślij link resetujący'}
             </Button>
           </DialogFooter>
         </form>
