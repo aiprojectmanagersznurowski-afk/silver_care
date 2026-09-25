@@ -220,15 +220,12 @@ export async function resetUserPasswordAction(formData: FormData) {
     console.error('Błąd audytu przy resecie hasła:', rpcErr)
   }
 
-  // 2. AC1: Wygenerowanie bezpiecznego linku resetującego (recovery) i wysłanie e-mailem
-  const { error: linkErr } = await adminClient.auth.admin.generateLink({
-    type: 'recovery',
-    email: targetEmail
-  })
+  // 2. AC1: Wysłanie bezpiecznego linku resetującego (recovery) przez Supabase Auth
+  const { error: resetErr } = await supabase.auth.resetPasswordForEmail(targetEmail)
 
-  if (linkErr) {
-    console.error('Błąd generowania linku resetującego:', linkErr)
-    return { error: 'Błąd generowania linku resetującego: ' + linkErr.message }
+  if (resetErr) {
+    console.error('Błąd wysyłania linku resetującego przez Supabase:', resetErr)
+    return { error: 'Błąd wysyłania linku resetującego: ' + resetErr.message }
   }
 
   safeRevalidateIam()

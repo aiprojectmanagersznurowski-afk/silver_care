@@ -103,11 +103,8 @@ describe('IAM Hardening & Privilege Escalation Protection (@REQ: SUP-IAM-PANEL)'
 
   describe('AC1: Reset hasła wyłącznie przez bezpieczny link e-mail (@REQ: SUP-IAM-PANEL)', () => {
     it('dispatches password recovery link and does NOT accept or return plain text password', async () => {
-      const mockGenerateLink = vi.fn().mockResolvedValue({
-        data: {
-          properties: { action_link: 'https://auth.silvercare.pl/verify?token=test-token' },
-          user: { id: 'target-user-1', email: 'user@example.com' },
-        },
+      const mockResetPasswordForEmail = vi.fn().mockResolvedValue({
+        data: {},
         error: null,
       })
 
@@ -133,6 +130,7 @@ describe('IAM Hardening & Privilege Escalation Protection (@REQ: SUP-IAM-PANEL)'
               },
             },
           }),
+          resetPasswordForEmail: mockResetPasswordForEmail,
         },
         rpc: vi.fn().mockResolvedValue({ error: null }),
       } as unknown as Awaited<ReturnType<typeof createClient>>)
@@ -141,7 +139,6 @@ describe('IAM Hardening & Privilege Escalation Protection (@REQ: SUP-IAM-PANEL)'
         auth: {
           admin: {
             getUserById: mockGetUserById,
-            generateLink: mockGenerateLink,
             updateUserById: vi.fn(),
           },
         },
@@ -160,13 +157,8 @@ describe('IAM Hardening & Privilege Escalation Protection (@REQ: SUP-IAM-PANEL)'
       expect(result).not.toHaveProperty('temporaryPassword')
       expect((result as { recoveryEmailSent?: boolean }).recoveryEmailSent).toBe(true)
 
-      // Sprawdź, czy wywołano generowanie linku typu 'recovery'
-      expect(mockGenerateLink).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: 'recovery',
-          email: 'user@example.com',
-        })
-      )
+      // Sprawdź, czy wywołano wysłanie linku resetującego przez Supabase Auth
+      expect(mockResetPasswordForEmail).toHaveBeenCalledWith('user@example.com')
     })
   })
 })
