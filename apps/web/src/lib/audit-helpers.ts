@@ -67,10 +67,15 @@ export function sanitizeAuditPayload(payload?: Record<string, unknown>): Record<
   const forbiddenKeys = ['first_name', 'last_name', 'pesel_hash', 'name', 'email', 'password', 'phone']
 
   for (const [key, val] of Object.entries(payload)) {
-    if (forbiddenKeys.some(fk => key.toLowerCase().includes(fk))) {
+    const lowerKey = key.toLowerCase()
+    if (forbiddenKeys.some(fk => lowerKey.includes(fk))) {
       continue
     }
-    sanitized[key] = val
+    if (val && typeof val === 'object' && !Array.isArray(val)) {
+      sanitized[key] = sanitizeAuditPayload(val as Record<string, unknown>)
+    } else {
+      sanitized[key] = val
+    }
   }
 
   return sanitized

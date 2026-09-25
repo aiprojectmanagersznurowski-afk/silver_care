@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Download, Calendar, Filter, RotateCcw, Clock, ShieldCheck } from 'lucide-react'
@@ -14,13 +15,20 @@ import {
 
 interface AuditManagementClientProps {
   initialLogs: AuditLogEntry[]
+  initialStartDate?: string
+  initialEndDate?: string
 }
 
-export function AuditManagementClient({ initialLogs }: AuditManagementClientProps) {
-  const [startDate, setStartDate] = useState<string>('')
-  const [endDate, setEndDate] = useState<string>('')
-  const [appliedStartDate, setAppliedStartDate] = useState<string>('')
-  const [appliedEndDate, setAppliedEndDate] = useState<string>('')
+export function AuditManagementClient({
+  initialLogs,
+  initialStartDate = '',
+  initialEndDate = '',
+}: AuditManagementClientProps) {
+  const router = useRouter()
+  const [startDate, setStartDate] = useState<string>(initialStartDate)
+  const [endDate, setEndDate] = useState<string>(initialEndDate)
+  const [appliedStartDate, setAppliedStartDate] = useState<string>(initialStartDate)
+  const [appliedEndDate, setAppliedEndDate] = useState<string>(initialEndDate)
 
   // Wykrycie strefy czasowej przeglądarki
   const browserTimeZone = useMemo(() => {
@@ -39,6 +47,11 @@ export function AuditManagementClient({ initialLogs }: AuditManagementClientProp
     e.preventDefault()
     setAppliedStartDate(startDate)
     setAppliedEndDate(endDate)
+    const params = new URLSearchParams()
+    if (startDate) params.set('startDate', startDate)
+    if (endDate) params.set('endDate', endDate)
+    const q = params.toString()
+    router.push(q ? `/admin/audit?${q}` : '/admin/audit')
   }
 
   const handleClearFilter = () => {
@@ -46,6 +59,7 @@ export function AuditManagementClient({ initialLogs }: AuditManagementClientProp
     setEndDate('')
     setAppliedStartDate('')
     setAppliedEndDate('')
+    router.push('/admin/audit')
   }
 
   const handleExportCsv = () => {

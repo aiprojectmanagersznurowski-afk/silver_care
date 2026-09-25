@@ -4,15 +4,30 @@ import { createClient } from '@/lib/supabase/server'
 import { AuditManagementClient } from '@/components/AuditManagementClient'
 import { AuditLogEntry } from '@/lib/audit-helpers'
 
-export default async function AdminAuditPage() {
+export default async function AdminAuditPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ startDate?: string; endDate?: string }>
+}) {
+  const params = searchParams ? await searchParams : {}
   const supabase = await createClient()
 
   // Pobieranie audytu z tabeli audit_logs (izolowane przez RLS)
-  const { data: logs, error } = await supabase
+  let query = supabase
     .from('audit_logs')
     .select('id, organization_id, action, performed_by, payload, created_at')
     .order('created_at', { ascending: false })
-    .limit(200)
+
+  if (params.startDate) {
+    query = query.gte('created_at', new Date(params.startDate).toISOString())
+  }
+  if (params.endDate) {
+    const end = new Date(params.endDate)
+    end.setHours(23, 59, 59, 999)
+    query = query.lte('created_at', end.toISOString())
+  }
+
+  const { data: logs, error } = await query.limit(1000)
 
   if (error) {
     console.error('Błąd pobierania rejestru audytowego:', error.message)
