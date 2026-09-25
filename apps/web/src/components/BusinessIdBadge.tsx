@@ -44,18 +44,26 @@ export function BusinessIdBadge({
     >
       <span>{businessId}</span>
       {showCopy && (
-        <button
-          type="button"
+        <span
+          role="button"
+          tabIndex={0}
           aria-label="Kopiuj identyfikator"
           onClick={handleCopy}
-          className="text-slate-soft hover:text-slate transition-colors p-0.5 rounded cursor-pointer"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              e.stopPropagation()
+              handleCopy(e as unknown as React.MouseEvent)
+            }
+          }}
+          className="text-slate-soft hover:text-slate transition-colors p-0.5 rounded cursor-pointer inline-flex items-center"
         >
           {copied ? (
             <Check className="h-3 w-3 text-sage" />
           ) : (
             <Copy className="h-3 w-3" />
           )}
-        </button>
+        </span>
       )}
     </span>
   )
