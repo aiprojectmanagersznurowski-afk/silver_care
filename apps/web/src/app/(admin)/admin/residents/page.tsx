@@ -1,10 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
 import { Card, CardContent } from '@/components/ui/card'
 import { AddResidentDialog } from '@/components/AddResidentDialog'
 import { AdmissionWizard } from '@/components/AdmissionWizard'
 import { BulkImportDialog } from '@/components/BulkImportDialog'
 import { ExportDataDialog } from '@/components/ExportDataDialog'
-import { UserCircle2, ChevronRight } from 'lucide-react'
+import { UserCircle2, ChevronRight, ShieldAlert } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { ResidentInlineCareLevel } from '@/components/ResidentInlineCareLevel'
@@ -13,6 +14,7 @@ import { ResidentZsnCheckbox } from '@/components/ResidentZsnCheckbox'
 import { ResidentMobileCard } from '@/components/ResidentMobileCard'
 import Link from 'next/link'
 import { type CareLevel } from '@/lib/reporting-constants'
+import { isImpersonationSessionActive, maskResidentListForImpersonation } from '@/lib/impersonation-guards'
 import { format } from 'date-fns'
 import { pl } from 'date-fns/locale'
 
@@ -44,6 +46,8 @@ interface ResidentWithAssignments {
 
 export default async function AdminResidentsPage() {
   const supabase = await createClient()
+  const cookieStore = await cookies()
+  const isImpersonating = isImpersonationSessionActive(cookieStore)
 
   // Pobieramy wszystkich pensjonariuszy z organizacji tego admina
   const { data: rawResidents } = await supabase
@@ -51,7 +55,10 @@ export default async function AdminResidentsPage() {
     .select('*, bed_assignments(id, unassigned_at, beds(id, label, rooms(number)))')
     .order('created_at', { ascending: false })
 
-  const residents = rawResidents as unknown as ResidentWithAssignments[] | null
+  const { count: totalCount, residents, masked } = maskResidentListForImpersonation(
+    rawResidents as unknown as ResidentWithAssignments[] | null,
+    isImpersonating
+  )
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -62,13 +69,39 @@ export default async function AdminResidentsPage() {
           </h2>
           <p className="mt-2 text-slate-soft">Zarządzaj bazą podopiecznych w swojej placówce.</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          <ExportDataDialog />
-          <BulkImportDialog />
-          <AdmissionWizard />
-          <AddResidentDialog />
-        </div>
+        {!isImpersonating ? (
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <ExportDataDialog />
+            <BulkImportDialog />
+            <AdmissionWizard />
+            <AddResidentDialog />
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 rounded-xl bg-amber-500/10 px-4 py-2 text-xs font-medium text-amber-700 border border-amber-500/20">
+            <span>Tryb podglądu (impersonacja) — formularze i eksport wyłączone</span>
+          </div>
+        )}
       </div>
+
+      {masked ? (
+        <Card className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-8 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600 mb-3">
+            <ShieldAlert className="h-6 w-6" />
+          </div>
+          <h3 className="text-lg font-semibold text-slate mb-1">
+            Tryb podglądu (impersonacja) — Ochrona Danych Art. 9 RODO
+          </h3>
+          <p className="text-sm text-slate-soft max-w-lg mx-auto mb-4">
+            Dostęp do danych osobowych (PII) podopiecznych jest wyłączony dla Super Administratora. 
+            Wyświetlane jest wyłącznie podsumowanie statystyczne placówki.
+          </p>
+          <div className="inline-flex items-center gap-3 bg-white px-5 py-3 rounded-xl border border-slate/10 shadow-xs">
+            <span className="text-xs text-slate-soft">Liczba zarejestrowanych podopiecznych:</span>
+            <span className="text-xl font-bold text-slate">{totalCount}</span>
+          </div>
+        </Card>
+      ) : (
+        <>
 
       {/* Widok mobilny — lista kart (< sm) */}
       <div className="block sm:hidden space-y-3">
@@ -193,6 +226,8 @@ export default async function AdminResidentsPage() {
           </div>
         </CardContent>
       </Card>
+      </>
+      )}
     </div>
   )
 }

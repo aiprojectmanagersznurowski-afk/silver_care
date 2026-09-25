@@ -1,5 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
+import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
 import { Card, CardContent } from '@/components/ui/card'
 import { InviteStaffDialog } from '@/components/InviteStaffDialog'
 import { redirect } from 'next/navigation'
@@ -36,6 +38,9 @@ export default async function AdminStaffPage() {
     (u.app_metadata?.role === 'nurse' || u.app_metadata?.role === 'paramedic')
   )
 
+  const cookieStore = await cookies()
+  const isImpersonating = isImpersonationSessionActive(cookieStore)
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -45,7 +50,13 @@ export default async function AdminStaffPage() {
           </h2>
           <p className="mt-2 text-slate-soft">Zarządzaj zespołem opiekunów i pielęgniarek.</p>
         </div>
-        <InviteStaffDialog />
+        {!isImpersonating ? (
+          <InviteStaffDialog />
+        ) : (
+          <div className="flex items-center gap-2 rounded-xl bg-amber-500/10 px-4 py-2 text-xs font-medium text-amber-700 border border-amber-500/20">
+            <span>Tryb podglądu (impersonacja) — dodawanie personelu wyłączone</span>
+          </div>
+        )}
       </div>
 
       <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5 overflow-hidden">
