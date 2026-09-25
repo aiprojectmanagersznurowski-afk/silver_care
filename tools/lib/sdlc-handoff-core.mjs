@@ -16,7 +16,7 @@ export const MEMBERS = {
     id: '6a1e8bee5edd0ea47730152c',
     name: 'Michał Sznurowski',
     username: 'michalsznurowski',
-    github: 'michalsznurowski'
+    github: 'aiprojectmanagersznurowski-afk'
   }
 };
 
