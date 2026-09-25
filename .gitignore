@@ -11,3 +11,4 @@ dostępy
 .claude/state/
 playwright-report/
 test-results/
+supabase/.branches/
