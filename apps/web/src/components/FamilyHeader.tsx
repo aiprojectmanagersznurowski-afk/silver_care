@@ -139,6 +139,7 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
                   <DropdownMenuSeparator />
                   <form action="/auth/signout" method="post" className="w-full">
                     <DropdownMenuItem 
+                      nativeButton
                       className="flex w-full cursor-pointer items-center py-2.5 text-left font-medium text-destructive focus:bg-destructive/10" 
                       render={<button type="submit" />}
                     >
@@ -158,6 +159,7 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
                   <DropdownMenuSeparator />
                   <form action="/auth/signout" method="post" className="w-full">
                     <DropdownMenuItem 
+                      nativeButton
                       className="flex w-full cursor-pointer items-center py-2.5 text-left font-medium text-destructive focus:bg-destructive/10" 
                       render={<button type="submit" />}
                     >
