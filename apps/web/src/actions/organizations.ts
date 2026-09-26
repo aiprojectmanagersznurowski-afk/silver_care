@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
+import { validateOrganizationUpdate } from '@/lib/org-helpers'
 
 async function sendAdminInviteEmail(adminEmail: string, orgName: string): Promise<{ inviteUrl: string | null; emailSent: boolean; error?: string }> {
   try {
@@ -296,6 +297,76 @@ export async function addAdminToOrganizationAction(formData: FormData) {
     }
   } catch (err: unknown) {
     console.error('Błąd dodawania administratora do placówki:', err)
+    return { error: err instanceof Error ? err.message : 'Wystąpił błąd serwera.' }
+  }
+}
+
+export async function updateOrganizationAction(formData: FormData) {
+  const orgId = (formData.get('organizationId') as string)?.trim()
+  const orgName = (formData.get('orgName') as string)?.trim()
+  const address = (formData.get('address') as string)?.trim() || null
+  const residentLimitRaw = formData.get('residentLimit') as string
+
+  if (!orgId) {
+    return { error: 'Identyfikator placówki jest wymagany.' }
+  }
+
+  const validation = validateOrganizationUpdate({
+    orgName,
+    residentLimit: residentLimitRaw,
+    address
+  })
+
+  if (!validation.valid || !validation.data) {
+    return { error: validation.error || 'Nieprawidłowe dane formularza.' }
+  }
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const callerRole = user?.app_metadata?.role || user?.user_metadata?.role
+  if (!user || callerRole !== 'super_admin') {
+    return { error: 'Brak uprawnień. Wymagana rola super_admin.' }
+  }
+
+  try {
+    const { data: updatedOrg, error: updateErr } = await supabase
+      .from('organizations')
+      .update({
+        name: validation.data.orgName,
+        address: validation.data.address,
+        resident_limit: validation.data.residentLimit
+      })
+      .eq('id', orgId)
+      .select()
+      .single()
+
+    if (updateErr) {
+      console.error('Błąd aktualizacji placówki:', updateErr)
+      return { error: 'Błąd aktualizacji placówki: ' + updateErr.message }
+    }
+
+    // Rejestracja w audit_logs
+    await supabase.from('audit_logs').insert({
+      organization_id: orgId,
+      action: 'ORGANIZATION_UPDATED',
+      performed_by: user.id,
+      payload: {
+        organization_name: validation.data.orgName,
+        address: validation.data.address,
+        resident_limit: validation.data.residentLimit
+      }
+    })
+
+    revalidatePath('/admin/organizations')
+    revalidatePath(`/admin/organizations/${orgId}`)
+
+    return {
+      success: true,
+      organization: updatedOrg
+    }
+  } catch (err: unknown) {
+    console.error('Nieoczekiwany błąd serwera podczas aktualizacji placówki:', err)
     return { error: err instanceof Error ? err.message : 'Wystąpił błąd serwera.' }
   }
 }
