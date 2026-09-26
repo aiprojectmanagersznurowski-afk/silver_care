@@ -41,18 +41,26 @@ export async function callEuLlmCompletion(
   let activeApiKey = config.apiKey
   let activeModel = config.model
 
-  // Tymczasowy fallback na Groq LLM:
-  // Jeżeli brak konfiguracji europejskiego LLM (Mistral), ale dostępny jest GROQ_API_KEY,
-  // używamy modelu Llama 3.3 przez API Groqa, aby umożliwić działanie potoku na środowiskach demo/online.
-  if ((!activeApiKey || activeApiKey === 'mock_eu_llm_key') && process.env.GROQ_API_KEY) {
-    activeEndpoint = process.env.EU_LLM_ENDPOINT || 'https://api.groq.com/openai/v1/chat/completions'
-    activeApiKey = process.env.GROQ_API_KEY
-    activeModel = process.env.EU_LLM_MODEL || 'llama-3.1-8b-instant'
-    console.warn(`[INFRA-EU-REGION] Uwaga: Tymczasowy fallback potoku notatek głosowych na Groq LLM (${activeModel}) z powodu braku klucza EU LLM.`)
+  // Tymczasowy fallback na Groq LLM lub xAI Grok:
+  // Jeżeli brak konfiguracji europejskiego LLM (Mistral), ale dostępny jest GROQ_API_KEY lub XAI_API_KEY,
+  // używamy go, aby umożliwić działanie potoku na środowiskach demo/online.
+  const fallbackKey = process.env.GROQ_API_KEY || process.env.XAI_API_KEY
+  if ((!activeApiKey || activeApiKey === 'mock_eu_llm_key') && fallbackKey) {
+    if (fallbackKey.startsWith('xai-')) {
+      activeEndpoint = process.env.EU_LLM_ENDPOINT || 'https://api.x.ai/v1/chat/completions'
+      activeApiKey = fallbackKey
+      activeModel = process.env.EU_LLM_MODEL || 'grok-beta'
+      console.warn(`[INFRA-EU-REGION] Uwaga: Tymczasowy fallback potoku notatek głosowych na xAI Grok (${activeModel}) z powodu braku klucza EU LLM.`)
+    } else {
+      activeEndpoint = process.env.EU_LLM_ENDPOINT || 'https://api.groq.com/openai/v1/chat/completions'
+      activeApiKey = fallbackKey
+      activeModel = process.env.EU_LLM_MODEL || 'llama-3.1-8b-instant'
+      console.warn(`[INFRA-EU-REGION] Uwaga: Tymczasowy fallback potoku notatek głosowych na Groq LLM (${activeModel}) z powodu braku klucza EU LLM.`)
+    }
   }
 
   // Weryfikacja suwerenności danych EOG (zgodność z ADR-009)
-  if (!activeEndpoint.includes('.mistral.ai') && !activeEndpoint.includes('eu-') && !activeEndpoint.includes('europe') && !activeEndpoint.includes('groq.com')) {
+  if (!activeEndpoint.includes('.mistral.ai') && !activeEndpoint.includes('eu-') && !activeEndpoint.includes('europe') && !activeEndpoint.includes('groq.com') && !activeEndpoint.includes('api.x.ai')) {
     // Akceptujemy również lokalny mock deweloperski
     if (!activeEndpoint.startsWith('http://localhost') && !activeEndpoint.startsWith('http://127.0.0.1')) {
       console.warn(`[INFRA-EU-REGION] Ostrzeżenie: Endpoint ${activeEndpoint} powinien znajdować się w strefie UE.`)
@@ -67,48 +75,60 @@ export async function callEuLlmCompletion(
     )
   }
 
-  let response = await fetch(activeEndpoint, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${activeApiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: activeModel,
-      messages,
-      temperature,
-      max_tokens: maxTokens,
-    }),
-  })
+  const groqCandidates = [
+    activeModel,
+    'llama-3.1-8b-instant',
+    'llama-3.3-70b-versatile',
+    'qwen/qwen3.8-27b',
+    'groq/compound-mini',
+  ]
+  // Unikalna lista modeli do sprawdzenia
+  const modelsToTry = activeEndpoint.includes('groq.com')
+    ? Array.from(new Set(groqCandidates))
+    : [activeModel]
 
-  // Odporność fallbacku Groq: jeśli model zwraca 404 model_not_found (np. brak uprawnień do 70b),
-  // ponawiamy zapytanie na uniwersalnym darmowym modelu llama-3.1-8b-instant
-  if (!response.ok && activeEndpoint.includes('groq.com') && activeModel !== 'llama-3.1-8b-instant') {
-    const errorText = await response.text().catch(() => '')
-    if (response.status === 404 && errorText.includes('model_not_found')) {
-      console.warn(`[INFRA-GROQ-FALLBACK] Model ${activeModel} niedostępny w Groq (404). Ponawianie z llama-3.1-8b-instant...`)
-      activeModel = 'llama-3.1-8b-instant'
-      response = await fetch(activeEndpoint, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${activeApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: activeModel,
-          messages,
-          temperature,
-          max_tokens: maxTokens,
-        }),
-      })
-    } else {
-      throw new Error(`EU LLM request failed (${activeModel} @ ${activeEndpoint}) status: ${response.status} - ${errorText}`)
+  let response: Response | null = null
+  let successfulModel = activeModel
+  let lastErrorText = ''
+
+  for (const modelToTry of modelsToTry) {
+    response = await fetch(activeEndpoint, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${activeApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: modelToTry,
+        messages,
+        temperature,
+        max_tokens: maxTokens,
+      }),
+    })
+
+    if (response.ok) {
+      successfulModel = modelToTry
+      break
     }
+
+    lastErrorText = await response.text().catch(() => '')
+
+    // Jeśli błąd to 404 model_not_found i jesteśmy na Groqu, spróbujmy kolejnego kandydata
+    if (response.status === 404 && lastErrorText.includes('model_not_found') && activeEndpoint.includes('groq.com')) {
+      console.warn(`[INFRA-GROQ-FALLBACK] Model ${modelToTry} niedostępny w Groq (404 model_not_found). Sprawdzam kolejny model...`)
+      continue
+    }
+
+    // W przypadku innych błędów (np. 401 Unauthorized, 429 Rate Limit) nie iterujemy dalej po modelach
+    throw new Error(`EU LLM request failed (${modelToTry} @ ${activeEndpoint}) status: ${response.status} - ${lastErrorText}`)
   }
 
-  if (!response.ok) {
-    const errorText = await response.text().catch(() => '')
-    throw new Error(`EU LLM request failed (${activeModel} @ ${activeEndpoint}) status: ${response.status} - ${errorText}`)
+  if (!response || !response.ok) {
+    throw new Error(
+      `EU LLM request failed (${successfulModel} @ ${activeEndpoint}) status: ${response?.status || 500} - ${lastErrorText}. ` +
+      `Żaden z modeli zapasowych Groq (${modelsToTry.join(', ')}) nie jest dostępny dla Twojego klucza API. ` +
+      `Sprawdź uprawnienia klucza w console.groq.com (Model Permissions) lub skonfiguruj klucz MISTRAL_API_KEY.`
+    )
   }
 
   const data = await response.json()
