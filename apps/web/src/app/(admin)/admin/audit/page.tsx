@@ -1,72 +1,59 @@
 export const dynamic = 'force-dynamic'
-import { createClient } from '@/lib/supabase/server'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 
-export default async function AdminAuditPage() {
+import { createClient } from '@/lib/supabase/server'
+import { AuditManagementClient } from '@/components/AuditManagementClient'
+import { AuditLogEntry } from '@/lib/audit-helpers'
+
+export default async function AdminAuditPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ startDate?: string; endDate?: string }>
+}) {
+  const params = searchParams ? await searchParams : {}
   const supabase = await createClient()
 
-  // Pobieranie audytu. Pamiętaj, że dla uproszczenia MVP czytamy z tabeli `audit_logs` (jeśli zdefiniowaliśmy ją w migracji).
-  // Zakładam, że RLS filtruje po organization_id (zależnie od kontraktu).
-  const { data: logs } = await supabase
+  // Pobieranie audytu z tabeli audit_logs (izolowane przez RLS)
+  let query = supabase
     .from('audit_logs')
-    .select('*')
+    .select('id, organization_id, action, performed_by, payload, created_at')
     .order('created_at', { ascending: false })
-    .limit(50) // Paginacja na MVP nie jest konieczna, pokazujemy 50 ostatnich.
+
+  if (params.startDate) {
+    query = query.gte('created_at', new Date(params.startDate).toISOString())
+  }
+  if (params.endDate) {
+    const end = new Date(params.endDate)
+    end.setHours(23, 59, 59, 999)
+    query = query.lte('created_at', end.toISOString())
+  }
+
+  const { data: logs, error } = await query.limit(1000)
+
+  if (error) {
+    console.error('Błąd pobierania rejestru audytowego:', error.message)
+  }
+
+  const initialLogs: AuditLogEntry[] = (logs || []).map(l => ({
+    id: l.id,
+    organization_id: l.organization_id,
+    action: l.action,
+    performed_by: l.performed_by,
+    created_at: l.created_at,
+    payload: l.payload
+  }))
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+        <h2 className="text-3xl font-display font-semibold tracking-tight text-slate">
           Rejestr Audytowy
         </h2>
-        <p className="text-text-secondary">Wgląd w logi bezpieczeństwa i akcji systemowych (Tylko do odczytu).</p>
+        <p className="mt-2 text-slate-soft">
+          Wgląd w logi bezpieczeństwa i akcji systemowych z filtrowaniem wg dat, strefą czasową i eksportem RODO.
+        </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Ostatnie zdarzenia</CardTitle>
-          <CardDescription>Historia operacji z ostatnich dni (limit: 50).</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="relative w-full overflow-auto">
-            <table className="w-full caption-bottom text-sm">
-              <thead className="[&_tr]:border-b">
-                <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                  <th className="h-12 px-4 text-left align-middle font-medium text-text-secondary">Czas</th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-text-secondary">Akcja</th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-text-secondary">Tabela</th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-text-secondary">User ID</th>
-                </tr>
-              </thead>
-              <tbody className="[&_tr:last-child]:border-0">
-                {logs?.map((log) => (
-                  <tr key={log.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                    <td className="p-4 align-middle text-text-secondary">
-                      {new Date(log.created_at).toLocaleString('pl-PL')}
-                    </td>
-                    <td className="p-4 align-middle font-medium">
-                      {log.action}
-                    </td>
-                    <td className="p-4 align-middle font-mono text-xs text-text-tertiary">
-                      {log.table_name}
-                    </td>
-                    <td className="p-4 align-middle font-mono text-xs">
-                      {log.actor_id}
-                    </td>
-                  </tr>
-                ))}
-                {(!logs || logs.length === 0) && (
-                  <tr>
-                    <td colSpan={4} className="p-4 text-center text-text-secondary">
-                      Brak wpisów w rejestrze audytowym.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+      <AuditManagementClient initialLogs={initialLogs} />
     </div>
   )
 }
