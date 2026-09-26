@@ -47,8 +47,8 @@ export async function callEuLlmCompletion(
   if ((!activeApiKey || activeApiKey === 'mock_eu_llm_key') && process.env.GROQ_API_KEY) {
     activeEndpoint = process.env.EU_LLM_ENDPOINT || 'https://api.groq.com/openai/v1/chat/completions'
     activeApiKey = process.env.GROQ_API_KEY
-    activeModel = process.env.EU_LLM_MODEL || 'llama-3.3-70b-versatile'
-    console.warn('[INFRA-EU-REGION] Uwaga: Tymczasowy fallback potoku notatek głosowych na Groq LLM (llama-3.3) z powodu braku klucza EU LLM.')
+    activeModel = process.env.EU_LLM_MODEL || 'llama-3.1-8b-instant'
+    console.warn(`[INFRA-EU-REGION] Uwaga: Tymczasowy fallback potoku notatek głosowych na Groq LLM (${activeModel}) z powodu braku klucza EU LLM.`)
   }
 
   // Weryfikacja suwerenności danych EOG (zgodność z ADR-009)
@@ -67,7 +67,7 @@ export async function callEuLlmCompletion(
     )
   }
 
-  const response = await fetch(activeEndpoint, {
+  let response = await fetch(activeEndpoint, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${activeApiKey}`,
@@ -80,6 +80,31 @@ export async function callEuLlmCompletion(
       max_tokens: maxTokens,
     }),
   })
+
+  // Odporność fallbacku Groq: jeśli model zwraca 404 model_not_found (np. brak uprawnień do 70b),
+  // ponawiamy zapytanie na uniwersalnym darmowym modelu llama-3.1-8b-instant
+  if (!response.ok && activeEndpoint.includes('groq.com') && activeModel !== 'llama-3.1-8b-instant') {
+    const errorText = await response.text().catch(() => '')
+    if (response.status === 404 && errorText.includes('model_not_found')) {
+      console.warn(`[INFRA-GROQ-FALLBACK] Model ${activeModel} niedostępny w Groq (404). Ponawianie z llama-3.1-8b-instant...`)
+      activeModel = 'llama-3.1-8b-instant'
+      response = await fetch(activeEndpoint, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${activeApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: activeModel,
+          messages,
+          temperature,
+          max_tokens: maxTokens,
+        }),
+      })
+    } else {
+      throw new Error(`EU LLM request failed (${activeModel} @ ${activeEndpoint}) status: ${response.status} - ${errorText}`)
+    }
+  }
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => '')

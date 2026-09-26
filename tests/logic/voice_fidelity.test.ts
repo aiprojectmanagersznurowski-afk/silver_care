@@ -82,12 +82,60 @@ describe('Voice Fidelity & Medical Stripping (VOICE-MEDICAL-STRIP, VOICE-ZERO-GU
       const result = await callEuLlmCompletion([{ role: 'user', content: 'Test prompt' }])
       expect(result).toBe('Raport wygenerowany przez Groq fallback')
       expect(calledUrl).toContain('groq.com')
-      expect(calledBody.model).toBe('llama-3.3-70b-versatile')
+      expect(calledBody.model).toBe('llama-3.1-8b-instant')
     } finally {
       globalThis.fetch = originalFetch
       if (origKey) process.env.EU_LLM_API_KEY = origKey
       if (origMistralKey) process.env.MISTRAL_API_KEY = origMistralKey
       if (origGroqKey) process.env.GROQ_API_KEY = origGroqKey
+    }
+  })
+
+  it('callEuLlmCompletion automatically recovers with llama-3.1-8b-instant if 70b model returns 404 model_not_found @REQ: INFRA-GROQ-TRANSCRIPTION', async () => {
+    const origKey = process.env.EU_LLM_API_KEY
+    const origMistralKey = process.env.MISTRAL_API_KEY
+    const origGroqKey = process.env.GROQ_API_KEY
+    const origModel = process.env.EU_LLM_MODEL
+
+    const originalFetch = globalThis.fetch
+    const requestedModels: string[] = []
+
+    try {
+      delete process.env.EU_LLM_API_KEY
+      delete process.env.MISTRAL_API_KEY
+      process.env.GROQ_API_KEY = 'test_groq_key'
+      process.env.EU_LLM_MODEL = 'llama-3.3-70b-versatile'
+
+      globalThis.fetch = (async (_url: string | URL | Request, init?: RequestInit) => {
+        const body = init?.body ? JSON.parse(init.body as string) : {}
+        requestedModels.push(body.model)
+
+        if (body.model === 'llama-3.3-70b-versatile') {
+          return {
+            ok: false,
+            status: 404,
+            text: async () => JSON.stringify({ error: { code: 'model_not_found', message: 'The model llama-3.3-70b-versatile does not exist or you do not have access to it.' } })
+          } as any
+        }
+
+        return {
+          ok: true,
+          json: async () => ({
+            choices: [{ message: { content: 'Odpowiedź z fallbacku 8b' } }]
+          })
+        } as any
+      }) as any
+
+      const result = await callEuLlmCompletion([{ role: 'user', content: 'Test prompt' }])
+      expect(result).toBe('Odpowiedź z fallbacku 8b')
+      expect(requestedModels).toEqual(['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'])
+    } finally {
+      globalThis.fetch = originalFetch
+      if (origKey) process.env.EU_LLM_API_KEY = origKey
+      if (origMistralKey) process.env.MISTRAL_API_KEY = origMistralKey
+      if (origGroqKey) process.env.GROQ_API_KEY = origGroqKey
+      if (origModel) process.env.EU_LLM_MODEL = origModel
+      else delete process.env.EU_LLM_MODEL
     }
   })
 })
