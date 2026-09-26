@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { renderReportPublishedEmail, renderReportPublishedSms } from '@/lib/notification-templates'
 
 export const dynamic = 'force-dynamic'
 
@@ -82,8 +83,22 @@ export async function GET(request: Request) {
             const protocol = request.headers.get('x-forwarded-proto') || 'http'
             const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || `${protocol}://${host}`
 
-            // Neutralna treść bez PII i danych medycznych (ADR-008 / NTF-NO-PII)
-            const notificationText = `Nowy raport o Twoim bliskim jest dostepny w Silver Care. Zaloguj sie: ${baseUrl}/login`
+            // Pobierz nazwę placówki, jeśli dostępna
+            let orgName: string | undefined
+            if (notification.organization_id) {
+              const { data: org } = await adminClient
+                .from('organizations')
+                .select('name')
+                .eq('id', notification.organization_id)
+                .maybeSingle()
+              if (org?.name) {
+                orgName = org.name
+              }
+            }
+
+            const portalUrl = `${baseUrl}/login`
+            const emailTemplate = renderReportPublishedEmail({ portalUrl, organizationName: orgName })
+            const smsTemplate = renderReportPublishedSms({ portalUrl })
 
             for (const link of links) {
               const { data: userData } = await adminClient.auth.admin.getUserById(link.relative_user_id)
@@ -95,8 +110,8 @@ export async function GET(request: Request) {
                 console.log(`Wysyłanie SMS do: [UKRYTY_NUMER]...`)
                 const smsParams = new URLSearchParams()
                 smsParams.append('to', phone)
-                smsParams.append('from', 'Test')
-                smsParams.append('message', notificationText)
+                smsParams.append('from', smsTemplate.sender)
+                smsParams.append('message', smsTemplate.text)
                 smsParams.append('format', 'json')
 
                 const smsRes = await fetch('https://api.smsapi.pl/sms.do', {
@@ -114,7 +129,7 @@ export async function GET(request: Request) {
                 }
               }
 
-              // Wysyłka Email
+              // Wysyłka Email (HTML + Plain text fallback)
               if (email && mailtrapToken) {
                 console.log(`Wysyłanie E-maila do: [UKRYTY_EMAIL]...`)
                 const emailRes = await fetch('https://send.api.mailtrap.io/api/send', {
@@ -126,8 +141,9 @@ export async function GET(request: Request) {
                   body: JSON.stringify({
                     to: [{ email }],
                     from: { email: 'noreply@silvercare.space', name: 'Silver Care' },
-                    subject: 'Nowy raport w Silver Care',
-                    text: notificationText,
+                    subject: emailTemplate.subject,
+                    text: emailTemplate.text,
+                    html: emailTemplate.html,
                   }),
                 })
 
