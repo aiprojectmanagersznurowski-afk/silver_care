@@ -3,6 +3,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
+import { cookies } from 'next/headers'
+import { isImpersonationSessionActive, assertMutationAllowedDuringImpersonation } from '@/lib/impersonation-guards'
 import { RawResidentRow, validateResidentRows, ValidatedResidentRow, DryRunResult } from '@/lib/bulk-import-helpers'
 import { encryptNationalId } from '@/lib/identity_crypto'
 import crypto from 'crypto'
@@ -44,6 +46,12 @@ export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[
   error?: string
   importedCount?: number
 }> {
+  const cookieStore = await cookies()
+  const guard = assertMutationAllowedDuringImpersonation(isImpersonationSessionActive(cookieStore))
+  if (!guard.allowed) {
+    return { error: guard.error }
+  }
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 

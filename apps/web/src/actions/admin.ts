@@ -9,11 +9,11 @@ export async function deleteResidentAction(formData: FormData) {
   const residentId = formData.get('id') as string
   if (!residentId) return
 
-  // AC4: Blokada akcji destrukcyjnych w trakcie impersonacji
+  // AC4: Blokada akcji destrukcyjnych w trakcie impersonacji (403)
   const cookieStore = await cookies()
   if (cookieStore.get('sc_impersonation')) {
     console.warn('Blokada usuwania pensjonariusza w trakcie impersonacji')
-    return
+    return { error: '403: Operacja niedozwolona w trybie impersonacji.' }
   }
 
   const supabase = await createClient()
@@ -36,17 +36,18 @@ export async function deleteResidentAction(formData: FormData) {
   await supabase.from('residents').delete().eq('id', residentId)
 
   revalidatePath('/admin')
+  return { success: true }
 }
 
 export async function deleteStaffAction(formData: FormData) {
   const userId = formData.get('id') as string
   if (!userId) return
 
-  // AC4: Blokada akcji destrukcyjnych w trakcie impersonacji
+  // AC4: Blokada akcji destrukcyjnych w trakcie impersonacji (403)
   const cookieStore = await cookies()
   if (cookieStore.get('sc_impersonation')) {
     console.warn('Blokada usuwania personelu w trakcie impersonacji')
-    return
+    return { error: '403: Operacja niedozwolona w trybie impersonacji.' }
   }
   
   const supabase = await createClient()
