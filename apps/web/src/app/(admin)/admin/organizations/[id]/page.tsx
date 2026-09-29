@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Building2, ArrowLeft, Users, UserCog, UserCheck, Calendar, MapPin, Mail, ShieldAlert } from 'lucide-react'
 import { startImpersonationAction } from '@/actions/impersonation'
 import { ResendAdminInviteButton, AddAdminToOrgDialog } from '@/components/AdminInviteActions'
+import { EditOrganizationDialog } from '@/components/EditOrganizationDialog'
 
 export default async function OrganizationDetailsPage({
   params,
@@ -89,6 +90,14 @@ export default async function OrganizationDetailsPage({
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <EditOrganizationDialog
+              organization={{
+                organization_id: organization.id,
+                organization_name: organization.name,
+                address: organization.address,
+                resident_limit: organization.resident_limit || 50,
+              }}
+            />
             <span className="font-mono text-xs text-slate-soft bg-white px-3 py-1.5 rounded-xl border border-slate/10">
               ID: {organization.id}
             </span>

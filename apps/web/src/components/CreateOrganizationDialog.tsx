@@ -14,6 +14,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { AddressAutocompleteInput } from '@/components/AddressAutocompleteInput'
 import { createOrganizationAction } from '@/actions/organizations'
 import { Building2, Plus, CheckCircle2, AlertCircle, Copy, Check } from 'lucide-react'
 
@@ -169,11 +170,11 @@ export function CreateOrganizationDialog() {
 
             <div className="space-y-2">
               <Label htmlFor="create-org-address">Adres placówki</Label>
-              <Input
+              <AddressAutocompleteInput
                 id="create-org-address"
                 placeholder="np. ul. Leśna 10, 00-001 Warszawa"
                 value={address}
-                onChange={e => setAddress(e.target.value)}
+                onChange={setAddress}
               />
             </div>
 
