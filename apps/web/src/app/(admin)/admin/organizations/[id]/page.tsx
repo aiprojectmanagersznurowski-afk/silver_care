@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Building2, ArrowLeft, Users, UserCog, UserCheck, Calendar, MapPin, Mail, ShieldAlert } from 'lucide-react'
+import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 import { startImpersonationAction } from '@/actions/impersonation'
 import { ResendAdminInviteButton, AddAdminToOrgDialog } from '@/components/AdminInviteActions'
 import { EditOrganizationDialog } from '@/components/EditOrganizationDialog'
@@ -98,9 +99,7 @@ export default async function OrganizationDetailsPage({
                 resident_limit: organization.resident_limit || 50,
               }}
             />
-            <span className="font-mono text-xs text-slate-soft bg-white px-3 py-1.5 rounded-xl border border-slate/10">
-              ID: {organization.id}
-            </span>
+            <BusinessIdBadge type="organization" id={organization.id} />
           </div>
         </div>
       </div>

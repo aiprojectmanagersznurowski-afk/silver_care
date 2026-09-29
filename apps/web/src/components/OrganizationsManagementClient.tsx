@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { isValidViewMode, OrgViewMode } from '@/lib/org-helpers'
 import { EditOrganizationDialog } from '@/components/EditOrganizationDialog'
+import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 
 export interface OrganizationSummaryItem {
   organization_id: string
@@ -184,9 +185,7 @@ export function OrganizationsManagementClient({
                       >
                         {org.organization_name}
                       </Link>
-                      <span className="font-mono text-[10px] text-slate-soft/70 block mt-0.5">
-                        ID: {org.organization_id}
-                      </span>
+                      <BusinessIdBadge type="organization" id={org.organization_id} />
                     </td>
                     <td className="px-5 py-4 text-xs text-slate-soft max-w-[220px] truncate">
                       {org.address || '—'}
@@ -309,9 +308,7 @@ export function OrganizationsManagementClient({
                     <Calendar className="h-3 w-3" />
                     <span>W systemie od: {new Date(org.created_at).toLocaleDateString('pl-PL')}</span>
                   </div>
-                  <span className="font-mono text-[10px] text-slate-soft/70 truncate max-w-[140px]">
-                    ID: {org.organization_id}
-                  </span>
+                  <BusinessIdBadge type="organization" id={org.organization_id} />
                 </div>
               </div>
             )
