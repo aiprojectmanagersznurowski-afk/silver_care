@@ -10,13 +10,13 @@ export const MEMBERS = {
     id: '5ce666443ecfaa7f62756e43',
     name: 'Darek Rink',
     username: 'darekrink',
-    github: 'darkov89'
+    github: 'darekrink'
   },
   MICHAL: {
     id: '6a1e8bee5edd0ea47730152c',
     name: 'Michał Sznurowski',
     username: 'michalsznurowski',
-    github: 'michalsznurowski'
+    github: 'aiprojectmanagersznurowski-afk'
   }
 };
 
