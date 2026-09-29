@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { checkRateLimit } from '@/lib/rate-limiter'
+import { renderFamilyInviteEmail } from '@/lib/notification-templates'
 
 export async function POST(request: Request) {
   try {
@@ -88,6 +89,19 @@ export async function POST(request: Request) {
     
     if (process.env.EMAIL_PROVIDER_KEY) {
       console.log(`[EMAIL] Wysyłanie zaproszenia...`)
+
+      // Pobierz nazwę placówki
+      let orgName: string | undefined
+      if (orgId) {
+        const { data: org } = await adminClient
+          .from('organizations')
+          .select('name')
+          .eq('id', orgId)
+          .maybeSingle()
+        if (org?.name) orgName = org.name
+      }
+
+      const emailTemplate = renderFamilyInviteEmail({ inviteUrl: registerUrl, organizationName: orgName })
       
       const emailRes = await fetch('https://send.api.mailtrap.io/api/send', {
         method: 'POST',
@@ -98,8 +112,9 @@ export async function POST(request: Request) {
         body: JSON.stringify({
           to: [{ email: email.trim() }],
           from: { email: 'noreply@silvercare.space', name: 'Silver Care' },
-          subject: 'Zaproszenie do portalu rodziny Silver Care',
-          text: `Zostałeś zaproszony do portalu rodziny Silver Care. Kliknij w poniższy link, aby utworzyć konto i śledzić postępy Twojego bliskiego:\n\n${registerUrl}\n\nTen link jest jednorazowy i ważny przez 7 dni.`
+          subject: emailTemplate.subject,
+          text: emailTemplate.text,
+          html: emailTemplate.html,
         })
       })
 
