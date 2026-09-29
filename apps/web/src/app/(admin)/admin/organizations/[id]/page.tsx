@@ -10,6 +10,7 @@ import { Building2, ArrowLeft, Users, UserCog, UserCheck, Calendar, MapPin, Mail
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 import { startImpersonationAction } from '@/actions/impersonation'
 import { ResendAdminInviteButton, AddAdminToOrgDialog } from '@/components/AdminInviteActions'
+import { EditOrganizationDialog } from '@/components/EditOrganizationDialog'
 
 export default async function OrganizationDetailsPage({
   params,
@@ -90,6 +91,14 @@ export default async function OrganizationDetailsPage({
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <EditOrganizationDialog
+              organization={{
+                organization_id: organization.id,
+                organization_name: organization.name,
+                address: organization.address,
+                resident_limit: organization.resident_limit || 50,
+              }}
+            />
             <BusinessIdBadge type="organization" id={organization.id} />
           </div>
         </div>

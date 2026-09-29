@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
+import { renderStaffInviteEmail } from '@/lib/notification-templates'
 
 export async function POST(request: Request) {
   try {
@@ -84,6 +85,44 @@ export async function POST(request: Request) {
 
     const actionLink = data?.properties?.action_link
     const proxyUrl = actionLink ? `${origin}/accept-invite?url=${encodeURIComponent(actionLink)}` : null
+
+    if (proxyUrl && process.env.EMAIL_PROVIDER_KEY) {
+      try {
+        let orgName: string | undefined
+        if (orgId) {
+          const { data: org } = await adminClient
+            .from('organizations')
+            .select('name')
+            .eq('id', orgId)
+            .maybeSingle()
+          if (org?.name) orgName = org.name
+        }
+
+        const roleDisplay = role === 'nurse' ? 'Pielęgniarka' : role === 'paramedic' ? 'Ratownik medyczny' : 'Personel'
+        const emailTemplate = renderStaffInviteEmail({
+          inviteUrl: proxyUrl,
+          organizationName: orgName,
+          roleName: roleDisplay,
+        })
+
+        await fetch('https://send.api.mailtrap.io/api/send', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${process.env.EMAIL_PROVIDER_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            to: [{ email: email.trim() }],
+            from: { email: 'noreply@silvercare.space', name: 'Silver Care' },
+            subject: emailTemplate.subject,
+            text: emailTemplate.text,
+            html: emailTemplate.html,
+          })
+        })
+      } catch (mailErr) {
+        console.error('Błąd wysyłki e-maila zaproszenia pracownika:', mailErr)
+      }
+    }
 
     return NextResponse.json({ success: true, url: proxyUrl })
   } catch (error: any) {
