@@ -3,6 +3,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
+import { cookies } from 'next/headers'
+import { isImpersonationSessionActive, assertMutationAllowedDuringImpersonation } from '@/lib/impersonation-guards'
 
 export interface UpdateResidentPayload {
   residentId: string
@@ -24,6 +26,12 @@ export interface UpdateResidentResult {
 export async function updateResidentInlineAction(
   payload: UpdateResidentPayload
 ): Promise<UpdateResidentResult> {
+  const cookieStore = await cookies()
+  const guard = assertMutationAllowedDuringImpersonation(isImpersonationSessionActive(cookieStore))
+  if (!guard.allowed) {
+    return { success: false, error: guard.error }
+  }
+
   const supabase = await createClient()
   const {
     data: { user },

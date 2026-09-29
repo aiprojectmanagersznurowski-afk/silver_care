@@ -2,6 +2,8 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { cookies } from 'next/headers'
+import { isImpersonationSessionActive, assertMutationAllowedDuringImpersonation } from '@/lib/impersonation-guards'
 import {
   ExportFilterOptions,
   ResidentExportRecord,
@@ -40,6 +42,12 @@ export async function exportResidentsDataAction(options: ExportFilterOptions): P
   rows?: ExportRowFormatted[]
   count?: number
 }> {
+  const cookieStore = await cookies()
+  const guard = assertMutationAllowedDuringImpersonation(isImpersonationSessionActive(cookieStore))
+  if (!guard.allowed) {
+    return { error: 'Eksport danych podopiecznych jest zablokowany w trybie impersonacji (ochrona Art. 9 RODO).' }
+  }
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
