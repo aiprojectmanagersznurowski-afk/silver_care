@@ -62,7 +62,7 @@ interface DailySummaryHeroProps {
     };
   } | null;
   selectedDateMedia?: string[];
-  onOpenGallery?: () => void;
+  onOpenGallery?: (index?: number) => void;
 }
 
 export function DailySummaryHero({ resident, report, selectedDateMedia = [], onOpenGallery }: DailySummaryHeroProps) {
@@ -136,7 +136,7 @@ export function DailySummaryHero({ resident, report, selectedDateMedia = [], onO
             </h3>
             {selectedDateMedia.length > 0 && onOpenGallery && (
               <button 
-                onClick={onOpenGallery}
+                onClick={() => onOpenGallery(0)}
                 className="text-xs font-semibold text-sage hover:underline"
               >
                 Otwórz pełną galerię
@@ -147,7 +147,7 @@ export function DailySummaryHero({ resident, report, selectedDateMedia = [], onO
           {selectedDateMedia.length > 0 ? (
             <div className="grid grid-cols-2 gap-2">
               <div 
-                onClick={onOpenGallery}
+                onClick={() => onOpenGallery?.(0)}
                 className="col-span-2 overflow-hidden rounded-2xl h-32 relative group cursor-pointer shadow-inner bg-slate/5"
               >
                 <img
@@ -158,7 +158,7 @@ export function DailySummaryHero({ resident, report, selectedDateMedia = [], onO
               </div>
               {selectedDateMedia.length > 1 ? (
                 <div 
-                  onClick={onOpenGallery}
+                  onClick={() => onOpenGallery?.(1)}
                   className="overflow-hidden rounded-2xl h-24 relative group cursor-pointer shadow-inner bg-slate/5"
                 >
                   <img
@@ -169,14 +169,14 @@ export function DailySummaryHero({ resident, report, selectedDateMedia = [], onO
                 </div>
               ) : (
                 <div 
-                  onClick={onOpenGallery}
+                  onClick={() => onOpenGallery?.(0)}
                   className="overflow-hidden rounded-2xl h-24 relative group cursor-pointer bg-slate/5 flex items-center justify-center hover:bg-slate/10 transition-colors"
                 >
                   <span className="text-sage font-medium text-xs">Zobacz więcej</span>
                 </div>
               )}
               <div 
-                onClick={onOpenGallery}
+                onClick={() => onOpenGallery?.(selectedDateMedia.length > 2 ? 2 : 0)}
                 className="overflow-hidden rounded-2xl h-24 relative group cursor-pointer bg-slate/5 flex items-center justify-center hover:bg-slate/10 transition-colors"
               >
                 <span className="text-sage font-medium text-sm">
@@ -195,7 +195,7 @@ export function DailySummaryHero({ resident, report, selectedDateMedia = [], onO
               </p>
               {onOpenGallery && (
                 <button
-                  onClick={onOpenGallery}
+                  onClick={() => onOpenGallery(0)}
                   className="mt-4 rounded-full bg-card px-4 py-1.5 text-xs font-medium text-sage border border-border hover:bg-sage-soft/60 transition-colors shadow-sm"
                 >
                   Przeglądaj wcześniejsze zdjęcia →
