@@ -83,4 +83,12 @@ describe('Migration removes the reversible column (SEC-PESEL-HASH)', () => {
     expect(create.length).toBeGreaterThan(0)
     expect(create).not.toMatch(/pesel_encrypted/i)
   })
+
+  it('enforces tenant isolation and search_path hardening in admit_resident_with_bed @REQ: SEC-PESEL-HASH', () => {
+    const create = (drop?.text.split(/CREATE OR REPLACE FUNCTION public\.admit_resident_with_bed/i)[1] ?? '')
+      .split(/ALTER TABLE/i)[0]
+    expect(create).toMatch(/SET search_path = public, pg_temp/i)
+    expect(create).toMatch(/r\.organization_id = v_org_id/i)
+    expect(create).toMatch(/Bed % does not belong to organization/i)
+  })
 })

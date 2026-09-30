@@ -28,6 +28,7 @@ CREATE OR REPLACE FUNCTION public.admit_resident_with_bed(
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
 DECLARE
   v_caller_id uuid;
@@ -78,8 +79,17 @@ BEGIN
     p_notes
   ) RETURNING id INTO v_resident_id;
 
-  -- 3. If bed_id provided, check and assign
+  -- 3. If bed_id provided, check organization and occupancy, then assign (Tenant Isolation)
   IF p_bed_id IS NOT NULL THEN
+    -- Check if bed belongs to caller's organization
+    IF NOT EXISTS (
+      SELECT 1 FROM public.beds b
+      JOIN public.rooms r ON b.room_id = r.id
+      WHERE b.id = p_bed_id AND r.organization_id = v_org_id
+    ) THEN
+      RAISE EXCEPTION 'Bed % does not belong to organization', p_bed_id USING ERRCODE = 'check_violation';
+    END IF;
+
     -- Lock and check if bed is already occupied
     IF EXISTS (
       SELECT 1 FROM public.bed_assignments
