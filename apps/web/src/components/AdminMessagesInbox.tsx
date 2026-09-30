@@ -3,6 +3,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { UIState } from '@silvercare/contracts/src/generated/presentation';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
+import { toast } from 'sonner';
 
 interface FamilyMessage {
   id: string;
@@ -86,12 +87,13 @@ export function AdminMessagesInbox() {
 
       if (res.ok) {
         setReplyContent('');
+        toast.success('Wiadomość została wysłana');
         fetchMessages();
       } else {
-        alert('Nie udało się wysłać odpowiedzi');
+        toast.error('Nie udało się wysłać odpowiedzi');
       }
     } catch (e) {
-      alert('Błąd sieci');
+      toast.error('Błąd sieci podczas wysyłania odpowiedzi');
     } finally {
       setIsSending(false);
     }

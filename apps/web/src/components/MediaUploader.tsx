@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { ImagePlus, Loader2, Check } from 'lucide-react'
 import { Button } from './ui/button'
+import { toast } from 'sonner'
 
 export function MediaUploader({ residentId }: { residentId: string }) {
   const [uploading, setUploading] = useState(false)
@@ -44,10 +45,11 @@ export function MediaUploader({ residentId }: { residentId: string }) {
       if (dbError) throw dbError
       
       setSuccess(true)
+      toast.success('Zdjęcie zostało pomyślnie wgrane')
       setTimeout(() => setSuccess(false), 3000)
     } catch (error) {
       console.error('Błąd wgrywania zdjęcia:', error)
-      alert('Wystąpił błąd podczas wgrywania zdjęcia.')
+      toast.error('Wystąpił błąd podczas wgrywania zdjęcia.')
     } finally {
       setUploading(false)
     }

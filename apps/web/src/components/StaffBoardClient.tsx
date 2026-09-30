@@ -8,6 +8,8 @@ import { MediaUploader } from '@/components/MediaUploader'
 import { AgendaView } from '@/components/AgendaView'
 import { quickLogRoutineObservationAction } from '@/actions/bulk-reports'
 import Link from 'next/link'
+import { toast } from 'sonner'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 
 type NoteStatus = 'ready' | 'draft' | 'none'
 
@@ -117,9 +119,13 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
         )
         if (res.success) {
           setLoggedResidentIds((prev) => ({ ...prev, [residentId]: true }))
+          toast.success('Zapisano rutynową obserwację: Stan stabilny')
+        } else {
+          toast.error(res.error || 'Nie udało się zapisać obserwacji')
         }
       } catch (err: unknown) {
         console.error('Błąd zapisu obserwacji:', err)
+        toast.error('Błąd zapisu obserwacji')
       } finally {
         setPendingResidentId(null)
       }
@@ -359,40 +365,58 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 pt-1">
-                  <Link href={`/voice?resident=${resId}`} className="block">
-                    <button
-                      type="button"
-                      className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-sage px-3 py-3 text-xs font-semibold text-white shadow-xs hover:bg-sage-dark transition-colors min-h-[48px]"
-                    >
-                      <Mic className="h-4 w-4" />
-                      Dyktuj (1-klik)
-                    </button>
-                  </Link>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link href={`/voice?resident=${resId}`} className="block">
+                        <button
+                          type="button"
+                          className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-sage px-3 py-3 text-xs font-semibold text-white shadow-xs hover:bg-sage-dark transition-colors min-h-[48px]"
+                        >
+                          <Mic className="h-4 w-4" />
+                          Dyktuj (1-klik)
+                        </button>
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      Nagraj notatkę głosową dla tego pensjonariusza
+                    </TooltipContent>
+                  </Tooltip>
 
-                  <button
-                    type="button"
-                    onClick={() => handleQuickLog(resId)}
-                    disabled={isSubmitting || isLogged}
-                    className={`w-full inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-3 text-xs font-semibold transition-colors min-h-[48px] ${
-                      isLogged
-                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 cursor-default'
-                        : 'bg-white border border-slate/20 text-slate hover:bg-slate/5 shadow-xs'
-                    }`}
-                  >
-                    {isSubmitting ? (
-                      <Loader2 className="h-4 w-4 animate-spin text-sage" />
-                    ) : isLogged ? (
-                      <>
-                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                        Stabilny
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle2 className="h-4 w-4 text-slate-soft" />
-                        Stan stabilny
-                      </>
-                    )}
-                  </button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span>
+                        <button
+                          type="button"
+                          onClick={() => handleQuickLog(resId)}
+                          disabled={isSubmitting || isLogged}
+                          className={`w-full inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-3 text-xs font-semibold transition-colors min-h-[48px] ${
+                            isLogged
+                              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 cursor-default'
+                              : 'bg-white border border-slate/20 text-slate hover:bg-slate/5 shadow-xs'
+                          }`}
+                        >
+                          {isSubmitting ? (
+                            <Loader2 className="h-4 w-4 animate-spin text-sage" />
+                          ) : isLogged ? (
+                            <>
+                              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                              Stabilny
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle2 className="h-4 w-4 text-slate-soft" />
+                              Stan stabilny
+                            </>
+                          )}
+                        </button>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {isLogged
+                        ? 'Obserwacja została już zarejestrowana podczas tego obchodu'
+                        : 'Zapisz rutynową obserwację: Stan stabilny, bez uwag'}
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
               </div>
             )
@@ -455,20 +479,34 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                   </div>
 
                   <div className="border-t border-slate/5 p-4 bg-slate/5 flex flex-col gap-3">
-                    <Link href={`/voice?resident=${resident.id}`} className="block w-full">
-                      <button className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-sage px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-sage-dark transition-colors min-h-[44px]">
-                        <Mic className="h-4 w-4" />
-                        Nagraj notatkę
-                      </button>
-                    </Link>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Link href={`/voice?resident=${resident.id}`} className="block w-full">
+                          <button className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-sage px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-sage-dark transition-colors min-h-[44px]">
+                            <Mic className="h-4 w-4" />
+                            Nagraj notatkę
+                          </button>
+                        </Link>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        Otwórz potok głosowy i nagraj obserwację dla pensjonariusza
+                      </TooltipContent>
+                    </Tooltip>
 
                     {noteStatus !== 'none' && (
-                      <Link href={`/staff/reports?resident=${resident.id}`} className="block w-full">
-                        <button className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-medium text-slate shadow-sm ring-1 ring-inset ring-slate/10 hover:bg-slate/5 transition-colors min-h-[44px]">
-                          <FileText className="h-4 w-4 text-slate-soft" />
-                          Podgląd raportu
-                        </button>
-                      </Link>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Link href={`/staff/reports?resident=${resident.id}`} className="block w-full">
+                            <button className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-medium text-slate shadow-sm ring-1 ring-inset ring-slate/10 hover:bg-slate/5 transition-colors min-h-[44px]">
+                              <FileText className="h-4 w-4 text-slate-soft" />
+                              Podgląd raportu
+                            </button>
+                          </Link>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          Zobacz wygenerowany raport i historię obserwacji
+                        </TooltipContent>
+                      </Tooltip>
                     )}
 
                     <div className="mt-1">

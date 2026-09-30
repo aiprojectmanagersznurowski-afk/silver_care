@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { toast } from 'sonner'
 import {
   Dialog,
   DialogContent,
@@ -159,7 +160,7 @@ export function InviteFamilyDialog({ residents }: { residents: Resident[] }) {
                   className="h-8"
                   onClick={() => {
                     navigator.clipboard.writeText(generatedUrl)
-                    alert('Skopiowano do schowka!')
+                    toast.success('Link zaproszenia skopiowano do schowka!')
                   }}
                 >
                   Kopiuj

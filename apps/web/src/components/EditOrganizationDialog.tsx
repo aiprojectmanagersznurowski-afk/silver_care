@@ -17,6 +17,7 @@ import { Label } from '@/components/ui/label'
 import { AddressAutocompleteInput } from '@/components/AddressAutocompleteInput'
 import { updateOrganizationAction } from '@/actions/organizations'
 import { Pencil, AlertCircle } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface EditOrganizationDialogProps {
   organization: {
@@ -72,7 +73,9 @@ export function EditOrganizationDialog({
 
       if (result?.error) {
         setError(result.error)
+        toast.error(result.error)
       } else if (result?.success) {
+        toast.success('Pomyślnie zaktualizowano dane placówki')
         setOpen(false)
         onSuccess?.()
         router.refresh()

@@ -3,6 +3,8 @@
 import React, { useState } from 'react'
 import { Copy, Check } from 'lucide-react'
 import { formatBusinessId, BusinessEntityType } from '@/lib/business-ids'
+import { toast } from 'sonner'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 
 interface BusinessIdBadgeProps {
   type: BusinessEntityType
@@ -33,6 +35,7 @@ export function BusinessIdBadge({
       // Graceful fallback for non-secure / restricted environments
     }
     setCopied(true)
+    toast.success(`Skopiowano identyfikator ${businessId} do schowka`)
     setTimeout(() => setCopied(false), 2000)
   }
 
@@ -44,26 +47,33 @@ export function BusinessIdBadge({
     >
       <span>{businessId}</span>
       {showCopy && (
-        <span
-          role="button"
-          tabIndex={0}
-          aria-label="Kopiuj identyfikator"
-          onClick={handleCopy}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault()
-              e.stopPropagation()
-              handleCopy(e as unknown as React.MouseEvent)
-            }
-          }}
-          className="text-slate-soft hover:text-slate transition-colors p-0.5 rounded cursor-pointer inline-flex items-center"
-        >
-          {copied ? (
-            <Check className="h-3 w-3 text-sage" />
-          ) : (
-            <Copy className="h-3 w-3" />
-          )}
-        </span>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span
+              role="button"
+              tabIndex={0}
+              aria-label="Kopiuj identyfikator"
+              onClick={handleCopy}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  handleCopy(e as unknown as React.MouseEvent)
+                }
+              }}
+              className="text-slate-soft hover:text-slate transition-colors p-0.5 rounded cursor-pointer inline-flex items-center"
+            >
+              {copied ? (
+                <Check className="h-3 w-3 text-sage" />
+              ) : (
+                <Copy className="h-3 w-3" />
+              )}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>
+            {copied ? 'Skopiowano!' : `Kopiuj ${businessId} do schowka`}
+          </TooltipContent>
+        </Tooltip>
       )}
     </span>
   )

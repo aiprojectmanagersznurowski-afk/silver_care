@@ -12,7 +12,7 @@ const ROOT = process.env.SC_PROJECT_DIR || join(dirname(fileURLToPath(import.met
 // .claude/ i .agents/ to instrukcje dla agentów — wymieniają porzucone nazwy po to,
 // żeby ich zakazać. Skaner nie odróżnia użycia od zacytowania, więc reguła, która
 // nie pomija tych katalogów, uniemożliwia napisanie instrukcji o samej regule.
-const SKIP_DIRS = ['node_modules', '.git', '.next', 'dist', 'generated', 'docs', 'contracts', '.claude', '.agents'];
+const SKIP_DIRS = ['node_modules', '.git', '.next', 'dist', 'generated', 'docs', 'contracts', '.claude', '.agents', 'UI'];
 /**
  * Pliki instrukcji i dokumentacji są pomijane, bo wymieniają porzucone nazwy po to,
  * żeby ich zakazać. Skaner porównuje tekst i nie odróżnia użycia od zacytowania —
