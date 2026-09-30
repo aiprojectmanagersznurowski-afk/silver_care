@@ -4,12 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { parseNationalId, suggestBeds, BedCandidate, BedSuggestion } from '@/lib/admission-helpers'
-import { encryptNationalId } from '@/lib/identity_crypto'
-import crypto from 'crypto'
-
-function hashNationalId(value: string, salt: string = 'silvercare_pesel_salt'): string {
-  return crypto.createHmac('sha256', salt).update(value).digest('hex')
-}
+import { hashNationalId } from '@/lib/national-id-hash'
 
 interface ActiveAssignmentRecord {
   bed_id: string
@@ -122,13 +117,11 @@ export async function admitResidentAction(formData: FormData) {
   }
 
   const computedHash = hashNationalId(idValue)
-  const computedEncrypted = encryptNationalId(idValue)
 
   const { data, error } = await supabase.rpc('admit_resident_with_bed', {
     p_first_name: firstName,
     p_last_name: lastName,
     p_pesel_hash: computedHash,
-    p_pesel_encrypted: computedEncrypted,
     p_gender: parsed.gender,
     p_birth_date: parsed.birthDate,
     p_care_level: careLevel,

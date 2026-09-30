@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createHmac } from 'crypto'
+import { hashNationalId } from '@/lib/national-id-hash'
 import { withAuth } from '@/lib/api-auth'
 import { ApiError } from '@/lib/api-errors'
 import { parsePaginationParams, getPaginationRange, buildPaginationMeta } from '@/lib/pagination'
@@ -53,14 +53,11 @@ export const POST = withAuth(
       throw new ApiError('Identyfikator musi składać się z 11 cyfr.', 400, 'INVALID_IDENTIFIER')
     }
 
-    const salt = process.env.PESEL_HASH_SALT
-    if (!salt) {
+    if (!process.env.PESEL_HASH_SALT) {
       throw new ApiError('Błąd konfiguracji serwera', 500, 'CONFIG_ERROR')
     }
 
-    const pesel_hash = createHmac('sha256', salt)
-      .update(trimmed)
-      .digest('hex')
+    const pesel_hash = hashNationalId(trimmed)
 
     const { data, error } = await supabase
       .from('residents')

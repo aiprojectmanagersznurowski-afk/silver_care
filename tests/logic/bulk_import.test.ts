@@ -1,10 +1,18 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import { validateResidentRows, RawResidentRow } from '../../apps/web/src/lib/bulk-import-helpers'
 
 /**
  * @REQ: ADM-RESIDENT-ADD
  */
 describe('Bulk Import Logic & Validation (@REQ: ADM-RESIDENT-ADD)', () => {
+  // Sól hasha pochodzi wyłącznie ze środowiska (SEC-PESEL-HASH) — test ustawia własną.
+  beforeAll(() => {
+    vi.stubEnv('PESEL_HASH_SALT', 'test-salt-bulk-import')
+  })
+  afterAll(() => {
+    vi.unstubAllEnvs()
+  })
+
   it('identifies valid rows and correctly parses gender/birthDate from PESEL', () => {
     const rawRows: RawResidentRow[] = [
       {

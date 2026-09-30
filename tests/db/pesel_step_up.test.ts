@@ -16,7 +16,7 @@ describe('PESEL Step-Up Audit and Column Invariant (SEC-PESEL-STEP-UP)', () => {
     await sql.end();
   });
 
-  it('keeps database invariant: pesel_encrypted exists, but raw pesel never exists @REQ: SEC-PESEL-HASH', async () => {
+  it('keeps database invariant: only pesel_hash exists, no reversible or raw pesel column @REQ: SEC-PESEL-HASH', async () => {
     const columns = await sql`
       SELECT column_name 
       FROM information_schema.columns 
@@ -25,7 +25,7 @@ describe('PESEL Step-Up Audit and Column Invariant (SEC-PESEL-STEP-UP)', () => {
     const colNames = columns.map(c => c.column_name);
 
     expect(colNames).toContain('pesel_hash');
-    expect(colNames).toContain('pesel_encrypted');
+    expect(colNames).not.toContain('pesel_encrypted');
     expect(colNames).not.toContain('pesel');
   });
 
