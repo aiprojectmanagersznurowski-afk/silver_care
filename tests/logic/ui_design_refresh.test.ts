@@ -60,4 +60,23 @@ describe('UI Design System Refresh & Login Page', () => {
     expect(cssContent).toContain('--border: #E8E4DD')
     expect(cssContent).toContain('--sidebar')
   })
+
+  it('@REQ: SEC-SESSION - auth/callback i login/page.tsx poprawnie kierują role i obsługują błędy OAuth', () => {
+    const callbackPath = join(root, 'apps/web/src/app/auth/callback/route.ts')
+    expect(existsSync(callbackPath)).toBe(true)
+    const callbackContent = readFileSync(callbackPath, 'utf8')
+
+    // Weryfikacja kierowania ról z app_metadata (RBAC)
+    expect(callbackContent).toContain("role === 'super_admin'")
+    expect(callbackContent).toContain("destination = '/admin'")
+    expect(callbackContent).toContain("destination = '/staff'")
+    expect(callbackContent).toContain("destination = '/dashboard'")
+    expect(callbackContent).toContain('response.cookies.set')
+
+    // Weryfikacja obsługi parametru błędu na stronie logowania
+    const loginPath = join(root, 'apps/web/src/app/login/page.tsx')
+    const loginContent = readFileSync(loginPath, 'utf8')
+    expect(loginContent).toContain("searchParams.get('error')")
+  })
 })
+

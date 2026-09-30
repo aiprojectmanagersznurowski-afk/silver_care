@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
@@ -7,32 +8,34 @@ export async function GET(request: Request) {
   const code = searchParams.get('code')
   
   if (!code) {
-    return NextResponse.redirect(`${origin}/login?error=Brak+kodu+autoryzacji`)
+    return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent('Brak kodu autoryzacji')}`)
   }
 
+  const cookieStore = await cookies()
   const supabase = await createClient()
 
   // Wymieniamy kod na sesję
   const { error: sessionError, data: sessionData } = await supabase.auth.exchangeCodeForSession(code)
 
   if (sessionError || !sessionData.user) {
-    return NextResponse.redirect(`${origin}/login?error=Błąd+logowania+przez+Google`)
+    const errorMsg = sessionError?.message || 'Błąd logowania przez Google'
+    return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(errorMsg)}`)
   }
 
   const user = sessionData.user
 
   // Odczytujemy ciasteczka, szukając invite_token dla rodziny
   const cookieHeader = request.headers.get('cookie') || ''
-  const cookies = Object.fromEntries(
+  const cookiesMap = Object.fromEntries(
     cookieHeader.split('; ').map(c => {
       const parts = c.split('=')
       return [parts[0].trim(), decodeURIComponent(parts.slice(1).join('='))]
     }).filter(c => c[0])
   )
 
-  const inviteToken = cookies['invite_token']
+  const inviteToken = cookiesMap['invite_token']
 
-  // Jeśli użytkownik rejestrował się jako rodzina
+  // Jeśli użytkownik rejestrował się jako rodzina z zaproszeniem
   if (inviteToken) {
     try {
       const adminClient = createAdminClient()
@@ -102,9 +105,12 @@ export async function GET(request: Request) {
         .update({ claimed_at: new Date().toISOString() })
         .eq('id', inviteToken)
 
-      // Sukces, przekierowujemy czyszcząc ciastko
+      // Sukces, przekierowujemy czyszcząc ciastko zaproszenia i utrwalając sesję
       const response = NextResponse.redirect(`${origin}/dashboard`)
       response.cookies.delete('invite_token')
+      cookieStore.getAll().forEach(c => {
+        response.cookies.set(c.name, c.value)
+      })
       return response
 
     } catch (e: any) {
@@ -115,6 +121,28 @@ export async function GET(request: Request) {
     }
   }
 
-  // W innym przypadku to normalne logowanie (np. personel lub już zarejestrowana rodzina)
-  return NextResponse.redirect(`${origin}/dashboard`)
+  // Normalne logowanie — kierowanie wg roli z app_metadata
+  const role = user.app_metadata?.role
+
+  let destination = '/dashboard'
+  if (role === 'super_admin' || role === 'org_admin' || role === 'admin' || role === 'facility_manager') {
+    destination = '/admin'
+  } else if (role === 'nurse' || role === 'paramedic' || role === 'caregiver') {
+    destination = '/staff'
+  } else if (role === 'family' || role === 'legal_guardian') {
+    destination = '/dashboard'
+  } else {
+    // Użytkownik zalogował się kontem Google, które nie jest zarejestrowane w systemie
+    await supabase.auth.signOut()
+    return NextResponse.redirect(
+      `${origin}/login?error=${encodeURIComponent('Konto Google nie jest powiązane z żadnym profilem w systemie. Skontaktuj się z administratorem placówki.')}`
+    )
+  }
+
+  const response = NextResponse.redirect(`${origin}${destination}`)
+  cookieStore.getAll().forEach(c => {
+    response.cookies.set(c.name, c.value)
+  })
+  return response
 }
+

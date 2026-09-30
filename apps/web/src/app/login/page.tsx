@@ -99,17 +99,25 @@ export default function LoginPage() {
       setIsRevealed(true)
     }, 400)
 
-    // Obsługa hasha z zaproszenia lub tokenu resetu hasła
+    // 1. Obsługa błędu z parametrów zapytania URL (?error=...)
+    const searchParams = new URLSearchParams(window.location.search)
+    const queryError = searchParams.get('error')
+    if (queryError) {
+      setError(queryError)
+      window.history.replaceState(null, '', window.location.pathname)
+    }
+
+    // 2. Obsługa hasha z zaproszenia lub tokenu resetu hasła (#access_token=... lub #error=...)
     const hash = window.location.hash
     if (hash.includes('access_token')) {
       router.push(`/update-password${hash}`)
-    } else if (hash.includes('error=access_denied')) {
+    } else if (hash.includes('error=')) {
       const params = new URLSearchParams(hash.replace('#', '?'))
       const errorDescription = params.get('error_description')
       if (errorDescription) {
         setError(errorDescription.replace(/\+/g, ' '))
       } else {
-        setError('Link wygasł lub jest nieprawidłowy.')
+        setError('Wystąpił błąd autoryzacji.')
       }
       window.history.replaceState(null, '', window.location.pathname)
     }
@@ -361,14 +369,24 @@ export default function LoginPage() {
                 className="w-full h-10 rounded-lg border-border hover:bg-muted text-foreground font-medium transition-colors"
                 disabled={loading}
                 onClick={async () => {
-                  setLoading(true)
-                  const supabase = createClient()
-                  await supabase.auth.signInWithOAuth({
-                    provider: 'google',
-                    options: {
-                      redirectTo: `${window.location.origin}/auth/callback`,
-                    },
-                  })
+                  try {
+                    setLoading(true)
+                    setError(null)
+                    const supabase = createClient()
+                    const { error: oauthError } = await supabase.auth.signInWithOAuth({
+                      provider: 'google',
+                      options: {
+                        redirectTo: `${window.location.origin}/auth/callback`,
+                      },
+                    })
+                    if (oauthError) {
+                      setError(oauthError.message)
+                      setLoading(false)
+                    }
+                  } catch (err: any) {
+                    setError(err?.message || 'Nie udało się połączyć z usługą Google.')
+                    setLoading(false)
+                  }
                 }}
               >
                 Zaloguj z Google
