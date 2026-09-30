@@ -43,7 +43,12 @@ export function isEuEndpoint(endpoint: string): boolean {
     return false
   }
   if (host === 'localhost' || host === '127.0.0.1') return true
-  return host.endsWith('.mistral.ai') || host.endsWith('.eu') || /(^|\.)eu-|europe/.test(host)
+  return (
+    host === 'mistral.ai' ||
+    host.endsWith('.mistral.ai') ||
+    host.endsWith('.eu') ||
+    /(^|\.)(eu-[a-z0-9-]+|europe-[a-z0-9-]+)\./.test(host)
+  )
 }
 
 export async function callEuLlmCompletion(

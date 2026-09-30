@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { extractJson } from '../../apps/web/src/lib/voice-helpers'
-import { callEuLlmCompletion } from '../../apps/web/src/lib/eu-llm-client'
+import { callEuLlmCompletion, isEuEndpoint } from '../../apps/web/src/lib/eu-llm-client'
 
 describe('Voice Fidelity & Medical Stripping (VOICE-MEDICAL-STRIP, VOICE-ZERO-GUESSING, INFRA-EU-REGION)', () => {
   it('extractJson flags parse error and sets behavioral to null when JSON is corrupt @REQ: VOICE-MEDICAL-STRIP', () => {
@@ -90,6 +90,9 @@ describe('Voice Fidelity & Medical Stripping (VOICE-MEDICAL-STRIP, VOICE-ZERO-GU
     'https://api.groq.com/openai/v1/chat/completions',
     'https://api.x.ai/v1/chat/completions',
     'https://api.openai.com/v1/chat/completions',
+    'https://fake-europe.com/v1',
+    'https://bad-europe.attacker.com/v1',
+    'https://api.europe.openai.com/v1',
   ])('callEuLlmCompletion rejects non-EEA endpoint %s without sending the prompt @REQ: INFRA-EU-REGION', async (endpoint) => {
     const saved = ['EU_LLM_API_KEY', 'MISTRAL_API_KEY', 'EU_LLM_ENDPOINT'].map(
       (k) => [k, process.env[k]] as const
@@ -110,6 +113,56 @@ describe('Voice Fidelity & Medical Stripping (VOICE-MEDICAL-STRIP, VOICE-ZERO-GU
         callEuLlmCompletion([{ role: 'user', content: 'Test prompt' }])
       ).rejects.toThrow(/EU-LLM-REGION/)
       expect(fetchCalls).toBe(0)
+    } finally {
+      globalThis.fetch = originalFetch
+      for (const [k, v] of saved) {
+        if (v === undefined) delete process.env[k]
+        else process.env[k] = v
+      }
+    }
+  })
+
+  it('isEuEndpoint validates base mistral domain, regional subdomains and rejects attacker domains @REQ: INFRA-EU-REGION', () => {
+    // Valid EEA endpoints
+    expect(isEuEndpoint('https://mistral.ai/v1/chat/completions')).toBe(true)
+    expect(isEuEndpoint('https://api.mistral.ai/v1/chat/completions')).toBe(true)
+    expect(isEuEndpoint('https://eu-west-1.model-gateway.internal/v1')).toBe(true)
+    expect(isEuEndpoint('https://europe-west3-model.internal.cloud/v1')).toBe(true)
+    expect(isEuEndpoint('https://gateway.example.eu/v1')).toBe(true)
+    expect(isEuEndpoint('http://localhost:11434/v1')).toBe(true)
+    expect(isEuEndpoint('http://127.0.0.1:8000/v1')).toBe(true)
+
+    // Invalid / Spoofed endpoints with "europe" substring
+    expect(isEuEndpoint('https://fake-europe.com/v1')).toBe(false)
+    expect(isEuEndpoint('https://bad-europe.attacker.com/v1')).toBe(false)
+    expect(isEuEndpoint('https://phishing-europe.attacker.io/v1')).toBe(false)
+    expect(isEuEndpoint('https://api.europe.openai.com/v1')).toBe(false)
+    expect(isEuEndpoint('https://api.groq.com/openai/v1')).toBe(false)
+    expect(isEuEndpoint('https://api.x.ai/v1')).toBe(false)
+    expect(isEuEndpoint('invalid-url')).toBe(false)
+  })
+
+  it('callEuLlmCompletion succeeds with base mistral.ai domain endpoint @REQ: INFRA-EU-REGION', async () => {
+    const saved = ['EU_LLM_API_KEY', 'MISTRAL_API_KEY', 'EU_LLM_ENDPOINT'].map(
+      (k) => [k, process.env[k]] as const
+    )
+    const originalFetch = globalThis.fetch
+
+    try {
+      process.env.EU_LLM_API_KEY = 'test_eu_key'
+      process.env.EU_LLM_ENDPOINT = 'https://mistral.ai/v1/chat/completions'
+
+      globalThis.fetch = (async () => {
+        return {
+          ok: true,
+          json: async () => ({
+            choices: [{ message: { content: 'Raport z Mistral EU' } }],
+          }),
+        } as any
+      }) as any
+
+      const result = await callEuLlmCompletion([{ role: 'user', content: 'Test prompt' }])
+      expect(result).toBe('Raport z Mistral EU')
     } finally {
       globalThis.fetch = originalFetch
       for (const [k, v] of saved) {
