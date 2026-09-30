@@ -28,6 +28,16 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
+
+  /* Sidebar Tokens */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
   
   /* Custom Silver Care Tokens */
   --color-surface: var(--card);
@@ -73,6 +83,16 @@
   --input: #E8E4DD;
   --ring: #2F6F5E;
 
+  /* Sidebar Tokens (Light Mode) */
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #1C1B19;
+  --sidebar-primary: #2F6F5E;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #E8F0ED;
+  --sidebar-accent-foreground: #2F6F5E;
+  --sidebar-border: #E8E4DD;
+  --sidebar-ring: #2F6F5E;
+
   /* Family Portal (Senior Care Family Dashboard) Tokens */
   --cream: #ffffff;
   --cream-deep: #f8fafc;
@@ -105,7 +125,17 @@
   --input: #38342F;
   --ring: #7FBCA8;
 
-  /* Family Portal (Senior Care Family Dashboard) Tokens - Dark Mode Equivalents if needed, defaulting to original for now */
+  /* Sidebar Tokens (Dark Mode) */
+  --sidebar: #211F1D;
+  --sidebar-foreground: #F5F3F0;
+  --sidebar-primary: #7FBCA8;
+  --sidebar-primary-foreground: #171614;
+  --sidebar-accent: #1E3A32;
+  --sidebar-accent-foreground: #7FBCA8;
+  --sidebar-border: #38342F;
+  --sidebar-ring: #7FBCA8;
+
+  /* Family Portal Tokens */
   --cream: oklch(0.145 0 0);
   --cream-deep: oklch(0.205 0 0);
   --sage: #3b82f6;

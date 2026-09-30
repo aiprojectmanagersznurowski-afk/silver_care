@@ -45,7 +45,7 @@ export function AdminSidebar({
     { href: '/admin/audit', label: 'Rejestr Audytowy', icon: ShieldAlert },
   ]
 
-  // Linki operacyjne w placówce (dla lokalnego personelu/admina lub Super Admina w trybie impersonacji)
+  // Linki operacyjne w placówce (dla personelu/admina lub Super Admina w impersonacji)
   const facilityTopLinks = [
     { href: '/admin', label: 'Pulpit Placówki', icon: LayoutDashboard },
     { href: '/admin/facility', label: 'Struktura Placówki', icon: Building2 },
@@ -64,27 +64,28 @@ export function AdminSidebar({
   ]
 
   return (
-    <aside className="hidden w-72 flex-col border-r border-slate/10 bg-white md:flex">
-      <div className="flex h-20 items-center justify-between border-b border-slate/10 px-6">
-        <Link href="/admin" className="flex items-center hover:opacity-90 transition-opacity">
+    <aside className="hidden w-72 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
+      <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-5">
+        <Link href="/admin" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
           <Image
             src="/logo.png"
             alt="Silver Care"
-            width={130}
-            height={38}
-            className="h-8 w-auto object-contain"
+            width={124}
+            height={36}
+            className="h-7 w-auto object-contain"
             priority
           />
         </Link>
-        <span className="rounded-md bg-sage/10 px-2 py-1 text-xs font-medium text-sage">
+        <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
           {role === 'super_admin' ? 'Super Admin' : 'Admin'}
         </span>
       </div>
-      <nav className="flex-1 space-y-4 p-4 overflow-y-auto">
+
+      <nav className="flex-1 space-y-4 p-3.5 overflow-y-auto">
         {/* Widok Platformowy Super Admina */}
         {role === 'super_admin' && !isImpersonating && (
-          <div className="space-y-1.5">
-            <div className="px-4 pb-1 text-[0.7rem] font-semibold tracking-wider text-slate-soft/70 uppercase">
+          <div className="space-y-1">
+            <div className="px-3 pb-1.5 text-[0.7rem] font-semibold tracking-wider text-muted-foreground uppercase">
               Zarządzanie Platformą
             </div>
             {platformLinks.map((link) => {
@@ -95,13 +96,13 @@ export function AdminSidebar({
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`flex items-center gap-3 rounded-xl px-4 py-3 text-[0.95rem] font-medium transition-colors ${
+                  className={`flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-sm font-medium transition-all ${
                     isActive
-                      ? 'bg-sage text-white shadow-sm'
-                      : 'text-slate-soft hover:bg-slate/5 hover:text-slate'
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
                   }`}
                 >
-                  <Icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-slate-soft'}`} />
+                  <Icon className={`h-4.5 w-4.5 ${isActive ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
                   {link.label}
                 </Link>
               )
@@ -109,11 +110,11 @@ export function AdminSidebar({
           </div>
         )}
 
-        {/* Widok Operacyjny Placówki (Dla personelu placówki lub podczas impersonacji) */}
+        {/* Widok Operacyjny Placówki */}
         {(role !== 'super_admin' || isImpersonating) && (
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             {isImpersonating && (
-              <div className="px-4 pb-1 text-[0.7rem] font-semibold tracking-wider text-amber-600 uppercase">
+              <div className="px-3 pb-1.5 text-[0.7rem] font-semibold tracking-wider text-amber-600 uppercase">
                 Operacje Placówki (Podgląd)
               </div>
             )}
@@ -125,44 +126,44 @@ export function AdminSidebar({
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`flex items-center gap-3 rounded-xl px-4 py-3 text-[0.95rem] font-medium transition-colors ${
+                  className={`flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-sm font-medium transition-all ${
                     isActive
-                      ? 'bg-sage text-white shadow-sm'
-                      : 'text-slate-soft hover:bg-slate/5 hover:text-slate'
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
                   }`}
                 >
-                  <Icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-slate-soft'}`} />
+                  <Icon className={`h-4.5 w-4.5 ${isActive ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
                   {link.label}
                 </Link>
               )
             })}
 
             {/* Rozwijane menu Analiza */}
-            <div className="space-y-1">
+            <div className="space-y-1 pt-1">
               <button
                 type="button"
                 onClick={() => setIsAnalysisOpen((prev) => !prev)}
-                className={`flex w-full items-center justify-between rounded-xl px-4 py-3 text-[0.95rem] font-medium transition-colors ${
+                className={`flex w-full items-center justify-between rounded-lg px-3.5 py-2.5 text-sm font-medium transition-all ${
                   isAnalysisActive && !isAnalysisOpen
-                    ? 'bg-sage/10 text-sage font-semibold'
+                    ? 'bg-primary/10 text-primary font-semibold'
                     : isAnalysisActive
-                    ? 'text-slate font-semibold bg-slate/5'
-                    : 'text-slate-soft hover:bg-slate/5 hover:text-slate'
+                    ? 'text-foreground font-semibold bg-muted'
+                    : 'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <TrendingUp className={`h-5 w-5 ${isAnalysisActive ? 'text-sage' : 'text-slate-soft'}`} />
+                  <TrendingUp className={`h-4.5 w-4.5 ${isAnalysisActive ? 'text-primary' : 'text-muted-foreground'}`} />
                   <span>Analiza</span>
                 </div>
                 <ChevronDown
                   className={`h-4 w-4 transition-transform duration-200 ${
-                    isAnalysisOpen ? 'rotate-180 text-slate' : 'text-slate-soft'
+                    isAnalysisOpen ? 'rotate-180 text-foreground' : 'text-muted-foreground'
                   }`}
                 />
               </button>
 
               {isAnalysisOpen && (
-                <div className="ml-4 space-y-1 border-l-2 border-slate/10 pl-3 pt-1">
+                <div className="ml-4 space-y-1 border-l-2 border-border pl-3 pt-1">
                   {analysisSubLinks.map((subLink) => {
                     const SubIcon = subLink.icon
                     const isSubActive = pathname === subLink.href || pathname.startsWith(subLink.href)
@@ -171,13 +172,13 @@ export function AdminSidebar({
                       <Link
                         key={subLink.href}
                         href={subLink.href}
-                        className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                        className={`flex items-center gap-2.5 rounded-md px-3 py-2 text-xs font-medium transition-all ${
                           isSubActive
-                            ? 'bg-sage text-white shadow-sm'
-                            : 'text-slate-soft hover:bg-slate/5 hover:text-slate'
+                            ? 'bg-primary text-primary-foreground shadow-sm'
+                            : 'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
                         }`}
                       >
-                        <SubIcon className={`h-4 w-4 ${isSubActive ? 'text-white' : 'text-slate-soft'}`} />
+                        <SubIcon className={`h-4 w-4 ${isSubActive ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
                         {subLink.label}
                       </Link>
                     )
@@ -194,13 +195,13 @@ export function AdminSidebar({
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`flex items-center gap-3 rounded-xl px-4 py-3 text-[0.95rem] font-medium transition-colors ${
+                  className={`flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-sm font-medium transition-all ${
                     isActive
-                      ? 'bg-sage text-white shadow-sm'
-                      : 'text-slate-soft hover:bg-slate/5 hover:text-slate'
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
                   }`}
                 >
-                  <Icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-slate-soft'}`} />
+                  <Icon className={`h-4.5 w-4.5 ${isActive ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
                   {link.label}
                 </Link>
               )
@@ -208,13 +209,17 @@ export function AdminSidebar({
           </div>
         )}
       </nav>
-      <div className="p-4 border-t border-slate/10 bg-slate/5">
-        <div className="mb-4 px-2 text-xs font-medium text-slate-soft truncate">
-          Zalogowano jako:<br/>
-          <span className="text-slate">{userEmail}</span>
+
+      <div className="p-3.5 border-t border-sidebar-border bg-muted/40">
+        <div className="mb-3 px-1 text-xs text-muted-foreground truncate">
+          <span className="block text-[11px] uppercase tracking-wider text-muted-foreground/70">Zalogowano:</span>
+          <span className="font-medium text-foreground truncate">{userEmail}</span>
         </div>
         <form action="/auth/signout" method="post">
-          <button type="submit" className="flex w-full items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10">
+          <button
+            type="submit"
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10"
+          >
             <LogOut className="h-4 w-4" />
             Wyloguj się
           </button>
