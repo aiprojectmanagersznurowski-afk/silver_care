@@ -54,125 +54,68 @@ describe('Voice Fidelity & Medical Stripping (VOICE-MEDICAL-STRIP, VOICE-ZERO-GU
     }
   })
 
-  it('callEuLlmCompletion falls back to Groq when EU keys are missing but GROQ_API_KEY is present @REQ: INFRA-GROQ-TRANSCRIPTION', async () => {
-    const origKey = process.env.EU_LLM_API_KEY
-    const origMistralKey = process.env.MISTRAL_API_KEY
-    const origGroqKey = process.env.GROQ_API_KEY
-
+  it.each([
+    ['Groq', 'test_groq_key', 'GROQ_API_KEY'],
+    ['xAI', 'xai-test-key-12345', 'XAI_API_KEY'],
+  ])('callEuLlmCompletion refuses and makes no network call when only a %s key is present @REQ: INFRA-EU-REGION @REQ: INFRA-GROQ-TRANSCRIPTION', async (_name, key, envName) => {
+    const saved = ['EU_LLM_API_KEY', 'MISTRAL_API_KEY', 'GROQ_API_KEY', 'XAI_API_KEY', 'EU_LLM_ENDPOINT'].map(
+      (k) => [k, process.env[k]] as const
+    )
     const originalFetch = globalThis.fetch
-    let calledUrl = ''
-    let calledBody: any = null
+    let fetchCalls = 0
 
     try {
-      delete process.env.EU_LLM_API_KEY
-      delete process.env.MISTRAL_API_KEY
-      process.env.GROQ_API_KEY = 'test_groq_key'
+      for (const [k] of saved) delete process.env[k]
+      process.env[envName] = key
 
-      globalThis.fetch = (async (url: string | URL | Request, init?: RequestInit) => {
-        calledUrl = String(url)
-        calledBody = init?.body ? JSON.parse(init.body as string) : null
-        return {
-          ok: true,
-          json: async () => ({
-            choices: [{ message: { content: 'Raport wygenerowany przez Groq fallback' } }]
-          })
-        } as any
+      globalThis.fetch = (async () => {
+        fetchCalls++
+        return { ok: true, json: async () => ({ choices: [{ message: { content: 'x' } }] }) } as any
       }) as any
 
-      const result = await callEuLlmCompletion([{ role: 'user', content: 'Test prompt' }])
-      expect(result).toBe('Raport wygenerowany przez Groq fallback')
-      expect(calledUrl).toContain('groq.com')
-      expect(calledBody.model).toBe('llama-3.1-8b-instant')
+      await expect(
+        callEuLlmCompletion([{ role: 'user', content: 'Test prompt' }])
+      ).rejects.toThrow(/EU-LLM-CONFIG/)
+      expect(fetchCalls).toBe(0)
     } finally {
       globalThis.fetch = originalFetch
-      if (origKey) process.env.EU_LLM_API_KEY = origKey
-      if (origMistralKey) process.env.MISTRAL_API_KEY = origMistralKey
-      if (origGroqKey) process.env.GROQ_API_KEY = origGroqKey
+      for (const [k, v] of saved) {
+        if (v === undefined) delete process.env[k]
+        else process.env[k] = v
+      }
     }
   })
 
-  it('callEuLlmCompletion automatically recovers with llama-3.1-8b-instant if 70b model returns 404 model_not_found @REQ: INFRA-GROQ-TRANSCRIPTION', async () => {
-    const origKey = process.env.EU_LLM_API_KEY
-    const origMistralKey = process.env.MISTRAL_API_KEY
-    const origGroqKey = process.env.GROQ_API_KEY
-    const origModel = process.env.EU_LLM_MODEL
-
+  it.each([
+    'https://api.groq.com/openai/v1/chat/completions',
+    'https://api.x.ai/v1/chat/completions',
+    'https://api.openai.com/v1/chat/completions',
+  ])('callEuLlmCompletion rejects non-EEA endpoint %s without sending the prompt @REQ: INFRA-EU-REGION', async (endpoint) => {
+    const saved = ['EU_LLM_API_KEY', 'MISTRAL_API_KEY', 'EU_LLM_ENDPOINT'].map(
+      (k) => [k, process.env[k]] as const
+    )
     const originalFetch = globalThis.fetch
-    const requestedModels: string[] = []
+    let fetchCalls = 0
 
     try {
-      delete process.env.EU_LLM_API_KEY
-      delete process.env.MISTRAL_API_KEY
-      process.env.GROQ_API_KEY = 'test_groq_key'
-      process.env.EU_LLM_MODEL = 'llama-3.3-70b-versatile'
+      process.env.EU_LLM_API_KEY = 'test_eu_key'
+      process.env.EU_LLM_ENDPOINT = endpoint
 
-      globalThis.fetch = (async (_url: string | URL | Request, init?: RequestInit) => {
-        const body = init?.body ? JSON.parse(init.body as string) : {}
-        requestedModels.push(body.model)
-
-        if (body.model === 'llama-3.3-70b-versatile') {
-          return {
-            ok: false,
-            status: 404,
-            text: async () => JSON.stringify({ error: { code: 'model_not_found', message: 'The model llama-3.3-70b-versatile does not exist or you do not have access to it.' } })
-          } as any
-        }
-
-        return {
-          ok: true,
-          json: async () => ({
-            choices: [{ message: { content: 'Odpowiedź z fallbacku 8b' } }]
-          })
-        } as any
+      globalThis.fetch = (async () => {
+        fetchCalls++
+        return { ok: true, json: async () => ({ choices: [{ message: { content: 'x' } }] }) } as any
       }) as any
 
-      const result = await callEuLlmCompletion([{ role: 'user', content: 'Test prompt' }])
-      expect(result).toBe('Odpowiedź z fallbacku 8b')
-      expect(requestedModels).toEqual(['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'])
+      await expect(
+        callEuLlmCompletion([{ role: 'user', content: 'Test prompt' }])
+      ).rejects.toThrow(/EU-LLM-REGION/)
+      expect(fetchCalls).toBe(0)
     } finally {
       globalThis.fetch = originalFetch
-      if (origKey) process.env.EU_LLM_API_KEY = origKey
-      if (origMistralKey) process.env.MISTRAL_API_KEY = origMistralKey
-      if (origGroqKey) process.env.GROQ_API_KEY = origGroqKey
-      if (origModel) process.env.EU_LLM_MODEL = origModel
-      else delete process.env.EU_LLM_MODEL
-    }
-  })
-
-  it('callEuLlmCompletion automatically routes to xAI endpoint when key starts with xai- @REQ: INFRA-GROQ-TRANSCRIPTION', async () => {
-    const origKey = process.env.EU_LLM_API_KEY
-    const origMistralKey = process.env.MISTRAL_API_KEY
-    const origGroqKey = process.env.GROQ_API_KEY
-
-    const originalFetch = globalThis.fetch
-    let calledUrl = ''
-    let calledBody: any = null
-
-    try {
-      delete process.env.EU_LLM_API_KEY
-      delete process.env.MISTRAL_API_KEY
-      process.env.GROQ_API_KEY = 'xai-test-key-12345'
-
-      globalThis.fetch = (async (url: string | URL | Request, init?: RequestInit) => {
-        calledUrl = String(url)
-        calledBody = init?.body ? JSON.parse(init.body as string) : null
-        return {
-          ok: true,
-          json: async () => ({
-            choices: [{ message: { content: 'Odpowiedź z xAI Grok' } }]
-          })
-        } as any
-      }) as any
-
-      const result = await callEuLlmCompletion([{ role: 'user', content: 'Test prompt' }])
-      expect(result).toBe('Odpowiedź z xAI Grok')
-      expect(calledUrl).toContain('api.x.ai')
-      expect(calledBody.model).toBe('grok-beta')
-    } finally {
-      globalThis.fetch = originalFetch
-      if (origKey) process.env.EU_LLM_API_KEY = origKey
-      if (origMistralKey) process.env.MISTRAL_API_KEY = origMistralKey
-      if (origGroqKey) process.env.GROQ_API_KEY = origGroqKey
+      for (const [k, v] of saved) {
+        if (v === undefined) delete process.env[k]
+        else process.env[k] = v
+      }
     }
   })
 })
