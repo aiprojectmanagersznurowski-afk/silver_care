@@ -89,12 +89,15 @@ export async function updateSession(request: NextRequest) {
     const isPublicPage = 
       path === '/' || 
       path === '/manifest.json' ||
+      path === '/sw.js' ||
+      path === '/offline.html' ||
       path.startsWith('/login') || 
       path.startsWith('/auth') || 
       path.startsWith('/register') || 
       path.startsWith('/accept-invite') ||
       path.startsWith('/update-password') ||
       path.startsWith('/unauthorized')
+
 
     if (!isPublicPage) {
       const redirectUrl = request.nextUrl.clone()
