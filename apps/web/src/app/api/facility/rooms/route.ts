@@ -10,12 +10,49 @@ import { ApiError } from '@/lib/api-errors'
 export const GET = withAuth(async (_request, { supabase }) => {
   const { data: rooms, error } = await supabase
     .from('rooms')
-    .select('*, beds:bed_count, occupied:occupied_beds, free:free_beds')
+    .select(`
+      *,
+      beds:bed_count,
+      occupied:occupied_beds,
+      free:free_beds,
+      beds_list:beds(
+        id,
+        is_active,
+        bed_assignments(
+          id,
+          unassigned_at,
+          resident:residents(gender)
+        )
+      )
+    `)
     .order('number', { ascending: true })
 
   if (error) throw error
 
-  return NextResponse.json({ rooms })
+  const enrichedRooms = (rooms || []).map((room) => {
+    let males = 0
+    let females = 0
+    const bedsList = (room as unknown as { beds_list?: Array<{ is_active: boolean; bed_assignments?: Array<{ unassigned_at: string | null; resident?: { gender?: string } }> }> })?.beds_list
+    if (bedsList) {
+      for (const b of bedsList) {
+        if (b.is_active && b.bed_assignments) {
+          for (const a of b.bed_assignments) {
+            if (a.unassigned_at === null && a.resident?.gender) {
+              if (a.resident.gender === 'M') males++
+              else if (a.resident.gender === 'F') females++
+            }
+          }
+        }
+      }
+    }
+    return {
+      ...room,
+      beds_list: undefined,
+      genderDistribution: { males, females },
+    }
+  })
+
+  return NextResponse.json({ rooms: enrichedRooms })
 })
 
 export const POST = withAuth(

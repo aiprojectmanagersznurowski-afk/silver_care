@@ -9,7 +9,7 @@ export const config = {
   generatedTsDir: 'packages/contracts/src/generated',
 
   contractProtectedPaths: ['contracts/', 'packages/contracts/src/generated/', 'packages/database/schema.prisma'],
-  testPathPatterns: ['/tests/', '.test.', '.spec.', '/e2e/'],
+  testPathPatterns: ['/tests/', '.test.', '.spec.', 'e2e/'],
 
   /** Zakresy zapisu per agent. Egzekwowane w Claude Code; w Antigravity zastępuje je sc-phase.mjs. */
   agentWriteScopes: {
