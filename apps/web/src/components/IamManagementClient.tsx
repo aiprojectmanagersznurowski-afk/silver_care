@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button'
 import { updateUserRoleAction, createUserWithRoleAction, resetUserPasswordAction } from '@/actions/iam'
 import { ShieldAlert, CheckCircle2, UserCog, RefreshCw, AlertCircle, Key, Copy, Check } from 'lucide-react'
 import { ROLES } from '@silvercare/contracts/src/generated/roles'
+import { toast } from 'sonner'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 
 import { UserTable } from './iam/UserTable'
 import { ResetPasswordDialog } from './iam/ResetPasswordDialog'
@@ -142,8 +144,10 @@ export function IamManagementClient({
       const result = await updateUserRoleAction(formData)
       if (result?.error) {
         setStatusMessage({ type: 'error', text: result.error })
+        toast.error(result.error)
       } else {
         setStatusMessage({ type: 'success', text: `Pomyślnie zaktualizowano rolę dla użytkownika.` })
+        toast.success('Pomyślnie zaktualizowano rolę dla użytkownika')
         setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u))
       }
     })
@@ -155,6 +159,7 @@ export function IamManagementClient({
 
     if (!newEmail.trim()) {
       setAddUserError('Adres e-mail jest wymagany.')
+      toast.error('Adres e-mail jest wymagany.')
       return
     }
 
@@ -172,7 +177,9 @@ export function IamManagementClient({
       const result = await createUserWithRoleAction(formData)
       if (result?.error) {
         setAddUserError(result.error)
+        toast.error(result.error)
       } else if (result?.user) {
+        toast.success(`Utworzono konto użytkownika: ${result.user.email}`)
         const u = result.user
         setUsers(prev => [
           {
@@ -317,20 +324,28 @@ export function IamManagementClient({
               <div className="flex items-center gap-2">
                 <strong>Hasło:</strong> 
                 <span className="bg-slate/5 px-2 py-1 rounded select-all">{createdCredentials.temporaryPassword}</span>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-7 px-2 text-xs"
-                  onClick={() => {
-                    navigator.clipboard.writeText(createdCredentials.temporaryPassword || '')
-                    setCopiedPassword(true)
-                    setTimeout(() => setCopiedPassword(false), 2000)
-                  }}
-                >
-                  {copiedPassword ? <Check className="h-3 w-3 text-sage mr-1" /> : <Copy className="h-3 w-3 mr-1" />}
-                  {copiedPassword ? 'Skopiowano' : 'Kopiuj hasło'}
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-7 px-2 text-xs"
+                      onClick={() => {
+                        navigator.clipboard.writeText(createdCredentials.temporaryPassword || '')
+                        setCopiedPassword(true)
+                        toast.success('Hasło tymczasowe skopiowano do schowka')
+                        setTimeout(() => setCopiedPassword(false), 2000)
+                      }}
+                    >
+                      {copiedPassword ? <Check className="h-3 w-3 text-sage mr-1" /> : <Copy className="h-3 w-3 mr-1" />}
+                      {copiedPassword ? 'Skopiowano' : 'Kopiuj hasło'}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {copiedPassword ? 'Skopiowano!' : 'Kopiuj hasło tymczasowe do schowka'}
+                  </TooltipContent>
+                </Tooltip>
               </div>
             )}
           </div>

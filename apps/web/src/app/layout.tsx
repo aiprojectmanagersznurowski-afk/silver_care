@@ -15,6 +15,8 @@ export const metadata: Metadata = {
 };
 
 import { PwaRegister } from "@/components/PwaRegister";
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export default function RootLayout({
   children,
@@ -24,7 +26,10 @@ export default function RootLayout({
   return (
     <html lang="pl" className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-background text-foreground">
-        {children}
+        <TooltipProvider>
+          {children}
+        </TooltipProvider>
+        <Toaster />
         <PwaRegister />
       </body>
     </html>

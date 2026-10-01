@@ -13,13 +13,31 @@ function Tooltip({ children, ...props }: TooltipPrimitive.Root.Props) {
   return <TooltipPrimitive.Root {...props}>{children}</TooltipPrimitive.Root>
 }
 
-function TooltipTrigger({ className, ...props }: TooltipPrimitive.Trigger.Props) {
+function TooltipTrigger({
+  className,
+  asChild,
+  children,
+  render,
+  ...props
+}: TooltipPrimitive.Trigger.Props & { asChild?: boolean }) {
+  if (asChild && React.isValidElement(children)) {
+    return (
+      <TooltipPrimitive.Trigger
+        data-slot="tooltip-trigger"
+        render={children}
+        {...props}
+      />
+    )
+  }
   return (
     <TooltipPrimitive.Trigger
       data-slot="tooltip-trigger"
       className={cn("inline-flex", className)}
+      render={render}
       {...props}
-    />
+    >
+      {children}
+    </TooltipPrimitive.Trigger>
   )
 }
 
