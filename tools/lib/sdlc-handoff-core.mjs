@@ -10,7 +10,7 @@ export const MEMBERS = {
     id: '5ce666443ecfaa7f62756e43',
     name: 'Darek Rink',
     username: 'darekrink',
-    github: 'darekrink'
+    github: 'darkov89'
   },
   MICHAL: {
     id: '6a1e8bee5edd0ea47730152c',

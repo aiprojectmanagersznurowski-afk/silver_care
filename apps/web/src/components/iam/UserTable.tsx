@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Shield, Key } from 'lucide-react'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import type { UserItem } from '@/components/IamManagementClient'
 import { AddUserDialog } from './AddUserDialog'
 import type { ComponentProps } from 'react'
@@ -93,24 +94,40 @@ export function UserTable({
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => onResetPasswordClick(user)}
-                          className="min-h-[40px] rounded-xl border-slate/20 text-slate hover:bg-slate/5"
-                          title="Resetuj lub nadaj nowe hasło"
-                        >
-                          <Key className="h-4 w-4 mr-1.5 text-slate-soft" />
-                          Hasło
-                        </Button>
-                        <Button
-                          disabled={!hasChanged || isPending}
-                          onClick={() => onApplyRole(user.id)}
-                          className="min-h-[40px] rounded-xl bg-sage px-4 text-sm font-medium text-white shadow-sm hover:bg-sage/90 disabled:opacity-40"
-                        >
-                          Zastosuj
-                        </Button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => onResetPasswordClick(user)}
+                              className="min-h-[40px] rounded-xl border-slate/20 text-slate hover:bg-slate/5"
+                            >
+                              <Key className="h-4 w-4 mr-1.5 text-slate-soft" />
+                              Hasło
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            Resetuj hasło lub wyślij link e-mail
+                          </TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span>
+                              <Button
+                                disabled={!hasChanged || isPending}
+                                onClick={() => onApplyRole(user.id)}
+                                className="min-h-[40px] rounded-xl bg-sage px-4 text-sm font-medium text-white shadow-sm hover:bg-sage/90 disabled:opacity-40"
+                              >
+                                Zastosuj
+                              </Button>
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {hasChanged ? 'Zapisz nową rolę w systemie' : 'Wybierz inną rolę z listy, aby zapisać'}
+                          </TooltipContent>
+                        </Tooltip>
                       </div>
                     </td>
                   </tr>
