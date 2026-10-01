@@ -1,5 +1,5 @@
 import { parseNationalId } from './admission-helpers'
-import crypto from 'crypto'
+import { hashNationalId } from './national-id-hash'
 
 export interface RawResidentRow {
   firstName?: string
@@ -74,7 +74,7 @@ export function validateResidentRows(
           seenInFile.add(idVal)
         }
 
-        const hash = crypto.createHmac('sha256', 'silvercare_pesel_salt').update(idVal).digest('hex')
+        const hash = hashNationalId(idVal)
         if (existingHashes.has(hash)) {
           errors.push('Pensjonariusz o tym numerze PESEL już istnieje w bazie placówki.')
         }

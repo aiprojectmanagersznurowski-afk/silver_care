@@ -675,7 +675,6 @@ export interface Database {
           contract_monthly_rate: number | null
           notes: string | null
           is_zsn: boolean
-          pesel_encrypted: string | null
         }
         Insert: {
           id?: string
@@ -698,7 +697,6 @@ export interface Database {
           contract_monthly_rate?: number | null
           notes?: string | null
           is_zsn?: boolean
-          pesel_encrypted?: string | null
         }
         Update: {
           id?: string
@@ -721,7 +719,6 @@ export interface Database {
           contract_monthly_rate?: number | null
           notes?: string | null
           is_zsn?: boolean
-          pesel_encrypted?: string | null
         }
         Relationships: []
       }

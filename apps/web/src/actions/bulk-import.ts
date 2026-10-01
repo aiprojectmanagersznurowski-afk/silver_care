@@ -6,12 +6,7 @@ import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { isImpersonationSessionActive, assertMutationAllowedDuringImpersonation } from '@/lib/impersonation-guards'
 import { RawResidentRow, validateResidentRows, ValidatedResidentRow, DryRunResult } from '@/lib/bulk-import-helpers'
-import { encryptNationalId } from '@/lib/identity_crypto'
-import crypto from 'crypto'
-
-function hashNationalId(value: string, salt: string = 'silvercare_pesel_salt'): string {
-  return crypto.createHmac('sha256', salt).update(value).digest('hex')
-}
+import { hashNationalId } from '@/lib/national-id-hash'
 
 export async function analyzeBulkImportAction(rows: RawResidentRow[]): Promise<{
   error?: string
@@ -77,7 +72,6 @@ export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[
     first_name: r.firstName,
     last_name: r.lastName,
     pesel_hash: hashNationalId(r.nationalId),
-    pesel_encrypted: encryptNationalId(r.nationalId),
     gender: r.gender,
     birth_date: r.birthDate,
     care_level: r.careLevel,
