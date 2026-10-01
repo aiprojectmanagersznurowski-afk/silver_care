@@ -7,13 +7,16 @@ import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import AssignBedDialog from './AssignBedDialog'
+import ReassignBedDialog from './ReassignBedDialog'
 
 interface BedListProps {
   roomId: string
+  roomNumber?: string
+  floor?: string
   onUpdate: () => void
 }
 
-export default function BedList({ roomId, onUpdate }: BedListProps) {
+export default function BedList({ roomId, roomNumber, floor, onUpdate }: BedListProps) {
   const [beds, setBeds] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [unassignTarget, setUnassignTarget] = useState<{
@@ -123,10 +126,27 @@ export default function BedList({ roomId, onUpdate }: BedListProps) {
 
             <div className="mt-4 min-h-[60px]">
               {bed.active_assignment ? (
-                <div className="text-sm">
-                  <div className="text-muted-foreground">Przypisano:</div>
-                  <div className="font-medium">
+                <div className="text-sm space-y-1.5">
+                  <div className="text-muted-foreground text-xs">Przypisano:</div>
+                  <div className="font-medium text-foreground">
                     {bed.active_assignment.resident.first_name} {bed.active_assignment.resident.last_name}
+                  </div>
+                  <div className="flex flex-wrap gap-1 text-[11px]">
+                    {bed.active_assignment.resident.gender && (
+                      <span className="inline-flex items-center rounded-md bg-slate-100 px-1.5 py-0.5 font-medium text-slate-700">
+                        {bed.active_assignment.resident.gender === 'M' ? 'Mężczyzna' : 'Kobieta'}
+                      </span>
+                    )}
+                    {bed.active_assignment.resident.is_zsn && (
+                      <span className="inline-flex items-center rounded-md bg-amber-100 px-1.5 py-0.5 font-medium text-amber-800">
+                        ZSN
+                      </span>
+                    )}
+                    {bed.active_assignment.resident.care_level && (
+                      <span className="inline-flex items-center rounded-md bg-blue-50 px-1.5 py-0.5 font-medium text-blue-700">
+                        {bed.active_assignment.resident.care_level === 'bedridden' ? 'Leżący' : bed.active_assignment.resident.care_level === 'sitting' ? 'Na wózku' : 'Chodzący'}
+                      </span>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -136,29 +156,46 @@ export default function BedList({ roomId, onUpdate }: BedListProps) {
               )}
             </div>
 
-            <div className="mt-4 pt-4 border-t flex items-center justify-between">
+            <div className="mt-4 pt-4 border-t flex items-center justify-between gap-2">
               {bed.is_active ? (
                 <>
                   {bed.active_assignment ? (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                          onClick={() => setUnassignTarget({
-                            bedId: bed.id,
-                            residentId: bed.active_assignment.resident.id,
-                            residentName: `${bed.active_assignment.resident.first_name} ${bed.active_assignment.resident.last_name}`,
-                          })}
-                        >
-                          Wypisz
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        Zwolnij to łóżko i usuń bieżące przypisanie pensjonariusza
-                      </TooltipContent>
-                    </Tooltip>
+                    <div className="flex items-center gap-1.5">
+                      <ReassignBedDialog
+                        currentBedId={bed.id}
+                        currentBedLabel={bed.label}
+                        currentRoomNumber={roomNumber || ''}
+                        currentFloor={floor}
+                        residentId={bed.active_assignment.resident.id}
+                        residentName={`${bed.active_assignment.resident.first_name} ${bed.active_assignment.resident.last_name}`}
+                        residentGender={bed.active_assignment.resident.gender}
+                        residentIsZsn={bed.active_assignment.resident.is_zsn}
+                        residentCareLevel={bed.active_assignment.resident.care_level}
+                        onReassigned={() => {
+                          fetchBeds()
+                          onUpdate()
+                        }}
+                      />
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="text-destructive hover:bg-destructive/10 hover:text-destructive h-8 px-2.5 text-xs"
+                            onClick={() => setUnassignTarget({
+                              bedId: bed.id,
+                              residentId: bed.active_assignment.resident.id,
+                              residentName: `${bed.active_assignment.resident.first_name} ${bed.active_assignment.resident.last_name}`,
+                            })}
+                          >
+                            Wypisz
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          Zwolnij to łóżko i usuń bieżące przypisanie pensjonariusza
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
                   ) : (
                     <AssignBedDialog bedId={bed.id} onAssigned={() => { fetchBeds(); onUpdate() }} />
                   )}
