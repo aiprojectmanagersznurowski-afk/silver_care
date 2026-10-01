@@ -5,7 +5,6 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Search, X, Mic, FileText, Bed, CheckCircle2, Zap, LayoutGrid, Loader2 } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { MediaUploader } from '@/components/MediaUploader'
-import { AgendaView } from '@/components/AgendaView'
 import { quickLogRoutineObservationAction } from '@/actions/bulk-reports'
 import Link from 'next/link'
 import { toast } from 'sonner'
@@ -55,7 +54,7 @@ interface StaffBoardClientProps {
 }
 
 export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
-  const [viewMode, setViewMode] = useState<'standard' | 'rounds'>('standard')
+  const [viewMode, setViewMode] = useState<'standard' | 'rounds'>('rounds')
   const [searchFilter, setSearchFilter] = useState<string>('')
   const [floorFilter, setFloorFilter] = useState<string>('all')
   const [roomFilter, setRoomFilter] = useState<string>('all')
@@ -139,30 +138,20 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
     (searchFilter !== '' ? 1 : 0)
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-3xl font-display font-semibold tracking-tight text-slate">
             Podopieczni
           </h2>
-          <p className="mt-2 text-slate-soft">Szybki dostęp do notatek, dyktowania i statusów dyżuru.</p>
+          <p className="mt-1 text-slate-soft text-sm">
+            Szybki obchód dyżurny, bezpośrednie dyktowanie i bieżący stan podopiecznych.
+          </p>
         </div>
 
-        {/* Przełącznik trybu widoku (Click-Reduction Engine) */}
+        {/* Przełącznik trybu widoku */}
         <div className="flex items-center gap-2">
           <div className="bg-slate/5 p-1 rounded-xl flex items-center border border-slate/10">
-            <button
-              type="button"
-              onClick={() => setViewMode('standard')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors min-h-[40px] ${
-                viewMode === 'standard'
-                  ? 'bg-white text-slate shadow-xs'
-                  : 'text-slate-soft hover:text-slate'
-              }`}
-            >
-              <LayoutGrid className="h-4 w-4" />
-              Karty
-            </button>
             <button
               type="button"
               onClick={() => setViewMode('rounds')}
@@ -175,43 +164,123 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
               <Zap className="h-4 w-4" />
               Szybki obchód (Quick-Rounds)
             </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('standard')}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors min-h-[40px] ${
+                viewMode === 'standard'
+                  ? 'bg-white text-slate shadow-xs'
+                  : 'text-slate-soft hover:text-slate'
+              }`}
+            >
+              <LayoutGrid className="h-4 w-4" />
+              Karty
+            </button>
           </div>
 
           {activeFiltersCount > 0 && (
             <button
               onClick={clearFilters}
-              className="inline-flex items-center gap-2 rounded-xl bg-slate/5 px-3 py-2 text-sm font-medium text-slate-soft hover:bg-slate/10 hover:text-slate transition-colors min-h-[40px]"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-slate/5 px-3 py-2 text-xs font-semibold text-slate-soft hover:bg-slate/10 hover:text-slate transition-colors min-h-[40px]"
             >
-              Wyczyść filtry ({activeFiltersCount})
-              <X className="h-4 w-4" />
+              Wyczyść ({activeFiltersCount})
+              <X className="h-3.5 w-3.5" />
             </button>
           )}
         </div>
       </div>
 
-      {/* Agenda View */}
-      <AgendaView residents={residents} />
+      {/* Pasek filtrów tokenowych (filter-token-bar) */}
+      <Card data-testid="filter-token-bar" className="rounded-2xl border-none shadow-sm ring-1 ring-slate/10 bg-white">
+        <CardContent className="p-4 sm:p-5 space-y-4">
+          {/* Górny wiersz: Wyszukiwarka + Licznik */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-soft" />
+              <input
+                placeholder="Szukaj podopiecznego..."
+                className="w-full h-10 pl-10 pr-9 rounded-xl border border-slate/15 bg-slate/5 text-sm text-slate placeholder:text-slate-soft focus:outline-none focus:ring-2 focus:ring-sage focus:border-transparent transition-all"
+                value={searchFilter}
+                onChange={(e) => setSearchFilter(e.target.value)}
+              />
+              {searchFilter && (
+                <button
+                  type="button"
+                  onClick={() => setSearchFilter('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-soft hover:text-slate p-1"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
 
-      {/* Filtry */}
-      <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5 bg-white">
-        <CardContent className="p-6 space-y-6">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-soft" />
-            <input
-              placeholder="Szukaj podopiecznego..."
-              className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate/10 bg-slate/5 text-slate placeholder:text-slate-soft focus:outline-none focus:ring-2 focus:ring-sage focus:border-transparent transition-all"
-              value={searchFilter}
-              onChange={(e) => setSearchFilter(e.target.value)}
-            />
+            <div className="text-xs font-medium text-slate-soft self-end sm:self-center">
+              Wyników: <span className="font-semibold text-slate">{filtered.length}</span> z {residents.length}
+            </div>
           </div>
 
-          <div className="flex flex-col gap-4">
+          {/* Rzędy tokenów filtrów */}
+          <div className="space-y-2.5 pt-1 border-t border-slate/10">
+            {/* Tokeny statusu notatki */}
+            <div data-filter-group="status" className="flex flex-wrap items-center gap-1.5">
+              <span className="text-xs font-medium text-slate-soft w-14 shrink-0">Status:</span>
+              <button
+                type="button"
+                onClick={() => setStatusFilter('all')}
+                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                  statusFilter === 'all'
+                    ? 'bg-slate text-white'
+                    : 'bg-slate/5 text-slate-soft hover:bg-slate/10 hover:text-slate'
+                }`}
+              >
+                Wszystkie
+              </button>
+              <button
+                type="button"
+                onClick={() => setStatusFilter('none')}
+                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                  statusFilter === 'none'
+                    ? 'bg-rose-600 text-white'
+                    : 'bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-600/20 hover:bg-rose-100'
+                }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
+                Brak wpisu
+              </button>
+              <button
+                type="button"
+                onClick={() => setStatusFilter('draft')}
+                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                  statusFilter === 'draft'
+                    ? 'bg-amber-600 text-white'
+                    : 'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20 hover:bg-amber-100'
+                }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                Wersja robocza
+              </button>
+              <button
+                type="button"
+                onClick={() => setStatusFilter('ready')}
+                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                  statusFilter === 'ready'
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20 hover:bg-emerald-100'
+                }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                Raport gotowy
+              </button>
+            </div>
+
+            {/* Tokeny piętra */}
             {floors.length > 0 && (
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-sm font-medium text-slate-soft w-16">Piętro:</span>
+              <div data-filter-group="floor" className="flex flex-wrap items-center gap-1.5">
+                <span className="text-xs font-medium text-slate-soft w-14 shrink-0">Piętro:</span>
                 <button
+                  type="button"
                   onClick={() => setFloorFilter('all')}
-                  className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                  className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                     floorFilter === 'all'
                       ? 'bg-slate text-white'
                       : 'bg-slate/5 text-slate-soft hover:bg-slate/10 hover:text-slate'
@@ -222,25 +291,28 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                 {floors.map((f) => (
                   <button
                     key={f}
+                    type="button"
                     onClick={() => setFloorFilter(f)}
-                    className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                    className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                       floorFilter === f
                         ? 'bg-slate text-white'
                         : 'bg-slate/5 text-slate-soft hover:bg-slate/10 hover:text-slate'
                     }`}
                   >
-                    {f}
+                    Piętro {f}
                   </button>
                 ))}
               </div>
             )}
 
+            {/* Tokeny sali (gdy wybrane piętro) */}
             {floorFilter !== 'all' && roomsForCurrentFloor.length > 0 && (
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-sm font-medium text-slate-soft w-16">Sala:</span>
+              <div data-filter-group="room" className="flex flex-wrap items-center gap-1.5">
+                <span className="text-xs font-medium text-slate-soft w-14 shrink-0">Sala:</span>
                 <button
+                  type="button"
                   onClick={() => setRoomFilter('all')}
-                  className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                  className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                     roomFilter === 'all'
                       ? 'bg-slate text-white'
                       : 'bg-slate/5 text-slate-soft hover:bg-slate/10 hover:text-slate'
@@ -251,63 +323,61 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                 {roomsForCurrentFloor.map((r) => (
                   <button
                     key={r}
+                    type="button"
                     onClick={() => setRoomFilter(r)}
-                    className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                    className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                       roomFilter === r
                         ? 'bg-slate text-white'
                         : 'bg-slate/5 text-slate-soft hover:bg-slate/10 hover:text-slate'
                     }`}
                   >
-                    {r}
+                    Pokój {r}
                   </button>
                 ))}
               </div>
             )}
-
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm font-medium text-slate-soft w-16">Status:</span>
-              <button
-                onClick={() => setStatusFilter('all')}
-                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                  statusFilter === 'all'
-                    ? 'bg-slate text-white'
-                    : 'bg-slate/5 text-slate-soft hover:bg-slate/10 hover:text-slate'
-                }`}
-              >
-                Wszystkie
-              </button>
-              <button
-                onClick={() => setStatusFilter('none')}
-                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                  statusFilter === 'none'
-                    ? 'bg-rose-500 text-white'
-                    : 'bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-600/20 hover:bg-rose-100'
-                }`}
-              >
-                Brak wpisu
-              </button>
-              <button
-                onClick={() => setStatusFilter('draft')}
-                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                  statusFilter === 'draft'
-                    ? 'bg-amber-500 text-white'
-                    : 'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20 hover:bg-amber-100'
-                }`}
-              >
-                Wersja robocza
-              </button>
-              <button
-                onClick={() => setStatusFilter('ready')}
-                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                  statusFilter === 'ready'
-                    ? 'bg-emerald-500 text-white'
-                    : 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20 hover:bg-emerald-100'
-                }`}
-              >
-                Raport gotowy
-              </button>
-            </div>
           </div>
+
+          {/* Aktywne tokeny filtrów (Active chips) */}
+          {activeFiltersCount > 0 && (
+            <div className="pt-2 border-t border-slate/10 flex flex-wrap items-center gap-2">
+              <span className="text-[11px] font-semibold text-slate-soft uppercase tracking-wider">
+                Aktywne filtry:
+              </span>
+              {searchFilter && (
+                <span className="inline-flex items-center gap-1 bg-sage/10 text-sage-dark text-xs font-medium px-2.5 py-0.5 rounded-full">
+                  Szukaj: &quot;{searchFilter}&quot;
+                  <button type="button" onClick={() => setSearchFilter('')} className="hover:opacity-75">
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
+              {statusFilter !== 'all' && (
+                <span className="inline-flex items-center gap-1 bg-slate/10 text-slate text-xs font-medium px-2.5 py-0.5 rounded-full">
+                  Status: {STATUS_CONFIG[statusFilter as NoteStatus]?.label}
+                  <button type="button" onClick={() => setStatusFilter('all')} className="hover:opacity-75">
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
+              {floorFilter !== 'all' && (
+                <span className="inline-flex items-center gap-1 bg-slate/10 text-slate text-xs font-medium px-2.5 py-0.5 rounded-full">
+                  Piętro: {floorFilter}
+                  <button type="button" onClick={() => setFloorFilter('all')} className="hover:opacity-75">
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
+              {roomFilter !== 'all' && (
+                <span className="inline-flex items-center gap-1 bg-slate/10 text-slate text-xs font-medium px-2.5 py-0.5 rounded-full">
+                  Pokój: {roomFilter}
+                  <button type="button" onClick={() => setRoomFilter('all')} className="hover:opacity-75">
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 
