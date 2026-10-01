@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useTransition } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
-import { Search, X, Mic, FileText, Bed, CheckCircle2, Zap, LayoutGrid, Loader2 } from 'lucide-react'
+import { Search, X, Mic, FileText, Bed, CheckCircle2, Zap, LayoutGrid, Loader2, MessageSquare } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { MediaUploader } from '@/components/MediaUploader'
 import { quickLogRoutineObservationAction } from '@/actions/bulk-reports'
@@ -578,6 +578,13 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                         </TooltipContent>
                       </Tooltip>
                     )}
+
+                    <Link href={`/staff/messages?residentId=${resident.id}`} className="block w-full">
+                      <button className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-medium text-slate shadow-sm ring-1 ring-inset ring-slate/10 hover:bg-slate/5 transition-colors min-h-[44px]">
+                        <MessageSquare className="h-4 w-4 text-sage-dark" />
+                        Wiadomości od rodziny
+                      </button>
+                    </Link>
 
                     <div className="mt-1">
                       <MediaUploader residentId={resident.id as string} />
