@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { Menu, X, Users, Calendar, FileText, LogOut } from 'lucide-react'
+import { Menu, X, Users, Calendar, FileText, MessageSquare, LogOut } from 'lucide-react'
 import { StaffCommandPalette } from '@/components/StaffCommandPalette'
 
 export function StaffMobileHeader({ userEmail }: { userEmail: string | undefined }) {
@@ -15,6 +15,7 @@ export function StaffMobileHeader({ userEmail }: { userEmail: string | undefined
     { name: 'Podopieczni', href: '/staff', icon: Users },
     { name: 'Agenda na dziś', href: '/staff/agenda', icon: Calendar },
     { name: 'Raporty', href: '/staff/reports', icon: FileText },
+    { name: 'Wiadomości', href: '/staff/messages', icon: MessageSquare },
   ]
 
 

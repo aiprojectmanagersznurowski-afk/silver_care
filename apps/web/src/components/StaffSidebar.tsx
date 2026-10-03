@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { Users, Calendar, FileText, LogOut } from 'lucide-react'
+import { Users, Calendar, FileText, MessageSquare, LogOut } from 'lucide-react'
 import { StaffCommandPalette } from '@/components/StaffCommandPalette'
 
 export function StaffSidebar({ userEmail }: { userEmail: string | undefined }) {
@@ -13,6 +13,7 @@ export function StaffSidebar({ userEmail }: { userEmail: string | undefined }) {
     { name: 'Podopieczni', href: '/staff', icon: Users },
     { name: 'Agenda na dziś', href: '/staff/agenda', icon: Calendar },
     { name: 'Raporty', href: '/staff/reports', icon: FileText },
+    { name: 'Wiadomości', href: '/staff/messages', icon: MessageSquare },
   ]
 
 
