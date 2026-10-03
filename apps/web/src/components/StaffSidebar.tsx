@@ -11,7 +11,7 @@ export function StaffSidebar({ userEmail }: { userEmail: string | undefined }) {
 
   const navItems = [
     { name: 'Podopieczni', href: '/staff', icon: Users },
-    { name: 'Plan Dnia', href: '/staff/agenda', icon: Calendar },
+    { name: 'Agenda na dziś', href: '/staff/agenda', icon: Calendar },
     { name: 'Raporty', href: '/staff/reports', icon: FileText },
   ]
 

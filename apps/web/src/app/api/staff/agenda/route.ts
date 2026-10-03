@@ -48,12 +48,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Brak przypisania do organizacji' }, { status: 403 })
     }
 
+    const lowerTitle = String(title).toLowerCase()
+    const FORBIDDEN_SUBSTRINGS = ['pacj', 'zawa', 'udar']
+    for (const term of FORBIDDEN_SUBSTRINGS) {
+      if (lowerTitle.includes(term)) {
+        return NextResponse.json(
+          { error: 'Wpis narusza zasady opiekuńcze. Wpis musi mieć charakter organizacyjny i neutralny.' },
+          { status: 400 }
+        )
+      }
+    }
+
     let rowsToInsert: any[] = []
 
     if (Array.isArray(target_dates) && target_dates.length > 0) {
       rowsToInsert = target_dates.map(date => ({
         organization_id: orgId,
-        title,
+        title: title.trim(),
         time,
         type,
         resident_id: resident_id || null,
@@ -63,7 +74,7 @@ export async function POST(request: Request) {
     } else {
       rowsToInsert = [{
         organization_id: orgId,
-        title,
+        title: title.trim(),
         time,
         type,
         resident_id: resident_id || null,
@@ -83,6 +94,65 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true }, { status: 201 })
   } catch {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
+  }
+}
+
+export async function PUT(request: Request) {
+  const supabase = await createClient()
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const appRole = user.app_metadata?.role
+  if (!['nurse', 'paramedic', 'caregiver', 'org_admin', 'admin', 'super_admin'].includes(appRole)) {
+    return NextResponse.json({ error: 'Brak uprawnień personelu' }, { status: 403 })
+  }
+
+  try {
+    const body = await request.json()
+    const { id, title, time, type, resident_id } = body
+
+    if (!id || !title || !time || !type) {
+      return NextResponse.json({ error: 'Brakujące wymagane pola (id, title, time, type)' }, { status: 400 })
+    }
+
+    const lowerTitle = String(title).toLowerCase()
+    const FORBIDDEN_SUBSTRINGS = ['pacj', 'zawa', 'udar']
+    for (const term of FORBIDDEN_SUBSTRINGS) {
+      if (lowerTitle.includes(term)) {
+        return NextResponse.json(
+          { error: 'Wpis narusza zasady opiekuńcze. Wpis musi mieć charakter organizacyjny i neutralny.' },
+          { status: 400 }
+        )
+      }
+    }
+
+    const orgId = user.app_metadata?.organization_id
+    let updateQuery = supabase
+      .from('agenda_items')
+      .update({
+        title: title.trim(),
+        time,
+        type,
+        resident_id: resident_id || null,
+      })
+      .eq('id', id)
+
+    if (orgId) {
+      updateQuery = updateQuery.eq('organization_id', orgId)
+    }
+
+    const { error: updateError } = await updateQuery
+
+    if (updateError) {
+      return NextResponse.json({ error: 'Nie udało się zaktualizować wpisu' }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Błąd serwera' }, { status: 500 })
   }
 }
 
