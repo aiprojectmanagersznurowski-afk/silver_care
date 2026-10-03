@@ -20,6 +20,7 @@ import { differenceInYears, differenceInDays, format } from 'date-fns'
 import { pl } from 'date-fns/locale'
 import { ResidentZsnCheckbox } from '@/components/ResidentZsnCheckbox'
 import { PolarWearableCard } from '@/components/PolarWearableCard'
+import { ResidentContractAttachment } from '@/components/facility/ResidentContractAttachment'
 
 export default async function ResidentProfilePage({
   params,
@@ -271,6 +272,17 @@ export default async function ResidentProfilePage({
                     : null}
                 />
               </dl>
+
+              <div className="mt-6 pt-6 border-t border-slate/10">
+                <h4 className="text-xs font-semibold text-slate uppercase tracking-wider mb-2">
+                  Dokument umowy (Załącznik)
+                </h4>
+                <ResidentContractAttachment
+                  residentId={resident.id}
+                  initialContractPath={resident.contract_document_path}
+                  initialContractName={resident.contract_document_name}
+                />
+              </div>
             </CardContent>
           </Card>
 
