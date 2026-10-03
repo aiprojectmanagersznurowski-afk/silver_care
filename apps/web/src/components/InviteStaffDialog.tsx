@@ -38,14 +38,19 @@ export function InviteStaffDialog() {
     let avatar_url = null
     if (avatarFile) {
       try {
+        const { optimizeImageForUpload } = await import('@/lib/image-optimizer')
+        const { file: optimizedAvatar } = await optimizeImageForUpload(avatarFile, {
+          maxWidth: 400,
+          maxHeight: 400,
+          quality: 0.85,
+          prefix: 'staff_av'
+        })
         const supabase = createClient()
-        const fileExt = avatarFile.name.split('.').pop()
-        const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`
-        const filePath = `staff/${fileName}`
+        const filePath = `staff/${optimizedAvatar.name}`
         
         const { error: uploadError } = await supabase.storage
           .from('avatars')
-          .upload(filePath, avatarFile)
+          .upload(filePath, optimizedAvatar)
           
         if (uploadError) throw uploadError
         
