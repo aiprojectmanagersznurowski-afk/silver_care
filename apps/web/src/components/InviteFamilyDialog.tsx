@@ -27,6 +27,7 @@ export function InviteFamilyDialog({ residents }: { residents: Resident[] }) {
   const [phone, setPhone] = useState('')
   const [countryCode, setCountryCode] = useState('48')
   const [residentId, setResidentId] = useState(residents[0]?.id || '')
+  const [familyRole, setFamilyRole] = useState<'legal_guardian' | 'family'>('legal_guardian')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [generatedUrl, setGeneratedUrl] = useState<string | null>(null)
@@ -56,7 +57,7 @@ export function InviteFamilyDialog({ residents }: { residents: Resident[] }) {
       const res = await fetch('/api/family/invite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), phone: finalPhone, resident_id: residentId }),
+        body: JSON.stringify({ email: email.trim(), phone: finalPhone, resident_id: residentId, role: familyRole }),
       })
 
       const data = await res.json()
@@ -65,6 +66,7 @@ export function InviteFamilyDialog({ residents }: { residents: Resident[] }) {
         setGeneratedUrl(data.url)
         setEmail('')
         setPhone('')
+        setFamilyRole('legal_guardian')
         // setOpen(false) 
         // window.location.reload() // Usunięte by użytkownik zobaczył link
       } else {
@@ -103,6 +105,21 @@ export function InviteFamilyDialog({ residents }: { residents: Resident[] }) {
                 <option key={r.id} value={r.id}>{r.first_name} {r.last_name}</option>
               ))}
             </select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="family-role">Rola i uprawnienia</Label>
+            <select
+              id="family-role"
+              value={familyRole}
+              onChange={(e) => setFamilyRole(e.target.value as 'legal_guardian' | 'family')}
+              className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <option value="legal_guardian">Opiekun prawny (pełne uprawnienia, zgody Art. 9)</option>
+              <option value="family">Obserwator (tylko wgląd w raporty, brak zgód Art. 9)</option>
+            </select>
+            <p className="text-xs text-muted-foreground">
+              Zgodnie z RODO (Art. 9) wyłącznie pensjonariusz lub opiekun prawny może decydować o przetwarzaniu danych szczególnych kategorii. Obserwator posiada wyłącznie wgląd do publikowanych raportów.
+            </p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">Adres e-mail członka rodziny</Label>

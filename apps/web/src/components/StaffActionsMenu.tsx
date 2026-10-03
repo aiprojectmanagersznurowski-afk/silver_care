@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { KeyRound, Ban, CheckCircle, MoreHorizontal } from 'lucide-react'
+import { toast } from 'sonner'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,9 +32,19 @@ interface StaffActionsMenuProps {
 
 export function StaffActionsMenu({ staffId, email, isActive }: StaffActionsMenuProps) {
   const [isPending, startTransition] = useTransition()
+  const [dropdownOpen, setDropdownOpen] = useState(false)
   const [dialogType, setDialogType] = useState<'none' | 'reset' | 'suspend' | 'restore'>('none')
   const [confirmationInput, setConfirmationInput] = useState('')
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
+  const openDialog = (type: 'reset' | 'suspend' | 'restore') => {
+    setDropdownOpen(false)
+    setStatusMsg(null)
+    setConfirmationInput('')
+    setTimeout(() => {
+      setDialogType(type)
+    }, 100)
+  }
 
   const handleResetPassword = (mode: 'email' | 'temp') => {
     setStatusMsg(null)
@@ -45,8 +56,11 @@ export function StaffActionsMenu({ staffId, email, isActive }: StaffActionsMenuP
       const res = await resetStaffPasswordAction(formData)
       if (res.error) {
         setStatusMsg({ type: 'error', text: res.error })
+        toast.error(res.error)
       } else {
-        setStatusMsg({ type: 'success', text: res.message || 'Wykonano pomyślnie.' })
+        const msg = res.message || 'Wykonano pomyślnie.'
+        setStatusMsg({ type: 'success', text: msg })
+        toast.success(msg)
       }
     })
   }
@@ -61,8 +75,10 @@ export function StaffActionsMenu({ staffId, email, isActive }: StaffActionsMenuP
       const res = await suspendStaffAction(formData)
       if (res.error) {
         setStatusMsg({ type: 'error', text: res.error })
+        toast.error(res.error)
       } else {
-        setStatusMsg({ type: 'success', text: res.message || 'Konto zawieszone.' })
+        const msg = res.message || 'Konto pracownika zostało zawieszone.'
+        toast.success(msg)
         setDialogType('none')
         setConfirmationInput('')
       }
@@ -78,8 +94,10 @@ export function StaffActionsMenu({ staffId, email, isActive }: StaffActionsMenuP
       const res = await restoreStaffAction(formData)
       if (res.error) {
         setStatusMsg({ type: 'error', text: res.error })
+        toast.error(res.error)
       } else {
-        setStatusMsg({ type: 'success', text: res.message || 'Konto przywrócone.' })
+        const msg = res.message || 'Konto pracownika zostało przywrócone.'
+        toast.success(msg)
         setDialogType('none')
       }
     })
@@ -87,7 +105,7 @@ export function StaffActionsMenu({ staffId, email, isActive }: StaffActionsMenuP
 
   return (
     <>
-      <DropdownMenu>
+      <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
         <DropdownMenuTrigger className="inline-flex items-center justify-center h-8 w-8 rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors">
           <span className="sr-only">Otwórz menu</span>
           <MoreHorizontal className="h-4 w-4" />
@@ -96,18 +114,18 @@ export function StaffActionsMenu({ staffId, email, isActive }: StaffActionsMenuP
           <DropdownMenuLabel>Zarządzaj kontem</DropdownMenuLabel>
           <DropdownMenuSeparator />
 
-          <DropdownMenuItem onClick={() => setDialogType('reset')}>
+          <DropdownMenuItem onClick={() => openDialog('reset')}>
             <KeyRound className="mr-2 h-4 w-4 text-amber-600" />
             Zresetuj hasło
           </DropdownMenuItem>
 
           {isActive ? (
-            <DropdownMenuItem onClick={() => setDialogType('suspend')} className="text-red-600 focus:text-red-600">
+            <DropdownMenuItem onClick={() => openDialog('suspend')} className="text-red-600 focus:text-red-600">
               <Ban className="mr-2 h-4 w-4" />
               Zawieś konto
             </DropdownMenuItem>
           ) : (
-            <DropdownMenuItem onClick={() => setDialogType('restore')} className="text-emerald-600 focus:text-emerald-600">
+            <DropdownMenuItem onClick={() => openDialog('restore')} className="text-emerald-600 focus:text-emerald-600">
               <CheckCircle className="mr-2 h-4 w-4" />
               Przywróć konto
             </DropdownMenuItem>

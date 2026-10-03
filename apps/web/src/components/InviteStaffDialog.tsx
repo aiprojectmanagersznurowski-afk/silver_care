@@ -121,6 +121,7 @@ export function InviteStaffDialog() {
             >
               <option value="nurse">Pielęgniarka / Pielęgniarz</option>
               <option value="paramedic">Sanitariusz / Sanitariuszka</option>
+              <option value="org_admin">Administrator Placówki (org_admin)</option>
             </select>
           </div>
           <div className="space-y-2">
