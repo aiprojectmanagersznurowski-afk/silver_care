@@ -30,6 +30,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Button } from '@/components/ui/button'
 
 interface AgendaItem {
@@ -248,10 +249,14 @@ export default function StaffAgendaPage() {
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Czy na pewno chcesz usunąć ten wpis z harmonogramu?')) return
+  const [deleteItemId, setDeleteItemId] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const confirmDelete = async () => {
+    if (!deleteItemId) return
+    setIsDeleting(true)
     try {
-      const res = await fetch(`/api/staff/agenda?id=${id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/staff/agenda?id=${deleteItemId}`, { method: 'DELETE' })
       if (res.ok) {
         toast.success('Usunięto wpis.')
         fetchItems()
@@ -260,6 +265,9 @@ export default function StaffAgendaPage() {
       }
     } catch {
       toast.error('Błąd połączenia z serwerem.')
+    } finally {
+      setIsDeleting(false)
+      setDeleteItemId(null)
     }
   }
 
@@ -425,7 +433,7 @@ export default function StaffAgendaPage() {
                                     </button>
                                     <button
                                       type="button"
-                                      onClick={() => handleDelete(item.id)}
+                                      onClick={() => setDeleteItemId(item.id)}
                                       className="p-2 text-slate-soft hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                                       title="Usuń wpis"
                                     >
@@ -724,6 +732,18 @@ export default function StaffAgendaPage() {
           </DialogContent>
         </Dialog>
       )}
+
+      <ConfirmDialog
+        open={!!deleteItemId}
+        onOpenChange={(open) => !open && setDeleteItemId(null)}
+        title="Usuń wpis z harmonogramu"
+        description="Czy na pewno chcesz usunąć ten wpis z harmonogramu? Tej operacji nie można cofnąć."
+        confirmLabel="Usuń"
+        cancelLabel="Anuluj"
+        variant="destructive"
+        loading={isDeleting}
+        onConfirm={confirmDelete}
+      />
     </div>
   )
 }
