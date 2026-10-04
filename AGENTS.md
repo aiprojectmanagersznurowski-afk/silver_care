@@ -32,6 +32,14 @@ Trzy strumienie **przed** wejściem do modelu: `MEDICAL` (usuwany, zostaje w bru
 
 Rdzeń: `organizations`, `residents`. Identyfikatory dostawców żyją w `external_wearable_links` i `external_org_links`. Nazwy `care_homes`, `patients`, `polar_user_id` są porzucone.
 
+## Specyfikacja user stories
+
+`docs/KANONICZNA_SPECYFIKACJA_USER_STORIES.md` to narracyjna warstwa dokumentacji (kto, po co, scenariusze). **Nie jest źródłem prawdy** — przy sprzeczności wygrywa kontrakt i ADR.
+
+- Funkcja niepokryta istniejącym story → nowe story z kolejnym ID w domenie (np. `SC-NUR-11`) **przed** Work Orderem, ze statusem `📝 PROPOZYCJA`.
+- Każde story ma linię `🔗 Kontrakt` z ID `@REQ` albo `brak REQ`; nowe wymaganie w kontrakcie wskazuje story w polu `source`.
+- Zmiana zakresu funkcji = aktualizacja story w tym samym PR co kod.
+
 ## Pętla
 
 ```

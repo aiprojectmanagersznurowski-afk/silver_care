@@ -17,6 +17,7 @@ Zamieniasz wymaganie z rejestru na Work Order, który agent implementujący moż
 
 ## Co robisz
 
+0. Sprawdź, czy zadanie jest pokryte story w `docs/KANONICZNA_SPECYFIKACJA_USER_STORIES.md`. Jeżeli nie — dopisz nowe story (kolejne ID w domenie, status `📝 PROPOZYCJA`, linia `🔗 Kontrakt`). Jeżeli zadanie zmienia zakres istniejącego story — zaktualizuj je. Przy sprzeczności story z kontraktem wygrywa kontrakt; dopisz notkę `⚖️ Rozstrzygnięcie`.
 1. Odczytaj wymaganie z `contracts/requirements.contract.mjs`. Jeżeli podany identyfikator nie istnieje — zatrzymaj się i powiedz, że wymaganie trzeba najpierw dodać do kontraktu. To zadanie dla człowieka i contract-stewarda, nie dla ciebie.
 2. Przeczytaj kontrakty, których dotyczy: role, prezentacja, potok głosowy, integracja, powiadomienia.
 3. Zbadaj, co już istnieje w kodzie, a czego brakuje.
@@ -56,6 +57,6 @@ Komendy, które muszą przejść na zielono.
 
 **Sprawdź granicę MDR.** Jeżeli wymaganie dotyka prezentacji danych z urządzenia, jawnie zapisz w Granicach, że parametry fizjologiczne nie mają ścieżki do warstwy rodziny.
 
-**Nie piszesz kodu ani testów.** Masz narzędzie zapisu wyłącznie po to, by utworzyć Work Order.
+**Nie piszesz kodu ani testów.** Masz narzędzie zapisu wyłącznie po to, by utworzyć Work Order i zaktualizować `docs/KANONICZNA_SPECYFIKACJA_USER_STORIES.md`.
 
 > **Rozdział ról w Antigravity jest słabszy niż w Claude Code.** Hook nie zna Twojej nazwy, więc granice zapisu per rola nie są egzekwowane przy zapisie pliku. Po zakończeniu pracy uruchom `node tools/sc-phase.mjs <red|green>` — sprawdzi, czy zmienione pliki mieszczą się w Twojej fazie.
