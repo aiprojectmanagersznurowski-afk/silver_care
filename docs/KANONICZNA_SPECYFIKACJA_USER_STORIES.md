@@ -648,7 +648,7 @@
 - **AC3 (Alertowanie):** W przypadku braku danych przez > 30 minut Administrator otrzymuje powiadomienie o „Braku strumienia danych z urządzenia [ID]".
 
 ### [SC-FAM-02] Zarządzanie zgodami na dane IoT (Consent Ledger)
-🔗 **Kontrakt:** `CONSENT-LEDGER-IMMUTABLE` (AC2), `CONSENT-GRANTOR` · **Status:** 🟡 — niezmienialność rejestru zrealizowana, widok dla bliskich nie
+🔗 **Kontrakt:** `CONSENT-LEDGER-IMMUTABLE` (AC2), `CONSENT-GRANTOR`, `CONSENT-REVOKE` · **Status:** 🟡 — niezmienialność i obsługa wycofania zgód zrealizowana, widok dla bliskich w portalu poza MVP
 
 **User story:** Jako Rodzina, chcę mieć wgląd w stan moich zgód na przetwarzanie danych z urządzeń BLE, aby zachować kontrolę nad zakresem udostępnianych informacji o samopoczuciu mojego bliskiego.
 
