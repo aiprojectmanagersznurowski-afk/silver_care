@@ -159,6 +159,7 @@
 - **AC1 (Brak wycieków PII):** Treść wiadomości e-mail z zaproszeniem zawiera jedynie bezpieczny, wygasający link (np. na 7 dni) oraz anonimowe powitanie. Nie może zawierać imienia, nazwiska ani PESEL-u podopiecznego.
 - **AC2 (Tworzenie relacji):** Kliknięcie w link przez członka rodziny przenosi go na ekran ustawiania hasła. Po poprawnej rejestracji system automatycznie przypisuje nowo utworzone konto do odpowiedniego `resident_id` z ustaloną wcześniej przez administratora relacją (np. córka) z tabeli `family_invitations`.
 - **AC3 (Unieważnianie):** Administrator ma w swoim panelu podgląd wysłanych zaproszeń ze statusem `pending` i może je w każdej chwili ręcznie unieważnić (`revoke`), zanim rodzina zdąży założyć konto.
+- **AC4 (Zachowanie roli w OAuth):** Rola z zaproszenia (`legal_guardian` lub `family`) jest zachowywana także przy realizacji zaproszenia przez Google OAuth (`/auth/callback`), nie tylko przy rejestracji hasłem.
 
 ### [SC-ADM-09] Zarządzanie siecią placówek (Multi-Org View)
 🔗 **Kontrakt:** brak REQ · **Status:** ❌
@@ -473,8 +474,8 @@
 **Kryteria akceptacji:**
 - **AC1:** Reset hasła (link albo hasło tymczasowe z wymuszoną zmianą).
 - **AC2:** Odwracalne zawieszenie / przywrócenie konta z potwierdzeniem.
-- **AC3:** Operacje na użytkownikach innej placówki kończą się 403.
-- **AC4:** Zaproszenie bliskiego rozróżnia rolę `legal_guardian` i `family`.
+- **AC3:** Operacje na użytkownikach innej placówki kończą się 403. Próba wysłania zaproszenia bliskiego do pensjonariusza obcej placówki zwraca 404 (taka sama odpowiedź jak dla nieistniejącego, brak wyroczni istnienia rekordów).
+- **AC4:** Zaproszenie bliskiego rozróżnia rolę `legal_guardian` i `family`; rola z zaproszenia jest zachowywana także przy realizacji przez Google OAuth (`/auth/callback`).
 - **AC5:** Każda akcja w `audit_logs` bez PII.
 
 #### [SC-ADM-16] Szybka edycja danych pensjonariusza (inline i panel boczny)
@@ -519,8 +520,8 @@
 - **AC1:** Analiza strumienia behawioralnego pod kątem czterech wymiarów troski rodziny.
 - **AC2:** Brakujący wymiar = podpowiedź dla personelu, nie blokada i nie dopisanie treści przez model.
 
-#### [SC-NUR-10] Kontrolowany podgląd PESEL (step-up) — ⚠️ WYMAGA DECYZJI
-🔗 **Kontrakt:** `SEC-PESEL-HASH` (konflikt — patrz niżej) · **WO:** [`SEC-PESEL-STEP-UP`](workorders/SEC-PESEL-STEP-UP.md) · **Status:** ❌ 📝
+#### [SC-NUR-10] Kontrolowany podgląd PESEL (step-up) — 🚫 Wycofane
+🔗 **Kontrakt:** `SEC-PESEL-HASH` · **WO:** [`SEC-PESEL-STEP-UP`](workorders/SEC-PESEL-STEP-UP.md) · **Status:** 🚫 Wycofane (zastąpione przez `SEC-PESEL-HASH`, ADR-008, PR #39)
 
 **User story:** Jako uprawniony pracownik (`nurse`, `org_admin`), chcę jednorazowo odsłonić PESEL podopiecznego po ponownym podaniu hasła i wskazaniu powodu, aby obsłużyć sprawy urzędowe (np. NFZ) bez trzymania PESEL-u na wierzchu.
 
@@ -530,7 +531,7 @@
 - **AC3:** Odsłonięcie na maks. 30 s, wyłącznie w pamięci stanu.
 - **AC4:** Każda próba w `audit_logs` z powodem i ID podopiecznego, bez numeru PESEL.
 
-> ⚠️ **WYMAGA DECYZJI.** `AGENTS.md`: *„PESEL wyłącznie jako `pesel_hash`."* Kontrakt `SEC-PESEL-HASH`: *„Brak kolumny z wartością jawną."* Tymczasem odsłonięcie PESEL-u (ta funkcja) oraz `ADM-BULK-IMPORT` (*„szyfrowanie `pesel_encrypted`"*) wymagają przechowywania wartości odwracalnej. Szyfrogram to nie wartość jawna, ale reguła nadrzędna mówi „wyłącznie hash". Potrzebny ADR i ewentualna zmiana kontraktu.
+> ⚖️ **Rozstrzygnięcie:** Wycofane w PR #39 (`SEC-PESEL-HASH`, ADR-008). Zgodnie z nadrzędną regułą `AGENTS.md` (*„PESEL wyłącznie jako `pesel_hash`."*) oraz kontraktem `SEC-PESEL-HASH`, w bazie danych nie ma kolumny z wartością jawną ani odwracalną (`pesel_encrypted` i moduł kryptograficzny zostały usunięte z bazy i kodu). Podgląd wartości PESEL nie jest wspierany.
 
 #### [SC-USR-01] Własny profil i bezpieczeństwo konta
 🔗 **Kontrakt:** `SEC-SESSION`, `SEC-MFA-STAFF` · **WO:** [`NUR-PROFILE-SECURITY`](workorders/NUR-PROFILE-SECURITY.md) · **Status:** ✅ 📝
@@ -566,8 +567,8 @@
 - **AC3:** Niepoprawny JSON z modelu nie przepuszcza surowego transkryptu do strumienia behawioralnego.
 - **AC4:** Prompt nie każe dopisywać „spokojnego dnia", gdy nagranie o tym nie mówi.
 
-#### [NFR-INFRA-02] Model językowy potoku głosowego w EOG (+ fallback) — ⚠️ WYMAGA DECYZJI
-🔗 **Kontrakt:** `INFRA-EU-REGION`, `INFRA-GROQ-TRANSCRIPTION` (ADR-009) · **WO:** [`INFRA-EU-VOICE-LLM`](workorders/INFRA-EU-VOICE-LLM.md), [`VOICE-GROQ-FALLBACK`](workorders/VOICE-GROQ-FALLBACK.md) · **Status:** 🟡 📝
+#### [NFR-INFRA-02] Model językowy potoku głosowego w EOG
+🔗 **Kontrakt:** `INFRA-EU-REGION`, `INFRA-GROQ-TRANSCRIPTION` (ADR-009) · **WO:** [`INFRA-EU-VOICE-LLM`](workorders/INFRA-EU-VOICE-LLM.md), [`VOICE-GROQ-FALLBACK`](workorders/VOICE-GROQ-FALLBACK.md) · **Status:** ✅ 📝
 
 **User story:** Jako placówka, chcę, żeby klasyfikacja i generowanie raportu z danych art. 9 odbywały się w EOG, a poza EOG wychodziło wyłącznie surowe audio do transkrypcji (wyjątek ADR-009).
 
@@ -575,7 +576,7 @@
 - **AC1:** `TRANSCRIBE` w Groq (SCC, zerowa retencja); `CLASSIFY` i `GENERATE` u dostawcy w EOG.
 - **AC2:** Do Groq nie trafia żaden prompt tekstowy z notatką ani zredagowany transkrypt.
 
-> ⚠️ **WYMAGA DECYZJI.** Kontrakt `INFRA-GROQ-TRANSCRIPTION`: *„Model generujący raport dla bliskich działa w infrastrukturze UE, nie w Groq."* WO `VOICE-GROQ-FALLBACK`: *„jeżeli brak konfiguracji europejskiego dostawcy […] automatycznie przekierowuje zapytania klasyfikacji i generowania raportu na Groq"*. Fallback łamie AC2 i kontrakt, gdy brak klucza EU. Do rozstrzygnięcia: usunąć fallback na produkcji albo dopisać wyjątek w ADR-009 (`exceptionApprovedBy`).
+> ⚖️ **Rozstrzygnięcie:** PR #38 (`fix/sec-eu-llm-no-fallback`) usunął fallback Groq/xAI. `apps/web/src/lib/eu-llm-client.ts` przy braku klucza EU rzuca `[EU-LLM-CONFIG]` („przełączanie na dostawcę spoza EOG jest wyłączone”), a endpoint spoza EOG kończy się `[EU-LLM-REGION]`. AC2 jest w pełni spełnione.
 
 #### [NFR-INT-01] Integracja Polar AccessLink z buforem wsadowym
 🔗 **Kontrakt:** `INT-CORE-DECOUPLED`, `INT-INGEST-PRECONDITIONS`, `INT-NORMALIZATION`, `INT-SYNC-STALENESS` · **WO:** [`INT-POLAR-ACCESSLINK`](workorders/INT-POLAR-ACCESSLINK.md), [`INT-WEARABLE-BUFFER`](workorders/INT-WEARABLE-BUFFER.md) · **Status:** ✅ 📝

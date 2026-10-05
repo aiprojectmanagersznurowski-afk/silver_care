@@ -1,5 +1,7 @@
 # Work Order: Kontrolowany Podgląd PESEL ze Step-Up Authentication i Audytem (SEC-PESEL-STEP-UP)
 
+> ⚠️ **SUPERSEDED:** Zastąpione i wycofane przez PR #39 (ADR-008, `SEC-PESEL-HASH`). W bazie nie ma wartości odwracalnej ani kolumny `pesel_encrypted`.
+
 ## Wymaganie
 Uprawniony pracownik personelu medycznego (`nurse`, `org_admin`) potrzebuje jednorazowo odsłonić numer PESEL podopiecznego (np. dla NFZ/recepty/karty medycznej):
 1. PESEL jest domyślnie zamaskowany w interfejsie (`850401•••••`).
