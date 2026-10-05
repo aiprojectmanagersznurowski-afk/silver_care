@@ -77,10 +77,10 @@ export const COLORS = {
     'portal-ink-soft':        { value: '#64748B', desc: 'Tekst drugorzędny portalu. Kontrast 4.8:1.' },
     // Wykresy — wyłącznie statystyki placówki w panelu administratora (quiet-metrics, ADR-005)
     'chart-1':                { value: '#2F6F5E', desc: 'Seria 1.' },
-    'chart-2':                { value: '#4F8F7C', desc: 'Seria 2.' },
-    'chart-3':                { value: '#7FBCA8', desc: 'Seria 3.' },
-    'chart-4':                { value: '#A9D2C4', desc: 'Seria 4.' },
-    'chart-5':                { value: '#57534E', desc: 'Seria 5 — neutralna.' },
+    'chart-2':                { value: '#4F8F7C', desc: 'Seria 2. Kontrast 3,6:1.' },
+    'chart-3':                { value: '#8C8680', desc: 'Seria 3 — neutralna, jasna szarość. Kontrast 3,5:1.' },
+    'chart-4':                { value: '#1F4A3F', desc: 'Seria 4 — głęboka zieleń. Kontrast 9,5:1.' },
+    'chart-5':                { value: '#57534E', desc: 'Seria 5 — neutralna, ciemna. Kontrast 7,3:1.' },
   },
   dark: {
     'bg':              { value: '#171614' },
@@ -108,8 +108,8 @@ export const COLORS = {
     'portal-ink-soft':        { value: '#CBD5E1' },
     'chart-1':                { value: '#7FBCA8' },
     'chart-2':                { value: '#5FA08C' },
-    'chart-3':                { value: '#4F8F7C' },
-    'chart-4':                { value: '#2F6F5E' },
+    'chart-3':                { value: '#918B83' },
+    'chart-4':                { value: '#3F7A69' },
     'chart-5':                { value: '#B8B2AA' },
   },
   rules: [
@@ -117,6 +117,7 @@ export const COLORS = {
     'Czerwień wyłącznie dla błędów technicznych i akcji destrukcyjnych w panelu personelu.',
     'Kolor nigdy nie jest jedynym nośnikiem informacji — zawsze towarzyszy mu tekst.',
     'Kolory chart-* wyłącznie dla statystyk placówki w panelu administratora — nigdy dla metryk pensjonariusza (ADR-005).',
+    'Każda seria chart-* ma kontrast co najmniej 3:1 na tle bg i surface w obu motywach (WCAG 1.4.11). Serie rozróżnia też podpis lub legenda, nie tylko kolor.',
   ],
 };
 
