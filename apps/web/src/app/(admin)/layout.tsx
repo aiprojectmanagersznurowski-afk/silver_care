@@ -4,7 +4,8 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { AdminSidebar } from '@/components/AdminSidebar'
-import { AdminMobileHeader } from '@/components/AdminMobileHeader'
+import { Separator } from '@/components/ui/separator'
+import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { ImpersonationBanner } from '@/components/ImpersonationBanner'
 import { ImpersonationSession } from '@/actions/impersonation'
 
@@ -28,34 +29,30 @@ export default async function AdminLayout({ children }: { children: ReactNode })
     }
   }
 
+  const sidebarOpen = cookieStore.get('sidebar_state')?.value !== 'false'
+
   return (
-    <div className="flex flex-col min-h-screen bg-cream font-sans text-slate">
-      {impersonationSession && <ImpersonationBanner session={impersonationSession} />}
-
-      <div className="flex flex-1 min-h-0">
-        {/* Sidebar for desktop */}
-        <AdminSidebar 
-          userEmail={user.email || ''} 
-          role={role} 
-          isImpersonating={!!impersonationSession} 
-        />
-
-        {/* Main content */}
-        <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          {/* Mobile header */}
-          <AdminMobileHeader 
-            userEmail={user.email || ''} 
-            role={role} 
-            isImpersonating={!!impersonationSession} 
-          />
-          
-          <div className="flex-1 overflow-y-auto p-4 sm:p-8 lg:p-12">
-            <div className="mx-auto max-w-7xl">
-              {children}
+    <SidebarProvider defaultOpen={sidebarOpen}>
+      <AdminSidebar
+        userEmail={user.email || ''}
+        role={role}
+        isImpersonating={!!impersonationSession}
+      />
+      <SidebarInset className="min-w-0 overflow-x-clip">
+        {impersonationSession && <ImpersonationBanner session={impersonationSession} />}
+        <header className="flex h-12 shrink-0 items-center gap-2 border-b">
+          <div className="flex w-full items-center justify-between px-4 lg:px-6">
+            <div className="flex items-center gap-1 lg:gap-2">
+              <SidebarTrigger className="-ml-1" aria-label="Zwiń lub rozwiń menu" />
+              <Separator orientation="vertical" className="mx-2 data-[orientation=vertical]:h-4 data-[orientation=vertical]:self-center" />
+              <span className="text-sm font-medium">{role === 'super_admin' && !impersonationSession ? 'Panel platformy' : 'Panel placówki'}</span>
             </div>
           </div>
-        </main>
-      </div>
-    </div>
+        </header>
+        <div className="flex-1 p-4 md:p-6">
+          <div className="mx-auto w-full max-w-screen-2xl">{children}</div>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }

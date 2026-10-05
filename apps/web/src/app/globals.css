@@ -1,35 +1,52 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+/* Tokeny generowane z contracts/design.contract.mjs (ADR-011, ADR-014). Wartości kolorów i rozmiarów żyją tylko tam. */
+@import "../../../../packages/contracts/src/generated/tokens.css";
 
 @custom-variant dark (&:is(.dark *));
 
+/* Motyw szablonu shadcn-admin (styl nova): nazwy zmiennych jak w szablonie, wartości z tokenów kontraktu. */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --radius-full: var(--sc-radius-full);
+
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
-  
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  
+  --font-heading: var(--font-sans);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 
-  /* Sidebar Tokens */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -38,111 +55,73 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  
-  /* Custom Silver Care Tokens */
+
+  /* Tokeny Silver Care używane przez widoki */
   --color-surface: var(--card);
   --color-surface-sunken: var(--secondary);
   --color-text-secondary: var(--muted-foreground);
   --color-text-tertiary: var(--text-tertiary);
   --color-accent-soft: var(--accent);
-  
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-full: 999px;
 
-  /* Family Portal (Senior Care Family Dashboard) Tokens */
+  /* Paleta portalu bliskich */
   --color-cream: var(--cream);
   --color-cream-deep: var(--cream-deep);
   --color-sage: var(--sage);
   --color-sage-deep: var(--sage-deep);
+  --color-sage-dark: var(--sage-deep);
   --color-sage-soft: var(--sage-soft);
   --color-slate: var(--slate);
   --color-slate-soft: var(--slate-soft);
 }
 
-:root {
-  --background: #FBFAF8;
-  --foreground: #1C1B19;
-  --card: #FFFFFF;
-  --card-foreground: #1C1B19;
-  --popover: #FFFFFF;
-  --popover-foreground: #1C1B19;
-  --primary: #2F6F5E;
-  --primary-foreground: #FFFFFF;
-  --secondary: #F4F2EE;
-  --secondary-foreground: #1C1B19;
-  --muted: #F4F2EE;
-  --muted-foreground: #57534E;
-  --text-tertiary: #78716C;
-  --accent: #E8F0ED;
-  --accent-foreground: #2F6F5E;
-  --destructive: #ef4444;
-  --destructive-foreground: #FFFFFF;
-  --border: #E8E4DD;
-  --input: #E8E4DD;
-  --ring: #2F6F5E;
-
-  /* Sidebar Tokens (Light Mode) */
-  --sidebar: #FFFFFF;
-  --sidebar-foreground: #1C1B19;
-  --sidebar-primary: #2F6F5E;
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #E8F0ED;
-  --sidebar-accent-foreground: #2F6F5E;
-  --sidebar-border: #E8E4DD;
-  --sidebar-ring: #2F6F5E;
-
-  /* Family Portal (Senior Care Family Dashboard) Tokens */
-  --cream: #ffffff;
-  --cream-deep: #f8fafc;
-  --sage: #1e3a8a;
-  --sage-deep: #172554;
-  --sage-soft: #eff6ff;
-  --slate: #0f172a;
-  --slate-soft: #64748b;
-}
-
+/* Na :root i .dark — tokeny --sc-* przełączają się klasą .dark, mapowanie musi się przeliczyć na tym samym elemencie. */
+:root,
 .dark {
-  --background: #171614;
-  --foreground: #F5F3F0;
-  --card: #211F1D;
-  --card-foreground: #F5F3F0;
-  --popover: #211F1D;
-  --popover-foreground: #F5F3F0;
-  --primary: #7FBCA8;
-  --primary-foreground: #171614;
-  --secondary: #2A2724;
-  --secondary-foreground: #F5F3F0;
-  --muted: #2A2724;
-  --muted-foreground: #B8B2AA;
-  --text-tertiary: #918B83;
-  --accent: #1E3A32;
-  --accent-foreground: #7FBCA8;
-  --destructive: #ef4444;
-  --destructive-foreground: #FFFFFF;
-  --border: #38342F;
-  --input: #38342F;
-  --ring: #7FBCA8;
+  --radius: var(--sc-radius-lg);
 
-  /* Sidebar Tokens (Dark Mode) */
-  --sidebar: #211F1D;
-  --sidebar-foreground: #F5F3F0;
-  --sidebar-primary: #7FBCA8;
-  --sidebar-primary-foreground: #171614;
-  --sidebar-accent: #1E3A32;
-  --sidebar-accent-foreground: #7FBCA8;
-  --sidebar-border: #38342F;
-  --sidebar-ring: #7FBCA8;
+  --background: var(--sc-bg);
+  --foreground: var(--sc-text);
+  --card: var(--sc-surface);
+  --card-foreground: var(--sc-text);
+  --popover: var(--sc-surface);
+  --popover-foreground: var(--sc-text);
+  --primary: var(--sc-accent);
+  --primary-foreground: var(--sc-accent-foreground);
+  --secondary: var(--sc-surface-sunken);
+  --secondary-foreground: var(--sc-text);
+  --muted: var(--sc-surface-sunken);
+  --muted-foreground: var(--sc-text-secondary);
+  --text-tertiary: var(--sc-text-tertiary);
+  --accent: var(--sc-accent-soft);
+  --accent-foreground: var(--sc-accent);
+  --destructive: var(--sc-destructive);
+  --destructive-foreground: var(--sc-destructive-foreground);
+  --border: var(--sc-border);
+  --input: var(--sc-input);
+  --ring: var(--sc-focus);
 
-  /* Family Portal Tokens */
-  --cream: oklch(0.145 0 0);
-  --cream-deep: oklch(0.205 0 0);
-  --sage: #3b82f6;
-  --sage-deep: #60a5fa;
-  --sage-soft: #1e3a8a;
-  --slate: #f1f5f9;
-  --slate-soft: #cbd5e1;
+  --chart-1: var(--sc-chart-1);
+  --chart-2: var(--sc-chart-2);
+  --chart-3: var(--sc-chart-3);
+  --chart-4: var(--sc-chart-4);
+  --chart-5: var(--sc-chart-5);
+
+  --sidebar: var(--sc-sidebar);
+  --sidebar-foreground: var(--sc-text);
+  --sidebar-primary: var(--sc-accent);
+  --sidebar-primary-foreground: var(--sc-accent-foreground);
+  --sidebar-accent: var(--sc-sidebar-accent);
+  --sidebar-accent-foreground: var(--sc-accent);
+  --sidebar-border: var(--sc-border);
+  --sidebar-ring: var(--sc-focus);
+
+  --cream: var(--sc-portal-surface);
+  --cream-deep: var(--sc-portal-surface-deep);
+  --sage: var(--sc-portal-primary);
+  --sage-deep: var(--sc-portal-primary-deep);
+  --sage-soft: var(--sc-portal-primary-soft);
+  --slate: var(--sc-portal-ink);
+  --slate-soft: var(--sc-portal-ink-soft);
 }
 
 @layer base {
@@ -151,6 +130,8 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-size: var(--sc-text-base-size);
+    line-height: var(--sc-text-body-leading);
   }
   html {
     @apply font-sans;

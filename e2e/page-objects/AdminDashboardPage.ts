@@ -24,13 +24,13 @@ export class AdminDashboardPage {
     this.subHeading = page.locator('text=Szybki podgląd stanu placówki, text=Zarządzanie placówkami partnerskimi').first();
     this.logoutButton = page.locator('form[action="/auth/signout"] button[type="submit"]');
 
-    this.organizationsLink = page.locator('aside a[href="/admin/organizations"]');
-    this.iamLink = page.locator('aside a[href="/admin/iam"]');
-    this.auditLink = page.locator('aside a[href="/admin/audit"]');
-    this.facilityLink = page.locator('aside a[href="/admin/facility"]');
-    this.residentsLink = page.locator('aside a[href="/admin/residents"]');
-    this.staffLink = page.locator('aside a[href="/admin/staff"]');
-    this.invitationsLink = page.locator('aside a[href="/admin/invitations"]');
+    this.organizationsLink = page.locator('[data-slot="sidebar"] a[href="/admin/organizations"]');
+    this.iamLink = page.locator('[data-slot="sidebar"] a[href="/admin/iam"]');
+    this.auditLink = page.locator('[data-slot="sidebar"] a[href="/admin/audit"]');
+    this.facilityLink = page.locator('[data-slot="sidebar"] a[href="/admin/facility"]');
+    this.residentsLink = page.locator('[data-slot="sidebar"] a[href="/admin/residents"]');
+    this.staffLink = page.locator('[data-slot="sidebar"] a[href="/admin/staff"]');
+    this.invitationsLink = page.locator('[data-slot="sidebar"] a[href="/admin/invitations"]');
   }
 
   async goto() {

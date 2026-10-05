@@ -49,15 +49,19 @@ describe('UI Design System Refresh & Login Page', () => {
     expect(content).toContain('signInWithOAuth')
   })
 
-  it('@REQ: UI-FOUR-STATES - globals.css zachowuje kanoniczną paletę Silver Care (Ciepłe Zaufanie)', () => {
-    const cssPath = join(root, 'apps/web/src/app/globals.css')
-    const cssContent = readFileSync(cssPath, 'utf8')
+  it('@REQ: UI-FOUR-STATES - motyw zachowuje kanoniczną paletę Silver Care (Ciepłe Zaufanie) przez tokeny kontraktu', () => {
+    // ADR-014: wartości kolorów żyją w kontrakcie (tokens.css), globals.css tylko je mapuje.
+    const tokens = readFileSync(join(root, 'packages/contracts/src/generated/tokens.css'), 'utf8')
+    expect(tokens).toContain('--sc-accent: #2F6F5E')
+    expect(tokens).toContain('--sc-bg: #FBFAF8')
+    expect(tokens).toContain('--sc-text: #1C1B19')
+    expect(tokens).toContain('--sc-border: #E8E4DD')
 
-    // Kanoniczne wartości kolorów Silver Care
-    expect(cssContent).toContain('--primary: #2F6F5E')
-    expect(cssContent).toContain('--background: #FBFAF8')
-    expect(cssContent).toContain('--foreground: #1C1B19')
-    expect(cssContent).toContain('--border: #E8E4DD')
+    const cssContent = readFileSync(join(root, 'apps/web/src/app/globals.css'), 'utf8')
+    expect(cssContent).toContain('--primary: var(--sc-accent)')
+    expect(cssContent).toContain('--background: var(--sc-bg)')
+    expect(cssContent).toContain('--foreground: var(--sc-text)')
+    expect(cssContent).toContain('--border: var(--sc-border)')
     expect(cssContent).toContain('--sidebar')
   })
 

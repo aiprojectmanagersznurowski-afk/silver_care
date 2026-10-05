@@ -279,6 +279,20 @@ export const REQUIREMENTS = [
     ]
   },
   {
+    "id": "UI-TEMPLATE-ALIGNMENT",
+    "status": "TODO",
+    "risk": "MEDIUM",
+    "source": "ADR-014",
+    "domain": "presentation",
+    "statement": "Interfejs używa komponentów i układu szablonu shadcn-admin (styl nova) w skali 14px/32px, z tokenami generowanymi z kontraktu.",
+    "acceptance": [
+      "apps/web importuje wygenerowany tokens.css, a zmienne motywu w globals.css wskazują tokeny --sc-* bez wartości kolorów wpisanych ręcznie",
+      "Panel administratora i panel personelu mają zwijany pasek boczny szablonu z przyciskiem zwijania w nagłówku strony",
+      "Komponenty bazowe szablonu potrzebne widokom (sidebar, table, tabs, select, field, empty, chart) są dostępne w components/ui",
+      "Kolory chart-* nie prezentują metryk pensjonariusza — zestawienia trendu pozostają zakazane (ADR-005)"
+    ]
+  },
+  {
     "id": "VOICE-ZERO-GUESSING",
     "status": "TODO",
     "risk": "HIGH",

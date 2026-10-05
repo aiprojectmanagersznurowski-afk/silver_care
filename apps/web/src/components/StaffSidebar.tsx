@@ -1,94 +1,52 @@
 'use client'
 
-import Link from 'next/link'
+import { Calendar, FileText, MessageSquare, Users } from 'lucide-react'
 import Image from 'next/image'
-import { usePathname } from 'next/navigation'
-import { Users, Calendar, FileText, MessageSquare, LogOut } from 'lucide-react'
-import { StaffCommandPalette } from '@/components/StaffCommandPalette'
+import Link from 'next/link'
+import { Badge } from '@/components/ui/badge'
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarRail,
+} from '@/components/ui/sidebar'
+import { SidebarNav, type SidebarNavGroup } from '@/components/SidebarNav'
+import { SidebarAccount } from '@/components/SidebarAccount'
+
+const STAFF_GROUPS: SidebarNavGroup[] = [
+  {
+    label: 'Dyżur',
+    items: [
+      { href: '/staff', label: 'Podopieczni', icon: Users, exact: true },
+      { href: '/staff/agenda', label: 'Agenda na dziś', icon: Calendar },
+      { href: '/staff/reports', label: 'Raporty', icon: FileText },
+      { href: '/staff/messages', label: 'Wiadomości', icon: MessageSquare },
+    ],
+  },
+]
 
 export function StaffSidebar({ userEmail }: { userEmail: string | undefined }) {
-  const pathname = usePathname()
-
-  const navItems = [
-    { name: 'Podopieczni', href: '/staff', icon: Users },
-    { name: 'Agenda na dziś', href: '/staff/agenda', icon: Calendar },
-    { name: 'Raporty', href: '/staff/reports', icon: FileText },
-    { name: 'Wiadomości', href: '/staff/messages', icon: MessageSquare },
-  ]
-
-
   return (
-    <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
-      <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-slate/10 bg-cream px-6 pb-4">
-        <div className="flex h-16 shrink-0 items-center justify-between">
-          <Link href="/staff" className="flex items-center hover:opacity-90 transition-opacity">
-            <Image
-              src="/logo.png"
-              alt="Silver Care"
-              width={120}
-              height={34}
-              className="h-7 w-auto object-contain"
-              priority
-            />
-          </Link>
-          <span className="rounded-full bg-sage/20 px-2.5 py-0.5 text-xs font-medium text-sage-dark">Personel</span>
-        </div>
-        <div className="pt-1">
-          <StaffCommandPalette />
-        </div>
-        <nav className="flex flex-1 flex-col">
-          <ul role="list" className="flex flex-1 flex-col gap-y-7">
-            <li>
-              <ul role="list" className="-mx-2 space-y-1">
-                {navItems.map((item) => {
-                  const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
-                  return (
-                    <li key={item.name}>
-                      <Link
-                        href={item.href}
-                        className={`
-                          group flex gap-x-3 rounded-xl p-3 text-sm leading-6 font-medium transition-all
-                          ${isActive
-                            ? 'bg-sage/10 text-sage-dark'
-                            : 'text-slate-soft hover:bg-slate/5 hover:text-slate'
-                          }
-                        `}
-                      >
-                        <item.icon
-                          className={`h-5 w-5 shrink-0 ${isActive ? 'text-sage-dark' : 'text-slate-soft group-hover:text-slate'}`}
-                          aria-hidden="true"
-                        />
-                        {item.name}
-                      </Link>
-                    </li>
-                  )
-                })}
-              </ul>
-            </li>
-            
-            <li className="mt-auto -mx-2">
-              <div className="px-3 py-3 mb-2 rounded-xl bg-slate/5">
-                <p className="text-xs font-medium text-slate-soft truncate">
-                  Zalogowano jako:
-                </p>
-                <p className="text-sm font-medium text-slate truncate">
-                  {userEmail || 'Nieznany użytkownik'}
-                </p>
-              </div>
-              
-              <form action="/auth/signout" method="post">
-                <button
-                  type="submit"
-                  className="group flex w-full gap-x-3 rounded-xl p-3 text-sm leading-6 font-medium text-slate-soft transition-all hover:bg-slate/5 hover:text-slate"
-                >
-                  <LogOut className="h-5 w-5 shrink-0 text-slate-soft group-hover:text-slate" aria-hidden="true" />
-                  Wyloguj
-                </button>
-              </form>
-            </li>
-          </ul>
-        </nav>
-      </div>
-    </div>
+    <Sidebar collapsible="icon">
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="lg" render={<Link href="/staff" aria-label="Silver Care — strona główna" />}>
+              <Image src="/logo-mark.png" alt="" width={32} height={32} className="hidden size-8 object-contain group-data-[collapsible=icon]:block" />
+              <Image src="/logo.png" alt="Silver Care" width={124} height={36} className="h-7 w-auto object-contain group-data-[collapsible=icon]:hidden" priority />
+              <Badge variant="secondary" className="ml-auto group-data-[collapsible=icon]:hidden">Personel</Badge>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarNav groups={STAFF_GROUPS} />
+      </SidebarContent>
+      <SidebarAccount userEmail={userEmail} />
+      <SidebarRail />
+    </Sidebar>
   )
 }

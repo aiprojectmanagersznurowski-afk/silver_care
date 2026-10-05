@@ -84,9 +84,9 @@ W danym momencie co najwyżej jedno przypisanie z unassigned_at = NULL na dane b
 
 Krój: `-apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui, sans-serif`
 
-Bazowy rozmiar 17px · minimalny kontrast 4.5:1 · cel dotykowy 48px
+Bazowy rozmiar 14px · minimalny kontrast 4.5:1 · cel dotykowy 32px
 
-## Wymagania (50)
+## Wymagania (51)
 
 | ID | Domena | Ryzyko | Treść |
 |---|---|---|---|
@@ -111,6 +111,7 @@ Bazowy rozmiar 17px · minimalny kontrast 4.5:1 · cel dotykowy 48px
 | MDR-VOCABULARY | presentation | MEDIUM | W warstwie widocznej dla użytkownika nie występuje słowo „pacjent" ani język kliniczny. |
 | UI-FOUR-STATES | presentation | MEDIUM | Każdy komponent prezentujący dane ma cztery stany. |
 | UI-ACCESSIBILITY | presentation | MEDIUM | Interfejs spełnia WCAG 2.1 na poziomie AA. |
+| UI-TEMPLATE-ALIGNMENT | presentation | MEDIUM | Interfejs używa komponentów i układu szablonu shadcn-admin (styl nova) w skali 14px/32px, z tokenami generowanymi z kontraktu. |
 | VOICE-ZERO-GUESSING | voice | HIGH | Model nigdy nie ustala tożsamości pensjonariusza z nagrania. |
 | VOICE-MEDICAL-STRIP | voice | HIGH | Dane medyczne są usuwane z transkryptu przed wysłaniem do modelu. |
 | VOICE-DRAFT-ISOLATION | voice | HIGH | Brudnopis personelu jest niedostępny dla bliskich. |
