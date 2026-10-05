@@ -12,60 +12,60 @@ export const TYPOGRAPHY = {
     "subset": "latin-ext",
     "note": "latin-ext jest wymagany — polskie znaki diakrytyczne."
   },
-  "baseSize": "17px",
+  "baseSize": "14px",
   "scale": [
     {
       "id": "display",
-      "size": "34px",
+      "size": "30px",
       "weight": 600,
       "lineHeight": 1.2,
       "tracking": "-0.02em",
-      "use": "Nagłówek raportu dnia. Jedyne miejsce na ten rozmiar."
+      "use": "Nagłówek raportu dnia. Jedyne miejsce na ten rozmiar. (text-3xl)"
     },
     {
       "id": "title",
       "size": "24px",
       "weight": 600,
-      "lineHeight": 1.3,
+      "lineHeight": 1.33,
       "tracking": "-0.01em",
-      "use": "Nagłówek sekcji, imię pensjonariusza."
+      "use": "Nagłówek strony i sekcji, imię pensjonariusza. (text-2xl)"
     },
     {
       "id": "heading",
-      "size": "20px",
+      "size": "16px",
       "weight": 600,
-      "lineHeight": 1.35,
+      "lineHeight": 1.5,
       "tracking": "0",
-      "use": "Nagłówek karty."
+      "use": "Nagłówek karty. (text-base)"
     },
     {
       "id": "body",
-      "size": "17px",
+      "size": "14px",
       "weight": 400,
-      "lineHeight": 1.6,
+      "lineHeight": 1.43,
       "tracking": "0",
-      "use": "Treść raportu, opisy. Domyślny rozmiar."
+      "use": "Treść interfejsu i raportu, opisy. Domyślny rozmiar. (text-sm)"
     },
     {
       "id": "callout",
-      "size": "15px",
-      "weight": 400,
-      "lineHeight": 1.5,
-      "tracking": "0",
-      "use": "Etykiety pól, wartości metryk."
-    },
-    {
-      "id": "caption",
       "size": "13px",
       "weight": 400,
       "lineHeight": 1.4,
+      "tracking": "0",
+      "use": "Etykiety pomocnicze, wartości metryk w tabelach."
+    },
+    {
+      "id": "caption",
+      "size": "12px",
+      "weight": 400,
+      "lineHeight": 1.33,
       "tracking": "0.01em",
-      "use": "Znaczniki czasu, etykieta AI. Nigdy dla treści istotnej."
+      "use": "Znaczniki czasu, etykieta AI. Nigdy dla treści istotnej. (text-xs)"
     }
   ],
   "rules": [
     "Waga 600 zamiast 700 — cięższy krój psuje spokojny ton.",
-    "Nigdy poniżej 13px. Etykieta wymagana przez EU AI Act musi być czytelna, nie ukryta.",
+    "Nigdy poniżej 12px. Etykieta wymagana przez EU AI Act musi być czytelna, nie ukryta.",
     "Długość wiersza w raporcie maksymalnie 68 znaków.",
     "Bez wersalików w treści — pogarszają czytelność przy zmęczonym wzroku."
   ]
@@ -112,6 +112,78 @@ export const COLORS = {
     "focus": {
       "value": "#2F6F5E",
       "desc": "Pierścień fokusu, grubość 2px, odsunięcie 2px."
+    },
+    "accent-foreground": {
+      "value": "#FFFFFF",
+      "desc": "Tekst na tle akcentu (przycisk główny). Kontrast 5.6:1."
+    },
+    "input": {
+      "value": "#E8E4DD",
+      "desc": "Obramowanie pól formularza."
+    },
+    "destructive": {
+      "value": "#DC2626",
+      "desc": "Wyłącznie błąd techniczny i akcja destrukcyjna. Kontrast 4.8:1. Nigdy ocena stanu pensjonariusza."
+    },
+    "destructive-foreground": {
+      "value": "#FFFFFF",
+      "desc": "Tekst na tle błędu."
+    },
+    "sidebar": {
+      "value": "#FFFFFF",
+      "desc": "Tło paska bocznego."
+    },
+    "sidebar-accent": {
+      "value": "#E8F0ED",
+      "desc": "Aktywna i najechana pozycja menu."
+    },
+    "portal-primary": {
+      "value": "#1E3A8A",
+      "desc": "Akcent portalu bliskich (klasa sage). Kontrast 10.4:1."
+    },
+    "portal-primary-deep": {
+      "value": "#172554",
+      "desc": "Stan wciśnięty akcentu portalu."
+    },
+    "portal-primary-soft": {
+      "value": "#EFF6FF",
+      "desc": "Tło wyróżnienia w portalu."
+    },
+    "portal-surface": {
+      "value": "#FFFFFF",
+      "desc": "Tło kart portalu (klasa cream)."
+    },
+    "portal-surface-deep": {
+      "value": "#F8FAFC",
+      "desc": "Tło sekcji portalu."
+    },
+    "portal-ink": {
+      "value": "#0F172A",
+      "desc": "Tekst główny portalu (klasa slate). Kontrast 17.9:1."
+    },
+    "portal-ink-soft": {
+      "value": "#64748B",
+      "desc": "Tekst drugorzędny portalu. Kontrast 4.8:1."
+    },
+    "chart-1": {
+      "value": "#2F6F5E",
+      "desc": "Seria 1."
+    },
+    "chart-2": {
+      "value": "#4F8F7C",
+      "desc": "Seria 2."
+    },
+    "chart-3": {
+      "value": "#7FBCA8",
+      "desc": "Seria 3."
+    },
+    "chart-4": {
+      "value": "#A9D2C4",
+      "desc": "Seria 4."
+    },
+    "chart-5": {
+      "value": "#57534E",
+      "desc": "Seria 5 — neutralna."
     }
   },
   "dark": {
@@ -144,12 +216,67 @@ export const COLORS = {
     },
     "focus": {
       "value": "#7FBCA8"
+    },
+    "accent-foreground": {
+      "value": "#171614"
+    },
+    "input": {
+      "value": "#38342F"
+    },
+    "destructive": {
+      "value": "#F87171"
+    },
+    "destructive-foreground": {
+      "value": "#171614"
+    },
+    "sidebar": {
+      "value": "#211F1D"
+    },
+    "sidebar-accent": {
+      "value": "#1E3A32"
+    },
+    "portal-primary": {
+      "value": "#60A5FA"
+    },
+    "portal-primary-deep": {
+      "value": "#93C5FD"
+    },
+    "portal-primary-soft": {
+      "value": "#1E3A8A"
+    },
+    "portal-surface": {
+      "value": "#211F1D"
+    },
+    "portal-surface-deep": {
+      "value": "#171614"
+    },
+    "portal-ink": {
+      "value": "#F1F5F9"
+    },
+    "portal-ink-soft": {
+      "value": "#CBD5E1"
+    },
+    "chart-1": {
+      "value": "#7FBCA8"
+    },
+    "chart-2": {
+      "value": "#5FA08C"
+    },
+    "chart-3": {
+      "value": "#4F8F7C"
+    },
+    "chart-4": {
+      "value": "#2F6F5E"
+    },
+    "chart-5": {
+      "value": "#B8B2AA"
     }
   },
   "rules": [
     "Zakaz czerwieni i zieleni jako oceny stanu pensjonariusza (ADR-005).",
     "Czerwień wyłącznie dla błędów technicznych i akcji destrukcyjnych w panelu personelu.",
-    "Kolor nigdy nie jest jedynym nośnikiem informacji — zawsze towarzyszy mu tekst."
+    "Kolor nigdy nie jest jedynym nośnikiem informacji — zawsze towarzyszy mu tekst.",
+    "Kolory chart-* wyłącznie dla statystyk placówki w panelu administratora — nigdy dla metryk pensjonariusza (ADR-005)."
   ]
 } as const;
 
@@ -166,18 +293,19 @@ export const SPACING = {
   },
   "rules": [
     "Odstęp między sekcjami minimum 32px. Ciasny układ czyta się jak formularz urzędowy.",
-    "Wewnętrzny margines karty 24px, na wąskim ekranie 20px.",
+    "Wewnętrzny margines karty 16px, karta mała 12px (szablon shadcn, ADR-014).",
     "Przestrzeń jest podstawowym narzędziem podziału — przed sięgnięciem po ramkę zwiększ odstęp."
   ]
 } as const;
 
 export const RADIUS = {
-  "sm": "8px",
-  "md": "12px",
-  "lg": "16px",
+  "sm": "6px",
+  "md": "8px",
+  "lg": "10px",
+  "xl": "14px",
   "full": "999px",
   "rules": [
-    "Bez ostrych rogów. Zaokrąglenie 12px dla kart, 8px dla pól."
+    "Bazowe zaokrąglenie 10px (--radius szablonu). Karty 14px, pola i przyciski 8px (ADR-014)."
   ]
 } as const;
 
@@ -207,7 +335,7 @@ export const MOTION = {
 
 export const ACCESSIBILITY = {
   "contrastMinimum": 4.5,
-  "touchTargetMinimum": "48px",
+  "touchTargetMinimum": "32px",
   "focusVisible": "Zawsze widoczny pierścień 2px w kolorze akcentu z odsunięciem 2px.",
   "textZoom": "Układ nie psuje się przy powiększeniu do 200%.",
   "rules": [
