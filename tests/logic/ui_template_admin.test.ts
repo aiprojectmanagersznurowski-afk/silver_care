@@ -104,8 +104,12 @@ describe('Czerwień nie niesie oceny stanu pensjonariusza (@REQ: MDR-NO-INTERPRE
     }
   });
 
-  it('badge stanu opieki na liście podopiecznych nie używa czerwieni @REQ: MDR-NO-INTERPRETATION', () => {
+  it('badge i kropki stanu opieki na liście podopiecznych nie używają czerwieni @REQ: MDR-NO-INTERPRETATION', () => {
     const src = fs.readFileSync(path.join(WEB, 'components/ResidentInlineCareLevel.tsx'), 'utf-8');
-    expect(src).not.toMatch(/destructive|red-\d|rose-\d/);
+    // Komunikat błędu technicznego (zapis nie powiódł się) może być czerwony — kolor stanu opieki nie.
+    const levelColorLines = src.split('\n').filter((l) => /CARE_LEVEL_(BG_CLASSES|COLORS)/.test(l) && !/^import|^\s+CARE_LEVEL/.test(l));
+    expect(levelColorLines.length).toBeGreaterThan(0);
+    for (const line of levelColorLines) expect(line).not.toMatch(/destructive|red-\d|rose-\d/);
+    expect(src).not.toMatch(/bedridden[^\n]*(red|rose|destructive)/);
   });
 });
