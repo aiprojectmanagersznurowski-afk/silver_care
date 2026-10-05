@@ -7,6 +7,8 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip
 import type { UserItem } from '@/components/IamManagementClient'
 import { AddUserDialog } from './AddUserDialog'
 import type { ComponentProps } from 'react'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 
 interface UserTableProps {
   users: UserItem[]
@@ -30,7 +32,7 @@ export function UserTable({
   addUserProps,
 }: UserTableProps) {
   return (
-    <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5 overflow-hidden">
+    <Card className="rounded-xl border-none ring-1 ring-slate/5 overflow-hidden">
       <CardHeader className="border-b border-slate/5 bg-white px-6 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sage/10 text-sage shrink-0">
@@ -49,50 +51,49 @@ export function UserTable({
 
       <CardContent className="p-0">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm" aria-label="Tabela użytkowników i ról IAM">
-            <thead className="bg-slate/5 text-slate-soft">
-              <tr>
-                <th scope="col" className="px-6 py-4 font-medium">Użytkownik</th>
-                <th scope="col" className="px-6 py-4 font-medium">Placówka</th>
-                <th scope="col" className="px-6 py-4 font-medium">Aktualna rola</th>
-                <th scope="col" className="px-6 py-4 font-medium">Nowa rola</th>
-                <th scope="col" className="px-6 py-4 font-medium text-right">Akcja</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate/5 bg-white">
+          <Table aria-label="Tabela użytkowników i ról IAM">
+            <TableHeader className="text-slate-soft">
+              <TableRow>
+                <TableHead scope="col">Użytkownik</TableHead>
+                <TableHead scope="col">Placówka</TableHead>
+                <TableHead scope="col">Aktualna rola</TableHead>
+                <TableHead scope="col">Nowa rola</TableHead>
+                <TableHead scope="col" className="text-right">Akcja</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {users.map(user => {
                 const currentSelected = selectedRoles[user.id] || user.role
                 const hasChanged = currentSelected !== user.role
 
                 return (
-                  <tr key={user.id} className="transition-colors hover:bg-slate/5">
-                    <td className="px-6 py-4">
+                  <TableRow key={user.id}>
+                    <TableCell>
                       <div className="font-medium text-slate text-base">{user.email}</div>
                       <div className="font-mono text-xs text-slate-soft">{user.id}</div>
-                    </td>
-                    <td className="px-6 py-4 text-slate-soft font-mono text-xs">
+                    </TableCell>
+                    <TableCell className="text-slate-soft font-mono">
                       {user.organizationId || 'Globalna / Brak'}
-                    </td>
-                    <td className="px-6 py-4">
+                    </TableCell>
+                    <TableCell>
                       <span className="inline-flex items-center rounded-lg bg-slate/10 px-2.5 py-1 text-xs font-medium text-slate">
                         {user.role}
                       </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <select
+                    </TableCell>
+                    <TableCell>
+                      <NativeSelect
                         aria-label={`Wybierz rolę dla ${user.email}`}
                         value={currentSelected}
                         onChange={e => onRoleSelect(user.id, e.target.value)}
-                        className="min-h-[44px] rounded-xl border border-slate/20 bg-white px-3 py-2 text-sm text-slate focus:border-sage focus:outline-none focus:ring-1 focus:ring-sage"
                       >
                         {availableRoles.map(r => (
-                          <option key={r.id} value={r.id}>
+                          <NativeSelectOption key={r.id} value={r.id}>
                             {r.label}
-                          </option>
+                          </NativeSelectOption>
                         ))}
-                      </select>
-                    </td>
-                    <td className="px-6 py-4 text-right">
+                      </NativeSelect>
+                    </TableCell>
+                    <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -118,7 +119,7 @@ export function UserTable({
                               <Button
                                 disabled={!hasChanged || isPending}
                                 onClick={() => onApplyRole(user.id)}
-                                className="min-h-[40px] rounded-xl bg-sage px-4 text-sm font-medium text-white shadow-sm hover:bg-sage/90 disabled:opacity-40"
+                                className="min-h-[40px] rounded-xl bg-sage px-4 text-sm font-medium text-white hover:bg-sage/90 disabled:opacity-40"
                               >
                                 Zastosuj
                               </Button>
@@ -129,12 +130,12 @@ export function UserTable({
                           </TooltipContent>
                         </Tooltip>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 )
               })}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </CardContent>
     </Card>

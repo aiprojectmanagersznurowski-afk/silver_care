@@ -93,7 +93,7 @@ export function CreateOrganizationDialog() {
   return (
     <>
       {successInfo && (
-        <div className="rounded-2xl border border-sage/30 bg-sage/5 p-5 flex flex-col gap-3">
+        <div className="rounded-xl border border-sage/30 bg-sage/5 p-5 flex flex-col gap-3">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">
               <CheckCircle2 className="h-5 w-5 text-sage shrink-0" />

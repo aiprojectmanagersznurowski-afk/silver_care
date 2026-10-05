@@ -14,6 +14,7 @@ import {
   DialogFooter,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 
 type Resident = {
   id: string
@@ -94,29 +95,27 @@ export function InviteFamilyDialog({ residents }: { residents: Resident[] }) {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="resident">Pensjonariusz</Label>
-            <select
+            <NativeSelect
               id="resident"
               value={residentId}
-              onChange={(e) => setResidentId(e.target.value)}
-              className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              onChange={(e) => setResidentId(e.target.value)} className="flex w-full items-center justify-between disabled:cursor-not-allowed disabled:opacity-50"
               required
             >
               {residents.map(r => (
-                <option key={r.id} value={r.id}>{r.first_name} {r.last_name}</option>
+                <NativeSelectOption key={r.id} value={r.id}>{r.first_name} {r.last_name}</NativeSelectOption>
               ))}
-            </select>
+            </NativeSelect>
           </div>
           <div className="space-y-2">
             <Label htmlFor="family-role">Rola i uprawnienia</Label>
-            <select
+            <NativeSelect
               id="family-role"
               value={familyRole}
-              onChange={(e) => setFamilyRole(e.target.value as 'legal_guardian' | 'family')}
-              className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              onChange={(e) => setFamilyRole(e.target.value as 'legal_guardian' | 'family')} className="flex w-full items-center justify-between disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <option value="legal_guardian">Opiekun prawny (pełne uprawnienia, zgody Art. 9)</option>
-              <option value="family">Obserwator (tylko wgląd w raporty, brak zgód Art. 9)</option>
-            </select>
+              <NativeSelectOption value="legal_guardian">Opiekun prawny (pełne uprawnienia, zgody Art. 9)</NativeSelectOption>
+              <NativeSelectOption value="family">Obserwator (tylko wgląd w raporty, brak zgód Art. 9)</NativeSelectOption>
+            </NativeSelect>
             <p className="text-xs text-muted-foreground">
               Zgodnie z RODO (Art. 9) wyłącznie pensjonariusz lub opiekun prawny może decydować o przetwarzaniu danych szczególnych kategorii. Obserwator posiada wyłącznie wgląd do publikowanych raportów.
             </p>
@@ -135,17 +134,16 @@ export function InviteFamilyDialog({ residents }: { residents: Resident[] }) {
           <div className="space-y-2">
             <Label htmlFor="phone">Numer telefonu (opcjonalnie do powiadomień SMS)</Label>
             <div className="flex gap-2">
-              <select
+              <NativeSelect
                 value={countryCode}
-                onChange={(e) => setCountryCode(e.target.value)}
-                className="flex h-10 w-[120px] items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                onChange={(e) => setCountryCode(e.target.value)} className="flex w-[120px] items-center justify-between"
               >
-                <option value="48">🇵🇱 +48</option>
-                <option value="44">🇬🇧 +44</option>
-                <option value="49">🇩🇪 +49</option>
-                <option value="380">🇺🇦 +380</option>
-                <option value="1">🇺🇸 +1</option>
-              </select>
+                <NativeSelectOption value="48">🇵🇱 +48</NativeSelectOption>
+                <NativeSelectOption value="44">🇬🇧 +44</NativeSelectOption>
+                <NativeSelectOption value="49">🇩🇪 +49</NativeSelectOption>
+                <NativeSelectOption value="380">🇺🇦 +380</NativeSelectOption>
+                <NativeSelectOption value="1">🇺🇸 +1</NativeSelectOption>
+              </NativeSelect>
               <Input
                 id="phone"
                 type="tel"

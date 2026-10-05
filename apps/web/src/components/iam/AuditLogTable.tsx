@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { History } from 'lucide-react'
 import type { AuditLogItem, UserItem } from '@/components/IamManagementClient'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 interface AuditLogTableProps {
   auditLogs: AuditLogItem[]
@@ -35,7 +36,7 @@ export function AuditLogTable({
   }
 
   return (
-    <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5 overflow-hidden">
+    <Card className="rounded-xl border-none ring-1 ring-slate/5 overflow-hidden">
       <CardHeader className="border-b border-slate/5 bg-white px-6 py-5">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate/5 text-slate-soft shrink-0">
@@ -56,40 +57,40 @@ export function AuditLogTable({
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-slate">
-              <thead className="bg-slate/5 text-xs uppercase font-medium text-slate-soft">
-                <tr>
-                  <th className="px-6 py-3">Czas operacji</th>
-                  <th className="px-6 py-3">Typ zdarzenia</th>
-                  <th className="px-6 py-3">Użytkownik docelowy</th>
-                  <th className="px-6 py-3">Szczegóły zmiany</th>
-                  <th className="px-6 py-3">Operator</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate/5 bg-white">
+            <Table>
+              <TableHeader className="font-medium text-slate-soft">
+                <TableRow>
+                  <TableHead>Czas operacji</TableHead>
+                  <TableHead>Typ zdarzenia</TableHead>
+                  <TableHead>Użytkownik docelowy</TableHead>
+                  <TableHead>Szczegóły zmiany</TableHead>
+                  <TableHead>Operator</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {auditLogs.map(log => {
                   const targetUser = users.find(u => u.id === log.payload?.target_user_id)
                   const targetEmail = targetUser ? targetUser.email : (log.payload?.target_user_id || '—')
 
                   return (
-                    <tr key={log.id} className="hover:bg-slate/[0.02]">
-                      <td className="px-6 py-4 font-mono text-xs text-slate-soft whitespace-nowrap">
+                    <TableRow key={log.id} className="hover:bg-slate/[0.02]">
+                      <TableCell className="font-mono text-slate-soft whitespace-nowrap">
                         {formatDateTime(log.created_at)}
-                      </td>
-                      <td className="px-6 py-4 font-medium">
+                      </TableCell>
+                      <TableCell className="font-medium">
                         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-slate/10 text-slate">
                           {log.action}
                         </span>
-                      </td>
-                      <td className="px-6 py-4">
+                      </TableCell>
+                      <TableCell>
                         <div className="font-medium text-slate">{targetEmail}</div>
                         {log.payload?.target_user_id && (
                           <div className="font-mono text-[0.65rem] text-slate-soft truncate max-w-[120px]">
                             {log.payload.target_user_id}
                           </div>
                         )}
-                      </td>
-                      <td className="px-6 py-4 text-xs">
+                      </TableCell>
+                      <TableCell>
                         {log.action === 'role_change' && (
                           <div className="flex items-center gap-1.5 flex-wrap">
                             {log.payload.previous_role && (
@@ -109,15 +110,15 @@ export function AuditLogTable({
                             {JSON.stringify(log.payload)}
                           </span>
                         )}
-                      </td>
-                      <td className="px-6 py-4 text-xs text-slate-soft">
+                      </TableCell>
+                      <TableCell className="text-slate-soft">
                         {log.performed_by || 'system'}
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   )
                 })}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         )}
       </CardContent>

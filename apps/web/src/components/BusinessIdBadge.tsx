@@ -43,7 +43,7 @@ export function BusinessIdBadge({
     <span
       data-slot="business-id-badge"
       title={`Techniczny UUID: ${id}`}
-      className={`inline-flex items-center gap-1.5 rounded-lg bg-slate/5 px-2 py-1 text-xs font-mono font-medium text-slate border border-slate/10 shadow-xs transition-colors hover:bg-slate/10 ${className}`}
+      className={`inline-flex items-center gap-1.5 rounded-lg bg-slate/5 px-2 py-1 text-xs font-mono font-medium text-slate border border-slate/10 transition-colors hover:bg-slate/10 ${className}`}
     >
       <span>{businessId}</span>
       {showCopy && (

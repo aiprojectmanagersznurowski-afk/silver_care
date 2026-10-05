@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Users, Bed, Heart, Activity,
-  BarChart3, PieChart, ShieldCheck
+  BarChart3, PieChart as PieChartIcon, ShieldCheck
 } from 'lucide-react'
 import {
   CARE_LEVEL_LABELS, CARE_LEVEL_COLORS,
@@ -11,8 +11,15 @@ import {
   MONTH_LABELS_SHORT_PL, STAY_RANGE_ORDER,
   type CareLevel, type ContractSource, type ContractEndReason,
 } from '@/lib/reporting-constants'
-import { ResponsivePie } from '@nivo/pie'
-import { ResponsiveBar } from '@nivo/bar'
+import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart as RechartsPieChart, XAxis, YAxis } from 'recharts'
+import {
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from '@/components/ui/chart'
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -65,49 +72,11 @@ interface Props {
   contractEndReasons: ContractEndReasonStat[]
 }
 
-// ── Nivo Theme (using design system tokens) ─────────────────────────────────
+// Serie wykresów: tokeny chart-* z kontraktu (ADR-014). Kolejność nie niesie oceny.
+const SERIES_COLORS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)']
 
-const nivoTheme = {
-  text: {
-    fontSize: 11,
-    fill: 'var(--color-slate-soft)',
-    fontFamily: 'inherit',
-  },
-  axis: {
-    ticks: {
-      text: { fontSize: 10, fill: 'var(--color-slate-soft)' },
-    },
-    legend: {
-      text: { fontSize: 12, fill: 'var(--color-slate-soft)' },
-    },
-  },
-  grid: {
-    line: { stroke: 'var(--color-border)', strokeWidth: 1 },
-  },
-  tooltip: {
-    container: {
-      background: 'var(--color-card)',
-      color: 'var(--color-foreground)',
-      fontSize: 12,
-      borderRadius: 8,
-      boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-      padding: '8px 12px',
-      border: '1px solid var(--color-border)',
-    },
-  },
-  labels: {
-    text: { fontSize: 11, fontWeight: 600 as const },
-  },
-}
-
-const END_REASON_COLORS = [
-  'var(--color-primary)',
-  'var(--color-accent-foreground)',
-  'var(--color-slate-soft)',
-  'var(--color-destructive)',
-  'var(--color-border)',
-  'var(--color-sage-deep)',
-]
+/** Klucz serii bezpieczny dla zmiennej CSS (--color-<klucz>). */
+const slug = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 
 // ── Component ───────────────────────────────────────────────────────────────
 
@@ -119,12 +88,11 @@ export function StatisticsDashboardClient({
   admissionsByMonth,
   contractEndReasons,
 }: Props) {
-  // Transform data for Nivo pie
   const pieData = careLevelData.map((d) => ({
     id: CARE_LEVEL_LABELS[(d.care_level || 'unknown') as CareLevel | 'unknown'] || d.care_level,
     label: CARE_LEVEL_LABELS[(d.care_level || 'unknown') as CareLevel | 'unknown'] || d.care_level,
     value: d.resident_count,
-    color: CARE_LEVEL_COLORS[(d.care_level || 'unknown') as CareLevel | 'unknown'],
+    fill: CARE_LEVEL_COLORS[(d.care_level || 'unknown') as CareLevel | 'unknown'],
   }))
 
   const totalResidents = careLevelData.reduce((sum, d) => sum + d.resident_count, 0)
@@ -148,7 +116,7 @@ export function StatisticsDashboardClient({
       acc[label] = (acc[label] || 0) + d.cnt
       return acc
     }, {})
-  ).map(([id, value]) => ({ id, label: id, value }))
+  ).map(([id, value], i) => ({ id, label: id, value, fill: SERIES_COLORS[i % SERIES_COLORS.length] }))
 
   // Admissions by month — stacked bar
   const admissionsData = Array.from({ length: 12 }, (_, i) => {
@@ -158,7 +126,7 @@ export function StatisticsDashboardClient({
     const monthEntries = admissionsByMonth.filter(d => d.admission_month === i + 1)
     for (const entry of monthEntries) {
       const label = CARE_LEVEL_LABELS[(entry.care_level || 'unknown') as CareLevel | 'unknown'] || entry.care_level
-      monthData[label] = entry.cnt
+      monthData[slug(label)] = entry.cnt
     }
     return monthData
   }).filter(d => {
@@ -166,11 +134,27 @@ export function StatisticsDashboardClient({
     return Object.keys(d).some(k => k !== 'month' && (d[k] as number) > 0)
   })
 
-  const admissionKeys = [...new Set(
+  // Klucz serii to slug (bezpieczny dla zmiennej CSS), etykieta zostaje w konfiguracji wykresu
+  const admissionSeries = [...new Set(
     admissionsByMonth.map(d =>
       CARE_LEVEL_LABELS[(d.care_level || 'unknown') as CareLevel | 'unknown'] || d.care_level
     )
-  )]
+  )].map(label => ({ key: slug(label), label }))
+
+  const careLevelConfig: ChartConfig = Object.fromEntries(
+    pieData.map((d) => [d.id, { label: d.label, color: d.fill }]),
+  )
+  const endReasonsConfig: ChartConfig = Object.fromEntries(
+    endReasonsPie.map((d) => [d.id, { label: d.label, color: d.fill }]),
+  )
+  const countConfig: ChartConfig = { count: { label: 'Liczba', color: 'var(--chart-1)' } }
+  const admissionsConfig: ChartConfig = Object.fromEntries(
+    admissionSeries.map(({ key, label }) => {
+      const entry = Object.entries(CARE_LEVEL_LABELS).find(([, v]) => v === label)
+      const color = entry ? CARE_LEVEL_COLORS[entry[0] as CareLevel | 'unknown'] : 'var(--chart-5)'
+      return [key, { label, color }]
+    }),
+  )
 
   return (
     <div className="space-y-6">
@@ -183,27 +167,23 @@ export function StatisticsDashboardClient({
             icon={Activity}
             label="Obłożenie"
             value={`${occupancyKpi.occupancy_rate}%`}
-            color={occupancyKpi.occupancy_rate > 90 ? 'text-emerald-600' : 'text-slate'}
           />
           <KpiCard icon={Bed} label="Wolne" value={occupancyKpi.free_beds} />
           <KpiCard
             icon={ShieldCheck}
             label="ZSN"
             value={`${occupancyKpi.zsn_count ?? 0} (${occupancyKpi.zsn_percentage ?? 0}%)`}
-            color="text-amber-700"
           />
-          <KpiCard icon={Heart} label="Zgony (msc)" value={occupancyKpi.deaths_this_month} color="text-red-500" />
+          <KpiCard icon={Heart} label="Zgony (msc)" value={occupancyKpi.deaths_this_month} />
           <KpiCard
             icon={Users}
             label="Nowe umowy"
             value={occupancyKpi.contracts_signed_this_month}
-            color="text-emerald-600"
           />
           <KpiCard
             icon={Users}
             label="Koniec umów"
             value={occupancyKpi.contracts_ended_this_month}
-            color="text-amber-600"
           />
           <KpiCard
             icon={Activity}
@@ -220,10 +200,10 @@ export function StatisticsDashboardClient({
       {/* Charts Row 1: Care Level + Contract End Reasons */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Care Level Breakdown */}
-        <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5">
+        <Card className="rounded-xl border-none ring-1 ring-slate/5">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg text-slate">
-              <PieChart className="h-5 w-5 text-sage" /> Stan podopiecznych
+              <PieChartIcon className="h-5 w-5 text-sage" /> Stan podopiecznych
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -231,29 +211,19 @@ export function StatisticsDashboardClient({
               <p className="text-sm text-slate-soft text-center py-12">Brak danych</p>
             ) : (
               <>
-                <div className="h-64">
-                  <ResponsivePie
-                    data={pieData}
-                    colors={pieData.map(d => d.color)}
-                    margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
-                    innerRadius={0.55}
-                    padAngle={2}
-                    cornerRadius={4}
-                    activeOuterRadiusOffset={8}
-                    enableArcLinkLabels={false}
-                    arcLabelsSkipAngle={15}
-                    arcLabelsTextColor="var(--color-primary-foreground)"
-                    theme={nivoTheme}
-                    motionConfig="gentle"
-                  />
-                </div>
+                <ChartContainer config={careLevelConfig} className="mx-auto h-64 w-full">
+                  <RechartsPieChart>
+                    <ChartTooltip content={<ChartTooltipContent nameKey="id" hideLabel />} />
+                    <Pie data={pieData} dataKey="value" nameKey="id" innerRadius={55} paddingAngle={2} strokeWidth={1} />
+                  </RechartsPieChart>
+                </ChartContainer>
                 {/* Legend */}
                 <div className="mt-4 grid grid-cols-2 gap-2">
                   {pieData.map((d) => (
                     <div key={d.id} className="flex items-center gap-2 text-sm">
                       <div
                         className="h-3 w-3 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: d.color }}
+                        style={{ backgroundColor: d.fill }}
                       />
                       <span className="text-slate-soft">{d.label}</span>
                       <span className="ml-auto font-semibold text-slate tabular-nums">{d.value}</span>
@@ -270,35 +240,23 @@ export function StatisticsDashboardClient({
         </Card>
 
         {/* Contract End Reasons */}
-        <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5">
+        <Card className="rounded-xl border-none ring-1 ring-slate/5">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg text-slate">
-              <PieChart className="h-5 w-5 text-sage" /> Powody zakończenia umowy
+              <PieChartIcon className="h-5 w-5 text-sage" /> Powody zakończenia umowy
             </CardTitle>
           </CardHeader>
           <CardContent>
             {endReasonsPie.length === 0 ? (
               <p className="text-sm text-slate-soft text-center py-12">Brak danych</p>
             ) : (
-              <div className="h-80">
-                <ResponsivePie
-                  data={endReasonsPie}
-                  margin={{ top: 20, right: 100, bottom: 20, left: 20 }}
-                  innerRadius={0.5}
-                  padAngle={2}
-                  cornerRadius={4}
-                  activeOuterRadiusOffset={8}
-                  enableArcLinkLabels={true}
-                  arcLinkLabelsSkipAngle={10}
-                  arcLinkLabelsTextColor="var(--color-slate-soft)"
-                  arcLinkLabelsColor={{ from: 'color' }}
-                  arcLabelsSkipAngle={15}
-                  arcLabelsTextColor="var(--color-primary-foreground)"
-                  theme={nivoTheme}
-                  colors={END_REASON_COLORS}
-                  motionConfig="gentle"
-                />
-              </div>
+              <ChartContainer config={endReasonsConfig} className="mx-auto h-72 w-full">
+                <RechartsPieChart>
+                  <ChartTooltip content={<ChartTooltipContent nameKey="id" hideLabel />} />
+                  <Pie data={endReasonsPie} dataKey="value" nameKey="id" innerRadius={50} paddingAngle={2} strokeWidth={1} />
+                  <ChartLegend content={<ChartLegendContent nameKey="id" />} />
+                </RechartsPieChart>
+              </ChartContainer>
             )}
           </CardContent>
         </Card>
@@ -307,7 +265,7 @@ export function StatisticsDashboardClient({
       {/* Charts Row 2: Deaths by Stay + Contract Sources */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Deaths by stay length */}
-        <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5">
+        <Card className="rounded-xl border-none ring-1 ring-slate/5">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg text-slate">
               <BarChart3 className="h-5 w-5 text-sage" /> Zgony a długość pobytu
@@ -317,30 +275,21 @@ export function StatisticsDashboardClient({
             {deathsBarData.every(d => d.count === 0) ? (
               <p className="text-sm text-slate-soft text-center py-12">Brak danych</p>
             ) : (
-              <div className="h-72">
-                <ResponsiveBar
-                  data={deathsBarData}
-                  keys={['count']}
-                  indexBy="range"
-                  margin={{ top: 10, right: 20, bottom: 50, left: 40 }}
-                  padding={0.3}
-                  colors={['var(--color-slate-soft)']}
-                  borderRadius={4}
-                  enableLabel={true}
-                  labelTextColor="var(--color-primary-foreground)"
-                  axisBottom={{
-                    tickRotation: -30,
-                  }}
-                  theme={nivoTheme}
-                  motionConfig="gentle"
-                />
-              </div>
+              <ChartContainer config={countConfig} className="h-72 w-full">
+                <BarChart data={deathsBarData} margin={{ left: 0, right: 8 }}>
+                  <CartesianGrid vertical={false} />
+                  <XAxis dataKey="range" tickLine={false} axisLine={false} tickMargin={8} />
+                  <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={32} />
+                  <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                  <Bar dataKey="count" fill="var(--color-count)" radius={4} />
+                </BarChart>
+              </ChartContainer>
             )}
           </CardContent>
         </Card>
 
         {/* Contract Sources */}
-        <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5">
+        <Card className="rounded-xl border-none ring-1 ring-slate/5">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg text-slate">
               <BarChart3 className="h-5 w-5 text-sage" /> Źródło umowy
@@ -350,29 +299,22 @@ export function StatisticsDashboardClient({
             {sourcesBarData.length === 0 ? (
               <p className="text-sm text-slate-soft text-center py-12">Brak danych</p>
             ) : (
-              <div className="h-72">
-                <ResponsiveBar
-                  data={sourcesBarData}
-                  keys={['count']}
-                  indexBy="source"
-                  layout="horizontal"
-                  margin={{ top: 10, right: 30, bottom: 20, left: 120 }}
-                  padding={0.3}
-                  colors={['var(--color-primary)']}
-                  borderRadius={4}
-                  enableLabel={true}
-                  labelTextColor="var(--color-primary-foreground)"
-                  theme={nivoTheme}
-                  motionConfig="gentle"
-                />
-              </div>
+              <ChartContainer config={countConfig} className="h-72 w-full">
+                <BarChart data={sourcesBarData} layout="vertical" margin={{ left: 0, right: 16 }}>
+                  <CartesianGrid horizontal={false} />
+                  <YAxis dataKey="source" type="category" tickLine={false} axisLine={false} width={120} />
+                  <XAxis type="number" allowDecimals={false} tickLine={false} axisLine={false} />
+                  <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                  <Bar dataKey="count" fill="var(--color-count)" radius={4} />
+                </BarChart>
+              </ChartContainer>
             )}
           </CardContent>
         </Card>
       </div>
 
       {/* Charts Row 3: Admissions by Month */}
-      <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5">
+      <Card className="rounded-xl border-none ring-1 ring-slate/5">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg text-slate">
             <BarChart3 className="h-5 w-5 text-sage" /> Przyjęcia wg miesiąca i stanu
@@ -382,39 +324,18 @@ export function StatisticsDashboardClient({
           {admissionsData.length === 0 ? (
             <p className="text-sm text-slate-soft text-center py-12">Brak danych</p>
           ) : (
-            <div className="h-80">
-              <ResponsiveBar
-                data={admissionsData}
-                keys={admissionKeys}
-                indexBy="month"
-                groupMode="stacked"
-                margin={{ top: 20, right: 140, bottom: 40, left: 40 }}
-                padding={0.3}
-                colors={admissionKeys.map(k => {
-                  const entry = Object.entries(CARE_LEVEL_LABELS).find(([, v]) => v === k)
-                  return entry ? CARE_LEVEL_COLORS[entry[0] as CareLevel | 'unknown'] : 'var(--color-slate-soft)'
-                })}
-                borderRadius={3}
-                enableLabel={false}
-                axisBottom={{
-                  tickRotation: 0,
-                }}
-                legends={[
-                  {
-                    dataFrom: 'keys',
-                    anchor: 'right',
-                    direction: 'column',
-                    translateX: 130,
-                    itemWidth: 120,
-                    itemHeight: 20,
-                    symbolSize: 12,
-                    symbolShape: 'circle',
-                  },
-                ]}
-                theme={nivoTheme}
-                motionConfig="gentle"
-              />
-            </div>
+            <ChartContainer config={admissionsConfig} className="h-80 w-full">
+              <BarChart data={admissionsData} margin={{ left: 0, right: 8 }}>
+                <CartesianGrid vertical={false} />
+                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+                <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={32} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartLegend content={<ChartLegendContent />} />
+                {admissionSeries.map(({ key }) => (
+                  <Bar key={key} dataKey={key} stackId="admissions" fill={`var(--color-${key})`} />
+                ))}
+              </BarChart>
+            </ChartContainer>
           )}
         </CardContent>
       </Card>
@@ -436,7 +357,7 @@ function KpiCard({
   color?: string
 }) {
   return (
-    <Card className="rounded-xl border-none shadow-sm ring-1 ring-slate/5">
+    <Card className="rounded-xl border-none ring-1 ring-slate/5">
       <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-2">
           <Icon className="h-4 w-4 text-slate-soft" />

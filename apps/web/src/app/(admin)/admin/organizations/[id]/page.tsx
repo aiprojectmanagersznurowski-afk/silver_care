@@ -11,6 +11,7 @@ import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 import { startImpersonationAction } from '@/actions/impersonation'
 import { ResendAdminInviteButton, AddAdminToOrgDialog } from '@/components/AdminInviteActions'
 import { EditOrganizationDialog } from '@/components/EditOrganizationDialog'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 export default async function OrganizationDetailsPage({
   params,
@@ -77,7 +78,7 @@ export default async function OrganizationDetailsPage({
         </Link>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sage/10 text-sage">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-sage/10 text-sage">
               <Building2 className="h-6 w-6" />
             </div>
             <div>
@@ -106,7 +107,7 @@ export default async function OrganizationDetailsPage({
 
       {/* Karty KPI placówki */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5">
+        <Card className="rounded-xl border-none ring-1 ring-slate/5">
           <CardContent className="p-6">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sage/10 text-sage">
@@ -123,7 +124,7 @@ export default async function OrganizationDetailsPage({
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5">
+        <Card className="rounded-xl border-none ring-1 ring-slate/5">
           <CardContent className="p-6">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate/10 text-slate">
@@ -139,7 +140,7 @@ export default async function OrganizationDetailsPage({
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5">
+        <Card className="rounded-xl border-none ring-1 ring-slate/5">
           <CardContent className="p-6">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate/10 text-slate">
@@ -157,7 +158,7 @@ export default async function OrganizationDetailsPage({
       </div>
 
       {/* Sekcja Administratorzy */}
-      <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5 overflow-hidden">
+      <Card className="rounded-xl border-none ring-1 ring-slate/5 overflow-hidden">
         <CardHeader className="border-b border-slate/5 bg-white px-6 py-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -177,38 +178,38 @@ export default async function OrganizationDetailsPage({
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate/5 text-slate-soft">
-                <tr>
-                  <th scope="col" className="px-6 py-4 font-medium">Użytkownik</th>
-                  <th scope="col" className="px-6 py-4 font-medium">Rola</th>
-                  <th scope="col" className="px-6 py-4 font-medium">Data rejestracji</th>
-                  <th scope="col" className="px-6 py-4 font-medium">Ostatnie logowanie</th>
-                  <th scope="col" className="px-6 py-4 font-medium text-right">Akcja</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate/5 bg-white">
+            <Table>
+              <TableHeader className="text-slate-soft">
+                <TableRow>
+                  <TableHead scope="col">Użytkownik</TableHead>
+                  <TableHead scope="col">Rola</TableHead>
+                  <TableHead scope="col">Data rejestracji</TableHead>
+                  <TableHead scope="col">Ostatnie logowanie</TableHead>
+                  <TableHead scope="col" className="text-right">Akcja</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {administrators.map(admin => (
-                  <tr key={admin.id} className="transition-colors hover:bg-slate/5">
-                    <td className="px-6 py-4">
+                  <TableRow key={admin.id}>
+                    <TableCell>
                       <div className="font-medium text-slate">{admin.email}</div>
                       <div className="font-mono text-xs text-slate-soft">{admin.id}</div>
-                    </td>
-                    <td className="px-6 py-4">
+                    </TableCell>
+                    <TableCell>
                       <span className="inline-flex items-center rounded-lg bg-sage/10 px-2.5 py-1 text-xs font-semibold text-sage">
                         Administrator Ośrodka
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-slate-soft">
+                    </TableCell>
+                    <TableCell className="text-slate-soft">
                       {new Date(admin.created_at).toLocaleDateString('pl-PL')}
-                    </td>
-                    <td className="px-6 py-4 text-slate-soft">
+                    </TableCell>
+                    <TableCell className="text-slate-soft">
                       {admin.last_sign_in_at
                         ? new Date(admin.last_sign_in_at).toLocaleString('pl-PL')
                         : 'Nigdy'
                       }
-                    </td>
-                    <td className="px-6 py-4 text-right">
+                    </TableCell>
+                    <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
                         <ResendAdminInviteButton
                           adminEmail={admin.email || ''}
@@ -231,24 +232,24 @@ export default async function OrganizationDetailsPage({
                           </Button>
                         </form>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
                 {administrators.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-slate-soft">
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center text-slate-soft">
                       Brak przypisanych administratorów placówki.
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>
 
       {/* Sekcja Personel */}
-      <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5 overflow-hidden">
+      <Card className="rounded-xl border-none ring-1 ring-slate/5 overflow-hidden">
         <CardHeader className="border-b border-slate/5 bg-white px-6 py-5">
           <div className="flex items-center gap-2 text-slate font-semibold">
             <UserCheck className="h-5 w-5 text-sage" />
@@ -260,47 +261,47 @@ export default async function OrganizationDetailsPage({
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate/5 text-slate-soft">
-                <tr>
-                  <th scope="col" className="px-6 py-4 font-medium">Użytkownik</th>
-                  <th scope="col" className="px-6 py-4 font-medium">Rola</th>
-                  <th scope="col" className="px-6 py-4 font-medium">Data rejestracji</th>
-                  <th scope="col" className="px-6 py-4 font-medium">Ostatnie logowanie</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate/5 bg-white">
+            <Table>
+              <TableHeader className="text-slate-soft">
+                <TableRow>
+                  <TableHead scope="col">Użytkownik</TableHead>
+                  <TableHead scope="col">Rola</TableHead>
+                  <TableHead scope="col">Data rejestracji</TableHead>
+                  <TableHead scope="col">Ostatnie logowanie</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {staff.map(person => (
-                  <tr key={person.id} className="transition-colors hover:bg-slate/5">
-                    <td className="px-6 py-4">
+                  <TableRow key={person.id}>
+                    <TableCell>
                       <div className="font-medium text-slate">{person.email}</div>
                       <div className="font-mono text-xs text-slate-soft">{person.id}</div>
-                    </td>
-                    <td className="px-6 py-4">
+                    </TableCell>
+                    <TableCell>
                       <span className="inline-flex items-center rounded-lg bg-slate/10 px-2.5 py-1 text-xs font-medium text-slate">
                         {person.app_metadata?.role || person.user_metadata?.role || 'Personel'}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-slate-soft">
+                    </TableCell>
+                    <TableCell className="text-slate-soft">
                       {new Date(person.created_at).toLocaleDateString('pl-PL')}
-                    </td>
-                    <td className="px-6 py-4 text-slate-soft">
+                    </TableCell>
+                    <TableCell className="text-slate-soft">
                       {person.last_sign_in_at
                         ? new Date(person.last_sign_in_at).toLocaleString('pl-PL')
                         : 'Nigdy'
                       }
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
                 {staff.length === 0 && (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-8 text-center text-slate-soft">
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center text-slate-soft">
                       Brak zarejestrowanego personelu w tej placówce.
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>

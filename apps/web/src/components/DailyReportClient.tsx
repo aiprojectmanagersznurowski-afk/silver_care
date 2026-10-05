@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ChevronLeft, ChevronRight, Download, Loader2 } from 'lucide-react'
 import { MONTH_LABELS_PL } from '@/lib/reporting-constants'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 interface DailyRow {
   report_date: string
@@ -176,7 +177,7 @@ export function DailyReportClient({ organizationId }: { organizationId?: string 
       )}
 
       {/* Daily data table */}
-      <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5 overflow-hidden">
+      <Card className="rounded-xl border-none ring-1 ring-slate/5 overflow-hidden">
         <CardContent className="p-0">
           {loading ? (
             <div className="flex items-center justify-center py-20">
@@ -188,31 +189,31 @@ export function DailyReportClient({ organizationId }: { organizationId?: string 
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="bg-slate/5">
-                    <th className="sticky left-0 z-10 bg-slate/5 px-4 py-3 text-left font-semibold text-slate min-w-48 border-r border-slate/10">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="sticky left-0 z-10 min-w-48 border-r">
                       MIESIĄC — {MONTH_LABELS_PL[month - 1].toUpperCase()} {year}
-                    </th>
-                    <th className="px-3 py-3 text-center font-semibold text-slate min-w-14 border-r border-slate/10">
+                    </TableHead>
+                    <TableHead className="text-center min-w-14 border-r">
                       ∑
-                    </th>
+                    </TableHead>
                     {data.map((row) => {
                       const d = new Date(row.report_date)
                       const dayNum = d.getDate()
                       const isWeekend = d.getDay() === 0 || d.getDay() === 6
                       return (
-                        <th
+                        <TableHead
                           key={row.report_date}
                           className={`px-2 py-3 text-center font-medium min-w-10 ${isWeekend ? 'bg-sage/5 text-sage' : 'text-slate-soft'}`}
                         >
                           {dayNum}
-                        </th>
+                        </TableHead>
                       )
                     })}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate/5">
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {metricRows.map((metric) => {
                     const values = data.map((r) => getDailyValue(r, metric.key))
                     const summaryValue = metric.summaryKey && summary
@@ -225,19 +226,19 @@ export function DailyReportClient({ organizationId }: { organizationId?: string 
                     const isDelta = metric.key === 'delta_change'
 
                     return (
-                      <tr key={metric.key} className={`${isHighlight ? 'bg-sage/3 font-semibold' : ''} hover:bg-slate/5 transition-colors`}>
-                        <td className={`sticky left-0 z-10 px-4 py-2.5 text-left whitespace-nowrap border-r border-slate/10 ${isHighlight ? 'bg-sage/3 text-slate font-semibold' : 'bg-white text-slate-soft font-medium'}`}>
+                      <TableRow key={metric.key} className={`${isHighlight ? 'bg-sage/3 font-semibold' : ''} hover:bg-slate/5 transition-colors`}>
+                        <TableCell className={`sticky left-0 z-10 px-4 py-2.5 text-left whitespace-nowrap border-r border-slate/10 ${isHighlight ? 'bg-sage/3 text-slate font-semibold' : 'bg-white text-slate-soft font-medium'}`}>
                           {metric.label}
-                        </td>
-                        <td className={`px-3 py-2.5 text-center font-semibold border-r border-slate/10 ${isHighlight ? 'text-slate' : 'text-slate-soft'}`}>
+                        </TableCell>
+                        <TableCell className={`px-3 py-2.5 text-center font-semibold border-r border-slate/10 ${isHighlight ? 'text-slate' : 'text-slate-soft'}`}>
                           {summaryValue != null
                             ? typeof summaryValue === 'number' && !Number.isInteger(summaryValue)
                               ? summaryValue.toFixed(1)
                               : summaryValue
                             : '—'}
-                        </td>
+                        </TableCell>
                         {values.map((val, i) => (
-                          <td
+                          <TableCell
                             key={i}
                             className={`px-2 py-2.5 text-center tabular-nums ${
                               isDelta
@@ -254,13 +255,13 @@ export function DailyReportClient({ organizationId }: { organizationId?: string 
                             }`}
                           >
                             {isDelta && val > 0 ? `+${val}` : val}
-                          </td>
+                          </TableCell>
                         ))}
-                      </tr>
+                      </TableRow>
                     )
                   })}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           )}
         </CardContent>

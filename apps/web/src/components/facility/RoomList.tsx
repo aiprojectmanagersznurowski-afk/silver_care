@@ -18,6 +18,8 @@ import { Button } from '@/components/ui/button'
 import BedList from './BedList'
 import AddBedDialog from './AddBedDialog'
 import { isGroundFloor } from '@/lib/bed-allocation-optimizer'
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 interface RoomItem {
   id: string
@@ -128,7 +130,7 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
   return (
     <div className="space-y-6 mt-8">
       {/* Pasek narzędziowy: Przełącznik widoku oraz Filtry */}
-      <div className="flex flex-col gap-4 rounded-2xl bg-white p-4 shadow-sm border border-slate/10">
+      <div className="flex flex-col gap-4 rounded-xl bg-white p-4 border border-slate/10">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           {/* Wyszukiwarka */}
           <div className="relative flex-1 max-w-md">
@@ -179,39 +181,37 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
           </div>
 
           {/* Piętro */}
-          <select
+          <NativeSelect
             name="floorFilter"
             value={selectedFloor}
             onChange={(e) => setSelectedFloor(e.target.value)}
-            className="h-8 rounded-lg border border-input bg-background px-2.5 text-xs text-slate focus:outline-none focus:ring-2 focus:ring-ring"
           >
-            <option value="all">Wszystkie piętra</option>
+            <NativeSelectOption value="all">Wszystkie piętra</NativeSelectOption>
             {availableFloors.map((floor) => (
-              <option key={floor} value={floor}>
+              <NativeSelectOption key={floor} value={floor}>
                 {floor}
-              </option>
+              </NativeSelectOption>
             ))}
-          </select>
+          </NativeSelect>
 
           {/* Sektor */}
           {availableSectors.length > 0 && (
-            <select
+            <NativeSelect
               name="sectorFilter"
               value={selectedSector}
               onChange={(e) => setSelectedSector(e.target.value)}
-              className="h-8 rounded-lg border border-input bg-background px-2.5 text-xs text-slate focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <option value="all">Wszystkie sektory</option>
+              <NativeSelectOption value="all">Wszystkie sektory</NativeSelectOption>
               {availableSectors.map((sector) => (
-                <option key={sector} value={sector}>
+                <NativeSelectOption key={sector} value={sector}>
                   Sektor {sector}
-                </option>
+                </NativeSelectOption>
               ))}
-            </select>
+            </NativeSelect>
           )}
 
           {/* Stan obłożenia */}
-          <select
+          <NativeSelect
             name="occupancyFilter"
             value={selectedOccupancy}
             onChange={(e) => {
@@ -220,12 +220,11 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
                 setSelectedOccupancy(val)
               }
             }}
-            className="h-8 rounded-lg border border-input bg-background px-2.5 text-xs text-slate focus:outline-none focus:ring-2 focus:ring-ring"
           >
-            <option value="all">Wszystkie pokoje</option>
-            <option value="free">Tylko z wolnymi miejscami</option>
-            <option value="full">W pełni zajęte</option>
-          </select>
+            <NativeSelectOption value="all">Wszystkie pokoje</NativeSelectOption>
+            <NativeSelectOption value="free">Tylko z wolnymi miejscami</NativeSelectOption>
+            <NativeSelectOption value="full">W pełni zajęte</NativeSelectOption>
+          </NativeSelect>
 
           {/* Licznik wyników */}
           <div className="ml-auto text-xs text-muted-foreground">
@@ -252,8 +251,8 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
               <Card
                 key={room.id}
                 data-testid="room-card"
-                className={`overflow-hidden rounded-2xl border transition-all duration-200 ${
-                  isExpanded ? 'ring-2 ring-sage/30 shadow-md' : 'hover:shadow-sm'
+                className={`overflow-hidden rounded-xl border transition-all duration-200 ${
+                  isExpanded ? 'ring-2 ring-sage/30' : 'hover:bg-muted/40'
                 }`}
               >
                 <div className="p-4 space-y-3">
@@ -376,46 +375,45 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
         /* WIDOK TABELARYCZNY */
         <div
           data-testid="room-table"
-          className="rounded-2xl border border-slate/10 bg-white overflow-hidden shadow-sm"
+          className="rounded-xl border border-slate/10 bg-white overflow-hidden"
         >
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-muted/40 text-xs font-semibold uppercase text-slate-soft border-b">
-                <tr>
-                  <th className="py-3 px-4">Pokój</th>
-                  <th className="py-3 px-4">Piętro</th>
-                  <th className="py-3 px-4">Sektor</th>
-                  <th className="py-3 px-4 text-center">Łóżka</th>
-                  <th className="py-3 px-4 text-center">Obłożenie</th>
-                  <th className="py-3 px-4">Reguły alokacji</th>
-                  <th className="py-3 px-4 text-right">Akcje</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate/10">
+            <Table>
+              <TableHeader className="font-semibold text-slate-soft">
+                <TableRow>
+                  <TableHead>Pokój</TableHead>
+                  <TableHead>Piętro</TableHead>
+                  <TableHead>Sektor</TableHead>
+                  <TableHead className="text-center">Łóżka</TableHead>
+                  <TableHead className="text-center">Obłożenie</TableHead>
+                  <TableHead>Reguły alokacji</TableHead>
+                  <TableHead className="text-right">Akcje</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {filteredRooms.map((room) => {
                   const genderInfo = getRoomGenderLabel(room)
                   const isGround = isGroundFloor(room.floor)
                   const isExpanded = expandedRooms[room.id]
 
                   return (
-                    <tr
+                    <TableRow
                       key={room.id}
-                      className="hover:bg-muted/20 transition-colors"
                     >
-                      <td className="py-3.5 px-4 font-semibold text-slate">
+                      <TableCell className="font-semibold text-slate">
                         <div className="flex items-center gap-2">
                           <DoorOpen className="w-4 h-4 text-sage" />
                           <span>Pokój {room.number}</span>
                         </div>
-                      </td>
-                      <td className="py-3.5 px-4 text-slate-soft">{room.floor}</td>
-                      <td className="py-3.5 px-4 text-slate-soft">
+                      </TableCell>
+                      <TableCell className="text-slate-soft">{room.floor}</TableCell>
+                      <TableCell className="text-slate-soft">
                         {room.sector ? `Sektor ${room.sector}` : '—'}
-                      </td>
-                      <td className="py-3.5 px-4 text-center font-medium">
+                      </TableCell>
+                      <TableCell className="text-center font-medium">
                         {room.beds || 0}
-                      </td>
-                      <td className="py-3.5 px-4 text-center">
+                      </TableCell>
+                      <TableCell className="text-center">
                         <span
                           className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                             room.free > 0
@@ -425,8 +423,8 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
                         >
                           {room.occupied || 0} / {room.beds || 0} ({room.free || 0} wolnych)
                         </span>
-                      </td>
-                      <td className="py-3.5 px-4">
+                      </TableCell>
+                      <TableCell>
                         <div className="flex flex-wrap items-center gap-1.5 text-xs">
                           {isGround && (
                             <span className="inline-flex items-center gap-1 rounded bg-blue-50 px-1.5 py-0.5 text-[11px] font-medium text-blue-700">
@@ -443,8 +441,8 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
                             {genderInfo.label}
                           </span>
                         </div>
-                      </td>
-                      <td className="py-3.5 px-4 text-right">
+                      </TableCell>
+                      <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
                           <AddBedDialog roomId={room.id} onBedAdded={onUpdate} />
                           <Button
@@ -457,12 +455,12 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
                             {isExpanded ? 'Zwiń' : 'Łóżka'}
                           </Button>
                         </div>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   )
                 })}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </div>
       )}

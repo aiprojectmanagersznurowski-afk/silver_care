@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { UserPlus } from 'lucide-react'
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 
 interface AddUserDialogProps {
   isOpen: boolean
@@ -76,18 +77,17 @@ export function AddUserDialog({
 
           <div className="space-y-2">
             <Label htmlFor="new-user-role">Rola systemowa *</Label>
-            <select
+            <NativeSelect
               id="new-user-role"
               value={newRole}
-              onChange={e => onRoleChange(e.target.value)}
-              className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              onChange={e => onRoleChange(e.target.value)} className="flex w-full items-center justify-between"
             >
               {availableRoles.map(r => (
-                <option key={r.id} value={r.id}>
+                <NativeSelectOption key={r.id} value={r.id}>
                   {r.label}
-                </option>
+                </NativeSelectOption>
               ))}
-            </select>
+            </NativeSelect>
           </div>
 
           <div className="space-y-2">

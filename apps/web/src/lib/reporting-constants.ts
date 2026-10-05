@@ -21,45 +21,26 @@ export const CARE_LEVEL_LABELS: Record<CareLevel | 'unknown', string> = {
  * For charts that need raw CSS values, use CARE_LEVEL_CHART_COLORS.
  */
 export const CARE_LEVEL_COLORS: Record<CareLevel | 'unknown', string> = {
-  walking: 'var(--color-primary)',             // sage / green — design token
-  sitting: 'var(--color-accent-foreground)',    // accent foreground
-  bedridden: 'var(--color-destructive)',        // destructive red
-  hospice: 'var(--color-muted-foreground)',     // muted grey
-  unknown: 'var(--color-border)',              // border neutral
+  // Kategorie opisują stan opieki, nie jego ocenę (ADR-005, ADR-011): odcienie jednej palety, bez czerwieni.
+  walking: 'var(--chart-1)',
+  sitting: 'var(--chart-2)',
+  bedridden: 'var(--chart-3)',
+  hospice: 'var(--chart-5)',
+  unknown: 'var(--border)',
 }
 
 /** Tailwind bg- classes for care-level badges */
 export const CARE_LEVEL_BG_CLASSES: Record<CareLevel | 'unknown', string> = {
-  walking: 'bg-primary/15 text-primary',
-  sitting: 'bg-accent text-accent-foreground',
-  bedridden: 'bg-destructive/15 text-destructive',
-  hospice: 'bg-muted text-muted-foreground',
+  walking: 'bg-chart-1/15 text-foreground',
+  sitting: 'bg-chart-2/15 text-foreground',
+  bedridden: 'bg-chart-3/20 text-foreground',
+  hospice: 'bg-chart-5/15 text-foreground',
   unknown: 'bg-secondary text-secondary-foreground',
 }
 
-/**
- * Chart-safe color palette derived from design tokens.
- * Uses computed CSS values resolved at render time.
- */
+/** Paleta serii wykresów — tokeny chart-* z kontraktu (ADR-014), rozwiązywane przez przeglądarkę. */
 export function getCareLevelChartColors(): Record<CareLevel | 'unknown', string> {
-  if (typeof window === 'undefined') {
-    // SSR fallback — these match the :root values from globals.css
-    return {
-      walking: 'hsl(160, 40%, 31%)',
-      sitting: 'hsl(160, 40%, 31%)',
-      bedridden: 'hsl(0, 84%, 60%)',
-      hospice: 'hsl(24, 6%, 33%)',
-      unknown: 'hsl(34, 10%, 71%)',
-    }
-  }
-  const style = getComputedStyle(document.documentElement)
-  return {
-    walking: style.getPropertyValue('--primary').trim() || 'hsl(160, 40%, 31%)',
-    sitting: style.getPropertyValue('--accent-foreground').trim() || 'hsl(160, 40%, 31%)',
-    bedridden: style.getPropertyValue('--destructive').trim() || 'hsl(0, 84%, 60%)',
-    hospice: style.getPropertyValue('--muted-foreground').trim() || 'hsl(24, 6%, 33%)',
-    unknown: style.getPropertyValue('--border').trim() || 'hsl(34, 10%, 71%)',
-  }
+  return CARE_LEVEL_COLORS
 }
 
 // ── Contract sources ────────────────────────────────────────────────────────

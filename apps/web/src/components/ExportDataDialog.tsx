@@ -14,6 +14,7 @@ import {
 import { Download, FileSpreadsheet, FileText, Check, AlertCircle, Loader2 } from 'lucide-react'
 import { exportResidentsDataAction } from '@/actions/export'
 import * as XLSX from 'xlsx'
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 
 export function ExportDataDialog() {
   const [open, setOpen] = useState(false)
@@ -136,15 +137,14 @@ export function ExportDataDialog() {
 
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-600 block">Status pensjonariuszy</label>
-            <select
+            <NativeSelect
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as 'active' | 'archived' | 'all')}
-              className="w-full px-3 py-2 border rounded-md text-sm bg-white border-slate-200"
+              onChange={(e) => setStatusFilter(e.target.value as 'active' | 'archived' | 'all')} className="w-full"
             >
-              <option value="active">Tylko aktywni (obecnie w placówce)</option>
-              <option value="archived">Tylko wypisani / zarchiwizowani</option>
-              <option value="all">Wszyscy (obecni i archiwalni)</option>
-            </select>
+              <NativeSelectOption value="active">Tylko aktywni (obecnie w placówce)</NativeSelectOption>
+              <NativeSelectOption value="archived">Tylko wypisani / zarchiwizowani</NativeSelectOption>
+              <NativeSelectOption value="all">Wszyscy (obecni i archiwalni)</NativeSelectOption>
+            </NativeSelect>
           </div>
 
           <div className="flex items-center gap-2 pt-2">
