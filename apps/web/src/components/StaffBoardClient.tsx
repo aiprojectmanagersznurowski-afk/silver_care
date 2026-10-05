@@ -437,14 +437,9 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                 <div className="grid grid-cols-2 gap-2 pt-1">
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Link href={`/voice?resident=${resId}`} className="block">
-                        <button
-                          type="button"
-                          className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-sage px-3 py-3 text-xs font-semibold text-white shadow-xs hover:bg-sage-dark transition-colors min-h-[48px]"
-                        >
-                          <Mic className="h-4 w-4" />
-                          Dyktuj (1-klik)
-                        </button>
+                      <Link href={`/voice?resident=${resId}`} className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-sage px-3 py-3 text-xs font-semibold text-white shadow-xs hover:bg-sage-dark transition-colors min-h-[48px]">
+                        <Mic className="h-4 w-4" />
+                        Dyktuj (1-klik)
                       </Link>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -551,11 +546,9 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                   <div className="border-t border-slate/5 p-4 bg-slate/5 flex flex-col gap-3">
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Link href={`/voice?resident=${resident.id}`} className="block w-full">
-                          <button className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-sage px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-sage-dark transition-colors min-h-[44px]">
-                            <Mic className="h-4 w-4" />
-                            Nagraj notatkę
-                          </button>
+                        <Link href={`/voice?resident=${resident.id}`} className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-sage px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-sage-dark transition-colors min-h-[44px]">
+                          <Mic className="h-4 w-4" />
+                          Nagraj notatkę
                         </Link>
                       </TooltipTrigger>
                       <TooltipContent>
@@ -566,11 +559,9 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                     {noteStatus !== 'none' && (
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Link href={`/staff/reports?resident=${resident.id}`} className="block w-full">
-                            <button className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-medium text-slate shadow-sm ring-1 ring-inset ring-slate/10 hover:bg-slate/5 transition-colors min-h-[44px]">
-                              <FileText className="h-4 w-4 text-slate-soft" />
-                              Podgląd raportu
-                            </button>
+                          <Link href={`/staff/reports?resident=${resident.id}`} className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-medium text-slate shadow-sm ring-1 ring-inset ring-slate/10 hover:bg-slate/5 transition-colors min-h-[44px]">
+                            <FileText className="h-4 w-4 text-slate-soft" />
+                            Podgląd raportu
                           </Link>
                         </TooltipTrigger>
                         <TooltipContent>
@@ -579,11 +570,9 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                       </Tooltip>
                     )}
 
-                    <Link href={`/staff/messages?residentId=${resident.id}`} className="block w-full">
-                      <button className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-medium text-slate shadow-sm ring-1 ring-inset ring-slate/10 hover:bg-slate/5 transition-colors min-h-[44px]">
-                        <MessageSquare className="h-4 w-4 text-sage-dark" />
-                        Wiadomości od rodziny
-                      </button>
+                    <Link href={`/staff/messages?residentId=${resident.id}`} className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-medium text-slate shadow-sm ring-1 ring-inset ring-slate/10 hover:bg-slate/5 transition-colors min-h-[44px]">
+                      <MessageSquare className="h-4 w-4 text-sage-dark" />
+                      Wiadomości od rodziny
                     </Link>
 
                     <div className="mt-1">

@@ -78,11 +78,9 @@ export default async function StaffReportsPage({ searchParams }: StaffReportsPag
 
         {residentId && (
           <div className="flex items-center gap-2">
-            <Link href={`/voice?resident=${residentId}`}>
-              <button className="inline-flex items-center gap-2 rounded-xl bg-sage px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sage-dark transition-colors">
-                <Mic className="h-4 w-4" />
-                Nagraj nową notatkę
-              </button>
+            <Link href={`/voice?resident=${residentId}`} className="inline-flex items-center gap-2 rounded-xl bg-sage px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sage-dark transition-colors">
+              <Mic className="h-4 w-4" />
+              Nagraj nową notatkę
             </Link>
           </div>
         )}
@@ -114,11 +112,9 @@ export default async function StaffReportsPage({ searchParams }: StaffReportsPag
             </p>
             {residentId && (
               <div className="mt-6">
-                <Link href={`/voice?resident=${residentId}`}>
-                  <button className="inline-flex items-center gap-2 rounded-xl bg-sage px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-sage-dark transition-colors">
-                    <Mic className="h-4 w-4" />
-                    Nagraj notatkę głosową
-                  </button>
+                <Link href={`/voice?resident=${residentId}`} className="inline-flex items-center gap-2 rounded-xl bg-sage px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-sage-dark transition-colors">
+                  <Mic className="h-4 w-4" />
+                  Nagraj notatkę głosową
                 </Link>
               </div>
             )}

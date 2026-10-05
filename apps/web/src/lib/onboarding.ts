@@ -130,3 +130,14 @@ export function determineConsentsForRole(
     purposes: [],
   };
 }
+
+export type RelativeRole = 'legal_guardian' | 'family';
+
+/**
+ * Rola bliskiego wynikająca z zaproszenia (CONSENT-GRANTOR).
+ * Jedno źródło reguły dla rejestracji e-mailem i dla Google OAuth — każda wartość
+ * inna niż legal_guardian daje family, nigdy rolę wyższą.
+ */
+export function resolveRelativeRole(invitationRole: string | null | undefined): RelativeRole {
+  return invitationRole === 'legal_guardian' ? 'legal_guardian' : 'family';
+}

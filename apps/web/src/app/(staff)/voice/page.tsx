@@ -345,11 +345,9 @@ function VoiceNoteContent() {
               </div>
               
               <div className="flex flex-col sm:flex-row gap-3">
-                <Link href="/staff/reports" className="flex-1">
-                  <button className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 transition-colors">
-                    Przejdź do weryfikacji raportów
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
+                <Link href="/staff/reports" className="flex-1 w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 transition-colors">
+                  Przejdź do weryfikacji raportów
+                  <ArrowRight className="h-4 w-4" />
                 </Link>
                 <button 
                   onClick={resetNote}

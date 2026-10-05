@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { resolveRelativeRole } from '@/lib/onboarding'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -70,13 +71,14 @@ export async function GET(request: Request) {
         throw new Error('Adres e-mail z Google nie pokrywa się z zaproszeniem.')
       }
 
-      // 2. Aktualizacja app_metadata użytkownika
+      // 2. Aktualizacja app_metadata użytkownika — rola z zaproszenia, jak w /api/family/register (CONSENT-GRANTOR)
+      const relativeRole = resolveRelativeRole(invitation.role)
       const { error: updateError } = await adminClient.auth.admin.updateUserById(user.id, {
         user_metadata: {
           phone: invitation.phone || null
         },
         app_metadata: {
-          role: 'family',
+          role: relativeRole,
           organization_id: invitation.organization_id
         }
       })
@@ -91,8 +93,8 @@ export async function GET(request: Request) {
         .insert({
           resident_id: invitation.resident_id,
           relative_user_id: user.id,
-          relationship_code: 'family',
-          role: 'family'
+          relationship_code: relativeRole,
+          role: relativeRole
         })
 
       if (linkError && linkError.code !== '23505') {
