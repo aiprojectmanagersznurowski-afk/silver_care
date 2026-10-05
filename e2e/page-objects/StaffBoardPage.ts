@@ -11,6 +11,8 @@ export class StaffBoardPage {
   readonly agendaLink: Locator;
   readonly reportsLink: Locator;
   readonly logoutButton: Locator;
+  readonly familyMessagesLinks: Locator;
+  readonly buttonsNestedInLinks: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -20,6 +22,8 @@ export class StaffBoardPage {
     this.agendaLink = page.locator('a[href="/staff/agenda"]');
     this.reportsLink = page.locator('a[href="/staff/reports"]');
     this.logoutButton = page.locator('form[action="/auth/signout"] button[type="submit"]');
+    this.familyMessagesLinks = page.locator('a[href^="/staff/messages?residentId="]');
+    this.buttonsNestedInLinks = page.locator('a button');
   }
 
   async goto() {

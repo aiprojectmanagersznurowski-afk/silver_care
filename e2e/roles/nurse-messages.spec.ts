@@ -4,6 +4,7 @@ import { StaffMessagesPage } from '../page-objects/StaffMessagesPage.spec.helper
 /**
  * @REQ: FAM-MESSAGES
  * @REQ: NUR-BOARD
+ * @REQ: UI-ACCESSIBILITY
  *
  * Testy E2E dla modułu wiadomości personelu (odczyt wiadomości od rodzin i odpowiedź).
  */
@@ -43,5 +44,25 @@ test.describe('Portal Personelu — Wiadomości od rodzin (@REQ: FAM-MESSAGES, @
     const emptyStateVisible = await messagesPage.emptyState.isVisible().catch(() => false);
 
     expect(inboxVisible || emptyStateVisible).toBe(true);
+  });
+
+  test('@REQ: UI-ACCESSIBILITY - Akcja „Wiadomości od rodziny" na tablicy to link bez zagnieżdżonego przycisku', async ({ loginPage, staffBoardPage, page }) => {
+    await loginPage.loginAs('nurse');
+    await staffBoardPage.goto();
+    await staffBoardPage.expectStaffBoardLoaded();
+
+    // Domyślny widok to szybki obchód — tam też nie może być przycisku w linku
+    await expect(staffBoardPage.buttonsNestedInLinks).toHaveCount(0);
+
+    // Akcja wiadomości jest na karcie pensjonariusza w widoku kart
+    await staffBoardPage.switchToCards();
+    const messagesLink = staffBoardPage.familyMessagesLinks.first();
+    await expect(messagesLink).toBeVisible();
+    await expect(messagesLink).toContainText('Wiadomości od rodziny');
+    await expect(staffBoardPage.buttonsNestedInLinks).toHaveCount(0);
+
+    await messagesLink.click();
+    await page.waitForURL(/\/staff\/messages\?residentId=[0-9a-f-]{36}/);
+    await new StaffMessagesPage(page).expectPageLoaded();
   });
 });
