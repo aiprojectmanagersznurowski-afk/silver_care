@@ -20,9 +20,9 @@ export default async function FamilyMessagesPage() {
 
   if (residents.length === 0) {
     return (
-      <div className="mx-auto my-12 max-w-md rounded-3xl border border-border bg-card p-8 text-center shadow-sm">
-        <h3 className="text-lg font-semibold text-slate font-display">Brak powiązanych podopiecznych</h3>
-        <p className="mt-2 text-sm text-slate-soft">
+      <div className="mx-auto my-12 max-w-md rounded-xl border border-border bg-card p-8 text-center">
+        <h3 className="text-lg font-semibold text-foreground font-display">Brak powiązanych podopiecznych</h3>
+        <p className="mt-2 text-sm text-muted-foreground">
           Twoje konto nie ma jeszcze przypisanego podopiecznego. Skontaktuj się z personelem placówki.
         </p>
       </div>

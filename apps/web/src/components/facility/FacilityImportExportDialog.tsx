@@ -413,30 +413,30 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
 
   return (
     <Dialog open={open} onOpenChange={(val) => { setOpen(val); if (!val) resetAllState(); }}>
-      <DialogTrigger render={<Button variant="outline" className="gap-2 border-slate-300 text-slate-700" />}>
-        <ArrowUpDown className="w-4 h-4 text-sage" />
+      <DialogTrigger render={<Button variant="outline" className="gap-2 border-border text-foreground" />}>
+        <ArrowUpDown className="w-4 h-4 text-primary" />
         Import / Eksport / Głosowo
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-6 overflow-hidden">
         <DialogHeader className="shrink-0 mb-4">
-          <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-slate">
-            <FileSpreadsheet className="w-5 h-5 text-sage" />
+          <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-foreground">
+            <FileSpreadsheet className="w-5 h-5 text-primary" />
             Zarządzanie strukturą placówki
           </DialogTitle>
-          <DialogDescription className="text-sm text-slate-soft">
+          <DialogDescription className="text-sm text-muted-foreground">
             Eksportuj, wgrywaj masowo lub dodawaj pokoje i łóżka za pomocą głosu.
           </DialogDescription>
         </DialogHeader>
 
         {/* Tab buttons */}
-        <div className="flex border-b border-slate-200 shrink-0 gap-2 mb-4">
+        <div className="flex border-b border-border shrink-0 gap-2 mb-4">
           <button
             type="button"
             onClick={() => setActiveTab('export')}
             className={`pb-2 px-3 text-sm font-medium border-b-2 transition-colors ${
               activeTab === 'export'
-                ? 'border-sage text-sage font-semibold'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
+                ? 'border-primary text-primary font-semibold'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
             <Download className="w-4 h-4 inline mr-1.5" />
@@ -447,8 +447,8 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
             onClick={() => setActiveTab('import')}
             className={`pb-2 px-3 text-sm font-medium border-b-2 transition-colors ${
               activeTab === 'import'
-                ? 'border-sage text-sage font-semibold'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
+                ? 'border-primary text-primary font-semibold'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
             <Upload className="w-4 h-4 inline mr-1.5" />
@@ -459,8 +459,8 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
             onClick={() => setActiveTab('voice')}
             className={`pb-2 px-3 text-sm font-medium border-b-2 transition-colors ${
               activeTab === 'voice'
-                ? 'border-sage text-sage font-semibold'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
+                ? 'border-primary text-primary font-semibold'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
             <Mic className="w-4 h-4 inline mr-1.5" />
@@ -473,11 +473,11 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
           {/* TAB 1: EKSPORT */}
           {activeTab === 'export' && (
             <div className="space-y-4">
-              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
-                <h4 className="text-sm font-semibold text-slate-800 mb-1">
+              <div className="p-4 bg-muted rounded-xl border border-border">
+                <h4 className="text-sm font-semibold text-foreground mb-1">
                   Eksport pełnej struktury placówki
                 </h4>
-                <p className="text-xs text-slate-600 mb-4">
+                <p className="text-xs text-foreground mb-4">
                   Pobierz aktualne dane o wszystkich pokojach, sektorach, łóżkach i przypisanych mieszkańcach.
                 </p>
 
@@ -485,7 +485,7 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
                   <Button
                     onClick={handleExportXLSX}
                     disabled={exportLoading}
-                    className="gap-2 bg-sage hover:bg-sage/90 text-white"
+                    className="gap-2 bg-primary hover:bg-primary/90 text-white"
                   >
                     {exportLoading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -499,7 +499,7 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
                     onClick={handleExportJSON}
                     disabled={exportLoading}
                     variant="outline"
-                    className="gap-2 border-slate-300 text-slate-700"
+                    className="gap-2 border-border text-foreground"
                   >
                     {exportLoading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -511,18 +511,18 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
                 </div>
               </div>
 
-              <div className="p-4 bg-amber-50/50 rounded-xl border border-amber-200/60">
-                <h4 className="text-sm font-semibold text-amber-900 mb-1">
+              <div className="p-4 bg-muted rounded-xl border border-border">
+                <h4 className="text-sm font-semibold text-foreground mb-1">
                   Wzorcowy szablon importu
                 </h4>
-                <p className="text-xs text-amber-700 mb-3">
+                <p className="text-xs text-foreground mb-3">
                   Potrzebujesz formatki do przygotowania danych pokoi? Pobierz czysty szablon z przykładowymi wierszami.
                 </p>
                 <Button
                   onClick={handleDownloadTemplate}
                   variant="outline"
                   size="sm"
-                  className="gap-2 border-amber-300 text-amber-900 hover:bg-amber-100"
+                  className="gap-2 border-border text-foreground hover:bg-muted"
                 >
                   <Download className="w-3.5 h-3.5" />
                   Pobierz szablon Excel (.xlsx)
@@ -530,14 +530,14 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
               </div>
 
               {exportError && (
-                <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-sm flex items-center gap-2">
+                <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>{exportError}</span>
                 </div>
               )}
 
               {exportSuccess && (
-                <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-sm flex items-center gap-2">
+                <div className="p-3 bg-muted border border-border text-foreground rounded-lg text-sm flex items-center gap-2">
                   <Check className="w-4 h-4 shrink-0" />
                   <span>{exportSuccess}</span>
                 </div>
@@ -550,12 +550,12 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
             <div className="space-y-4">
               {!dryRunResult ? (
                 <div className="space-y-4">
-                  <div className="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center bg-slate-50/50 hover:bg-slate-50 transition-colors">
-                    <FileSpreadsheet className="w-10 h-10 text-slate-400 mx-auto mb-3" />
-                    <p className="text-sm font-medium text-slate-700 mb-1">
+                  <div className="border-2 border-dashed border-border rounded-xl p-8 text-center bg-muted hover:bg-muted transition-colors">
+                    <FileSpreadsheet className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                    <p className="text-sm font-medium text-foreground mb-1">
                       Wybierz lub przeciągnij plik Excel (.xlsx) lub CSV
                     </p>
-                    <p className="text-xs text-slate-500 mb-4">
+                    <p className="text-xs text-muted-foreground mb-4">
                       Kolumny: Piętro, Numer pokoju, Sektor (opcjonalnie), Liczba łóżek lub Etykiety łóżek
                     </p>
                     <input
@@ -569,7 +569,7 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
                     <Button
                       onClick={() => fileInputRef.current?.click()}
                       disabled={importLoading}
-                      className="gap-2 bg-sage hover:bg-sage/90 text-white"
+                      className="gap-2 bg-primary hover:bg-primary/90 text-white"
                     >
                       {importLoading ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -582,12 +582,12 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200 text-sm">
+                  <div className="flex items-center justify-between p-3 bg-muted rounded-lg border border-border text-sm">
                     <div>
-                      <span className="font-semibold text-slate-800">Podsumowanie analizy: </span>
-                      <span className="text-emerald-700 font-medium">Poprawnych: {dryRunResult.validRowsCount}</span>
+                      <span className="font-semibold text-foreground">Podsumowanie analizy: </span>
+                      <span className="text-foreground font-medium">Poprawnych: {dryRunResult.validRowsCount}</span>
                       {dryRunResult.invalidRowsCount > 0 && (
-                        <span className="text-rose-600 font-medium ml-2">
+                        <span className="text-destructive font-medium ml-2">
                           Błędnych: {dryRunResult.invalidRowsCount}
                         </span>
                       )}
@@ -596,16 +596,16 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
                       variant="ghost"
                       size="sm"
                       onClick={() => setDryRunResult(null)}
-                      className="text-xs text-slate-500"
+                      className="text-xs text-muted-foreground"
                     >
                       Wgraj inny plik
                     </Button>
                   </div>
 
                   {/* Tabela podglądu dry-run */}
-                  <div className="border border-slate-200 rounded-lg overflow-x-auto max-h-56">
+                  <div className="border border-border rounded-lg overflow-x-auto max-h-56">
                     <Table>
-                      <TableHeader className="bg-slate-100 text-slate-700 sticky top-0">
+                      <TableHeader className="bg-muted text-foreground sticky top-0">
                         <TableRow>
                           <TableHead>Wiersz</TableHead>
                           <TableHead>Piętro</TableHead>
@@ -619,20 +619,20 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
                         {dryRunResult.rows.map((row) => (
                           <TableRow
                             key={row.rowNumber}
-                            className={row.isValid ? 'bg-white' : 'bg-rose-50/50'}
+                            className={row.isValid ? 'bg-card' : 'bg-destructive/5'}
                           >
-                            <TableCell className="font-mono text-slate-500">{row.rowNumber}</TableCell>
+                            <TableCell className="font-mono text-muted-foreground">{row.rowNumber}</TableCell>
                             <TableCell className="font-medium">{row.floor || '-'}</TableCell>
                             <TableCell className="font-medium">{row.number || '-'}</TableCell>
-                            <TableCell className="text-slate-600">{row.sector || '-'}</TableCell>
+                            <TableCell className="text-foreground">{row.sector || '-'}</TableCell>
                             <TableCell className="font-mono">{row.bedLabels.join(', ') || '-'}</TableCell>
                             <TableCell>
                               {row.isValid ? (
-                                <span className="inline-flex items-center gap-1 text-emerald-700 font-medium">
+                                <span className="inline-flex items-center gap-1 text-foreground font-medium">
                                   <Check className="w-3.5 h-3.5" /> Gotowy
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 text-rose-600" title={row.errors.join(' ')}>
+                                <span className="inline-flex items-center gap-1 text-destructive" title={row.errors.join(' ')}>
                                   <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                                   {row.errors[0]}
                                 </span>
@@ -645,12 +645,12 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
                   </div>
 
                   <div className="flex items-center justify-between pt-2">
-                    <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+                    <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer">
                       <input
                         type="checkbox"
                         checked={onlyValid}
                         onChange={(e) => setOnlyValid(e.target.checked)}
-                        className="rounded border-slate-300 text-sage focus:ring-sage"
+                        className="rounded border-border text-primary focus:ring-primary"
                       />
                       <span>Pomiń błędne wiersze i importuj tylko poprawne</span>
                     </label>
@@ -658,7 +658,7 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
                     <Button
                       onClick={handleCommitImport}
                       disabled={importLoading || (onlyValid && dryRunResult.validRowsCount === 0)}
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2 text-sm"
+                      className="bg-primary hover:bg-primary text-white gap-2 text-sm"
                     >
                       {importLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                       Zatwierdź import ({onlyValid ? dryRunResult.validRowsCount : dryRunResult.totalRows})
@@ -668,14 +668,14 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
               )}
 
               {importError && (
-                <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-sm flex items-center gap-2">
+                <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>{importError}</span>
                 </div>
               )}
 
               {importSuccess && (
-                <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-sm flex items-center gap-2">
+                <div className="p-3 bg-muted border border-border text-foreground rounded-lg text-sm flex items-center gap-2">
                   <Check className="w-4 h-4 shrink-0" />
                   <span>{importSuccess}</span>
                 </div>
@@ -686,13 +686,13 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
           {/* TAB 3: GŁOSOWE DODAWANIE */}
           {activeTab === 'voice' && (
             <div className="space-y-4">
-              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+              <div className="p-4 bg-muted rounded-xl border border-border">
                 <div className="flex items-center justify-between mb-3">
                   <div>
-                    <h4 className="text-sm font-semibold text-slate-800">
+                    <h4 className="text-sm font-semibold text-foreground">
                       Podyktuj parametry nowego pokoju
                     </h4>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-muted-foreground">
                       Np.: &quot;Dodaj pokój 205 na drugim piętrze, sektor B, z dwoma łóżkami A i B&quot;.
                     </p>
                   </div>
@@ -701,7 +701,7 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
                     onClick={isRecording ? stopRecording : startRecording}
                     disabled={isProcessingVoice}
                     variant={isRecording ? 'destructive' : 'default'}
-                    className={`gap-2 ${!isRecording ? 'bg-sage hover:bg-sage/90 text-white' : ''}`}
+                    className={`gap-2 ${!isRecording ? 'bg-primary hover:bg-primary/90 text-white' : ''}`}
                   >
                     {isRecording ? (
                       <>
@@ -718,15 +718,15 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
                 </div>
 
                 {isProcessingVoice && (
-                  <div className="flex items-center gap-2 text-xs text-slate-600 bg-white p-3 rounded-lg border border-slate-200">
-                    <Loader2 className="w-4 h-4 animate-spin text-sage" />
+                  <div className="flex items-center gap-2 text-xs text-foreground bg-card p-3 rounded-lg border border-border">
+                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
                     <span>Przetwarzanie audio i ekstrakcja parametrów struktury...</span>
                   </div>
                 )}
 
                 {/* Transkrypcja / edycja tekstu */}
                 <div className="mt-3">
-                  <Label htmlFor="voice-transcript" className="text-xs font-medium text-slate-700 mb-1 block">
+                  <Label htmlFor="voice-transcript" className="text-xs font-medium text-foreground mb-1 block">
                     Transkrypcja lub polecenie słowne:
                   </Label>
                   <div className="flex gap-2">
@@ -745,7 +745,7 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
                       disabled={isProcessingVoice || !voiceTranscription.trim()}
                       className="gap-1 text-xs shrink-0"
                     >
-                      <Sparkles className="w-3.5 h-3.5 text-sage" />
+                      <Sparkles className="w-3.5 h-3.5 text-primary" />
                       Przetwórz AI
                     </Button>
                   </div>
@@ -753,8 +753,8 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
               </div>
 
               {/* Formularz weryfikacji i zatwierdzenia pokoju */}
-              <form onSubmit={handleSaveVoiceRoom} className="p-4 bg-white rounded-xl border border-slate-200 space-y-3">
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <form onSubmit={handleSaveVoiceRoom} className="p-4 bg-card rounded-xl border border-border space-y-3">
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Wyodrębnione parametry pokoju (do weryfikacji)
                 </h4>
 
@@ -810,7 +810,7 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
                   <Button
                     type="submit"
                     disabled={isSubmittingVoice || !voiceRoomNumber.trim() || !voiceFloor.trim()}
-                    className="bg-sage hover:bg-sage/90 text-white gap-2 text-sm"
+                    className="bg-primary hover:bg-primary/90 text-white gap-2 text-sm"
                   >
                     {isSubmittingVoice ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                     Dodaj pokój i łóżka
@@ -819,14 +819,14 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
               </form>
 
               {voiceError && (
-                <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-sm flex items-center gap-2">
+                <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>{voiceError}</span>
                 </div>
               )}
 
               {voiceSuccess && (
-                <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-sm flex items-center gap-2">
+                <div className="p-3 bg-muted border border-border text-foreground rounded-lg text-sm flex items-center gap-2">
                   <Check className="w-4 h-4 shrink-0" />
                   <span>{voiceSuccess}</span>
                 </div>

@@ -99,7 +99,7 @@ export function AddUserDialog({
               value={newPassword}
               onChange={e => onPasswordChange(e.target.value)}
             />
-            <p className="text-[0.75rem] text-slate-soft">
+            <p className="text-[0.75rem] text-muted-foreground">
               Jeśli nie podasz hasła, system wygeneruje bezpieczny ciąg znaków i wyświetli go po utworzeniu.
             </p>
           </div>
@@ -127,7 +127,7 @@ export function AddUserDialog({
             >
               Anuluj
             </Button>
-            <Button type="submit" disabled={isPending} className="bg-sage text-white hover:bg-sage/90">
+            <Button type="submit" disabled={isPending} className="bg-primary text-white hover:bg-primary/90">
               {isPending ? 'Tworzenie...' : 'Utwórz i nadaj rolę'}
             </Button>
           </DialogFooter>

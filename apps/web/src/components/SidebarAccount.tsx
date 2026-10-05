@@ -19,7 +19,7 @@ export function SidebarAccount({ userEmail }: { userEmail?: string | null }) {
         )}
         <SidebarMenuItem>
           <form action="/auth/signout" method="post">
-            <SidebarMenuButton type="submit" tooltip="Wyloguj się" className="text-destructive hover:text-destructive">
+            <SidebarMenuButton type="submit" tooltip="Wyloguj się" >
               <LogOut />
               <span>Wyloguj się</span>
             </SidebarMenuButton>

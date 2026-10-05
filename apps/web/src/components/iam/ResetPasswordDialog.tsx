@@ -38,11 +38,11 @@ export function ResetPasswordDialog({
         </DialogHeader>
 
         <form onSubmit={onSubmit} className="space-y-4 py-2">
-          <div className="rounded-xl border border-slate/10 bg-slate/5 p-4 flex items-start gap-3 text-sm text-slate">
-            <MailCheck className="h-5 w-5 text-sage shrink-0 mt-0.5" />
+          <div className="rounded-xl border border-border bg-muted/50 p-4 flex items-start gap-3 text-sm text-foreground">
+            <MailCheck className="h-5 w-5 text-primary shrink-0 mt-0.5" />
             <div>
-              <p className="font-medium text-slate">Procedura bezpiecznego resetu hasła (IAM Hardening)</p>
-              <p className="mt-1 text-xs text-slate-soft leading-relaxed">
+              <p className="font-medium text-foreground">Procedura bezpiecznego resetu hasła (IAM Hardening)</p>
+              <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
                 Zgodnie z zasadami bezpieczeństwa hasło nie jest ustalane ręcznie przez administratora. Po potwierdzeniu na adres <strong>{user?.email}</strong> zostanie wygenerowany i przesłany bezpieczny link do zresetowania hasła. Użytkownik samodzielnie zdefiniuje nowe hasło.
               </p>
             </div>
@@ -61,7 +61,7 @@ export function ResetPasswordDialog({
             >
               Anuluj
             </Button>
-            <Button type="submit" disabled={isPending} className="bg-sage text-white hover:bg-sage/90">
+            <Button type="submit" disabled={isPending} className="bg-primary text-white hover:bg-primary/90">
               {isPending ? 'Wysyłanie linku...' : 'Wyślij link resetujący'}
             </Button>
           </DialogFooter>

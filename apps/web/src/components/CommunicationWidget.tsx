@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback } from "./ui/avatar";
 import { useSendFamilyMessage } from '../hooks/useSendFamilyMessage';
 import { format, isSameDay } from 'date-fns';
 import { pl } from 'date-fns/locale';
+import { Textarea } from '@/components/ui/textarea'
 
 interface Message {
   id: string;
@@ -67,24 +68,24 @@ export function CommunicationWidget({ residentId }: { residentId?: string }) {
       {open && (
         <div className="mb-3 flex h-[540px] w-[370px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[1.5rem] bg-card shadow-2xl ring-1 ring-border sm:max-w-[calc(100vw-3rem)]">
           {/* header */}
-          <div className="flex items-center justify-between bg-sage px-5 py-4 text-primary-foreground">
+          <div className="flex items-center justify-between bg-primary px-5 py-4 text-primary-foreground">
             <div className="leading-tight">
               <p className="text-[1.1rem] font-medium">Zespół opieki</p>
               <p className="flex items-center gap-1.5 text-[0.78rem] opacity-90">
-                <span className="h-2 w-2 rounded-full bg-emerald-400" /> Silver Care · kontakt z placówką
+                <span className="h-2 w-2 rounded-full bg-primary" /> Silver Care · kontakt z placówką
               </p>
             </div>
             <div className="flex items-center gap-1">
               <Link
                 href="/messages"
                 title="Otwórz pełny widok wiadomości"
-                className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-white/15 transition-colors text-white"
+                className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-card/15 transition-colors text-white"
               >
                 <Maximize2 className="h-4 w-4" />
               </Link>
               <button
                 onClick={() => setOpen(false)}
-                className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-white/15 transition-colors"
+                className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-card/15 transition-colors"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -95,13 +96,13 @@ export function CommunicationWidget({ residentId }: { residentId?: string }) {
           <div className="flex-1 flex flex-col overflow-y-auto p-4 bg-surface-sunken" ref={scrollRef}>
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center flex-1 text-center px-4 py-8">
-                <div className="w-16 h-16 rounded-full flex items-center justify-center text-3xl mb-4 bg-sage-soft text-sage-deep">
+                <div className="w-16 h-16 rounded-full flex items-center justify-center text-3xl mb-4 bg-accent text-primary">
                   💬
                 </div>
-                <p className="text-sm font-medium text-slate">
+                <p className="text-sm font-medium text-foreground">
                   Napisz wiadomość do personelu opiekuńczego.
                 </p>
-                <p className="text-xs text-slate-soft mt-1 max-w-[220px]">
+                <p className="text-xs text-muted-foreground mt-1 max-w-[220px]">
                   Odpowiedź pojawi się bezpośrednio w tym oknie oraz w zakładce Wiadomości.
                 </p>
               </div>
@@ -116,7 +117,7 @@ export function CommunicationWidget({ residentId }: { residentId?: string }) {
                     <div key={m.id} className="flex flex-col">
                       {showTime && (
                         <div className="flex justify-center my-4">
-                          <span className="text-[10px] font-semibold text-slate-soft uppercase tracking-wider bg-card px-2 py-0.5 rounded-full border border-border">
+                          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider bg-card px-2 py-0.5 rounded-full border border-border">
                             {format(new Date(m.created_at), "EEEE, d MMMM, HH:mm", { locale: pl })}
                           </span>
                         </div>
@@ -124,21 +125,21 @@ export function CommunicationWidget({ residentId }: { residentId?: string }) {
                       
                       {isFamily ? (
                         <div className="flex flex-col items-end">
-                          <div className="max-w-[80%] rounded-2xl rounded-br-md bg-sage px-4 py-2.5 text-primary-foreground shadow-sm">
+                          <div className="max-w-[80%] rounded-xl rounded-br-md bg-primary px-4 py-2.5 text-primary-foreground">
                             <p className="text-[0.92rem] leading-relaxed whitespace-pre-wrap">{m.content}</p>
                           </div>
-                          <span className="mt-1 text-[0.7rem] text-slate-soft">{format(new Date(m.created_at), "HH:mm")}</span>
+                          <span className="mt-1 text-[0.7rem] text-muted-foreground">{format(new Date(m.created_at), "HH:mm")}</span>
                         </div>
                       ) : (
                         <div className="flex gap-2.5">
                           <Avatar className="mt-0.5 h-8 w-8">
-                            <AvatarFallback className="bg-sage-soft text-sage font-medium text-xs">SC</AvatarFallback>
+                            <AvatarFallback className="bg-accent text-primary font-medium text-xs">SC</AvatarFallback>
                           </Avatar>
                           <div>
-                            <div className="max-w-[85%] rounded-2xl rounded-tl-md bg-card px-4 py-2.5 shadow-sm border border-border">
-                              <p className="text-[0.92rem] leading-relaxed text-slate whitespace-pre-wrap">{m.content}</p>
+                            <div className="max-w-[85%] rounded-xl rounded-tl-md bg-card px-4 py-2.5 border border-border">
+                              <p className="text-[0.92rem] leading-relaxed text-foreground whitespace-pre-wrap">{m.content}</p>
                             </div>
-                            <span className="ml-1 mt-1 block text-[0.7rem] text-slate-soft">
+                            <span className="ml-1 mt-1 block text-[0.7rem] text-muted-foreground">
                               Personel · {format(new Date(m.created_at), "HH:mm")}
                             </span>
                           </div>
@@ -154,8 +155,8 @@ export function CommunicationWidget({ residentId }: { residentId?: string }) {
           {/* composer */}
           <div className="border-t border-border p-3 bg-card">
             <div className="flex flex-col gap-1">
-              <div className="flex items-end gap-2 rounded-2xl bg-muted/40 px-3 py-2 border border-border/60">
-                <textarea
+              <div className="flex items-end gap-2 rounded-xl bg-muted/40 px-3 py-2 border border-border/60">
+                <Textarea
                   rows={1}
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
@@ -166,15 +167,15 @@ export function CommunicationWidget({ residentId }: { residentId?: string }) {
                     }
                   }}
                   placeholder="Napisz do zespołu opieki…"
-                  className="max-h-24 flex-1 resize-none bg-transparent py-1.5 text-[0.92rem] text-slate outline-none placeholder:text-slate-soft"
+                  className="max-h-24 min-h-0 flex-1 resize-none border-0 bg-transparent py-1.5 shadow-none focus-visible:ring-0"
                 />
                 <button
                   onClick={handleSubmit}
                   disabled={sendState === 'loading' || !draft.trim()}
                   className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all ${
                     draft.trim() && sendState !== 'loading'
-                      ? "bg-sage text-primary-foreground hover:scale-105 shadow-sm" 
-                      : "bg-muted text-slate-soft cursor-not-allowed opacity-60"
+                      ? "bg-primary text-primary-foreground hover:scale-105" 
+                      : "bg-muted text-muted-foreground cursor-not-allowed opacity-60"
                   }`}
                 >
                   <Send className="h-4 w-4" />
@@ -192,7 +193,7 @@ export function CommunicationWidget({ residentId }: { residentId?: string }) {
 
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-sage text-primary-foreground shadow-xl transition-transform hover:scale-105 active:scale-95"
+        className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl transition-transform hover:scale-105 active:scale-95"
       >
         {open ? <X className="h-6 w-6 sm:h-7 sm:w-7" /> : <MessageCircle className="h-6 w-6 sm:h-7 sm:w-7" />}
       </button>

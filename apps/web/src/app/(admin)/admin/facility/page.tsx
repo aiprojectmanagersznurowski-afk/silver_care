@@ -39,10 +39,10 @@ export default function FacilityManagementPage() {
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-display font-semibold tracking-tight text-slate">
+          <h2 className="text-3xl font-display font-semibold tracking-tight text-foreground">
             Struktura Placówki
           </h2>
-          <p className="mt-2 text-slate-soft">
+          <p className="mt-2 text-muted-foreground">
             Zarządzaj pokojami i łóżkami w twojej placówce.
           </p>
         </div>
@@ -54,54 +54,54 @@ export default function FacilityManagementPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="rounded-xl border-none ring-1 ring-slate/5">
+        <Card className="rounded-xl border-none ring-1 ring-border">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-sage/10 text-sage">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <DoorClosed className="h-6 w-6" />
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-soft">Liczba pokoi</p>
-                <h3 className="text-2xl font-bold text-slate">{rooms.length}</h3>
+                <p className="text-sm font-medium text-muted-foreground">Liczba pokoi</p>
+                <h3 className="text-2xl font-bold text-foreground">{rooms.length}</h3>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="rounded-xl border-none ring-1 ring-slate/5">
+        <Card className="rounded-xl border-none ring-1 ring-border">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate/10 text-slate">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted text-foreground">
                 <Bed className="h-6 w-6" />
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-soft">Wszystkie łóżka</p>
-                <h3 className="text-2xl font-bold text-slate">{totalBeds}</h3>
+                <p className="text-sm font-medium text-muted-foreground">Wszystkie łóżka</p>
+                <h3 className="text-2xl font-bold text-foreground">{totalBeds}</h3>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="rounded-xl border-none ring-1 ring-slate/5">
+        <Card className="rounded-xl border-none ring-1 ring-border">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted text-foreground">
                 <Users className="h-6 w-6" />
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-soft">Zajęte łóżka</p>
-                <h3 className="text-2xl font-bold text-slate">{occupiedBeds}</h3>
+                <p className="text-sm font-medium text-muted-foreground">Zajęte łóżka</p>
+                <h3 className="text-2xl font-bold text-foreground">{occupiedBeds}</h3>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="rounded-xl border-none ring-1 ring-slate/5">
+        <Card className="rounded-xl border-none ring-1 ring-border">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted text-foreground">
                 <Bed className="h-6 w-6" />
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-soft">Wolne łóżka</p>
-                <h3 className="text-2xl font-bold text-slate">{freeBeds}</h3>
+                <p className="text-sm font-medium text-muted-foreground">Wolne łóżka</p>
+                <h3 className="text-2xl font-bold text-foreground">{freeBeds}</h3>
               </div>
             </div>
           </CardContent>
@@ -110,7 +110,7 @@ export default function FacilityManagementPage() {
 
       {isLoading ? (
         <div className="flex justify-center p-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sage"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
       ) : (
         <RoomList rooms={rooms} onUpdate={fetchRooms} />

@@ -118,9 +118,9 @@ export default function BedList({ roomId, roomNumber, floor, onUpdate }: BedList
               {!bed.is_active ? (
                 <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-secondary text-secondary-foreground">Nieaktywne</span>
               ) : bed.active_assignment ? (
-                <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-blue-500 text-white">Zajęte</span>
+                <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-primary text-white">Zajęte</span>
               ) : (
-                <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold text-green-600 border-green-600">Wolne</span>
+                <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold text-foreground border-border">Wolne</span>
               )}
             </div>
 
@@ -133,17 +133,17 @@ export default function BedList({ roomId, roomNumber, floor, onUpdate }: BedList
                   </div>
                   <div className="flex flex-wrap gap-1 text-[11px]">
                     {bed.active_assignment.resident.gender && (
-                      <span className="inline-flex items-center rounded-md bg-slate-100 px-1.5 py-0.5 font-medium text-slate-700">
+                      <span className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 font-medium text-foreground">
                         {bed.active_assignment.resident.gender === 'M' ? 'Mężczyzna' : 'Kobieta'}
                       </span>
                     )}
                     {bed.active_assignment.resident.is_zsn && (
-                      <span className="inline-flex items-center rounded-md bg-amber-100 px-1.5 py-0.5 font-medium text-amber-800">
+                      <span className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 font-medium text-foreground">
                         ZSN
                       </span>
                     )}
                     {bed.active_assignment.resident.care_level && (
-                      <span className="inline-flex items-center rounded-md bg-blue-50 px-1.5 py-0.5 font-medium text-blue-700">
+                      <span className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 font-medium text-foreground">
                         {bed.active_assignment.resident.care_level === 'bedridden' ? 'Leżący' : bed.active_assignment.resident.care_level === 'sitting' ? 'Na wózku' : 'Chodzący'}
                       </span>
                     )}

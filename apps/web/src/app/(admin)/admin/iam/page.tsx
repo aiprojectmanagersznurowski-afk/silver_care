@@ -61,10 +61,10 @@ export default async function IamPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-3xl font-display font-semibold tracking-tight text-slate">
+        <h2 className="text-3xl font-display font-semibold tracking-tight text-foreground">
           Zarządzanie Dostępem i Tożsamością (IAM)
         </h2>
-        <p className="mt-2 text-slate-soft">
+        <p className="mt-2 text-muted-foreground">
           Kontrola ról systemowych, zarządzanie dostępami użytkowników oraz rejestr audytowy zmian uprawnień.
         </p>
       </div>

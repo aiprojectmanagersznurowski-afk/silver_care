@@ -43,7 +43,7 @@ export function BusinessIdBadge({
     <span
       data-slot="business-id-badge"
       title={`Techniczny UUID: ${id}`}
-      className={`inline-flex items-center gap-1.5 rounded-lg bg-slate/5 px-2 py-1 text-xs font-mono font-medium text-slate border border-slate/10 transition-colors hover:bg-slate/10 ${className}`}
+      className={`inline-flex items-center gap-1.5 rounded-lg bg-muted/50 px-2 py-1 text-xs font-mono font-medium text-foreground border border-border transition-colors hover:bg-muted ${className}`}
     >
       <span>{businessId}</span>
       {showCopy && (
@@ -61,10 +61,10 @@ export function BusinessIdBadge({
                   handleCopy(e as unknown as React.MouseEvent)
                 }
               }}
-              className="text-slate-soft hover:text-slate transition-colors p-0.5 rounded cursor-pointer inline-flex items-center"
+              className="text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded cursor-pointer inline-flex items-center"
             >
               {copied ? (
-                <Check className="h-3 w-3 text-sage" />
+                <Check className="h-3 w-3 text-primary" />
               ) : (
                 <Copy className="h-3 w-3" />
               )}

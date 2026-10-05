@@ -111,7 +111,7 @@ export function ManageResidentBedDialog({ residentId, currentBedLabel, currentRo
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="ghost" size="icon" title="Zarządzaj łóżkiem" className="text-sage hover:bg-sage/10 h-8 w-8" />}>
+      <DialogTrigger render={<Button variant="ghost" size="icon" title="Zarządzaj łóżkiem" className="text-primary hover:bg-primary/10 h-8 w-8" />}>
         <BedDouble className="h-4 w-4" />
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
@@ -131,7 +131,7 @@ export function ManageResidentBedDialog({ residentId, currentBedLabel, currentRo
               <div className="text-sm font-medium text-destructive bg-destructive/10 p-2 rounded-md">{error}</div>
             )}
             {success && (
-              <div className="text-sm font-medium text-green-600 bg-green-50 p-2 rounded-md flex items-center gap-2">
+              <div className="text-sm font-medium text-foreground bg-muted p-2 rounded-md flex items-center gap-2">
                 <Check className="h-4 w-4" /> Przypisano poprawnie!
               </div>
             )}

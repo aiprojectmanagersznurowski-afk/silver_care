@@ -169,11 +169,11 @@ export default function ReassignBedDialog({
           <Button
             variant="outline"
             size="sm"
-            className="text-xs h-8 text-slate hover:bg-slate/5 border-border"
+            className="text-xs h-8 text-foreground hover:bg-muted/50 border-border"
           />
         }
       >
-        <ArrowRightLeft className="w-3.5 h-3.5 mr-1.5 text-sage" />
+        <ArrowRightLeft className="w-3.5 h-3.5 mr-1.5 text-primary" />
         Zmień łóżko
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
@@ -207,11 +207,11 @@ export default function ReassignBedDialog({
               <Label htmlFor="target-bed">Docelowe wolne łóżko</Label>
               {isLoadingBeds ? (
                 <div className="text-xs text-muted-foreground py-2 flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-sage" />
+                  <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-primary" />
                   Wyszukiwanie wolnych łóżek w placówce...
                 </div>
               ) : availableBeds.length === 0 ? (
-                <div className="text-xs text-amber-700 bg-amber-50 p-2.5 rounded border border-amber-200">
+                <div className="text-xs text-foreground bg-muted p-2.5 rounded border border-border">
                   Brak wolnych łóżek w innych pokojach placówki.
                 </div>
               ) : (
@@ -233,22 +233,22 @@ export default function ReassignBedDialog({
 
             {/* Transparentne reguły i ostrzeżenia */}
             {genderWarning && (
-              <div className="flex items-start gap-2 p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs">
-                <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
+              <div className="flex items-start gap-2 p-2.5 rounded-lg bg-muted border border-border text-foreground text-xs">
+                <AlertTriangle className="w-4 h-4 shrink-0 text-foreground mt-0.5" />
                 <div>{genderWarning}</div>
               </div>
             )}
 
             {mobilityWarning && (
-              <div className="flex items-start gap-2 p-2.5 rounded-lg bg-blue-50 border border-blue-200 text-blue-800 text-xs">
-                <AlertTriangle className="w-4 h-4 shrink-0 text-blue-600 mt-0.5" />
+              <div className="flex items-start gap-2 p-2.5 rounded-lg bg-muted border border-border text-foreground text-xs">
+                <AlertTriangle className="w-4 h-4 shrink-0 text-foreground mt-0.5" />
                 <div>{mobilityWarning}</div>
               </div>
             )}
 
             {selectedOption && !genderWarning && !mobilityWarning && (
-              <div className="flex items-center gap-2 p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs">
-                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-muted border border-border text-foreground text-xs">
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-foreground" />
                 <span>Wybrane miejsce spełnia wszystkie standardy transparentnej alokacji.</span>
               </div>
             )}
@@ -292,7 +292,7 @@ export default function ReassignBedDialog({
             <Button
               type="submit"
               disabled={isSubmitting || !selectedBedId}
-              className="bg-sage hover:bg-sage-dark text-white"
+              className="bg-primary hover:bg-primary/90 text-white"
             >
               {isSubmitting ? 'Przenoszenie...' : 'Potwierdź przeniesienie'}
             </Button>

@@ -94,17 +94,17 @@ export default async function ResidentProfilePage({
       {/* Back link */}
       <Link
         href="/admin/residents"
-        className="inline-flex items-center gap-2 text-sm text-slate-soft hover:text-slate transition-colors"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
         Powrót do listy podopiecznych
       </Link>
 
       {/* Header Card */}
-      <Card className="rounded-xl border-none ring-1 ring-slate/5 overflow-hidden">
+      <Card className="rounded-xl border-none ring-1 ring-border overflow-hidden">
         <div className="relative">
           {/* Gradient banner */}
-          <div className="h-32 bg-gradient-to-r from-sage/20 via-sage/10 to-transparent" />
+          <div className="h-32 bg-muted" />
 
           <CardContent className="relative -mt-16 px-8 pb-8">
             <div className="flex flex-col sm:flex-row items-start gap-6">
@@ -112,26 +112,26 @@ export default async function ResidentProfilePage({
                 {resident.avatar_url && (
                   <AvatarImage src={resident.avatar_url} alt={`${resident.first_name} ${resident.last_name}`} />
                 )}
-                <AvatarFallback className="bg-sage/10 text-sage text-2xl">
+                <AvatarFallback className="bg-primary/10 text-primary text-2xl">
                   <UserCircle2 className="h-12 w-12" />
                 </AvatarFallback>
               </Avatar>
 
               <div className="flex-1 pt-4 sm:pt-8">
                 <div className="flex flex-wrap items-center gap-3">
-                  <h1 className="text-3xl font-display font-semibold text-slate">
+                  <h1 className="text-3xl font-display font-semibold text-foreground">
                     {resident.first_name} {resident.last_name}
                   </h1>
                   {isActive ? (
-                    <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                    <Badge className="bg-muted text-foreground border-border">
                       Aktywny
                     </Badge>
                   ) : resident.death_date ? (
-                    <Badge className="bg-slate/10 text-slate-soft border-slate/20">
+                    <Badge className="bg-muted text-muted-foreground border-border">
                       Zgon
                     </Badge>
                   ) : (
-                    <Badge className="bg-slate/10 text-slate-soft border-slate/20">
+                    <Badge className="bg-muted text-muted-foreground border-border">
                       Zarchiwizowany
                     </Badge>
                   )}
@@ -144,14 +144,14 @@ export default async function ResidentProfilePage({
                     </Badge>
                   )}
                   {resident.is_zsn && (
-                    <Badge className="bg-amber-50 text-amber-800 border-amber-200 border">
+                    <Badge className="bg-muted text-foreground border-border border">
                       ZSN: Znaczny stopień niepełnosprawności
                     </Badge>
                   )}
                 </div>
 
                 {/* Quick stats row */}
-                <div className="mt-3 flex flex-wrap gap-6 text-sm text-slate-soft">
+                <div className="mt-3 flex flex-wrap gap-6 text-sm text-muted-foreground">
                   {age !== null && (
                     <span className="flex items-center gap-1.5">
                       <Calendar className="h-4 w-4" /> {age} lat
@@ -187,10 +187,10 @@ export default async function ResidentProfilePage({
           />
 
           {/* Personal data */}
-          <Card className="rounded-xl border-none ring-1 ring-slate/5">
+          <Card className="rounded-xl border-none ring-1 ring-border">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg text-slate">
-                <UserCircle2 className="h-5 w-5 text-sage" /> Dane osobowe
+              <CardTitle className="flex items-center gap-2 text-lg text-foreground">
+                <UserCircle2 className="h-5 w-5 text-primary" /> Dane osobowe
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -233,10 +233,10 @@ export default async function ResidentProfilePage({
           </Card>
 
           {/* Contract */}
-          <Card className="rounded-xl border-none ring-1 ring-slate/5">
+          <Card className="rounded-xl border-none ring-1 ring-border">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg text-slate">
-                <FileText className="h-5 w-5 text-sage" /> Umowa
+              <CardTitle className="flex items-center gap-2 text-lg text-foreground">
+                <FileText className="h-5 w-5 text-primary" /> Umowa
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -273,8 +273,8 @@ export default async function ResidentProfilePage({
                 />
               </dl>
 
-              <div className="mt-6 pt-6 border-t border-slate/10">
-                <h4 className="text-xs font-semibold text-slate uppercase tracking-wider mb-2">
+              <div className="mt-6 pt-6 border-t border-border">
+                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">
                   Dokument umowy (Załącznik)
                 </h4>
                 <ResidentContractAttachment
@@ -287,35 +287,35 @@ export default async function ResidentProfilePage({
           </Card>
 
           {/* Event timeline */}
-          <Card className="rounded-xl border-none ring-1 ring-slate/5">
+          <Card className="rounded-xl border-none ring-1 ring-border">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg text-slate">
-                <Clock className="h-5 w-5 text-sage" /> Oś czasu zdarzeń
+              <CardTitle className="flex items-center gap-2 text-lg text-foreground">
+                <Clock className="h-5 w-5 text-primary" /> Oś czasu zdarzeń
               </CardTitle>
             </CardHeader>
             <CardContent>
               {sortedEvents.length === 0 ? (
-                <p className="text-sm text-slate-soft py-4 text-center">Brak zarejestrowanych zdarzeń.</p>
+                <p className="text-sm text-muted-foreground py-4 text-center">Brak zarejestrowanych zdarzeń.</p>
               ) : (
                 <div className="relative space-y-0">
                   {/* Timeline line */}
-                  <div className="absolute left-5 top-2 bottom-2 w-px bg-slate/10" />
+                  <div className="absolute left-5 top-2 bottom-2 w-px bg-muted" />
 
                   {sortedEvents.map((event: any, index: number) => (
                     <div key={event.id} className="relative flex gap-4 py-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white ring-1 ring-slate/10 text-lg z-10">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-card ring-1 ring-border text-lg z-10">
                         {EVENT_TYPE_ICONS[event.event_type as EventType] || '📌'}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate">
+                        <p className="text-sm font-medium text-foreground">
                           {EVENT_TYPE_LABELS[event.event_type as EventType] || event.event_type}
                         </p>
                         {event.event_reason && (
-                          <p className="text-xs text-slate-soft mt-0.5">
+                          <p className="text-xs text-muted-foreground mt-0.5">
                             {CONTRACT_END_REASON_LABELS[event.event_reason as ContractEndReason | 'Nieznany'] || event.event_reason}
                           </p>
                         )}
-                        <p className="text-xs text-slate-soft/60 mt-0.5">
+                        <p className="text-xs text-muted-foreground/60 mt-0.5">
                           {format(new Date(event.event_date), 'd MMMM yyyy', { locale: pl })}
                         </p>
                       </div>
@@ -330,47 +330,47 @@ export default async function ResidentProfilePage({
         {/* Right column: Room, Relatives, Packages */}
         <div className="space-y-6">
           {/* Current room */}
-          <Card className="rounded-xl border-none ring-1 ring-slate/5">
+          <Card className="rounded-xl border-none ring-1 ring-border">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg text-slate">
-                <BedDouble className="h-5 w-5 text-sage" /> Pokój i łóżko
+              <CardTitle className="flex items-center gap-2 text-lg text-foreground">
+                <BedDouble className="h-5 w-5 text-primary" /> Pokój i łóżko
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {activeAssignment ? (
-                <div className="rounded-xl bg-sage/5 p-4">
-                  <p className="font-medium text-slate">
+                <div className="rounded-xl bg-primary/5 p-4">
+                  <p className="font-medium text-foreground">
                     Pokój {activeAssignment.beds?.rooms?.number}
                   </p>
-                  <p className="text-sm text-slate-soft">
+                  <p className="text-sm text-muted-foreground">
                     Łóżko: {activeAssignment.beds?.label}
                   </p>
                   {activeAssignment.beds?.rooms?.floor && (
-                    <p className="text-sm text-slate-soft">
+                    <p className="text-sm text-muted-foreground">
                       Piętro: {activeAssignment.beds.rooms.floor}
                     </p>
                   )}
                   {activeAssignment.beds?.rooms?.sector && (
-                    <p className="text-sm text-slate-soft">
+                    <p className="text-sm text-muted-foreground">
                       Sektor: {activeAssignment.beds.rooms.sector}
                     </p>
                   )}
-                  <p className="text-xs text-slate-soft/60 mt-2">
+                  <p className="text-xs text-muted-foreground/60 mt-2">
                     Od: {format(new Date(activeAssignment.assigned_at), 'd MMM yyyy', { locale: pl })}
                   </p>
                 </div>
               ) : (
-                <p className="text-sm text-slate-soft text-center py-4">
+                <p className="text-sm text-muted-foreground text-center py-4">
                   Brak aktywnego przypisania do łóżka.
                 </p>
               )}
 
               {pastAssignments.length > 0 && (
                 <>
-                  <p className="text-xs font-medium text-slate-soft uppercase tracking-wider">Historia</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Historia</p>
                   <div className="space-y-2">
                     {pastAssignments.slice(0, 5).map((a: any) => (
-                      <div key={a.id} className="text-sm text-slate-soft flex justify-between">
+                      <div key={a.id} className="text-sm text-muted-foreground flex justify-between">
                         <span>
                           Pokój {a.beds?.rooms?.number}, łóżko {a.beds?.label}
                         </span>
@@ -394,26 +394,26 @@ export default async function ResidentProfilePage({
           />
 
           {/* Relatives */}
-          <Card className="rounded-xl border-none ring-1 ring-slate/5">
+          <Card className="rounded-xl border-none ring-1 ring-border">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg text-slate">
-                <Users className="h-5 w-5 text-sage" /> Bliscy
+              <CardTitle className="flex items-center gap-2 text-lg text-foreground">
+                <Users className="h-5 w-5 text-primary" /> Bliscy
               </CardTitle>
             </CardHeader>
             <CardContent>
               {(!resident.resident_relative_links || resident.resident_relative_links.length === 0) ? (
-                <p className="text-sm text-slate-soft text-center py-4">
+                <p className="text-sm text-muted-foreground text-center py-4">
                   Brak powiązanych bliskich.
                 </p>
               ) : (
                 <div className="space-y-3">
                   {resident.resident_relative_links.map((link: any) => (
-                    <div key={link.id} className="flex items-center justify-between rounded-xl bg-slate/5 p-3">
+                    <div key={link.id} className="flex items-center justify-between rounded-xl bg-muted/50 p-3">
                       <div>
-                        <p className="text-sm font-medium text-slate">
+                        <p className="text-sm font-medium text-foreground">
                           {link.relationship_code}
                         </p>
-                        <p className="text-xs text-slate-soft">
+                        <p className="text-xs text-muted-foreground">
                           {link.role === 'legal_guardian' ? 'Opiekun prawny' : 'Rodzina'}
                         </p>
                       </div>
@@ -428,29 +428,29 @@ export default async function ResidentProfilePage({
           </Card>
 
           {/* Packages */}
-          <Card className="rounded-xl border-none ring-1 ring-slate/5">
+          <Card className="rounded-xl border-none ring-1 ring-border">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg text-slate">
-                <Heart className="h-5 w-5 text-sage" /> Pakiety
+              <CardTitle className="flex items-center gap-2 text-lg text-foreground">
+                <Heart className="h-5 w-5 text-primary" /> Pakiety
               </CardTitle>
             </CardHeader>
             <CardContent>
               {activePackages.length === 0 ? (
-                <p className="text-sm text-slate-soft text-center py-4">
+                <p className="text-sm text-muted-foreground text-center py-4">
                   Brak aktywnych pakietów.
                 </p>
               ) : (
                 <div className="space-y-2">
                   {activePackages.map((pkg: any) => (
-                    <div key={pkg.id} className="flex items-center justify-between rounded-xl bg-sage/5 p-3">
+                    <div key={pkg.id} className="flex items-center justify-between rounded-xl bg-primary/5 p-3">
                       <div>
-                        <p className="text-sm font-medium text-slate">{pkg.package_name}</p>
-                        <p className="text-xs text-slate-soft">
+                        <p className="text-sm font-medium text-foreground">{pkg.package_name}</p>
+                        <p className="text-xs text-muted-foreground">
                           {PACKAGE_TYPE_LABELS[pkg.package_type as PackageType] || pkg.package_type}
                         </p>
                       </div>
                       {pkg.monthly_rate && (
-                        <span className="text-sm font-medium text-slate">
+                        <span className="text-sm font-medium text-foreground">
                           {Number(pkg.monthly_rate).toLocaleString('pl-PL')} zł
                         </span>
                       )}
@@ -470,8 +470,8 @@ export default async function ResidentProfilePage({
 function DataField({ label, value }: { label: string; value: string | null | undefined }) {
   return (
     <div>
-      <dt className="font-medium text-slate-soft">{label}</dt>
-      <dd className="mt-1 text-slate">{value || <span className="text-slate-soft/50">—</span>}</dd>
+      <dt className="font-medium text-muted-foreground">{label}</dt>
+      <dd className="mt-1 text-foreground">{value || <span className="text-muted-foreground/50">—</span>}</dd>
     </div>
   )
 }

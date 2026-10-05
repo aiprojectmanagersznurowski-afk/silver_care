@@ -154,7 +154,7 @@ export function EditOrganizationDialog({
             <Button
               type="submit"
               disabled={isPending}
-              className="bg-sage text-white hover:bg-sage/90"
+              className="bg-primary text-white hover:bg-primary/90"
             >
               {isPending ? 'Zapisywanie...' : 'Zapisz zmiany'}
             </Button>

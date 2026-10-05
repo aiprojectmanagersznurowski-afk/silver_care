@@ -93,15 +93,15 @@ export function CreateOrganizationDialog() {
   return (
     <>
       {successInfo && (
-        <div className="rounded-xl border border-sage/30 bg-sage/5 p-5 flex flex-col gap-3">
+        <div className="rounded-xl border border-primary/30 bg-primary/5 p-5 flex flex-col gap-3">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">
-              <CheckCircle2 className="h-5 w-5 text-sage shrink-0" />
+              <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
               <div>
-                <p className="text-sm font-semibold text-slate">
+                <p className="text-sm font-semibold text-foreground">
                   Placówka „{successInfo.orgName}” została pomyślnie utworzona!
                 </p>
-                <p className="text-xs text-slate-soft mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5">
                   {successInfo.emailSent
                     ? `Wysłano e-mail z zaproszeniem na adres ${successInfo.adminEmail}.`
                     : `Konto pierwszego administratora (${successInfo.adminEmail}) zostało przygotowane.`
@@ -112,21 +112,21 @@ export function CreateOrganizationDialog() {
             <button
               type="button"
               onClick={() => setSuccessInfo(null)}
-              className="text-xs text-slate-soft hover:text-slate font-medium"
+              className="text-xs text-muted-foreground hover:text-foreground font-medium"
             >
               Zamknij
             </button>
           </div>
 
           {successInfo.inviteUrl && (
-            <div className="pt-2 border-t border-sage/10 flex flex-col sm:flex-row sm:items-center gap-2">
-              <span className="text-xs text-slate-soft font-medium shrink-0">
+            <div className="pt-2 border-t border-primary/10 flex flex-col sm:flex-row sm:items-center gap-2">
+              <span className="text-xs text-muted-foreground font-medium shrink-0">
                 Link aktywacyjny:
               </span>
               <input
                 readOnly
                 value={successInfo.inviteUrl}
-                className="text-xs font-mono bg-white px-3 py-1.5 rounded-lg border border-slate/10 flex-1 truncate text-slate"
+                className="text-xs font-mono bg-card px-3 py-1.5 rounded-lg border border-border flex-1 truncate text-foreground"
               />
               <Button
                 type="button"
@@ -135,7 +135,7 @@ export function CreateOrganizationDialog() {
                 onClick={() => handleCopy(successInfo.inviteUrl!)}
                 className="h-8 text-xs shrink-0 rounded-lg gap-1.5"
               >
-                {copied ? <Check className="h-3.5 w-3.5 text-sage" /> : <Copy className="h-3.5 w-3.5" />}
+                {copied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
                 {copied ? 'Skopiowano' : 'Kopiuj link'}
               </Button>
             </div>
@@ -231,7 +231,7 @@ export function CreateOrganizationDialog() {
               <Button
                 type="submit"
                 disabled={isPending}
-                className="bg-sage text-white hover:bg-sage/90"
+                className="bg-primary text-white hover:bg-primary/90"
               >
                 {isPending ? 'Tworzenie...' : 'Utwórz placówkę'}
               </Button>

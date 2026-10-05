@@ -75,14 +75,14 @@ export function ExportDataDialog() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="outline" className="gap-2 border-slate-300 text-slate-700" />}>
-        <Download className="w-4 h-4 text-sage" />
+      <DialogTrigger render={<Button variant="outline" className="gap-2 border-border text-foreground" />}>
+        <Download className="w-4 h-4 text-primary" />
         Eksportuj dane
       </DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Download className="w-5 h-5 text-sage" />
+            <Download className="w-5 h-5 text-primary" />
             Eksport danych placówki
           </DialogTitle>
           <DialogDescription>
@@ -91,33 +91,33 @@ export function ExportDataDialog() {
         </DialogHeader>
 
         {error && (
-          <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-sm flex items-center gap-2">
+          <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
         {successMessage && (
-          <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-sm flex items-center gap-2">
+          <div className="p-3 bg-muted border border-border text-foreground rounded-lg text-sm flex items-center gap-2">
             <Check className="w-4 h-4 shrink-0" />
             <span>{successMessage}</span>
           </div>
         )}
 
-        <div className="space-y-4 py-2 text-sm text-slate-700">
+        <div className="space-y-4 py-2 text-sm text-foreground">
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-600 block">Format pliku</label>
+            <label className="text-xs font-semibold text-foreground block">Format pliku</label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setFormatType('xlsx')}
                 className={`p-3 rounded-lg border text-left flex items-center gap-2 transition-all ${
                   formatType === 'xlsx'
-                    ? 'border-sage bg-sage/5 ring-1 ring-sage text-slate-900 font-medium'
-                    : 'border-slate-200 hover:border-slate-300 text-slate-600'
+                    ? 'border-primary bg-primary/5 ring-1 ring-primary text-foreground font-medium'
+                    : 'border-border hover:border-border text-foreground'
                 }`}
               >
-                <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                <FileSpreadsheet className="w-4 h-4 text-foreground" />
                 <span>Excel (.xlsx)</span>
               </button>
               <button
@@ -125,18 +125,18 @@ export function ExportDataDialog() {
                 onClick={() => setFormatType('csv')}
                 className={`p-3 rounded-lg border text-left flex items-center gap-2 transition-all ${
                   formatType === 'csv'
-                    ? 'border-sage bg-sage/5 ring-1 ring-sage text-slate-900 font-medium'
-                    : 'border-slate-200 hover:border-slate-300 text-slate-600'
+                    ? 'border-primary bg-primary/5 ring-1 ring-primary text-foreground font-medium'
+                    : 'border-border hover:border-border text-foreground'
                 }`}
               >
-                <FileText className="w-4 h-4 text-blue-600" />
+                <FileText className="w-4 h-4 text-foreground" />
                 <span>CSV (UTF-8 BOM)</span>
               </button>
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-600 block">Status pensjonariuszy</label>
+            <label className="text-xs font-semibold text-foreground block">Status pensjonariuszy</label>
             <NativeSelect
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as 'active' | 'archived' | 'all')} className="w-full"
@@ -153,15 +153,15 @@ export function ExportDataDialog() {
               id="export-zsn-only"
               checked={zsnOnly}
               onChange={(e) => setZsnOnly(e.target.checked)}
-              className="rounded border-slate-300 text-sage focus:ring-sage"
+              className="rounded border-border text-primary focus:ring-primary"
             />
-            <label htmlFor="export-zsn-only" className="text-xs text-slate-700 cursor-pointer">
+            <label htmlFor="export-zsn-only" className="text-xs text-foreground cursor-pointer">
               Eksportuj wyłącznie pensjonariuszy z pakietem ZSN
             </label>
           </div>
 
-          <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-500 space-y-1">
-            <p className="font-medium text-slate-700">Ochrona prywatności i MDR:</p>
+          <div className="p-3 bg-muted border border-border rounded-lg text-xs text-muted-foreground space-y-1">
+            <p className="font-medium text-foreground">Ochrona prywatności i MDR:</p>
             <p>Zgodnie z procedurami Silver Care, plik nie zawiera surowych danych biometrycznych ani medycznych. Operacja pobrania zostanie zapisana w rejestrze audytowym.</p>
           </div>
         </div>
@@ -181,7 +181,7 @@ export function ExportDataDialog() {
             size="sm"
             onClick={handleExport}
             disabled={loading}
-            className="bg-sage hover:bg-sage/90 text-white gap-2"
+            className="bg-primary hover:bg-primary/90 text-white gap-2"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
             {loading ? 'Generowanie...' : 'Pobierz plik'}

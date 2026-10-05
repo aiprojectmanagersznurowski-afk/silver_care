@@ -111,7 +111,7 @@ export function ResidentEditSheet({ resident, onUpdated }: ResidentEditSheetProp
       <button
         type="button"
         onClick={handleOpen}
-        className="p-2 rounded-lg text-slate-soft/70 hover:text-slate hover:bg-slate/5 focus:outline-none focus:ring-2 focus:ring-sage/50 min-h-[48px] min-w-[48px] inline-flex items-center justify-center transition-colors"
+        className="p-2 rounded-lg text-muted-foreground/70 hover:text-foreground hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/50 min-h-[48px] min-w-[48px] inline-flex items-center justify-center transition-colors"
         title={`Edytuj dane: ${resident.first_name} ${resident.last_name}`}
         aria-label={`Edytuj dane podopiecznego ${resident.first_name} ${resident.last_name}`}
         data-testid="resident-edit-btn"
@@ -123,10 +123,10 @@ export function ResidentEditSheet({ resident, onUpdated }: ResidentEditSheetProp
         <SheetContent className="w-full sm:max-w-md p-6 flex flex-col justify-between overflow-y-auto">
           <div>
             <SheetHeader className="p-0 mb-6">
-              <SheetTitle className="text-xl font-display font-semibold text-slate">
+              <SheetTitle className="text-xl font-display font-semibold text-foreground">
                 Szybka edycja podopiecznego
               </SheetTitle>
-              <SheetDescription className="text-sm text-slate-soft">
+              <SheetDescription className="text-sm text-muted-foreground">
                 Wprowadź zmiany w profilu podopiecznego. Zmiany zostaną natychmiast odnotowane w rejestrze audytowym placówki.
               </SheetDescription>
             </SheetHeader>
@@ -135,7 +135,7 @@ export function ResidentEditSheet({ resident, onUpdated }: ResidentEditSheetProp
               {errorMessage && (
                 <div
                   role="alert"
-                  className="flex items-center gap-2 p-3 text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-lg"
+                  className="flex items-center gap-2 p-3 text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-lg"
                 >
                   <AlertCircle className="h-4 w-4 shrink-0" />
                   <span>{errorMessage}</span>
@@ -145,7 +145,7 @@ export function ResidentEditSheet({ resident, onUpdated }: ResidentEditSheetProp
               {successMessage && (
                 <div
                   role="status"
-                  className="flex items-center gap-2 p-3 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg"
+                  className="flex items-center gap-2 p-3 text-xs text-foreground bg-muted border border-border rounded-lg"
                 >
                   <Check className="h-4 w-4 shrink-0" />
                   <span>Zmiany zostały pomyślnie zapisane!</span>
@@ -153,7 +153,7 @@ export function ResidentEditSheet({ resident, onUpdated }: ResidentEditSheetProp
               )}
 
               <div className="space-y-1.5">
-                <Label htmlFor="first_name" className="text-xs font-medium text-slate">
+                <Label htmlFor="first_name" className="text-xs font-medium text-foreground">
                   Imię *
                 </Label>
                 <Input
@@ -166,7 +166,7 @@ export function ResidentEditSheet({ resident, onUpdated }: ResidentEditSheetProp
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="last_name" className="text-xs font-medium text-slate">
+                <Label htmlFor="last_name" className="text-xs font-medium text-foreground">
                   Nazwisko *
                 </Label>
                 <Input
@@ -180,7 +180,7 @@ export function ResidentEditSheet({ resident, onUpdated }: ResidentEditSheetProp
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="birth_date" className="text-xs font-medium text-slate">
+                  <Label htmlFor="birth_date" className="text-xs font-medium text-foreground">
                     Data urodzenia
                   </Label>
                   <Input
@@ -193,7 +193,7 @@ export function ResidentEditSheet({ resident, onUpdated }: ResidentEditSheetProp
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="admission_date" className="text-xs font-medium text-slate">
+                  <Label htmlFor="admission_date" className="text-xs font-medium text-foreground">
                     Data przyjęcia
                   </Label>
                   <Input
@@ -207,7 +207,7 @@ export function ResidentEditSheet({ resident, onUpdated }: ResidentEditSheetProp
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="care_level" className="text-xs font-medium text-slate">
+                <Label htmlFor="care_level" className="text-xs font-medium text-foreground">
                   Poziom opieki
                 </Label>
                 <NativeSelect
@@ -224,7 +224,7 @@ export function ResidentEditSheet({ resident, onUpdated }: ResidentEditSheetProp
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="notes" className="text-xs font-medium text-slate">
+                <Label htmlFor="notes" className="text-xs font-medium text-foreground">
                   Notatki / uwagi organizacyjne
                 </Label>
                 <Textarea
@@ -238,7 +238,7 @@ export function ResidentEditSheet({ resident, onUpdated }: ResidentEditSheetProp
             </form>
           </div>
 
-          <SheetFooter className="p-0 pt-6 mt-6 border-t border-slate/10 flex sm:flex-row justify-end gap-2">
+          <SheetFooter className="p-0 pt-6 mt-6 border-t border-border flex sm:flex-row justify-end gap-2">
             <Button
               type="button"
               variant="outline"
@@ -252,7 +252,7 @@ export function ResidentEditSheet({ resident, onUpdated }: ResidentEditSheetProp
               type="submit"
               form="resident-edit-form"
               disabled={isPending}
-              className="bg-sage hover:bg-sage/90 text-white min-h-[44px] min-w-[120px]"
+              className="bg-primary hover:bg-primary/90 text-white min-h-[44px] min-w-[120px]"
             >
               {isPending ? (
                 <>

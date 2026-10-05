@@ -89,25 +89,25 @@ export function ProfileSecurityClient({ initialData }: { initialData: ProfileDat
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-slate-500 block">Adres E-mail:</span>
-              <span className="font-medium text-slate-900">{initialData.user.email}</span>
+              <span className="text-muted-foreground block">Adres E-mail:</span>
+              <span className="font-medium text-foreground">{initialData.user.email}</span>
             </div>
             <div>
-              <span className="text-slate-500 block">Rola w systemie:</span>
+              <span className="text-muted-foreground block">Rola w systemie:</span>
               <div className="mt-1">
-                <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-200">
+                <Badge variant="outline" className="bg-muted text-foreground border-border">
                   {roleLabels[initialData.user.role] || initialData.user.role}
                 </Badge>
               </div>
             </div>
             <div>
-              <span className="text-slate-500 block">Identyfikator (UUID):</span>
-              <span className="font-mono text-xs text-slate-600">{initialData.user.id}</span>
+              <span className="text-muted-foreground block">Identyfikator (UUID):</span>
+              <span className="font-mono text-xs text-foreground">{initialData.user.id}</span>
             </div>
             {initialData.user.organizationId && (
               <div>
-                <span className="text-slate-500 block">Identyfikator Placówki:</span>
-                <span className="font-mono text-xs text-slate-600">{initialData.user.organizationId}</span>
+                <span className="text-muted-foreground block">Identyfikator Placówki:</span>
+                <span className="font-mono text-xs text-foreground">{initialData.user.organizationId}</span>
               </div>
             )}
           </div>
@@ -125,12 +125,12 @@ export function ProfileSecurityClient({ initialData }: { initialData: ProfileDat
         <form onSubmit={handlePasswordSubmit}>
           <CardContent className="space-y-4">
             {passwordState.status === 'error' && (
-              <div className="p-3 text-sm text-red-700 bg-red-50 rounded-md border border-red-200">
+              <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md border border-destructive/20">
                 {passwordState.message}
               </div>
             )}
             {passwordState.status === 'success' && (
-              <div className="p-3 text-sm text-emerald-700 bg-emerald-50 rounded-md border border-emerald-200">
+              <div className="p-3 text-sm text-foreground bg-muted rounded-md border border-border">
                 {passwordState.message}
               </div>
             )}
@@ -189,20 +189,20 @@ export function ProfileSecurityClient({ initialData }: { initialData: ProfileDat
         </CardHeader>
         <CardContent className="space-y-6">
           {sessionState.status === 'error' && (
-            <div className="p-3 text-sm text-red-700 bg-red-50 rounded-md border border-red-200">
+            <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md border border-destructive/20">
               {sessionState.message}
             </div>
           )}
           {sessionState.status === 'success' && (
-            <div className="p-3 text-sm text-emerald-700 bg-emerald-50 rounded-md border border-emerald-200">
+            <div className="p-3 text-sm text-foreground bg-muted rounded-md border border-border">
               {sessionState.message}
             </div>
           )}
 
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 border rounded-lg bg-slate-50">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 border rounded-lg bg-muted">
             <div>
-              <h4 className="font-medium text-slate-900">Pozostałe aktywne urządzenia</h4>
-              <p className="text-xs text-slate-500 mt-1">
+              <h4 className="font-medium text-foreground">Pozostałe aktywne urządzenia</h4>
+              <p className="text-xs text-muted-foreground mt-1">
                 Wyloguj wszystkie sesje poza tą przeglądarką, jeśli podejrzewasz nieautoryzowany dostęp.
               </p>
             </div>
@@ -215,14 +215,14 @@ export function ProfileSecurityClient({ initialData }: { initialData: ProfileDat
             </Button>
           </div>
 
-          <div className="p-4 border rounded-lg bg-slate-50 space-y-2">
+          <div className="p-4 border rounded-lg bg-muted space-y-2">
             <div className="flex items-center justify-between">
-              <h4 className="font-medium text-slate-900">Uwierzytelnianie dwuskładnikowe (MFA / TOTP)</h4>
+              <h4 className="font-medium text-foreground">Uwierzytelnianie dwuskładnikowe (MFA / TOTP)</h4>
               <Badge variant={isStaffOrAdmin ? 'default' : 'secondary'}>
                 {isStaffOrAdmin ? 'Wymagane dla personelu' : 'Opcjonalne'}
               </Badge>
             </div>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted-foreground">
               Drugi składnik logowania zapewnia najwyższy poziom ochrony danych pensjonariuszy zgodnie z normami RODO Art. 9.
             </p>
           </div>
@@ -237,19 +237,19 @@ export function ProfileSecurityClient({ initialData }: { initialData: ProfileDat
         </CardHeader>
         <CardContent>
           {initialData.logs.length === 0 ? (
-            <div className="text-center py-6 text-sm text-slate-500">
+            <div className="text-center py-6 text-sm text-muted-foreground">
               Brak zarejestrowanych zdarzeń bezpieczeństwa w bieżącym okresie.
             </div>
           ) : (
-            <div className="divide-y divide-slate-100 text-sm">
+            <div className="divide-y divide-border text-sm">
               {initialData.logs.map((log) => (
                 <div key={log.id} className="py-2.5 flex justify-between items-center">
                   <div>
-                    <span className="font-medium text-slate-800">
+                    <span className="font-medium text-foreground">
                       {log.action === 'password_self_change' ? 'Samodzielna zmiana hasła' : log.action}
                     </span>
                   </div>
-                  <span className="text-xs text-slate-400">
+                  <span className="text-xs text-muted-foreground">
                     {new Date(log.created_at).toLocaleString('pl-PL')}
                   </span>
                 </div>

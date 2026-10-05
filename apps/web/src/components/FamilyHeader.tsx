@@ -53,7 +53,7 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
 
   return (
     <>
-      <header className="sticky top-0 z-30 border-b border-border/70 bg-cream/80 backdrop-blur-md">
+      <header className="sticky top-0 z-30 border-b border-border/70 bg-background/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-[1600px] items-center gap-4 px-4 py-3 sm:gap-6 sm:px-6 sm:py-4">
           <Link href="/dashboard" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
             <Image
@@ -64,7 +64,7 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
               className="h-8 sm:h-9 w-auto object-contain"
               priority
             />
-            <span className="hidden text-[0.8rem] text-slate-soft sm:inline-block border-l border-slate/15 pl-3">
+            <span className="hidden text-[0.8rem] text-muted-foreground sm:inline-block border-l border-border pl-3">
               Portal rodzinnej opieki
             </span>
           </Link>
@@ -79,8 +79,8 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
                   href={item.href}
                   className={`rounded-full px-5 py-2.5 transition-colors text-sm font-medium ${
                     isActive
-                      ? "bg-sage text-primary-foreground shadow-sm"
-                      : "text-slate-soft hover:bg-sage-soft/60 hover:text-slate"
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
                   }`}
                 >
                   {item.label}
@@ -91,13 +91,13 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
 
           <div className="ml-auto flex items-center gap-3">
             <DropdownMenu>
-              <DropdownMenuTrigger className="relative flex h-11 w-11 items-center justify-center rounded-full bg-card text-slate-soft ring-1 ring-border transition-colors hover:text-slate hover:shadow-sm">
+              <DropdownMenuTrigger className="relative flex h-11 w-11 items-center justify-center rounded-full bg-card text-muted-foreground ring-1 ring-border transition-colors hover:text-foreground">
                 <Bell className="h-5 w-5" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64 rounded-2xl p-2">
-                <DropdownMenuLabel className="text-slate-soft">Powiadomienia</DropdownMenuLabel>
+              <DropdownMenuContent align="end" className="w-64 rounded-xl p-2">
+                <DropdownMenuLabel className="text-muted-foreground">Powiadomienia</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <div className="py-5 text-center text-[0.85rem] text-slate-soft">
+                <div className="py-5 text-center text-[0.85rem] text-muted-foreground">
                   Brak nowych powiadomień
                 </div>
               </DropdownMenuContent>
@@ -105,19 +105,19 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
 
             {current ? (
               <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-3 rounded-full bg-card py-1.5 pl-1.5 pr-3 ring-1 ring-border transition-shadow hover:shadow-sm">
+                <DropdownMenuTrigger className="flex items-center gap-3 rounded-full bg-card py-1.5 pl-1.5 pr-3 ring-1 ring-border transition-shadow">
                   <Avatar className="h-9 w-9">
                     <AvatarImage src={current.avatar_url || ""} alt={`${current.first_name} ${current.last_name}`} />
                     <AvatarFallback>{current.first_name[0]}</AvatarFallback>
                   </Avatar>
                   <div className="hidden text-left leading-tight sm:block">
-                    <p className="text-[0.95rem] text-slate">{current.first_name} {current.last_name}</p>
-                    <p className="text-[0.72rem] text-slate-soft">Wyświetlany profil</p>
+                    <p className="text-[0.95rem] text-foreground">{current.first_name} {current.last_name}</p>
+                    <p className="text-[0.72rem] text-muted-foreground">Wyświetlany profil</p>
                   </div>
-                  <ChevronDown className="h-4 w-4 text-slate-soft" />
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-72 rounded-2xl p-2">
-                  <DropdownMenuLabel className="text-slate-soft">Zmień bliską osobę</DropdownMenuLabel>
+                <DropdownMenuContent align="end" className="w-72 rounded-xl p-2">
+                  <DropdownMenuLabel className="text-muted-foreground">Zmień bliską osobę</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {residents.map((s) => (
                     <DropdownMenuItem
@@ -130,9 +130,9 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
                         <AvatarFallback>{s.first_name[0]}</AvatarFallback>
                       </Avatar>
                       <div className="flex-1 leading-tight">
-                        <p className="text-slate">{s.first_name} {s.last_name}</p>
+                        <p className="text-foreground">{s.first_name} {s.last_name}</p>
                       </div>
-                      {current.id === s.id && <Check className="h-4 w-4 text-sage" />}
+                      {current.id === s.id && <Check className="h-4 w-4 text-primary" />}
                     </DropdownMenuItem>
                   ))}
                   
@@ -150,12 +150,12 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
               </DropdownMenu>
             ) : (
               <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-2 rounded-full bg-card py-2 px-4 ring-1 ring-border text-slate-soft hover:text-slate">
+                <DropdownMenuTrigger className="flex items-center gap-2 rounded-full bg-card py-2 px-4 ring-1 ring-border text-muted-foreground hover:text-foreground">
                   <span className="text-sm font-medium">Konto</span>
                   <ChevronDown className="h-4 w-4" />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2">
-                  <DropdownMenuLabel className="text-slate-soft">Profil rodziny</DropdownMenuLabel>
+                <DropdownMenuContent align="end" className="w-56 rounded-xl p-2">
+                  <DropdownMenuLabel className="text-muted-foreground">Profil rodziny</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <form action="/auth/signout" method="post" className="w-full">
                     <DropdownMenuItem 
@@ -174,7 +174,7 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
       </header>
 
       {/* Mobile Bottom Navigation Bar (Dead End #1 Fix) */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-border/80 bg-cream/95 py-2 px-2 backdrop-blur-lg shadow-lg md:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-border/80 bg-background/95 py-2 px-2 backdrop-blur-lg shadow-lg md:hidden">
         {navItems.map((item) => {
           const isActive = pathname?.startsWith(item.href) || (pathname === '/' && item.href === '/dashboard');
           const Icon = item.icon;
@@ -184,11 +184,11 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
               href={item.href}
               className={`flex flex-col items-center gap-1 rounded-xl px-4 py-1.5 text-xs font-medium transition-colors ${
                 isActive 
-                  ? "text-sage font-bold bg-sage-soft/60" 
-                  : "text-slate-soft hover:text-slate"
+                  ? "text-primary font-bold bg-accent/60" 
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <Icon className={`h-5 w-5 ${isActive ? "text-sage" : "text-slate-soft"}`} />
+              <Icon className={`h-5 w-5 ${isActive ? "text-primary" : "text-muted-foreground"}`} />
               <span>{item.label}</span>
             </Link>
           );

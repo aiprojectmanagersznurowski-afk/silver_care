@@ -155,14 +155,14 @@ export function AdmissionWizard() {
 
   return (
     <Dialog open={open} onOpenChange={(val) => { setOpen(val); if (!val) resetForm(); }}>
-      <DialogTrigger render={<Button className="bg-sage hover:bg-sage/90 text-white gap-2" />}>
+      <DialogTrigger render={<Button className="bg-primary hover:bg-primary/90 text-white gap-2" />}>
         <UserPlus className="w-4 h-4" />
         Kreator przyjęcia (Wizard)
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <UserPlus className="w-5 h-5 text-sage" />
+            <UserPlus className="w-5 h-5 text-primary" />
             Przyjęcie pensjonariusza — Krok {step} z 3
           </DialogTitle>
           <DialogDescription>
@@ -175,20 +175,20 @@ export function AdmissionWizard() {
         {/* EKRAN SUKCESU */}
         {createdResidentId ? (
           <div className="space-y-6 py-6 text-center">
-            <div className="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto">
+            <div className="w-12 h-12 bg-muted text-foreground rounded-full flex items-center justify-center mx-auto">
               <Check className="w-6 h-6 stroke-[3]" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold text-slate-800">
+              <h3 className="text-lg font-semibold text-foreground">
                 Przyjęcie zakończone pomyślnie!
               </h3>
-              <p className="text-sm text-slate-600 max-w-md mx-auto">
+              <p className="text-sm text-foreground max-w-md mx-auto">
                 Pensjonariusz <strong>{firstName} {lastName}</strong> został pomyślnie przyjęty do placówki.
                 {selectedBedInfo ? ` Przypisano: ${selectedBedInfo}.` : ''}
               </p>
             </div>
-            <div className="p-4 bg-sage/10 rounded-xl border border-sage/20 text-left text-xs text-slate-600 max-w-md mx-auto">
-              <span className="font-semibold text-slate-800 block mb-1">Kolejny krok: Uzupełnienie dokumentacji</span>
+            <div className="p-4 bg-primary/10 rounded-xl border border-primary/20 text-left text-xs text-foreground max-w-md mx-auto">
+              <span className="font-semibold text-foreground block mb-1">Kolejny krok: Uzupełnienie dokumentacji</span>
               Możesz teraz przejść bezpośrednio do profilu pensjonariusza, aby załączyć skan umowy oraz uzupełnić dane kontaktowe bliskich.
             </div>
             <div className="flex items-center justify-center gap-3 pt-2">
@@ -203,7 +203,7 @@ export function AdmissionWizard() {
               </Button>
               <Link
                 href={`/admin/residents/${createdResidentId}`}
-                className={buttonVariants({ className: 'bg-sage hover:bg-sage/90 text-white gap-2' })}
+                className={buttonVariants({ className: 'bg-primary hover:bg-primary/90 text-white gap-2' })}
               >
                 <FileText className="w-4 h-4" />
                 Przejdź do profilu pensjonariusza i dodaj umowę
@@ -216,8 +216,8 @@ export function AdmissionWizard() {
               <div
                 className={`p-3 rounded-lg text-sm flex items-center gap-2 ${
                   statusMessage.type === 'success'
-                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                    : 'bg-rose-50 text-rose-700 border border-rose-200'
+                    ? 'bg-muted text-foreground border border-border'
+                    : 'bg-destructive/10 text-destructive border border-destructive/20'
                 }`}
               >
                 {statusMessage.type === 'success' ? <Check className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
@@ -258,9 +258,9 @@ export function AdmissionWizard() {
                     value={idValue}
                     onChange={(e) => handleIdChange(e.target.value)}
                   />
-                  {idError && <p data-testid="national-id-error" className="text-xs text-rose-500">{idError}</p>}
+                  {idError && <p data-testid="national-id-error" className="text-xs text-destructive">{idError}</p>}
                   {calculatedBirthDate && calculatedGender && (
-                    <div className="flex items-center gap-3 mt-1 text-xs text-slate-600 bg-slate-50 p-2 rounded border border-slate-200">
+                    <div className="flex items-center gap-3 mt-1 text-xs text-foreground bg-muted p-2 rounded border border-border">
                       <span>Data ur.: <strong>{calculatedBirthDate}</strong></span>
                       <span>Płeć: <strong>{calculatedGender === 'F' ? 'Kobieta' : 'Mężczyzna'}</strong></span>
                     </div>
@@ -288,7 +288,7 @@ export function AdmissionWizard() {
                       id="wiz-zsn"
                       checked={isZsn}
                       onChange={(e) => setIsZsn(e.target.checked)}
-                      className="rounded border-slate-300 text-sage focus:ring-sage"
+                      className="rounded border-border text-primary focus:ring-primary"
                     />
                     <Label htmlFor="wiz-zsn" className="text-sm font-normal cursor-pointer">
                       ZSN: Znaczny stopień niepełnosprawności
@@ -314,8 +314,8 @@ export function AdmissionWizard() {
               <div className="space-y-4 py-2">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="text-sm font-semibold text-slate-800">Rekomendowane łóżka</h4>
-                    <p className="text-xs text-slate-500">Dopasowane według kryteriów płci w pokoju oraz piętra.</p>
+                    <h4 className="text-sm font-semibold text-foreground">Rekomendowane łóżka</h4>
+                    <p className="text-xs text-muted-foreground">Dopasowane według kryteriów płci w pokoju oraz piętra.</p>
                   </div>
                   <Button
                     variant="outline"
@@ -324,17 +324,17 @@ export function AdmissionWizard() {
                     disabled={loadingSuggestions}
                     className="gap-1 text-xs"
                   >
-                    {loadingSuggestions ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 text-amber-500" />}
+                    {loadingSuggestions ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 text-foreground" />}
                     Przelicz ponownie
                   </Button>
                 </div>
 
                 {loadingSuggestions ? (
-                  <div className="py-8 text-center text-slate-500 text-sm flex items-center justify-center gap-2">
+                  <div className="py-8 text-center text-muted-foreground text-sm flex items-center justify-center gap-2">
                     <Loader2 className="w-4 h-4 animate-spin" /> Analizowanie wolnych miejsc...
                   </div>
                 ) : suggestions.length === 0 ? (
-                  <div className="p-4 bg-amber-50 text-amber-800 text-sm rounded-lg border border-amber-200">
+                  <div className="p-4 bg-muted text-foreground text-sm rounded-lg border border-border">
                     Brak dostępnych wolnych łóżek spełniających kryteria. Możesz przyjąć podopiecznego bez przypisania łóżka.
                   </div>
                 ) : (
@@ -350,31 +350,31 @@ export function AdmissionWizard() {
                           }}
                           className={`p-3 rounded-lg border cursor-pointer transition-all flex items-start justify-between ${
                             isSelected
-                              ? 'border-sage bg-sage/5 ring-1 ring-sage'
-                              : 'border-slate-200 hover:border-slate-300 bg-white'
+                              ? 'border-primary bg-primary/5 ring-1 ring-primary'
+                              : 'border-border hover:border-border bg-card'
                           }`}
                         >
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
-                              <Bed className="w-4 h-4 text-slate-600" />
-                              <span className="font-semibold text-sm text-slate-800">
+                              <Bed className="w-4 h-4 text-foreground" />
+                              <span className="font-semibold text-sm text-foreground">
                                 Pokój {s.roomNumber} — Łóżko {s.bedNumber}
                               </span>
                               <Badge variant="outline" className="text-xs font-normal">
                                 Piętro {s.floorNumber}
                               </Badge>
-                              <Badge variant="outline" className="text-xs font-normal text-slate-500">
+                              <Badge variant="outline" className="text-xs font-normal text-muted-foreground">
                                 Dopasowanie: {s.score} pkt
                               </Badge>
                             </div>
-                            <p className="text-xs text-slate-500">
+                            <p className="text-xs text-muted-foreground">
                               {s.reason}
                             </p>
                           </div>
                           <div className="pt-1">
                             <div
                               className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                                isSelected ? 'border-sage bg-sage text-white' : 'border-slate-300'
+                                isSelected ? 'border-primary bg-primary text-white' : 'border-border'
                               }`}
                             >
                               {isSelected && <Check className="w-3 h-3" />}
@@ -386,7 +386,7 @@ export function AdmissionWizard() {
                   </div>
                 )}
 
-                <div className="pt-2 border-t flex items-center justify-between text-xs text-slate-500">
+                <div className="pt-2 border-t flex items-center justify-between text-xs text-muted-foreground">
                   <span>{selectedBedInfo ? `Wybrano: ${selectedBedInfo}` : 'Nie wybrano żadnego łóżka'}</span>
                   {selectedBedId && (
                     <button
@@ -395,7 +395,7 @@ export function AdmissionWizard() {
                         setSelectedBedId(null)
                         setSelectedBedInfo(null)
                       }}
-                      className="text-rose-600 hover:underline"
+                      className="text-destructive hover:underline"
                     >
                       Odznacz wybór
                     </button>
@@ -406,40 +406,40 @@ export function AdmissionWizard() {
 
             {/* KROK 3: PODSUMOWANIE */}
             {step === 3 && (
-              <div className="space-y-4 py-2 text-sm text-slate-700">
-                <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-3">
+              <div className="space-y-4 py-2 text-sm text-foreground">
+                <div className="bg-muted p-4 rounded-lg border border-border space-y-3">
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <span className="text-xs text-slate-400 block">Imię i nazwisko</span>
+                      <span className="text-xs text-muted-foreground block">Imię i nazwisko</span>
                       <span className="font-semibold">{firstName} {lastName}</span>
                     </div>
                     <div>
-                      <span className="text-xs text-slate-400 block">Identyfikator (PESEL)</span>
+                      <span className="text-xs text-muted-foreground block">Identyfikator (PESEL)</span>
                       <span className="font-mono">{idValue.slice(0, 6)}*****</span>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <span className="text-xs text-slate-400 block">Płeć i data ur.</span>
+                      <span className="text-xs text-muted-foreground block">Płeć i data ur.</span>
                       <span>{calculatedGender === 'F' ? 'Kobieta' : 'Mężczyzna'}, {calculatedBirthDate}</span>
                     </div>
                     <div>
-                      <span className="text-xs text-slate-400 block">Profil opiekuńczy</span>
+                      <span className="text-xs text-muted-foreground block">Profil opiekuńczy</span>
                       <span>{careLevel} {isZsn ? '(ZSN: Znaczny stopień niepełnosprawności)' : ''}</span>
                     </div>
                   </div>
 
                   <div>
-                    <span className="text-xs text-slate-400 block">Przypisane łóżko</span>
-                    <span className="font-medium text-slate-900">
+                    <span className="text-xs text-muted-foreground block">Przypisane łóżko</span>
+                    <span className="font-medium text-foreground">
                       {selectedBedInfo || 'Brak przypisanego łóżka (można przypisać później)'}
                     </span>
                   </div>
 
                   {notes && (
                     <div>
-                      <span className="text-xs text-slate-400 block">Uwagi</span>
+                      <span className="text-xs text-muted-foreground block">Uwagi</span>
                       <span className="italic">{notes}</span>
                     </div>
                   )}
@@ -467,7 +467,7 @@ export function AdmissionWizard() {
                     type="button"
                     onClick={handleNextToStep2}
                     disabled={!firstName.trim() || !lastName.trim() || !calculatedGender || !!idError || idValue.trim().length !== 11}
-                    className="bg-sage text-white"
+                    className="bg-primary text-white"
                   >
                     Dalej (Wybór łóżka)
                   </Button>
@@ -477,7 +477,7 @@ export function AdmissionWizard() {
                   <Button
                     type="button"
                     onClick={handleNextToStep3}
-                    className="bg-sage text-white"
+                    className="bg-primary text-white"
                   >
                     Dalej (Podsumowanie)
                   </Button>
@@ -488,7 +488,7 @@ export function AdmissionWizard() {
                     type="button"
                     onClick={handleSubmitAdmission}
                     disabled={submitting}
-                    className="bg-sage text-white gap-2"
+                    className="bg-primary text-white gap-2"
                   >
                     {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                     {submitting ? 'Przyjmowanie...' : 'Zatwierdź przyjęcie'}

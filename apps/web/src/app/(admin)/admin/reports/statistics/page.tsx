@@ -8,7 +8,7 @@ export default async function StatisticsPage() {
 
   if (!orgId) {
     return (
-      <div className="text-center py-20 text-slate-soft">
+      <div className="text-center py-20 text-muted-foreground">
         Brak przypisanej organizacji.
       </div>
     )
@@ -34,10 +34,10 @@ export default async function StatisticsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-3xl font-display font-semibold tracking-tight text-slate">
+        <h2 className="text-3xl font-display font-semibold tracking-tight text-foreground">
           Statystyka
         </h2>
-        <p className="mt-2 text-slate-soft">
+        <p className="mt-2 text-muted-foreground">
           Podsumowanie i agregaty placówki — stany, obłożenie, przyjęcia, źródła umów.
         </p>
       </div>

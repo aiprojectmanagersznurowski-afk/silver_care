@@ -146,7 +146,7 @@ export function DailyReportClient({ organizationId }: { organizationId?: string 
           <Button variant="outline" size="icon" onClick={goToPrevMonth} className="h-10 w-10 rounded-xl">
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <h3 className="text-xl font-semibold text-slate min-w-48 text-center">
+          <h3 className="text-xl font-semibold text-foreground min-w-48 text-center">
             {MONTH_LABELS_PL[month - 1]} {year}
           </h3>
           <Button variant="outline" size="icon" onClick={goToNextMonth} className="h-10 w-10 rounded-xl">
@@ -177,14 +177,14 @@ export function DailyReportClient({ organizationId }: { organizationId?: string 
       )}
 
       {/* Daily data table */}
-      <Card className="rounded-xl border-none ring-1 ring-slate/5 overflow-hidden">
+      <Card className="rounded-xl border-none ring-1 ring-border overflow-hidden">
         <CardContent className="p-0">
           {loading ? (
             <div className="flex items-center justify-center py-20">
-              <Loader2 className="h-8 w-8 animate-spin text-sage" />
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : data.length === 0 ? (
-            <div className="text-center py-20 text-slate-soft">
+            <div className="text-center py-20 text-muted-foreground">
               Brak danych dla wybranego miesiąca.
             </div>
           ) : (
@@ -205,7 +205,7 @@ export function DailyReportClient({ organizationId }: { organizationId?: string 
                       return (
                         <TableHead
                           key={row.report_date}
-                          className={`px-2 py-3 text-center font-medium min-w-10 ${isWeekend ? 'bg-sage/5 text-sage' : 'text-slate-soft'}`}
+                          className={`px-2 py-3 text-center font-medium min-w-10 ${isWeekend ? 'bg-primary/5 text-primary' : 'text-muted-foreground'}`}
                         >
                           {dayNum}
                         </TableHead>
@@ -226,11 +226,11 @@ export function DailyReportClient({ organizationId }: { organizationId?: string 
                     const isDelta = metric.key === 'delta_change'
 
                     return (
-                      <TableRow key={metric.key} className={`${isHighlight ? 'bg-sage/3 font-semibold' : ''} hover:bg-slate/5 transition-colors`}>
-                        <TableCell className={`sticky left-0 z-10 px-4 py-2.5 text-left whitespace-nowrap border-r border-slate/10 ${isHighlight ? 'bg-sage/3 text-slate font-semibold' : 'bg-white text-slate-soft font-medium'}`}>
+                      <TableRow key={metric.key} className={`${isHighlight ? 'bg-primary/3 font-semibold' : ''} hover:bg-muted/50 transition-colors`}>
+                        <TableCell className={`sticky left-0 z-10 px-4 py-2.5 text-left whitespace-nowrap border-r border-border ${isHighlight ? 'bg-primary/3 text-foreground font-semibold' : 'bg-card text-muted-foreground font-medium'}`}>
                           {metric.label}
                         </TableCell>
-                        <TableCell className={`px-3 py-2.5 text-center font-semibold border-r border-slate/10 ${isHighlight ? 'text-slate' : 'text-slate-soft'}`}>
+                        <TableCell className={`px-3 py-2.5 text-center font-semibold border-r border-border ${isHighlight ? 'text-foreground' : 'text-muted-foreground'}`}>
                           {summaryValue != null
                             ? typeof summaryValue === 'number' && !Number.isInteger(summaryValue)
                               ? summaryValue.toFixed(1)
@@ -243,15 +243,15 @@ export function DailyReportClient({ organizationId }: { organizationId?: string 
                             className={`px-2 py-2.5 text-center tabular-nums ${
                               isDelta
                                 ? val > 0
-                                  ? 'text-emerald-600'
+                                  ? 'text-foreground'
                                   : val < 0
-                                    ? 'text-red-500'
-                                    : 'text-slate-soft/50'
+                                    ? 'text-foreground'
+                                    : 'text-muted-foreground/50'
                                 : metric.key === 'deaths' && val > 0
-                                  ? 'text-red-500 font-medium'
+                                  ? 'text-foreground font-medium'
                                   : val === 0
-                                    ? 'text-slate-soft/30'
-                                    : 'text-slate'
+                                    ? 'text-muted-foreground/30'
+                                    : 'text-foreground'
                             }`}
                           >
                             {isDelta && val > 0 ? `+${val}` : val}
@@ -280,10 +280,10 @@ function SummaryCard({
   variant?: 'default' | 'success' | 'danger' | 'warning'
 }) {
   const colorMap = {
-    default: 'bg-slate/5 text-slate',
-    success: 'bg-emerald-50 text-emerald-700',
-    danger: 'bg-red-50 text-red-600',
-    warning: 'bg-amber-50 text-amber-700',
+    default: 'bg-muted/50 text-foreground',
+    success: 'bg-muted text-foreground',
+    danger: 'bg-muted text-foreground',
+    warning: 'bg-muted text-foreground',
   }
 
   return (

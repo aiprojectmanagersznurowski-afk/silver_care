@@ -4,9 +4,9 @@ import Link from "next/link";
 type Status = "completed" | "upcoming" | "menu";
 
 const statusStyles: Record<Status, { label: string; cls: string }> = {
-  completed: { label: "Ukończono", cls: "bg-sage text-primary-foreground" },
-  upcoming: { label: "Nadchodzi", cls: "bg-muted text-slate-soft" },
-  menu: { label: "Wspólne", cls: "bg-blue-100 text-blue-800" },
+  completed: { label: "Ukończono", cls: "bg-primary text-primary-foreground" },
+  upcoming: { label: "Nadchodzi", cls: "bg-muted text-muted-foreground" },
+  menu: { label: "Wspólne", cls: "bg-muted text-foreground" },
 };
 
 function getIconForType(type: string) {
@@ -20,10 +20,10 @@ function getIconForType(type: string) {
 
 function getTintForType(type: string) {
   switch (type?.toLowerCase()) {
-    case 'meal': return "bg-blue-100 text-blue-800";
-    case 'medical': return "bg-slate-100 text-slate-700";
-    case 'activity': return "bg-sage-soft text-sage-deep";
-    default: return "bg-indigo-100 text-indigo-800";
+    case 'meal': return "bg-muted text-foreground";
+    case 'medical': return "bg-muted text-foreground";
+    case 'activity': return "bg-accent text-primary";
+    default: return "bg-muted text-foreground";
   }
 }
 
@@ -69,16 +69,16 @@ export function ServiceActivityFeed({
   }
 
   return (
-    <div className="rounded-[1.75rem] bg-card p-6 ring-1 border border-border shadow-sm">
+    <div className="rounded-[1.75rem] bg-card p-6 border border-border">
       <div className="mb-5 flex items-center justify-between">
         <div>
-          <h3 className="text-[1.25rem] text-slate font-display">Aktywność opieki</h3>
-          <p className="text-[0.88rem] text-slate-soft">Dzisiejszy harmonogram opieki</p>
+          <h3 className="text-[1.25rem] text-foreground font-display">Aktywność opieki</h3>
+          <p className="text-[0.88rem] text-muted-foreground">Dzisiejszy harmonogram opieki</p>
         </div>
         {compact && (
           <Link 
             href="/agenda"
-            className="flex items-center gap-1 rounded-full px-3 py-2 text-[0.9rem] text-sage font-medium hover:bg-sage-soft/60 transition-colors"
+            className="flex items-center gap-1 rounded-full px-3 py-2 text-[0.9rem] text-primary font-medium hover:bg-accent/60 transition-colors"
           >
             Zobacz agendę <ChevronRight className="h-4 w-4" />
           </Link>
@@ -86,12 +86,12 @@ export function ServiceActivityFeed({
       </div>
 
       {activities.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-10 px-4 text-center bg-slate/5 rounded-2xl">
-          <div className="h-12 w-12 rounded-full bg-sage-soft flex items-center justify-center mb-2">
-            <Calendar className="h-6 w-6 text-sage-deep" />
+        <div className="flex flex-col items-center justify-center py-10 px-4 text-center bg-muted/50 rounded-xl">
+          <div className="h-12 w-12 rounded-full bg-accent flex items-center justify-center mb-2">
+            <Calendar className="h-6 w-6 text-primary" />
           </div>
-          <p className="text-sm font-semibold text-slate">Brak zaplanowanych wydarzeń na dziś</p>
-          <p className="text-xs text-slate-soft mt-1 max-w-[280px] leading-relaxed">
+          <p className="text-sm font-semibold text-foreground">Brak zaplanowanych wydarzeń na dziś</p>
+          <p className="text-xs text-muted-foreground mt-1 max-w-[280px] leading-relaxed">
             Harmonogram zajęć, posiłków i spacerów jest aktualizowany na bieżąco przez personel placówki.
           </p>
         </div>
@@ -106,17 +106,17 @@ export function ServiceActivityFeed({
                   <span className="absolute left-[27px] top-[56px] h-[calc(100%-40px)] w-px bg-border" />
                 )}
                 <div
-                  className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ${a.tint}`}
+                  className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-xl ${a.tint}`}
                 >
                   <a.icon className="h-6 w-6" />
                 </div>
-                <div className="flex flex-1 items-start justify-between gap-3 rounded-2xl px-4 py-3 transition-colors hover:bg-muted/40">
+                <div className="flex flex-1 items-start justify-between gap-3 rounded-xl px-4 py-3 transition-colors hover:bg-muted/40">
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="text-[1.05rem] text-slate font-medium">{a.title}</p>
-                      <span className="text-[0.82rem] text-slate-soft">· {a.time}</span>
+                      <p className="text-[1.05rem] text-foreground font-medium">{a.title}</p>
+                      <span className="text-[0.82rem] text-muted-foreground">· {a.time}</span>
                     </div>
-                    <p className="mt-0.5 text-[0.9rem] leading-relaxed text-slate-soft">{a.detail}</p>
+                    <p className="mt-0.5 text-[0.9rem] leading-relaxed text-muted-foreground">{a.detail}</p>
                   </div>
                   <span className={`shrink-0 rounded-full px-3 py-1 text-[0.78rem] font-medium ${s.cls}`}>
                     {s.label}
