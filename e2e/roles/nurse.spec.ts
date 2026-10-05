@@ -28,7 +28,7 @@ test.describe('Rola: Personel Opiekuńczy (Pielęgniarka / Pielęgniarz)', () =>
     // Przejście do planu dnia personelu
     await staffBoardPage.navigateToAgenda();
     await expect(page).toHaveURL(/\/staff\/agenda/);
-    await expect(page.locator('h2:has-text("Plan Dnia")')).toBeVisible();
+    await expect(page.locator('h2:has-text("Agenda na dziś")')).toBeVisible();
 
     // Przejście do modułu raportów opieki
     await staffBoardPage.navigateToReports();
