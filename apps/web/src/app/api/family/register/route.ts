@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { validateInvitationState, determineConsentsForRole } from '@/lib/onboarding';
+import { validateInvitationState, determineConsentsForRole, resolveRelativeRole } from '@/lib/onboarding';
 
 export async function POST(request: Request) {
   try {
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     }
 
     // 3. Utwórz użytkownika w Supabase Auth z rolą określoną w zaproszeniu
-    const userRole = invitation.role === 'legal_guardian' ? 'legal_guardian' : 'family';
+    const userRole = resolveRelativeRole(invitation.role);
     const emailToRegister = invitation.email?.trim().toLowerCase();
 
     const { data: userData, error: createError } = await adminClient.auth.admin.createUser({

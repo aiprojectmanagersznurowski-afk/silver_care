@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { checkRateLimit } from '@/lib/rate-limiter'
 import { renderFamilyInviteEmail } from '@/lib/notification-templates'
+import { authorizeInviteTarget } from '@/lib/invite-authorization'
+import { resolveRelativeRole } from '@/lib/onboarding'
 
 export async function POST(request: Request) {
   try {
@@ -33,7 +35,6 @@ export async function POST(request: Request) {
     }
 
     const appRole = user.app_metadata?.role
-    let orgId = user.app_metadata?.organization_id
 
     if (appRole !== 'org_admin' && appRole !== 'admin' && appRole !== 'super_admin') {
       return NextResponse.json({ error: 'Brak uprawnień administratora' }, { status: 403 })
@@ -48,20 +49,25 @@ export async function POST(request: Request) {
 
     const adminClient = createAdminClient()
 
-    if (!orgId) {
-      const { data: resident } = await adminClient
-        .from('residents')
-        .select('organization_id')
-        .eq('id', resident_id)
-        .maybeSingle()
-      orgId = resident?.organization_id
+    // Klient admin omija RLS — przynależność pensjonariusza do placówki z tokenu sprawdzamy jawnie
+    const { data: resident } = await adminClient
+      .from('residents')
+      .select('organization_id')
+      .eq('id', resident_id)
+      .maybeSingle()
+
+    const target = authorizeInviteTarget({
+      appRole,
+      tokenOrgId: user.app_metadata?.organization_id,
+      residentOrgId: resident?.organization_id,
+    })
+
+    if (!target.ok) {
+      return NextResponse.json({ error: 'Nie znaleziono pensjonariusza' }, { status: target.status })
     }
 
-    if (!orgId) {
-      return NextResponse.json({ error: 'Brak przypisania do organizacji' }, { status: 400 })
-    }
-
-    const assignedRole = role === 'legal_guardian' ? 'legal_guardian' : 'family'
+    const orgId = target.organizationId
+    const assignedRole = resolveRelativeRole(role)
 
     // Create invitation record (bypassing RLS for simplicity, but we still inject orgId)
     const { data, error } = await adminClient
@@ -92,14 +98,12 @@ export async function POST(request: Request) {
 
       // Pobierz nazwę placówki
       let orgName: string | undefined
-      if (orgId) {
-        const { data: org } = await adminClient
-          .from('organizations')
-          .select('name')
-          .eq('id', orgId)
-          .maybeSingle()
-        if (org?.name) orgName = org.name
-      }
+      const { data: org } = await adminClient
+        .from('organizations')
+        .select('name')
+        .eq('id', orgId)
+        .maybeSingle()
+      if (org?.name) orgName = org.name
 
       const emailTemplate = renderFamilyInviteEmail({ inviteUrl: registerUrl, organizationName: orgName })
       
