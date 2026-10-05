@@ -15,6 +15,7 @@ import { FileSpreadsheet, Download, Upload, Check, AlertCircle, Loader2, AlertTr
 import { RawResidentRow, ValidatedResidentRow, DryRunResult } from '@/lib/bulk-import-helpers'
 import { analyzeBulkImportAction, commitBulkImportAction } from '@/actions/bulk-import'
 import * as XLSX from 'xlsx'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 export function BulkImportDialog() {
   const [open, setOpen] = useState(false)
@@ -223,26 +224,26 @@ export function BulkImportDialog() {
             </div>
 
             <div className="flex-1 overflow-y-auto border border-slate-200 rounded-lg max-h-64">
-              <table className="w-full text-xs text-left">
-                <thead className="bg-slate-50 text-slate-600 sticky top-0 border-b">
-                  <tr>
-                    <th className="p-2 w-10">#</th>
-                    <th className="p-2">Imię i nazwisko</th>
-                    <th className="p-2">PESEL</th>
-                    <th className="p-2">Profil</th>
-                    <th className="p-2">Status / Błędy</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
+              <Table>
+                <TableHeader className="bg-slate-50 text-slate-600 sticky top-0">
+                  <TableRow>
+                    <TableHead className="w-10">#</TableHead>
+                    <TableHead>Imię i nazwisko</TableHead>
+                    <TableHead>PESEL</TableHead>
+                    <TableHead>Profil</TableHead>
+                    <TableHead>Status / Błędy</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {dryRunResult.rows.map((r) => (
-                    <tr key={r.rowNumber} className={r.isValid ? 'bg-white' : 'bg-rose-50/40'}>
-                      <td className="p-2 font-mono text-slate-400">{r.rowNumber}</td>
-                      <td className="p-2 font-medium text-slate-800">
+                    <TableRow key={r.rowNumber} className={r.isValid ? 'bg-white' : 'bg-rose-50/40'}>
+                      <TableCell className="font-mono text-slate-400">{r.rowNumber}</TableCell>
+                      <TableCell className="font-medium text-slate-800">
                         {r.firstName} {r.lastName}
-                      </td>
-                      <td className="p-2 font-mono">{r.nationalId || '—'}</td>
-                      <td className="p-2">{r.careLevel} {r.isZsn ? '(ZSN)' : ''}</td>
-                      <td className="p-2">
+                      </TableCell>
+                      <TableCell className="font-mono">{r.nationalId || '—'}</TableCell>
+                      <TableCell>{r.careLevel} {r.isZsn ? '(ZSN)' : ''}</TableCell>
+                      <TableCell>
                         {r.isValid ? (
                           <span className="inline-flex items-center gap-1 text-emerald-700 font-medium">
                             <Check className="w-3.5 h-3.5" /> Poprawny
@@ -257,11 +258,11 @@ export function BulkImportDialog() {
                             ))}
                           </div>
                         )}
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
 
             <div className="flex items-center gap-2 pt-2">

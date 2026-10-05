@@ -101,7 +101,7 @@ export default async function ResidentProfilePage({
       </Link>
 
       {/* Header Card */}
-      <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5 overflow-hidden">
+      <Card className="rounded-xl border-none ring-1 ring-slate/5 overflow-hidden">
         <div className="relative">
           {/* Gradient banner */}
           <div className="h-32 bg-gradient-to-r from-sage/20 via-sage/10 to-transparent" />
@@ -187,7 +187,7 @@ export default async function ResidentProfilePage({
           />
 
           {/* Personal data */}
-          <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5">
+          <Card className="rounded-xl border-none ring-1 ring-slate/5">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg text-slate">
                 <UserCircle2 className="h-5 w-5 text-sage" /> Dane osobowe
@@ -233,7 +233,7 @@ export default async function ResidentProfilePage({
           </Card>
 
           {/* Contract */}
-          <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5">
+          <Card className="rounded-xl border-none ring-1 ring-slate/5">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg text-slate">
                 <FileText className="h-5 w-5 text-sage" /> Umowa
@@ -287,7 +287,7 @@ export default async function ResidentProfilePage({
           </Card>
 
           {/* Event timeline */}
-          <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5">
+          <Card className="rounded-xl border-none ring-1 ring-slate/5">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg text-slate">
                 <Clock className="h-5 w-5 text-sage" /> Oś czasu zdarzeń
@@ -330,7 +330,7 @@ export default async function ResidentProfilePage({
         {/* Right column: Room, Relatives, Packages */}
         <div className="space-y-6">
           {/* Current room */}
-          <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5">
+          <Card className="rounded-xl border-none ring-1 ring-slate/5">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg text-slate">
                 <BedDouble className="h-5 w-5 text-sage" /> Pokój i łóżko
@@ -394,7 +394,7 @@ export default async function ResidentProfilePage({
           />
 
           {/* Relatives */}
-          <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5">
+          <Card className="rounded-xl border-none ring-1 ring-slate/5">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg text-slate">
                 <Users className="h-5 w-5 text-sage" /> Bliscy
@@ -428,7 +428,7 @@ export default async function ResidentProfilePage({
           </Card>
 
           {/* Packages */}
-          <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5">
+          <Card className="rounded-xl border-none ring-1 ring-slate/5">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg text-slate">
                 <Heart className="h-5 w-5 text-sage" /> Pakiety

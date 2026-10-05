@@ -38,6 +38,7 @@ import {
   createRoomWithBedsAction,
 } from '@/actions/facility'
 import * as XLSX from 'xlsx'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 interface FacilityImportExportDialogProps {
   onStructureChanged?: () => void
@@ -603,29 +604,29 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
 
                   {/* Tabela podglądu dry-run */}
                   <div className="border border-slate-200 rounded-lg overflow-x-auto max-h-56">
-                    <table className="w-full text-left text-xs">
-                      <thead className="bg-slate-100 text-slate-700 sticky top-0">
-                        <tr>
-                          <th className="p-2">Wiersz</th>
-                          <th className="p-2">Piętro</th>
-                          <th className="p-2">Pokój</th>
-                          <th className="p-2">Sektor</th>
-                          <th className="p-2">Łóżka</th>
-                          <th className="p-2">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-200">
+                    <Table>
+                      <TableHeader className="bg-slate-100 text-slate-700 sticky top-0">
+                        <TableRow>
+                          <TableHead>Wiersz</TableHead>
+                          <TableHead>Piętro</TableHead>
+                          <TableHead>Pokój</TableHead>
+                          <TableHead>Sektor</TableHead>
+                          <TableHead>Łóżka</TableHead>
+                          <TableHead>Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
                         {dryRunResult.rows.map((row) => (
-                          <tr
+                          <TableRow
                             key={row.rowNumber}
                             className={row.isValid ? 'bg-white' : 'bg-rose-50/50'}
                           >
-                            <td className="p-2 font-mono text-slate-500">{row.rowNumber}</td>
-                            <td className="p-2 font-medium">{row.floor || '-'}</td>
-                            <td className="p-2 font-medium">{row.number || '-'}</td>
-                            <td className="p-2 text-slate-600">{row.sector || '-'}</td>
-                            <td className="p-2 font-mono">{row.bedLabels.join(', ') || '-'}</td>
-                            <td className="p-2">
+                            <TableCell className="font-mono text-slate-500">{row.rowNumber}</TableCell>
+                            <TableCell className="font-medium">{row.floor || '-'}</TableCell>
+                            <TableCell className="font-medium">{row.number || '-'}</TableCell>
+                            <TableCell className="text-slate-600">{row.sector || '-'}</TableCell>
+                            <TableCell className="font-mono">{row.bedLabels.join(', ') || '-'}</TableCell>
+                            <TableCell>
                               {row.isValid ? (
                                 <span className="inline-flex items-center gap-1 text-emerald-700 font-medium">
                                   <Check className="w-3.5 h-3.5" /> Gotowy
@@ -636,11 +637,11 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
                                   {row.errors[0]}
                                 </span>
                               )}
-                            </td>
-                          </tr>
+                            </TableCell>
+                          </TableRow>
                         ))}
-                      </tbody>
-                    </table>
+                      </TableBody>
+                    </Table>
                   </div>
 
                   <div className="flex items-center justify-between pt-2">

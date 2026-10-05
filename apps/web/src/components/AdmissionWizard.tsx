@@ -18,6 +18,8 @@ import { getBedSuggestionsAction, admitResidentAction } from '@/actions/admissio
 import { UserPlus, Sparkles, Bed, Check, AlertCircle, Loader2, FileText } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
+import { Textarea } from '@/components/ui/textarea'
 
 type CareLevelType = 'walking' | 'sitting' | 'bedridden' | 'hospice'
 type WizardStep = 1 | 2 | 3
@@ -268,17 +270,16 @@ export function AdmissionWizard() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="wiz-care-level">Poziom sprawności</Label>
-                    <select
-                      id="wiz-care-level"
-                      className="w-full px-3 py-2 border rounded-md text-sm bg-white border-slate-200"
+                    <NativeSelect
+                      id="wiz-care-level" className="w-full"
                       value={careLevel}
                       onChange={(e) => setCareLevel(e.target.value as CareLevelType)}
                     >
-                      <option value="walking">Chodzący (parter lub wyższe piętra)</option>
-                      <option value="sitting">Siedzący / wózek (rekomendowany parter)</option>
-                      <option value="bedridden">Leżący (rekomendowany parter)</option>
-                      <option value="hospice">Opieka paliatywna</option>
-                    </select>
+                      <NativeSelectOption value="walking">Chodzący (parter lub wyższe piętra)</NativeSelectOption>
+                      <NativeSelectOption value="sitting">Siedzący / wózek (rekomendowany parter)</NativeSelectOption>
+                      <NativeSelectOption value="bedridden">Leżący (rekomendowany parter)</NativeSelectOption>
+                      <NativeSelectOption value="hospice">Opieka paliatywna</NativeSelectOption>
+                    </NativeSelect>
                   </div>
 
                   <div className="flex items-center gap-2 pt-6">
@@ -297,10 +298,9 @@ export function AdmissionWizard() {
 
                 <div className="space-y-1.5">
                   <Label htmlFor="wiz-notes">Uwagi przyjęciowe</Label>
-                  <textarea
+                  <Textarea
                     id="wiz-notes"
-                    rows={2}
-                    className="w-full px-3 py-2 border rounded-md text-sm bg-white border-slate-200"
+                    rows={2} className="w-full"
                     placeholder="Dodatkowe informacje dla personelu..."
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}

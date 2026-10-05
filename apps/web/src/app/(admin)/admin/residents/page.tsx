@@ -17,6 +17,7 @@ import { type CareLevel } from '@/lib/reporting-constants'
 import { isImpersonationSessionActive, maskResidentListForImpersonation } from '@/lib/impersonation-guards'
 import { format } from 'date-fns'
 import { pl } from 'date-fns/locale'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 interface BedAssignmentItem {
   id: string
@@ -84,8 +85,8 @@ export default async function AdminResidentsPage() {
       </div>
 
       {masked ? (
-        <Card className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-8 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600 mb-3">
+        <Card className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-8 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 mb-3">
             <ShieldAlert className="h-6 w-6" />
           </div>
           <h3 className="text-lg font-semibold text-slate mb-1">
@@ -95,7 +96,7 @@ export default async function AdminResidentsPage() {
             Dostęp do danych osobowych (PII) podopiecznych jest wyłączony dla Super Administratora. 
             Wyświetlane jest wyłącznie podsumowanie statystyczne placówki.
           </p>
-          <div className="inline-flex items-center gap-3 bg-white px-5 py-3 rounded-xl border border-slate/10 shadow-xs">
+          <div className="inline-flex items-center gap-3 bg-white px-5 py-3 rounded-xl border border-slate/10">
             <span className="text-xs text-slate-soft">Liczba zarejestrowanych podopiecznych:</span>
             <span className="text-xl font-bold text-slate">{totalCount}</span>
           </div>
@@ -109,29 +110,29 @@ export default async function AdminResidentsPage() {
           <ResidentMobileCard key={resident.id} resident={resident} />
         ))}
         {(!residents || residents.length === 0) && (
-          <div className="rounded-2xl bg-white p-8 text-center text-slate-soft ring-1 ring-slate/5">
+          <div className="rounded-xl bg-white p-8 text-center text-slate-soft ring-1 ring-slate/5">
             Brak podopiecznych w bazie. Kliknij przycisk powyżej, aby dodać pierwszą osobę.
           </div>
         )}
       </div>
 
       {/* Widok desktopowy — pełna tabela (>= sm) */}
-      <Card className="hidden sm:block rounded-2xl border-none shadow-sm ring-1 ring-slate/5 overflow-hidden">
+      <Card className="hidden sm:block rounded-xl border-none ring-1 ring-slate/5 overflow-hidden">
         <CardContent className="p-0">
           <div className="relative w-full overflow-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="bg-slate/5 text-slate-soft">
-                <tr>
-                  <th className="px-6 py-4 font-medium">Imię i nazwisko</th>
-                  <th className="px-6 py-4 font-medium">Stan</th>
-                  <th className="px-6 py-4 font-medium">ZSN</th>
-                  <th className="px-6 py-4 font-medium">Status</th>
-                  <th className="px-6 py-4 font-medium">Pokój</th>
-                  <th className="px-6 py-4 font-medium">Data przyjęcia</th>
-                  <th className="px-6 py-4 font-medium w-24 text-right">Akcje</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate/5 bg-white">
+            <Table>
+              <TableHeader className="text-slate-soft">
+                <TableRow>
+                  <TableHead>Imię i nazwisko</TableHead>
+                  <TableHead>Stan</TableHead>
+                  <TableHead>ZSN</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Pokój</TableHead>
+                  <TableHead>Data przyjęcia</TableHead>
+                  <TableHead className="w-24 text-right">Akcje</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {residents?.map((resident) => {
                   const activeAssignments = Array.isArray(resident.bed_assignments)
                     ? resident.bed_assignments.filter((a) => a.unassigned_at === null)
@@ -139,8 +140,8 @@ export default async function AdminResidentsPage() {
                   const activeBed = activeAssignments.length > 0 ? activeAssignments[0].beds : null
 
                   return (
-                    <tr key={resident.id} className="transition-colors hover:bg-slate/5 group">
-                      <td className="px-6 py-4">
+                    <TableRow key={resident.id} className="group">
+                      <TableCell>
                         <Link href={`/admin/residents/${resident.id}`} className="flex items-center gap-3">
                           <Avatar className="h-10 w-10 border border-slate/10">
                             {resident.avatar_url && (
@@ -154,21 +155,21 @@ export default async function AdminResidentsPage() {
                             {resident.first_name} {resident.last_name}
                           </span>
                         </Link>
-                      </td>
-                      <td className="px-6 py-4">
+                      </TableCell>
+                      <TableCell>
                         <ResidentInlineCareLevel
                           residentId={resident.id}
                           initialCareLevel={resident.care_level ?? null}
                         />
-                      </td>
-                      <td className="px-6 py-4">
+                      </TableCell>
+                      <TableCell>
                         <ResidentZsnCheckbox
                           residentId={resident.id}
                           initialValue={Boolean(resident.is_zsn)}
                           variant="compact"
                         />
-                      </td>
-                      <td className="px-6 py-4">
+                      </TableCell>
+                      <TableCell>
                         {resident.archived_at ? (
                           <Badge className="bg-slate/10 text-slate-soft border-none text-xs">
                             Zarchiwizowany
@@ -182,8 +183,8 @@ export default async function AdminResidentsPage() {
                             Aktywny
                           </Badge>
                         )}
-                      </td>
-                      <td className="px-6 py-4 text-slate-soft">
+                      </TableCell>
+                      <TableCell className="text-slate-soft">
                         {activeBed ? (
                           <span>
                             Pok. {activeBed.rooms?.number}, ł. {activeBed.label}
@@ -191,15 +192,15 @@ export default async function AdminResidentsPage() {
                         ) : (
                           <span className="text-slate-soft/50">—</span>
                         )}
-                      </td>
-                      <td className="px-6 py-4 text-slate-soft">
+                      </TableCell>
+                      <TableCell className="text-slate-soft">
                         {resident.admission_date
                           ? format(new Date(resident.admission_date), 'd MMM yyyy', { locale: pl })
                           : resident.created_at
                             ? format(new Date(resident.created_at), 'd MMM yyyy', { locale: pl })
                             : '—'}
-                      </td>
-                      <td className="px-6 py-4 text-right">
+                      </TableCell>
+                      <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
                           <ResidentEditSheet resident={resident} />
                           <Link
@@ -210,19 +211,19 @@ export default async function AdminResidentsPage() {
                             <ChevronRight className="h-5 w-5" />
                           </Link>
                         </div>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   )
                 })}
                 {(!residents || residents.length === 0) && (
-                  <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center text-slate-soft">
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center text-slate-soft">
                       Brak podopiecznych w bazie. Kliknij przycisk powyżej, aby dodać pierwszą osobę.
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>

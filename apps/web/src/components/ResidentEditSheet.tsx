@@ -15,6 +15,8 @@ import { Label } from '@/components/ui/label'
 import { updateResidentInlineAction } from '@/actions/resident-inline'
 import { Pencil, Loader2, AlertCircle, Check } from 'lucide-react'
 import { CareLevel } from '@/lib/reporting-constants'
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
+import { Textarea } from '@/components/ui/textarea'
 
 interface ResidentData {
   id: string
@@ -208,30 +210,28 @@ export function ResidentEditSheet({ resident, onUpdated }: ResidentEditSheetProp
                 <Label htmlFor="care_level" className="text-xs font-medium text-slate">
                   Poziom opieki
                 </Label>
-                <select
+                <NativeSelect
                   id="care_level"
                   value={formData.care_level}
-                  onChange={(e) => setFormData({ ...formData, care_level: e.target.value })}
-                  className="w-full rounded-md border border-slate/20 bg-white px-3 py-2 text-sm text-slate focus:outline-none focus:ring-2 focus:ring-sage/50 min-h-[44px]"
+                  onChange={(e) => setFormData({ ...formData, care_level: e.target.value })} className="w-full"
                 >
-                  <option value="">Nieokreślony</option>
-                  <option value="walking">Chodzący</option>
-                  <option value="sitting">Siedzący</option>
-                  <option value="bedridden">Leżący</option>
-                  <option value="hospice">Opieka paliatywna</option>
-                </select>
+                  <NativeSelectOption value="">Nieokreślony</NativeSelectOption>
+                  <NativeSelectOption value="walking">Chodzący</NativeSelectOption>
+                  <NativeSelectOption value="sitting">Siedzący</NativeSelectOption>
+                  <NativeSelectOption value="bedridden">Leżący</NativeSelectOption>
+                  <NativeSelectOption value="hospice">Opieka paliatywna</NativeSelectOption>
+                </NativeSelect>
               </div>
 
               <div className="space-y-1.5">
                 <Label htmlFor="notes" className="text-xs font-medium text-slate">
                   Notatki / uwagi organizacyjne
                 </Label>
-                <textarea
+                <Textarea
                   id="notes"
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  rows={4}
-                  className="w-full rounded-md border border-slate/20 bg-white p-3 text-sm text-slate focus:outline-none focus:ring-2 focus:ring-sage/50"
+                  rows={4} className="w-full"
                   placeholder="Wpisz istotne informacje organizacyjne..."
                 />
               </div>

@@ -54,7 +54,7 @@ export default function FacilityManagementPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5">
+        <Card className="rounded-xl border-none ring-1 ring-slate/5">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-sage/10 text-sage">
@@ -67,7 +67,7 @@ export default function FacilityManagementPage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5">
+        <Card className="rounded-xl border-none ring-1 ring-slate/5">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate/10 text-slate">
@@ -80,7 +80,7 @@ export default function FacilityManagementPage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5">
+        <Card className="rounded-xl border-none ring-1 ring-slate/5">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
@@ -93,7 +93,7 @@ export default function FacilityManagementPage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5">
+        <Card className="rounded-xl border-none ring-1 ring-slate/5">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">

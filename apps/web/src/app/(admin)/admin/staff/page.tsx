@@ -10,6 +10,7 @@ import { Trash2, UserCog } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { StaffActionsMenu } from '@/components/StaffActionsMenu'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 export default async function AdminStaffPage() {
   const supabase = await createClient()
@@ -59,22 +60,22 @@ export default async function AdminStaffPage() {
         )}
       </div>
 
-      <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5 overflow-hidden">
+      <Card className="rounded-xl border-none ring-1 ring-slate/5 overflow-hidden">
         <CardContent className="p-0">
           <div className="relative w-full overflow-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="bg-slate/5 text-slate-soft">
-                <tr>
-                  <th className="px-6 py-4 font-medium">Pracownik</th>
-                  <th className="px-6 py-4 font-medium">Rola</th>
-                  <th className="px-6 py-4 font-medium">Ostatnie logowanie</th>
-                  <th className="px-6 py-4 font-medium text-right">Akcje</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate/5 bg-white">
+            <Table>
+              <TableHeader className="text-slate-soft">
+                <TableRow>
+                  <TableHead>Pracownik</TableHead>
+                  <TableHead>Rola</TableHead>
+                  <TableHead>Ostatnie logowanie</TableHead>
+                  <TableHead className="text-right">Akcje</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {staff.map((staffUser) => (
-                  <tr key={staffUser.id} className="transition-colors hover:bg-slate/5">
-                    <td className="px-6 py-4">
+                  <TableRow key={staffUser.id}>
+                    <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar className="h-10 w-10 border border-slate/10">
                           {staffUser.user_metadata?.avatar_url && (
@@ -93,17 +94,17 @@ export default async function AdminStaffPage() {
                           )}
                         </div>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 text-slate">
+                    </TableCell>
+                    <TableCell className="text-slate">
                       {staffUser.app_metadata?.role === 'nurse' ? 'Pielęgniarka / Pielęgniarz' : 'Sanitariusz / Sanitariuszka'}
-                    </td>
-                    <td className="px-6 py-4 text-slate-soft">
+                    </TableCell>
+                    <TableCell className="text-slate-soft">
                       {staffUser.last_sign_in_at 
                         ? new Date(staffUser.last_sign_in_at).toLocaleDateString('pl-PL') + ' ' + new Date(staffUser.last_sign_in_at).toLocaleTimeString('pl-PL')
                         : 'Nigdy'
                       }
-                    </td>
-                    <td className="px-6 py-4">
+                    </TableCell>
+                    <TableCell>
                       <div className="flex justify-end gap-2 items-center">
                         <StaffActionsMenu
                           staffId={staffUser.id}
@@ -111,18 +112,18 @@ export default async function AdminStaffPage() {
                           isActive={staffUser.app_metadata?.is_active !== false}
                         />
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
                 {staff.length === 0 && (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center text-slate-soft">
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center text-slate-soft">
                       Brak przypisanego personelu. Zaproś pracowników za pomocą przycisku powyżej.
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>

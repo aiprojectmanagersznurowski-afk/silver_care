@@ -17,7 +17,7 @@ export function ImpersonationBanner({ session }: { session: ImpersonationSession
   return (
     <div
       role="alert"
-      className="bg-amber-500 text-amber-950 px-4 py-2.5 text-sm font-medium shadow-md flex items-center justify-between gap-4 border-b border-amber-600/30 sticky top-0 z-50 animate-in fade-in slide-in-from-top duration-200"
+      className="bg-amber-500 text-amber-950 px-4 py-2.5 text-sm font-medium flex items-center justify-between gap-4 border-b border-amber-600/30 sticky top-0 z-50 animate-in fade-in slide-in-from-top duration-200"
     >
       <div className="flex items-center gap-2.5 truncate">
         <ShieldAlert className="h-5 w-5 shrink-0 text-amber-950" />

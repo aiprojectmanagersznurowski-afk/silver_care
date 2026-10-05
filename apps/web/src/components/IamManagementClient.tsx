@@ -235,8 +235,8 @@ export function IamManagementClient({
     return (
       <div className="space-y-8 animate-pulse" aria-busy="true" aria-label="Ładowanie panelu uprawnień">
         <div className="h-10 w-72 rounded-xl bg-slate/10" />
-        <div className="h-64 rounded-2xl bg-slate/10" />
-        <div className="h-64 rounded-2xl bg-slate/10" />
+        <div className="h-64 rounded-xl bg-slate/10" />
+        <div className="h-64 rounded-xl bg-slate/10" />
       </div>
     )
   }
@@ -244,8 +244,8 @@ export function IamManagementClient({
   // 2. Stan ERROR (Błąd z opcją ponowienia)
   if (currentState === 'error') {
     return (
-      <Card className="rounded-2xl border-destructive/20 bg-destructive/5 p-8 text-center" role="alert">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/10 text-destructive mb-4">
+      <Card className="rounded-xl border-destructive/20 bg-destructive/5 p-8 text-center" role="alert">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-destructive/10 text-destructive mb-4">
           <AlertCircle className="h-8 w-8" />
         </div>
         <h3 className="text-xl font-semibold text-slate mb-2">Błąd wczytywania danych IAM</h3>
@@ -266,8 +266,8 @@ export function IamManagementClient({
   // 3. Stan EMPTY (Stan pusty z czytelnym wyjaśnieniem)
   if (currentState === 'empty') {
     return (
-      <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5 p-12 text-center">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-sage/10 text-sage mb-4">
+      <Card className="rounded-xl border-none ring-1 ring-slate/5 p-12 text-center">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-sage/10 text-sage mb-4">
           <UserCog className="h-8 w-8" />
         </div>
         <h3 className="text-xl font-semibold text-slate mb-2">Brak zarejestrowanych kont</h3>
@@ -284,7 +284,7 @@ export function IamManagementClient({
       {statusMessage && (
         <div
           role="status"
-          className={`flex items-center gap-3 rounded-2xl p-4 text-sm font-medium ${
+          className={`flex items-center gap-3 rounded-xl p-4 text-sm font-medium ${
             statusMessage.type === 'success'
               ? 'bg-sage/10 text-sage border border-sage/20'
               : 'bg-destructive/10 text-destructive border border-destructive/20'
@@ -300,7 +300,7 @@ export function IamManagementClient({
       )}
 
       {createdCredentials && (
-        <div className="rounded-2xl border border-sage/30 bg-sage/5 p-6 space-y-3">
+        <div className="rounded-xl border border-sage/30 bg-sage/5 p-6 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-sage font-semibold">
               <Key className="h-5 w-5" />

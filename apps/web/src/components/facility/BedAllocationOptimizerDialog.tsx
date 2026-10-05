@@ -265,7 +265,7 @@ export function BedAllocationOptimizerDialog({
                       onClick={() => toggleSelect(s.id)}
                       className={`p-3 rounded-xl border cursor-pointer transition-all ${
                         selectedIds.has(s.id)
-                          ? 'bg-amber-50/40 border-amber-300 shadow-xs'
+                          ? 'bg-amber-50/40 border-amber-300'
                           : 'bg-white border-slate-200 opacity-70 hover:opacity-100'
                       }`}
                     >

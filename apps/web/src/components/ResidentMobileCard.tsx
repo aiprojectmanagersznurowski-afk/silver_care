@@ -56,7 +56,7 @@ export function ResidentMobileCard({ resident }: ResidentMobileCardProps) {
   return (
     <div
       data-testid="resident-mobile-card"
-      className="flex flex-col gap-3 bg-white rounded-2xl p-4 ring-1 ring-slate/5 shadow-xs"
+      className="flex flex-col gap-3 bg-white rounded-xl p-4 ring-1 ring-slate/5"
     >
       <div className="flex items-center gap-3">
         {/* Avatar z linkiem do profilu */}

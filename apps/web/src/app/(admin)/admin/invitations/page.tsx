@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { InviteFamilyDialog } from '@/components/InviteFamilyDialog'
 import { redirect } from 'next/navigation'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 export default async function AdminInvitationsPage() {
   const supabase = await createClient()
@@ -63,24 +64,24 @@ export default async function AdminInvitationsPage() {
         </CardHeader>
         <CardContent>
           <div className="relative w-full overflow-auto">
-            <table className="w-full caption-bottom text-sm">
-              <thead className="[&_tr]:border-b">
-                <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                  <th className="h-12 px-4 text-left align-middle font-medium text-text-secondary">Email zapraszanego</th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-text-secondary">Pensjonariusz</th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-text-secondary">Status</th>
-                </tr>
-              </thead>
-              <tbody className="[&_tr:last-child]:border-0">
+            <Table>
+              <TableHeader className="[&_tr]:border-b">
+                <TableRow className="hover:bg-muted/50 data-[state=selected]:bg-muted">
+                  <TableHead className="h-12 text-text-secondary">Email zapraszanego</TableHead>
+                  <TableHead className="h-12 text-text-secondary">Pensjonariusz</TableHead>
+                  <TableHead className="h-12 text-text-secondary">Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody className="[&_tr:last-child]:border-0">
                 {invitations?.map((inv) => (
-                  <tr key={inv.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                    <td className="p-4 align-middle font-medium">
+                  <TableRow key={inv.id} className="hover:bg-muted/50 data-[state=selected]:bg-muted">
+                    <TableCell className="font-medium">
                       {inv.email}
-                    </td>
-                    <td className="p-4 align-middle">
+                    </TableCell>
+                    <TableCell>
                       {inv.residents?.first_name} {inv.residents?.last_name}
-                    </td>
-                    <td className="p-4 align-middle">
+                    </TableCell>
+                    <TableCell>
                       {inv.claimed_at ? (
                         <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-primary text-primary-foreground">
                           Zrealizowane
@@ -98,18 +99,18 @@ export default async function AdminInvitationsPage() {
                           Oczekujące
                         </span>
                       )}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
                 {(!invitations || invitations.length === 0) && (
-                  <tr>
-                    <td colSpan={3} className="p-4 text-center text-text-secondary">
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center text-text-secondary">
                       Brak zaproszeń w bazie.
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>

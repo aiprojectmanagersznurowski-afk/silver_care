@@ -13,6 +13,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 
 interface ManageResidentBedDialogProps {
   residentId: string
@@ -142,20 +143,19 @@ export function ManageResidentBedDialog({ residentId, currentBedLabel, currentRo
                 {isFetching ? (
                   <div className="text-sm text-muted-foreground">Ładowanie wolnych łóżek...</div>
                 ) : (
-                  <select
-                    id="bed"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  <NativeSelect
+                    id="bed" className="flex w-full placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
                     value={bedId}
                     onChange={(e) => setBedId(e.target.value)}
                     required
                   >
-                    <option value="" disabled>Wybierz wolne łóżko</option>
+                    <NativeSelectOption value="" disabled>Wybierz wolne łóżko</NativeSelectOption>
                     {availableBeds.map(b => (
-                      <option key={b.id} value={b.id}>
+                      <NativeSelectOption key={b.id} value={b.id}>
                         Sala {b.roomNumber} - Łóżko {b.label}
-                      </option>
+                      </NativeSelectOption>
                     ))}
-                  </select>
+                  </NativeSelect>
                 )}
               </div>
             </div>

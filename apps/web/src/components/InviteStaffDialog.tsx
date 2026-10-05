@@ -15,6 +15,7 @@ import {
   DialogFooter,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 
 export function InviteStaffDialog() {
   const [open, setOpen] = useState(false)
@@ -118,16 +119,15 @@ export function InviteStaffDialog() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="role">Rola</Label>
-            <select
+            <NativeSelect
               id="role"
               value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              onChange={(e) => setRole(e.target.value)} className="flex w-full items-center justify-between disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <option value="nurse">Pielęgniarka / Pielęgniarz</option>
-              <option value="paramedic">Sanitariusz / Sanitariuszka</option>
-              <option value="org_admin">Administrator Placówki (org_admin)</option>
-            </select>
+              <NativeSelectOption value="nurse">Pielęgniarka / Pielęgniarz</NativeSelectOption>
+              <NativeSelectOption value="paramedic">Sanitariusz / Sanitariuszka</NativeSelectOption>
+              <NativeSelectOption value="org_admin">Administrator Placówki (org_admin)</NativeSelectOption>
+            </NativeSelect>
           </div>
           <div className="space-y-2">
             <Label htmlFor="avatar">Zdjęcie profilowe (opcjonalnie)</Label>

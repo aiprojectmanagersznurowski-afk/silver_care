@@ -69,7 +69,7 @@ export function ResidentZsnCheckbox({
         <div
           className={`flex h-5 w-5 items-center justify-center rounded border transition-colors ${
             checked
-              ? 'bg-amber-600 border-amber-600 text-white shadow-xs'
+              ? 'bg-amber-600 border-amber-600 text-white'
               : 'border-slate/30 bg-white hover:border-slate/50'
           }`}
         >
@@ -106,7 +106,7 @@ export function ResidentZsnCheckbox({
         <div
           className={`flex h-5 w-5 items-center justify-center rounded border transition-colors ${
             checked
-              ? 'bg-amber-600 border-amber-600 text-white shadow-xs'
+              ? 'bg-amber-600 border-amber-600 text-white'
               : 'border-slate/30 bg-white group-hover:border-slate/50'
           }`}
         >

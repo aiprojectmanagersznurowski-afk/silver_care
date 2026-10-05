@@ -12,11 +12,6 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
-    "@nivo/bar": "^0.99.0",
-    "@nivo/core": "^0.99.0",
-    "@nivo/line": "^0.99.0",
-    "@nivo/pie": "^0.99.0",
-    "@nivo/tooltip": "^0.99.0",
     "@silvercare/contracts": "workspace:*",
     "@supabase/ssr": "^0.12.5",
     "@supabase/supabase-js": "^2.112.4",

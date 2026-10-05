@@ -15,6 +15,7 @@ import {
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { isGroundFloor } from '@/lib/bed-allocation-optimizer'
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 
 interface AvailableBedOption {
   bedId: string
@@ -214,20 +215,19 @@ export default function ReassignBedDialog({
                   Brak wolnych łóżek w innych pokojach placówki.
                 </div>
               ) : (
-                <select
+                <NativeSelect
                   id="target-bed"
                   value={selectedBedId}
-                  onChange={(e) => setSelectedBedId(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  onChange={(e) => setSelectedBedId(e.target.value)} className="flex w-full"
                   required
                 >
-                  <option value="" disabled>Wybierz wolne łóżko</option>
+                  <NativeSelectOption value="" disabled>Wybierz wolne łóżko</NativeSelectOption>
                   {availableBeds.map((bed) => (
-                    <option key={bed.bedId} value={bed.bedId}>
+                    <NativeSelectOption key={bed.bedId} value={bed.bedId}>
                       Pokój {bed.roomNumber} ({bed.floor}{bed.sector ? `, Sektor ${bed.sector}` : ''}) — Łóżko {bed.bedLabel}
-                    </option>
+                    </NativeSelectOption>
                   ))}
-                </select>
+                </NativeSelect>
               )}
             </div>
 
@@ -256,18 +256,17 @@ export default function ReassignBedDialog({
             {/* Powód przeniesienia */}
             <div className="space-y-2">
               <Label htmlFor="reassign-reason">Powód zmiany łóżka</Label>
-              <select
+              <NativeSelect
                 id="reassign-reason"
                 value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                onChange={(e) => setReason(e.target.value)} className="flex w-full"
               >
-                <option value="Dostosowanie do stanu zdrowia">Dostosowanie do stanu zdrowia / mobilności</option>
-                <option value="Prośba pensjonariusza lub rodziny">Prośba pensjonariusza lub rodziny</option>
-                <option value="Optymalizacja struktury pokoi">Optymalizacja struktury placówki / zgodność płci</option>
-                <option value="Remont lub reorganizacja pokoju">Remont lub reorganizacja pokoju</option>
-                <option value="Inny powód">Inny powód...</option>
-              </select>
+                <NativeSelectOption value="Dostosowanie do stanu zdrowia">Dostosowanie do stanu zdrowia / mobilności</NativeSelectOption>
+                <NativeSelectOption value="Prośba pensjonariusza lub rodziny">Prośba pensjonariusza lub rodziny</NativeSelectOption>
+                <NativeSelectOption value="Optymalizacja struktury pokoi">Optymalizacja struktury placówki / zgodność płci</NativeSelectOption>
+                <NativeSelectOption value="Remont lub reorganizacja pokoju">Remont lub reorganizacja pokoju</NativeSelectOption>
+                <NativeSelectOption value="Inny powód">Inny powód...</NativeSelectOption>
+              </NativeSelect>
               {reason === 'Inny powód' && (
                 <input
                   type="text"

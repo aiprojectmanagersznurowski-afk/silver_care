@@ -12,6 +12,7 @@ import {
   formatAuditToJson,
   filterAuditLogsByDate
 } from '@/lib/audit-helpers'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 interface AuditManagementClientProps {
   initialLogs: AuditLogEntry[]
@@ -91,7 +92,7 @@ export function AuditManagementClient({
   return (
     <div className="space-y-6">
       {/* Pasek filtrów daty oraz akcji eksportu RODO */}
-      <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5 bg-white p-5">
+      <Card className="rounded-xl border-none ring-1 ring-slate/5 bg-white p-5">
         <form onSubmit={handleApplyFilter} className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2">
@@ -174,7 +175,7 @@ export function AuditManagementClient({
       </Card>
 
       {/* Tabela zdarzeń audytowych */}
-      <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5 overflow-hidden">
+      <Card className="rounded-xl border-none ring-1 ring-slate/5 overflow-hidden">
         <CardHeader className="border-b border-slate/5 bg-white px-6 py-5">
           <CardTitle className="text-lg font-semibold text-slate">Zdarzenia Audytowe</CardTitle>
           <CardDescription className="text-slate-soft">
@@ -183,47 +184,47 @@ export function AuditManagementClient({
         </CardHeader>
         <CardContent className="p-0">
           <div className="relative w-full overflow-auto">
-            <table className="w-full text-left text-sm" aria-label="Tabela rejestru audytowego">
-              <thead className="bg-slate/5 text-slate-soft">
-                <tr>
-                  <th scope="col" className="px-6 py-4 font-medium">Czas</th>
-                  <th scope="col" className="px-6 py-4 font-medium">Akcja</th>
-                  <th scope="col" className="px-6 py-4 font-medium">User ID (Aktor)</th>
-                  <th scope="col" className="px-6 py-4 font-medium">Szczegóły techniczne</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate/5 bg-white">
+            <Table aria-label="Tabela rejestru audytowego">
+              <TableHeader className="text-slate-soft">
+                <TableRow>
+                  <TableHead scope="col">Czas</TableHead>
+                  <TableHead scope="col">Akcja</TableHead>
+                  <TableHead scope="col">User ID (Aktor)</TableHead>
+                  <TableHead scope="col">Szczegóły techniczne</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {filteredLogs.map(log => (
-                  <tr key={log.id} className="transition-colors hover:bg-slate/5">
-                    <td className="px-6 py-4 text-xs font-mono text-slate-soft whitespace-nowrap">
+                  <TableRow key={log.id}>
+                    <TableCell className="font-mono text-slate-soft whitespace-nowrap">
                       {formatAuditTimestamp(log.created_at, browserTimeZone)}
-                    </td>
-                    <td className="px-6 py-4">
+                    </TableCell>
+                    <TableCell>
                       <span className="inline-flex items-center rounded-lg bg-slate/10 px-2.5 py-1 text-xs font-medium text-slate">
                         {log.action}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 font-mono text-xs text-slate">
+                    </TableCell>
+                    <TableCell className="font-mono text-slate">
                       {log.performed_by ? (
                         <span className="bg-slate/5 px-2 py-1 rounded font-semibold text-slate">{log.performed_by}</span>
                       ) : (
                         <span className="text-slate-soft italic">System / Automat</span>
                       )}
-                    </td>
-                    <td className="px-6 py-4 font-mono text-xs text-slate-soft max-w-md truncate">
+                    </TableCell>
+                    <TableCell className="font-mono text-slate-soft max-w-md truncate">
                       {log.payload ? JSON.stringify(log.payload) : '—'}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
                 {filteredLogs.length === 0 && (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-8 text-center text-slate-soft">
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center text-slate-soft">
                       Brak wpisów w rejestrze audytowym dla wybranych kryteriów.
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>

@@ -137,7 +137,7 @@ export function ResidentInlineCareLevel({
       {errorMessage && (
         <div
           role="alert"
-          className="absolute z-30 top-full left-0 mt-1 flex items-center gap-1.5 text-xs text-rose-600 bg-rose-50 border border-rose-200 px-2.5 py-1.5 rounded-lg shadow-md whitespace-nowrap"
+          className="absolute z-30 top-full left-0 mt-1 flex items-center gap-1.5 text-xs text-rose-600 bg-rose-50 border border-rose-200 px-2.5 py-1.5 rounded-lg whitespace-nowrap"
         >
           <AlertCircle className="h-3.5 w-3.5 shrink-0" />
           <span>{errorMessage}</span>

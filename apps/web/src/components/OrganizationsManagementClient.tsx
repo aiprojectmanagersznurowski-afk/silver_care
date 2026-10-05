@@ -20,6 +20,7 @@ import {
 import { isValidViewMode, OrgViewMode } from '@/lib/org-helpers'
 import { EditOrganizationDialog } from '@/components/EditOrganizationDialog'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 export interface OrganizationSummaryItem {
   organization_id: string
@@ -70,8 +71,8 @@ export function OrganizationsManagementClient({
       <div className="space-y-6 animate-pulse" aria-busy="true" aria-label="Ładowanie listy placówek">
         <div className="h-10 w-72 rounded-xl bg-slate/10" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="h-56 rounded-2xl bg-slate/10" />
-          <div className="h-56 rounded-2xl bg-slate/10" />
+          <div className="h-56 rounded-xl bg-slate/10" />
+          <div className="h-56 rounded-xl bg-slate/10" />
         </div>
       </div>
     )
@@ -80,8 +81,8 @@ export function OrganizationsManagementClient({
   // 2. Stan ERROR
   if (currentState === 'error') {
     return (
-      <Card className="rounded-2xl border-destructive/20 bg-destructive/5 p-8 text-center" role="alert">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/10 text-destructive mb-4">
+      <Card className="rounded-xl border-destructive/20 bg-destructive/5 p-8 text-center" role="alert">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-destructive/10 text-destructive mb-4">
           <AlertCircle className="h-8 w-8" />
         </div>
         <h3 className="text-xl font-semibold text-slate mb-2">Błąd wczytywania placówek</h3>
@@ -102,8 +103,8 @@ export function OrganizationsManagementClient({
   // 3. Stan EMPTY
   if (currentState === 'empty') {
     return (
-      <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5 p-12 text-center">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-sage/10 text-sage mb-4">
+      <Card className="rounded-xl border-none ring-1 ring-slate/5 p-12 text-center">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-sage/10 text-sage mb-4">
           <Building2 className="h-8 w-8" />
         </div>
         <h3 className="text-xl font-semibold text-slate mb-2">Brak zarejestrowanych placówek</h3>
@@ -131,7 +132,7 @@ export function OrganizationsManagementClient({
             onClick={() => handleModeChange('cards')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
               viewMode === 'cards'
-                ? 'bg-white text-sage shadow-sm font-semibold'
+                ? 'bg-white text-sage font-semibold'
                 : 'text-slate-soft hover:text-slate'
             }`}
           >
@@ -144,7 +145,7 @@ export function OrganizationsManagementClient({
             onClick={() => handleModeChange('table')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
               viewMode === 'table'
-                ? 'bg-white text-sage shadow-sm font-semibold'
+                ? 'bg-white text-sage font-semibold'
                 : 'text-slate-soft hover:text-slate'
             }`}
           >
@@ -157,28 +158,28 @@ export function OrganizationsManagementClient({
       </div>
 
       {viewMode === 'table' ? (
-        <div className="overflow-x-auto rounded-2xl bg-white shadow-sm ring-1 ring-slate/10">
-          <table className="w-full text-left text-sm text-slate border-collapse">
-            <thead className="bg-slate/5 text-xs text-slate-soft uppercase tracking-wider border-b border-slate/10">
-              <tr>
-                <th className="px-5 py-3.5 font-semibold">Nazwa</th>
-                <th className="px-5 py-3.5 font-semibold">Adres</th>
-                <th className="px-4 py-3.5 font-semibold text-center">Limit</th>
-                <th className="px-4 py-3.5 font-semibold text-center">Obłożenie</th>
-                <th className="px-4 py-3.5 font-semibold text-center">Personel</th>
-                <th className="px-4 py-3.5 font-semibold">Utworzono</th>
-                <th className="px-5 py-3.5 font-semibold text-right">Akcje</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate/10">
+        <div className="overflow-x-auto rounded-xl bg-white ring-1 ring-slate/10">
+          <Table>
+            <TableHeader className="text-slate-soft">
+              <TableRow>
+                <TableHead>Nazwa</TableHead>
+                <TableHead>Adres</TableHead>
+                <TableHead className="text-center">Limit</TableHead>
+                <TableHead className="text-center">Obłożenie</TableHead>
+                <TableHead className="text-center">Personel</TableHead>
+                <TableHead>Utworzono</TableHead>
+                <TableHead className="text-right">Akcje</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {organizations.map((org) => {
                 const occupancyPercent = org.resident_limit > 0
                   ? Math.round((org.active_resident_count / org.resident_limit) * 100)
                   : 0
 
                 return (
-                  <tr key={org.organization_id} className="hover:bg-slate/[0.02] transition-colors">
-                    <td className="px-5 py-4">
+                  <TableRow key={org.organization_id} className="hover:bg-slate/[0.02]">
+                    <TableCell>
                       <Link
                         href={`/admin/organizations/${org.organization_id}`}
                         className="font-semibold text-slate hover:text-sage transition-colors block"
@@ -186,27 +187,27 @@ export function OrganizationsManagementClient({
                         {org.organization_name}
                       </Link>
                       <BusinessIdBadge type="organization" id={org.organization_id} />
-                    </td>
-                    <td className="px-5 py-4 text-xs text-slate-soft max-w-[220px] truncate">
+                    </TableCell>
+                    <TableCell className="text-slate-soft max-w-[220px] truncate">
                       {org.address || '—'}
-                    </td>
-                    <td className="px-4 py-4 text-center font-medium">
+                    </TableCell>
+                    <TableCell className="text-center font-medium">
                       {org.resident_limit}
-                    </td>
-                    <td className="px-4 py-4 text-center">
+                    </TableCell>
+                    <TableCell className="text-center">
                       <div className="font-semibold text-xs text-slate">
                         {org.active_resident_count} / {org.resident_limit}
                       </div>
                       <div className="text-[10px] text-slate-soft">{occupancyPercent}%</div>
-                    </td>
-                    <td className="px-4 py-4 text-center text-xs">
+                    </TableCell>
+                    <TableCell className="text-center">
                       <span className="font-medium text-slate">{org.staff_count}</span>
                       <span className="text-[10px] text-slate-soft block">({org.administrator_count} adm.)</span>
-                    </td>
-                    <td className="px-4 py-4 text-xs text-slate-soft">
+                    </TableCell>
+                    <TableCell className="text-slate-soft">
                       {new Date(org.created_at).toLocaleDateString('pl-PL')}
-                    </td>
-                    <td className="px-5 py-4 text-right">
+                    </TableCell>
+                    <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
                         <EditOrganizationDialog organization={org} />
                         <Link
@@ -217,12 +218,12 @@ export function OrganizationsManagementClient({
                           <ChevronRight className="h-3.5 w-3.5" />
                         </Link>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 )
               })}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -234,7 +235,7 @@ export function OrganizationsManagementClient({
             return (
               <div
                 key={org.organization_id}
-                className="group block rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate/10 hover:ring-sage transition-all"
+                className="group block rounded-xl bg-white p-6 ring-1 ring-slate/10 hover:ring-sage transition-all"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="space-y-1">
