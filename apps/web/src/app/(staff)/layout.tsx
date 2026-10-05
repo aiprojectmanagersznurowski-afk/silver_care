@@ -3,7 +3,10 @@ import { ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { StaffSidebar } from '@/components/StaffSidebar'
-import { StaffMobileHeader } from '@/components/StaffMobileHeader'
+import { cookies } from 'next/headers'
+import { Separator } from '@/components/ui/separator'
+import { StaffCommandPalette } from '@/components/StaffCommandPalette'
+import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 
 export default async function StaffLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient()
@@ -14,16 +17,27 @@ export default async function StaffLayout({ children }: { children: ReactNode })
     redirect('/')
   }
 
-  return (
-    <div className="min-h-screen bg-cream selection:bg-sage/30">
-      <StaffSidebar userEmail={user?.email} />
-      <StaffMobileHeader userEmail={user?.email} />
+  const cookieStore = await cookies()
+  const sidebarOpen = cookieStore.get('sidebar_state')?.value !== 'false'
 
-      <main className="lg:pl-72 flex flex-col min-h-screen">
-        <div className="flex-1 max-w-[1600px] w-full mx-auto px-4 py-8 sm:px-6 lg:px-8">
-          {children}
+  return (
+    <SidebarProvider defaultOpen={sidebarOpen}>
+      <StaffSidebar userEmail={user?.email} />
+      <SidebarInset className="min-w-0 overflow-x-clip">
+        <header className="flex h-12 shrink-0 items-center gap-2 border-b">
+          <div className="flex w-full items-center justify-between px-4 lg:px-6">
+            <div className="flex items-center gap-1 lg:gap-2">
+              <SidebarTrigger className="-ml-1" aria-label="Zwiń lub rozwiń menu" />
+              <Separator orientation="vertical" className="mx-2 data-[orientation=vertical]:h-4 data-[orientation=vertical]:self-center" />
+              <span className="text-sm font-medium">Panel personelu</span>
+            </div>
+            <div className="flex items-center gap-2"><StaffCommandPalette /></div>
+          </div>
+        </header>
+        <div className="flex-1 p-4 md:p-6">
+          <div className="mx-auto w-full max-w-screen-2xl">{children}</div>
         </div>
-      </main>
-    </div>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }
