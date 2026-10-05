@@ -26,15 +26,15 @@ export function ActivityRings({ stepsProgress, activityProgress, sleepProgress }
   return (
     <svg viewBox="0 0 200 200" className="w-48 h-48 sm:w-56 sm:h-56">
       {/* Tracks */}
-      <circle cx="100" cy="100" r={r1} fill="none" stroke="#FF6B47" strokeWidth={sw} strokeOpacity="0.12" />
-      <circle cx="100" cy="100" r={r2} fill="none" stroke="#30D158" strokeWidth={sw} strokeOpacity="0.12" />
-      <circle cx="100" cy="100" r={r3} fill="none" stroke="#AF52DE" strokeWidth={sw} strokeOpacity="0.12" />
+      <circle cx="100" cy="100" r={r1} fill="none" stroke="var(--chart-1)" strokeWidth={sw} strokeOpacity="0.12" />
+      <circle cx="100" cy="100" r={r2} fill="none" stroke="var(--chart-2)" strokeWidth={sw} strokeOpacity="0.12" />
+      <circle cx="100" cy="100" r={r3} fill="none" stroke="var(--chart-3)" strokeWidth={sw} strokeOpacity="0.12" />
 
       {/* Progress arcs */}
       <circle
         cx="100" cy="100" r={r1}
         fill="none"
-        stroke="#FF6B47"
+        stroke="var(--chart-1)"
         strokeWidth={sw}
         strokeLinecap="round"
         strokeDasharray={c1}
@@ -45,7 +45,7 @@ export function ActivityRings({ stepsProgress, activityProgress, sleepProgress }
       <circle
         cx="100" cy="100" r={r2}
         fill="none"
-        stroke="#30D158"
+        stroke="var(--chart-2)"
         strokeWidth={sw}
         strokeLinecap="round"
         strokeDasharray={c2}
@@ -56,7 +56,7 @@ export function ActivityRings({ stepsProgress, activityProgress, sleepProgress }
       <circle
         cx="100" cy="100" r={r3}
         fill="none"
-        stroke="#AF52DE"
+        stroke="var(--chart-3)"
         strokeWidth={sw}
         strokeLinecap="round"
         strokeDasharray={c3}

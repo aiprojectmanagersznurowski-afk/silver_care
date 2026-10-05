@@ -200,15 +200,15 @@ export function StatisticsDashboardClient({
       {/* Charts Row 1: Care Level + Contract End Reasons */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Care Level Breakdown */}
-        <Card className="rounded-xl border-none ring-1 ring-slate/5">
+        <Card className="rounded-xl border-none ring-1 ring-border">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg text-slate">
-              <PieChartIcon className="h-5 w-5 text-sage" /> Stan podopiecznych
+            <CardTitle className="flex items-center gap-2 text-lg text-foreground">
+              <PieChartIcon className="h-5 w-5 text-primary" /> Stan podopiecznych
             </CardTitle>
           </CardHeader>
           <CardContent>
             {pieData.length === 0 ? (
-              <p className="text-sm text-slate-soft text-center py-12">Brak danych</p>
+              <p className="text-sm text-muted-foreground text-center py-12">Brak danych</p>
             ) : (
               <>
                 <ChartContainer config={careLevelConfig} className="mx-auto h-64 w-full">
@@ -225,13 +225,13 @@ export function StatisticsDashboardClient({
                         className="h-3 w-3 rounded-full flex-shrink-0"
                         style={{ backgroundColor: d.fill }}
                       />
-                      <span className="text-slate-soft">{d.label}</span>
-                      <span className="ml-auto font-semibold text-slate tabular-nums">{d.value}</span>
+                      <span className="text-muted-foreground">{d.label}</span>
+                      <span className="ml-auto font-semibold text-foreground tabular-nums">{d.value}</span>
                     </div>
                   ))}
-                  <div className="col-span-2 border-t border-slate/10 pt-2 mt-1 flex items-center justify-between text-sm font-semibold">
-                    <span className="text-slate">Razem</span>
-                    <span className="text-slate tabular-nums">{totalResidents}</span>
+                  <div className="col-span-2 border-t border-border pt-2 mt-1 flex items-center justify-between text-sm font-semibold">
+                    <span className="text-foreground">Razem</span>
+                    <span className="text-foreground tabular-nums">{totalResidents}</span>
                   </div>
                 </div>
               </>
@@ -240,15 +240,15 @@ export function StatisticsDashboardClient({
         </Card>
 
         {/* Contract End Reasons */}
-        <Card className="rounded-xl border-none ring-1 ring-slate/5">
+        <Card className="rounded-xl border-none ring-1 ring-border">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg text-slate">
-              <PieChartIcon className="h-5 w-5 text-sage" /> Powody zakończenia umowy
+            <CardTitle className="flex items-center gap-2 text-lg text-foreground">
+              <PieChartIcon className="h-5 w-5 text-primary" /> Powody zakończenia umowy
             </CardTitle>
           </CardHeader>
           <CardContent>
             {endReasonsPie.length === 0 ? (
-              <p className="text-sm text-slate-soft text-center py-12">Brak danych</p>
+              <p className="text-sm text-muted-foreground text-center py-12">Brak danych</p>
             ) : (
               <ChartContainer config={endReasonsConfig} className="mx-auto h-72 w-full">
                 <RechartsPieChart>
@@ -265,15 +265,15 @@ export function StatisticsDashboardClient({
       {/* Charts Row 2: Deaths by Stay + Contract Sources */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Deaths by stay length */}
-        <Card className="rounded-xl border-none ring-1 ring-slate/5">
+        <Card className="rounded-xl border-none ring-1 ring-border">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg text-slate">
-              <BarChart3 className="h-5 w-5 text-sage" /> Zgony a długość pobytu
+            <CardTitle className="flex items-center gap-2 text-lg text-foreground">
+              <BarChart3 className="h-5 w-5 text-primary" /> Zgony a długość pobytu
             </CardTitle>
           </CardHeader>
           <CardContent>
             {deathsBarData.every(d => d.count === 0) ? (
-              <p className="text-sm text-slate-soft text-center py-12">Brak danych</p>
+              <p className="text-sm text-muted-foreground text-center py-12">Brak danych</p>
             ) : (
               <ChartContainer config={countConfig} className="h-72 w-full">
                 <BarChart data={deathsBarData} margin={{ left: 0, right: 8 }}>
@@ -289,15 +289,15 @@ export function StatisticsDashboardClient({
         </Card>
 
         {/* Contract Sources */}
-        <Card className="rounded-xl border-none ring-1 ring-slate/5">
+        <Card className="rounded-xl border-none ring-1 ring-border">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg text-slate">
-              <BarChart3 className="h-5 w-5 text-sage" /> Źródło umowy
+            <CardTitle className="flex items-center gap-2 text-lg text-foreground">
+              <BarChart3 className="h-5 w-5 text-primary" /> Źródło umowy
             </CardTitle>
           </CardHeader>
           <CardContent>
             {sourcesBarData.length === 0 ? (
-              <p className="text-sm text-slate-soft text-center py-12">Brak danych</p>
+              <p className="text-sm text-muted-foreground text-center py-12">Brak danych</p>
             ) : (
               <ChartContainer config={countConfig} className="h-72 w-full">
                 <BarChart data={sourcesBarData} layout="vertical" margin={{ left: 0, right: 16 }}>
@@ -314,15 +314,15 @@ export function StatisticsDashboardClient({
       </div>
 
       {/* Charts Row 3: Admissions by Month */}
-      <Card className="rounded-xl border-none ring-1 ring-slate/5">
+      <Card className="rounded-xl border-none ring-1 ring-border">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg text-slate">
-            <BarChart3 className="h-5 w-5 text-sage" /> Przyjęcia wg miesiąca i stanu
+          <CardTitle className="flex items-center gap-2 text-lg text-foreground">
+            <BarChart3 className="h-5 w-5 text-primary" /> Przyjęcia wg miesiąca i stanu
           </CardTitle>
         </CardHeader>
         <CardContent>
           {admissionsData.length === 0 ? (
-            <p className="text-sm text-slate-soft text-center py-12">Brak danych</p>
+            <p className="text-sm text-muted-foreground text-center py-12">Brak danych</p>
           ) : (
             <ChartContainer config={admissionsConfig} className="h-80 w-full">
               <BarChart data={admissionsData} margin={{ left: 0, right: 8 }}>
@@ -357,13 +357,13 @@ function KpiCard({
   color?: string
 }) {
   return (
-    <Card className="rounded-xl border-none ring-1 ring-slate/5">
+    <Card className="rounded-xl border-none ring-1 ring-border">
       <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-2">
-          <Icon className="h-4 w-4 text-slate-soft" />
-          <span className="text-xs font-medium text-slate-soft">{label}</span>
+          <Icon className="h-4 w-4 text-muted-foreground" />
+          <span className="text-xs font-medium text-muted-foreground">{label}</span>
         </div>
-        <p className={`text-xl font-bold tabular-nums ${color || 'text-slate'}`}>
+        <p className={`text-xl font-bold tabular-nums ${color || 'text-foreground'}`}>
           {value}
         </p>
       </CardContent>

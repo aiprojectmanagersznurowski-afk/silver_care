@@ -72,14 +72,14 @@ export function PhotoGalleryModal({
             type="button"
             onClick={onClose}
             aria-label="Zamknij podgląd"
-            className="rounded-full bg-white/10 hover:bg-white/20 p-2 text-white transition-colors"
+            className="rounded-full bg-card/10 hover:bg-card/20 p-2 text-white transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Main Image Container */}
-        <div className="relative flex items-center justify-center w-full max-h-[75vh] overflow-hidden rounded-2xl bg-black/40">
+        <div className="relative flex items-center justify-center w-full max-h-[75vh] overflow-hidden rounded-xl bg-black/40">
           <img
             src={images[currentIndex]}
             alt={`Zdjęcie ${currentIndex + 1}`}
@@ -92,7 +92,7 @@ export function PhotoGalleryModal({
                 type="button"
                 onClick={handlePrev}
                 aria-label="Poprzednie zdjęcie"
-                className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 hover:bg-black/75 p-3 text-white transition-all shadow-md"
+                className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 hover:bg-black/75 p-3 text-white transition-all"
               >
                 <ChevronLeft className="h-6 w-6" />
               </button>
@@ -100,7 +100,7 @@ export function PhotoGalleryModal({
                 type="button"
                 onClick={handleNext}
                 aria-label="Następne zdjęcie"
-                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 hover:bg-black/75 p-3 text-white transition-all shadow-md"
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 hover:bg-black/75 p-3 text-white transition-all"
               >
                 <ChevronRight className="h-6 w-6" />
               </button>

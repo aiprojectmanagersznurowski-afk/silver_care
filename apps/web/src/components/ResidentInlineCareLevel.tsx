@@ -81,7 +81,7 @@ export function ResidentInlineCareLevel({
         <DropdownMenuTrigger
           type="button"
           disabled={isPending}
-          className="group inline-flex items-center gap-1.5 min-h-[48px] px-2 py-1 rounded-lg hover:bg-slate/5 focus:outline-none focus:ring-2 focus:ring-sage/50 transition-colors"
+          className="group inline-flex items-center gap-1.5 min-h-[48px] px-2 py-1 rounded-lg hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
           aria-label="Zmień stan podopiecznego"
         >
           {currentLevel ? (
@@ -97,7 +97,7 @@ export function ResidentInlineCareLevel({
               )}
             </Badge>
           ) : (
-            <span className="text-slate-soft/70 text-xs hover:text-slate flex items-center gap-1 border border-dashed border-slate/20 px-2 py-1 rounded">
+            <span className="text-muted-foreground/70 text-xs hover:text-foreground flex items-center gap-1 border border-dashed border-border px-2 py-1 rounded">
               + Ustaw stan
               {isPending ? (
                 <Loader2 className="h-3 w-3 animate-spin text-current ml-1" />
@@ -109,7 +109,7 @@ export function ResidentInlineCareLevel({
         </DropdownMenuTrigger>
 
         <DropdownMenuContent align="start" className="w-48 py-1">
-          <DropdownMenuLabel className="px-3 py-1.5 text-[0.7rem] font-semibold text-slate-soft uppercase tracking-wider">
+          <DropdownMenuLabel className="px-3 py-1.5 text-[0.7rem] font-semibold text-muted-foreground uppercase tracking-wider">
             Zmień poziom opieki
           </DropdownMenuLabel>
           {CARE_OPTIONS.map((option) => {
@@ -118,7 +118,7 @@ export function ResidentInlineCareLevel({
               <DropdownMenuItem
                 key={option.value}
                 onClick={() => handleSelect(option.value)}
-                className="w-full flex items-center justify-between px-3 py-2 text-xs text-slate hover:bg-slate/5 cursor-pointer min-h-[44px]"
+                className="w-full flex items-center justify-between px-3 py-2 text-xs text-foreground hover:bg-muted/50 cursor-pointer min-h-[44px]"
               >
                 <span className="flex items-center gap-2">
                   <span
@@ -127,7 +127,7 @@ export function ResidentInlineCareLevel({
                   />
                   {option.label}
                 </span>
-                {isSelected && <Check className="h-3.5 w-3.5 text-sage stroke-[2.5]" />}
+                {isSelected && <Check className="h-3.5 w-3.5 text-primary stroke-[2.5]" />}
               </DropdownMenuItem>
             )
           })}
@@ -137,7 +137,7 @@ export function ResidentInlineCareLevel({
       {errorMessage && (
         <div
           role="alert"
-          className="absolute z-30 top-full left-0 mt-1 flex items-center gap-1.5 text-xs text-rose-600 bg-rose-50 border border-rose-200 px-2.5 py-1.5 rounded-lg whitespace-nowrap"
+          className="absolute z-30 top-full left-0 mt-1 flex items-center gap-1.5 text-xs text-destructive bg-destructive/10 border border-destructive/20 px-2.5 py-1.5 rounded-lg whitespace-nowrap"
         >
           <AlertCircle className="h-3.5 w-3.5 shrink-0" />
           <span>{errorMessage}</span>

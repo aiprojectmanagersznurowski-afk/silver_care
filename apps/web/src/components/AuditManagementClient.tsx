@@ -92,33 +92,33 @@ export function AuditManagementClient({
   return (
     <div className="space-y-6">
       {/* Pasek filtrów daty oraz akcji eksportu RODO */}
-      <Card className="rounded-xl border-none ring-1 ring-slate/5 bg-white p-5">
+      <Card className="rounded-xl border-none ring-1 ring-border bg-card p-5">
         <form onSubmit={handleApplyFilter} className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-slate-soft" />
-              <span className="text-xs font-medium text-slate">Od:</span>
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs font-medium text-foreground">Od:</span>
               <input
                 id="audit-date-from"
                 type="date"
                 value={startDate}
                 onChange={e => setStartDate(e.target.value)}
-                className="h-9 rounded-xl border border-slate/20 bg-white px-3 text-xs text-slate focus:border-sage focus:outline-none focus:ring-1 focus:ring-sage"
+                className="h-9 rounded-xl border border-border bg-card px-3 text-xs text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-slate">Do:</span>
+              <span className="text-xs font-medium text-foreground">Do:</span>
               <input
                 id="audit-date-to"
                 type="date"
                 value={endDate}
                 onChange={e => setEndDate(e.target.value)}
-                className="h-9 rounded-xl border border-slate/20 bg-white px-3 text-xs text-slate focus:border-sage focus:outline-none focus:ring-1 focus:ring-sage"
+                className="h-9 rounded-xl border border-border bg-card px-3 text-xs text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
 
-            <Button type="submit" size="sm" className="h-9 rounded-xl bg-sage text-white hover:bg-sage/90 gap-1.5 text-xs font-medium">
+            <Button type="submit" size="sm" className="h-9 rounded-xl bg-primary text-white hover:bg-primary/90 gap-1.5 text-xs font-medium">
               <Filter className="h-3.5 w-3.5" />
               Filtruj
             </Button>
@@ -129,7 +129,7 @@ export function AuditManagementClient({
                 variant="outline"
                 size="sm"
                 onClick={handleClearFilter}
-                className="h-9 rounded-xl border-slate/20 text-slate-soft hover:bg-slate/5 gap-1.5 text-xs"
+                className="h-9 rounded-xl border-border text-muted-foreground hover:bg-muted/50 gap-1.5 text-xs"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
                 Wyczyść
@@ -143,9 +143,9 @@ export function AuditManagementClient({
               variant="outline"
               size="sm"
               onClick={handleExportCsv}
-              className="h-9 rounded-xl border-slate/20 text-slate hover:bg-slate/5 gap-1.5 text-xs font-medium"
+              className="h-9 rounded-xl border-border text-foreground hover:bg-muted/50 gap-1.5 text-xs font-medium"
             >
-              <Download className="h-3.5 w-3.5 text-slate-soft" />
+              <Download className="h-3.5 w-3.5 text-muted-foreground" />
               Eksportuj CSV
             </Button>
 
@@ -154,38 +154,38 @@ export function AuditManagementClient({
               variant="outline"
               size="sm"
               onClick={handleExportJson}
-              className="h-9 rounded-xl border-slate/20 text-slate hover:bg-slate/5 gap-1.5 text-xs font-medium"
+              className="h-9 rounded-xl border-border text-foreground hover:bg-muted/50 gap-1.5 text-xs font-medium"
             >
-              <Download className="h-3.5 w-3.5 text-slate-soft" />
+              <Download className="h-3.5 w-3.5 text-muted-foreground" />
               Eksportuj JSON
             </Button>
           </div>
         </form>
 
-        <div className="mt-3 pt-3 border-t border-slate/5 flex items-center justify-between text-xs text-slate-soft">
+        <div className="mt-3 pt-3 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
-            <Clock className="h-3.5 w-3.5 text-sage" />
-            <span>Strefa czasowa przeglądarki: <strong className="text-slate font-medium">{browserTimeZone}</strong></span>
+            <Clock className="h-3.5 w-3.5 text-primary" />
+            <span>Strefa czasowa przeglądarki: <strong className="text-foreground font-medium">{browserTimeZone}</strong></span>
           </div>
           <div className="flex items-center gap-2">
-            <ShieldCheck className="h-3.5 w-3.5 text-sage" />
+            <ShieldCheck className="h-3.5 w-3.5 text-primary" />
             <span>Niezmienialny rejestr zdarzeń (RODO Append-Only) — bez danych wrażliwych pensjonariuszy</span>
           </div>
         </div>
       </Card>
 
       {/* Tabela zdarzeń audytowych */}
-      <Card className="rounded-xl border-none ring-1 ring-slate/5 overflow-hidden">
-        <CardHeader className="border-b border-slate/5 bg-white px-6 py-5">
-          <CardTitle className="text-lg font-semibold text-slate">Zdarzenia Audytowe</CardTitle>
-          <CardDescription className="text-slate-soft">
+      <Card className="rounded-xl border-none ring-1 ring-border overflow-hidden">
+        <CardHeader className="border-b border-border bg-card px-6 py-5">
+          <CardTitle className="text-lg font-semibold text-foreground">Zdarzenia Audytowe</CardTitle>
+          <CardDescription className="text-muted-foreground">
             Wyświetlono {filteredLogs.length} wpisów{appliedStartDate || appliedEndDate ? ' dla wybranego zakresu dat' : ''}.
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           <div className="relative w-full overflow-auto">
             <Table aria-label="Tabela rejestru audytowego">
-              <TableHeader className="text-slate-soft">
+              <TableHeader className="text-muted-foreground">
                 <TableRow>
                   <TableHead scope="col">Czas</TableHead>
                   <TableHead scope="col">Akcja</TableHead>
@@ -196,29 +196,29 @@ export function AuditManagementClient({
               <TableBody>
                 {filteredLogs.map(log => (
                   <TableRow key={log.id}>
-                    <TableCell className="font-mono text-slate-soft whitespace-nowrap">
+                    <TableCell className="font-mono text-muted-foreground whitespace-nowrap">
                       {formatAuditTimestamp(log.created_at, browserTimeZone)}
                     </TableCell>
                     <TableCell>
-                      <span className="inline-flex items-center rounded-lg bg-slate/10 px-2.5 py-1 text-xs font-medium text-slate">
+                      <span className="inline-flex items-center rounded-lg bg-muted px-2.5 py-1 text-xs font-medium text-foreground">
                         {log.action}
                       </span>
                     </TableCell>
-                    <TableCell className="font-mono text-slate">
+                    <TableCell className="font-mono text-foreground">
                       {log.performed_by ? (
-                        <span className="bg-slate/5 px-2 py-1 rounded font-semibold text-slate">{log.performed_by}</span>
+                        <span className="bg-muted/50 px-2 py-1 rounded font-semibold text-foreground">{log.performed_by}</span>
                       ) : (
-                        <span className="text-slate-soft italic">System / Automat</span>
+                        <span className="text-muted-foreground italic">System / Automat</span>
                       )}
                     </TableCell>
-                    <TableCell className="font-mono text-slate-soft max-w-md truncate">
+                    <TableCell className="font-mono text-muted-foreground max-w-md truncate">
                       {log.payload ? JSON.stringify(log.payload) : '—'}
                     </TableCell>
                   </TableRow>
                 ))}
                 {filteredLogs.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-slate-soft">
+                    <TableCell colSpan={4} className="text-center text-muted-foreground">
                       Brak wpisów w rejestrze audytowym dla wybranych kryteriów.
                     </TableCell>
                   </TableRow>

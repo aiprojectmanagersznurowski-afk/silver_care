@@ -91,7 +91,7 @@ export default async function AdminInvitationsPage() {
                           Odwołane
                         </span>
                       ) : new Date(inv.expires_at) < new Date() ? (
-                        <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-destructive/10 text-destructive">
+                        <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-muted text-muted-foreground">
                           Wygasłe
                         </span>
                       ) : (

@@ -106,7 +106,7 @@ export function StaffActionsMenu({ staffId, email, isActive }: StaffActionsMenuP
   return (
     <>
       <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
-        <DropdownMenuTrigger className="inline-flex items-center justify-center h-8 w-8 rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors">
+        <DropdownMenuTrigger className="inline-flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
           <span className="sr-only">Otwórz menu</span>
           <MoreHorizontal className="h-4 w-4" />
         </DropdownMenuTrigger>
@@ -115,17 +115,17 @@ export function StaffActionsMenu({ staffId, email, isActive }: StaffActionsMenuP
           <DropdownMenuSeparator />
 
           <DropdownMenuItem onClick={() => openDialog('reset')}>
-            <KeyRound className="mr-2 h-4 w-4 text-amber-600" />
+            <KeyRound className="mr-2 h-4 w-4 text-foreground" />
             Zresetuj hasło
           </DropdownMenuItem>
 
           {isActive ? (
-            <DropdownMenuItem onClick={() => openDialog('suspend')} className="text-red-600 focus:text-red-600">
+            <DropdownMenuItem onClick={() => openDialog('suspend')} className="text-destructive focus:text-destructive">
               <Ban className="mr-2 h-4 w-4" />
               Zawieś konto
             </DropdownMenuItem>
           ) : (
-            <DropdownMenuItem onClick={() => openDialog('restore')} className="text-emerald-600 focus:text-emerald-600">
+            <DropdownMenuItem onClick={() => openDialog('restore')} className="text-foreground focus:text-foreground">
               <CheckCircle className="mr-2 h-4 w-4" />
               Przywróć konto
             </DropdownMenuItem>
@@ -139,12 +139,12 @@ export function StaffActionsMenu({ staffId, email, isActive }: StaffActionsMenuP
           <DialogHeader>
             <DialogTitle>Reset Hasła Pracownika</DialogTitle>
             <DialogDescription>
-              Wybierz metodę resetu hasła dla konta <span className="font-semibold text-slate-800">{email}</span>.
+              Wybierz metodę resetu hasła dla konta <span className="font-semibold text-foreground">{email}</span>.
             </DialogDescription>
           </DialogHeader>
 
           {statusMsg && (
-            <div className={`p-3 text-sm rounded-md ${statusMsg.type === 'error' ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'}`}>
+            <div className={`p-3 text-sm rounded-md ${statusMsg.type === 'error' ? 'bg-destructive/10 text-destructive' : 'bg-muted text-foreground'}`}>
               {statusMsg.text}
             </div>
           )}
@@ -181,19 +181,19 @@ export function StaffActionsMenu({ staffId, email, isActive }: StaffActionsMenuP
           <DialogHeader>
             <DialogTitle>Zawieszenie Konta Pracownika</DialogTitle>
             <DialogDescription>
-              Operacja natychmiast zablokuje możliwość logowania pracownika <span className="font-semibold text-slate-800">{email}</span> i unieważni wszystkie aktywne sesje.
+              Operacja natychmiast zablokuje możliwość logowania pracownika <span className="font-semibold text-foreground">{email}</span> i unieważni wszystkie aktywne sesje.
             </DialogDescription>
           </DialogHeader>
 
           {statusMsg && (
-            <div className="p-3 text-sm rounded-md bg-red-50 text-red-700">
+            <div className="p-3 text-sm rounded-md bg-destructive/10 text-destructive">
               {statusMsg.text}
             </div>
           )}
 
           <div className="space-y-3 py-2">
             <Label htmlFor="confirmation">
-              Aby potwierdzić, wpisz słowo <span className="font-bold text-red-600">DEZAKTYWUJ</span>:
+              Aby potwierdzić, wpisz słowo <span className="font-bold text-destructive">DEZAKTYWUJ</span>:
             </Label>
             <Input
               id="confirmation"
@@ -224,12 +224,12 @@ export function StaffActionsMenu({ staffId, email, isActive }: StaffActionsMenuP
           <DialogHeader>
             <DialogTitle>Przywrócenie Konta Pracownika</DialogTitle>
             <DialogDescription>
-              Czy na pewno chcesz przywrócić dostęp do konta dla pracownika <span className="font-semibold text-slate-800">{email}</span>?
+              Czy na pewno chcesz przywrócić dostęp do konta dla pracownika <span className="font-semibold text-foreground">{email}</span>?
             </DialogDescription>
           </DialogHeader>
 
           {statusMsg && (
-            <div className={`p-3 text-sm rounded-md ${statusMsg.type === 'error' ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'}`}>
+            <div className={`p-3 text-sm rounded-md ${statusMsg.type === 'error' ? 'bg-destructive/10 text-destructive' : 'bg-muted text-foreground'}`}>
               {statusMsg.text}
             </div>
           )}
@@ -241,7 +241,7 @@ export function StaffActionsMenu({ staffId, email, isActive }: StaffActionsMenuP
             <Button
               onClick={handleRestore}
               disabled={isPending}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="bg-primary hover:bg-primary text-white"
             >
               {isPending ? 'Przywracanie...' : 'Przywróć konto'}
             </Button>

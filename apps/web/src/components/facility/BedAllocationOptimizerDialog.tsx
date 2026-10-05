@@ -129,15 +129,15 @@ export function BedAllocationOptimizerDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger render={<Button variant="outline" className="gap-2 border-slate-300 text-slate-700" />}>
-        <Sparkles className="w-4 h-4 text-amber-500" />
+      <DialogTrigger render={<Button variant="outline" className="gap-2 border-border text-foreground" />}>
+        <Sparkles className="w-4 h-4 text-foreground" />
         Optymalizator przydziału (AI)
       </DialogTrigger>
       <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col p-6 overflow-hidden">
         <DialogHeader className="shrink-0 mb-4">
           <div className="flex items-center justify-between">
-            <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-slate">
-              <Sparkles className="w-5 h-5 text-amber-500" />
+            <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-foreground">
+              <Sparkles className="w-5 h-5 text-foreground" />
               Optymalizator przydziału łóżek
             </DialogTitle>
             <Button
@@ -145,21 +145,21 @@ export function BedAllocationOptimizerDialog({
               size="sm"
               onClick={loadAnalysis}
               disabled={isLoading || isExecuting}
-              className="gap-1.5 text-xs text-slate-600"
+              className="gap-1.5 text-xs text-foreground"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
               Przelicz ponownie
             </Button>
           </div>
-          <DialogDescription className="text-sm text-slate-soft">
+          <DialogDescription className="text-sm text-muted-foreground">
             Inteligentna weryfikacja obłożenia placówki pod kątem zgodności płciowej oraz poziomu mobilności.
           </DialogDescription>
         </DialogHeader>
 
         {isLoading ? (
           <div className="flex-1 flex flex-col items-center justify-center p-12 space-y-3">
-            <Loader2 className="w-8 h-8 animate-spin text-sage" />
-            <p className="text-sm text-slate-500">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">
               Analizowanie struktury placówki, obłożenia i parametrów pensjonariuszy...
             </p>
           </div>
@@ -168,60 +168,60 @@ export function BedAllocationOptimizerDialog({
             {/* Metryki ogólne */}
             {metrics && (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                  <p className="text-xs text-slate-500">Wskaźnik jakości</p>
+                <div className="p-3 bg-muted rounded-xl border border-border">
+                  <p className="text-xs text-muted-foreground">Wskaźnik jakości</p>
                   <p
                     className={`text-xl font-bold ${
                       metrics.overallScore >= 90
-                        ? 'text-emerald-700'
+                        ? 'text-foreground'
                         : metrics.overallScore >= 70
-                        ? 'text-amber-600'
-                        : 'text-rose-600'
+                        ? 'text-foreground'
+                        : 'text-foreground'
                     }`}
                   >
                     {metrics.overallScore}%
                   </p>
                 </div>
 
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                  <p className="text-xs text-slate-500">Konflikty płci</p>
+                <div className="p-3 bg-muted rounded-xl border border-border">
+                  <p className="text-xs text-muted-foreground">Konflikty płci</p>
                   <p
                     className={`text-xl font-bold ${
-                      metrics.genderConflictsCount > 0 ? 'text-rose-600' : 'text-emerald-700'
+                      metrics.genderConflictsCount > 0 ? 'text-foreground' : 'text-foreground'
                     }`}
                   >
                     {metrics.genderConflictsCount}
                   </p>
                 </div>
 
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                  <p className="text-xs text-slate-500">Bariery mobilności</p>
+                <div className="p-3 bg-muted rounded-xl border border-border">
+                  <p className="text-xs text-muted-foreground">Bariery mobilności</p>
                   <p
                     className={`text-xl font-bold ${
-                      metrics.mobilityMismatchCount > 0 ? 'text-amber-600' : 'text-emerald-700'
+                      metrics.mobilityMismatchCount > 0 ? 'text-foreground' : 'text-foreground'
                     }`}
                   >
                     {metrics.mobilityMismatchCount}
                   </p>
                 </div>
 
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                  <p className="text-xs text-slate-500">Wolne łóżka</p>
-                  <p className="text-xl font-bold text-slate-700">{metrics.freeBeds}</p>
+                <div className="p-3 bg-muted rounded-xl border border-border">
+                  <p className="text-xs text-muted-foreground">Wolne łóżka</p>
+                  <p className="text-xl font-bold text-foreground">{metrics.freeBeds}</p>
                 </div>
               </div>
             )}
 
             {/* Powiadomienia błędu lub sukcesu */}
             {error && (
-              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-sm flex items-center gap-2">
+              <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{error}</span>
               </div>
             )}
 
             {success && (
-              <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-sm flex items-center gap-2">
+              <div className="p-3 bg-muted border border-border text-foreground rounded-lg text-sm flex items-center gap-2">
                 <Check className="w-4 h-4 shrink-0" />
                 <span>{success}</span>
               </div>
@@ -229,12 +229,12 @@ export function BedAllocationOptimizerDialog({
 
             {/* Informacja o braku konfliktów */}
             {suggestions.length === 0 && !isLoading && (
-              <div className="p-6 text-center border rounded-xl bg-emerald-50/50 border-emerald-200/60 space-y-2">
-                <ShieldCheck className="w-10 h-10 text-emerald-600 mx-auto" />
-                <h4 className="text-base font-semibold text-emerald-900">
+              <div className="p-6 text-center border rounded-xl bg-muted border-border space-y-2">
+                <ShieldCheck className="w-10 h-10 text-foreground mx-auto" />
+                <h4 className="text-base font-semibold text-foreground">
                   Brak konfliktów alokacji
                 </h4>
-                <p className="text-xs text-emerald-700 max-w-md mx-auto">
+                <p className="text-xs text-foreground max-w-md mx-auto">
                   Wszystkie pokoje wieloosobowe są zgodne płciowo, a pensjonariusze o ograniczonej mobilności przebywają na parterze.
                 </p>
               </div>
@@ -244,15 +244,15 @@ export function BedAllocationOptimizerDialog({
             {suggestions.length > 0 && (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-semibold text-slate-800">
+                  <h4 className="text-sm font-semibold text-foreground">
                     Rekomendowane przeniesienia ({suggestions.length})
                   </h4>
-                  <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+                  <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer">
                     <input
                       type="checkbox"
                       checked={selectedIds.size === suggestions.length && suggestions.length > 0}
                       onChange={(e) => handleSelectAll(e.target.checked)}
-                      className="rounded border-slate-300 text-sage focus:ring-sage"
+                      className="rounded border-border text-primary focus:ring-primary"
                     />
                     <span>Zaznacz wszystkie</span>
                   </label>
@@ -265,8 +265,8 @@ export function BedAllocationOptimizerDialog({
                       onClick={() => toggleSelect(s.id)}
                       className={`p-3 rounded-xl border cursor-pointer transition-all ${
                         selectedIds.has(s.id)
-                          ? 'bg-amber-50/40 border-amber-300'
-                          : 'bg-white border-slate-200 opacity-70 hover:opacity-100'
+                          ? 'bg-muted border-border'
+                          : 'bg-card border-border opacity-70 hover:opacity-100'
                       }`}
                     >
                       <div className="flex items-start gap-3">
@@ -274,50 +274,50 @@ export function BedAllocationOptimizerDialog({
                           type="checkbox"
                           checked={selectedIds.has(s.id)}
                           onChange={() => {}} // Handled by container onClick
-                          className="mt-1 rounded border-slate-300 text-sage focus:ring-sage"
+                          className="mt-1 rounded border-border text-primary focus:ring-primary"
                         />
 
                         <div className="flex-1 space-y-1">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-slate-800 tracking-wide font-mono">
+                            <span className="text-xs font-bold text-foreground tracking-wide font-mono">
                               Pensjonariusz {s.residentPseudonym} ({s.gender === 'F' ? 'K' : 'M'})
                             </span>
                             <span
                               className={`text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full ${
                                 s.priority === 'high'
-                                  ? 'bg-rose-100 text-rose-700'
-                                  : 'bg-amber-100 text-amber-800'
+                                  ? 'bg-muted text-foreground'
+                                  : 'bg-muted text-foreground'
                               }`}
                             >
                               Priorytet: {s.priority === 'high' ? 'Wysoki' : 'Średni'}
                             </span>
                           </div>
 
-                          <div className="flex items-center gap-2 text-xs text-slate-600">
-                            <span className="bg-slate-100 px-2 py-0.5 rounded-md font-medium">
+                          <div className="flex items-center gap-2 text-xs text-foreground">
+                            <span className="bg-muted px-2 py-0.5 rounded-md font-medium">
                               Pokój {s.fromRoomNumber} (P.{s.fromFloor}), Łóżko {s.fromBedLabel}
                             </span>
-                            <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
-                            <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-md font-medium">
+                            <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
+                            <span className="bg-muted text-foreground border border-border px-2 py-0.5 rounded-md font-medium">
                               Pokój {s.toRoomNumber} (P.{s.toFloor}), Łóżko {s.toBedLabel}
                             </span>
                           </div>
 
-                          <p className="text-xs text-slate-600 pt-0.5">{s.reason}</p>
+                          <p className="text-xs text-foreground pt-0.5">{s.reason}</p>
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
 
-                <div className="pt-3 border-t border-slate-200 flex items-center justify-between">
-                  <p className="text-xs text-slate-500">
+                <div className="pt-3 border-t border-border flex items-center justify-between">
+                  <p className="text-xs text-muted-foreground">
                     Wybrano: {selectedIds.size} z {suggestions.length} propozycji
                   </p>
                   <Button
                     onClick={handleExecuteRelocations}
                     disabled={isExecuting || selectedIds.size === 0}
-                    className="bg-sage hover:bg-sage/90 text-white gap-2 text-sm"
+                    className="bg-primary hover:bg-primary/90 text-white gap-2 text-sm"
                   >
                     {isExecuting ? (
                       <Loader2 className="w-4 h-4 animate-spin" />

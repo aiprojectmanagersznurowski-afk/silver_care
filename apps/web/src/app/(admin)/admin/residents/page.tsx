@@ -65,10 +65,10 @@ export default async function AdminResidentsPage() {
     <div className="space-y-6 sm:space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-display font-semibold tracking-tight text-slate">
+          <h2 className="text-3xl font-display font-semibold tracking-tight text-foreground">
             Podopieczni
           </h2>
-          <p className="mt-2 text-slate-soft">Zarządzaj bazą podopiecznych w swojej placówce.</p>
+          <p className="mt-2 text-muted-foreground">Zarządzaj bazą podopiecznych w swojej placówce.</p>
         </div>
         {!isImpersonating ? (
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
@@ -78,27 +78,27 @@ export default async function AdminResidentsPage() {
             <AddResidentDialog />
           </div>
         ) : (
-          <div className="flex items-center gap-2 rounded-xl bg-amber-500/10 px-4 py-2 text-xs font-medium text-amber-700 border border-amber-500/20">
+          <div className="flex items-center gap-2 rounded-xl bg-muted px-4 py-2 text-xs font-medium text-foreground border border-border">
             <span>Tryb podglądu (impersonacja) — formularze i eksport wyłączone</span>
           </div>
         )}
       </div>
 
       {masked ? (
-        <Card className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-8 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 mb-3">
+        <Card className="rounded-xl border border-border bg-primary p-8 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-muted text-foreground mb-3">
             <ShieldAlert className="h-6 w-6" />
           </div>
-          <h3 className="text-lg font-semibold text-slate mb-1">
+          <h3 className="text-lg font-semibold text-foreground mb-1">
             Tryb podglądu (impersonacja) — Ochrona Danych Art. 9 RODO
           </h3>
-          <p className="text-sm text-slate-soft max-w-lg mx-auto mb-4">
+          <p className="text-sm text-muted-foreground max-w-lg mx-auto mb-4">
             Dostęp do danych osobowych (PII) podopiecznych jest wyłączony dla Super Administratora. 
             Wyświetlane jest wyłącznie podsumowanie statystyczne placówki.
           </p>
-          <div className="inline-flex items-center gap-3 bg-white px-5 py-3 rounded-xl border border-slate/10">
-            <span className="text-xs text-slate-soft">Liczba zarejestrowanych podopiecznych:</span>
-            <span className="text-xl font-bold text-slate">{totalCount}</span>
+          <div className="inline-flex items-center gap-3 bg-card px-5 py-3 rounded-xl border border-border">
+            <span className="text-xs text-muted-foreground">Liczba zarejestrowanych podopiecznych:</span>
+            <span className="text-xl font-bold text-foreground">{totalCount}</span>
           </div>
         </Card>
       ) : (
@@ -110,18 +110,18 @@ export default async function AdminResidentsPage() {
           <ResidentMobileCard key={resident.id} resident={resident} />
         ))}
         {(!residents || residents.length === 0) && (
-          <div className="rounded-xl bg-white p-8 text-center text-slate-soft ring-1 ring-slate/5">
+          <div className="rounded-xl bg-card p-8 text-center text-muted-foreground ring-1 ring-border">
             Brak podopiecznych w bazie. Kliknij przycisk powyżej, aby dodać pierwszą osobę.
           </div>
         )}
       </div>
 
       {/* Widok desktopowy — pełna tabela (>= sm) */}
-      <Card className="hidden sm:block rounded-xl border-none ring-1 ring-slate/5 overflow-hidden">
+      <Card className="hidden sm:block rounded-xl border-none ring-1 ring-border overflow-hidden">
         <CardContent className="p-0">
           <div className="relative w-full overflow-auto">
             <Table>
-              <TableHeader className="text-slate-soft">
+              <TableHeader className="text-muted-foreground">
                 <TableRow>
                   <TableHead>Imię i nazwisko</TableHead>
                   <TableHead>Stan</TableHead>
@@ -143,15 +143,15 @@ export default async function AdminResidentsPage() {
                     <TableRow key={resident.id} className="group">
                       <TableCell>
                         <Link href={`/admin/residents/${resident.id}`} className="flex items-center gap-3">
-                          <Avatar className="h-10 w-10 border border-slate/10">
+                          <Avatar className="h-10 w-10 border border-border">
                             {resident.avatar_url && (
                               <AvatarImage src={resident.avatar_url} alt={`${resident.first_name} ${resident.last_name}`} />
                             )}
-                            <AvatarFallback className="bg-sage/10 text-sage">
+                            <AvatarFallback className="bg-primary/10 text-primary">
                               <UserCircle2 className="h-5 w-5" />
                             </AvatarFallback>
                           </Avatar>
-                          <span className="font-medium text-slate text-base group-hover:text-sage transition-colors">
+                          <span className="font-medium text-foreground text-base group-hover:text-primary transition-colors">
                             {resident.first_name} {resident.last_name}
                           </span>
                         </Link>
@@ -171,29 +171,29 @@ export default async function AdminResidentsPage() {
                       </TableCell>
                       <TableCell>
                         {resident.archived_at ? (
-                          <Badge className="bg-slate/10 text-slate-soft border-none text-xs">
+                          <Badge className="bg-muted text-muted-foreground border-none text-xs">
                             Zarchiwizowany
                           </Badge>
                         ) : resident.death_date ? (
-                          <Badge className="bg-slate/10 text-slate-soft border-none text-xs">
+                          <Badge className="bg-muted text-muted-foreground border-none text-xs">
                             Zgon
                           </Badge>
                         ) : (
-                          <Badge className="bg-emerald-50 text-emerald-700 border-none text-xs">
+                          <Badge className="bg-muted text-foreground border-none text-xs">
                             Aktywny
                           </Badge>
                         )}
                       </TableCell>
-                      <TableCell className="text-slate-soft">
+                      <TableCell className="text-muted-foreground">
                         {activeBed ? (
                           <span>
                             Pok. {activeBed.rooms?.number}, ł. {activeBed.label}
                           </span>
                         ) : (
-                          <span className="text-slate-soft/50">—</span>
+                          <span className="text-muted-foreground/50">—</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-slate-soft">
+                      <TableCell className="text-muted-foreground">
                         {resident.admission_date
                           ? format(new Date(resident.admission_date), 'd MMM yyyy', { locale: pl })
                           : resident.created_at
@@ -205,7 +205,7 @@ export default async function AdminResidentsPage() {
                           <ResidentEditSheet resident={resident} />
                           <Link
                             href={`/admin/residents/${resident.id}`}
-                            className="p-2 text-slate-soft/50 hover:text-sage transition-colors min-h-[48px] min-w-[48px] inline-flex items-center justify-center"
+                            className="p-2 text-muted-foreground/50 hover:text-primary transition-colors min-h-[48px] min-w-[48px] inline-flex items-center justify-center"
                             title="Profil 360°"
                           >
                             <ChevronRight className="h-5 w-5" />
@@ -217,7 +217,7 @@ export default async function AdminResidentsPage() {
                 })}
                 {(!residents || residents.length === 0) && (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-slate-soft">
+                    <TableCell colSpan={7} className="text-center text-muted-foreground">
                       Brak podopiecznych w bazie. Kliknij przycisk powyżej, aby dodać pierwszą osobę.
                     </TableCell>
                   </TableRow>

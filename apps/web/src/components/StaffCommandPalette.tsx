@@ -137,7 +137,7 @@ export function StaffCommandPalette({ residents = [] }: StaffCommandPaletteProps
             role="dialog"
             aria-modal="true"
             aria-label="Paleta szybkiego wyboru podopiecznego"
-            className="relative w-full max-w-lg rounded-xl bg-card shadow-2xl ring-1 ring-black/10 overflow-hidden flex flex-col z-10 animate-in fade-in zoom-in-95 duration-150"
+            className="relative w-full max-w-lg rounded-xl bg-card shadow-2xl ring-1 ring-foreground/10 overflow-hidden flex flex-col z-10 animate-in fade-in zoom-in-95 duration-150"
           >
             {/* Input wyszukiwania */}
             <div className="flex items-center border-b border-border px-4">

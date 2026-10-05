@@ -35,7 +35,7 @@ function DailyReportPresentation({
 
   if (state === 'error') {
     return (
-      <div className="p-6 bg-surface rounded-xl border border-red-200 text-red-700 max-w-[680px]">
+      <div className="p-6 bg-surface rounded-xl border border-destructive/20 text-destructive max-w-[680px]">
         <p className="font-semibold">Błąd ładowania raportu</p>
         <p className="text-sm mt-1">{errorMessage}</p>
       </div>

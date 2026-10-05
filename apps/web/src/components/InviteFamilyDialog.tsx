@@ -159,8 +159,8 @@ export function InviteFamilyDialog({ residents }: { residents: Resident[] }) {
             <p className="text-sm font-medium text-destructive">{error}</p>
           )}
           {generatedUrl && (
-            <div className="mt-4 p-4 border border-green-500/30 bg-green-500/10 rounded-md space-y-2">
-              <p className="text-sm font-semibold text-green-600 dark:text-green-400">
+            <div className="mt-4 p-4 border border-border bg-primary rounded-md space-y-2">
+              <p className="text-sm font-semibold text-foreground dark:text-foreground">
                 Zaproszenie wygenerowane pomyślnie!
               </p>
               <p className="text-xs text-muted-foreground">

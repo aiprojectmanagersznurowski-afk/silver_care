@@ -151,21 +151,21 @@ export function AddressAutocompleteInput({
           autoComplete="off"
         />
         {isLoading && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-soft">
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
           </div>
         )}
       </div>
 
       {isOpen && predictions.length > 0 && (
-        <ul className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-slate/10 bg-white py-1 shadow-lg text-sm text-slate">
+        <ul className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-border bg-card py-1 shadow-lg text-sm text-foreground">
           {predictions.map((p) => (
             <li
               key={p.place_id}
               onClick={() => handleSelectPrediction(p.description)}
-              className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-sage/10 transition-colors"
+              className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-primary/10 transition-colors"
             >
-              <MapPin className="h-4 w-4 text-sage shrink-0" />
+              <MapPin className="h-4 w-4 text-primary shrink-0" />
               <span className="truncate">{p.description}</span>
             </li>
           ))}

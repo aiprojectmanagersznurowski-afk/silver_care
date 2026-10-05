@@ -23,10 +23,10 @@ export function AuditLogTable({
     const roleDef = availableRoles.find(r => r.id === roleId)
     const label = roleDef ? roleDef.label : roleId
 
-    let colorClass = 'bg-slate/10 text-slate'
+    let colorClass = 'bg-muted text-foreground'
     if (roleId === 'super_admin') colorClass = 'bg-amber/10 text-amber'
     if (roleId === 'org_admin') colorClass = 'bg-teal/10 text-teal'
-    if (roleId === 'nurse') colorClass = 'bg-sage/10 text-sage'
+    if (roleId === 'nurse') colorClass = 'bg-primary/10 text-primary'
 
     return (
       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${colorClass}`}>
@@ -36,15 +36,15 @@ export function AuditLogTable({
   }
 
   return (
-    <Card className="rounded-xl border-none ring-1 ring-slate/5 overflow-hidden">
-      <CardHeader className="border-b border-slate/5 bg-white px-6 py-5">
+    <Card className="rounded-xl border-none ring-1 ring-border overflow-hidden">
+      <CardHeader className="border-b border-border bg-card px-6 py-5">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate/5 text-slate-soft shrink-0">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted/50 text-muted-foreground shrink-0">
             <History className="h-5 w-5" />
           </div>
           <div>
-            <CardTitle className="text-lg font-semibold text-slate">Dziennik Audytowy Zmian Uprawnień</CardTitle>
-            <CardDescription className="text-slate-soft">
+            <CardTitle className="text-lg font-semibold text-foreground">Dziennik Audytowy Zmian Uprawnień</CardTitle>
+            <CardDescription className="text-muted-foreground">
               Historia wszystkich modyfikacji ról, uprawnień i kont personelu.
             </CardDescription>
           </div>
@@ -52,13 +52,13 @@ export function AuditLogTable({
       </CardHeader>
       <CardContent className="p-0">
         {auditLogs.length === 0 ? (
-          <div className="p-8 text-center text-sm text-slate-soft">
+          <div className="p-8 text-center text-sm text-muted-foreground">
             Brak zarejestrowanych wpisów audytowych w bieżącym widoku.
           </div>
         ) : (
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader className="font-medium text-slate-soft">
+              <TableHeader className="font-medium text-muted-foreground">
                 <TableRow>
                   <TableHead>Czas operacji</TableHead>
                   <TableHead>Typ zdarzenia</TableHead>
@@ -73,19 +73,19 @@ export function AuditLogTable({
                   const targetEmail = targetUser ? targetUser.email : (log.payload?.target_user_id || '—')
 
                   return (
-                    <TableRow key={log.id} className="hover:bg-slate/[0.02]">
-                      <TableCell className="font-mono text-slate-soft whitespace-nowrap">
+                    <TableRow key={log.id} className="hover:bg-muted/30">
+                      <TableCell className="font-mono text-muted-foreground whitespace-nowrap">
                         {formatDateTime(log.created_at)}
                       </TableCell>
                       <TableCell className="font-medium">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-slate/10 text-slate">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-muted text-foreground">
                           {log.action}
                         </span>
                       </TableCell>
                       <TableCell>
-                        <div className="font-medium text-slate">{targetEmail}</div>
+                        <div className="font-medium text-foreground">{targetEmail}</div>
                         {log.payload?.target_user_id && (
-                          <div className="font-mono text-[0.65rem] text-slate-soft truncate max-w-[120px]">
+                          <div className="font-mono text-[0.65rem] text-muted-foreground truncate max-w-[120px]">
                             {log.payload.target_user_id}
                           </div>
                         )}
@@ -96,22 +96,22 @@ export function AuditLogTable({
                             {log.payload.previous_role && (
                               <>
                                 {getRoleBadge(log.payload.previous_role)}
-                                <span className="text-slate-soft">→</span>
+                                <span className="text-muted-foreground">→</span>
                               </>
                             )}
                             {getRoleBadge(log.payload.new_role)}
                           </div>
                         )}
                         {log.action === 'password_reset' && (
-                          <span className="text-slate-soft">Reset i aktualizacja hasła konta</span>
+                          <span className="text-muted-foreground">Reset i aktualizacja hasła konta</span>
                         )}
                         {log.action !== 'role_change' && log.action !== 'password_reset' && (
-                          <span className="font-mono text-[0.7rem] text-slate-soft">
+                          <span className="font-mono text-[0.7rem] text-muted-foreground">
                             {JSON.stringify(log.payload)}
                           </span>
                         )}
                       </TableCell>
-                      <TableCell className="text-slate-soft">
+                      <TableCell className="text-muted-foreground">
                         {log.performed_by || 'system'}
                       </TableCell>
                     </TableRow>

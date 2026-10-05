@@ -303,7 +303,7 @@ function RegisterContent() {
                 type="checkbox"
                 checked={acceptTerms}
                 onChange={(e) => setAcceptTerms(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary"
                 disabled={isSubmitting}
               />
               <span className="text-xs text-foreground leading-relaxed">
@@ -316,7 +316,7 @@ function RegisterContent() {
                 type="checkbox"
                 checked={acceptDataProcessing}
                 onChange={(e) => setAcceptDataProcessing(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary"
                 disabled={isSubmitting}
               />
               <span className="text-xs text-foreground leading-relaxed">

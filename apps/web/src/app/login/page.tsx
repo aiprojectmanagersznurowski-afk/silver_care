@@ -62,6 +62,8 @@ export default function LoginPage() {
       for (let i = 0; i < count; i++) particles.push(makeParticle())
     }
 
+    const accent = getComputedStyle(document.documentElement).getPropertyValue('--sc-accent').trim() || 'currentColor'
+
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       particles.forEach((p) => {
@@ -72,9 +74,11 @@ export default function LoginPage() {
           p.v = Math.random() * 0.25 + 0.05
           p.o = Math.random() * 0.35 + 0.15
         }
-        // Subtelna szałwiowa poświata cząsteczek
-        ctx.fillStyle = `rgba(47, 111, 94, ${p.o * 0.45})`
+        // Cząsteczki w kolorze akcentu z kontraktu (canvas nie rozumie var(), więc czytamy wartość tokenu)
+        ctx.globalAlpha = p.o * 0.45
+        ctx.fillStyle = accent
         ctx.fillRect(p.x, p.y, 1.2, 2.4)
+        ctx.globalAlpha = 1
       })
       animationFrameId = requestAnimationFrame(draw)
     }
@@ -184,18 +188,6 @@ export default function LoginPage() {
         .vline:nth-child(4) { left: 22%; animation-delay: .42s; }
         .vline:nth-child(5) { left: 50%; animation-delay: .54s; }
         .vline:nth-child(6) { left: 78%; animation-delay: .66s; }
-        
-        .hline::after, .vline::after {
-          content: "";
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(90deg, transparent, rgba(47, 111, 94, 0.2), transparent);
-          opacity: 0;
-          animation: shimmer .9s ease-out forwards;
-        }
-        .hline:nth-child(1)::after { animation-delay: .12s; }
-        .hline:nth-child(2)::after { animation-delay: .22s; }
-        .hline:nth-child(3)::after { animation-delay: .32s; }
         .vline:nth-child(4)::after { animation-delay: .42s; }
         .vline:nth-child(5)::after { animation-delay: .54s; }
         .vline:nth-child(6)::after { animation-delay: .66s; }
@@ -229,9 +221,6 @@ export default function LoginPage() {
         }
       `}</style>
 
-      {/* Subtelna winieta i tło świetlne zgodne z paletą Silver Care */}
-      <div className="absolute inset-0 pointer-events-none [background:radial-gradient(75%_55%_at_50%_35%,rgba(47,111,94,0.06),transparent_70%)]" />
-
       {/* Animowane linie akcentowe */}
       <div className="accent-lines">
         <div className="hline" />
@@ -258,7 +247,7 @@ export default function LoginPage() {
               alt="Silver Care"
               width={200}
               height={55}
-              className="relative h-12 w-auto object-contain drop-shadow-sm transition-transform duration-700"
+              className="relative h-12 w-auto object-contain transition-transform duration-700"
               priority
             />
           </div>
@@ -350,7 +339,7 @@ export default function LoginPage() {
             <CardFooter className="flex-col gap-3.5 pt-2">
               <Button
                 type="submit"
-                className="w-full h-10 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium shadow-sm transition-all"
+                className="w-full h-10 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium transition-all"
                 disabled={loading}
               >
                 {loading ? 'Logowanie...' : 'Zaloguj się'}

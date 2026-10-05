@@ -69,10 +69,10 @@ export function OrganizationsManagementClient({
   if (currentState === 'loading') {
     return (
       <div className="space-y-6 animate-pulse" aria-busy="true" aria-label="Ładowanie listy placówek">
-        <div className="h-10 w-72 rounded-xl bg-slate/10" />
+        <div className="h-10 w-72 rounded-xl bg-muted" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="h-56 rounded-xl bg-slate/10" />
-          <div className="h-56 rounded-xl bg-slate/10" />
+          <div className="h-56 rounded-xl bg-muted" />
+          <div className="h-56 rounded-xl bg-muted" />
         </div>
       </div>
     )
@@ -85,13 +85,13 @@ export function OrganizationsManagementClient({
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-destructive/10 text-destructive mb-4">
           <AlertCircle className="h-8 w-8" />
         </div>
-        <h3 className="text-xl font-semibold text-slate mb-2">Błąd wczytywania placówek</h3>
-        <p className="text-slate-soft max-w-md mx-auto mb-6">
+        <h3 className="text-xl font-semibold text-foreground mb-2">Błąd wczytywania placówek</h3>
+        <p className="text-muted-foreground max-w-md mx-auto mb-6">
           {errorMessage || 'Wystąpił problem podczas pobierania podsumowania organizacji.'}
         </p>
         <Button
           onClick={() => window.location.reload()}
-          className="min-h-[48px] rounded-xl px-6 bg-slate text-white hover:bg-slate/90"
+          className="min-h-[48px] rounded-xl px-6 bg-foreground text-white hover:bg-muted"
         >
           <RefreshCw className="mr-2 h-4 w-4" />
           Spróbuj ponownie
@@ -103,12 +103,12 @@ export function OrganizationsManagementClient({
   // 3. Stan EMPTY
   if (currentState === 'empty') {
     return (
-      <Card className="rounded-xl border-none ring-1 ring-slate/5 p-12 text-center">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-sage/10 text-sage mb-4">
+      <Card className="rounded-xl border-none ring-1 ring-border p-12 text-center">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary mb-4">
           <Building2 className="h-8 w-8" />
         </div>
-        <h3 className="text-xl font-semibold text-slate mb-2">Brak zarejestrowanych placówek</h3>
-        <p className="text-slate-soft max-w-md mx-auto mb-6">
+        <h3 className="text-xl font-semibold text-foreground mb-2">Brak zarejestrowanych placówek</h3>
+        <p className="text-muted-foreground max-w-md mx-auto mb-6">
           W systemie nie zarejestrowano jeszcze żadnego ośrodka. Utwórz pierwszą placówkę, aby rozpocząć konfigurację platformy.
         </p>
         {renderActionSlot && (
@@ -125,15 +125,15 @@ export function OrganizationsManagementClient({
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         {/* View mode toggle */}
-        <div className="flex items-center bg-slate/5 p-1 rounded-xl border border-slate/10">
+        <div className="flex items-center bg-muted/50 p-1 rounded-xl border border-border">
           <button
             type="button"
             aria-label="Widok kafelków"
             onClick={() => handleModeChange('cards')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
               viewMode === 'cards'
-                ? 'bg-white text-sage font-semibold'
-                : 'text-slate-soft hover:text-slate'
+                ? 'bg-card text-primary font-semibold'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             <LayoutGrid className="h-4 w-4" />
@@ -145,8 +145,8 @@ export function OrganizationsManagementClient({
             onClick={() => handleModeChange('table')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
               viewMode === 'table'
-                ? 'bg-white text-sage font-semibold'
-                : 'text-slate-soft hover:text-slate'
+                ? 'bg-card text-primary font-semibold'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             <TableIcon className="h-4 w-4" />
@@ -158,9 +158,9 @@ export function OrganizationsManagementClient({
       </div>
 
       {viewMode === 'table' ? (
-        <div className="overflow-x-auto rounded-xl bg-white ring-1 ring-slate/10">
+        <div className="overflow-x-auto rounded-xl bg-card ring-1 ring-border">
           <Table>
-            <TableHeader className="text-slate-soft">
+            <TableHeader className="text-muted-foreground">
               <TableRow>
                 <TableHead>Nazwa</TableHead>
                 <TableHead>Adres</TableHead>
@@ -178,33 +178,33 @@ export function OrganizationsManagementClient({
                   : 0
 
                 return (
-                  <TableRow key={org.organization_id} className="hover:bg-slate/[0.02]">
+                  <TableRow key={org.organization_id} className="hover:bg-muted/30">
                     <TableCell>
                       <Link
                         href={`/admin/organizations/${org.organization_id}`}
-                        className="font-semibold text-slate hover:text-sage transition-colors block"
+                        className="font-semibold text-foreground hover:text-primary transition-colors block"
                       >
                         {org.organization_name}
                       </Link>
                       <BusinessIdBadge type="organization" id={org.organization_id} />
                     </TableCell>
-                    <TableCell className="text-slate-soft max-w-[220px] truncate">
+                    <TableCell className="text-muted-foreground max-w-[220px] truncate">
                       {org.address || '—'}
                     </TableCell>
                     <TableCell className="text-center font-medium">
                       {org.resident_limit}
                     </TableCell>
                     <TableCell className="text-center">
-                      <div className="font-semibold text-xs text-slate">
+                      <div className="font-semibold text-xs text-foreground">
                         {org.active_resident_count} / {org.resident_limit}
                       </div>
-                      <div className="text-[10px] text-slate-soft">{occupancyPercent}%</div>
+                      <div className="text-[10px] text-muted-foreground">{occupancyPercent}%</div>
                     </TableCell>
                     <TableCell className="text-center">
-                      <span className="font-medium text-slate">{org.staff_count}</span>
-                      <span className="text-[10px] text-slate-soft block">({org.administrator_count} adm.)</span>
+                      <span className="font-medium text-foreground">{org.staff_count}</span>
+                      <span className="text-[10px] text-muted-foreground block">({org.administrator_count} adm.)</span>
                     </TableCell>
-                    <TableCell className="text-slate-soft">
+                    <TableCell className="text-muted-foreground">
                       {new Date(org.created_at).toLocaleDateString('pl-PL')}
                     </TableCell>
                     <TableCell className="text-right">
@@ -212,7 +212,7 @@ export function OrganizationsManagementClient({
                         <EditOrganizationDialog organization={org} />
                         <Link
                           href={`/admin/organizations/${org.organization_id}`}
-                          className="inline-flex items-center gap-1 rounded-lg bg-slate/5 px-2.5 py-1.5 text-xs font-medium text-slate-soft hover:bg-sage/10 hover:text-sage transition-colors"
+                          className="inline-flex items-center gap-1 rounded-lg bg-muted/50 px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
                         >
                           Szczegóły
                           <ChevronRight className="h-3.5 w-3.5" />
@@ -235,22 +235,22 @@ export function OrganizationsManagementClient({
             return (
               <div
                 key={org.organization_id}
-                className="group block rounded-xl bg-white p-6 ring-1 ring-slate/10 hover:ring-sage transition-all"
+                className="group block rounded-xl bg-card p-6 ring-1 ring-border hover:ring-primary transition-all"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-sage/10 text-sage">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
                         <Building2 className="h-5 w-5" />
                       </span>
                       <Link
                         href={`/admin/organizations/${org.organization_id}`}
-                        className="text-lg font-bold text-slate group-hover:text-sage transition-colors"
+                        className="text-lg font-bold text-foreground group-hover:text-primary transition-colors"
                       >
                         {org.organization_name}
                       </Link>
                     </div>
-                    <div className="flex items-center gap-1.5 text-xs text-slate-soft pl-11">
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground pl-11">
                       <MapPin className="h-3.5 w-3.5 shrink-0" />
                       <span>{org.address || 'Brak podanego adresu'}</span>
                     </div>
@@ -260,7 +260,7 @@ export function OrganizationsManagementClient({
                     <EditOrganizationDialog organization={org} />
                     <Link
                       href={`/admin/organizations/${org.organization_id}`}
-                      className="flex items-center gap-1 rounded-lg bg-slate/5 px-2.5 py-1 text-xs font-medium text-slate-soft group-hover:bg-sage/10 group-hover:text-sage transition-colors"
+                      className="flex items-center gap-1 rounded-lg bg-muted/50 px-2.5 py-1 text-xs font-medium text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors"
                     >
                       <span>Szczegóły</span>
                       <ChevronRight className="h-3.5 w-3.5" />
@@ -268,43 +268,43 @@ export function OrganizationsManagementClient({
                   </div>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-slate/5 grid grid-cols-3 gap-4 text-center">
-                  <div className="bg-slate/5 rounded-xl p-3">
-                    <div className="flex items-center justify-center gap-1 text-xs text-slate-soft mb-1">
-                      <Users className="h-3.5 w-3.5 text-sage" />
+                <div className="mt-6 pt-4 border-t border-border grid grid-cols-3 gap-4 text-center">
+                  <div className="bg-muted/50 rounded-xl p-3">
+                    <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mb-1">
+                      <Users className="h-3.5 w-3.5 text-primary" />
                       <span>Podopieczni</span>
                     </div>
-                    <div className="text-base font-bold text-slate">
+                    <div className="text-base font-bold text-foreground">
                       {org.active_resident_count}
-                      <span className="text-xs font-normal text-slate-soft"> / {org.resident_limit}</span>
+                      <span className="text-xs font-normal text-muted-foreground"> / {org.resident_limit}</span>
                     </div>
-                    <div className="text-[10px] text-slate-soft mt-0.5">{occupancyPercent}% limitu</div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5">{occupancyPercent}% limitu</div>
                   </div>
 
-                  <div className="bg-slate/5 rounded-xl p-3">
-                    <div className="flex items-center justify-center gap-1 text-xs text-slate-soft mb-1">
-                      <UserCheck className="h-3.5 w-3.5 text-sage" />
+                  <div className="bg-muted/50 rounded-xl p-3">
+                    <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mb-1">
+                      <UserCheck className="h-3.5 w-3.5 text-primary" />
                       <span>Personel</span>
                     </div>
-                    <div className="text-base font-bold text-slate">
+                    <div className="text-base font-bold text-foreground">
                       {org.staff_count}
                     </div>
-                    <div className="text-[10px] text-slate-soft mt-0.5">Opiekunowie</div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5">Opiekunowie</div>
                   </div>
 
-                  <div className="bg-slate/5 rounded-xl p-3">
-                    <div className="flex items-center justify-center gap-1 text-xs text-slate-soft mb-1">
-                      <UserCog className="h-3.5 w-3.5 text-sage" />
+                  <div className="bg-muted/50 rounded-xl p-3">
+                    <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mb-1">
+                      <UserCog className="h-3.5 w-3.5 text-primary" />
                       <span>Admini</span>
                     </div>
-                    <div className="text-base font-bold text-slate">
+                    <div className="text-base font-bold text-foreground">
                       {org.administrator_count}
                     </div>
-                    <div className="text-[10px] text-slate-soft mt-0.5">Org Admini</div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5">Org Admini</div>
                   </div>
                 </div>
 
-                <div className="mt-4 flex items-center justify-between text-xs text-slate-soft">
+                <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
                     <span>W systemie od: {new Date(org.created_at).toLocaleDateString('pl-PL')}</span>

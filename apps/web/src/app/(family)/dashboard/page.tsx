@@ -30,12 +30,12 @@ export default async function FamilyDashboard(props: { searchParams: Promise<{ d
 
   if (residents.length === 0) {
     return (
-      <div className="mx-auto my-12 max-w-lg rounded-3xl border border-border bg-card p-8 text-center shadow-sm">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-sage-soft text-2xl text-sage-deep">
+      <div className="mx-auto my-12 max-w-lg rounded-xl border border-border bg-card p-8 text-center">
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-accent text-2xl text-primary">
           👥
         </div>
-        <h2 className="text-xl font-semibold text-slate font-display">Brak powiązanych podopiecznych</h2>
-        <p className="mt-2 text-sm text-slate-soft leading-relaxed">
+        <h2 className="text-xl font-semibold text-foreground font-display">Brak powiązanych podopiecznych</h2>
+        <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
           Twoje konto nie zostało jeszcze przypisane do profilu podopiecznego w placówce.
           Skontaktuj się z administracją placówki, aby aktywować dostęp do raportów.
         </p>

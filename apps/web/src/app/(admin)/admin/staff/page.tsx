@@ -46,25 +46,25 @@ export default async function AdminStaffPage() {
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-display font-semibold tracking-tight text-slate">
+          <h2 className="text-3xl font-display font-semibold tracking-tight text-foreground">
             Personel
           </h2>
-          <p className="mt-2 text-slate-soft">Zarządzaj zespołem opiekunów i pielęgniarek.</p>
+          <p className="mt-2 text-muted-foreground">Zarządzaj zespołem opiekunów i pielęgniarek.</p>
         </div>
         {!isImpersonating ? (
           <InviteStaffDialog />
         ) : (
-          <div className="flex items-center gap-2 rounded-xl bg-amber-500/10 px-4 py-2 text-xs font-medium text-amber-700 border border-amber-500/20">
+          <div className="flex items-center gap-2 rounded-xl bg-muted px-4 py-2 text-xs font-medium text-foreground border border-border">
             <span>Tryb podglądu (impersonacja) — dodawanie personelu wyłączone</span>
           </div>
         )}
       </div>
 
-      <Card className="rounded-xl border-none ring-1 ring-slate/5 overflow-hidden">
+      <Card className="rounded-xl border-none ring-1 ring-border overflow-hidden">
         <CardContent className="p-0">
           <div className="relative w-full overflow-auto">
             <Table>
-              <TableHeader className="text-slate-soft">
+              <TableHeader className="text-muted-foreground">
                 <TableRow>
                   <TableHead>Pracownik</TableHead>
                   <TableHead>Rola</TableHead>
@@ -77,28 +77,28 @@ export default async function AdminStaffPage() {
                   <TableRow key={staffUser.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10 border border-slate/10">
+                        <Avatar className="h-10 w-10 border border-border">
                           {staffUser.user_metadata?.avatar_url && (
                             <AvatarImage src={staffUser.user_metadata.avatar_url} alt={staffUser.email} />
                           )}
-                          <AvatarFallback className="bg-sage/10 text-sage">
+                          <AvatarFallback className="bg-primary/10 text-primary">
                             <UserCog className="h-5 w-5" />
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <div className="font-medium text-slate text-base">{staffUser.email}</div>
+                          <div className="font-medium text-foreground text-base">{staffUser.email}</div>
                           {staffUser.app_metadata?.is_active === false && (
-                            <span className="inline-flex items-center rounded-md bg-slate/10 px-2 py-0.5 text-[10px] font-medium text-slate-soft mt-1">
+                            <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground mt-1">
                               Zarchiwizowany
                             </span>
                           )}
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-slate">
+                    <TableCell className="text-foreground">
                       {staffUser.app_metadata?.role === 'nurse' ? 'Pielęgniarka / Pielęgniarz' : 'Sanitariusz / Sanitariuszka'}
                     </TableCell>
-                    <TableCell className="text-slate-soft">
+                    <TableCell className="text-muted-foreground">
                       {staffUser.last_sign_in_at 
                         ? new Date(staffUser.last_sign_in_at).toLocaleDateString('pl-PL') + ' ' + new Date(staffUser.last_sign_in_at).toLocaleTimeString('pl-PL')
                         : 'Nigdy'
@@ -117,7 +117,7 @@ export default async function AdminStaffPage() {
                 ))}
                 {staff.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-slate-soft">
+                    <TableCell colSpan={4} className="text-center text-muted-foreground">
                       Brak przypisanego personelu. Zaproś pracowników za pomocą przycisku powyżej.
                     </TableCell>
                   </TableRow>

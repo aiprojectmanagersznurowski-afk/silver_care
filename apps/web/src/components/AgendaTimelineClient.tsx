@@ -122,7 +122,7 @@ export function AgendaTimelineClient({ items, accentColor = "var(--primary)", vi
         {/* Vertical line */}
         <div
           className="absolute left-[52px] top-0 bottom-0 w-px"
-          style={{ background: "linear-gradient(to bottom, transparent, var(--border) 10%, var(--border) 90%, transparent)" }}
+          style={{ background: "var(--border)" }}
         />
 
         <div className="space-y-1">
@@ -169,7 +169,6 @@ export function AgendaTimelineClient({ items, accentColor = "var(--primary)", vi
                   className="flex-1 mb-2 rounded-xl overflow-hidden transition-all duration-200"
                   style={{
                     background: "var(--card)",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)",
                     opacity: past ? 1 : 0.72,
                   }}
                 >

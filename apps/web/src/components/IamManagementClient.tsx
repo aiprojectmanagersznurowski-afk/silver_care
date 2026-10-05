@@ -234,9 +234,9 @@ export function IamManagementClient({
   if (currentState === 'loading') {
     return (
       <div className="space-y-8 animate-pulse" aria-busy="true" aria-label="Ładowanie panelu uprawnień">
-        <div className="h-10 w-72 rounded-xl bg-slate/10" />
-        <div className="h-64 rounded-xl bg-slate/10" />
-        <div className="h-64 rounded-xl bg-slate/10" />
+        <div className="h-10 w-72 rounded-xl bg-muted" />
+        <div className="h-64 rounded-xl bg-muted" />
+        <div className="h-64 rounded-xl bg-muted" />
       </div>
     )
   }
@@ -248,13 +248,13 @@ export function IamManagementClient({
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-destructive/10 text-destructive mb-4">
           <AlertCircle className="h-8 w-8" />
         </div>
-        <h3 className="text-xl font-semibold text-slate mb-2">Błąd wczytywania danych IAM</h3>
-        <p className="text-slate-soft max-w-md mx-auto mb-6">
+        <h3 className="text-xl font-semibold text-foreground mb-2">Błąd wczytywania danych IAM</h3>
+        <p className="text-muted-foreground max-w-md mx-auto mb-6">
           {errorMessage || 'Wystąpił problem podczas pobierania rejestru uprawnień lub użytkowników.'}
         </p>
         <Button
           onClick={() => window.location.reload()}
-          className="min-h-[48px] rounded-xl px-6 bg-slate text-white hover:bg-slate/90"
+          className="min-h-[48px] rounded-xl px-6 bg-foreground text-white hover:bg-muted"
         >
           <RefreshCw className="mr-2 h-4 w-4" />
           Spróbuj ponownie
@@ -266,12 +266,12 @@ export function IamManagementClient({
   // 3. Stan EMPTY (Stan pusty z czytelnym wyjaśnieniem)
   if (currentState === 'empty') {
     return (
-      <Card className="rounded-xl border-none ring-1 ring-slate/5 p-12 text-center">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-sage/10 text-sage mb-4">
+      <Card className="rounded-xl border-none ring-1 ring-border p-12 text-center">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary mb-4">
           <UserCog className="h-8 w-8" />
         </div>
-        <h3 className="text-xl font-semibold text-slate mb-2">Brak zarejestrowanych kont</h3>
-        <p className="text-slate-soft max-w-md mx-auto">
+        <h3 className="text-xl font-semibold text-foreground mb-2">Brak zarejestrowanych kont</h3>
+        <p className="text-muted-foreground max-w-md mx-auto">
           W systemie nie odnaleziono jeszcze żadnych kont użytkowników. Gdy administratorzy placówek lub personel dołączą do platformy, pojawią się w tym panelu.
         </p>
       </Card>
@@ -286,7 +286,7 @@ export function IamManagementClient({
           role="status"
           className={`flex items-center gap-3 rounded-xl p-4 text-sm font-medium ${
             statusMessage.type === 'success'
-              ? 'bg-sage/10 text-sage border border-sage/20'
+              ? 'bg-primary/10 text-primary border border-primary/20'
               : 'bg-destructive/10 text-destructive border border-destructive/20'
           }`}
         >
@@ -300,30 +300,30 @@ export function IamManagementClient({
       )}
 
       {createdCredentials && (
-        <div className="rounded-xl border border-sage/30 bg-sage/5 p-6 space-y-3">
+        <div className="rounded-xl border border-primary/30 bg-primary/5 p-6 space-y-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sage font-semibold">
+            <div className="flex items-center gap-2 text-primary font-semibold">
               <Key className="h-5 w-5" />
               <span>Utworzono nowe konto użytkownika!</span>
             </div>
             <button
               type="button"
               onClick={() => setCreatedCredentials(null)}
-              className="text-slate-soft hover:text-slate text-sm font-medium"
+              className="text-muted-foreground hover:text-foreground text-sm font-medium"
             >
               Zamknij powiadomienie
             </button>
           </div>
-          <p className="text-sm text-slate-soft">
+          <p className="text-sm text-muted-foreground">
             Przekaż poniższe dane logowania użytkownikowi. Hasło tymczasowe nie będzie ponownie widoczne w panelu.
           </p>
-          <div className="flex flex-wrap items-center gap-4 bg-white p-3 rounded-xl border border-slate/10 font-mono text-xs">
+          <div className="flex flex-wrap items-center gap-4 bg-card p-3 rounded-xl border border-border font-mono text-xs">
             <div><strong>E-mail:</strong> {createdCredentials.email}</div>
             <div><strong>Rola:</strong> {createdCredentials.role}</div>
             {createdCredentials.temporaryPassword && (
               <div className="flex items-center gap-2">
                 <strong>Hasło:</strong> 
-                <span className="bg-slate/5 px-2 py-1 rounded select-all">{createdCredentials.temporaryPassword}</span>
+                <span className="bg-muted/50 px-2 py-1 rounded select-all">{createdCredentials.temporaryPassword}</span>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
@@ -338,7 +338,7 @@ export function IamManagementClient({
                         setTimeout(() => setCopiedPassword(false), 2000)
                       }}
                     >
-                      {copiedPassword ? <Check className="h-3 w-3 text-sage mr-1" /> : <Copy className="h-3 w-3 mr-1" />}
+                      {copiedPassword ? <Check className="h-3 w-3 text-primary mr-1" /> : <Copy className="h-3 w-3 mr-1" />}
                       {copiedPassword ? 'Skopiowano' : 'Kopiuj hasło'}
                     </Button>
                   </TooltipTrigger>

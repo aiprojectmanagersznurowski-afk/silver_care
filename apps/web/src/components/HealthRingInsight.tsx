@@ -23,13 +23,13 @@ export function HealthRingInsight({ metrics }: HealthRingInsightProps) {
   const sleepPct = Math.min((sleep / maxSleep) * 100, 100);
 
   return (
-    <div className="flex flex-col rounded-[1.75rem] bg-card p-6 ring-1 ring-border shadow-sm">
+    <div className="flex flex-col rounded-[1.75rem] bg-card p-6 ring-1 ring-border">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h3 className="text-[1.15rem] text-slate font-display">Aktywność i Zdrowie</h3>
-          <p className="mt-0.5 text-[0.85rem] text-slate-soft">Pomiary z opaski</p>
+          <h3 className="text-[1.15rem] text-foreground font-display">Aktywność i Zdrowie</h3>
+          <p className="mt-0.5 text-[0.85rem] text-muted-foreground">Pomiary z opaski</p>
         </div>
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sage-soft text-sage">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent text-primary">
           <Activity className="h-5 w-5" />
         </div>
       </div>
@@ -55,7 +55,7 @@ export function HealthRingInsight({ metrics }: HealthRingInsightProps) {
 
         {/* Steps Ring (Inner) */}
         <svg className="absolute inset-0 h-full w-full -rotate-90">
-          <circle cx="96" cy="96" r="62" fill="none" stroke="rgba(15,23,42,0.05)" strokeWidth="14" />
+          <circle cx="96" cy="96" r="62" fill="none" stroke="var(--border)" strokeWidth="14" />
           <circle
             cx="96"
             cy="96"
@@ -71,32 +71,32 @@ export function HealthRingInsight({ metrics }: HealthRingInsightProps) {
         </svg>
 
         <div className="flex flex-col items-center">
-          <Heart className="h-6 w-6 text-sage" fill="currentColor" />
+          <Heart className="h-6 w-6 text-primary" fill="currentColor" />
         </div>
       </div>
 
       <div className="mt-auto space-y-3">
         {metrics.sleep_hours !== undefined && (
-          <div className="flex items-center justify-between rounded-2xl bg-sage-soft px-4 py-3">
+          <div className="flex items-center justify-between rounded-xl bg-accent px-4 py-3">
             <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-sage shadow-sm">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-card text-primary">
                 <Moon className="h-4 w-4" />
               </div>
-              <span className="text-[0.95rem] text-sage-deep font-medium">Sen</span>
+              <span className="text-[0.95rem] text-primary font-medium">Sen</span>
             </div>
-            <span className="text-[1.05rem] font-medium text-sage-deep">{sleep}h</span>
+            <span className="text-[1.05rem] font-medium text-primary">{sleep}h</span>
           </div>
         )}
 
         {metrics.steps !== undefined && (
-          <div className="flex items-center justify-between rounded-2xl bg-slate/5 px-4 py-3">
+          <div className="flex items-center justify-between rounded-xl bg-muted/50 px-4 py-3">
             <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-slate shadow-sm">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-card text-foreground">
                 <Footprints className="h-4 w-4" />
               </div>
-              <span className="text-[0.95rem] text-slate font-medium">Kroki</span>
+              <span className="text-[0.95rem] text-foreground font-medium">Kroki</span>
             </div>
-            <span className="text-[1.05rem] font-medium text-slate">{steps}</span>
+            <span className="text-[1.05rem] font-medium text-foreground">{steps}</span>
           </div>
         )}
       </div>

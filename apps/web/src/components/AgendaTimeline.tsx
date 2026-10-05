@@ -14,9 +14,9 @@ export function AgendaTimeline({ residentId }: AgendaTimelineProps) {
   if (loading) {
     return (
       <div className="flex flex-col space-y-4 animate-pulse p-4">
-        <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-        <div className="h-10 bg-gray-200 rounded w-full"></div>
-        <div className="h-10 bg-gray-200 rounded w-full"></div>
+        <div className="h-4 bg-muted rounded w-1/4"></div>
+        <div className="h-10 bg-muted rounded w-full"></div>
+        <div className="h-10 bg-muted rounded w-full"></div>
       </div>
     );
   }
@@ -32,7 +32,7 @@ export function AgendaTimeline({ residentId }: AgendaTimelineProps) {
 
   if (agenda.length === 0) {
     return (
-      <div className="p-8 text-center text-gray-500 bg-gray-50 rounded-md border border-dashed border-gray-300">
+      <div className="p-8 text-center text-muted-foreground bg-muted rounded-md border border-dashed border-border">
         <p>Brak zaplanowanych wydarzeń na dziś.</p>
         <p className="text-sm mt-2">Gdy tylko pojawi się plan dnia, zobaczysz go tutaj.</p>
       </div>
@@ -41,17 +41,17 @@ export function AgendaTimeline({ residentId }: AgendaTimelineProps) {
 
   return (
     <div className="p-4">
-      <h3 className="text-lg font-semibold mb-4 text-gray-800">Plan Dnia</h3>
-      <div className="relative border-l border-gray-200 ml-3 space-y-6">
+      <h3 className="text-lg font-semibold mb-4 text-foreground">Plan Dnia</h3>
+      <div className="relative border-l border-border ml-3 space-y-6">
         {agenda.map((item: AgendaItem) => (
           <div key={item.id} className="mb-8 ml-6 relative">
-            <span className="absolute -left-[35px] top-1 flex items-center justify-center w-6 h-6 bg-muted rounded-full ring-4 ring-white">
+            <span className="absolute -left-[35px] top-1 flex items-center justify-center w-6 h-6 bg-muted rounded-full ring-4 ring-card">
               <div className="w-2.5 h-2.5 bg-primary rounded-full"></div>
             </span>
             <div className="flex flex-col">
               <span className="text-sm font-semibold text-foreground">{item.time}</span>
-              <h4 className="text-md font-medium text-gray-900">{item.title}</h4>
-              <span className="text-xs text-gray-500">{item.type}</span>
+              <h4 className="text-md font-medium text-foreground">{item.title}</h4>
+              <span className="text-xs text-muted-foreground">{item.type}</span>
             </div>
           </div>
         ))}

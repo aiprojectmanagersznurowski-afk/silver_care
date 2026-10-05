@@ -68,7 +68,7 @@ export function FamilyMessageForm({ residentId }: FamilyMessageFormProps) {
   };
 
   return (
-    <div className="flex flex-col h-[500px] relative bg-card rounded-2xl border border-border overflow-hidden">
+    <div className="flex flex-col h-[500px] relative bg-card rounded-xl border border-border overflow-hidden">
       
       {/* Okno czatu */}
       <div 
@@ -109,7 +109,7 @@ export function FamilyMessageForm({ residentId }: FamilyMessageFormProps) {
                 )}
                 <div className={`flex flex-col ${isFamily ? 'items-end' : 'items-start'}`}>
                   <div 
-                    className={`max-w-[78%] px-4 py-2.5 rounded-2xl shadow-sm ${
+                    className={`max-w-[78%] px-4 py-2.5 rounded-xl ${
                       isFamily 
                         ? 'bg-primary text-primary-foreground rounded-br-sm' 
                         : 'bg-card text-foreground border border-border rounded-bl-sm'
@@ -131,7 +131,7 @@ export function FamilyMessageForm({ residentId }: FamilyMessageFormProps) {
 
       {/* Komunikat o błędzie (np. limit wiadomości) */}
       {sendState === 'error' && sendError && (
-        <div className="absolute bottom-[64px] left-4 right-4 bg-destructive/10 border border-destructive/20 rounded-xl p-2.5 text-center text-[12px] text-destructive font-medium shadow-sm z-20 animate-in fade-in slide-in-from-bottom-2">
+        <div className="absolute bottom-[64px] left-4 right-4 bg-destructive/10 border border-destructive/20 rounded-xl p-2.5 text-center text-[12px] text-destructive font-medium z-20 animate-in fade-in slide-in-from-bottom-2">
           {sendError}
         </div>
       )}
@@ -141,7 +141,7 @@ export function FamilyMessageForm({ residentId }: FamilyMessageFormProps) {
         className="absolute bottom-0 left-0 right-0 px-4 py-3 flex items-center gap-3 bg-surface/90 backdrop-blur-md border-t border-border"
       >
         <div
-          className="flex-1 flex items-center rounded-full px-4 py-2.5 bg-background border border-border shadow-sm"
+          className="flex-1 flex items-center rounded-full px-4 py-2.5 bg-background border border-border"
         >
           <input
             className="flex-1 text-[14px] font-normal bg-transparent text-foreground outline-none"

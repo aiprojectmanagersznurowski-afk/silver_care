@@ -57,24 +57,24 @@ export function PolarWearableCard({
   }
 
   return (
-    <Card className="rounded-2xl border-none shadow-sm ring-1 ring-slate/5">
+    <Card className="rounded-xl border-none ring-1 ring-border">
       <CardHeader className="flex flex-row items-center justify-between pb-3">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <Watch className="h-5 w-5 text-indigo-600" />
-            <CardTitle className="text-lg font-display text-slate">Opaska telemetryczna Polar 360</CardTitle>
+            <Watch className="h-5 w-5 text-foreground" />
+            <CardTitle className="text-lg font-display text-foreground">Opaska telemetryczna Polar 360</CardTitle>
           </div>
-          <CardDescription className="text-xs text-slate-soft">
+          <CardDescription className="text-xs text-muted-foreground">
             Integracja przez Polar AccessLink API v3 (kroki, sen, czas aktywności)
           </CardDescription>
         </div>
         {initialLinked ? (
-          <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 flex items-center gap-1.5 py-1 px-2.5">
+          <Badge className="bg-muted text-foreground border-border flex items-center gap-1.5 py-1 px-2.5">
             <CheckCircle2 className="h-3.5 w-3.5" />
             Połączono
           </Badge>
         ) : (
-          <Badge variant="outline" className="text-amber-700 border-amber-300 bg-amber-50/50 flex items-center gap-1 py-1 px-2.5">
+          <Badge variant="outline" className="text-foreground border-border bg-muted flex items-center gap-1 py-1 px-2.5">
             <AlertTriangle className="h-3.5 w-3.5" />
             Niepołączono
           </Badge>
@@ -84,14 +84,14 @@ export function PolarWearableCard({
       <CardContent className="space-y-4 pt-2">
         {initialLinked ? (
           <div className="space-y-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm bg-slate-50/60 p-3.5 rounded-xl border border-slate-100">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm bg-muted p-3.5 rounded-xl border border-border">
               <div>
-                <span className="text-xs text-slate-400 block mb-0.5">Identyfikator użytkownika Polar</span>
-                <span className="font-mono font-medium text-slate-800">{externalUserId || 'Brak'}</span>
+                <span className="text-xs text-muted-foreground block mb-0.5">Identyfikator użytkownika Polar</span>
+                <span className="font-mono font-medium text-foreground">{externalUserId || 'Brak'}</span>
               </div>
               <div>
-                <span className="text-xs text-slate-400 block mb-0.5">Data sparowania</span>
-                <span className="font-medium text-slate-800">
+                <span className="text-xs text-muted-foreground block mb-0.5">Data sparowania</span>
+                <span className="font-medium text-foreground">
                   {linkedAt ? new Date(linkedAt).toLocaleDateString('pl-PL') : 'Aktywne'}
                 </span>
               </div>
@@ -99,7 +99,7 @@ export function PolarWearableCard({
 
             {syncStatus && (
               <div className={`p-3 rounded-xl text-xs flex items-center gap-2 ${
-                isError ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                isError ? 'bg-destructive/10 text-destructive border border-destructive/20' : 'bg-muted text-foreground border border-border'
               }`}>
                 {isError ? <AlertTriangle className="h-4 w-4 shrink-0" /> : <CheckCircle2 className="h-4 w-4 shrink-0" />}
                 <span>{syncStatus}</span>
@@ -120,7 +120,7 @@ export function PolarWearableCard({
 
               <a
                 href={`/api/polar/auth?residentId=${residentId}`}
-                className="text-xs text-indigo-600 hover:text-indigo-800 inline-flex items-center gap-1 font-medium transition-colors"
+                className="text-xs text-foreground hover:text-foreground inline-flex items-center gap-1 font-medium transition-colors"
               >
                 Zmień powiązanie
                 <ExternalLink className="h-3 w-3" />
@@ -129,12 +129,12 @@ export function PolarWearableCard({
           </div>
         ) : (
           <div className="space-y-3 py-1">
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-foreground">
               Podopieczny nie ma jeszcze sparowanej opaski Polar. Połączenie pozwoli automatycznie zliczać kroki, czas aktywności i długość snu z zachowaniem ochrony danych osobowych.
             </p>
             <a
               href={`/api/polar/auth?residentId=${residentId}`}
-              className="inline-flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white gap-2 text-xs font-medium rounded-xl h-9 px-4 transition-colors shadow-sm"
+              className="inline-flex items-center justify-center bg-primary hover:bg-primary text-white gap-2 text-xs font-medium rounded-xl h-9 px-4 transition-colors"
             >
               <Watch className="h-4 w-4" />
               Sparuj opaskę w Polar Flow

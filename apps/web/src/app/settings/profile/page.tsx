@@ -16,13 +16,13 @@ export default async function ProfileSettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-10 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-muted py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
             Profil i Bezpieczeństwo Konta
           </h1>
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="mt-2 text-sm text-foreground">
             Zarządzaj swoimi danymi uwierzytelniającymi, aktywnymi sesjami i poziomem zabezpieczeń.
           </p>
         </div>

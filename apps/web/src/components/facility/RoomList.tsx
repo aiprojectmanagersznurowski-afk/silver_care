@@ -130,7 +130,7 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
   return (
     <div className="space-y-6 mt-8">
       {/* Pasek narzędziowy: Przełącznik widoku oraz Filtry */}
-      <div className="flex flex-col gap-4 rounded-xl bg-white p-4 border border-slate/10">
+      <div className="flex flex-col gap-4 rounded-xl bg-card p-4 border border-border">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           {/* Wyszukiwarka */}
           <div className="relative flex-1 max-w-md">
@@ -152,7 +152,7 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
               size="sm"
               onClick={() => setViewMode('grid')}
               className={`h-8 px-3 rounded-lg text-xs font-medium ${
-                viewMode === 'grid' ? 'bg-sage hover:bg-sage-dark text-white' : 'text-slate'
+                viewMode === 'grid' ? 'bg-primary hover:bg-primary/90 text-white' : 'text-foreground'
               }`}
             >
               <LayoutGrid className="w-3.5 h-3.5 mr-1.5" />
@@ -164,7 +164,7 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
               size="sm"
               onClick={() => setViewMode('table')}
               className={`h-8 px-3 rounded-lg text-xs font-medium ${
-                viewMode === 'table' ? 'bg-sage hover:bg-sage-dark text-white' : 'text-slate'
+                viewMode === 'table' ? 'bg-primary hover:bg-primary/90 text-white' : 'text-foreground'
               }`}
             >
               <TableIcon className="w-3.5 h-3.5 mr-1.5" />
@@ -252,15 +252,15 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
                 key={room.id}
                 data-testid="room-card"
                 className={`overflow-hidden rounded-xl border transition-all duration-200 ${
-                  isExpanded ? 'ring-2 ring-sage/30' : 'hover:bg-muted/40'
+                  isExpanded ? 'ring-2 ring-primary/30' : 'hover:bg-muted/40'
                 }`}
               >
                 <div className="p-4 space-y-3">
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="flex items-center gap-2">
-                        <DoorOpen className="w-5 h-5 text-sage" />
-                        <h4 className="font-semibold text-base text-slate">Pokój {room.number}</h4>
+                        <DoorOpen className="w-5 h-5 text-primary" />
+                        <h4 className="font-semibold text-base text-foreground">Pokój {room.number}</h4>
                       </div>
                       <div className="text-xs text-muted-foreground mt-0.5">
                         {room.floor} {room.sector ? `• Sektor ${room.sector}` : ''}
@@ -271,8 +271,8 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-full ${
                           room.free > 0
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                            : 'bg-amber-50 text-amber-700 border border-amber-200'
+                            ? 'bg-muted text-foreground border border-border'
+                            : 'bg-muted text-foreground border border-border'
                         }`}
                       >
                         {room.free > 0 ? `${room.free} wolne` : 'Zajęty'}
@@ -284,13 +284,13 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
                   <div className="flex flex-wrap gap-1.5 text-[11px]">
                     {/* Reguła parteru */}
                     {isGround ? (
-                      <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-0.5 font-medium text-blue-700 border border-blue-200/60">
-                        <CheckCircle2 className="w-3 h-3 text-blue-600" />
+                      <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 font-medium text-foreground border border-border">
+                        <CheckCircle2 className="w-3 h-3 text-foreground" />
                         Parter (ZSN / leżący)
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 rounded-md bg-slate-50 px-2 py-0.5 text-slate-600 border border-slate-200/60">
-                        <Info className="w-3 h-3 text-slate-400" />
+                      <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-foreground border border-border">
+                        <Info className="w-3 h-3 text-muted-foreground" />
                         Wyższe piętro
                       </span>
                     )}
@@ -299,16 +299,16 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
                     <span
                       className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 font-medium border ${
                         genderInfo.variant === 'warning'
-                          ? 'bg-rose-50 text-rose-700 border-rose-200'
+                          ? 'bg-muted text-foreground border-border'
                           : genderInfo.variant === 'male'
-                          ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                          ? 'bg-muted text-foreground border-border'
                           : genderInfo.variant === 'female'
-                          ? 'bg-purple-50 text-purple-700 border-purple-200'
-                          : 'bg-slate-50 text-slate-600 border-slate-200'
+                          ? 'bg-muted text-foreground border-border'
+                          : 'bg-muted text-foreground border-border'
                       }`}
                     >
                       {genderInfo.variant === 'warning' && (
-                        <AlertTriangle className="w-3 h-3 text-rose-600" />
+                        <AlertTriangle className="w-3 h-3 text-foreground" />
                       )}
                       {genderInfo.label}
                     </span>
@@ -320,10 +320,10 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
                       <span>Łóżka ({room.occupied || 0}/{room.beds || 0})</span>
                       <span>{room.free || 0} wolnych</span>
                     </div>
-                    <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all ${
-                          room.free === 0 ? 'bg-amber-500' : 'bg-emerald-500'
+                          room.free === 0 ? 'bg-primary' : 'bg-primary'
                         }`}
                         style={{
                           width: `${room.beds > 0 ? ((room.occupied || 0) / room.beds) * 100 : 0}%`,
@@ -339,7 +339,7 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
                       variant="ghost"
                       size="sm"
                       onClick={() => toggleRoom(room.id)}
-                      className="text-xs text-sage hover:text-sage-dark font-medium p-0 h-auto"
+                      className="text-xs text-primary hover:text-primary font-medium p-0 h-auto"
                     >
                       {isExpanded ? (
                         <>
@@ -358,7 +358,7 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
                 </div>
 
                 {isExpanded && (
-                  <CardContent className="bg-slate-50/60 p-4 border-t">
+                  <CardContent className="bg-muted p-4 border-t">
                     <BedList
                       roomId={room.id}
                       roomNumber={room.number}
@@ -375,11 +375,11 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
         /* WIDOK TABELARYCZNY */
         <div
           data-testid="room-table"
-          className="rounded-xl border border-slate/10 bg-white overflow-hidden"
+          className="rounded-xl border border-border bg-card overflow-hidden"
         >
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader className="font-semibold text-slate-soft">
+              <TableHeader className="font-semibold text-muted-foreground">
                 <TableRow>
                   <TableHead>Pokój</TableHead>
                   <TableHead>Piętro</TableHead>
@@ -400,14 +400,14 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
                     <TableRow
                       key={room.id}
                     >
-                      <TableCell className="font-semibold text-slate">
+                      <TableCell className="font-semibold text-foreground">
                         <div className="flex items-center gap-2">
-                          <DoorOpen className="w-4 h-4 text-sage" />
+                          <DoorOpen className="w-4 h-4 text-primary" />
                           <span>Pokój {room.number}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-slate-soft">{room.floor}</TableCell>
-                      <TableCell className="text-slate-soft">
+                      <TableCell className="text-muted-foreground">{room.floor}</TableCell>
+                      <TableCell className="text-muted-foreground">
                         {room.sector ? `Sektor ${room.sector}` : '—'}
                       </TableCell>
                       <TableCell className="text-center font-medium">
@@ -417,8 +417,8 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
                         <span
                           className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                             room.free > 0
-                              ? 'bg-emerald-50 text-emerald-700'
-                              : 'bg-amber-50 text-amber-700'
+                              ? 'bg-muted text-foreground'
+                              : 'bg-muted text-foreground'
                           }`}
                         >
                           {room.occupied || 0} / {room.beds || 0} ({room.free || 0} wolnych)
@@ -427,15 +427,15 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
                       <TableCell>
                         <div className="flex flex-wrap items-center gap-1.5 text-xs">
                           {isGround && (
-                            <span className="inline-flex items-center gap-1 rounded bg-blue-50 px-1.5 py-0.5 text-[11px] font-medium text-blue-700">
+                            <span className="inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-[11px] font-medium text-foreground">
                               Parter
                             </span>
                           )}
                           <span
                             className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium ${
                               genderInfo.variant === 'warning'
-                                ? 'bg-rose-50 text-rose-700'
-                                : 'bg-slate-100 text-slate-700'
+                                ? 'bg-muted text-foreground'
+                                : 'bg-muted text-foreground'
                             }`}
                           >
                             {genderInfo.label}
@@ -450,7 +450,7 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
                             variant="ghost"
                             size="sm"
                             onClick={() => toggleRoom(room.id)}
-                            className="h-8 px-2 text-xs text-sage hover:text-sage-dark"
+                            className="h-8 px-2 text-xs text-primary hover:text-primary"
                           >
                             {isExpanded ? 'Zwiń' : 'Łóżka'}
                           </Button>

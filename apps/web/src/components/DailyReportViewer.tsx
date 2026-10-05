@@ -13,16 +13,16 @@ export function DailyReportViewer({ residentId }: DailyReportViewerProps) {
   if (loading) {
     return (
       <div className="flex flex-col space-y-4 animate-pulse p-4 border rounded-md">
-        <div className="h-6 bg-gray-200 rounded w-1/3"></div>
-        <div className="h-4 bg-gray-200 rounded w-full"></div>
-        <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+        <div className="h-6 bg-muted rounded w-1/3"></div>
+        <div className="h-4 bg-muted rounded w-full"></div>
+        <div className="h-4 bg-muted rounded w-2/3"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="p-4 bg-red-50 text-red-700 rounded-md border border-red-200">
+      <div className="p-4 bg-destructive/10 text-destructive rounded-md border border-destructive/20">
         <p className="font-semibold">Błąd ładowania raportu</p>
         <p className="text-sm">{error}</p>
       </div>
@@ -31,7 +31,7 @@ export function DailyReportViewer({ residentId }: DailyReportViewerProps) {
 
   if (!report) {
     return (
-      <div className="p-8 text-center text-gray-500 bg-gray-50 rounded-md border border-dashed border-gray-300">
+      <div className="p-8 text-center text-muted-foreground bg-muted rounded-md border border-dashed border-border">
         <p>Brak raportu - pojawi się wkrótce.</p>
         <p className="text-sm mt-2">Pracujemy nad przygotowaniem najnowszego podsumowania dnia.</p>
       </div>
@@ -46,13 +46,13 @@ export function DailyReportViewer({ residentId }: DailyReportViewerProps) {
   });
 
   return (
-    <div className="p-4 border rounded-md bg-white shadow-sm">
+    <div className="p-4 border rounded-md bg-card">
       <div className="border-b pb-3 mb-4">
-        <h3 className="text-lg font-semibold text-gray-800">Raport dnia</h3>
-        <p className="text-sm text-gray-500 capitalize">{reportDate}</p>
+        <h3 className="text-lg font-semibold text-foreground">Raport dnia</h3>
+        <p className="text-sm text-muted-foreground capitalize">{reportDate}</p>
       </div>
       
-      <div className="text-gray-700 space-y-4">
+      <div className="text-foreground space-y-4">
         <p>{report.content?.text || report.content?.msg || 'Brak tekstu w raporcie.'}</p>
         
         {/* Renderowanie behawioralnych statystyk (jeśli obecne) */}
@@ -70,7 +70,7 @@ export function DailyReportViewer({ residentId }: DailyReportViewerProps) {
         )}
       </div>
 
-      <div className="mt-6 pt-4 border-t text-xs text-gray-400 text-center">
+      <div className="mt-6 pt-4 border-t text-xs text-muted-foreground text-center">
         Podsumowanie generowane przy wsparciu AI, zatwierdzone przez personel placówki
       </div>
     </div>

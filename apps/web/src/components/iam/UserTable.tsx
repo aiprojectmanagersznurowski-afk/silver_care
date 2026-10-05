@@ -32,15 +32,15 @@ export function UserTable({
   addUserProps,
 }: UserTableProps) {
   return (
-    <Card className="rounded-xl border-none ring-1 ring-slate/5 overflow-hidden">
-      <CardHeader className="border-b border-slate/5 bg-white px-6 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <Card className="rounded-xl border-none ring-1 ring-border overflow-hidden">
+      <CardHeader className="border-b border-border bg-card px-6 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sage/10 text-sage shrink-0">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
             <Shield className="h-5 w-5" />
           </div>
           <div>
-            <CardTitle className="text-lg font-semibold text-slate">Użytkownicy i Role</CardTitle>
-            <CardDescription className="text-slate-soft">
+            <CardTitle className="text-lg font-semibold text-foreground">Użytkownicy i Role</CardTitle>
+            <CardDescription className="text-muted-foreground">
               Zarządzaj kontami użytkowników, przydziałem ról i uprawnień dostępowych.
             </CardDescription>
           </div>
@@ -52,7 +52,7 @@ export function UserTable({
       <CardContent className="p-0">
         <div className="overflow-x-auto">
           <Table aria-label="Tabela użytkowników i ról IAM">
-            <TableHeader className="text-slate-soft">
+            <TableHeader className="text-muted-foreground">
               <TableRow>
                 <TableHead scope="col">Użytkownik</TableHead>
                 <TableHead scope="col">Placówka</TableHead>
@@ -69,14 +69,14 @@ export function UserTable({
                 return (
                   <TableRow key={user.id}>
                     <TableCell>
-                      <div className="font-medium text-slate text-base">{user.email}</div>
-                      <div className="font-mono text-xs text-slate-soft">{user.id}</div>
+                      <div className="font-medium text-foreground text-base">{user.email}</div>
+                      <div className="font-mono text-xs text-muted-foreground">{user.id}</div>
                     </TableCell>
-                    <TableCell className="text-slate-soft font-mono">
+                    <TableCell className="text-muted-foreground font-mono">
                       {user.organizationId || 'Globalna / Brak'}
                     </TableCell>
                     <TableCell>
-                      <span className="inline-flex items-center rounded-lg bg-slate/10 px-2.5 py-1 text-xs font-medium text-slate">
+                      <span className="inline-flex items-center rounded-lg bg-muted px-2.5 py-1 text-xs font-medium text-foreground">
                         {user.role}
                       </span>
                     </TableCell>
@@ -102,9 +102,9 @@ export function UserTable({
                               variant="outline"
                               size="sm"
                               onClick={() => onResetPasswordClick(user)}
-                              className="min-h-[40px] rounded-xl border-slate/20 text-slate hover:bg-slate/5"
+                              className="min-h-[40px] rounded-xl border-border text-foreground hover:bg-muted/50"
                             >
-                              <Key className="h-4 w-4 mr-1.5 text-slate-soft" />
+                              <Key className="h-4 w-4 mr-1.5 text-muted-foreground" />
                               Hasło
                             </Button>
                           </TooltipTrigger>
@@ -119,7 +119,7 @@ export function UserTable({
                               <Button
                                 disabled={!hasChanged || isPending}
                                 onClick={() => onApplyRole(user.id)}
-                                className="min-h-[40px] rounded-xl bg-sage px-4 text-sm font-medium text-white hover:bg-sage/90 disabled:opacity-40"
+                                className="min-h-[40px] rounded-xl bg-primary px-4 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-40"
                               >
                                 Zastosuj
                               </Button>
