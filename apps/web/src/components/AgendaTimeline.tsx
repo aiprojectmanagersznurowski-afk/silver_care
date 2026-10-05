@@ -23,7 +23,7 @@ export function AgendaTimeline({ residentId }: AgendaTimelineProps) {
 
   if (error) {
     return (
-      <div className="p-4 bg-red-50 text-red-700 rounded-md border border-red-200">
+      <div className="p-4 bg-destructive/10 text-destructive rounded-md border border-destructive/20">
         <p className="font-semibold">Błąd ładowania agendy</p>
         <p className="text-sm">{error}</p>
       </div>
@@ -45,11 +45,11 @@ export function AgendaTimeline({ residentId }: AgendaTimelineProps) {
       <div className="relative border-l border-gray-200 ml-3 space-y-6">
         {agenda.map((item: AgendaItem) => (
           <div key={item.id} className="mb-8 ml-6 relative">
-            <span className="absolute -left-[35px] top-1 flex items-center justify-center w-6 h-6 bg-blue-100 rounded-full ring-4 ring-white">
-              <div className="w-2.5 h-2.5 bg-blue-600 rounded-full"></div>
+            <span className="absolute -left-[35px] top-1 flex items-center justify-center w-6 h-6 bg-muted rounded-full ring-4 ring-white">
+              <div className="w-2.5 h-2.5 bg-primary rounded-full"></div>
             </span>
             <div className="flex flex-col">
-              <span className="text-sm font-semibold text-blue-600">{item.time}</span>
+              <span className="text-sm font-semibold text-foreground">{item.time}</span>
               <h4 className="text-md font-medium text-gray-900">{item.title}</h4>
               <span className="text-xs text-gray-500">{item.type}</span>
             </div>

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { groupMessagesIntoThreads, filterThreadsBySearch } from '@/lib/messages-helper';
+import { Textarea } from '@/components/ui/textarea'
 
 interface RawMessage {
   id: string;
@@ -139,18 +140,18 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
   };
 
   return (
-    <div className="flex flex-col h-[750px] bg-white rounded-3xl border border-slate/10 shadow-sm overflow-hidden">
+    <div className="flex flex-col h-[750px] bg-card rounded-xl border border-border overflow-hidden">
       {/* Pasek statusu / nagłówek wewnętrzny */}
-      <div className="flex items-center justify-between border-b border-slate/10 bg-cream/50 px-6 py-4">
+      <div className="flex items-center justify-between border-b border-border bg-background/50 px-6 py-4">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-2xl bg-sage/10 text-sage-dark flex items-center justify-center">
+          <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
             <MessageSquare className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-base font-semibold text-slate font-display">
+            <h3 className="text-base font-semibold text-foreground font-display">
               Skrzynka wiadomości personelu
             </h3>
-            <p className="text-xs text-slate-soft">
+            <p className="text-xs text-muted-foreground">
               Bezpośrednia komunikacja z bliskimi pensjonariuszy placówki.
             </p>
           </div>
@@ -159,7 +160,7 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
         <button
           onClick={fetchMessages}
           disabled={loading}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-slate/20 bg-white px-3 py-1.5 text-xs font-medium text-slate hover:bg-slate/5 transition-colors disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted/50 transition-colors disabled:opacity-50"
         >
           <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
           Odśwież
@@ -168,44 +169,44 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
 
       <div className="flex flex-1 overflow-hidden">
         {/* Lewa kolumna: Lista wątków */}
-        <div className="w-80 md:w-96 border-r border-slate/10 flex flex-col bg-slate/5">
+        <div className="w-80 md:w-96 border-r border-border flex flex-col bg-muted/50">
           {/* Szukajka */}
-          <div className="p-3 border-b border-slate/10 bg-white">
+          <div className="p-3 border-b border-border bg-card">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-soft" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Szukaj podopiecznego lub treści..."
-                className="w-full rounded-xl bg-slate/5 pl-9 pr-4 py-2 text-xs text-slate outline-none placeholder:text-slate-soft focus:ring-1 focus:ring-sage border border-transparent focus:border-sage"
+                className="w-full rounded-xl bg-muted/50 pl-9 pr-4 py-2 text-xs text-foreground outline-none placeholder:text-muted-foreground focus:ring-1 focus:ring-primary border border-transparent focus:border-primary"
               />
             </div>
           </div>
 
           {/* Lista wątków */}
-          <div className="flex-1 overflow-y-auto divide-y divide-slate/10" data-testid="message-threads-list">
+          <div className="flex-1 overflow-y-auto divide-y divide-border" data-testid="message-threads-list">
             {loading && threads.length === 0 ? (
-              <div className="p-6 text-center text-xs text-slate-soft space-y-2">
-                <div className="inline-block animate-spin text-sage">
+              <div className="p-6 text-center text-xs text-muted-foreground space-y-2">
+                <div className="inline-block animate-spin text-primary">
                   <RefreshCw className="h-5 w-5" />
                 </div>
                 <p>Ładowanie wątków...</p>
               </div>
             ) : error && threads.length === 0 ? (
-              <div className="p-6 text-center text-xs text-rose-600 space-y-2">
+              <div className="p-6 text-center text-xs text-destructive space-y-2">
                 <AlertCircle className="h-5 w-5 mx-auto" />
                 <p>{error}</p>
                 <button
                   onClick={fetchMessages}
-                  className="mt-2 text-xs font-semibold underline text-slate"
+                  className="mt-2 text-xs font-semibold underline text-foreground"
                 >
                   Spróbuj ponownie
                 </button>
               </div>
             ) : filteredThreads.length === 0 ? (
-              <div className="p-8 text-center text-xs text-slate-soft" data-testid="messages-empty-state">
-                <p className="font-medium text-slate">Brak wiadomości</p>
+              <div className="p-8 text-center text-xs text-muted-foreground" data-testid="messages-empty-state">
+                <p className="font-medium text-foreground">Brak wiadomości</p>
                 <p className="mt-1">
                   {searchQuery ? 'Brak wyników pasujących do wyszukiwania.' : 'Nie ma jeszcze wiadomości od rodzin.'}
                 </p>
@@ -225,43 +226,43 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
                     }}
                     className={`w-full text-left p-4 transition-all flex items-start gap-3 border-l-4 ${
                       isSelected
-                        ? 'bg-white border-sage shadow-xs'
-                        : 'border-transparent hover:bg-white/60'
+                        ? 'bg-card border-primary'
+                        : 'border-transparent hover:bg-card/60'
                     }`}
                   >
-                    <Avatar className="h-10 w-10 shrink-0 border border-slate/10">
-                      <AvatarFallback className="bg-sage/10 text-sage-dark font-medium text-xs">
+                    <Avatar className="h-10 w-10 shrink-0 border border-border">
+                      <AvatarFallback className="bg-primary/10 text-primary font-medium text-xs">
                         {thread.residentName.split(' ').map(n => n[0]).join('')}
                       </AvatarFallback>
                     </Avatar>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-1 mb-1">
-                        <span className="font-semibold text-xs text-slate truncate">
+                        <span className="font-semibold text-xs text-foreground truncate">
                           {thread.residentName}
                         </span>
-                        <span className="text-[10px] text-slate-soft whitespace-nowrap flex items-center gap-0.5">
+                        <span className="text-[10px] text-muted-foreground whitespace-nowrap flex items-center gap-0.5">
                           <Clock className="h-3 w-3" />
                           {format(new Date(lastMsg.created_at), 'd MMM, HH:mm', { locale: pl })}
                         </span>
                       </div>
 
-                      <p className="text-xs text-slate-soft truncate">
+                      <p className="text-xs text-muted-foreground truncate">
                         {lastMsg.is_from_family ? (
-                          <span className="font-medium text-slate">Rodzina: </span>
+                          <span className="font-medium text-foreground">Rodzina: </span>
                         ) : (
-                          <span className="font-medium text-sage-dark">Personel: </span>
+                          <span className="font-medium text-primary">Personel: </span>
                         )}
                         {lastMsg.content}
                       </p>
 
                       <div className="mt-2 flex items-center justify-between">
-                        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-soft">
-                          <MessageSquare className="h-3 w-3 text-slate-soft" />
+                        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
+                          <MessageSquare className="h-3 w-3 text-muted-foreground" />
                           {thread.messages.length} {thread.messages.length === 1 ? 'wiadomość' : 'wiadomości'}
                         </span>
                         {lastMsg.is_from_family && (
-                          <span className="inline-flex items-center rounded-full bg-sage/10 px-2 py-0.5 text-[10px] font-semibold text-sage-dark">
+                          <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
                             Do odpowiedzi
                           </span>
                         )}
@@ -275,33 +276,33 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
         </div>
 
         {/* Prawa kolumna: Obszar rozmowy */}
-        <div className="flex-1 flex flex-col bg-white">
+        <div className="flex-1 flex flex-col bg-card">
           {activeThread ? (
             <>
               {/* Nagłówek wątku */}
               <div 
                 data-testid="conversation-header"
-                className="px-6 py-4 border-b border-slate/10 flex items-center justify-between bg-white"
+                className="px-6 py-4 border-b border-border flex items-center justify-between bg-card"
               >
                 <div className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10 border border-slate/10">
-                    <AvatarFallback className="bg-sage/10 text-sage-dark font-medium text-sm">
+                  <Avatar className="h-10 w-10 border border-border">
+                    <AvatarFallback className="bg-primary/10 text-primary font-medium text-sm">
                       {activeThread.residentName.split(' ').map(n => n[0]).join('')}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h3 className="font-semibold text-sm text-slate">
+                    <h3 className="font-semibold text-sm text-foreground">
                       {activeThread.residentName}
                     </h3>
-                    <p className="text-xs text-slate-soft flex items-center gap-1.5">
-                      <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-primary" />
                       Wątek wiadomości z rodziną podopiecznego
                     </p>
                   </div>
                 </div>
 
                 <div className="text-right">
-                  <span className="text-[11px] text-slate-soft bg-slate/5 px-2.5 py-1 rounded-full border border-slate/10">
+                  <span className="text-[11px] text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-full border border-border">
                     ID wątku: {activeThread.residentId.slice(0, 8)}
                   </span>
                 </div>
@@ -311,7 +312,7 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
               <div
                 ref={scrollRef}
                 data-testid="messages-scroll-container"
-                className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate/5"
+                className="flex-1 overflow-y-auto p-6 space-y-4 bg-muted/50"
               >
                 {activeThread.messages.map((msg, idx) => {
                   const isStaff = !msg.is_from_family;
@@ -322,7 +323,7 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
                     <React.Fragment key={msg.id}>
                       {showDate && (
                         <div className="flex justify-center my-4">
-                          <span className="text-[10px] font-semibold text-slate-soft uppercase tracking-wider bg-white px-3 py-1 rounded-full border border-slate/10 shadow-2xs">
+                          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider bg-card px-3 py-1 rounded-full border border-border shadow-2xs">
                             {format(new Date(msg.created_at), 'EEEE, d MMMM yyyy', { locale: pl })}
                           </span>
                         </div>
@@ -330,10 +331,10 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
 
                       <div className={`flex flex-col ${isStaff ? 'items-end' : 'items-start'}`}>
                         <div
-                          className={`max-w-[78%] rounded-2xl px-4 py-3 shadow-xs ${
+                          className={`max-w-[78%] rounded-xl px-4 py-3 ${
                             isStaff
-                              ? 'bg-sage text-white rounded-br-xs'
-                              : 'bg-white text-slate border border-slate/10 rounded-bl-xs'
+                              ? 'bg-primary text-white rounded-br-xs'
+                              : 'bg-card text-foreground border border-border rounded-bl-xs'
                           }`}
                         >
                           <p className="text-xs md:text-sm leading-relaxed whitespace-pre-wrap">
@@ -341,11 +342,11 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
                           </p>
                         </div>
                         <div className="flex items-center gap-1.5 mt-1 px-1">
-                          <span className="text-[10px] text-slate-soft">
+                          <span className="text-[10px] text-muted-foreground">
                             {isStaff ? 'Personel placówki' : 'Rodzina / Opiekun'} ·{' '}
                             {format(new Date(msg.created_at), 'HH:mm')}
                           </span>
-                          {isStaff && <CheckCircle2 className="h-3 w-3 text-sage" />}
+                          {isStaff && <CheckCircle2 className="h-3 w-3 text-primary" />}
                         </div>
                       </div>
                     </React.Fragment>
@@ -354,16 +355,16 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
               </div>
 
               {/* Formularz odpowiedzi */}
-              <div className="p-4 border-t border-slate/10 bg-white">
+              <div className="p-4 border-t border-border bg-card">
                 {sendError && (
-                  <div className="mb-3 flex items-center gap-2 rounded-xl bg-rose-50 border border-rose-200 p-2.5 text-xs text-rose-700">
-                    <ShieldAlert className="h-4 w-4 shrink-0 text-rose-600" />
+                  <div className="mb-3 flex items-center gap-2 rounded-xl bg-destructive/10 border border-destructive/20 p-2.5 text-xs text-destructive">
+                    <ShieldAlert className="h-4 w-4 shrink-0 text-destructive" />
                     <span>{sendError}</span>
                   </div>
                 )}
 
-                <div className="flex gap-2 items-end bg-slate/5 rounded-2xl p-2 border border-slate/10 focus-within:border-sage focus-within:ring-1 focus-within:ring-sage transition-all">
-                  <textarea
+                <div className="flex gap-2 items-end bg-muted/50 rounded-xl p-2 border border-border focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
+                  <Textarea
                     rows={2}
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
@@ -373,8 +374,7 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
                         e.preventDefault();
                         handleSendReply();
                       }
-                    }}
-                    className="flex-1 bg-transparent resize-none p-2 text-xs md:text-sm text-slate outline-none placeholder:text-slate-soft"
+                    }} className="flex-1 md:text-sm"
                   />
 
                   <button
@@ -382,8 +382,8 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
                     disabled={isSending || !replyText.trim()}
                     className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-semibold transition-all ${
                       replyText.trim() && !isSending
-                        ? 'bg-sage text-white hover:bg-sage-dark shadow-sm'
-                        : 'bg-slate/10 text-slate-soft cursor-not-allowed'
+                        ? 'bg-primary text-white hover:bg-primary/90'
+                        : 'bg-muted text-muted-foreground cursor-not-allowed'
                     }`}
                   >
                     {isSending ? (
@@ -396,21 +396,21 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
                     )}
                   </button>
                 </div>
-                <p className="text-[10px] text-slate-soft mt-1.5 px-2 flex items-center gap-1">
-                  <CornerDownRight className="h-3 w-3 text-slate-soft" />
+                <p className="text-[10px] text-muted-foreground mt-1.5 px-2 flex items-center gap-1">
+                  <CornerDownRight className="h-3 w-3 text-muted-foreground" />
                   Wciśnij Enter, aby wysłać odpowiedź. Shift+Enter tworzy nową linię.
                 </p>
               </div>
             </>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center" data-testid="messages-empty-state">
-              <div className="h-16 w-16 rounded-full bg-sage/10 text-sage-dark flex items-center justify-center mb-3">
+              <div className="h-16 w-16 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-3">
                 <MessageSquare className="h-8 w-8" />
               </div>
-              <h4 className="font-semibold text-sm text-slate font-display">
+              <h4 className="font-semibold text-sm text-foreground font-display">
                 Wybierz wątek z listy
               </h4>
-              <p className="text-xs text-slate-soft max-w-sm mt-1">
+              <p className="text-xs text-muted-foreground max-w-sm mt-1">
                 Wybierz podopiecznego z lewego menu, aby zobaczyć historię wiadomości od rodziny i wysłać odpowiedź.
               </p>
             </div>

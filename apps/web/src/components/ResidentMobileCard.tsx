@@ -42,10 +42,10 @@ export function ResidentMobileCard({ resident }: ResidentMobileCardProps) {
   const activeBed = activeAssignments[0]?.beds ?? null
 
   const statusBadge = resident.archived_at
-    ? { label: 'Zarchiwizowany', className: 'bg-slate/10 text-slate-soft border-none text-xs' }
+    ? { label: 'Zarchiwizowany', className: 'bg-muted text-muted-foreground border-none text-xs' }
     : resident.death_date
-    ? { label: 'Zgon', className: 'bg-slate/10 text-slate-soft border-none text-xs' }
-    : { label: 'Aktywny', className: 'bg-emerald-50 text-emerald-700 border-none text-xs' }
+    ? { label: 'Zgon', className: 'bg-muted text-muted-foreground border-none text-xs' }
+    : { label: 'Aktywny', className: 'bg-muted text-foreground border-none text-xs' }
 
   const admissionDate = resident.admission_date
     ? format(new Date(resident.admission_date), 'd MMM yyyy', { locale: pl })
@@ -56,16 +56,16 @@ export function ResidentMobileCard({ resident }: ResidentMobileCardProps) {
   return (
     <div
       data-testid="resident-mobile-card"
-      className="flex flex-col gap-3 bg-white rounded-xl p-4 ring-1 ring-slate/5"
+      className="flex flex-col gap-3 bg-card rounded-xl p-4 ring-1 ring-border"
     >
       <div className="flex items-center gap-3">
         {/* Avatar z linkiem do profilu */}
         <Link href={`/admin/residents/${resident.id}`} className="shrink-0">
-          <Avatar className="h-12 w-12 border border-slate/10">
+          <Avatar className="h-12 w-12 border border-border">
             {resident.avatar_url && (
               <AvatarImage src={resident.avatar_url} alt={`${resident.first_name} ${resident.last_name}`} />
             )}
-            <AvatarFallback className="bg-sage/10 text-sage">
+            <AvatarFallback className="bg-primary/10 text-primary">
               <UserCircle2 className="h-6 w-6" />
             </AvatarFallback>
           </Avatar>
@@ -75,18 +75,18 @@ export function ResidentMobileCard({ resident }: ResidentMobileCardProps) {
         <div className="flex-1 min-w-0">
           <Link
             href={`/admin/residents/${resident.id}`}
-            className="font-medium text-slate text-base hover:text-sage transition-colors truncate block"
+            className="font-medium text-foreground text-base hover:text-primary transition-colors truncate block"
           >
             {resident.first_name} {resident.last_name}
           </Link>
           <div className="flex flex-wrap items-center gap-2 mt-1">
             <Badge className={statusBadge.className}>{statusBadge.label}</Badge>
             {activeBed ? (
-              <span className="text-xs text-slate-soft">
+              <span className="text-xs text-muted-foreground">
                 Pok. {activeBed.rooms?.number}, ł. {activeBed.label}
               </span>
             ) : (
-              <span className="text-xs text-slate-soft/50">Brak pokoju</span>
+              <span className="text-xs text-muted-foreground/50">Brak pokoju</span>
             )}
           </div>
         </div>
@@ -105,7 +105,7 @@ export function ResidentMobileCard({ resident }: ResidentMobileCardProps) {
           />
           <Link
             href={`/admin/residents/${resident.id}`}
-            className="p-2 text-slate-soft/50 hover:text-sage transition-colors min-h-[48px] min-w-[48px] inline-flex items-center justify-center rounded-lg hover:bg-slate/5"
+            className="p-2 text-muted-foreground/50 hover:text-primary transition-colors min-h-[48px] min-w-[48px] inline-flex items-center justify-center rounded-lg hover:bg-muted/50"
             title="Profil 360°"
             aria-label={`Profil 360° ${resident.first_name} ${resident.last_name}`}
           >
@@ -115,9 +115,9 @@ export function ResidentMobileCard({ resident }: ResidentMobileCardProps) {
       </div>
 
       {/* Dolny pasek karty mobilnej: data przyjęcia + kontrole inline */}
-      <div className="flex items-center justify-between border-t border-slate/5 pt-2 mt-1">
-        <div className="text-xs text-slate-soft">
-          Przyjęcie: <span className="font-medium text-slate">{admissionDate}</span>
+      <div className="flex items-center justify-between border-t border-border pt-2 mt-1">
+        <div className="text-xs text-muted-foreground">
+          Przyjęcie: <span className="font-medium text-foreground">{admissionDate}</span>
         </div>
         <div className="flex items-center gap-2">
           <ResidentInlineCareLevel

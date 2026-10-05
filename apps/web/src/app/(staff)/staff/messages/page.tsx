@@ -12,10 +12,10 @@ export default async function StaffMessagesPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-display font-semibold tracking-tight text-slate">
+        <h1 className="text-3xl font-display font-semibold tracking-tight text-foreground">
           Wiadomości
         </h1>
-        <p className="mt-2 text-slate-soft">
+        <p className="mt-2 text-muted-foreground">
           Bezpośredni kontakt z rodzinami i opiekunami prawnymi podopiecznych.
         </p>
       </div>

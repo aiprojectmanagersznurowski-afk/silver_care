@@ -9,6 +9,7 @@ import { quickLogRoutineObservationAction } from '@/actions/bulk-reports'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 
 type NoteStatus = 'ready' | 'draft' | 'none'
 
@@ -43,9 +44,9 @@ function getRoomNumber(resident: Record<string, unknown>): string | null {
 }
 
 const STATUS_CONFIG: Record<NoteStatus, { label: string; className: string }> = {
-  ready: { label: 'Raport gotowy', className: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20' },
-  draft: { label: 'Wersja robocza', className: 'bg-amber-50 text-amber-700 ring-amber-600/20' },
-  none: { label: 'Brak wpisu', className: 'bg-rose-50 text-rose-700 ring-rose-600/20' },
+  ready: { label: 'Raport gotowy', className: 'bg-muted text-foreground ring-border' },
+  draft: { label: 'Wersja robocza', className: 'bg-muted text-foreground ring-border' },
+  none: { label: 'Brak wpisu', className: 'bg-muted text-foreground ring-border' },
 }
 
 interface StaffBoardClientProps {
@@ -141,47 +142,46 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-display font-semibold tracking-tight text-slate">
+          <h2 className="text-3xl font-display font-semibold tracking-tight text-foreground">
             Podopieczni
           </h2>
-          <p className="mt-1 text-slate-soft text-sm">
+          <p className="mt-1 text-muted-foreground text-sm">
             Szybki obchód dyżurny, bezpośrednie dyktowanie i bieżący stan podopiecznych.
           </p>
         </div>
 
         {/* Przełącznik trybu widoku */}
         <div className="flex items-center gap-2">
-          <div className="bg-slate/5 p-1 rounded-xl flex items-center border border-slate/10">
-            <button
-              type="button"
-              onClick={() => setViewMode('rounds')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors min-h-[40px] ${
-                viewMode === 'rounds'
-                  ? 'bg-sage text-white shadow-xs'
-                  : 'text-slate-soft hover:text-slate'
-              }`}
+          <ToggleGroup
+            variant="outline"
+            aria-label="Tryb widoku podopiecznych"
+            value={[viewMode]}
+            onValueChange={(next) => {
+              // Tryb jest zawsze wybrany — ponowne kliknięcie aktywnego nie wyłącza go
+              const mode = next[0]
+              if (mode === 'rounds' || mode === 'standard') setViewMode(mode)
+            }}
+          >
+            <ToggleGroupItem
+              value="rounds"
+              className="gap-1.5 data-[pressed]:bg-primary data-[pressed]:text-primary-foreground"
             >
               <Zap className="h-4 w-4" />
               Szybki obchód (Quick-Rounds)
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('standard')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors min-h-[40px] ${
-                viewMode === 'standard'
-                  ? 'bg-white text-slate shadow-xs'
-                  : 'text-slate-soft hover:text-slate'
-              }`}
+            </ToggleGroupItem>
+            <ToggleGroupItem
+              value="standard"
+              className="gap-1.5 data-[pressed]:bg-primary data-[pressed]:text-primary-foreground"
             >
               <LayoutGrid className="h-4 w-4" />
               Karty
-            </button>
-          </div>
+            </ToggleGroupItem>
+          </ToggleGroup>
 
           {activeFiltersCount > 0 && (
             <button
               onClick={clearFilters}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-slate/5 px-3 py-2 text-xs font-semibold text-slate-soft hover:bg-slate/10 hover:text-slate transition-colors min-h-[40px]"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-muted/50 px-3 py-2 text-xs font-semibold text-muted-foreground hover:bg-muted hover:text-foreground transition-colors min-h-[40px]"
             >
               Wyczyść ({activeFiltersCount})
               <X className="h-3.5 w-3.5" />
@@ -191,15 +191,15 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
       </div>
 
       {/* Pasek filtrów tokenowych (filter-token-bar) */}
-      <Card data-testid="filter-token-bar" className="rounded-2xl border-none shadow-sm ring-1 ring-slate/10 bg-white">
+      <Card data-testid="filter-token-bar" className="rounded-xl border-none ring-1 ring-border bg-card">
         <CardContent className="p-4 sm:p-5 space-y-4">
           {/* Górny wiersz: Wyszukiwarka + Licznik */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
             <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-soft" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
                 placeholder="Szukaj podopiecznego..."
-                className="w-full h-10 pl-10 pr-9 rounded-xl border border-slate/15 bg-slate/5 text-sm text-slate placeholder:text-slate-soft focus:outline-none focus:ring-2 focus:ring-sage focus:border-transparent transition-all"
+                className="w-full h-10 pl-10 pr-9 rounded-xl border border-border bg-muted/50 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                 value={searchFilter}
                 onChange={(e) => setSearchFilter(e.target.value)}
               />
@@ -207,30 +207,30 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                 <button
                   type="button"
                   onClick={() => setSearchFilter('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-soft hover:text-slate p-1"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
               )}
             </div>
 
-            <div className="text-xs font-medium text-slate-soft self-end sm:self-center">
-              Wyników: <span className="font-semibold text-slate">{filtered.length}</span> z {residents.length}
+            <div className="text-xs font-medium text-muted-foreground self-end sm:self-center">
+              Wyników: <span className="font-semibold text-foreground">{filtered.length}</span> z {residents.length}
             </div>
           </div>
 
           {/* Rzędy tokenów filtrów */}
-          <div className="space-y-2.5 pt-1 border-t border-slate/10">
+          <div className="space-y-2.5 pt-1 border-t border-border">
             {/* Tokeny statusu notatki */}
             <div data-filter-group="status" className="flex flex-wrap items-center gap-1.5">
-              <span className="text-xs font-medium text-slate-soft w-14 shrink-0">Status:</span>
+              <span className="text-xs font-medium text-muted-foreground w-14 shrink-0">Status:</span>
               <button
                 type="button"
                 onClick={() => setStatusFilter('all')}
                 className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                   statusFilter === 'all'
-                    ? 'bg-slate text-white'
-                    : 'bg-slate/5 text-slate-soft hover:bg-slate/10 hover:text-slate'
+                    ? 'bg-foreground text-white'
+                    : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
               >
                 Wszystkie
@@ -240,11 +240,11 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                 onClick={() => setStatusFilter('none')}
                 className={`rounded-full px-3 py-1 text-xs font-medium transition-colors flex items-center gap-1.5 ${
                   statusFilter === 'none'
-                    ? 'bg-rose-600 text-white'
-                    : 'bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-600/20 hover:bg-rose-100'
+                    ? 'bg-primary text-white'
+                    : 'bg-muted text-foreground ring-1 ring-inset ring-border hover:bg-muted'
                 }`}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
+                <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
                 Brak wpisu
               </button>
               <button
@@ -252,11 +252,11 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                 onClick={() => setStatusFilter('draft')}
                 className={`rounded-full px-3 py-1 text-xs font-medium transition-colors flex items-center gap-1.5 ${
                   statusFilter === 'draft'
-                    ? 'bg-amber-600 text-white'
-                    : 'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20 hover:bg-amber-100'
+                    ? 'bg-primary text-white'
+                    : 'bg-muted text-foreground ring-1 ring-inset ring-border hover:bg-muted'
                 }`}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
                 Wersja robocza
               </button>
               <button
@@ -264,11 +264,11 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                 onClick={() => setStatusFilter('ready')}
                 className={`rounded-full px-3 py-1 text-xs font-medium transition-colors flex items-center gap-1.5 ${
                   statusFilter === 'ready'
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20 hover:bg-emerald-100'
+                    ? 'bg-primary text-white'
+                    : 'bg-muted text-foreground ring-1 ring-inset ring-border hover:bg-muted'
                 }`}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
                 Raport gotowy
               </button>
             </div>
@@ -276,14 +276,14 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
             {/* Tokeny piętra */}
             {floors.length > 0 && (
               <div data-filter-group="floor" className="flex flex-wrap items-center gap-1.5">
-                <span className="text-xs font-medium text-slate-soft w-14 shrink-0">Piętro:</span>
+                <span className="text-xs font-medium text-muted-foreground w-14 shrink-0">Piętro:</span>
                 <button
                   type="button"
                   onClick={() => setFloorFilter('all')}
                   className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                     floorFilter === 'all'
-                      ? 'bg-slate text-white'
-                      : 'bg-slate/5 text-slate-soft hover:bg-slate/10 hover:text-slate'
+                      ? 'bg-foreground text-white'
+                      : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
                   }`}
                 >
                   Wszystkie
@@ -295,8 +295,8 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                     onClick={() => setFloorFilter(f)}
                     className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                       floorFilter === f
-                        ? 'bg-slate text-white'
-                        : 'bg-slate/5 text-slate-soft hover:bg-slate/10 hover:text-slate'
+                        ? 'bg-foreground text-white'
+                        : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
                     }`}
                   >
                     Piętro {f}
@@ -308,14 +308,14 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
             {/* Tokeny sali (gdy wybrane piętro) */}
             {floorFilter !== 'all' && roomsForCurrentFloor.length > 0 && (
               <div data-filter-group="room" className="flex flex-wrap items-center gap-1.5">
-                <span className="text-xs font-medium text-slate-soft w-14 shrink-0">Sala:</span>
+                <span className="text-xs font-medium text-muted-foreground w-14 shrink-0">Sala:</span>
                 <button
                   type="button"
                   onClick={() => setRoomFilter('all')}
                   className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                     roomFilter === 'all'
-                      ? 'bg-slate text-white'
-                      : 'bg-slate/5 text-slate-soft hover:bg-slate/10 hover:text-slate'
+                      ? 'bg-foreground text-white'
+                      : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
                   }`}
                 >
                   Wszystkie
@@ -327,8 +327,8 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                     onClick={() => setRoomFilter(r)}
                     className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                       roomFilter === r
-                        ? 'bg-slate text-white'
-                        : 'bg-slate/5 text-slate-soft hover:bg-slate/10 hover:text-slate'
+                        ? 'bg-foreground text-white'
+                        : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
                     }`}
                   >
                     Pokój {r}
@@ -340,12 +340,12 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
 
           {/* Aktywne tokeny filtrów (Active chips) */}
           {activeFiltersCount > 0 && (
-            <div className="pt-2 border-t border-slate/10 flex flex-wrap items-center gap-2">
-              <span className="text-[11px] font-semibold text-slate-soft uppercase tracking-wider">
+            <div className="pt-2 border-t border-border flex flex-wrap items-center gap-2">
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                 Aktywne filtry:
               </span>
               {searchFilter && (
-                <span className="inline-flex items-center gap-1 bg-sage/10 text-sage-dark text-xs font-medium px-2.5 py-0.5 rounded-full">
+                <span className="inline-flex items-center gap-1 bg-primary/10 text-primary text-xs font-medium px-2.5 py-0.5 rounded-full">
                   Szukaj: &quot;{searchFilter}&quot;
                   <button type="button" onClick={() => setSearchFilter('')} className="hover:opacity-75">
                     <X className="h-3 w-3" />
@@ -353,7 +353,7 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                 </span>
               )}
               {statusFilter !== 'all' && (
-                <span className="inline-flex items-center gap-1 bg-slate/10 text-slate text-xs font-medium px-2.5 py-0.5 rounded-full">
+                <span className="inline-flex items-center gap-1 bg-muted text-foreground text-xs font-medium px-2.5 py-0.5 rounded-full">
                   Status: {STATUS_CONFIG[statusFilter as NoteStatus]?.label}
                   <button type="button" onClick={() => setStatusFilter('all')} className="hover:opacity-75">
                     <X className="h-3 w-3" />
@@ -361,7 +361,7 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                 </span>
               )}
               {floorFilter !== 'all' && (
-                <span className="inline-flex items-center gap-1 bg-slate/10 text-slate text-xs font-medium px-2.5 py-0.5 rounded-full">
+                <span className="inline-flex items-center gap-1 bg-muted text-foreground text-xs font-medium px-2.5 py-0.5 rounded-full">
                   Piętro: {floorFilter}
                   <button type="button" onClick={() => setFloorFilter('all')} className="hover:opacity-75">
                     <X className="h-3 w-3" />
@@ -369,7 +369,7 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                 </span>
               )}
               {roomFilter !== 'all' && (
-                <span className="inline-flex items-center gap-1 bg-slate/10 text-slate text-xs font-medium px-2.5 py-0.5 rounded-full">
+                <span className="inline-flex items-center gap-1 bg-muted text-foreground text-xs font-medium px-2.5 py-0.5 rounded-full">
                   Pokój: {roomFilter}
                   <button type="button" onClick={() => setRoomFilter('all')} className="hover:opacity-75">
                     <X className="h-3 w-3" />
@@ -397,27 +397,27 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
             return (
               <div
                 key={resId}
-                className="bg-white rounded-2xl border border-slate/10 p-5 shadow-sm space-y-4 hover:border-sage/40 transition-colors"
+                className="bg-card rounded-xl border border-border p-5 space-y-4 hover:border-primary/40 transition-colors"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Avatar className="h-12 w-12 border border-slate/10">
+                    <Avatar className="h-12 w-12 border border-border">
                       {(resident.avatar_url as string) && (
                         <AvatarImage
                           src={resident.avatar_url as string}
                           alt={`${resident.first_name as string} ${resident.last_name as string}`}
                         />
                       )}
-                      <AvatarFallback className="bg-sage/10 text-sage-dark font-semibold text-base">
+                      <AvatarFallback className="bg-primary/10 text-primary font-semibold text-base">
                         {(resident.first_name as string)?.[0]}
                         {(resident.last_name as string)?.[0]}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <h4 className="font-semibold text-slate text-base">
+                      <h4 className="font-semibold text-foreground text-base">
                         {resident.first_name as string} {resident.last_name as string}
                       </h4>
-                      <p className="text-xs text-slate-soft flex items-center gap-1 mt-0.5">
+                      <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                         <Bed className="h-3.5 w-3.5" />
                         {roomNumber && bedLabel
                           ? `Pokój ${roomNumber}, Łóżko ${bedLabel}`
@@ -427,8 +427,8 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                   </div>
 
                   {isLogged && (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-foreground bg-muted px-2.5 py-1 rounded-full border border-border">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-foreground" />
                       Odnotowano
                     </span>
                   )}
@@ -437,7 +437,7 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                 <div className="grid grid-cols-2 gap-2 pt-1">
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Link href={`/voice?resident=${resId}`} className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-sage px-3 py-3 text-xs font-semibold text-white shadow-xs hover:bg-sage-dark transition-colors min-h-[48px]">
+                      <Link href={`/voice?resident=${resId}`} className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-3 text-xs font-semibold text-white hover:bg-primary/90 transition-colors min-h-[48px]">
                         <Mic className="h-4 w-4" />
                         Dyktuj (1-klik)
                       </Link>
@@ -456,20 +456,20 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                           disabled={isSubmitting || isLogged}
                           className={`w-full inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-3 text-xs font-semibold transition-colors min-h-[48px] ${
                             isLogged
-                              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 cursor-default'
-                              : 'bg-white border border-slate/20 text-slate hover:bg-slate/5 shadow-xs'
+                              ? 'bg-muted text-foreground border border-border cursor-default'
+                              : 'bg-card border border-border text-foreground hover:bg-muted/50'
                           }`}
                         >
                           {isSubmitting ? (
-                            <Loader2 className="h-4 w-4 animate-spin text-sage" />
+                            <Loader2 className="h-4 w-4 animate-spin text-primary" />
                           ) : isLogged ? (
                             <>
-                              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                              <CheckCircle2 className="h-4 w-4 text-foreground" />
                               Stabilny
                             </>
                           ) : (
                             <>
-                              <CheckCircle2 className="h-4 w-4 text-slate-soft" />
+                              <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
                               Stan stabilny
                             </>
                           )}
@@ -502,19 +502,19 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
             return (
               <Card
                 key={resident.id as string}
-                className="group relative overflow-hidden rounded-2xl border-none shadow-sm ring-1 ring-slate/5 bg-white transition-all hover:shadow-md hover:ring-sage/30 flex flex-col"
+                className="group relative overflow-hidden rounded-xl border-none ring-1 ring-border bg-card transition-all hover:ring-primary/30 flex flex-col"
               >
                 <CardContent className="p-0 flex flex-col h-full">
                   <div className="p-5 flex-grow space-y-4">
                     <div className="flex items-start justify-between">
-                      <Avatar className="h-12 w-12 border border-slate/10 shadow-sm">
+                      <Avatar className="h-12 w-12 border border-border">
                         {(resident.avatar_url as string) && (
                           <AvatarImage
                             src={resident.avatar_url as string}
                             alt={`${resident.first_name as string} ${resident.last_name as string}`}
                           />
                         )}
-                        <AvatarFallback className="bg-sage/10 text-sage-dark font-semibold">
+                        <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                           {(resident.first_name as string)?.[0]}
                           {(resident.last_name as string)?.[0]}
                         </AvatarFallback>
@@ -527,26 +527,26 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                     </div>
 
                     <div>
-                      <h3 className="text-lg font-semibold text-slate truncate">
+                      <h3 className="text-lg font-semibold text-foreground truncate">
                         {resident.first_name as string} {resident.last_name as string}
                       </h3>
-                      <div className="mt-1 flex items-center text-sm text-slate-soft">
+                      <div className="mt-1 flex items-center text-sm text-muted-foreground">
                         <Bed className="h-4 w-4 mr-1.5 shrink-0" />
                         {roomNumber && bedLabel ? (
                           <span>
                             Pokój {roomNumber}, Łóżko {bedLabel}
                           </span>
                         ) : (
-                          <span className="text-rose-500">Brak przypisanego łóżka</span>
+                          <span className="text-foreground">Brak przypisanego łóżka</span>
                         )}
                       </div>
                     </div>
                   </div>
 
-                  <div className="border-t border-slate/5 p-4 bg-slate/5 flex flex-col gap-3">
+                  <div className="border-t border-border p-4 bg-muted/50 flex flex-col gap-3">
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Link href={`/voice?resident=${resident.id}`} className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-sage px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-sage-dark transition-colors min-h-[44px]">
+                        <Link href={`/voice?resident=${resident.id}`} className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 transition-colors min-h-[44px]">
                           <Mic className="h-4 w-4" />
                           Nagraj notatkę
                         </Link>
@@ -559,8 +559,8 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                     {noteStatus !== 'none' && (
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Link href={`/staff/reports?resident=${resident.id}`} className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-medium text-slate shadow-sm ring-1 ring-inset ring-slate/10 hover:bg-slate/5 transition-colors min-h-[44px]">
-                            <FileText className="h-4 w-4 text-slate-soft" />
+                          <Link href={`/staff/reports?resident=${resident.id}`} className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-card px-4 py-2.5 text-sm font-medium text-foreground ring-1 ring-inset ring-border hover:bg-muted/50 transition-colors min-h-[44px]">
+                            <FileText className="h-4 w-4 text-muted-foreground" />
                             Podgląd raportu
                           </Link>
                         </TooltipTrigger>
@@ -570,8 +570,8 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                       </Tooltip>
                     )}
 
-                    <Link href={`/staff/messages?residentId=${resident.id}`} className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-medium text-slate shadow-sm ring-1 ring-inset ring-slate/10 hover:bg-slate/5 transition-colors min-h-[44px]">
-                      <MessageSquare className="h-4 w-4 text-sage-dark" />
+                    <Link href={`/staff/messages?residentId=${resident.id}`} className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-card px-4 py-2.5 text-sm font-medium text-foreground ring-1 ring-inset ring-border hover:bg-muted/50 transition-colors min-h-[44px]">
+                      <MessageSquare className="h-4 w-4 text-primary" />
                       Wiadomości od rodziny
                     </Link>
 
@@ -587,13 +587,13 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
       )}
 
       {filtered.length === 0 && (
-        <div className="col-span-full py-16 text-center rounded-2xl border border-dashed border-slate/20 bg-slate/5">
-          <h3 className="text-sm font-medium text-slate mb-1">Brak podopiecznych</h3>
-          <p className="text-sm text-slate-soft">Nie znaleziono osób spełniających kryteria wyszukiwania.</p>
+        <div className="col-span-full py-16 text-center rounded-xl border border-dashed border-border bg-muted/50">
+          <h3 className="text-sm font-medium text-foreground mb-1">Brak podopiecznych</h3>
+          <p className="text-sm text-muted-foreground">Nie znaleziono osób spełniających kryteria wyszukiwania.</p>
           {activeFiltersCount > 0 && (
             <button
               onClick={clearFilters}
-              className="mt-6 inline-flex items-center rounded-xl bg-white px-4 py-2 text-sm font-medium text-slate shadow-sm ring-1 ring-inset ring-slate/10 hover:bg-slate/5 transition-colors min-h-[44px]"
+              className="mt-6 inline-flex items-center rounded-xl bg-card px-4 py-2 text-sm font-medium text-foreground ring-1 ring-inset ring-border hover:bg-muted/50 transition-colors min-h-[44px]"
             >
               Wyczyść wszystkie filtry
             </button>

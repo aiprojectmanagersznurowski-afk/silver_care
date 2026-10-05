@@ -56,19 +56,19 @@ export default async function StaffReportsPage({ searchParams }: StaffReportsPag
           <div className="flex items-center gap-2 mb-2">
             <Link 
               href="/staff" 
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-soft hover:text-slate transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
               Wróć do listy podopiecznych
             </Link>
           </div>
-          <h2 className="text-2xl font-display font-semibold tracking-tight text-slate">
+          <h2 className="text-2xl font-display font-semibold tracking-tight text-foreground">
             {residentInfo 
               ? `Raporty: ${residentInfo.first_name} ${residentInfo.last_name}`
               : 'Raporty do weryfikacji'
             }
           </h2>
-          <p className="text-sm text-slate-soft">
+          <p className="text-sm text-muted-foreground">
             {residentInfo 
               ? 'Historia oraz bieżące szkice raportów wygenerowane dla tego podopiecznego.'
               : 'Zatwierdź szkice raportów wygenerowane przez AI, aby rodzina mogła je zobaczyć.'
@@ -78,7 +78,7 @@ export default async function StaffReportsPage({ searchParams }: StaffReportsPag
 
         {residentId && (
           <div className="flex items-center gap-2">
-            <Link href={`/voice?resident=${residentId}`} className="inline-flex items-center gap-2 rounded-xl bg-sage px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sage-dark transition-colors">
+            <Link href={`/voice?resident=${residentId}`} className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 transition-colors">
               <Mic className="h-4 w-4" />
               Nagraj nową notatkę
             </Link>
@@ -96,23 +96,23 @@ export default async function StaffReportsPage({ searchParams }: StaffReportsPag
             <ReportCard key={report.id} report={report} />
           ))
         ) : (
-          <div className="py-16 text-center rounded-2xl border border-dashed border-slate/20 bg-slate/5">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-sage/10 text-sage-dark mb-4">
+          <div className="py-16 text-center rounded-xl border border-dashed border-border bg-muted/50">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary mb-4">
               <FileText className="h-6 w-6" />
             </div>
-            <h3 className="text-sm font-medium text-slate mb-1">
+            <h3 className="text-sm font-medium text-foreground mb-1">
               {residentInfo 
                 ? 'Brak raportów dla tego podopiecznego' 
                 : 'Brak raportów oczekujących na weryfikację'}
             </h3>
-            <p className="text-sm text-slate-soft max-w-sm mx-auto">
+            <p className="text-sm text-muted-foreground max-w-sm mx-auto">
               {residentInfo 
                 ? 'Nie utworzono jeszcze raportu dla tej osoby. Możesz nagrać notatkę głosową, aby AI wygenerowało szkic.'
                 : 'Wszystkie wygenerowane notatki zostały już zweryfikowane lub nie utworzono nowych szkiców.'}
             </p>
             {residentId && (
               <div className="mt-6">
-                <Link href={`/voice?resident=${residentId}`} className="inline-flex items-center gap-2 rounded-xl bg-sage px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-sage-dark transition-colors">
+                <Link href={`/voice?resident=${residentId}`} className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 transition-colors">
                   <Mic className="h-4 w-4" />
                   Nagraj notatkę głosową
                 </Link>
