@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { CheckCircle2, Clock, Edit3, Send, Save, X, Sparkles, AlertCircle, Check } from 'lucide-react'
 import { analyzeReportCompleteness } from '@/lib/completeness-gate'
+import { Textarea } from '@/components/ui/textarea'
 
 export interface ReportItem {
   id: string
@@ -55,17 +56,17 @@ export function ReportCard({ report }: { report: ReportItem }) {
   }
 
   return (
-    <Card className="rounded-2xl border-slate/10 bg-white shadow-sm overflow-hidden">
-      <CardHeader className="pb-3 border-b border-slate/5 bg-slate/[0.02]">
+    <Card className="rounded-xl border-border bg-card overflow-hidden">
+      <CardHeader className="pb-3 border-b border-border bg-muted/30">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <CardTitle className="text-base font-display font-semibold text-slate">
+            <CardTitle className="text-base font-display font-semibold text-foreground">
               {report.residents 
                 ? `${report.residents.first_name || ''} ${report.residents.last_name || ''}`.trim()
                 : 'Podopieczny'
               }
             </CardTitle>
-            <CardDescription className="text-xs text-slate-soft mt-0.5">
+            <CardDescription className="text-xs text-muted-foreground mt-0.5">
               Utworzono: {new Date(report.created_at).toLocaleDateString('pl-PL', {
                 year: 'numeric',
                 month: 'long',
@@ -78,12 +79,12 @@ export function ReportCard({ report }: { report: ReportItem }) {
 
           <div>
             {isPublished ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-sage/10 px-2.5 py-1 text-xs font-medium text-sage-dark border border-sage/20">
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary border border-primary/20">
                 <CheckCircle2 className="h-3 w-3" />
                 Opublikowany dla rodziny
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-700 border border-amber-500/20">
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-xs font-medium text-foreground border border-border">
                 <Clock className="h-3 w-3" />
                 Szkic do weryfikacji
               </span>
@@ -94,30 +95,29 @@ export function ReportCard({ report }: { report: ReportItem }) {
 
       <CardContent className="pt-4 space-y-4">
         {isEditing ? (
-          <textarea
-            className="w-full p-4 bg-slate/5 rounded-xl text-sm min-h-[120px] border border-slate/20 outline-none focus:ring-2 focus:ring-sage focus:border-sage text-slate leading-relaxed"
+          <Textarea className="w-full"
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Treść raportu..."
           />
         ) : (
-          <div className="p-4 bg-slate/[0.03] rounded-xl text-sm leading-relaxed text-slate whitespace-pre-wrap border border-slate/5">
+          <div className="p-4 bg-muted/30 rounded-xl text-sm leading-relaxed text-foreground whitespace-pre-wrap border border-border">
             {content || 'Brak treści raportu.'}
           </div>
         )}
 
         {/* Strażnik kompletności raportu opiekuńczego (AI Quality Gate) */}
         {!isPublished && (
-          <div className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-3 space-y-2.5 text-xs">
+          <div className="rounded-xl border border-border bg-muted p-3 space-y-2.5 text-xs">
             <div className="flex items-center justify-between">
-              <span className="font-semibold text-slate-700 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+              <span className="font-semibold text-foreground flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-foreground" />
                 Kompletność informacji dla rodziny ({completeness.scorePercent}%)
               </span>
               <span className={`px-2 py-0.5 rounded-full font-medium ${
                 completeness.isComplete 
-                  ? 'bg-emerald-100 text-emerald-800' 
-                  : 'bg-amber-100 text-amber-800'
+                  ? 'bg-muted text-foreground' 
+                  : 'bg-muted text-foreground'
               }`}>
                 {completeness.isComplete ? 'Wszystkie kluczowe obszary' : `Brak: ${completeness.missingLabels.join(', ')}`}
               </span>
@@ -129,15 +129,15 @@ export function ReportCard({ report }: { report: ReportItem }) {
                   key={dim.id}
                   className={`p-2 rounded-lg border flex items-center gap-1.5 transition-colors ${
                     dim.isCovered
-                      ? 'bg-emerald-50/60 border-emerald-200 text-emerald-800'
-                      : 'bg-white border-slate-200 text-slate-500'
+                      ? 'bg-muted border-border text-foreground'
+                      : 'bg-card border-border text-muted-foreground'
                   }`}
                   title={dim.isCovered ? 'Obszar zawarty w raporcie' : dim.suggestion}
                 >
                   {dim.isCovered ? (
-                    <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <Check className="w-3.5 h-3.5 text-foreground shrink-0" />
                   ) : (
-                    <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                    <AlertCircle className="w-3.5 h-3.5 text-foreground shrink-0" />
                   )}
                   <span className="truncate">{dim.label}</span>
                 </div>
@@ -145,7 +145,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
             </div>
 
             {!completeness.isComplete && (
-              <p className="text-slate-500 italic text-[11px] pt-0.5">
+              <p className="text-muted-foreground italic text-[11px] pt-0.5">
                 Podpowiedź asystenta: Bliscy najbardziej wyczekują informacji o apetycie, samopoczuciu i aktywności. Możesz uzupełnić treść lub opublikować raport w obecnym kształcie.
               </p>
             )}
@@ -158,7 +158,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
               <Button 
                 disabled={loading} 
                 onClick={handleSave} 
-                className="rounded-xl bg-sage hover:bg-sage-dark text-white text-xs font-semibold gap-1.5"
+                className="rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-semibold gap-1.5"
               >
                 <Save className="h-3.5 w-3.5" />
                 Zapisz zmiany
@@ -170,7 +170,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
                   setIsEditing(false)
                 }} 
                 variant="outline"
-                className="rounded-xl border-slate/20 text-slate hover:bg-slate/5 text-xs font-medium gap-1.5"
+                className="rounded-xl border-border text-foreground hover:bg-muted/50 text-xs font-medium gap-1.5"
               >
                 <X className="h-3.5 w-3.5" />
                 Anuluj
@@ -182,7 +182,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
                 <Button 
                   disabled={loading} 
                   onClick={handlePublish} 
-                  className="rounded-xl bg-sage hover:bg-sage-dark text-white text-xs font-semibold gap-1.5"
+                  className="rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-semibold gap-1.5"
                 >
                   <Send className="h-3.5 w-3.5" />
                   Zatwierdź i publikuj dla rodziny
@@ -192,7 +192,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
                 disabled={loading} 
                 onClick={() => setIsEditing(true)} 
                 variant="outline"
-                className="rounded-xl border-slate/20 text-slate hover:bg-slate/5 text-xs font-medium gap-1.5"
+                className="rounded-xl border-border text-foreground hover:bg-muted/50 text-xs font-medium gap-1.5"
               >
                 <Edit3 className="h-3.5 w-3.5" />
                 {isPublished ? 'Edytuj treść' : 'Edytuj szkic'}

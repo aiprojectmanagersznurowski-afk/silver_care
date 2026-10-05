@@ -64,13 +64,13 @@ export function ResidentZsnCheckbox({
         aria-checked={checked}
         aria-label={checked ? 'ZSN: Znaczny stopień niepełnosprawności (Aktywny)' : 'Brak ZSN — kliknij, aby zaznaczyć'}
         title={checked ? 'ZSN: Znaczny stopień niepełnosprawności (Aktywny)' : 'Brak ZSN — kliknij, aby zaznaczyć'}
-        className="group/zsn inline-flex items-center gap-1.5 min-h-[44px] min-w-[44px] p-2 rounded-lg hover:bg-slate/5 focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-colors"
+        className="group/zsn inline-flex items-center gap-1.5 min-h-[44px] min-w-[44px] p-2 rounded-lg hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-border transition-colors"
       >
         <div
           className={`flex h-5 w-5 items-center justify-center rounded border transition-colors ${
             checked
-              ? 'bg-amber-600 border-amber-600 text-white'
-              : 'border-slate/30 bg-white hover:border-slate/50'
+              ? 'bg-primary border-border text-white'
+              : 'border-border bg-card hover:border-border'
           }`}
         >
           {loading ? (
@@ -80,7 +80,7 @@ export function ResidentZsnCheckbox({
           ) : null}
         </div>
         {checked && (
-          <span className="text-[0.7rem] font-semibold tracking-wider text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+          <span className="text-[0.7rem] font-semibold tracking-wider text-foreground bg-muted px-1.5 py-0.5 rounded border border-border">
             ZSN
           </span>
         )}
@@ -96,18 +96,18 @@ export function ResidentZsnCheckbox({
       role="checkbox"
       aria-checked={checked}
       aria-label="ZSN: Znaczny stopień niepełnosprawności"
-      className={`relative w-full text-left flex cursor-pointer items-start gap-3.5 rounded-xl border p-4 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 ${
+      className={`relative w-full text-left flex cursor-pointer items-start gap-3.5 rounded-xl border p-4 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-border ${
         checked
-          ? 'bg-amber-50/50 border-amber-200/80 hover:bg-amber-50'
-          : 'bg-white border-slate/10 hover:border-slate/20 hover:bg-slate/5'
+          ? 'bg-muted border-border hover:bg-muted'
+          : 'bg-card border-border hover:border-border hover:bg-muted/50'
       }`}
     >
       <div className="pt-0.5">
         <div
           className={`flex h-5 w-5 items-center justify-center rounded border transition-colors ${
             checked
-              ? 'bg-amber-600 border-amber-600 text-white'
-              : 'border-slate/30 bg-white group-hover:border-slate/50'
+              ? 'bg-primary border-border text-white'
+              : 'border-border bg-card group-hover:border-border'
           }`}
         >
           {loading ? (
@@ -120,22 +120,22 @@ export function ResidentZsnCheckbox({
 
       <div className="flex-1 select-none">
         <div className="flex items-center gap-2">
-          <span className="font-semibold text-sm text-slate">
+          <span className="font-semibold text-sm text-foreground">
             ZSN: Znaczny stopień niepełnosprawności
           </span>
           {checked ? (
-            <Badge className="bg-amber-100 text-amber-900 border-amber-300 text-[0.7rem]">
+            <Badge className="bg-muted text-foreground border-border text-[0.7rem]">
               Zaznaczono
             </Badge>
           ) : (
-            <span className="text-xs text-slate-soft">Nieoznaczone</span>
+            <span className="text-xs text-muted-foreground">Nieoznaczone</span>
           )}
         </div>
-        <p className="mt-1 text-xs text-slate-soft">
+        <p className="mt-1 text-xs text-muted-foreground">
           Orzeczenie o znacznym stopniu niepełnosprawności. Pensjonariusz jest automatycznie uwzględniany w dobowych raportach dziennych oraz analizach BI placówki.
         </p>
         {savedMessage && (
-          <span className="mt-1.5 inline-block text-[0.7rem] font-medium text-emerald-600">
+          <span className="mt-1.5 inline-block text-[0.7rem] font-medium text-foreground">
             ✓ Zapisano zmianę
           </span>
         )}

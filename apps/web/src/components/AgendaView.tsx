@@ -37,7 +37,7 @@ export function AgendaView({ residents }: AgendaViewProps) {
   }
 
   return (
-    <Card className="mb-6 shadow-sm border-primary/20">
+    <Card className="mb-6 border-primary/20">
       <CardHeader className="bg-primary/5 rounded-t-xl pb-4">
         <CardTitle className="text-xl">Agenda na dziś</CardTitle>
         <CardDescription>Bieżący harmonogram rutyn i zabiegów</CardDescription>

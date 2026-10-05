@@ -35,13 +35,13 @@ const getIcon = (category: string) => {
 }
 
 const categoryColors = {
-  meal: "#FF9500",
-  activity: "#30D158",
-  medication: "#AF52DE",
-  rest: "#5AC8FA",
+  meal: "var(--chart-1)",
+  activity: "var(--chart-2)",
+  medication: "var(--chart-3)",
+  rest: "var(--chart-5)",
 }
 
-export function AgendaTimelineClient({ items, accentColor = "#007AFF", viewDateStr }: AgendaTimelineClientProps) {
+export function AgendaTimelineClient({ items, accentColor = "var(--primary)", viewDateStr }: AgendaTimelineClientProps) {
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
@@ -68,7 +68,7 @@ export function AgendaTimelineClient({ items, accentColor = "#007AFF", viewDateS
     return (
       <div className="max-w-2xl mx-auto space-y-3 mt-6">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="rounded-2xl h-20 animate-pulse bg-muted" />
+          <div key={i} className="rounded-xl h-20 animate-pulse bg-muted" />
         ))}
       </div>
     )
@@ -78,15 +78,15 @@ export function AgendaTimelineClient({ items, accentColor = "#007AFF", viewDateS
     return (
       <div className="max-w-2xl mx-auto px-5 pt-20 flex flex-col items-center text-center">
         <div
-          className="w-20 h-20 rounded-3xl flex items-center justify-center text-4xl mb-6"
-          style={{ background: "#F2F2F7" }}
+          className="w-20 h-20 rounded-xl flex items-center justify-center text-4xl mb-6"
+          style={{ background: "var(--muted)" }}
         >
           <CalendarX className="h-10 w-10 text-muted-foreground opacity-50" />
         </div>
-        <h2 className="text-[20px] font-700 mb-2" style={{ color: "#1C1C1E" }}>
+        <h2 className="text-[20px] font-700 mb-2" style={{ color: "var(--foreground)" }}>
           Brak wydarzeń
         </h2>
-        <p className="text-[15px]" style={{ color: "#8E8E93" }}>
+        <p className="text-[15px]" style={{ color: "var(--muted-foreground)" }}>
           Brak zaplanowanych wydarzeń na ten dzień
         </p>
       </div>
@@ -102,10 +102,10 @@ export function AgendaTimelineClient({ items, accentColor = "#007AFF", viewDateS
     >
       <div className="flex items-center justify-between mb-5">
         <div>
-          <p className="text-[11px] font-700 uppercase tracking-widest" style={{ color: "#8E8E93", letterSpacing: "0.1em" }}>
+          <p className="text-[11px] font-700 uppercase tracking-widest" style={{ color: "var(--muted-foreground)", letterSpacing: "0.1em" }}>
             Agenda dnia
           </p>
-          <p className="text-[17px] font-700" style={{ color: "#1C1C1E" }}>
+          <p className="text-[17px] font-700" style={{ color: "var(--foreground)" }}>
             {new Date(viewDateStr).toLocaleDateString("pl-PL", { weekday: "long", day: "numeric", month: "long" })}
           </p>
         </div>
@@ -122,7 +122,7 @@ export function AgendaTimelineClient({ items, accentColor = "#007AFF", viewDateS
         {/* Vertical line */}
         <div
           className="absolute left-[52px] top-0 bottom-0 w-px"
-          style={{ background: "linear-gradient(to bottom, transparent, #D1D1D6 10%, #D1D1D6 90%, transparent)" }}
+          style={{ background: "linear-gradient(to bottom, transparent, var(--border) 10%, var(--border) 90%, transparent)" }}
         />
 
         <div className="space-y-1">
@@ -146,7 +146,7 @@ export function AgendaTimelineClient({ items, accentColor = "#007AFF", viewDateS
                 <div className="flex flex-col items-end w-12 flex-shrink-0 pt-3.5">
                   <span
                     className="text-[11px] font-600 tabular-nums"
-                    style={{ color: past ? "#8E8E93" : "#1C1C1E" }}
+                    style={{ color: past ? "var(--muted-foreground)" : "var(--foreground)" }}
                   >
                     {event.time.substring(0, 5)}
                   </span>
@@ -157,18 +157,18 @@ export function AgendaTimelineClient({ items, accentColor = "#007AFF", viewDateS
                   <div
                     className="w-3 h-3 rounded-full border-2 transition-all duration-300"
                     style={{
-                      borderColor: past ? catColor : "#D1D1D6",
-                      background: past ? catColor : "#fff",
-                      boxShadow: past ? `0 0 0 3px ${catColor}22` : "none",
+                      borderColor: past ? catColor : "var(--border)",
+                      background: past ? catColor : "var(--card)",
+                      boxShadow: past ? `0 0 0 3px color-mix(in oklab, ${catColor} 13%, transparent)` : "none",
                     }}
                   />
                 </div>
 
                 {/* Event card */}
                 <div
-                  className="flex-1 mb-2 rounded-2xl overflow-hidden transition-all duration-200"
+                  className="flex-1 mb-2 rounded-xl overflow-hidden transition-all duration-200"
                   style={{
-                    background: "#fff",
+                    background: "var(--card)",
                     boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)",
                     opacity: past ? 1 : 0.72,
                   }}
@@ -176,7 +176,7 @@ export function AgendaTimelineClient({ items, accentColor = "#007AFF", viewDateS
                   <div className="flex items-center gap-3 p-4">
                     <div
                       className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
-                      style={{ background: `${catColor}18` }}
+                      style={{ background: `color-mix(in oklab, ${catColor} 9%, transparent)` }}
                     >
                       {icon}
                     </div>
@@ -185,7 +185,7 @@ export function AgendaTimelineClient({ items, accentColor = "#007AFF", viewDateS
                         <p
                           className="text-[14px] font-700"
                           style={{
-                            color: "#1C1C1E",
+                            color: "var(--foreground)",
                             textDecoration: "none",
                           }}
                         >

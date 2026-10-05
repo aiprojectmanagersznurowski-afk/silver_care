@@ -82,25 +82,25 @@ export function BulkReportApprover({ draftReports }: BulkReportApproverProps) {
   }
 
   return (
-    <div className="rounded-2xl border border-sage/20 bg-sage/5 p-4 sm:p-5 mb-6 space-y-4 shadow-sm">
+    <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 sm:p-5 mb-6 space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={toggleSelectAll}
             disabled={isPending}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-slate hover:text-sage min-h-[48px] px-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage/40 transition-colors"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-foreground hover:text-primary min-h-[48px] px-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40 transition-colors"
             aria-label={isAllSelected ? 'Odznacz wszystkie raporty' : 'Zaznacz wszystkie zweryfikowane raporty'}
           >
             {isAllSelected ? (
-              <CheckSquare className="h-5 w-5 text-sage stroke-[2.5]" />
+              <CheckSquare className="h-5 w-5 text-primary stroke-[2.5]" />
             ) : (
-              <Square className="h-5 w-5 text-slate-soft stroke-[2]" />
+              <Square className="h-5 w-5 text-muted-foreground stroke-[2]" />
             )}
             <span>Zaznacz wszystkie zweryfikowane (max 10)</span>
           </button>
-          <span className="text-xs text-slate-soft">
-            Wybrano: <strong className="text-slate">{selectedIds.length}</strong> / {selectableDrafts.length}
+          <span className="text-xs text-muted-foreground">
+            Wybrano: <strong className="text-foreground">{selectedIds.length}</strong> / {selectableDrafts.length}
           </span>
         </div>
 
@@ -108,7 +108,7 @@ export function BulkReportApprover({ draftReports }: BulkReportApproverProps) {
           type="button"
           onClick={handleBulkPublish}
           disabled={selectedIds.length === 0 || isPending}
-          className="bg-sage hover:bg-sage-dark text-white font-semibold min-h-[48px] px-5 rounded-xl shadow-xs inline-flex items-center gap-2 transition-colors disabled:opacity-50"
+          className="bg-primary hover:bg-primary/90 text-white font-semibold min-h-[48px] px-5 rounded-xl inline-flex items-center gap-2 transition-colors disabled:opacity-50"
         >
           {isPending ? (
             <>
@@ -127,7 +127,7 @@ export function BulkReportApprover({ draftReports }: BulkReportApproverProps) {
       {errorMessage && (
         <div
           role="alert"
-          className="flex items-center gap-2 p-3 text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-lg"
+          className="flex items-center gap-2 p-3 text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-lg"
         >
           <AlertCircle className="h-4 w-4 shrink-0" />
           <span>{errorMessage}</span>
@@ -137,9 +137,9 @@ export function BulkReportApprover({ draftReports }: BulkReportApproverProps) {
       {successCount !== null && (
         <div
           role="status"
-          className="flex items-center gap-2 p-3 text-xs text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-lg"
+          className="flex items-center gap-2 p-3 text-xs text-foreground bg-muted border border-border rounded-lg"
         >
-          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-foreground" />
           <span>
             Pomyślnie opublikowano <strong>{successCount}</strong> raportów dla rodzin pensjonariuszy!
           </span>
@@ -162,8 +162,8 @@ export function BulkReportApprover({ draftReports }: BulkReportApproverProps) {
               disabled={isPending}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors min-h-[40px] ${
                 isSelected
-                  ? 'bg-sage text-white border-sage shadow-xs'
-                  : 'bg-white text-slate border-slate/20 hover:border-slate/40'
+                  ? 'bg-primary text-white border-primary'
+                  : 'bg-card text-foreground border-border hover:border-border'
               }`}
             >
               {isSelected ? (

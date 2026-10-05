@@ -4,6 +4,7 @@ import { UIState } from '@silvercare/contracts/src/generated/presentation';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { Textarea } from '@/components/ui/textarea'
 
 interface FamilyMessage {
   id: string;
@@ -52,7 +53,7 @@ export function AdminMessagesInbox() {
   }, [messages, activeResidentId]);
 
   if (state === 'loading') return <div>Ładowanie wiadomości...</div>;
-  if (state === 'error') return <div className="text-red-500">Błąd podczas pobierania wiadomości.</div>;
+  if (state === 'error') return <div className="text-destructive">Błąd podczas pobierania wiadomości.</div>;
   if (state === 'empty') return <div>Brak wiadomości od rodzin.</div>;
 
   // Grupujemy najnowsze wiadomości od poszczególnych "wątków" (resident + relative)
@@ -156,7 +157,7 @@ export function AdminMessagesInbox() {
                       {format(new Date(msg.created_at), "d MMM, HH:mm", { locale: pl })}
                     </span>
                     <div 
-                      className={`px-4 py-2 rounded-2xl text-sm shadow-sm ${
+                      className={`px-4 py-2 rounded-xl text-sm ${
                         isStaff 
                           ? 'bg-primary text-primary-foreground rounded-tr-sm' 
                           : 'bg-muted text-foreground rounded-tl-sm'
@@ -173,8 +174,7 @@ export function AdminMessagesInbox() {
             </div>
 
             <div className="p-4 border-t border-border bg-muted/10 flex gap-2">
-              <textarea
-                className="flex-1 min-h-[44px] max-h-[120px] rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-y"
+              <Textarea className="flex-1"
                 rows={1}
                 value={replyContent}
                 onChange={(e) => setReplyContent(e.target.value)}

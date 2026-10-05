@@ -13,6 +13,7 @@ export class StaffBoardPage {
   readonly logoutButton: Locator;
   readonly familyMessagesLinks: Locator;
   readonly buttonsNestedInLinks: Locator;
+  readonly dictateLinks: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -24,6 +25,7 @@ export class StaffBoardPage {
     this.logoutButton = page.locator('form[action="/auth/signout"] button[type="submit"]');
     this.familyMessagesLinks = page.locator('a[href^="/staff/messages?residentId="]');
     this.buttonsNestedInLinks = page.locator('a button');
+    this.dictateLinks = page.locator('a[href^="/voice?resident="]');
   }
 
   async goto() {
@@ -37,12 +39,12 @@ export class StaffBoardPage {
 
   async switchToRounds() {
     await this.quickRoundsButton.click();
-    await expect(this.quickRoundsButton).toHaveClass(/bg-sage/);
+    await expect(this.quickRoundsButton).toHaveAttribute('aria-pressed', 'true');
   }
 
   async switchToCards() {
     await this.cardsViewButton.click();
-    await expect(this.cardsViewButton).toHaveClass(/bg-white/);
+    await expect(this.cardsViewButton).toHaveAttribute('aria-pressed', 'true');
   }
 
   async searchResident(name: string) {
