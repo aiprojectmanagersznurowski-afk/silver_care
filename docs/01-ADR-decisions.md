@@ -202,3 +202,23 @@ Obniżenie priorytetu obu naraz cicho pozbawiłoby impersonację super administr
 **`SEC-AUDIT-APPEND-ONLY` przepisane, żeby rozróżnienie było jawne w samym kontrakcie**, nie tylko w tym dokumencie — treść wymagania teraz wprost mówi, że nie zależy od PITR/pgAudit.
 
 **Koszt na etapie MVP: zero złotych za Supabase**, obok wcześniej ustalonego zera za Groq (ADR-009). Jedyne stałe koszty to dostawcy, których nie da się uniknąć — model językowy, SMS, e-mail.
+
+---
+
+## ADR-014 — Skala szablonu shadcn-admin zamiast skali 17px/48px ✅
+
+**Kontekst.** Interfejs ma wyglądać jak szablon `next-shadcn-admin-dashboard` (styl shadcn „nova"): tekst interfejsu 14px, przycisk 32px, tabela z wierszem 40px, zwijany pasek boczny. ADR-011 ustalał tekst bazowy 17px i cel dotykowy 48px, a reguła `R24-design-a11y` blokowała wszystko poniżej 16px i 44px. Dopasowanie do szablonu było niemożliwe bez zmiany progu bramki.
+
+**Decyzja (Michał, 2026-10-05).** Skala szablonu wszędzie — także w portalu bliskich i panelu personelu. Świadome obniżenie progu czytelności względem ADR-011 na rzecz spójności z szablonem. Paleta rozszerzona o neutralne tokeny shadcn (pop-over, wejście, sidebar, błąd techniczny) oraz pięć kolorów wykresów.
+
+**Co zostaje bez zmian.**
+- Kontrast minimum 4.5:1 (WCAG 2.1 AA) — także dla tekstu drugorzędnego.
+- `quiet-metrics` (ADR-005): kolory wykresów służą statystykom placówki w panelu administratora. Żadna metryka pensjonariusza nie jest pokazywana jako wykres trendu — to granica MDR, nie styl.
+- Kolor nie niesie oceny stanu pensjonariusza. Czerwień wyłącznie dla błędów technicznych i akcji destrukcyjnych.
+- Jedna rodzina krojów, karty bez cienia (obwódka zamiast cienia jest zgodna z szablonem).
+
+**Zgodność z `UI-ACCESSIBILITY` (WCAG 2.1 AA).** WCAG 2.1 AA nie narzuca minimalnego celu dotykowego (2.5.5 to poziom AAA). WCAG 2.2 AA (2.5.8) wymaga 24px — 32px go spełnia. Tekst 14px przy zachowanym kontraście i działającym powiększeniu do 200% spełnia AA.
+
+**Reguła `R24-design-a11y` zmieniona.** Progi: tekst bazowy ≥ 14px, każdy stopień skali ≥ 12px, cel dotykowy ≥ 32px. Kontrast, `latin-ext`, komplet tokenów w obu motywach i `quiet-metrics` bez zmian. Mutacja zmniejsza teraz tekst bazowy do 12px.
+
+**Ryzyko przyjęte świadomie.** Część odbiorców portalu bliskich to osoby starsze. Jeżeli pilotaż (Marconi, KIDO) pokaże problemy z czytelnością, powrót do skali ADR-011 w portalu bliskich to zmiana tokenów, nie przebudowa komponentów.

@@ -80,12 +80,17 @@ files['packages/contracts/src/generated/design.ts'] = BANNER
   + emit('ACCESSIBILITY', design.ACCESSIBILITY) + emit('LAYOUT_PRINCIPLES', design.LAYOUT_PRINCIPLES);
 
 // Tokeny CSS — jedno źródło dla Tailwinda i stylów globalnych.
+// Prefiks --sc- (ADR-014): bez niego --accent i --border z kontraktu nadpisywałyby
+// zmienne shadcn o innym znaczeniu. Mapowanie na zmienne shadcn robi globals.css.
+// Tryb ciemny przez klasę .dark — tak przełącza go aplikacja (custom-variant dark).
 {
-  const line = (k, v) => `  --${k}: ${v};`;
+  const line = (k, v) => `  --sc-${k}: ${v};`;
   const css = [
     '/* WYGENEROWANE z contracts/design.contract.mjs — nie edytuj ręcznie. */',
     ':root {',
     line('font-sans', design.TYPOGRAPHY.fontStack),
+    line('text-base-size', design.TYPOGRAPHY.baseSize),
+    line('touch-target', design.ACCESSIBILITY.touchTargetMinimum),
     ...design.TYPOGRAPHY.scale.flatMap((s) => [
       line(`text-${s.id}`, s.size),
       line(`text-${s.id}-weight`, String(s.weight)),
@@ -100,10 +105,8 @@ files['packages/contracts/src/generated/design.ts'] = BANNER
     ...Object.entries(design.COLORS.light).map(([k, v]) => line(k, v.value)),
     '}',
     '',
-    '@media (prefers-color-scheme: dark) {',
-    '  :root {',
-    ...Object.entries(design.COLORS.dark).map(([k, v]) => `  ${line(k, v.value)}`),
-    '  }',
+    '.dark {',
+    ...Object.entries(design.COLORS.dark).map(([k, v]) => line(k, v.value)),
     '}',
     '',
     '@media (prefers-reduced-motion: reduce) {',
