@@ -116,6 +116,10 @@ Osiem sprzeczności znalezionych w dokumentach źródłowych, rozstrzygniętych 
 
 **Co pozostaje otwarte.** Limit darmowego poziomu jest hojny, ale nie monitorowany automatycznie — jeśli pilotaż urośnie ponad piętnaście do dwudziestu pięciu osób, ktoś musi zauważyć zbliżający się próg, zanim konto zacznie naliczać opłaty albo odrzucać żądania. To zadanie operacyjne, nie architektoniczne.
 
+**Addendum (Michał, 2026-10-06): zakres DPA z Groq obejmuje też `CLASSIFY` i `GENERATE`.** Umowa powierzenia z Groq nie jest ograniczona do samej transkrypcji — pokrywa również klasyfikację strumieni i generowanie raportu. Referencja dokumentu: `TEST-1223` *(placeholder — podmienić na realny numer/identyfikator DPA i datę podpisania przed scaleniem do `main`; zob. `docs/REJESTR_PODMIOTOW_PRZETWARZAJACYCH.md`)*.
+
+To **nie zmienia** decyzji operacyjnej z PR #38 (`fix/sec-eu-llm-no-fallback`): `eu-llm-client.ts` nadal nie przekierowuje `CLASSIFY`/`GENERATE` na Groq, a brak klucza EU kończy się jawnym błędem zamiast cichego fallbacku. Istnienie podstawy prawnej do przetwarzania przez Groq na tych etapach nie jest samo w sobie decyzją architektoniczną o ich tam przeniesieniu — to osobna decyzja (koszt, jakość modelu, zgodność z `MDR-NO-INTERPRETATION`), która wymagałaby własnego Work Ordera i zmiany kontraktu (`PROVIDERS` w `integration.contract.mjs`, analogicznie do wpisu dla `TRANSCRIBE`). Ten addendum zamyka wyłącznie pytanie „czy mamy podstawę prawną" — nie otwiera ponownie pytania „czy używamy Groq do tych etapów".
+
 ---
 
 ## ADR-010 — Tryb autonomiczny ✅
