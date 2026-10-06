@@ -48,6 +48,10 @@ Rdzeń nazywa się `organizations` i `residents`. Identyfikatory dostawców nie 
 
 Powód: jeden pensjonariusz może jutro mieć drugie urządzenie innego producenta. Gdyby `polar_user_id` siedział na rekordzie seniora, każdy nowy dostawca oznaczałby migrację rdzenia.
 
+## Specyfikacja user stories
+
+`docs/KANONICZNA_SPECYFIKACJA_USER_STORIES.md` opisuje kto, po co i w jakich scenariuszach korzysta z funkcji. Nie jest źródłem prawdy — przy sprzeczności wygrywa kontrakt i ADR. Funkcja niepokryta istniejącym story dostaje nowe story (kolejne ID w domenie, status `📝 PROPOZYCJA`) przed Work Orderem. Każde story wskazuje `@REQ` albo `brak REQ`; nowe wymaganie w kontrakcie wskazuje story w polu `source`. Zmiana zakresu funkcji = aktualizacja story w tym samym PR.
+
 ## Pętla pracy
 
 ```

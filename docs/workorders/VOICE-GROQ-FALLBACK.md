@@ -1,5 +1,7 @@
 # Work Order: VOICE-GROQ-FALLBACK
 
+> ⚠️ **SUPERSEDED:** Zastąpione i wycofane przez PR #38 (ADR-009, usunięcie fallbacku poza EOG).
+
 ## Wymaganie
 Rejestr: INFRA-GROQ-TRANSCRIPTION, INFRA-EU-REGION (ADR-009)
 
