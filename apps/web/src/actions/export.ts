@@ -42,16 +42,16 @@ export async function exportResidentsDataAction(options: ExportFilterOptions): P
   rows?: ExportRowFormatted[]
   count?: number
 }> {
-  const cookieStore = await cookies()
-  const guard = assertMutationAllowedDuringImpersonation(isImpersonationSessionActive(cookieStore))
-  if (!guard.allowed) {
-    return { error: 'Eksport danych podopiecznych jest zablokowany w trybie impersonacji (ochrona Art. 9 RODO).' }
-  }
-
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) return { error: 'Brak autoryzacji sesji.' }
+
+  const cookieStore = await cookies()
+  const guard = assertMutationAllowedDuringImpersonation(isImpersonationSessionActive(cookieStore, user))
+  if (!guard.allowed) {
+    return { error: 'Eksport danych podopiecznych jest zablokowany w trybie impersonacji (ochrona Art. 9 RODO).' }
+  }
   const orgId = user.app_metadata?.organization_id
   if (!orgId) return { error: 'Brak przypisanej placówki.' }
 

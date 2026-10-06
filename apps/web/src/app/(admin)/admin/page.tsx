@@ -1,3 +1,4 @@
+import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
 import { createClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
@@ -11,7 +12,7 @@ export default async function AdminDashboard() {
 
   const role = user?.app_metadata?.role || user?.user_metadata?.role
   const cookieStore = await cookies()
-  const isImpersonating = !!cookieStore.get('sc_impersonation')?.value
+  const isImpersonating = isImpersonationSessionActive(cookieStore, user)
 
   // Super Admin bez aktywnej sesji impersonacji zarządza platformą (placówki)
   if (role === 'super_admin' && !isImpersonating) {
