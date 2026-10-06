@@ -1,6 +1,6 @@
 # 📖 Kanoniczna specyfikacja user stories — Silver Care
 
-> **Wersja:** 2.5 (bazuje na v2.4 + funkcje dopisane retroaktywnie) · **Ostatnia aktualizacja:** 2026-10-04
+> **Wersja:** 2.6 (bazuje na v2.4 + funkcje dopisane retroaktywnie) · **Ostatnia aktualizacja:** 2026-10-06
 > **Właściciele:** Darek Rink, Michał Sznurowski
 
 ## Jak czytać i utrzymywać ten dokument
@@ -384,6 +384,8 @@
 
 > ⚖️ **Rozstrzygnięcie (ADR-011):** tokeny (17 px tekst bazowy, kontrast min. 4.5:1, cel dotykowy 48 px) pochodzą z `design.contract.mjs`; kolor nie służy do oceny stanu zdrowia seniora.
 
+> ⚖️ **Rozstrzygnięcie (ADR-014, 2026-10-05):** liczby z ADR-011 zostały zmienione na skalę szablonu shadcn-admin: tekst bazowy 14 px, cel dotykowy 32 px (kontrast 4.5:1 i zasada „kolor nie ocenia" bez zmian). Aktualne wartości są w `design.contract.mjs`; szczegóły w `NFR-UI-03`.
+
 ### [NFR-SEC-04] Security incident response (SIEM lite)
 🔗 **Kontrakt:** `SEC-403-LOGGING` · **Status:** ✅
 
@@ -619,6 +621,32 @@
 - **AC3:** Kompresja zdjęć w przeglądarce i usuwanie metadanych EXIF przed wysłaniem.
 - **AC4:** Brak natywnych `alert()`/`confirm()` — Toast i dostępny `ConfirmDialog`.
 
+#### [NFR-UI-03] Szablon shadcn-admin, tokeny z kontraktu i jeden akcent
+🔗 **Kontrakt:** `UI-TEMPLATE-ALIGNMENT`, `UI-ACCESSIBILITY`, `MDR-NO-PHYSIO-TO-FAMILY` · **WO:** [`UI-TEMPLATE-ALIGNMENT`](workorders/UI-TEMPLATE-ALIGNMENT.md); PR #51–#54; ADR-014 · **Status:** ✅ 📝
+
+**User story:** Jako użytkownik każdej roli (administrator, personel, bliski), chcę, żeby cała aplikacja wyglądała spójnie i spokojnie, w jednym kolorze marki, aby nie uczyć się osobnego wyglądu dla każdego panelu.
+
+**Kryteria akceptacji:**
+- **AC1:** Skala szablonu: tekst bazowy 14 px, przycisk 32 px; kontrast tekstu min. 4.5:1 w obu motywach.
+- **AC2:** Wartości kolorów, rozmiarów i promieni pochodzą z `design.contract.mjs` przez wygenerowany `tokens.css` (`--sc-*`); w komponentach brak kolorów hex/rgb, klas palety portalu (`sage`/`cream`/`slate`) i palety Tailwinda.
+- **AC3:** Jeden akcent (zieleń marki) w panelu administratora, personelu, portalu bliskich i na ekranach logowania; brak gradientów i cieni na kartach.
+- **AC4:** Panel administratora i personelu ma zwijany pasek boczny z szablonu; stan zwinięcia jest zapamiętany, a na telefonie menu otwiera się jako panel.
+- **AC5:** Kolor nie niesie oceny: stany opieki, statusy wpisów, delty i zgony w danych dziennych są neutralne; czerwień wyłącznie dla błędów technicznych i akcji destrukcyjnych.
+- **AC6:** Wykresy (`ui/chart`) występują tylko w statystykach placówki w panelu administratora, nigdy w widokach bliskich (ADR-005).
+
+> ⚖️ **Rozstrzygnięcie:** liczby z `NFR-UI-01` (17 px / 48 px) zostały świadomie zastąpione w ADR-014; ryzyko dla czytelności portalu bliskich jest opisane w ADR i do zweryfikowania w pilotażu. Pole `source` wymagania `UI-TEMPLATE-ALIGNMENT` wskazuje dziś ADR-014; zgodnie z regułą utrzymania powinno wskazywać to story — wymaga okna kontraktowego (zmiana po stronie człowieka).
+
+#### [NFR-UI-04] Kontrast elementów graficznych (wykresy)
+🔗 **Kontrakt:** `UI-ACCESSIBILITY` · **WO:** brak (poprawka palety); PR #55; ADR-014 (korekta) · **Status:** 🟡 📝
+
+**User story:** Jako administrator czytający statystyki placówki, chcę, żeby każda seria wykresu była wyraźnie widoczna na tle, aby niczego nie przeoczyć przy słabszym wzroku.
+
+**Kryteria akceptacji:**
+- **AC1:** Każda seria `chart-1…5` ma kontrast co najmniej 3:1 na `bg` i `surface` w obu motywach (WCAG 1.4.11).
+- **AC2:** Bramka `R24-design-a11y` sprawdza ten próg, a `sc-selftest` ma mutację, która go łamie.
+- **AC3:** Serie są rozróżniane także legendą lub podpisem wartości, nie samym kolorem.
+- **AC4 (otwarte):** Seria „Nieokreślony" w wykresie stanów opieki używa koloru `border` (około 1,2:1). Wartość jest podana liczbą w legendzie, ale formalnie próg nie jest spełniony — wymaga decyzji o kolorze lub wzorze dla kategorii „brak danych".
+
 ---
 
 ## 💡 USER STORIES DO ANALIZY (Backlog / poza MVP)
@@ -703,3 +731,4 @@
 |---|---|---|
 | 2026-08-25 | 2.4 | Pierwotna specyfikacja (poza repozytorium), źródło `contracts/requirements.contract.mjs`. |
 | 2026-10-04 | 2.5 | Przeniesienie do repo; mapowanie na `@REQ` i ADR; dopisanie `SC-SUP-04`, `SC-ADM-10…16`, `SC-NUR-07…10`, `SC-USR-01` oraz 7 NFR z Work Orderów; oznaczenie dwóch sprzeczności jako WYMAGA DECYZJI. |
+| 2026-10-06 | 2.6 | Rozstrzygnięcie dwóch sprzeczności z v2.5 (odwracalny PESEL: PR #39, fallback Groq: PR #38; statusy zaktualizowane w `SC-NUR-10` i `NFR-INFRA-02`); kryteria `SC-ADM-08` i `SC-ADM-15` po PR #49; dopisanie `NFR-UI-03` (szablon shadcn-admin, ADR-014, PR #51–#54) i `NFR-UI-04` (kontrast wykresów, PR #55); notka ADR-014 przy `NFR-UI-01`. |
