@@ -7,7 +7,7 @@ import { AdminSidebar } from '@/components/AdminSidebar'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { ImpersonationBanner } from '@/components/ImpersonationBanner'
-import { ImpersonationSession } from '@/actions/impersonation'
+import { getActiveImpersonation } from '@/lib/impersonation-guards'
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient()
@@ -19,15 +19,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   }
 
   const cookieStore = await cookies()
-  const rawSession = cookieStore.get('sc_impersonation')?.value
-  let impersonationSession: ImpersonationSession | null = null
-  if (rawSession) {
-    try {
-      impersonationSession = JSON.parse(rawSession)
-    } catch {
-      impersonationSession = null
-    }
-  }
+  const impersonationSession = getActiveImpersonation(cookieStore, user)
 
   const sidebarOpen = cookieStore.get('sidebar_state')?.value !== 'false'
 
