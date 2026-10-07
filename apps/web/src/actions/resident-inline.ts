@@ -26,12 +26,6 @@ export interface UpdateResidentResult {
 export async function updateResidentInlineAction(
   payload: UpdateResidentPayload
 ): Promise<UpdateResidentResult> {
-  const cookieStore = await cookies()
-  const guard = assertMutationAllowedDuringImpersonation(isImpersonationSessionActive(cookieStore))
-  if (!guard.allowed) {
-    return { success: false, error: guard.error }
-  }
-
   const supabase = await createClient()
   const {
     data: { user },
@@ -39,6 +33,12 @@ export async function updateResidentInlineAction(
 
   if (!user) {
     return { success: false, error: 'Brak aktywnej sesji użytkownika.' }
+  }
+
+  const cookieStore = await cookies()
+  const guard = assertMutationAllowedDuringImpersonation(isImpersonationSessionActive(cookieStore, user))
+  if (!guard.allowed) {
+    return { success: false, error: guard.error }
   }
 
   const role = user.app_metadata?.role as string | undefined

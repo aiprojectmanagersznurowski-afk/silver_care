@@ -372,6 +372,18 @@ else if (Number(m[1]) < 7 || Number(m[2]) > 21) {
     if (!COLORS.light[tok]) err('R24-design-a11y', `Brak tokenu koloru "${tok}" w motywie jasnym.`);
     if (!COLORS.dark[tok]) err('R24-design-a11y', `Brak tokenu koloru "${tok}" w motywie ciemnym.`);
   }
+  // Serie wykresów to elementy graficzne: WCAG 1.4.11 wymaga 3:1 względem tła i karty w każdym motywie.
+  const lin = (v) => { const c = v / 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
+  const lum = (hex) => { const n = parseInt(hex.slice(1), 16); return 0.2126 * lin(n >> 16) + 0.7152 * lin((n >> 8) & 255) + 0.0722 * lin(n & 255); };
+  const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)]; return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+  for (const [mode, palette] of [['jasnym', COLORS.light], ['ciemnym', COLORS.dark]]) {
+    for (const tok of Object.keys(palette).filter((k) => /^chart-\d$/.test(k))) {
+      for (const surface of ['bg', 'surface']) {
+        const r = ratio(palette[tok].value, palette[surface].value);
+        if (r < 3) err('R24-design-a11y', `Seria "${tok}" w motywie ${mode} ma kontrast ${r.toFixed(1)}:1 na tle "${surface}" (minimum 3:1, WCAG 1.4.11).`);
+      }
+    }
+  }
   if (!LAYOUT_PRINCIPLES.find((l) => l.id === 'quiet-metrics')) {
     err('R24-design-a11y', 'Brak zasady o cichej prezentacji metryk — wykres sugerujący trend narusza ADR-005.');
   }

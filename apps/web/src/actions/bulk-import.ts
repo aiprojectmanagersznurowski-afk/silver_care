@@ -41,16 +41,16 @@ export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[
   error?: string
   importedCount?: number
 }> {
-  const cookieStore = await cookies()
-  const guard = assertMutationAllowedDuringImpersonation(isImpersonationSessionActive(cookieStore))
-  if (!guard.allowed) {
-    return { error: guard.error }
-  }
-
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) return { error: 'Brak autoryzacji sesji.' }
+
+  const cookieStore = await cookies()
+  const guard = assertMutationAllowedDuringImpersonation(isImpersonationSessionActive(cookieStore, user))
+  if (!guard.allowed) {
+    return { error: guard.error }
+  }
   const orgId = user.app_metadata?.organization_id
   if (!orgId) return { error: 'Brak przypisanej placówki.' }
 

@@ -1,4 +1,5 @@
 import { test, expect } from '../fixtures/base-test';
+import { MAIN_ORG_ID } from '../fixtures/test-users';
 
 /**
  * @REQ: SUP-IMPERSONATION
@@ -9,25 +10,13 @@ import { test, expect } from '../fixtures/base-test';
  * AC2: Blokada formularzy tworzenia i akcji eksportu
  */
 test.describe('Bezpieczny tryb impersonacji Super Admina (@REQ: SUP-IMPERSONATION, @REQ: SEC-NO-PII-LOGS)', () => {
-  test('@REQ: SUP-IMPERSONATION - AC1 & AC2: Tryb podglądu blokuje dodawanie i eksport oraz chroni PII', async ({ loginPage, page, context }) => {
+  test('@REQ: SUP-IMPERSONATION - AC1 & AC2: Tryb podglądu blokuje dodawanie i eksport oraz chroni PII', async ({ loginPage, page }) => {
     await loginPage.loginAs('super_admin');
 
-    // Ustawienie ciasteczka symulującego aktywną sesję impersonacji
-    await context.addCookies([
-      {
-        name: 'sc_impersonation',
-        value: JSON.stringify({
-          targetAdminId: '00000000-0000-0000-0000-000000000001',
-          targetOrgId: '00000000-0000-0000-0000-000000000001',
-          targetOrgName: 'Test Facility Impersonated',
-          adminEmail: 'admin@test.facility',
-          impersonatorId: 'super-admin-id',
-          startedAt: new Date().toISOString(),
-        }),
-        domain: 'localhost',
-        path: '/',
-      },
-    ]);
+    // Prawdziwa ścieżka: „Zaloguj jako" przy administratorze placówki ustawia ciasteczko powiązane z tym super adminem
+    await page.goto(`/admin/organizations/${MAIN_ORG_ID}`);
+    await page.getByRole('button', { name: 'Zaloguj jako' }).first().click();
+    await page.waitForURL('**/admin');
 
     await page.goto('/admin/residents');
     await page.waitForLoadState('networkidle');
