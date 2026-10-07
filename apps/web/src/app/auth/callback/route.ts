@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { resolveRelativeRole } from '@/lib/onboarding'
+import { evaluateOAuthInviteClaim } from '@/lib/invite-authorization'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -71,30 +72,45 @@ export async function GET(request: Request) {
         throw new Error('Adres e-mail z Google nie pokrywa się z zaproszeniem.')
       }
 
-      // 2. Aktualizacja app_metadata użytkownika — rola z zaproszenia, jak w /api/family/register (CONSENT-GRANTOR)
-      const relativeRole = resolveRelativeRole(invitation.role)
-      const { error: updateError } = await adminClient.auth.admin.updateUserById(user.id, {
-        user_metadata: {
-          phone: invitation.phone || null
-        },
-        app_metadata: {
-          role: relativeRole,
-          organization_id: invitation.organization_id
-        }
+      // 2. Walidacja bezpieczeństwa realizacji zaproszenia (SEC-OAUTH-METADATA-OVERWRITE)
+      const claimEvaluation = evaluateOAuthInviteClaim({
+        currentUserRole: user.app_metadata?.role,
+        currentUserOrgId: user.app_metadata?.organization_id,
+        invitationRole: invitation.role,
+        invitationOrgId: invitation.organization_id,
       })
 
-      if (updateError) {
-        throw new Error('Błąd przypisywania uprawnień systemowych.')
+      if (!claimEvaluation.allowed) {
+        throw new Error(claimEvaluation.error)
+      }
+
+      // Aktualizacja app_metadata następuje wyłącznie, gdy użytkownik nie ma roli lub awansuje (CONSENT-GRANTOR)
+      if (claimEvaluation.isNewRoleAssignment) {
+        const { error: updateError } = await adminClient.auth.admin.updateUserById(user.id, {
+          user_metadata: {
+            phone: invitation.phone || user.user_metadata?.phone || null,
+          },
+          app_metadata: {
+            ...user.app_metadata,
+            role: claimEvaluation.assignedRole,
+            organization_id: claimEvaluation.organizationId,
+          },
+        })
+
+        if (updateError) {
+          throw new Error('Błąd przypisywania uprawnień systemowych.')
+        }
       }
 
       // 3. Przypisanie do pensjonariusza
+      const assignedLinkRole = resolveRelativeRole(invitation.role)
       const { error: linkError } = await adminClient
         .from('resident_relative_links')
         .insert({
           resident_id: invitation.resident_id,
           relative_user_id: user.id,
-          relationship_code: relativeRole,
-          role: relativeRole
+          relationship_code: assignedLinkRole,
+          role: assignedLinkRole,
         })
 
       if (linkError && linkError.code !== '23505') {
