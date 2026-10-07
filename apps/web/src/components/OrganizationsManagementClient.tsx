@@ -237,26 +237,26 @@ export function OrganizationsManagementClient({
                 key={org.organization_id}
                 className="group block rounded-xl bg-card p-6 ring-1 ring-border hover:ring-primary transition-all"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                  <div className="space-y-1 min-w-0 flex-1">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
                         <Building2 className="h-5 w-5" />
                       </span>
                       <Link
                         href={`/admin/organizations/${org.organization_id}`}
-                        className="text-lg font-bold text-foreground group-hover:text-primary transition-colors"
+                        className="text-lg font-bold text-foreground group-hover:text-primary transition-colors truncate block"
                       >
                         {org.organization_name}
                       </Link>
                     </div>
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground pl-11">
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground pl-11 truncate">
                       <MapPin className="h-3.5 w-3.5 shrink-0" />
-                      <span>{org.address || 'Brak podanego adresu'}</span>
+                      <span className="truncate">{org.address || 'Brak podanego adresu'}</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 shrink-0">
                     <EditOrganizationDialog organization={org} />
                     <Link
                       href={`/admin/organizations/${org.organization_id}`}

@@ -41,6 +41,13 @@ interface RoomListProps {
   onUpdate: () => void
 }
 
+export function formatSectorName(sector?: string | null): string {
+  if (!sector) return '—'
+  const trimmed = sector.trim()
+  if (!trimmed) return '—'
+  return trimmed.toLowerCase().startsWith('sektor') ? trimmed : `Sektor ${trimmed}`
+}
+
 export default function RoomList({ rooms, onUpdate }: RoomListProps) {
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
   const [expandedRooms, setExpandedRooms] = useState<Record<string, boolean>>({})
@@ -204,7 +211,7 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
               <NativeSelectOption value="all">Wszystkie sektory</NativeSelectOption>
               {availableSectors.map((sector) => (
                 <NativeSelectOption key={sector} value={sector}>
-                  Sektor {sector}
+                  {formatSectorName(sector)}
                 </NativeSelectOption>
               ))}
             </NativeSelect>
@@ -263,7 +270,7 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
                         <h4 className="font-semibold text-base text-foreground">Pokój {room.number}</h4>
                       </div>
                       <div className="text-xs text-muted-foreground mt-0.5">
-                        {room.floor} {room.sector ? `• Sektor ${room.sector}` : ''}
+                        {room.floor} {room.sector ? `• ${formatSectorName(room.sector)}` : ''}
                       </div>
                     </div>
 
@@ -408,7 +415,7 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
                       </TableCell>
                       <TableCell className="text-muted-foreground">{room.floor}</TableCell>
                       <TableCell className="text-muted-foreground">
-                        {room.sector ? `Sektor ${room.sector}` : '—'}
+                        {room.sector ? formatSectorName(room.sector) : '—'}
                       </TableCell>
                       <TableCell className="text-center font-medium">
                         {room.beds || 0}

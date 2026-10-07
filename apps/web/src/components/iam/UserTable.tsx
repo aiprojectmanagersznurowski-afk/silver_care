@@ -9,6 +9,7 @@ import { AddUserDialog } from './AddUserDialog'
 import type { ComponentProps } from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
+import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 
 interface UserTableProps {
   users: UserItem[]
@@ -65,6 +66,7 @@ export function UserTable({
               {users.map(user => {
                 const currentSelected = selectedRoles[user.id] || user.role
                 const hasChanged = currentSelected !== user.role
+                const roleLabel = availableRoles.find(r => r.id === user.role)?.label || user.role
 
                 return (
                   <TableRow key={user.id}>
@@ -72,12 +74,16 @@ export function UserTable({
                       <div className="font-medium text-foreground text-base">{user.email}</div>
                       <div className="font-mono text-xs text-muted-foreground">{user.id}</div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground font-mono">
-                      {user.organizationId || 'Globalna / Brak'}
+                    <TableCell className="text-muted-foreground">
+                      {user.organizationId ? (
+                        <BusinessIdBadge type="organization" id={user.organizationId} />
+                      ) : (
+                        <span className="text-xs text-muted-foreground italic">Globalna / Brak</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <span className="inline-flex items-center rounded-lg bg-muted px-2.5 py-1 text-xs font-medium text-foreground">
-                        {user.role}
+                        {roleLabel}
                       </span>
                     </TableCell>
                     <TableCell>
@@ -85,6 +91,7 @@ export function UserTable({
                         aria-label={`Wybierz rolę dla ${user.email}`}
                         value={currentSelected}
                         onChange={e => onRoleSelect(user.id, e.target.value)}
+                        className="min-w-[170px]"
                       >
                         {availableRoles.map(r => (
                           <NativeSelectOption key={r.id} value={r.id}>

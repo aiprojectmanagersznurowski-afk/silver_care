@@ -64,20 +64,20 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
               className="h-8 sm:h-9 w-auto object-contain"
               priority
             />
-            <span className="hidden text-[0.8rem] text-muted-foreground sm:inline-block border-l border-border pl-3">
+            <span className="hidden text-[0.8rem] text-muted-foreground xl:inline-block border-l border-border pl-3">
               Portal rodzinnej opieki
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="ml-4 hidden items-center gap-1 md:flex">
+          <nav className="ml-4 hidden items-center gap-1 lg:flex">
             {navItems.map((item) => {
               const isActive = pathname?.startsWith(item.href) || (pathname === '/' && item.href === '/dashboard');
               return (
                 <Link
                   key={item.label}
                   href={item.href}
-                  className={`rounded-full px-5 py-2.5 transition-colors text-sm font-medium ${
+                  className={`rounded-full px-5 py-2.5 transition-colors text-sm font-medium whitespace-nowrap ${
                     isActive
                       ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
