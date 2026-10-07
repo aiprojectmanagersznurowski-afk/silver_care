@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { checkRateLimit } from '@/lib/rate-limiter'
 import { renderFamilyInviteEmail } from '@/lib/notification-templates'
-import { authorizeInviteTarget } from '@/lib/invite-authorization'
+import { authorizeInviteTarget, formatInviteResponse } from '@/lib/invite-authorization'
 import { resolveRelativeRole } from '@/lib/onboarding'
 
 export async function POST(request: Request) {
@@ -93,6 +93,7 @@ export async function POST(request: Request) {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || `${protocol}://${host}`
     const registerUrl = `${baseUrl}/register?token=${data.id}`
     
+    let emailSent = false
     if (process.env.EMAIL_PROVIDER_KEY) {
       console.log(`[EMAIL] Wysyłanie zaproszenia...`)
 
@@ -127,12 +128,21 @@ export async function POST(request: Request) {
         console.error('Błąd Mailtrap API:', errorData)
       } else {
         console.log(`[EMAIL] Zaproszenie wysłane pomyślnie.`)
+        emailSent = true
       }
     } else {
-      console.log(`[MOCK EMAIL] Brak EMAIL_PROVIDER_KEY. Link: ${registerUrl}`)
+      console.log(`[EMAIL] Brak EMAIL_PROVIDER_KEY. Zaproszenie wygenerowane pomyślnie.`)
     }
 
-    return NextResponse.json({ success: true, url: registerUrl, id: data.id }) // Returning url and id for testing purposes
+    const isProduction = process.env.NODE_ENV === 'production'
+    return NextResponse.json(
+      formatInviteResponse({
+        invitationId: data.id,
+        registerUrl,
+        isProduction,
+        emailSent,
+      })
+    )
   } catch (error: any) {
     console.error('API error:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
