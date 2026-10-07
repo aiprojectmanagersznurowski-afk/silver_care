@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
@@ -12,14 +13,14 @@ export async function resetStaffPasswordAction(formData: FormData) {
 
   if (!staffId) return { error: 'Brak identyfikatora pracownika.' }
 
-  const cookieStore = await cookies()
-  if (cookieStore.get('sc_impersonation')) {
-    return { error: 'Akcje administracyjne są zablokowane w trybie impersonacji.' }
-  }
-
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Brak aktywnej sesji.' }
+
+  const cookieStore = await cookies()
+  if (isImpersonationSessionActive(cookieStore, user)) {
+    return { error: 'Akcje administracyjne są zablokowane w trybie impersonacji.' }
+  }
 
   const callerRole = user.app_metadata?.role
   const callerOrg = user.app_metadata?.organization_id
@@ -95,14 +96,14 @@ export async function suspendStaffAction(formData: FormData) {
     return { error: 'Błędne potwierdzenie. Wpisz dokładnie słowo DEZAKTYWUJ.' }
   }
 
-  const cookieStore = await cookies()
-  if (cookieStore.get('sc_impersonation')) {
-    return { error: 'Akcje administracyjne są zablokowane w trybie impersonacji.' }
-  }
-
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Brak aktywnej sesji.' }
+
+  const cookieStore = await cookies()
+  if (isImpersonationSessionActive(cookieStore, user)) {
+    return { error: 'Akcje administracyjne są zablokowane w trybie impersonacji.' }
+  }
 
   const callerRole = user.app_metadata?.role
   const callerOrg = user.app_metadata?.organization_id
@@ -156,14 +157,14 @@ export async function restoreStaffAction(formData: FormData) {
   const staffId = formData.get('staffId') as string
   if (!staffId) return { error: 'Brak identyfikatora pracownika.' }
 
-  const cookieStore = await cookies()
-  if (cookieStore.get('sc_impersonation')) {
-    return { error: 'Akcje administracyjne są zablokowane w trybie impersonacji.' }
-  }
-
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Brak aktywnej sesji.' }
+
+  const cookieStore = await cookies()
+  if (isImpersonationSessionActive(cookieStore, user)) {
+    return { error: 'Akcje administracyjne są zablokowane w trybie impersonacji.' }
+  }
 
   const callerRole = user.app_metadata?.role
   const callerOrg = user.app_metadata?.organization_id

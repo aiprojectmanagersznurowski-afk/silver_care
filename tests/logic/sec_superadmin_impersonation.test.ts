@@ -53,18 +53,29 @@ describe('Super Admin Impersonation Security Guards (@REQ: SUP-IMPERSONATION, @R
   })
 
   describe('Wykrywanie sesji impersonacji z ciasteczka', () => {
-    it('detects active impersonation session when cookie is present', () => {
-      const mockCookieStore = {
-        get: (name: string) => name === 'sc_impersonation' ? { value: '{"targetOrgId":"org-1"}' } : undefined
-      }
-      expect(isImpersonationSessionActive(mockCookieStore)).toBe(true)
+    // SUP-IMPERSONATION: ciasteczko liczy się tylko dla super_admina, który rozpoczął sesję (patrz impersonation_cookie_binding.test.ts)
+    const superAdmin = { id: 'sa-1', app_metadata: { role: 'super_admin' } }
+    const cookieFor = (impersonatorId: string) => ({
+      get: (name: string) =>
+        name === 'sc_impersonation'
+          ? { value: JSON.stringify({ targetAdminId: 'a-1', targetOrgId: 'org-1', targetOrgName: 'Placówka', adminEmail: '', impersonatorId, startedAt: new Date().toISOString() }) }
+          : undefined,
+    })
+
+    it('detects active impersonation session when the super admin\'s own cookie is present', () => {
+      expect(isImpersonationSessionActive(cookieFor('sa-1'), superAdmin)).toBe(true)
+    })
+
+    it('ignores the cookie when no user is signed in or it belongs to someone else', () => {
+      expect(isImpersonationSessionActive(cookieFor('sa-1'), null)).toBe(false)
+      expect(isImpersonationSessionActive(cookieFor('inny-super-admin'), superAdmin)).toBe(false)
     })
 
     it('returns false when cookie is absent or empty', () => {
       const mockCookieStore = {
         get: (_name: string) => undefined
       }
-      expect(isImpersonationSessionActive(mockCookieStore)).toBe(false)
+      expect(isImpersonationSessionActive(mockCookieStore, superAdmin)).toBe(false)
     })
   })
 })

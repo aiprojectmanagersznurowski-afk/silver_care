@@ -40,7 +40,7 @@ export default async function AdminStaffPage() {
   )
 
   const cookieStore = await cookies()
-  const isImpersonating = isImpersonationSessionActive(cookieStore)
+  const isImpersonating = isImpersonationSessionActive(cookieStore, user)
 
   return (
     <div className="space-y-8">

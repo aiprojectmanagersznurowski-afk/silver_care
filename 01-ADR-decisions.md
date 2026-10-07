@@ -225,6 +225,8 @@ Obniżenie priorytetu obu naraz cicho pozbawiłoby impersonację super administr
 
 **Ryzyko przyjęte świadomie.** Część odbiorców portalu bliskich to osoby starsze. Jeżeli pilotaż (Marconi, KIDO) pokaże problemy z czytelnością, powrót do skali ADR-011 w portalu bliskich to zmiana tokenów, nie przebudowa komponentów.
 
+**Korekta ADR-014 (2026-10-05): kontrast serii wykresów.** Pomiar po wdrożeniu wykazał, że `chart-3` (2,1:1) i `chart-4` (1,6:1) w trybie jasnym oraz `chart-4` na karcie w trybie ciemnym (2,8:1) nie spełniają progu 3:1 dla elementów graficznych (WCAG 1.4.11). Nowa paleta: jasny `chart-3` #8C8680 (neutralna szarość) i `chart-4` #1F4A3F (głęboka zieleń); ciemny `chart-3` #918B83 i `chart-4` #3F7A69. `chart-1` zostaje akcentem marki. Reguła `R24-design-a11y` sprawdza teraz kontrast każdej serii na `bg` i `surface` w obu motywach, a selftest ma mutację, która przywraca zbyt jasną serię. Serie rozróżnia też podpis lub legenda — kolor nie jest jedynym nośnikiem informacji.
+
 ---
 
 ## ADR-015 — Groq jako tymczasowy dostawca CLASSIFY/GENERATE na czas demo, przed podpisaniem DPA ⚠️
