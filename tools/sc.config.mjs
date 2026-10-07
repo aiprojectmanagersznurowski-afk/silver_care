@@ -7,6 +7,10 @@
 export const config = {
   contractsDir: 'contracts',
   generatedTsDir: 'packages/contracts/src/generated',
+  // Używane przez .claude/hooks/guard-paths.mjs do odczytu stanu okna kontraktowego.
+  // Ta sama ścieżka co w tools/sc-contract-window.mjs — brak tego klucza sprawiał, że
+  // hook czytał "${PROJECT}/undefined/contract-window.json" i zawsze widział okno zamknięte.
+  stateDir: '.claude/state',
 
   contractProtectedPaths: ['contracts/', 'packages/contracts/src/generated/', 'packages/database/schema.prisma'],
   testPathPatterns: ['/tests/', '.test.', '.spec.', 'e2e/'],

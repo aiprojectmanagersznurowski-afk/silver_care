@@ -675,6 +675,21 @@ export const REQUIREMENTS = [
       "Model generujący raport dla bliskich działa w infrastrukturze UE, nie w Groq",
       "Przekroczenie darmowego limitu (2000 żądań/dzień, 8h audio/dzień) jest monitorowane, żeby uniknąć nieplanowanych kosztów"
     ]
+  },
+  {
+    "id": "INFRA-GROQ-DEMO-INTERIM",
+    "status": "TODO",
+    "risk": "HIGH",
+    "source": "ADR-015",
+    "domain": "infra",
+    "statement": "Gdy brak klucza modelu EU, CLASSIFY i GENERATE mogą tymczasowo korzystać z Groq wyłącznie w jawnie włączonym trybie demo (ALLOW_DEMO_GROQ_FALLBACK=true), przed podpisaniem DPA, ograniczone do danych syntetycznych.",
+    "acceptance": [
+      "Sama obecność GROQ_API_KEY nie aktywuje trybu demo — wymagana osobna zmienna ALLOW_DEMO_GROQ_FALLBACK=true",
+      "Klucz EU ma pierwszeństwo nad trybem demo, jeśli oba są obecne",
+      "Nieprawidłowy EU_LLM_ENDPOINT nadal kończy się błędem [EU-LLM-REGION] niezależnie od trybu demo",
+      "Każde użycie trybu demo zostawia ślad w logu serwera bez PII i bez treści promptu",
+      "Wpis GROQ_DEMO_LLM w PROVIDERS ma transferMechanism, exceptionApprovedBy i exceptionReason zgodnie z R22"
+    ]
   }
 ] as const;
 

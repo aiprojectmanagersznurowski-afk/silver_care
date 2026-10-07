@@ -13,10 +13,16 @@
  * Wyjście: exit 0 = przepuść, exit 2 = zablokuj (stderr trafia do agenta jako powód).
  */
 import { readFileSync } from 'node:fs';
-import { relative, isAbsolute } from 'node:path';
+import { relative, isAbsolute, dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const role = process.argv[2] || 'unknown';
-const PROJECT = process.env.CLAUDE_PROJECT_DIR || process.cwd();
+// CLAUDE_PROJECT_DIR bywa puste (zaobserwowane nawet w sesji głównej), a process.cwd()
+// zależy od tego, skąd harness odpalił ten hook — dla subagenta nie musi to być korzeń
+// repo. Ten plik leży w <root>/.claude/hooks/, więc korzeń wyznaczamy z jego własnej
+// ścieżki, tak samo jak robi to tools/sc-contract-window.mjs (ROOT = .../<root>).
+const SELF_DIR = dirname(fileURLToPath(import.meta.url));
+const PROJECT = process.env.CLAUDE_PROJECT_DIR || join(SELF_DIR, '../..');
+const staticArg = process.argv[2] || 'unknown';
 
 let input = {};
 try {
@@ -24,6 +30,16 @@ try {
 } catch {
   process.exit(0); // nie blokuj z powodu własnego błędu parsowania
 }
+
+// Rola: tożsamość subagenta z payloadu hooka, jeśli jest obecna — to samo pole, które
+// log-subagent.mjs już czyta poprawnie dla SubagentStart/SubagentStop (patrz run-log.jsonl).
+// Dopiero w jej braku (prawdziwy wątek główny, bez subagenta) wraca statyczny argument
+// z settings.json ("main-thread"). Naprawia lukę: wcześniej KAŻDY subagent wywołany przez
+// narzędzie Agent/Task dostawał etykietę "main-thread", bo settings.json ma jeden globalny
+// wpis hooka z argumentem na sztywno — więc żadna rola z agentWriteScopes nigdy się nie
+// dopasowywała (główny wątek nie ma wpisu w agentWriteScopes = brak ograniczeń), a ścieżka
+// kontraktowa była zamknięta nawet dla contract-stewarda.
+const role = input.agent_type || input.agent_name || staticArg;
 
 const raw = input?.tool_input?.file_path || input?.tool_input?.notebook_path || '';
 if (!raw) process.exit(0);
