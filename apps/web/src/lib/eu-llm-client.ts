@@ -14,7 +14,7 @@ export interface EuLlmConfig {
   endpoint: string
   apiKey: string
   model: string
-  region: 'EU'
+  region: 'EU' | 'US_DEMO_INTERIM'
 }
 
 export function getEuLlmConfig(): EuLlmConfig {
@@ -51,15 +51,52 @@ export function isEuEndpoint(endpoint: string): boolean {
   )
 }
 
+/**
+ * ADR-015: tymczasowy fallback CLASSIFY/GENERATE na Groq, wyłącznie na czas demo,
+ * przed podpisaniem DPA z Groq na te etapy (PROVIDERS.GROQ_DEMO_LLM w
+ * integration.contract.mjs). Wymaga jawnej, osobnej od GROQ_API_KEY zmiennej —
+ * sama obecność klucza transkrypcji nic nie aktywuje. Wyłącznie dane syntetyczne/
+ * demonstracyjne: zakaz użycia z rzeczywistymi danymi pensjonariuszy do czasu
+ * podpisania DPA (operacyjne, nie wymuszone tu technicznie — tak jak zerowa
+ * retencja Groq dla TRANSCRIBE w ADR-009 jest przełącznikiem w panelu, nie kodem).
+ */
+function getDemoGroqFallbackConfig(): EuLlmConfig | null {
+  if (process.env.ALLOW_DEMO_GROQ_FALLBACK !== 'true') return null
+  const apiKey = process.env.GROQ_API_KEY
+  if (!apiKey) return null
+  return {
+    endpoint: 'https://api.groq.com/openai/v1/chat/completions',
+    apiKey,
+    model: 'llama-3.3-70b-versatile',
+    region: 'US_DEMO_INTERIM',
+  }
+}
+
 export async function callEuLlmCompletion(
   messages: EuLlmMessage[],
   temperature: number = 0.1,
   maxTokens: number = 600
 ): Promise<string> {
-  const config = getEuLlmConfig()
+  const euConfig = getEuLlmConfig()
+  const hasEuKey = !!euConfig.apiKey && euConfig.apiKey !== 'mock_eu_llm_key'
 
-  // Weryfikacja suwerenności danych EOG (zgodność z ADR-009) — przed jakimkolwiek żądaniem
-  if (!isEuEndpoint(config.endpoint)) {
+  // Klucz EU ma zawsze pierwszeństwo — tryb demo jest wyłącznie awaryjny, nigdy nadrzędny
+  let config: EuLlmConfig = euConfig
+  if (!hasEuKey) {
+    const demo = getDemoGroqFallbackConfig()
+    if (demo) {
+      config = demo
+      // Bez treści promptu i bez PII — tylko fakt, że raport powstał poza EOG w trybie demo
+      console.warn(
+        '[EU-LLM-DEMO-FALLBACK] ADR-015: brak klucza EU, użyto Groq w trybie demo ' +
+        '(ALLOW_DEMO_GROQ_FALLBACK=true). Wyłącznie dane syntetyczne — nie używać z prawdziwymi podopiecznymi.'
+      )
+    }
+  }
+
+  // Weryfikacja suwerenności danych EOG (zgodność z ADR-009) — przed jakimkolwiek żądaniem.
+  // Tryb demo (region US_DEMO_INTERIM) jest jedynym świadomym wyjątkiem od tej reguły.
+  if (config.region === 'EU' && !isEuEndpoint(config.endpoint)) {
     throw new Error('[EU-LLM-REGION] Endpoint modelu językowego nie znajduje się w EOG. Żądanie nie zostało wysłane.')
   }
 

@@ -47,8 +47,9 @@ interface ResidentWithAssignments {
 
 export default async function AdminResidentsPage() {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
   const cookieStore = await cookies()
-  const isImpersonating = isImpersonationSessionActive(cookieStore)
+  const isImpersonating = isImpersonationSessionActive(cookieStore, user)
 
   // Pobieramy wszystkich pensjonariuszy z organizacji tego admina
   const { data: rawResidents } = await supabase
