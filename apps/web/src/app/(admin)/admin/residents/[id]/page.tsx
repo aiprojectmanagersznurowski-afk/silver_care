@@ -21,6 +21,7 @@ import { pl } from 'date-fns/locale'
 import { ResidentZsnCheckbox } from '@/components/ResidentZsnCheckbox'
 import { PolarWearableCard } from '@/components/PolarWearableCard'
 import { ResidentContractAttachment } from '@/components/facility/ResidentContractAttachment'
+import { InviteFamilyDialog } from '@/components/InviteFamilyDialog'
 
 export default async function ResidentProfilePage({
   params,
@@ -395,10 +396,16 @@ export default async function ResidentProfilePage({
 
           {/* Relatives */}
           <Card className="rounded-xl border-none ring-1 ring-border">
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="flex items-center gap-2 text-lg text-foreground">
                 <Users className="h-5 w-5 text-primary" /> Bliscy
               </CardTitle>
+              <InviteFamilyDialog
+                residents={[{ id: resident.id, first_name: resident.first_name, last_name: resident.last_name }]}
+                defaultResidentId={resident.id}
+                triggerLabel="Zaproś bliskiego"
+                triggerVariant="outline"
+              />
             </CardHeader>
             <CardContent>
               {(!resident.resident_relative_links || resident.resident_relative_links.length === 0) ? (
