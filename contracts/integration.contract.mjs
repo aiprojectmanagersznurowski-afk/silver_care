@@ -38,6 +38,28 @@ export const PROVIDERS = [
     requiresManualZeroRetentionToggle: true,
     desc: 'Whisper Large v3 Turbo przez GroqCloud. Transkrypcja surowego audio na etapie TRANSCRIBE, zanim transkrypt trafi do klasyfikatora strumieni.',
   },
+  /**
+   * GROQ_DEMO_LLM — tymczasowy fallback CLASSIFY/GENERATE na czas demo (ADR-015, 2026-10-06).
+   *
+   * Odrębny wpis od `GROQ` powyżej celowo: ten dotyczy innych etapów (CLASSIFY, GENERATE,
+   * nie TRANSCRIBE) i ma inną podstawę prawną — a raczej jej BRAK. DPA z Groq na te dwa
+   * etapy nie jest podpisane (stan na 2026-10-06, zob.
+   * docs/REJESTR_PODMIOTOW_PRZETWARZAJACYCH.md). Dopuszczony wyłącznie jako jawnie włączany
+   * wyjątek demo (zmienna ALLOW_DEMO_GROQ_FALLBACK, odrębna od GROQ_API_KEY), ograniczony do
+   * danych syntetycznych — nigdy rzeczywistych danych pensjonariuszy. Gdy DPA zostanie
+   * podpisane, ten wpis traci status wyjątku i może zostać scalony z GROQ albo zastąpiony
+   * wpisem bez słowa „demo".
+   */
+  {
+    id: 'GROQ_DEMO_LLM', kind: 'LLM_DEMO_INTERIM', status: 'ACTIVE', region: 'US', auth: 'API_KEY',
+    transferMechanism: 'BRAK — DPA z Groq na CLASSIFY/GENERATE nie jest podpisane, w trakcie negocjacji (stan 2026-10-06). Patrz docs/REJESTR_PODMIOTOW_PRZETWARZAJACYCH.md.',
+    exceptionApprovedBy: 'Michal, 2026-10-06',
+    exceptionReason: 'Wyjątek wyłącznie na czas demonstracji produktu (Marconi, KIDO) przed podpisaniem DPA. Dotyczy jedynie danych syntetycznych/testowych — zakazane użycie z rzeczywistymi danymi pensjonariuszy do czasu ukończenia DPA. Wymaga jawnej zmiennej ALLOW_DEMO_GROQ_FALLBACK=true, niezależnej od GROQ_API_KEY używanego już do transkrypcji w wpisie GROQ powyżej.',
+    requiresManualZeroRetentionToggle: false,
+    demoOnly: true,
+    dpaStatus: 'PENDING',
+    desc: 'llama-3.3-70b-versatile przez Groq OpenAI-compatible endpoint. Zamiennik CLASSIFY/GENERATE wyłącznie na czas demo, przed podpisaniem DPA (ADR-015). Domyślnie wyłączony — nieaktywny bez ALLOW_DEMO_GROQ_FALLBACK=true.',
+  },
 ];
 
 /** Mapowanie pensjonariusza na konto u dostawcy. Jeden rdzeń, wiele powiązań. */

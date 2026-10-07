@@ -36,6 +36,20 @@ export const PROVIDERS = [
     "exceptionReason": "Darmowy poziom (2000 żądań/dzień, 8h audio/dzień) eliminuje koszt transkrypcji w MVP dla piętnastu do dwudziestu pięciu pensjonariuszy. Umowa powierzenia istnieje, zerowa retencja dostępna do ręcznego włączenia. Wyjątek ograniczony do surowego audio przed redakcją — transkrypt zredagowany i wygenerowany raport zostają w infrastrukturze UE.",
     "requiresManualZeroRetentionToggle": true,
     "desc": "Whisper Large v3 Turbo przez GroqCloud. Transkrypcja surowego audio na etapie TRANSCRIBE, zanim transkrypt trafi do klasyfikatora strumieni."
+  },
+  {
+    "id": "GROQ_DEMO_LLM",
+    "kind": "LLM_DEMO_INTERIM",
+    "status": "ACTIVE",
+    "region": "US",
+    "auth": "API_KEY",
+    "transferMechanism": "BRAK — DPA z Groq na CLASSIFY/GENERATE nie jest podpisane, w trakcie negocjacji (stan 2026-10-06). Patrz docs/REJESTR_PODMIOTOW_PRZETWARZAJACYCH.md.",
+    "exceptionApprovedBy": "Michal, 2026-10-06",
+    "exceptionReason": "Wyjątek wyłącznie na czas demonstracji produktu (Marconi, KIDO) przed podpisaniem DPA. Dotyczy jedynie danych syntetycznych/testowych — zakazane użycie z rzeczywistymi danymi pensjonariuszy do czasu ukończenia DPA. Wymaga jawnej zmiennej ALLOW_DEMO_GROQ_FALLBACK=true, niezależnej od GROQ_API_KEY używanego już do transkrypcji w wpisie GROQ powyżej.",
+    "requiresManualZeroRetentionToggle": false,
+    "demoOnly": true,
+    "dpaStatus": "PENDING",
+    "desc": "llama-3.3-70b-versatile przez Groq OpenAI-compatible endpoint. Zamiennik CLASSIFY/GENERATE wyłącznie na czas demo, przed podpisaniem DPA (ADR-015). Domyślnie wyłączony — nieaktywny bez ALLOW_DEMO_GROQ_FALLBACK=true."
   }
 ] as const;
 
