@@ -58,6 +58,7 @@ export interface OAuthInviteClaimInput {
   currentUserOrgId: string | null | undefined;
   invitationRole: string;
   invitationOrgId: string;
+  consentsAccepted?: boolean;
 }
 
 export type OAuthInviteClaimResult =
@@ -66,15 +67,16 @@ export type OAuthInviteClaimResult =
       isNewRoleAssignment: boolean;
       assignedRole: 'legal_guardian' | 'family';
       organizationId: string;
+      requiresConsentLedgerInsert: boolean;
     }
   | {
       allowed: false;
-      errorCode: 'STAFF_ROLE_CONFLICT' | 'ORGANIZATION_MISMATCH';
+      errorCode: 'STAFF_ROLE_CONFLICT' | 'ORGANIZATION_MISMATCH' | 'CONSENTS_REQUIRED';
       error: string;
     };
 
 export function evaluateOAuthInviteClaim(input: OAuthInviteClaimInput): OAuthInviteClaimResult {
-  const { currentUserRole, currentUserOrgId, invitationRole, invitationOrgId } = input;
+  const { currentUserRole, currentUserOrgId, invitationRole, invitationOrgId, consentsAccepted } = input;
 
   // 1. Sprawdzenie ról personelu i administratorów (fail-closed)
   if (currentUserRole && (STAFF_ROLES.has(currentUserRole) || (currentUserRole !== 'family' && currentUserRole !== 'legal_guardian'))) {
@@ -96,27 +98,42 @@ export function evaluateOAuthInviteClaim(input: OAuthInviteClaimInput): OAuthInv
 
   const targetRole = invitationRole === 'legal_guardian' ? 'legal_guardian' : 'family';
 
-  // 3. Nowy użytkownik bez roli
+  // 3. Weryfikacja zgód dla opiekuna prawnego (CONSENT-GRANTOR, Art. 9 RODO)
+  // Jeśli użytkownik zyskuje rolę legal_guardian, zgody są bezwzględnie wymagane
+  const isGainingGuardianRole = targetRole === 'legal_guardian' && currentUserRole !== 'legal_guardian';
+  if (isGainingGuardianRole && consentsAccepted === false) {
+    return {
+      allowed: false,
+      errorCode: 'CONSENTS_REQUIRED',
+      error: 'Do aktywacji uprawnień opiekuna prawnego wymagana jest akceptacja regulaminu i zgód (Art. 9 RODO).',
+    };
+  }
+
+  const requiresConsentLedgerInsert = isGainingGuardianRole && consentsAccepted === true;
+
+  // 4. Nowy użytkownik bez roli
   if (!currentUserRole) {
     return {
       allowed: true,
       isNewRoleAssignment: true,
       assignedRole: targetRole,
       organizationId: invitationOrgId,
+      requiresConsentLedgerInsert,
     };
   }
 
-  // 4. Istniejący opiekun prawny — nie degradujemy do family (CONSENT-GRANTOR)
+  // 5. Istniejący opiekun prawny — nie degradujemy do family (CONSENT-GRANTOR)
   if (currentUserRole === 'legal_guardian') {
     return {
       allowed: true,
       isNewRoleAssignment: false,
       assignedRole: 'legal_guardian',
       organizationId: currentUserOrgId || invitationOrgId,
+      requiresConsentLedgerInsert: false,
     };
   }
 
-  // 5. Istniejący członek rodziny (family)
+  // 6. Istniejący członek rodziny (family)
   if (currentUserRole === 'family') {
     if (targetRole === 'legal_guardian') {
       return {
@@ -124,6 +141,7 @@ export function evaluateOAuthInviteClaim(input: OAuthInviteClaimInput): OAuthInv
         isNewRoleAssignment: true,
         assignedRole: 'legal_guardian',
         organizationId: invitationOrgId,
+        requiresConsentLedgerInsert,
       };
     }
 
@@ -132,6 +150,7 @@ export function evaluateOAuthInviteClaim(input: OAuthInviteClaimInput): OAuthInv
       isNewRoleAssignment: false,
       assignedRole: 'family',
       organizationId: currentUserOrgId || invitationOrgId,
+      requiresConsentLedgerInsert: false,
     };
   }
 
