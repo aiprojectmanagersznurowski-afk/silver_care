@@ -116,6 +116,8 @@ Osiem sprzeczności znalezionych w dokumentach źródłowych, rozstrzygniętych 
 
 **Co pozostaje otwarte.** Limit darmowego poziomu jest hojny, ale nie monitorowany automatycznie — jeśli pilotaż urośnie ponad piętnaście do dwudziestu pięciu osób, ktoś musi zauważyć zbliżający się próg, zanim konto zacznie naliczać opłaty albo odrzucać żądania. To zadanie operacyjne, nie architektoniczne.
 
+**Addendum i korekta (Michał, 2026-10-06).** Wcześniejsza wersja tego addendum twierdziła, że DPA z Groq obejmuje już `CLASSIFY` i `GENERATE`. To było nieprecyzyjne: **DPA na te dwa etapy nie jest podpisane**, jest w trakcie negocjacji. Jedynym realnie podpisanym wyjątkiem pozostaje `TRANSCRIBE`, opisany w głównej treści tego ADR. Rozszerzenie zakresu na `CLASSIFY`/`GENERATE` — tymczasowe, wyłącznie dla danych demonstracyjnych, przed podpisaniem DPA — jest osobną decyzją opisaną w **ADR-015**.
+
 ---
 
 ## ADR-010 — Tryb autonomiczny ✅
@@ -224,3 +226,24 @@ Obniżenie priorytetu obu naraz cicho pozbawiłoby impersonację super administr
 **Ryzyko przyjęte świadomie.** Część odbiorców portalu bliskich to osoby starsze. Jeżeli pilotaż (Marconi, KIDO) pokaże problemy z czytelnością, powrót do skali ADR-011 w portalu bliskich to zmiana tokenów, nie przebudowa komponentów.
 
 **Korekta ADR-014 (2026-10-05): kontrast serii wykresów.** Pomiar po wdrożeniu wykazał, że `chart-3` (2,1:1) i `chart-4` (1,6:1) w trybie jasnym oraz `chart-4` na karcie w trybie ciemnym (2,8:1) nie spełniają progu 3:1 dla elementów graficznych (WCAG 1.4.11). Nowa paleta: jasny `chart-3` #8C8680 (neutralna szarość) i `chart-4` #1F4A3F (głęboka zieleń); ciemny `chart-3` #918B83 i `chart-4` #3F7A69. `chart-1` zostaje akcentem marki. Reguła `R24-design-a11y` sprawdza teraz kontrast każdej serii na `bg` i `surface` w obu motywach, a selftest ma mutację, która przywraca zbyt jasną serię. Serie rozróżnia też podpis lub legenda — kolor nie jest jedynym nośnikiem informacji.
+
+---
+
+## ADR-015 — Groq jako tymczasowy dostawca CLASSIFY/GENERATE na czas demo, przed podpisaniem DPA ⚠️
+
+**Kontekst.** ADR-009 zatwierdza Groq wyłącznie dla etapu `TRANSCRIBE` (surowe audio), z podpisanym DPA i SCC. Klasyfikacja strumieni i generowanie raportu dla bliskich (`CLASSIFY`, `GENERATE`) pozostają w infrastrukturze UE (Mistral AI) — PR #38 usunął nawet cichy fallback do Groq na tych etapach i zastąpił go jawnym błędem przy braku klucza EU.
+
+Przed prezentacjami i demo dla potencjalnych klientów (Marconi, KIDO) potrzebny jest działający generator raportu, a klucz do europejskiego dostawcy (Mistral) nie jest jeszcze skonfigurowany na produkcji (karta Trello #146). DPA z Groq obejmujące `CLASSIFY`/`GENERATE` **nie jest podpisane** — jest w trakcie negocjacji (stan na 2026-10-06, zob. `docs/REJESTR_PODMIOTOW_PRZETWARZAJACYCH.md`).
+
+**Napięcie.** Bez klucza EU system odmawia generowania raportu (zgodnie z projektem z PR #38) — co jest poprawne dla produkcji z prawdziwymi danymi pensjonariuszy, ale blokuje demo na danych syntetycznych, gdzie żadne dane szczególnej kategorii realnej osoby nie są w grze.
+
+**Decyzja (Michał, 2026-10-06).** Dopuszczony tymczasowy, jawnie włączany wyjątek: gdy brak klucza EU, a zmienna środowiskowa `ALLOW_DEMO_GROQ_FALLBACK` jest ustawiona na `true`, `CLASSIFY`/`GENERATE` mogą korzystać z Groq. Warunki, które odróżniają to od cichego przywrócenia PR #38:
+
+1. **Dwie oddzielne zmienne.** Sama obecność `GROQ_API_KEY` (używanego już do `TRANSCRIBE`) nie wystarcza — potrzebna jest druga, jawna `ALLOW_DEMO_GROQ_FALLBACK=true`. Nikt nie aktywuje tego przypadkiem.
+2. **Wyłącznie dane syntetyczne/demonstracyjne.** Zakaz używania tego trybu z prawdziwymi danymi pensjonariuszy do czasu podpisania DPA. To ograniczenie jest operacyjne (dokumentacja, procedura wyłączania przed pracą z danymi klienta), nie wymuszone technicznie w tym PR-ze — podobnie jak zerowa retencja Groq dla `TRANSCRIBE` w ADR-009 jest przełącznikiem w panelu, nie kodem.
+3. **Każde użycie zostawia ślad.** Wywołanie w trybie demo loguje ostrzeżenie po stronie serwera (bez treści promptu i bez PII), żeby było widoczne w logach Vercel, że dany raport powstał poza EOG.
+4. **Domyślnie wyłączone.** Bez `ALLOW_DEMO_GROQ_FALLBACK=true` zachowanie jest identyczne jak po PR #38 — jawny błąd `[EU-LLM-CONFIG]`, zero cichego fallbacku.
+
+**Wykonane.** Nowy wpis `GROQ_DEMO_LLM` w `PROVIDERS` (`integration.contract.mjs`), `status: 'ACTIVE'`, `region: 'US'`, z `transferMechanism` jawnie stwierdzającym brak DPA, `exceptionApprovedBy: 'Michal, 2026-10-06'` i `exceptionReason` opisującym ograniczenie do danych syntetycznych. Nowe wymaganie `INFRA-GROQ-DEMO-INTERIM`. Reguła `R22-transfer-exception` wymusza te same trzy pola co dla `TRANSCRIBE` — nawet wyjątek bez DPA musi być udokumentowany, nie cichy.
+
+**Co pozostaje otwarte.** Brak technicznego mechanizmu, który uniemożliwiłby włączenie tej flagi na organizacji z prawdziwymi pensjonariuszami — to zależy od dyscypliny operacyjnej (kto ustawia zmienną na Vercelu i kiedy ją wyłącza). Gdy DPA zostanie podpisane, ten ADR traci status wyjątku: wpis w rejestrze podmiotów przetwarzających zmienia się z `PENDING` na realną referencję, a `GROQ_DEMO_LLM` w kontrakcie można scalić z istniejącym wpisem `GROQ` albo zastąpić stałym wpisem bez słowa „demo".
