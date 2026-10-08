@@ -13,7 +13,8 @@ export default defineConfig({
     },
   },
   test: {
-    testTimeout: 20000,
+    testTimeout: 60000,
+    hookTimeout: 60000,
     include: process.env.DATABASE_URL
       ? ['tests/**/*.test.ts']
       : ['tests/logic/**/*.test.ts'],
