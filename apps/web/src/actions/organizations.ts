@@ -197,12 +197,73 @@ export async function resendAdminInviteAction(formData: FormData) {
   }
 }
 
-export async function addAdminToOrganizationAction(formData: FormData) {
-  const orgId = (formData.get('organizationId') as string)?.trim()
-  const orgName = (formData.get('orgName') as string)?.trim() || 'placówki'
-  const adminEmail = (formData.get('adminEmail') as string)?.trim().toLowerCase()
-  const adminFullName = (formData.get('adminFullName') as string)?.trim() || null
+interface SupabaseAdminClientLike {
+  auth: {
+    admin: {
+      listUsers: (params?: { page?: number; perPage?: number }) => Promise<{
+        data: {
+          users: Array<{
+            id: string
+            email?: string
+            app_metadata?: Record<string, unknown>
+            user_metadata?: Record<string, unknown>
+          }>
+          nextPage?: number | null
+        } | null
+        error: { message: string } | null
+      }>
+    }
+  }
+}
 
+/**
+ * Wyszukuje użytkownika Auth po emailu z pełną paginacją stron.
+ * @REQ: ORG-PROVISION
+ */
+export async function findUserByEmailPaginated(
+  adminClient: SupabaseAdminClientLike,
+  email: string
+) {
+  const target = email.trim().toLowerCase()
+  let page = 1
+  const perPage = 50
+
+  while (true) {
+    const { data, error } = await adminClient.auth.admin.listUsers({ page, perPage })
+    if (error || !data?.users || data.users.length === 0) {
+      break
+    }
+    const found = data.users.find(u => u.email?.toLowerCase() === target)
+    if (found) {
+      return found
+    }
+    if (data.users.length < perPage || !data.nextPage) {
+      break
+    }
+    page++
+  }
+
+  return null
+}
+
+/**
+ * Logika przypisania administratora do placówki z ochroną ról i audytem.
+ * @REQ: ORG-PROVISION
+ * @REQ: SUP-IAM-PANEL
+ * @REQ: ORG-ISOLATION
+ */
+export async function assignAdminToOrganization(
+  orgId: string,
+  adminEmail: string,
+  adminFullName?: string | null,
+  orgName: string = 'placówki'
+): Promise<{
+  error?: string
+  success?: boolean
+  adminEmail?: string
+  inviteUrl?: string | null
+  emailSent?: boolean
+}> {
   if (!orgId) {
     return { error: 'Identyfikator placówki jest wymagany.' }
   }
@@ -227,13 +288,31 @@ export async function addAdminToOrganizationAction(formData: FormData) {
   try {
     const adminClient = createAdminClient()
 
-    // Sprawdzamy czy użytkownik już istnieje
-    const { data: listData } = await adminClient.auth.admin.listUsers()
-    const existingUser = listData?.users?.find(u => u.email?.toLowerCase() === adminEmail)
+    // 1. Sprawdzamy czy użytkownik już istnieje (z pełną paginacją)
+    const existingUser = await findUserByEmailPaginated(adminClient, adminEmail)
 
     let targetUserId = existingUser?.id
 
     if (existingUser) {
+      const currentRole = existingUser.app_metadata?.role || existingUser.user_metadata?.role
+
+      // Ochrona przed degradacją konta super_admin (SUP-IAM-PANEL)
+      if (currentRole === 'super_admin') {
+        return { error: 'Nie można zmienić roli konta super_admin.' }
+      }
+
+      // Ochrona przed cichym przejęciem ról personelu
+      const protectedStaff = ['nurse', 'caregiver', 'doctor', 'staff']
+      if (typeof currentRole === 'string' && protectedStaff.includes(currentRole)) {
+        return { error: 'Użytkownik posiada już aktywną rolę personelu placówki. Zmień uprawnienia w panelu IAM.' }
+      }
+
+      // Ochrona przed konfliktem wielu placówek
+      const existingOrgId = existingUser.app_metadata?.organization_id
+      if (currentRole === 'org_admin' && existingOrgId && existingOrgId !== orgId) {
+        return { error: 'Użytkownik jest już administratorem innej placówki. Zmień przypisanie w panelu IAM.' }
+      }
+
       // Aktualizujemy metadane istniejącego użytkownika
       const { error: updateErr } = await adminClient.auth.admin.updateUserById(existingUser.id, {
         app_metadata: {
@@ -252,7 +331,7 @@ export async function addAdminToOrganizationAction(formData: FormData) {
         return { error: 'Błąd przypisywania roli: ' + updateErr.message }
       }
     } else {
-      // Tworzymy nowe konto z rolą org_admin
+      // 2. Tworzymy nowe konto z rolą org_admin
       const { data: createdData, error: createErr } = await adminClient.auth.admin.createUser({
         email: adminEmail,
         email_confirm: false,
@@ -275,7 +354,7 @@ export async function addAdminToOrganizationAction(formData: FormData) {
       targetUserId = createdData.user.id
     }
 
-    // Zapis do audit_logs
+    // 3. Zapis do audit_logs
     await supabase.from('audit_logs').insert({
       organization_id: orgId,
       action: 'ADMIN_INVITED',
@@ -287,7 +366,7 @@ export async function addAdminToOrganizationAction(formData: FormData) {
       }
     })
 
-    // Wysyłka zaproszenia
+    // 4. Wysyłka zaproszenia
     const inviteResult = await sendAdminInviteEmail(adminEmail, orgName)
 
     revalidatePath(`/admin/organizations/${orgId}`)
@@ -302,6 +381,15 @@ export async function addAdminToOrganizationAction(formData: FormData) {
     console.error('Błąd dodawania administratora do placówki:', err)
     return { error: err instanceof Error ? err.message : 'Wystąpił błąd serwera.' }
   }
+}
+
+export async function addAdminToOrganizationAction(formData: FormData) {
+  const orgId = (formData.get('organizationId') as string)?.trim()
+  const orgName = (formData.get('orgName') as string)?.trim() || 'placówki'
+  const adminEmail = (formData.get('adminEmail') as string)?.trim().toLowerCase()
+  const adminFullName = (formData.get('adminFullName') as string)?.trim() || null
+
+  return assignAdminToOrganization(orgId, adminEmail, adminFullName, orgName)
 }
 
 export async function updateOrganizationAction(formData: FormData) {

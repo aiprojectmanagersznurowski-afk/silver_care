@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { resolveRelativeRole } from '@/lib/onboarding'
+import { checkOAuthInviteRoleConflict } from '@/lib/auth-safety'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -69,6 +70,17 @@ export async function GET(request: Request) {
         // Wyloguj jeśli maile się nie zgadzają, by zablokować token
         await supabase.auth.signOut()
         throw new Error('Adres e-mail z Google nie pokrywa się z zaproszeniem.')
+      }
+
+      // Weryfikacja ochrony istniejących ról personelu i administratora (SEC-OAUTH-METADATA-OVERWRITE)
+      const conflictCheck = checkOAuthInviteRoleConflict({
+        appRole: user.app_metadata?.role,
+        userRole: user.user_metadata?.role,
+      })
+
+      if (conflictCheck.hasConflict) {
+        await supabase.auth.signOut()
+        throw new Error(conflictCheck.reason || 'Konto posiada już uprawnienia personelu placówki lub administratora.')
       }
 
       // 2. Aktualizacja app_metadata użytkownika — rola z zaproszenia, jak w /api/family/register (CONSENT-GRANTOR)
