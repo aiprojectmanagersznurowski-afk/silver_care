@@ -13,7 +13,8 @@ import {
   AlertCircle, 
   RefreshCw,
   CornerDownRight,
-  ShieldAlert
+  ShieldAlert,
+  ChevronLeft
 } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { groupMessagesIntoThreads, filterThreadsBySearch } from '@/lib/messages-helper';
@@ -72,7 +73,9 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
             setActiveThreadId(threads[0]?.threadId || null);
           }
         } else if (!activeThreadId && threads.length > 0) {
-          setActiveThreadId(threads[0].threadId);
+          if (typeof window !== 'undefined' && window.innerWidth >= 768) {
+            setActiveThreadId(threads[0].threadId);
+          }
         }
       }
     } catch (e: unknown) {
@@ -167,9 +170,13 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
         </button>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden relative">
         {/* Lewa kolumna: Lista wątków */}
-        <div className="w-80 md:w-96 border-r border-border flex flex-col bg-muted/50">
+        <div 
+          className={`${
+            activeThreadId ? 'hidden md:flex' : 'flex'
+          } w-full md:w-96 border-r border-border flex-col bg-muted/50 shrink-0`}
+        >
           {/* Szukajka */}
           <div className="p-3 border-b border-border bg-card">
             <div className="relative">
@@ -276,33 +283,46 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
         </div>
 
         {/* Prawa kolumna: Obszar rozmowy */}
-        <div className="flex-1 flex flex-col bg-card">
+        <div 
+          className={`w-full flex md:flex-1 flex-col bg-card min-w-0 ${
+            activeThreadId ? '' : 'hidden md:flex'
+          }`}
+        >
           {activeThread ? (
             <>
               {/* Nagłówek wątku */}
               <div 
                 data-testid="conversation-header"
-                className="px-6 py-4 border-b border-border flex items-center justify-between bg-card"
+                className="px-4 md:px-6 py-4 border-b border-border flex items-center justify-between bg-card"
               >
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10 border border-border">
+                <div className="flex items-center gap-2 md:gap-3 min-w-0">
+                  <button
+                    type="button"
+                    onClick={() => setActiveThreadId(null)}
+                    className="md:hidden inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-border bg-muted/50 hover:bg-muted text-xs font-medium text-foreground transition-colors mr-1 shrink-0"
+                    aria-label="Wróć do listy wątków"
+                  >
+                    <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+                    <span>Wszystkie wątki</span>
+                  </button>
+                  <Avatar className="h-10 w-10 border border-border shrink-0">
                     <AvatarFallback className="bg-primary/10 text-primary font-medium text-sm">
                       {activeThread.residentName.split(' ').map(n => n[0]).join('')}
                     </AvatarFallback>
                   </Avatar>
-                  <div>
-                    <h3 className="font-semibold text-sm text-foreground">
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-sm text-foreground truncate">
                       {activeThread.residentName}
                     </h3>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                      <span className="h-2 w-2 rounded-full bg-primary" />
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5 truncate">
+                      <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
                       Wątek wiadomości z rodziną podopiecznego
                     </p>
                   </div>
                 </div>
 
-                <div className="text-right">
-                  <span className="text-[11px] text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-full border border-border">
+                <div className="text-right shrink-0">
+                  <span className="text-[11px] text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-full border border-border hidden sm:inline-block">
                     ID wątku: {activeThread.residentId.slice(0, 8)}
                   </span>
                 </div>
