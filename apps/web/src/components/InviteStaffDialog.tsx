@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -18,6 +19,7 @@ import {
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 
 export function InviteStaffDialog() {
+  const router = useRouter()
   const [open, setOpen] = useState(false)
   const [email, setEmail] = useState('')
   const [role, setRole] = useState('nurse')
@@ -81,8 +83,6 @@ export function InviteStaffDialog() {
         setEmail('')
         setRole('nurse')
         setAvatarFile(null)
-        // setOpen(false)
-        // window.location.reload()
       } else {
         setError(data.error || 'Wystąpił błąd.')
       }
@@ -94,7 +94,15 @@ export function InviteStaffDialog() {
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog 
+      open={open} 
+      onOpenChange={(isOpen) => {
+        setOpen(isOpen)
+        if (!isOpen && generatedUrl) {
+          router.refresh()
+        }
+      }}
+    >
       <DialogTrigger render={<Button />}>
         Zaproś pracownika
       </DialogTrigger>
@@ -125,6 +133,7 @@ export function InviteStaffDialog() {
               onChange={(e) => setRole(e.target.value)} className="flex w-full items-center justify-between disabled:cursor-not-allowed disabled:opacity-50"
             >
               <NativeSelectOption value="nurse">Pielęgniarka / Pielęgniarz</NativeSelectOption>
+              <NativeSelectOption value="caregiver">Opiekun / Opiekunka (caregiver)</NativeSelectOption>
               <NativeSelectOption value="paramedic">Sanitariusz / Sanitariuszka</NativeSelectOption>
               <NativeSelectOption value="org_admin">Administrator Placówki (org_admin)</NativeSelectOption>
             </NativeSelect>
@@ -143,15 +152,15 @@ export function InviteStaffDialog() {
             <p className="text-sm font-medium text-destructive">{error}</p>
           )}
           {generatedUrl && (
-            <div className="mt-4 p-4 border border-border bg-primary rounded-md space-y-2">
-              <p className="text-sm font-semibold text-foreground dark:text-foreground">
+            <div className="mt-4 p-4 border border-border bg-muted/60 rounded-md space-y-2">
+              <p className="text-sm font-semibold text-foreground">
                 Zaproszenie wygenerowane pomyślnie!
               </p>
               <p className="text-xs text-muted-foreground">
                 Wyślij poniższy link pracownikowi, aby umożliwić założenie konta:
               </p>
               <div className="flex items-center gap-2 mt-2">
-                <Input readOnly value={generatedUrl} className="text-xs font-mono h-8" />
+                <Input readOnly value={generatedUrl} className="text-xs font-mono h-8 bg-background" />
                 <Button 
                   type="button" 
                   variant="outline" 
@@ -171,10 +180,10 @@ export function InviteStaffDialog() {
                 className="w-full mt-2" 
                 onClick={() => {
                   setOpen(false)
-                  window.location.reload()
+                  router.refresh()
                 }}
               >
-                Zamknij i odśwież
+                Zamknij
               </Button>
             </div>
           )}
