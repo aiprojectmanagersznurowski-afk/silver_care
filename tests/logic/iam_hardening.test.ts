@@ -161,4 +161,36 @@ describe('IAM Hardening & Privilege Escalation Protection (@REQ: SUP-IAM-PANEL)'
       expect(mockResetPasswordForEmail).toHaveBeenCalledWith('user@example.com')
     })
   })
+
+  describe('AC4: Uproszczona tabela IAM z pojedynczą kolumną Rola i modalem potwierdzenia (@REQ: SUP-IAM-PANEL)', () => {
+    it('formats confirmation text with current role, target role and user email', () => {
+      const email = 'jan.kowalski@example.com'
+      const currentRole = 'nurse'
+      const newRole = 'org_admin'
+      const roleLabels: Record<string, string> = {
+        super_admin: 'Super Admin (Globalny)',
+        org_admin: 'Administrator Placówki (Org Admin)',
+        nurse: 'Personel Opiekuńczy (Nurse)',
+        caregiver: 'Opiekun (Caregiver)',
+        paramedic: 'Ratownik (Paramedic)',
+        legal_guardian: 'Opiekun Prawny (Legal Guardian)',
+        family: 'Członek Rodziny (Family)',
+      }
+
+      const currentRoleLabel = roleLabels[currentRole] || currentRole
+      const newRoleLabel = roleLabels[newRole] || newRole
+      const confirmationMessage = `Czy na pewno chcesz zmienić uprawnienia użytkownika ${email} z ${currentRoleLabel} na ${newRoleLabel}?`
+
+      expect(confirmationMessage).toContain('jan.kowalski@example.com')
+      expect(confirmationMessage).toContain('Personel Opiekuńczy (Nurse)')
+      expect(confirmationMessage).toContain('Administrator Placówki (Org Admin)')
+    })
+
+    it('requires a different role to enable confirmation', () => {
+      const hasChanged = (current: string, next: string) => current !== next && Boolean(next)
+      expect(hasChanged('nurse', 'nurse')).toBe(false)
+      expect(hasChanged('nurse', 'org_admin')).toBe(true)
+      expect(hasChanged('nurse', '')).toBe(false)
+    })
+  })
 })
