@@ -6,8 +6,8 @@ describe('FAM-DASHBOARD-AGENDA-DATE-ALIGNMENT: Spójność dat i kategorii agend
   const heroPath = path.resolve(process.cwd(), 'apps/web/src/components/DailySummaryHero.tsx')
   const clientPath = path.resolve(process.cwd(), 'apps/web/src/components/FamilyDashboardClient.tsx')
   const timelinePath = path.resolve(process.cwd(), 'apps/web/src/components/AgendaTimelineClient.tsx')
-  const deadSwitcherPath = path.resolve(process.cwd(), 'apps/web/src/components/ResidentSwitcher.tsx')
-  const deadAgendaViewPath = path.resolve(process.cwd(), 'apps/web/src/components/AgendaView.tsx')
+  const deprecatedSwitcherPath = path.resolve(process.cwd(), 'apps/web/src/components/ResidentSwitcher.tsx')
+  const deprecatedAgendaViewPath = path.resolve(process.cwd(), 'apps/web/src/components/AgendaView.tsx')
 
   it('DailySummaryHero obsługuje selectedDate i dynamiczne etykiety Dzisiaj/Wczoraj/data @REQ: FAM-DASHBOARD', () => {
     const heroContent = fs.readFileSync(heroPath, 'utf-8')
@@ -26,8 +26,10 @@ describe('FAM-DASHBOARD-AGENDA-DATE-ALIGNMENT: Spójność dat i kategorii agend
     expect(timelineContent).toMatch(/item\.type|type/i)
   })
 
-  it('martwe komponenty ResidentSwitcher i AgendaView zostały usunięte @REQ: FAM-DASHBOARD', () => {
-    expect(fs.existsSync(deadSwitcherPath)).toBe(false)
-    expect(fs.existsSync(deadAgendaViewPath)).toBe(false)
+  it('martwe komponenty ResidentSwitcher i AgendaView są wycofane i oznaczone @deprecated @REQ: FAM-DASHBOARD', () => {
+    const switcherContent = fs.readFileSync(deprecatedSwitcherPath, 'utf-8')
+    const agendaViewContent = fs.readFileSync(deprecatedAgendaViewPath, 'utf-8')
+    expect(switcherContent).toContain('@deprecated')
+    expect(agendaViewContent).toContain('@deprecated')
   })
 })

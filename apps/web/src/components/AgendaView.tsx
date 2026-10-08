@@ -16,6 +16,9 @@ interface AgendaViewProps {
   residents: Record<string, unknown>[]
 }
 
+/**
+ * @deprecated Zastąpione przez kanoniczną stronę /staff/agenda. Nie używać w widokach.
+ */
 export function AgendaView({ residents }: AgendaViewProps) {
   const [items, setItems] = useState<AgendaItem[]>([])
   const [loading, setLoading] = useState(true)
