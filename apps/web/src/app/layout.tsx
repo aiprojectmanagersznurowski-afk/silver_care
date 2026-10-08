@@ -17,6 +17,8 @@ export const metadata: Metadata = {
 import { PwaRegister } from "@/components/PwaRegister";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import { getAntiFOUCScript } from "@/lib/theme";
 
 export default function RootLayout({
   children,
@@ -24,13 +26,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pl" className={`${inter.variable} h-full antialiased`}>
+    <html lang="pl" suppressHydrationWarning className={`${inter.variable} h-full antialiased`}>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: getAntiFOUCScript(),
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col bg-background text-foreground">
-        <TooltipProvider>
-          {children}
-        </TooltipProvider>
-        <Toaster />
-        <PwaRegister />
+        <ThemeProvider>
+          <TooltipProvider>
+            {children}
+          </TooltipProvider>
+          <Toaster />
+          <PwaRegister />
+        </ThemeProvider>
       </body>
     </html>
   );
