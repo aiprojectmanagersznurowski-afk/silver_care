@@ -116,22 +116,22 @@ export function FamilyDashboardClient({ resident, reports, selectedDateMedia = [
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex space-x-2 mb-6 bg-muted/50 p-1 rounded-xl w-fit">
+        <div className="flex space-x-2 mb-6 bg-muted/50 p-1 rounded-xl w-full sm:w-fit max-w-full overflow-x-auto scrollbar-none">
           <button 
             onClick={() => setActiveTab('DASHBOARD')}
-            className={`px-5 py-2 rounded-xl text-sm font-medium transition-colors ${activeTab === 'DASHBOARD' ? 'bg-card text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+            className={`px-3 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap shrink-0 transition-colors ${activeTab === 'DASHBOARD' ? 'bg-card text-primary' : 'text-muted-foreground hover:text-foreground'}`}
           >
             Podsumowanie
           </button>
           <button 
             onClick={() => setActiveTab('AGENDA')}
-            className={`px-5 py-2 rounded-xl text-sm font-medium transition-colors ${activeTab === 'AGENDA' ? 'bg-card text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+            className={`px-3 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap shrink-0 transition-colors ${activeTab === 'AGENDA' ? 'bg-card text-primary' : 'text-muted-foreground hover:text-foreground'}`}
           >
             Agenda i Menu
           </button>
           <button 
             onClick={() => setActiveTab('GALERIA')}
-            className={`px-5 py-2 rounded-xl text-sm font-medium transition-colors ${activeTab === 'GALERIA' ? 'bg-card text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+            className={`px-3 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap shrink-0 transition-colors ${activeTab === 'GALERIA' ? 'bg-card text-primary' : 'text-muted-foreground hover:text-foreground'}`}
           >
             Galeria Dnia
           </button>
