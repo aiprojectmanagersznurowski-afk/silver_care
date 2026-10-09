@@ -1,8 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { InviteFamilyDialog } from '@/components/InviteFamilyDialog'
+import { InvitationsTable, type InvitationRecord } from '@/components/InvitationsTable'
 import { redirect } from 'next/navigation'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 export default async function AdminInvitationsPage() {
   const supabase = await createClient()
@@ -52,7 +52,7 @@ export default async function AdminInvitationsPage() {
           <h2 className="text-2xl font-semibold tracking-tight text-foreground">
             Zaproszenia
           </h2>
-          <p className="text-text-secondary">Zarządzaj dostępem dla bliskich pensjonariuszy.</p>
+          <p className="text-muted-foreground">Zarządzaj dostępem dla bliskich podopiecznych.</p>
         </div>
         <InviteFamilyDialog residents={residents || []} />
       </div>
@@ -60,58 +60,10 @@ export default async function AdminInvitationsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Oczekujące i zrealizowane zaproszenia</CardTitle>
-          <CardDescription>Rejestr zaproszeń i powiązań.</CardDescription>
+          <CardDescription>Rejestr zaproszeń, statusy oraz akcje zarządzania.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="relative w-full overflow-auto">
-            <Table>
-              <TableHeader className="[&_tr]:border-b">
-                <TableRow className="hover:bg-muted/50 data-[state=selected]:bg-muted">
-                  <TableHead className="h-12 text-text-secondary">Email zapraszanego</TableHead>
-                  <TableHead className="h-12 text-text-secondary">Pensjonariusz</TableHead>
-                  <TableHead className="h-12 text-text-secondary">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody className="[&_tr:last-child]:border-0">
-                {invitations?.map((inv) => (
-                  <TableRow key={inv.id} className="hover:bg-muted/50 data-[state=selected]:bg-muted">
-                    <TableCell className="font-medium">
-                      {inv.email}
-                    </TableCell>
-                    <TableCell>
-                      {inv.residents?.first_name} {inv.residents?.last_name}
-                    </TableCell>
-                    <TableCell>
-                      {inv.claimed_at ? (
-                        <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-primary text-primary-foreground">
-                          Zrealizowane
-                        </span>
-                      ) : inv.revoked_at ? (
-                        <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-destructive/10 text-destructive">
-                          Odwołane
-                        </span>
-                      ) : new Date(inv.expires_at) < new Date() ? (
-                        <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-muted text-muted-foreground">
-                          Wygasłe
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-muted text-muted-foreground">
-                          Oczekujące
-                        </span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {(!invitations || invitations.length === 0) && (
-                  <TableRow>
-                    <TableCell colSpan={3} className="text-center text-text-secondary">
-                      Brak zaproszeń w bazie.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+          <InvitationsTable initialInvitations={(invitations as unknown as InvitationRecord[]) || []} />
         </CardContent>
       </Card>
     </div>

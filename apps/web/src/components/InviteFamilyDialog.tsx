@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -22,22 +22,40 @@ type Resident = {
   last_name: string
 }
 
-export function InviteFamilyDialog({ residents }: { residents: Resident[] }) {
+export function InviteFamilyDialog({
+  residents,
+  defaultResidentId,
+  triggerLabel = 'Zaproś członka rodziny',
+  triggerVariant = 'default',
+}: {
+  residents: Resident[]
+  defaultResidentId?: string
+  triggerLabel?: string
+  triggerVariant?: 'default' | 'outline' | 'secondary' | 'ghost' | 'link'
+}) {
   const [open, setOpen] = useState(false)
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [countryCode, setCountryCode] = useState('48')
-  const [residentId, setResidentId] = useState(residents[0]?.id || '')
+  const [residentId, setResidentId] = useState(defaultResidentId || residents[0]?.id || '')
   const [familyRole, setFamilyRole] = useState<'legal_guardian' | 'family'>('legal_guardian')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isSuccess, setIsSuccess] = useState(false)
   const [generatedUrl, setGeneratedUrl] = useState<string | null>(null)
 
+  useEffect(() => {
+    if (defaultResidentId) {
+      setResidentId(defaultResidentId)
+    } else if (residents.length > 0 && !residentId) {
+      setResidentId(residents[0].id)
+    }
+  }, [defaultResidentId, residents, open])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!email.trim() || !residentId) {
-      setError('E-mail i przypisany pensjonariusz są wymagane.')
+      setError('E-mail i przypisany podopieczny są wymagane.')
       return
     }
 
@@ -73,9 +91,11 @@ export function InviteFamilyDialog({ residents }: { residents: Resident[] }) {
         toast.success(data.url ? 'Zaproszenie wygenerowane pomyślnie!' : 'Zaproszenie wysłane na podany adres e-mail!')
       } else {
         setError(data.error || 'Wystąpił błąd.')
+        toast.error(data.error || 'Wystąpił błąd.')
       }
     } catch {
       setError('Błąd sieci.')
+      toast.error('Błąd połączenia z serwerem.')
     } finally {
       setIsSubmitting(false)
     }
@@ -90,23 +110,24 @@ export function InviteFamilyDialog({ residents }: { residents: Resident[] }) {
         setError(null)
       }
     }}>
-      <DialogTrigger render={<Button />}>
-        Zaproś członka rodziny
+      <DialogTrigger render={<Button variant={triggerVariant} />}>
+        {triggerLabel}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Zaproś rodzinę pensjonariusza</DialogTitle>
+          <DialogTitle>Zaproś rodzinę podopiecznego</DialogTitle>
           <DialogDescription>
-            Wygeneruj jednorazowy token dostępu, który połączony zostanie z podanym pensjonariuszem.
+            Wygeneruj jednorazowy token dostępu, który połączony zostanie z wybranym podopiecznym.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="resident">Pensjonariusz</Label>
+            <Label htmlFor="resident">Podopieczny</Label>
             <NativeSelect
               id="resident"
               value={residentId}
-              onChange={(e) => setResidentId(e.target.value)} className="flex w-full items-center justify-between disabled:cursor-not-allowed disabled:opacity-50"
+              onChange={(e) => setResidentId(e.target.value)}
+              className="flex w-full items-center justify-between disabled:cursor-not-allowed disabled:opacity-50"
               required
             >
               {residents.map(r => (
@@ -119,13 +140,14 @@ export function InviteFamilyDialog({ residents }: { residents: Resident[] }) {
             <NativeSelect
               id="family-role"
               value={familyRole}
-              onChange={(e) => setFamilyRole(e.target.value as 'legal_guardian' | 'family')} className="flex w-full items-center justify-between disabled:cursor-not-allowed disabled:opacity-50"
+              onChange={(e) => setFamilyRole(e.target.value as 'legal_guardian' | 'family')}
+              className="flex w-full items-center justify-between disabled:cursor-not-allowed disabled:opacity-50"
             >
               <NativeSelectOption value="legal_guardian">Opiekun prawny (pełne uprawnienia, zgody Art. 9)</NativeSelectOption>
               <NativeSelectOption value="family">Obserwator (tylko wgląd w raporty, brak zgód Art. 9)</NativeSelectOption>
             </NativeSelect>
             <p className="text-xs text-muted-foreground">
-              Zgodnie z RODO (Art. 9) wyłącznie pensjonariusz lub opiekun prawny może decydować o przetwarzaniu danych szczególnych kategorii. Obserwator posiada wyłącznie wgląd do publikowanych raportów.
+              Zgodnie z RODO (Art. 9) wyłącznie podopieczny lub opiekun prawny może decydować o przetwarzaniu danych szczególnych kategorii. Obserwator posiada wyłącznie wgląd do publikowanych raportów.
             </p>
           </div>
           <div className="space-y-2">
@@ -144,7 +166,8 @@ export function InviteFamilyDialog({ residents }: { residents: Resident[] }) {
             <div className="flex gap-2">
               <NativeSelect
                 value={countryCode}
-                onChange={(e) => setCountryCode(e.target.value)} className="flex w-[120px] items-center justify-between"
+                onChange={(e) => setCountryCode(e.target.value)}
+                className="flex w-[120px] items-center justify-between"
               >
                 <NativeSelectOption value="48">🇵🇱 +48</NativeSelectOption>
                 <NativeSelectOption value="44">🇬🇧 +44</NativeSelectOption>
@@ -166,6 +189,7 @@ export function InviteFamilyDialog({ residents }: { residents: Resident[] }) {
           {error && (
             <p className="text-sm font-medium text-destructive">{error}</p>
           )}
+
           {isSuccess && !generatedUrl && (
             <div className="mt-4 p-4 border border-border bg-card rounded-md space-y-2">
               <p className="text-sm font-semibold text-foreground">
@@ -190,12 +214,12 @@ export function InviteFamilyDialog({ residents }: { residents: Resident[] }) {
           )}
 
           {isSuccess && generatedUrl && (
-            <div className="mt-4 p-4 border border-border bg-primary rounded-md space-y-2">
-              <p className="text-sm font-semibold text-foreground dark:text-foreground">
+            <div className="mt-4 p-4 border border-border bg-card rounded-md space-y-2">
+              <p className="text-sm font-semibold text-foreground">
                 Zaproszenie wygenerowane pomyślnie!
               </p>
               <p className="text-xs text-muted-foreground">
-                Wyślij poniższy link rodzinie pensjonariusza, aby umożliwić założenie konta:
+                Wyślij poniższy link bliskim podopiecznego, aby umożliwić założenie konta:
               </p>
               <div className="flex items-center gap-2 mt-2">
                 <Input readOnly value={generatedUrl} className="text-xs font-mono h-8" />
