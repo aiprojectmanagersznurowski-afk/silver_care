@@ -1,4 +1,5 @@
-import { LogOut } from 'lucide-react'
+import Link from 'next/link'
+import { LogOut, User } from 'lucide-react'
 import {
   SidebarFooter,
   SidebarMenu,
@@ -6,7 +7,7 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
 
-/** Stopka paska bocznego: zalogowane konto i wylogowanie (nav-user szablonu). */
+/** Stopka paska bocznego: zalogowane konto, link do profilu i wylogowanie (nav-user szablonu). */
 export function SidebarAccount({ userEmail }: { userEmail?: string | null }) {
   return (
     <SidebarFooter>
@@ -18,8 +19,14 @@ export function SidebarAccount({ userEmail }: { userEmail?: string | null }) {
           </SidebarMenuItem>
         )}
         <SidebarMenuItem>
+          <SidebarMenuButton render={<Link href="/settings/profile" />} tooltip="Profil i bezpieczeństwo">
+            <User />
+            <span>Profil i bezpieczeństwo</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+        <SidebarMenuItem>
           <form action="/auth/signout" method="post">
-            <SidebarMenuButton type="submit" tooltip="Wyloguj się" >
+            <SidebarMenuButton type="submit" tooltip="Wyloguj się">
               <LogOut />
               <span>Wyloguj się</span>
             </SidebarMenuButton>

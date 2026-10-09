@@ -4,7 +4,7 @@ import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronDown, Bell, Check, LayoutDashboard, Calendar, MessageSquare } from "lucide-react";
+import { ChevronDown, Bell, Check, LayoutDashboard, Calendar, MessageSquare, User } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -137,6 +137,13 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
                   ))}
                   
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="flex w-full cursor-pointer items-center gap-2.5 py-2.5 text-left font-medium text-foreground"
+                    render={<Link href="/settings/profile" />}
+                  >
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <span>Profil i bezpieczeństwo</span>
+                  </DropdownMenuItem>
                   <form action="/auth/signout" method="post" className="w-full">
                     <DropdownMenuItem 
                       nativeButton
@@ -157,6 +164,13 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
                 <DropdownMenuContent align="end" className="w-56 rounded-xl p-2">
                   <DropdownMenuLabel className="text-muted-foreground">Profil rodziny</DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="flex w-full cursor-pointer items-center gap-2.5 py-2.5 text-left font-medium text-foreground"
+                    render={<Link href="/settings/profile" />}
+                  >
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <span>Profil i bezpieczeństwo</span>
+                  </DropdownMenuItem>
                   <form action="/auth/signout" method="post" className="w-full">
                     <DropdownMenuItem 
                       nativeButton
