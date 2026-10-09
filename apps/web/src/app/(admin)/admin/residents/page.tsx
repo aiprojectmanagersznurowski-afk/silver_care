@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
 import { Card, CardContent } from '@/components/ui/card'
-import { AddResidentDialog } from '@/components/AddResidentDialog'
 import { AdmissionWizard } from '@/components/AdmissionWizard'
 import { BulkImportDialog } from '@/components/BulkImportDialog'
 import { ExportDataDialog } from '@/components/ExportDataDialog'
@@ -76,7 +75,6 @@ export default async function AdminResidentsPage() {
             <ExportDataDialog />
             <BulkImportDialog />
             <AdmissionWizard />
-            <AddResidentDialog />
           </div>
         ) : (
           <div className="flex items-center gap-2 rounded-xl bg-muted px-4 py-2 text-xs font-medium text-foreground border border-border">

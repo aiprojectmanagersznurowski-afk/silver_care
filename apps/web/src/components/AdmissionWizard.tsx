@@ -157,13 +157,13 @@ export function AdmissionWizard() {
     <Dialog open={open} onOpenChange={(val) => { setOpen(val); if (!val) resetForm(); }}>
       <DialogTrigger render={<Button className="bg-primary hover:bg-primary/90 text-white gap-2" />}>
         <UserPlus className="w-4 h-4" />
-        Kreator przyjęcia (Wizard)
+        Nowe Przyjęcie (Kreator)
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserPlus className="w-5 h-5 text-primary" />
-            Przyjęcie pensjonariusza — Krok {step} z 3
+            Przyjęcie podopiecznego — Krok {step} z 3
           </DialogTitle>
           <DialogDescription>
             {step === 1 && 'Krok 1: Wprowadź dane osobowe i profil opiekuńczy podopiecznego.'}
@@ -183,13 +183,13 @@ export function AdmissionWizard() {
                 Przyjęcie zakończone pomyślnie!
               </h3>
               <p className="text-sm text-foreground max-w-md mx-auto">
-                Pensjonariusz <strong>{firstName} {lastName}</strong> został pomyślnie przyjęty do placówki.
+                Podopieczny <strong>{firstName} {lastName}</strong> został pomyślnie przyjęty do placówki.
                 {selectedBedInfo ? ` Przypisano: ${selectedBedInfo}.` : ''}
               </p>
             </div>
             <div className="p-4 bg-primary/10 rounded-xl border border-primary/20 text-left text-xs text-foreground max-w-md mx-auto">
               <span className="font-semibold text-foreground block mb-1">Kolejny krok: Uzupełnienie dokumentacji</span>
-              Możesz teraz przejść bezpośrednio do profilu pensjonariusza, aby załączyć skan umowy oraz uzupełnić dane kontaktowe bliskich.
+              Możesz teraz przejść bezpośrednio do profilu podopiecznego, aby załączyć skan umowy oraz uzupełnić dane kontaktowe bliskich.
             </div>
             <div className="flex items-center justify-center gap-3 pt-2">
               <Button
@@ -206,7 +206,7 @@ export function AdmissionWizard() {
                 className={buttonVariants({ className: 'bg-primary hover:bg-primary/90 text-white gap-2' })}
               >
                 <FileText className="w-4 h-4" />
-                Przejdź do profilu pensjonariusza i dodaj umowę
+                Przejdź do profilu podopiecznego i dodaj umowę
               </Link>
             </div>
           </div>
