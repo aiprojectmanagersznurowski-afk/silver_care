@@ -1,6 +1,6 @@
 'use client'
 
-import { Calendar, FileText, MessageSquare, Users } from 'lucide-react'
+import { Calendar, FileText, MessageSquare, Users, Mic } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
@@ -22,6 +22,7 @@ const STAFF_GROUPS: SidebarNavGroup[] = [
     items: [
       { href: '/staff', label: 'Podopieczni', icon: Users, exact: true },
       { href: '/staff/agenda', label: 'Agenda na dziś', icon: Calendar },
+      { href: '/voice', label: 'Notatka głosowa', icon: Mic },
       { href: '/staff/reports', label: 'Raporty', icon: FileText },
       { href: '/staff/messages', label: 'Wiadomości', icon: MessageSquare },
     ],
