@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { ThemeToggle } from "./ThemeToggle";
 
 const navItems = [
   { label: "Pulpit", href: "/dashboard", icon: LayoutDashboard },
@@ -90,6 +91,7 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
           </nav>
 
           <div className="ml-auto flex items-center gap-3">
+            <ThemeToggle className="h-11 w-11 rounded-full bg-card ring-1 ring-border text-muted-foreground hover:text-foreground" />
             <DropdownMenu>
               <DropdownMenuTrigger className="relative flex h-11 w-11 items-center justify-center rounded-full bg-card text-muted-foreground ring-1 ring-border transition-colors hover:text-foreground">
                 <Bell className="h-5 w-5" />
