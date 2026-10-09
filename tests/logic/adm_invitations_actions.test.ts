@@ -36,8 +36,16 @@ describe('ADM-INVITATIONS-ACTIONS-MANAGEMENT: Rejestr zaproszeń i akcje', () =>
     expect(tableContent).toMatch(/Ponów/i)
   })
 
-  it('endpoint API family/invite obsługuje metodę PATCH do revoke i resend @REQ: ADM-INVITE', () => {
+  it('endpoint API family/invite obsługuje metodę PATCH do revoke i resend z formatInviteResponse @REQ: ADM-INVITE', () => {
     const apiContent = fs.readFileSync(apiRoutePath, 'utf-8')
     expect(apiContent).toMatch(/export\s+async\s+function\s+PATCH/)
+    expect(apiContent).toContain('formatInviteResponse')
+    expect(apiContent).not.toMatch(/console\.log\([^)]*registerUrl/)
+  })
+
+  it('InviteFamilyDialog obsługuje potwierdzenie sukcesu zarówno w trybie produkcji jak i dev @REQ: ADM-INVITE', () => {
+    const dialogContent = fs.readFileSync(dialogPath, 'utf-8')
+    expect(dialogContent).toContain('isSuccess && !generatedUrl')
+    expect(dialogContent).toContain('isSuccess && generatedUrl')
   })
 })
