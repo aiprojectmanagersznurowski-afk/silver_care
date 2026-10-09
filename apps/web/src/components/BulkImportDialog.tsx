@@ -27,17 +27,29 @@ export function BulkImportDialog() {
   const [onlyValid, setOnlyValid] = useState(true)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Generowanie i pobranie wzorcowego szablonu Excel
+  // Generowanie i pobranie wzorcowej formatki Excel wraz z arkuszem instrukcji
   const handleDownloadTemplate = () => {
     const wsData = [
       ['Imię', 'Nazwisko', 'PESEL', 'Stan', 'ZSN', 'Uwagi'],
-      ['Jan', 'Kowalski', '44051401458', 'chodzący', 'nie', 'Alergia na orzechy'],
+      ['Jan', 'Kowalski', '44051401458', 'chodzący', 'nie', 'Samodzielny'],
       ['Anna', 'Nowak', '52081203447', 'siedzący', 'tak', 'Wymaga asekuracji przy wstawaniu'],
+      ['Stanisław', 'Wiśniewski', '38031502491', 'leżący', 'tak', 'Wymaga regularnej zmiany pozycji'],
+    ]
+    const instructionsData = [
+      ['Kolumna', 'Wymagana?', 'Opis i dozwolone formaty'],
+      ['Imię', 'TAK', 'Imię podopiecznego (tekst, np. Jan)'],
+      ['Nazwisko', 'TAK', 'Nazwisko podopiecznego (tekst, np. Kowalski)'],
+      ['PESEL', 'TAK', 'Dokładnie 11 cyfr, prawidłowa suma kontrolna. Na tej podstawie system automatycznie wylicza datę urodzenia i płeć.'],
+      ['Stan', 'NIE', 'Dopuszczalne wartości: chodzący, siedzący, leżący, paliatywny. Domyślnie: chodzący.'],
+      ['ZSN', 'NIE', 'Zespół Stacjonarnej Niedyspozycji: tak / nie (lub 1 / 0). Domyślnie: nie.'],
+      ['Uwagi', 'NIE', 'Dowolny tekst z uwagami opiekuńczymi, alergiami lub zaleceniami.'],
     ]
     const wb = XLSX.utils.book_new()
     const ws = XLSX.utils.aoa_to_sheet(wsData)
+    const wsInstrukcja = XLSX.utils.aoa_to_sheet(instructionsData)
     XLSX.utils.book_append_sheet(wb, ws, 'Podopieczni')
-    XLSX.writeFile(wb, 'szablon_importu_pensjonariuszy.xlsx')
+    XLSX.utils.book_append_sheet(wb, wsInstrukcja, 'Instrukcja')
+    XLSX.writeFile(wb, 'formatka_importu_podopiecznych.xlsx')
   }
 
   // Parsowanie wgranego pliku XLSX lub CSV
@@ -155,20 +167,32 @@ export function BulkImportDialog() {
         </DialogHeader>
 
         {error && (
-          <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{error}</span>
+          <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleDownloadTemplate}
+              className="gap-1.5 text-xs bg-card shrink-0 h-8 text-foreground"
+            >
+              <Download className="w-3.5 h-3.5 text-foreground" />
+              Pobierz formatkę Excel (.xlsx)
+            </Button>
           </div>
         )}
 
         {/* KROK 1: UPLOAD & SZABLON */}
         {step === 'upload' && (
           <div className="space-y-6 py-4">
-            <div className="bg-muted p-4 rounded-xl border border-border flex items-center justify-between">
+            <div className="bg-muted p-4 rounded-xl border border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h4 className="text-sm font-semibold text-foreground">Wzorcowy szablon arkusza</h4>
+                <h4 className="text-sm font-semibold text-foreground">Wzorcowa formatka arkusza Excel</h4>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Pobierz przygotowany plik z prawidłowymi nagłówkami kolumn.
+                  Pobierz przygotowany plik z prawidłowymi kolumnami i arkuszem instrukcji, wklej dane i załaduj poniżej.
                 </p>
               </div>
               <Button
@@ -176,10 +200,10 @@ export function BulkImportDialog() {
                 variant="outline"
                 size="sm"
                 onClick={handleDownloadTemplate}
-                className="gap-2 text-xs bg-card"
+                className="gap-2 text-xs bg-card shrink-0"
               >
                 <Download className="w-3.5 h-3.5 text-foreground" />
-                Pobierz szablon .XLSX
+                Pobierz formatkę Excel (.xlsx)
               </Button>
             </div>
 
@@ -200,6 +224,18 @@ export function BulkImportDialog() {
                   {loading ? 'Analizowanie pliku...' : 'Kliknij, aby wybrać plik .xlsx lub .csv'}
                 </div>
                 <p className="text-xs text-muted-foreground">Obsługiwane formaty: Excel 2007+ (.xlsx) oraz CSV</p>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleDownloadTemplate();
+                  }}
+                  className="mt-1 text-xs text-primary underline hover:text-primary/80 inline-flex items-center gap-1 cursor-pointer"
+                >
+                  <Download className="w-3 h-3" />
+                  Nie masz pliku? Pobierz formatkę Excel (.xlsx)
+                </button>
               </label>
             </div>
           </div>
@@ -222,6 +258,25 @@ export function BulkImportDialog() {
                 <span className="font-semibold text-base text-destructive">{dryRunResult.invalidRowsCount}</span>
               </div>
             </div>
+
+            {dryRunResult.invalidRowsCount > 0 && (
+              <div className="p-3 bg-muted border border-border rounded-lg text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-foreground">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-primary shrink-0" />
+                  <span>Część wierszy zawiera błędy formatu. Pobierz formatkę Excel, aby zweryfikować kolumny i wartości.</span>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownloadTemplate}
+                  className="gap-1.5 text-xs bg-card shrink-0 h-7 text-foreground"
+                >
+                  <Download className="w-3 h-3 text-foreground" />
+                  Pobierz formatkę Excel
+                </Button>
+              </div>
+            )}
 
             <div className="flex-1 overflow-y-auto border border-border rounded-lg max-h-64">
               <Table>
@@ -295,17 +350,29 @@ export function BulkImportDialog() {
           </div>
         )}
 
-        <DialogFooter className="flex justify-between sm:justify-between items-center pt-2">
+        <DialogFooter className="flex flex-col sm:flex-row justify-between items-center gap-2 pt-2">
           {step === 'preview' ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setStep('upload')}
-              disabled={loading}
-            >
-              Wstecz
-            </Button>
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setStep('upload')}
+                disabled={loading}
+              >
+                Wstecz
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleDownloadTemplate}
+                className="gap-1.5 text-xs"
+              >
+                <Download className="w-3.5 h-3.5 text-foreground" />
+                Pobierz formatkę Excel
+              </Button>
+            </div>
           ) : (
             <div />
           )}
@@ -316,7 +383,7 @@ export function BulkImportDialog() {
               size="sm"
               onClick={handleCommitImport}
               disabled={loading || (dryRunResult?.validRowsCount === 0 && onlyValid)}
-              className="bg-primary hover:bg-primary text-white gap-2"
+              className="bg-primary hover:bg-primary text-white gap-2 w-full sm:w-auto"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
               {loading ? 'Zapisywanie...' : `Zatwierdź import (${onlyValid ? dryRunResult?.validRowsCount : dryRunResult?.totalRows})`}
