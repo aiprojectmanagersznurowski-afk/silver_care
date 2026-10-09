@@ -38,13 +38,13 @@ export function HealthRingInsight({ metrics }: HealthRingInsightProps) {
       <div className="relative mx-auto flex h-48 w-48 items-center justify-center mb-6">
         {/* Sleep Ring (Outer) */}
         <svg className="absolute inset-0 h-full w-full -rotate-90">
-          <circle cx="96" cy="96" r="82" fill="none" stroke="var(--color-sage-soft)" strokeWidth="14" />
+          <circle cx="96" cy="96" r="82" fill="none" stroke="var(--accent)" strokeWidth="14" />
           <circle
             cx="96"
             cy="96"
             r="82"
             fill="none"
-            stroke="var(--color-sage)"
+            stroke="var(--primary)"
             strokeWidth="14"
             strokeLinecap="round"
             strokeDasharray={2 * Math.PI * 82}

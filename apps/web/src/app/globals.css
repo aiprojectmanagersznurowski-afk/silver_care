@@ -63,15 +63,6 @@
   --color-text-tertiary: var(--text-tertiary);
   --color-accent-soft: var(--accent);
 
-  /* Paleta portalu bliskich */
-  --color-cream: var(--cream);
-  --color-cream-deep: var(--cream-deep);
-  --color-sage: var(--sage);
-  --color-sage-deep: var(--sage-deep);
-  --color-sage-dark: var(--sage-deep);
-  --color-sage-soft: var(--sage-soft);
-  --color-slate: var(--slate);
-  --color-slate-soft: var(--slate-soft);
 }
 
 /* Na :root i .dark — tokeny --sc-* przełączają się klasą .dark, mapowanie musi się przeliczyć na tym samym elemencie. */
@@ -115,13 +106,6 @@
   --sidebar-border: var(--sc-border);
   --sidebar-ring: var(--sc-focus);
 
-  --cream: var(--sc-portal-surface);
-  --cream-deep: var(--sc-portal-surface-deep);
-  --sage: var(--sc-portal-primary);
-  --sage-deep: var(--sc-portal-primary-deep);
-  --sage-soft: var(--sc-portal-primary-soft);
-  --slate: var(--sc-portal-ink);
-  --slate-soft: var(--sc-portal-ink-soft);
 }
 
 @layer base {

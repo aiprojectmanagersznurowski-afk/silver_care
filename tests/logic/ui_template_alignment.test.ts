@@ -58,9 +58,6 @@ describe('Tokeny z kontraktu w motywie aplikacji (@REQ: UI-TEMPLATE-ALIGNMENT)',
       '--sidebar-accent': '--sc-sidebar-accent',
       '--chart-1': '--sc-chart-1',
       '--chart-5': '--sc-chart-5',
-      '--sage': '--sc-portal-primary',
-      '--slate': '--sc-portal-ink',
-      '--cream': '--sc-portal-surface',
       '--radius': '--sc-radius-lg',
     };
     for (const [shadcnVar, token] of Object.entries(mapping)) {

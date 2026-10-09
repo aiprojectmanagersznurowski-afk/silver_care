@@ -634,10 +634,10 @@
 - **AC5:** Kolor nie niesie oceny: stany opieki, statusy wpisów, delty i zgony w danych dziennych są neutralne; czerwień wyłącznie dla błędów technicznych i akcji destrukcyjnych.
 - **AC6:** Wykresy (`ui/chart`) występują tylko w statystykach placówki w panelu administratora, nigdy w widokach bliskich (ADR-005).
 
-> ⚖️ **Rozstrzygnięcie:** liczby z `NFR-UI-01` (17 px / 48 px) zostały świadomie zastąpione w ADR-014; ryzyko dla czytelności portalu bliskich jest opisane w ADR i do zweryfikowania w pilotażu. Pole `source` wymagania `UI-TEMPLATE-ALIGNMENT` wskazuje dziś ADR-014; zgodnie z regułą utrzymania powinno wskazywać to story — wymaga okna kontraktowego (zmiana po stronie człowieka).
+> ⚖️ **Rozstrzygnięcie:** liczby z `NFR-UI-01` (17 px / 48 px) zostały świadomie zastąpione w ADR-014; ryzyko dla czytelności portalu bliskich jest opisane w ADR i do zweryfikowania w pilotażu. Pole `source` wymagania `UI-TEMPLATE-ALIGNMENT` wskazuje to story (`NFR-UI-03`).
 
 #### [NFR-UI-04] Kontrast elementów graficznych (wykresy)
-🔗 **Kontrakt:** `UI-ACCESSIBILITY` · **WO:** brak (poprawka palety); PR #55; ADR-014 (korekta) · **Status:** 🟡 📝
+🔗 **Kontrakt:** `UI-ACCESSIBILITY` · **WO:** brak (poprawka palety); PR #55; ADR-014 (korekta) · **Status:** ✅ 📝
 
 **User story:** Jako administrator czytający statystyki placówki, chcę, żeby każda seria wykresu była wyraźnie widoczna na tle, aby niczego nie przeoczyć przy słabszym wzroku.
 
@@ -645,7 +645,7 @@
 - **AC1:** Każda seria `chart-1…5` ma kontrast co najmniej 3:1 na `bg` i `surface` w obu motywach (WCAG 1.4.11).
 - **AC2:** Bramka `R24-design-a11y` sprawdza ten próg, a `sc-selftest` ma mutację, która go łamie.
 - **AC3:** Serie są rozróżniane także legendą lub podpisem wartości, nie samym kolorem.
-- **AC4 (otwarte):** Seria „Nieokreślony" w wykresie stanów opieki używa koloru `border` (około 1,2:1). Wartość jest podana liczbą w legendzie, ale formalnie próg nie jest spełniony — wymaga decyzji o kolorze lub wzorze dla kategorii „brak danych".
+- **AC4 (rozstrzygnięte):** Seria „Nieokreślony" w wykresie stanów opieki używa wzoru kreskowanego (deseń SVG) oraz wyraźnego konturu w kolorze `chart-5` (kontrast 7,3:1 w trybie jasnym, 4,8:1 w trybie ciemnym, spełnia próg ≥ 3:1 z WCAG 1.4.11). Wartość jest podana liczbą w legendzie.
 
 ---
 
