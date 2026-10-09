@@ -31,6 +31,7 @@ export function InviteFamilyDialog({ residents }: { residents: Resident[] }) {
   const [familyRole, setFamilyRole] = useState<'legal_guardian' | 'family'>('legal_guardian')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isSuccess, setIsSuccess] = useState(false)
   const [generatedUrl, setGeneratedUrl] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -64,12 +65,12 @@ export function InviteFamilyDialog({ residents }: { residents: Resident[] }) {
       const data = await res.json()
 
       if (res.ok && data.success) {
-        setGeneratedUrl(data.url)
+        setIsSuccess(true)
+        setGeneratedUrl(data.url || null)
         setEmail('')
         setPhone('')
         setFamilyRole('legal_guardian')
-        // setOpen(false) 
-        // window.location.reload() // Usunięte by użytkownik zobaczył link
+        toast.success(data.url ? 'Zaproszenie wygenerowane pomyślnie!' : 'Zaproszenie wysłane na podany adres e-mail!')
       } else {
         setError(data.error || 'Wystąpił błąd.')
       }
@@ -81,7 +82,14 @@ export function InviteFamilyDialog({ residents }: { residents: Resident[] }) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(newOpen) => {
+      setOpen(newOpen)
+      if (!newOpen) {
+        setIsSuccess(false)
+        setGeneratedUrl(null)
+        setError(null)
+      }
+    }}>
       <DialogTrigger render={<Button />}>
         Zaproś członka rodziny
       </DialogTrigger>
@@ -158,7 +166,30 @@ export function InviteFamilyDialog({ residents }: { residents: Resident[] }) {
           {error && (
             <p className="text-sm font-medium text-destructive">{error}</p>
           )}
-          {generatedUrl && (
+          {isSuccess && !generatedUrl && (
+            <div className="mt-4 p-4 border border-border bg-card rounded-md space-y-2">
+              <p className="text-sm font-semibold text-foreground">
+                Zaproszenie wysłane pomyślnie!
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Wiadomość z linkiem aktywacyjnym została wysłana na podany adres e-mail bliskiego.
+              </p>
+              <Button 
+                type="button" 
+                variant="default" 
+                className="w-full mt-2" 
+                onClick={() => {
+                  setOpen(false)
+                  setIsSuccess(false)
+                  window.location.reload()
+                }}
+              >
+                Zamknij i odśwież
+              </Button>
+            </div>
+          )}
+
+          {isSuccess && generatedUrl && (
             <div className="mt-4 p-4 border border-border bg-primary rounded-md space-y-2">
               <p className="text-sm font-semibold text-foreground dark:text-foreground">
                 Zaproszenie wygenerowane pomyślnie!
@@ -187,6 +218,8 @@ export function InviteFamilyDialog({ residents }: { residents: Resident[] }) {
                 className="w-full mt-2" 
                 onClick={() => {
                   setOpen(false)
+                  setIsSuccess(false)
+                  setGeneratedUrl(null)
                   window.location.reload()
                 }}
               >
@@ -195,7 +228,7 @@ export function InviteFamilyDialog({ residents }: { residents: Resident[] }) {
             </div>
           )}
 
-          {!generatedUrl && (
+          {!isSuccess && (
             <DialogFooter>
               <Button type="submit" disabled={isSubmitting || residents.length === 0}>
                 {isSubmitting ? 'Wysyłanie...' : 'Wygeneruj i wyślij'}
