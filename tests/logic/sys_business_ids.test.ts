@@ -50,6 +50,15 @@ describe('System Business IDs Presentation Logic (@REQ: INT-CORE-DECOUPLED, @REQ
       expect(isValidBusinessId(fromUuid)).toBe(true)
     })
 
+    it('formats user business ID with USR- prefix', () => {
+      const fromSeq = formatBusinessId('user' as any, sampleUuid, 12)
+      expect(fromSeq).toBe('USR-012')
+
+      const fromUuid = formatBusinessId('user' as any, sampleUuid)
+      expect(fromUuid).toMatch(/^USR-[A-Z0-9]{4}$/)
+      expect(isValidBusinessId(fromUuid)).toBe(true)
+    })
+
     it('generates deterministic codes for the same UUID', () => {
       const code1 = formatBusinessId('organization', sampleUuid)
       const code2 = formatBusinessId('organization', sampleUuid)
@@ -63,12 +72,26 @@ describe('System Business IDs Presentation Logic (@REQ: INT-CORE-DECOUPLED, @REQ
       expect(parseBusinessId('PEN-0042')).toEqual({ type: 'resident', code: '0042', prefix: 'PEN' })
       expect(parseBusinessId('POK-101')).toEqual({ type: 'room', code: '101', prefix: 'POK' })
       expect(parseBusinessId('PRAC-05')).toEqual({ type: 'staff', code: '05', prefix: 'PRAC' })
+      expect(parseBusinessId('USR-012')).toEqual({ type: 'user', code: '012', prefix: 'USR' })
     })
 
     it('returns null for invalid business ID formats', () => {
       expect(parseBusinessId('INVALID-123')).toBeNull()
       expect(parseBusinessId('12345')).toBeNull()
       expect(parseBusinessId('')).toBeNull()
+    })
+  })
+
+  describe('Prezentacja identyfikatorów użytkowników w panelu IAM (@REQ: SUP-IAM-PANEL)', () => {
+    it('UserTable renderuje BusinessIdBadge z typem user zamiast surowego UUID', async () => {
+      const fs = await import('node:fs')
+      const path = await import('node:path')
+      const userTableSource = fs.readFileSync(
+        path.resolve(process.cwd(), 'apps/web/src/components/iam/UserTable.tsx'),
+        'utf8'
+      )
+      expect(userTableSource).toContain('<BusinessIdBadge type="user" id={user.id}')
+      expect(userTableSource).not.toContain('<div className="font-mono text-xs text-muted-foreground">{user.id}</div>')
     })
   })
 })
