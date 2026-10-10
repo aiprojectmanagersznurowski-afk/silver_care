@@ -329,16 +329,6 @@ export default function StaffAgendaPage() {
                 <div className="py-12 text-center text-sm font-medium text-muted-foreground">
                   Ładowanie harmonogramu...
                 </div>
-              ) : items.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 px-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted/50 text-muted-foreground mb-4">
-                    <CalendarX className="h-8 w-8" />
-                  </div>
-                  <p className="text-base font-semibold text-foreground">Brak wpisów na ten dzień.</p>
-                  <p className="text-sm mt-1 text-muted-foreground text-center max-w-sm">
-                    Dodaj nowy punkt harmonogramu za pomocą formularza po prawej stronie.
-                  </p>
-                </div>
               ) : (
                 /* Podział na pory dnia */
                 <div className="space-y-6">

@@ -64,9 +64,9 @@ export function CommunicationWidget({ residentId }: { residentId?: string }) {
   };
 
   return (
-    <div className="fixed bottom-20 right-4 z-40 flex flex-col items-end sm:bottom-6 sm:right-6">
+    <div className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] right-4 z-40 flex flex-col items-end sm:bottom-6 sm:right-6">
       {open && (
-        <div className="mb-3 flex h-[540px] w-[370px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[1.5rem] bg-card shadow-2xl ring-1 ring-border sm:max-w-[calc(100vw-3rem)]">
+        <div className="mb-3 flex h-[540px] max-h-[calc(100dvh-7.5rem-env(safe-area-inset-bottom,0px))] w-[370px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[1.5rem] bg-card shadow-2xl ring-1 ring-border sm:max-h-[min(540px,calc(100dvh-6rem))] sm:max-w-[calc(100vw-3rem)]">
           {/* header */}
           <div className="flex items-center justify-between bg-primary px-5 py-4 text-primary-foreground">
             <div className="leading-tight">
