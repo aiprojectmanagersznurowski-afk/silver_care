@@ -137,34 +137,6 @@ export const COLORS = {
       "value": "#E8F0ED",
       "desc": "Aktywna i najechana pozycja menu."
     },
-    "portal-primary": {
-      "value": "#1E3A8A",
-      "desc": "Akcent portalu bliskich (klasa sage). Kontrast 10.4:1."
-    },
-    "portal-primary-deep": {
-      "value": "#172554",
-      "desc": "Stan wciśnięty akcentu portalu."
-    },
-    "portal-primary-soft": {
-      "value": "#EFF6FF",
-      "desc": "Tło wyróżnienia w portalu."
-    },
-    "portal-surface": {
-      "value": "#FFFFFF",
-      "desc": "Tło kart portalu (klasa cream)."
-    },
-    "portal-surface-deep": {
-      "value": "#F8FAFC",
-      "desc": "Tło sekcji portalu."
-    },
-    "portal-ink": {
-      "value": "#0F172A",
-      "desc": "Tekst główny portalu (klasa slate). Kontrast 17.9:1."
-    },
-    "portal-ink-soft": {
-      "value": "#64748B",
-      "desc": "Tekst drugorzędny portalu. Kontrast 4.8:1."
-    },
     "chart-1": {
       "value": "#2F6F5E",
       "desc": "Seria 1."
@@ -234,27 +206,6 @@ export const COLORS = {
     },
     "sidebar-accent": {
       "value": "#1E3A32"
-    },
-    "portal-primary": {
-      "value": "#60A5FA"
-    },
-    "portal-primary-deep": {
-      "value": "#93C5FD"
-    },
-    "portal-primary-soft": {
-      "value": "#1E3A8A"
-    },
-    "portal-surface": {
-      "value": "#211F1D"
-    },
-    "portal-surface-deep": {
-      "value": "#171614"
-    },
-    "portal-ink": {
-      "value": "#F1F5F9"
-    },
-    "portal-ink-soft": {
-      "value": "#CBD5E1"
     },
     "chart-1": {
       "value": "#7FBCA8"

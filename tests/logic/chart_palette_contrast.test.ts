@@ -45,4 +45,19 @@ describe('Kontrast serii wykresów (@REQ: UI-ACCESSIBILITY)', () => {
     expect(COLORS.light['chart-1'].value).toBe(COLORS.light['accent'].value);
     expect(COLORS.dark['chart-1'].value).toBe(COLORS.dark['accent'].value);
   });
+
+  it('seria „Nieokreślony” (brak danych) spełnia próg kontrastu ≥ 3:1 oraz posiada wzór kreskowany w wykresie @REQ: UI-ACCESSIBILITY', async () => {
+    const { CARE_LEVEL_COLORS } = await import('../../apps/web/src/lib/reporting-constants');
+    expect(CARE_LEVEL_COLORS.unknown).toBe('var(--chart-5)');
+    const lightVal = COLORS.light['chart-5'].value;
+    const darkVal = COLORS.dark['chart-5'].value;
+    expect(ratio(lightVal, COLORS.light.surface.value)).toBeGreaterThanOrEqual(3);
+    expect(ratio(darkVal, COLORS.dark.surface.value)).toBeGreaterThanOrEqual(3);
+
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const statsClient = fs.readFileSync(path.resolve(process.cwd(), 'apps/web/src/components/StatisticsDashboardClient.tsx'), 'utf-8');
+    expect(statsClient).toContain('pattern-unknown-hatched');
+    expect(statsClient).toContain('dashed var(--chart-5)');
+  });
 });

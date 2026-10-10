@@ -22,11 +22,12 @@ export const CARE_LEVEL_LABELS: Record<CareLevel | 'unknown', string> = {
  */
 export const CARE_LEVEL_COLORS: Record<CareLevel | 'unknown', string> = {
   // Kategorie opisują stan opieki, nie jego ocenę (ADR-005, ADR-011): odcienie jednej palety, bez czerwieni.
+  // Seria unknown używa konturu/bazy chart-5 o kontraście ≥ 3:1 (WCAG 1.4.11) z deseniem kreskowanym w UI.
   walking: 'var(--chart-1)',
   sitting: 'var(--chart-2)',
   bedridden: 'var(--chart-3)',
   hospice: 'var(--chart-5)',
-  unknown: 'var(--border)',
+  unknown: 'var(--chart-5)',
 }
 
 /** Tailwind bg- classes for care-level badges */
@@ -35,7 +36,7 @@ export const CARE_LEVEL_BG_CLASSES: Record<CareLevel | 'unknown', string> = {
   sitting: 'bg-chart-2/15 text-foreground',
   bedridden: 'bg-chart-3/20 text-foreground',
   hospice: 'bg-chart-5/15 text-foreground',
-  unknown: 'bg-secondary text-secondary-foreground',
+  unknown: 'bg-chart-5/10 text-foreground border border-chart-5/30',
 }
 
 /** Paleta serii wykresów — tokeny chart-* z kontraktu (ADR-014), rozwiązywane przez przeglądarkę. */
