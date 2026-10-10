@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 import { LogOut, User } from 'lucide-react'
 import {
@@ -5,11 +7,20 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from '@/components/ui/sidebar'
 import { ThemeToggle } from '@/components/ThemeToggle'
 
 /** Stopka paska bocznego: zalogowane konto, link do profilu i wylogowanie (nav-user szablonu). */
 export function SidebarAccount({ userEmail }: { userEmail?: string | null }) {
+  const { isMobile, setOpenMobile } = useSidebar()
+
+  const handleLinkClick = () => {
+    if (isMobile) {
+      setOpenMobile(false)
+    }
+  }
+
   return (
     <SidebarFooter>
       <SidebarMenu>
@@ -24,7 +35,11 @@ export function SidebarAccount({ userEmail }: { userEmail?: string | null }) {
           <ThemeToggle />
         </SidebarMenuItem>
         <SidebarMenuItem>
-          <SidebarMenuButton render={<Link href="/settings/profile" />} tooltip="Profil i bezpieczeństwo">
+          <SidebarMenuButton
+            render={<Link href="/settings/profile" onClick={handleLinkClick} />}
+            tooltip="Profil i bezpieczeństwo"
+            onClick={handleLinkClick}
+          >
             <User />
             <span>Profil i bezpieczeństwo</span>
           </SidebarMenuButton>

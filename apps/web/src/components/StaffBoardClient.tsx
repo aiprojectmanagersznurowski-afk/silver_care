@@ -167,7 +167,8 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
               className="gap-1.5 data-[pressed]:bg-primary data-[pressed]:text-primary-foreground"
             >
               <Zap className="h-4 w-4" />
-              Szybki obchód (Quick-Rounds)
+              <span className="sm:hidden">Obchód</span>
+              <span className="hidden sm:inline">Szybki obchód (Quick-Rounds)</span>
             </ToggleGroupItem>
             <ToggleGroupItem
               value="standard"

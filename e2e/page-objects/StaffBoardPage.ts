@@ -17,10 +17,10 @@ export class StaffBoardPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.searchInput = page.locator('input[placeholder="Szukaj podopiecznego..."]');
-    this.cardsViewButton = page.locator('button:has-text("Karty")');
-    this.quickRoundsButton = page.locator('button:has-text("Szybki obchód")');
-    this.agendaLink = page.locator('a[href="/staff/agenda"]');
+    this.searchInput = page.locator('input[placeholder="Szukaj podopiecznego..."]').first();
+    this.cardsViewButton = page.locator('button:has-text("Karty")').first();
+    this.quickRoundsButton = page.locator('button:has-text("Obchód"), button:has-text("Szybki obchód")').first();
+    this.agendaLink = page.locator('a[href="/staff/agenda"]').first();
     this.reportsLink = page.locator('a[href="/staff/reports"]');
     this.logoutButton = page.locator('form[action="/auth/signout"] button[type="submit"]');
     this.familyMessagesLinks = page.locator('a[href^="/staff/messages?residentId="]');

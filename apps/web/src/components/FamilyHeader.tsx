@@ -189,8 +189,8 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
         </div>
       </header>
 
-      {/* Mobile Bottom Navigation Bar (Dead End #1 Fix) */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-border/80 bg-background/95 py-2 px-2 backdrop-blur-lg shadow-lg md:hidden">
+      {/* Mobile & Tablet Bottom Navigation Bar (Dead End #1 Fix: tablet coverage up to lg breakpoint) */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-border/80 bg-background/95 py-2 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] backdrop-blur-lg shadow-lg lg:hidden">
         {navItems.map((item) => {
           const isActive = pathname?.startsWith(item.href) || (pathname === '/' && item.href === '/dashboard');
           const Icon = item.icon;

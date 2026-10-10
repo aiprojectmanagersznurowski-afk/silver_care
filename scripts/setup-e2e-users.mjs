@@ -36,40 +36,41 @@ const supabase = createClient(supabaseUrl, serviceKey);
 const sql = postgres(dbUrl, { prepare: false });
 
 export const E2E_PASSWORD = process.env.E2E_USER_PASSWORD || 'SilverTest123!';
-export const MAIN_ORG_ID = 'eaf1bc9d-0745-42a7-bf5c-92c657d0fc8b'; // Główna Placówka Opiekuńcza
-
-export const TEST_USERS = {
-  super_admin: {
-    email: 'e2e.superadmin@silvercare.test',
-    role: 'super_admin',
-    organization_id: MAIN_ORG_ID,
-  },
-  org_admin: {
-    email: 'e2e.admin@silvercare.test',
-    role: 'org_admin',
-    organization_id: MAIN_ORG_ID,
-  },
-  nurse: {
-    email: 'e2e.nurse@silvercare.test',
-    role: 'nurse',
-    organization_id: MAIN_ORG_ID,
-  },
-  family: {
-    email: 'e2e.family@silvercare.test',
-    role: 'family',
-    organization_id: MAIN_ORG_ID,
-  },
-};
 
 export async function setupE2EUsers() {
   console.log('🔄 Przygotowywanie kont testowych E2E...');
+  const orgs = await sql`SELECT id FROM public.organizations LIMIT 1`;
+  const mainOrgId = orgs.length > 0 ? orgs[0].id : '9d9b1de9-8f38-48c8-8b5b-721901fed8ff';
+
+  const testUsers = {
+    super_admin: {
+      email: 'e2e.superadmin@silvercare.test',
+      role: 'super_admin',
+      organization_id: mainOrgId,
+    },
+    org_admin: {
+      email: 'e2e.admin@silvercare.test',
+      role: 'org_admin',
+      organization_id: mainOrgId,
+    },
+    nurse: {
+      email: 'e2e.nurse@silvercare.test',
+      role: 'nurse',
+      organization_id: mainOrgId,
+    },
+    family: {
+      email: 'e2e.family@silvercare.test',
+      role: 'family',
+      organization_id: mainOrgId,
+    },
+  };
   const { data: existingUsersData, error: listErr } = await supabase.auth.admin.listUsers({ page: 1, perPage: 100 });
   if (listErr) throw listErr;
 
   const existingMap = new Map((existingUsersData.users || []).map((u) => [u.email?.toLowerCase(), u]));
   const createdIds = {};
 
-  for (const [key, config] of Object.entries(TEST_USERS)) {
+  for (const [key, config] of Object.entries(testUsers)) {
     const existing = existingMap.get(config.email.toLowerCase());
     if (existing) {
       // Aktualizuj hasło i metadane roli
@@ -104,7 +105,7 @@ export async function setupE2EUsers() {
   if (familyUserId) {
     const residents = await sql`
       SELECT id FROM residents 
-      WHERE organization_id = ${MAIN_ORG_ID} AND archived_at IS NULL 
+      WHERE organization_id = ${mainOrgId} AND archived_at IS NULL 
       LIMIT 1
     `;
 
