@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { History } from 'lucide-react'
 import type { AuditLogItem, UserItem } from '@/components/IamManagementClient'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 
 interface AuditLogTableProps {
   auditLogs: AuditLogItem[]
@@ -85,8 +86,8 @@ export function AuditLogTable({
                       <TableCell>
                         <div className="font-medium text-foreground">{targetEmail}</div>
                         {log.payload?.target_user_id && (
-                          <div className="font-mono text-[0.65rem] text-muted-foreground truncate max-w-[120px]">
-                            {log.payload.target_user_id}
+                          <div className="mt-1">
+                            <BusinessIdBadge type="user" id={log.payload.target_user_id} />
                           </div>
                         )}
                       </TableCell>

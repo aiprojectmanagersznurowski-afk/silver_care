@@ -25,4 +25,15 @@ test.describe('Prezentacja identyfikatorów biznesowych w UI (@REQ: INT-CORE-DEC
       await copyBtn.click();
     }
   });
+
+  test('@REQ: SUP-IAM-PANEL - AC1 & AC2: Kody biznesowe użytkowników w tabeli IAM z prefiksem USR-', async ({ loginPage, page }) => {
+    await loginPage.loginAs('super_admin');
+    await page.goto('/admin/iam');
+    await page.waitForLoadState('networkidle');
+
+    // Weryfikacja obecności badge z kodem biznesowym USR- w tabeli użytkowników
+    const userBadge = page.locator('table[aria-label="Tabela użytkowników i ról IAM"] [data-slot="business-id-badge"]').first();
+    await expect(userBadge).toBeVisible();
+    await expect(userBadge).toContainText('USR-');
+  });
 });
