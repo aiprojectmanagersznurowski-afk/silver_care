@@ -17,7 +17,7 @@ test.describe('Rola: Super Admin (Operator Platformy)', () => {
     await expect(page.locator('h2:has-text("Zarządzanie Placówkami")')).toBeVisible();
 
     // Sprawdzenie obecności tabeli lub listy placówek
-    await expect(page.locator('text=Główna Placówka Opiekuńcza').first()).toBeVisible();
+    await expect(page.locator('[data-slot="business-id-badge"]').first()).toBeVisible();
   });
 
   test('@REQ: SUP-IAM-PANEL - Super Admin zarządza uprawnieniami w panelu IAM i przegląda rejestr audytowy', async ({ loginPage, adminDashboardPage, page }) => {

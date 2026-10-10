@@ -1,7 +1,7 @@
 export type TestRole = 'super_admin' | 'org_admin' | 'nurse' | 'family';
 
 export const E2E_PASSWORD = process.env.E2E_USER_PASSWORD || 'SilverTest123!';
-export const MAIN_ORG_ID = 'eaf1bc9d-0745-42a7-bf5c-92c657d0fc8b';
+export const MAIN_ORG_ID = process.env.E2E_MAIN_ORG_ID || '9d9b1de9-8f38-48c8-8b5b-721901fed8ff';
 
 export const TEST_USERS: Record<TestRole, { email: string; role: TestRole; organization_id: string }> = {
   super_admin: {
