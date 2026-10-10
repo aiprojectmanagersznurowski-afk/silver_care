@@ -72,7 +72,9 @@ export function UserTable({
                   <TableRow key={user.id}>
                     <TableCell>
                       <div className="font-medium text-foreground text-base">{user.email}</div>
-                      <div className="font-mono text-xs text-muted-foreground">{user.id}</div>
+                      <div className="mt-1">
+                        <BusinessIdBadge type="user" id={user.id} />
+                      </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {user.organizationId ? (
