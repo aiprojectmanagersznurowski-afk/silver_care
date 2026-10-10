@@ -1,6 +1,6 @@
 # 📖 Kanoniczna specyfikacja user stories — Silver Care
 
-> **Wersja:** 2.6 (bazuje na v2.4 + funkcje dopisane retroaktywnie) · **Ostatnia aktualizacja:** 2026-10-06
+> **Wersja:** 2.7 (bazuje na v2.6 + naprawa Admission Wizard, Quick-Rounds i NFR-UI-05) · **Ostatnia aktualizacja:** 2026-10-10
 > **Właściciele:** Darek Rink, Michał Sznurowski
 
 ## Jak czytać i utrzymywać ten dokument
@@ -436,6 +436,7 @@
 - **AC2:** Krok 2 sugeruje łóżko według reguł: zgodność płci w pokoju wieloosobowym, mobilność (osoby leżące bliżej parteru), grupowanie ZSN.
 - **AC3:** Utworzenie pensjonariusza i przypisanie łóżka to jedna atomowa transakcja (`admit_resident_with_bed`) — kolizja = rollback z czytelnym komunikatem.
 - **AC4:** Ekran sukcesu prowadzi do karty pensjonariusza; umowa jako załącznik w karcie.
+- **AC5:** Ekran sukcesu kreatora posiada spójny nagłówek podsumowania zakończenia procedury (brak rozjazdu z numeracją „Krok 3 z 3”) oraz przyciski z tokenem `text-primary-foreground` (brak białego tekstu na jasnej mięcie w motywie ciemnym).
 
 #### [SC-ADM-12] Import/eksport struktury placówki i głosowe dyktowanie pokoju
 🔗 **Kontrakt:** `ADM-FACILITY-MANAGE`, `ADM-FACILITY-OCCUPANCY`, `INFRA-EU-REGION` · **WO:** [`ADM-FACILITY-IO-VOICE`](workorders/ADM-FACILITY-IO-VOICE.md) · **Status:** ✅ 📝
@@ -512,6 +513,7 @@
 - **AC2:** Paleta poleceń (Cmd/Ctrl+K) — wyszukanie pensjonariusza i start dyktowania w < 2 s.
 - **AC3:** Masowe zatwierdzanie raportów (do 10 naraz) — każdy raport nadal przechodzi `REPORT-APPROVAL`.
 - **AC4:** Widok „Agenda na dziś" z porami dnia i edycją.
+- **AC5:** Rejestracja rutynowej obserwacji 1-kliknięciem („Stan stabilny”) poprawnie utrwala rekord w `daily_logs` z `resident_id`, `nurse_id` oraz ustrukturyzowanym obiektem `data` (typ `ROUTINE_OBSERVATION`), natychmiast aktualizując stan kafelka w widoku obchodu dyżuru.
 
 #### [SC-NUR-09] Strażnik kompletności raportu przed publikacją
 🔗 **Kontrakt:** `REPORT-AI-FEEDBACK`, `REPORT-APPROVAL`, `MDR-VOCABULARY` · **WO:** [`NUR-REPORT-COMPLETENESS-GATE`](workorders/NUR-REPORT-COMPLETENESS-GATE.md) · **Status:** ✅ 📝
@@ -647,6 +649,16 @@
 - **AC3:** Serie są rozróżniane także legendą lub podpisem wartości, nie samym kolorem.
 - **AC4 (rozstrzygnięte):** Seria „Nieokreślony" w wykresie stanów opieki używa wzoru kreskowanego (deseń SVG) oraz wyraźnego konturu w kolorze `chart-5` (kontrast 7,3:1 w trybie jasnym, 4,8:1 w trybie ciemnym, spełnia próg ≥ 3:1 z WCAG 1.4.11). Wartość jest podana liczbą w legendzie.
 
+#### [NFR-UI-05] Dostępność interfejsu (WCAG 2.1 AA), semantyka kontrolek i wierność motywu ciemnego
+🔗 **Kontrakt:** `UI-ACCESSIBILITY`, `UI-TEMPLATE-ALIGNMENT` · **WO:** [`UI-WIZARD-ROUNDS-A11Y-FIX`](workorders/UI-WIZARD-ROUNDS-A11Y-FIX.md) · **Status:** 📝 PROPOZYCJA
+
+**User story:** Jako użytkownik korzystający z nawigacji klawiaturą, czytnika ekranu lub motywu ciemnego, chcę mieć wyraźne wskaźniki fokusu, semantyczne elementy sterujące i pełen kontrast tekstu oraz ikon, aby komfortowo korzystać z systemu bez barier dostępności i nieczytelnych elementów.
+
+**Kryteria akceptacji:**
+- **AC1 (Wskaźniki fokusu):** Wszystkie interaktywne elementy (przyciski, linki, pola formularzy, kafle wyboru łóżek) posiadają widoczny ring fokusu (`focus-visible`).
+- **AC2 (Semantyka elementów klikalnych):** Elementy interaktywne są implementowane za pomocą semantycznych znaczników `<button>` / `<Link>` lub posiadają atrybuty `role="button"`, `tabIndex={0}` oraz obsługę klawiatury (`Enter`/`Space`).
+- **AC3 (Kontrast ikon i motywu ciemnego):** Funkcyjne ikony posiadają kontrast co najmniej 3:1 wobec tła. Elementy akcentowe w trybie ciemnym stosują semantyczny token `text-primary-foreground` zamiast sztywnego `text-white`, zapobiegając efektowi „białe na jasnym”.
+
 ---
 
 ## 💡 USER STORIES DO ANALIZY (Backlog / poza MVP)
@@ -732,3 +744,4 @@
 | 2026-08-25 | 2.4 | Pierwotna specyfikacja (poza repozytorium), źródło `contracts/requirements.contract.mjs`. |
 | 2026-10-04 | 2.5 | Przeniesienie do repo; mapowanie na `@REQ` i ADR; dopisanie `SC-SUP-04`, `SC-ADM-10…16`, `SC-NUR-07…10`, `SC-USR-01` oraz 7 NFR z Work Orderów; oznaczenie dwóch sprzeczności jako WYMAGA DECYZJI. |
 | 2026-10-06 | 2.6 | Rozstrzygnięcie dwóch sprzeczności z v2.5 (odwracalny PESEL: PR #39, fallback Groq: PR #38; statusy zaktualizowane w `SC-NUR-10` i `NFR-INFRA-02`); kryteria `SC-ADM-08` i `SC-ADM-15` po PR #49; dopisanie `NFR-UI-03` (szablon shadcn-admin, ADR-014, PR #51–#54) i `NFR-UI-04` (kontrast wykresów, PR #55); notka ADR-014 przy `NFR-UI-01`. |
+| 2026-10-10 | 2.7 | Poprawki błędów UI z audytu DevTools: spójny nagłówek sukcesu i kontrast przycisków w kreatorze przyjęcia (`SC-ADM-11`), utrwalanie rutynowej obserwacji 1-kliknięciem w `daily_logs` (`SC-NUR-08`), dodanie `NFR-UI-05` (dostępność WCAG, focus-visible, kontrast motywu ciemnego). |
