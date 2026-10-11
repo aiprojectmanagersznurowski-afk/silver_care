@@ -34,7 +34,7 @@ export type AdminAssignmentDecision =
     }
   | {
       allowed: false;
-      errorCode: 'SUPER_ADMIN_CONFLICT' | 'ORGANIZATION_MISMATCH';
+      errorCode: 'SUPER_ADMIN_CONFLICT' | 'ORGANIZATION_MISMATCH' | 'STAFF_ROLE_CONFLICT';
       error: string;
     };
 
@@ -100,7 +100,17 @@ export function evaluateAdminAssignment(input: AdminAssignmentInput): AdminAssig
     };
   }
 
-  // 2. Ochrona izolacji najemców — zakaz przenoszenia administratora innej placówki
+  // 2. Ochrona przed cichym przejęciem ról personelu
+  const protectedStaff = ['nurse', 'caregiver', 'doctor', 'staff'];
+  if (typeof currentRole === 'string' && protectedStaff.includes(currentRole)) {
+    return {
+      allowed: false,
+      errorCode: 'STAFF_ROLE_CONFLICT',
+      error: 'Użytkownik posiada już aktywną rolę personelu placówki. Zmień uprawnienia w panelu IAM.',
+    };
+  }
+
+  // 3. Ochrona izolacji najemców — zakaz przenoszenia administratora innej placówki
   if (currentOrgId && currentOrgId !== targetOrgId) {
     return {
       allowed: false,
