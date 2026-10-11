@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Adres e-mail jest wymagany' }, { status: 400 })
     }
 
-    if (role !== 'nurse' && role !== 'paramedic' && role !== 'org_admin') {
+    if (role !== 'nurse' && role !== 'paramedic' && role !== 'caregiver' && role !== 'org_admin') {
       return NextResponse.json({ error: 'Nieprawidłowa rola' }, { status: 400 })
     }
 
@@ -98,7 +98,7 @@ export async function POST(request: Request) {
           if (org?.name) orgName = org.name
         }
 
-        const roleDisplay = role === 'nurse' ? 'Pielęgniarka' : role === 'paramedic' ? 'Ratownik medyczny' : role === 'org_admin' ? 'Administrator Placówki' : 'Personel'
+        const roleDisplay = role === 'nurse' ? 'Pielęgniarka' : role === 'caregiver' ? 'Opiekun' : role === 'paramedic' ? 'Ratownik medyczny' : role === 'org_admin' ? 'Administrator Placówki' : 'Personel'
         const emailTemplate = renderStaffInviteEmail({
           inviteUrl: proxyUrl,
           organizationName: orgName,

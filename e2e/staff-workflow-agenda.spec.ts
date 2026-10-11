@@ -14,10 +14,10 @@ test.describe('Panel personelu i Agenda na dziś (@REQ: NUR-BOARD, @REQ: NUR-AGE
   test('@REQ: NUR-BOARD - Panel personelu eksponuje szybki obchód oraz filtry tokenowe', async ({ loginPage, page }) => {
     await loginPage.loginAs('nurse');
     await page.goto('/staff');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Sprawdzenie obecności paska filtrów tokenowych
-    const tokenBar = page.locator('[data-testid="filter-token-bar"]');
+    const tokenBar = page.locator('[data-testid="filter-token-bar"]').first();
     await expect(tokenBar).toBeVisible();
 
     // Sprawdzenie tokenów statusu
@@ -32,7 +32,7 @@ test.describe('Panel personelu i Agenda na dziś (@REQ: NUR-BOARD, @REQ: NUR-AGE
   test('@REQ: NUR-AGENDA - Menu personelu zawiera dedykowany link "Agenda na dziś"', async ({ loginPage, page }) => {
     await loginPage.loginAs('nurse');
     await page.goto('/staff');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Weryfikacja menu bocznego
     const agendaMenuItem = page.locator('nav a[href="/staff/agenda"]:has-text("Agenda na dziś")');

@@ -63,11 +63,28 @@ interface DailySummaryHeroProps {
   } | null;
   selectedDateMedia?: string[];
   onOpenGallery?: (index?: number) => void;
+  selectedDate?: string | Date;
 }
 
-export function DailySummaryHero({ resident, report, selectedDateMedia = [], onOpenGallery }: DailySummaryHeroProps) {
+export function DailySummaryHero({ resident, report, selectedDateMedia = [], onOpenGallery, selectedDate }: DailySummaryHeroProps) {
   const reportText = report?.content?.text || 'Brak dzisiejszego raportu od personelu. Czekamy na pierwsze wpisy.';
   const wb = deriveWellbeing(report?.content?.text);
+
+  const targetDate = selectedDate
+    ? new Date(selectedDate)
+    : (report?.created_at ? new Date(report.created_at) : new Date());
+
+  const todayDateStr = new Date().toISOString().slice(0, 10);
+  const targetDateStr = targetDate.toISOString().slice(0, 10);
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayDateStr = yesterday.toISOString().slice(0, 10);
+
+  const dateLabel = targetDateStr === todayDateStr
+    ? `Dzisiaj · ${format(targetDate, 'EEEE, d MMMM', { locale: pl })}`
+    : targetDateStr === yesterdayDateStr
+    ? `Wczoraj · ${format(targetDate, 'EEEE, d MMMM', { locale: pl })}`
+    : format(targetDate, 'EEEE, d MMMM yyyy', { locale: pl });
 
   const quickStats = [
     { icon: CheckCircle2, label: "Sen", value: wb.sleep },
@@ -85,7 +102,7 @@ export function DailySummaryHero({ resident, report, selectedDateMedia = [], onO
           <div className="mb-6 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles className="h-5 w-5" />
-              <p className="text-[0.95rem] opacity-90">Dzisiaj · {format(new Date(), 'EEEE, d MMMM', { locale: pl })}</p>
+              <p className="text-[0.95rem] opacity-90 capitalize">{dateLabel}</p>
             </div>
             {report?.created_at && (
               <span className="text-[10px] uppercase font-bold tracking-widest px-3 py-1 rounded-full bg-card/20">

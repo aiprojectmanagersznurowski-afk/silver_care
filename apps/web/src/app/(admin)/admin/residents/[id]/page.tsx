@@ -21,6 +21,8 @@ import { pl } from 'date-fns/locale'
 import { ResidentZsnCheckbox } from '@/components/ResidentZsnCheckbox'
 import { PolarWearableCard } from '@/components/PolarWearableCard'
 import { ResidentContractAttachment } from '@/components/facility/ResidentContractAttachment'
+import { InviteFamilyDialog } from '@/components/InviteFamilyDialog'
+import { PrimaryContactButton } from '@/components/PrimaryContactButton'
 
 export default async function ResidentProfilePage({
   params,
@@ -36,7 +38,7 @@ export default async function ResidentProfilePage({
     .select(`
       *,
       bed_assignments(id, assigned_at, unassigned_at, beds(id, label, rooms(number, floor, sector))),
-      resident_relative_links(id, relative_user_id, relationship_code, role, created_at),
+      resident_relative_links(id, relative_user_id, relationship_code, role, is_primary_contact, created_at),
       resident_events(id, event_type, event_date, event_reason, metadata, created_at),
       resident_packages(id, package_type, package_name, monthly_rate, started_at, ended_at)
     `)
@@ -395,10 +397,16 @@ export default async function ResidentProfilePage({
 
           {/* Relatives */}
           <Card className="rounded-xl border-none ring-1 ring-border">
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="flex items-center gap-2 text-lg text-foreground">
                 <Users className="h-5 w-5 text-primary" /> Bliscy
               </CardTitle>
+              <InviteFamilyDialog
+                residents={[{ id: resident.id, first_name: resident.first_name, last_name: resident.last_name }]}
+                defaultResidentId={resident.id}
+                triggerLabel="Zaproś bliskiego"
+                triggerVariant="outline"
+              />
             </CardHeader>
             <CardContent>
               {(!resident.resident_relative_links || resident.resident_relative_links.length === 0) ? (
@@ -410,10 +418,17 @@ export default async function ResidentProfilePage({
                   {resident.resident_relative_links.map((link: any) => (
                     <div key={link.id} className="flex items-center justify-between rounded-xl bg-muted/50 p-3">
                       <div>
-                        <p className="text-sm font-medium text-foreground">
-                          {link.relationship_code}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium text-foreground">
+                            {link.relationship_code}
+                          </p>
+                          <PrimaryContactButton
+                            linkId={link.id}
+                            residentId={resident.id}
+                            isPrimary={!!link.is_primary_contact}
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5">
                           {link.role === 'legal_guardian' ? 'Opiekun prawny' : 'Rodzina'}
                         </p>
                       </div>

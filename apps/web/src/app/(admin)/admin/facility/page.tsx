@@ -46,7 +46,7 @@ export default function FacilityManagementPage() {
             Zarządzaj pokojami i łóżkami w twojej placówce.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <FacilityImportExportDialog onStructureChanged={fetchRooms} />
           <BedAllocationOptimizerDialog onAllocationChanged={fetchRooms} />
           <AddRoomDialog onRoomAdded={fetchRooms} />

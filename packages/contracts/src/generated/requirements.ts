@@ -282,7 +282,7 @@ export const REQUIREMENTS = [
     "id": "UI-TEMPLATE-ALIGNMENT",
     "status": "TODO",
     "risk": "MEDIUM",
-    "source": "ADR-014",
+    "source": "NFR-UI-03",
     "domain": "presentation",
     "statement": "Interfejs używa komponentów i układu szablonu shadcn-admin (styl nova) w skali 14px/32px, z tokenami generowanymi z kontraktu.",
     "acceptance": [

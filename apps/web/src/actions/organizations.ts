@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { validateOrganizationUpdate } from '@/lib/org-helpers'
 import { renderAdminInviteEmail } from '@/lib/notification-templates'
+import { findUserByEmail, evaluateAdminAssignment } from '@/lib/admin-assign-safety'
 
 async function sendAdminInviteEmail(adminEmail: string, orgName: string): Promise<{ inviteUrl: string | null; emailSent: boolean; error?: string }> {
   try {
@@ -288,32 +289,21 @@ export async function assignAdminToOrganization(
   try {
     const adminClient = createAdminClient()
 
-    // 1. Sprawdzamy czy użytkownik już istnieje (z pełną paginacją)
-    const existingUser = await findUserByEmailPaginated(adminClient, adminEmail)
+    // Bezpieczne, paginowane wyszukiwanie i walidacja przypisania roli (ORG-ASSIGN-ADMIN-SAFETY)
+    const existingUser = await findUserByEmail(adminClient, adminEmail)
+    const assignmentDecision = evaluateAdminAssignment({
+      existingUser,
+      targetOrgId: orgId,
+    })
+
+    if (!assignmentDecision.allowed) {
+      return { error: assignmentDecision.error }
+    }
 
     let targetUserId = existingUser?.id
 
     if (existingUser) {
-      const currentRole = existingUser.app_metadata?.role || existingUser.user_metadata?.role
-
-      // Ochrona przed degradacją konta super_admin (SUP-IAM-PANEL)
-      if (currentRole === 'super_admin') {
-        return { error: 'Nie można zmienić roli konta super_admin.' }
-      }
-
-      // Ochrona przed cichym przejęciem ról personelu
-      const protectedStaff = ['nurse', 'caregiver', 'doctor', 'staff']
-      if (typeof currentRole === 'string' && protectedStaff.includes(currentRole)) {
-        return { error: 'Użytkownik posiada już aktywną rolę personelu placówki. Zmień uprawnienia w panelu IAM.' }
-      }
-
-      // Ochrona przed konfliktem wielu placówek
-      const existingOrgId = existingUser.app_metadata?.organization_id
-      if (currentRole === 'org_admin' && existingOrgId && existingOrgId !== orgId) {
-        return { error: 'Użytkownik jest już administratorem innej placówki. Zmień przypisanie w panelu IAM.' }
-      }
-
-      // Aktualizujemy metadane istniejącego użytkownika
+      // Aktualizujemy metadane istniejącego użytkownika po pomyślnej walidacji
       const { error: updateErr } = await adminClient.auth.admin.updateUserById(existingUser.id, {
         app_metadata: {
           ...existingUser.app_metadata,

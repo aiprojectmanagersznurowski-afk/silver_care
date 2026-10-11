@@ -142,19 +142,19 @@ export function DailyReportClient({ organizationId }: { organizationId?: string 
     <div className="space-y-6">
       {/* Month navigation */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="icon" onClick={goToPrevMonth} className="h-10 w-10 rounded-xl">
+        <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-3 w-full sm:w-auto">
+          <Button variant="outline" size="icon" onClick={goToPrevMonth} className="h-10 w-10 rounded-xl shrink-0">
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <h3 className="text-xl font-semibold text-foreground min-w-48 text-center">
+          <h3 className="text-lg sm:text-xl font-semibold text-foreground min-w-36 sm:min-w-48 text-center flex-1 sm:flex-initial">
             {MONTH_LABELS_PL[month - 1]} {year}
           </h3>
-          <Button variant="outline" size="icon" onClick={goToNextMonth} className="h-10 w-10 rounded-xl">
+          <Button variant="outline" size="icon" onClick={goToNextMonth} className="h-10 w-10 rounded-xl shrink-0">
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
 
-        <Button variant="outline" onClick={exportCSV} className="rounded-xl gap-2" disabled={data.length === 0}>
+        <Button variant="outline" onClick={exportCSV} className="rounded-xl gap-2 w-full sm:w-auto" disabled={data.length === 0}>
           <Download className="h-4 w-4" />
           Eksport CSV
         </Button>

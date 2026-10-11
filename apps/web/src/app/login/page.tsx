@@ -150,7 +150,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div 
+    <main 
       className="relative min-h-screen flex flex-col items-center justify-center p-4 bg-background text-foreground overflow-hidden select-none"
       onClick={() => { if (!isRevealed) setIsRevealed(true) }}
     >
@@ -260,9 +260,9 @@ export default function LoginPage() {
         <Card className="card-animate w-full border-border/80 bg-card/95 shadow-lg backdrop-blur-md">
           <form onSubmit={handleLogin}>
             <CardHeader className="text-center pb-4">
-              <CardTitle className="text-2xl font-semibold tracking-tight text-foreground font-display">
+              <h1 className="text-2xl font-semibold tracking-tight text-foreground font-display">
                 Zaloguj się
-              </CardTitle>
+              </h1>
               <CardDescription className="text-muted-foreground text-sm mt-1">
                 Wprowadź swoje dane, aby uzyskać dostęp do panelu.
               </CardDescription>
@@ -283,11 +283,14 @@ export default function LoginPage() {
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="email"
+                    name="email"
                     type="email"
-                    placeholder="m.kowalski@example.com"
+                    autoComplete="username"
+                    inputMode="email"
+                    placeholder="np. jan@placowka.pl"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-9 rounded-lg border-input bg-background/50 focus-visible:ring-primary"
+                    className="pl-9 h-11 md:h-10 rounded-lg border-input bg-background/50 focus-visible:ring-primary text-base md:text-sm"
                     required
                   />
                 </div>
@@ -301,17 +304,18 @@ export default function LoginPage() {
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="password"
+                    name="password"
                     type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
+                    autoComplete="current-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-9 pr-9 rounded-lg border-input bg-background/50 focus-visible:ring-primary"
+                    className="pl-9 pr-11 h-11 md:h-10 rounded-lg border-input bg-background/50 focus-visible:ring-primary text-base md:text-sm"
                     required
                   />
                   <button
                     type="button"
                     aria-label={showPassword ? 'Ukryj hasło' : 'Pokaż hasło'}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-2 rounded-lg"
                     onClick={() => setShowPassword((prev) => !prev)}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -330,16 +334,19 @@ export default function LoginPage() {
                     Zapamiętaj mnie
                   </Label>
                 </div>
-                <span className="text-xs text-primary hover:underline cursor-pointer">
-                  Pomoc
-                </span>
+                <a
+                  href="mailto:pomoc@silvercare.space?subject=Nie%20pami%C4%99tam%20has%C5%82a%20-%20Silver%20Care"
+                  className="text-xs text-primary hover:underline font-medium"
+                >
+                  Nie pamiętasz hasła?
+                </a>
               </div>
             </CardContent>
 
             <CardFooter className="flex-col gap-3.5 pt-2">
               <Button
                 type="submit"
-                className="w-full h-10 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium transition-all"
+                className="w-full h-11 md:h-10 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium transition-all"
                 disabled={loading}
               >
                 {loading ? 'Logowanie...' : 'Zaloguj się'}
@@ -355,7 +362,7 @@ export default function LoginPage() {
               <Button
                 type="button"
                 variant="outline"
-                className="w-full h-10 rounded-lg border-border hover:bg-muted text-foreground font-medium transition-colors"
+                className="w-full h-11 md:h-10 rounded-lg border-border hover:bg-muted text-foreground font-medium transition-colors inline-flex items-center justify-center gap-2"
                 disabled={loading}
                 onClick={async () => {
                   try {
@@ -378,12 +385,15 @@ export default function LoginPage() {
                   }
                 }}
               >
-                Zaloguj z Google
+                <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+                  <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
+                </svg>
+                <span>Zaloguj z Google</span>
               </Button>
             </CardFooter>
           </form>
         </Card>
       </div>
-    </div>
+    </main>
   )
 }

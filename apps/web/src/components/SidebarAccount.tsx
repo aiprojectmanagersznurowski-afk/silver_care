@@ -1,13 +1,26 @@
-import { LogOut } from 'lucide-react'
+'use client'
+
+import Link from 'next/link'
+import { LogOut, User } from 'lucide-react'
 import {
   SidebarFooter,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from '@/components/ui/sidebar'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
-/** Stopka paska bocznego: zalogowane konto i wylogowanie (nav-user szablonu). */
+/** Stopka paska bocznego: zalogowane konto, link do profilu i wylogowanie (nav-user szablonu). */
 export function SidebarAccount({ userEmail }: { userEmail?: string | null }) {
+  const { isMobile, setOpenMobile } = useSidebar()
+
+  const handleLinkClick = () => {
+    if (isMobile) {
+      setOpenMobile(false)
+    }
+  }
+
   return (
     <SidebarFooter>
       <SidebarMenu>
@@ -17,9 +30,23 @@ export function SidebarAccount({ userEmail }: { userEmail?: string | null }) {
             <span className="block truncate text-sm font-medium">{userEmail}</span>
           </SidebarMenuItem>
         )}
+        <SidebarMenuItem className="flex items-center justify-between px-2 py-1">
+          <span className="text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">Motyw</span>
+          <ThemeToggle />
+        </SidebarMenuItem>
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            render={<Link href="/settings/profile" onClick={handleLinkClick} />}
+            tooltip="Profil i bezpieczeństwo"
+            onClick={handleLinkClick}
+          >
+            <User />
+            <span>Profil i bezpieczeństwo</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
         <SidebarMenuItem>
           <form action="/auth/signout" method="post">
-            <SidebarMenuButton type="submit" tooltip="Wyloguj się" >
+            <SidebarMenuButton type="submit" tooltip="Wyloguj się">
               <LogOut />
               <span>Wyloguj się</span>
             </SidebarMenuButton>

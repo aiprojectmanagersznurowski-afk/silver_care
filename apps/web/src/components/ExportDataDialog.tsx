@@ -75,11 +75,11 @@ export function ExportDataDialog() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="outline" className="gap-2 border-border text-foreground" />}>
+      <DialogTrigger render={<Button variant="outline" data-testid="export-data-trigger" className="gap-2 border-border text-foreground" />}>
         <Download className="w-4 h-4 text-primary" />
         Eksportuj dane
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent data-testid="export-data-dialog" className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Download className="w-5 h-5 text-primary" />
@@ -91,14 +91,14 @@ export function ExportDataDialog() {
         </DialogHeader>
 
         {error && (
-          <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm flex items-center gap-2">
+          <div data-testid="export-error-message" className="p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
         {successMessage && (
-          <div className="p-3 bg-muted border border-border text-foreground rounded-lg text-sm flex items-center gap-2">
+          <div data-testid="export-success-message" className="p-3 bg-muted border border-border text-foreground rounded-lg text-sm flex items-center gap-2">
             <Check className="w-4 h-4 shrink-0" />
             <span>{successMessage}</span>
           </div>
@@ -110,6 +110,7 @@ export function ExportDataDialog() {
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
+                data-testid="export-format-xlsx"
                 onClick={() => setFormatType('xlsx')}
                 className={`p-3 rounded-lg border text-left flex items-center gap-2 transition-all ${
                   formatType === 'xlsx'
@@ -122,6 +123,7 @@ export function ExportDataDialog() {
               </button>
               <button
                 type="button"
+                data-testid="export-format-csv"
                 onClick={() => setFormatType('csv')}
                 className={`p-3 rounded-lg border text-left flex items-center gap-2 transition-all ${
                   formatType === 'csv'
@@ -138,6 +140,7 @@ export function ExportDataDialog() {
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-foreground block">Status pensjonariuszy</label>
             <NativeSelect
+              data-testid="export-status-select"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as 'active' | 'archived' | 'all')} className="w-full"
             >
@@ -151,6 +154,7 @@ export function ExportDataDialog() {
             <input
               type="checkbox"
               id="export-zsn-only"
+              data-testid="export-zsn-checkbox"
               checked={zsnOnly}
               onChange={(e) => setZsnOnly(e.target.checked)}
               className="rounded border-border text-primary focus:ring-primary"
@@ -179,6 +183,7 @@ export function ExportDataDialog() {
           <Button
             type="button"
             size="sm"
+            data-testid="export-submit-button"
             onClick={handleExport}
             disabled={loading}
             className="bg-primary hover:bg-primary/90 text-white gap-2"
