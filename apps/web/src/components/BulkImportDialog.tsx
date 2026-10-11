@@ -149,11 +149,11 @@ export function BulkImportDialog() {
 
   return (
     <Dialog open={open} onOpenChange={(val) => { setOpen(val); if (!val) resetState(); }}>
-      <DialogTrigger render={<Button variant="outline" className="gap-2 border-border text-foreground" />}>
+      <DialogTrigger render={<Button variant="outline" data-testid="bulk-import-trigger" className="gap-2 border-border text-foreground" />}>
         <FileSpreadsheet className="w-4 h-4 text-foreground" />
         Masowy import (Excel/CSV)
       </DialogTrigger>
-      <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col">
+      <DialogContent data-testid="bulk-import-dialog" className="max-w-3xl max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileSpreadsheet className="w-5 h-5 text-foreground" />
@@ -176,6 +176,7 @@ export function BulkImportDialog() {
               type="button"
               variant="outline"
               size="sm"
+              data-testid="bulk-download-template"
               onClick={handleDownloadTemplate}
               className="gap-1.5 text-xs bg-card shrink-0 h-8 text-foreground"
             >
@@ -199,6 +200,7 @@ export function BulkImportDialog() {
                 type="button"
                 variant="outline"
                 size="sm"
+                data-testid="bulk-download-template-main"
                 onClick={handleDownloadTemplate}
                 className="gap-2 text-xs bg-card shrink-0"
               >
@@ -211,6 +213,7 @@ export function BulkImportDialog() {
               <input
                 ref={fileInputRef}
                 type="file"
+                data-testid="bulk-file-input"
                 accept=".xlsx,.xls,.csv"
                 onChange={handleFileUpload}
                 className="hidden"
@@ -381,6 +384,7 @@ export function BulkImportDialog() {
             <Button
               type="button"
               size="sm"
+              data-testid="bulk-commit-button"
               onClick={handleCommitImport}
               disabled={loading || (dryRunResult?.validRowsCount === 0 && onlyValid)}
               className="bg-primary hover:bg-primary text-white gap-2 w-full sm:w-auto"

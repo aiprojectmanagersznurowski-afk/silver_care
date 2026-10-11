@@ -4,7 +4,7 @@ import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronDown, Bell, Check, LayoutDashboard, Calendar, MessageSquare, User } from "lucide-react";
+import { ChevronDown, Bell, Check, LayoutDashboard, Calendar, MessageSquare, User, ShieldCheck } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +20,7 @@ const navItems = [
   { label: "Pulpit", href: "/dashboard", icon: LayoutDashboard },
   { label: "Plan Dnia", href: "/agenda", icon: Calendar },
   { label: "Wiadomości", href: "/messages", icon: MessageSquare },
+  { label: "Zgody", href: "/consents", icon: ShieldCheck },
 ];
 
 interface Resident {

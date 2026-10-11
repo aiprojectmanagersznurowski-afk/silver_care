@@ -111,7 +111,7 @@
 > ⚖️ **Rozstrzygnięcie (ADR-012):** przyjęcie może od razu obejmować przypisanie łóżka; pensjonariusz bez łóżka jest stanem poprawnym. Patrz też `SC-ADM-11`.
 
 ### [SC-ADM-03] Zarządzanie powiązaniami rodziny z seniorem (dodawanie i edycja dostępów)
-🔗 **Kontrakt:** `ADM-RESIDENT-ADD`, `MDR-VOCABULARY` (AC1), `ORG-ISOLATION` (AC2), `ADM-INVITE` (AC4) · **Status:** 🟡 — AC3 (jeden aktywny kontakt główny) nie ma odpowiednika w kontrakcie
+🔗 **Kontrakt:** `ADM-RESIDENT-ADD`, `MDR-VOCABULARY` (AC1), `ORG-ISOLATION` (AC2), `ADM-INVITE` (AC4) · **Status:** ✅
 
 **User story:** Jako Administrator, chcę dodawać kolejnych członków rodziny do profilu podopiecznego, zmieniać ich relacje oraz edytować lub cofać ich uprawnienia, aby zapewnić właściwym osobom dostęp do raportów, a nieuprawnionym natychmiast go odcinać.
 
@@ -689,7 +689,7 @@
 - **AC3 (Alertowanie):** W przypadku braku danych przez > 30 minut Administrator otrzymuje powiadomienie o „Braku strumienia danych z urządzenia [ID]".
 
 ### [SC-FAM-02] Zarządzanie zgodami na dane IoT (Consent Ledger)
-🔗 **Kontrakt:** `CONSENT-LEDGER-IMMUTABLE` (AC2), `CONSENT-GRANTOR`, `CONSENT-REVOKE` · **Status:** 🟡 — niezmienialność i obsługa wycofania zgód zrealizowana, widok dla bliskich w portalu poza MVP
+🔗 **Kontrakt:** `CONSENT-LEDGER-IMMUTABLE` (AC2), `CONSENT-GRANTOR`, `CONSENT-REVOKE` · **Status:** ✅ — niezmienialność, obsługa wycofania zgód i dedykowany widok /consents w portalu rodziny zrealizowane
 
 **User story:** Jako Rodzina, chcę mieć wgląd w stan moich zgód na przetwarzanie danych z urządzeń BLE, aby zachować kontrolę nad zakresem udostępnianych informacji o samopoczuciu mojego bliskiego.
 
