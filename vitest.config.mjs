@@ -14,7 +14,9 @@ export default defineConfig({
   },
   test: {
     testTimeout: 20000,
-    include: process.env.DATABASE_URL
+    fileParallelism: process.env.TEST_DB === 'true' ? false : true,
+    maxWorkers: process.env.TEST_DB === 'true' ? 1 : undefined,
+    include: process.env.TEST_DB === 'true'
       ? ['tests/**/*.test.ts']
       : ['tests/logic/**/*.test.ts'],
   },
