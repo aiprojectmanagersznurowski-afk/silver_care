@@ -650,7 +650,7 @@
 - **AC4 (rozstrzygnięte):** Seria „Nieokreślony" w wykresie stanów opieki używa wzoru kreskowanego (deseń SVG) oraz wyraźnego konturu w kolorze `chart-5` (kontrast 7,3:1 w trybie jasnym, 4,8:1 w trybie ciemnym, spełnia próg ≥ 3:1 z WCAG 1.4.11). Wartość jest podana liczbą w legendzie.
 
 #### [NFR-UI-05] Dostępność interfejsu (WCAG 2.1 AA), semantyka kontrolek i wierność motywu ciemnego
-🔗 **Kontrakt:** `UI-ACCESSIBILITY`, `UI-TEMPLATE-ALIGNMENT` · **WO:** [`UI-WIZARD-ROUNDS-A11Y-FIX`](workorders/UI-WIZARD-ROUNDS-A11Y-FIX.md) · **Status:** 📝 PROPOZYCJA
+🔗 **Kontrakt:** `UI-ACCESSIBILITY`, `UI-TEMPLATE-ALIGNMENT` · **WO:** [`UI-WIZARD-ROUNDS-A11Y-FIX`](workorders/UI-WIZARD-ROUNDS-A11Y-FIX.md) · **Status:** ✅
 
 **User story:** Jako użytkownik korzystający z nawigacji klawiaturą, czytnika ekranu lub motywu ciemnego, chcę mieć wyraźne wskaźniki fokusu, semantyczne elementy sterujące i pełen kontrast tekstu oraz ikon, aby komfortowo korzystać z systemu bez barier dostępności i nieczytelnych elementów.
 
