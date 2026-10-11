@@ -36,7 +36,7 @@ export default async function AdminStaffPage() {
 
   const staff = (users || []).filter(u => 
     (!orgId || u.app_metadata?.organization_id === orgId) &&
-    (u.app_metadata?.role === 'nurse' || u.app_metadata?.role === 'paramedic')
+    (u.app_metadata?.role === 'nurse' || u.app_metadata?.role === 'paramedic' || u.app_metadata?.role === 'caregiver')
   )
 
   const cookieStore = await cookies()
@@ -96,7 +96,11 @@ export default async function AdminStaffPage() {
                       </div>
                     </TableCell>
                     <TableCell className="text-foreground">
-                      {staffUser.app_metadata?.role === 'nurse' ? 'Pielęgniarka / Pielęgniarz' : 'Sanitariusz / Sanitariuszka'}
+                      {staffUser.app_metadata?.role === 'nurse' 
+                        ? 'Pielęgniarka / Pielęgniarz' 
+                        : staffUser.app_metadata?.role === 'caregiver'
+                        ? 'Opiekun / Opiekunka'
+                        : 'Sanitariusz / Sanitariuszka'}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {staffUser.last_sign_in_at 

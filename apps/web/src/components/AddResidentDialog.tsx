@@ -16,6 +16,9 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 
+/**
+ * @deprecated Zastąpione przez kanoniczny AdmissionWizard (Nowe Przyjęcie). Nie używać w nowych widokach.
+ */
 export function AddResidentDialog() {
   const router = useRouter()
   const [open, setOpen] = useState(false)

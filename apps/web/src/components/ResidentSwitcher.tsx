@@ -18,6 +18,7 @@ interface ResidentSwitcherProps {
 }
 
 /**
+ * @deprecated Zastąpione przez kanoniczny GlobalResidentSwitcher. Nie używać w widokach.
  * Przełącznik podopiecznych. Pojawia się wyłącznie gdy rodzina ma
  * więcej niż jednego aktywnego podopiecznego (FAM-MULTI-RESIDENT).
  */

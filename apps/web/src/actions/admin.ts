@@ -70,7 +70,7 @@ export async function deleteStaffAction(formData: FormData) {
   if (targetAppMeta.organization_id !== user.app_metadata?.organization_id) return
   
   // Nie pozwalamy adminowi usunąć samego siebie, ani innych org_admin / super_admin
-  if (targetAppMeta.role !== 'nurse' && targetAppMeta.role !== 'paramedic') return 
+  if (targetAppMeta.role !== 'nurse' && targetAppMeta.role !== 'paramedic' && targetAppMeta.role !== 'caregiver') return 
 
   // Soft delete: Zablokuj użytkownika (ban na 10 lat) i zaktualizuj app_metadata
   await adminClient.auth.admin.updateUserById(userId, {

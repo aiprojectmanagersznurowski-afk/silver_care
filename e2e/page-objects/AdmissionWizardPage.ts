@@ -18,7 +18,7 @@ export class AdmissionWizardPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.openWizardButton = page.locator('button:has-text("Kreator przyjęcia")');
+    this.openWizardButton = page.locator('button:has-text("Kreator"), button:has-text("Nowe Przyjęcie")');
     this.firstNameInput = page.locator('#wiz-first-name');
     this.lastNameInput = page.locator('#wiz-last-name');
     this.peselInput = page.locator('#wiz-id-val');

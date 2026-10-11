@@ -38,7 +38,7 @@ export default async function FamilyLayout({ children }: { children: ReactNode }
       <OnboardingModal />
       
       {/* Main content area */}
-      <main className="flex-1 px-4 py-8 pb-24 md:pb-8">
+      <main className="flex-1 px-4 py-8 pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] lg:pb-8">
         <div className="mx-auto max-w-7xl">
           {children}
         </div>

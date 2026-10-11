@@ -213,22 +213,45 @@ export function StatisticsDashboardClient({
               <>
                 <ChartContainer config={careLevelConfig} className="mx-auto h-64 w-full">
                   <RechartsPieChart>
+                    <defs>
+                      <pattern id="pattern-unknown-hatched" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                        <line x1="0" y1="0" x2="0" y2="6" stroke="var(--chart-5)" strokeWidth="2.5" />
+                      </pattern>
+                    </defs>
                     <ChartTooltip content={<ChartTooltipContent nameKey="id" hideLabel />} />
-                    <Pie data={pieData} dataKey="value" nameKey="id" innerRadius={55} paddingAngle={2} strokeWidth={1} />
+                    <Pie data={pieData} dataKey="value" nameKey="id" innerRadius={55} paddingAngle={2} strokeWidth={1}>
+                      {pieData.map((entry, index) => {
+                        const isUnknown = entry.id === CARE_LEVEL_LABELS.unknown
+                        return (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={isUnknown ? 'url(#pattern-unknown-hatched)' : entry.fill}
+                            stroke={isUnknown ? 'var(--chart-5)' : 'var(--background)'}
+                            strokeWidth={isUnknown ? 2 : 1}
+                          />
+                        )
+                      })}
+                    </Pie>
                   </RechartsPieChart>
                 </ChartContainer>
                 {/* Legend */}
                 <div className="mt-4 grid grid-cols-2 gap-2">
-                  {pieData.map((d) => (
-                    <div key={d.id} className="flex items-center gap-2 text-sm">
-                      <div
-                        className="h-3 w-3 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: d.fill }}
-                      />
-                      <span className="text-muted-foreground">{d.label}</span>
-                      <span className="ml-auto font-semibold text-foreground tabular-nums">{d.value}</span>
-                    </div>
-                  ))}
+                  {pieData.map((d) => {
+                    const isUnknown = d.id === CARE_LEVEL_LABELS.unknown
+                    return (
+                      <div key={d.id} className="flex items-center gap-2 text-sm">
+                        <div
+                          className="h-3 w-3 rounded-full flex-shrink-0"
+                          style={{
+                            backgroundColor: isUnknown ? 'transparent' : d.fill,
+                            border: isUnknown ? '2px dashed var(--chart-5)' : undefined,
+                          }}
+                        />
+                        <span className="text-muted-foreground">{d.label}</span>
+                        <span className="ml-auto font-semibold text-foreground tabular-nums">{d.value}</span>
+                      </div>
+                    )
+                  })}
                   <div className="col-span-2 border-t border-border pt-2 mt-1 flex items-center justify-between text-sm font-semibold">
                     <span className="text-foreground">Razem</span>
                     <span className="text-foreground tabular-nums">{totalResidents}</span>

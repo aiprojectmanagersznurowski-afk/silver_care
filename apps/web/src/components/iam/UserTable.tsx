@@ -8,6 +8,7 @@ import type { UserItem } from '@/components/IamManagementClient'
 import { AddUserDialog } from './AddUserDialog'
 import type { ComponentProps } from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 
 interface UserTableProps {
   users: UserItem[]
@@ -61,10 +62,16 @@ export function UserTable({
                   <TableRow key={user.id}>
                     <TableCell>
                       <div className="font-medium text-foreground text-base">{user.email}</div>
-                      <div className="font-mono text-xs text-muted-foreground">{user.id}</div>
+                      <div className="mt-1">
+                        <BusinessIdBadge type="user" id={user.id} />
+                      </div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground font-mono">
-                      {user.organizationId || 'Globalna / Brak'}
+                    <TableCell className="text-muted-foreground">
+                      {user.organizationId ? (
+                        <BusinessIdBadge type="organization" id={user.organizationId} />
+                      ) : (
+                        <span className="text-xs text-muted-foreground italic">Globalna / Brak</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <span className="inline-flex items-center rounded-lg bg-muted px-2.5 py-1 text-xs font-medium text-foreground">

@@ -8,6 +8,7 @@ interface AgendaItem {
   time: string
   title: string
   resident_id?: string | null
+  type?: string
 }
 
 interface AgendaTimelineClientProps {
@@ -16,9 +17,27 @@ interface AgendaTimelineClientProps {
   viewDateStr: string
 }
 
-const getCategory = (title: string): "meal" | "activity" | "medication" | "rest" => {
-  const t = title.toLowerCase()
-  if (t.includes('leki') || t.includes('zabieg') || t.includes('terapia') || t.includes('wizyta') || t.includes('zastrzyk')) return 'medication'
+type AgendaCategory = "meal" | "activity" | "medication" | "rest" | "therapy" | "hygiene" | "other"
+
+const getCategory = (item: AgendaItem | string, itemType?: string): AgendaCategory => {
+  const type = typeof item === 'object' ? item.type : itemType
+  const title = typeof item === 'object' ? item.title : item
+
+  if (type) {
+    const raw = type.toLowerCase()
+    if (raw === 'meal') return 'meal'
+    if (raw === 'activity') return 'activity'
+    if (raw === 'therapy') return 'therapy'
+    if (raw === 'hygiene') return 'hygiene'
+    if (raw === 'rest') return 'rest'
+    if (raw === 'medication') return 'medication'
+    if (raw === 'other') return 'other'
+  }
+
+  const t = (title || '').toLowerCase()
+  if (t.includes('leki') || t.includes('zabieg') || t.includes('wizyta') || t.includes('zastrzyk')) return 'medication'
+  if (t.includes('terapia') || t.includes('zajęcia')) return 'therapy'
+  if (t.includes('higiena') || t.includes('toaleta') || t.includes('kąpiel')) return 'hygiene'
   if (t.includes('śniadanie') || t.includes('obiad') || t.includes('kolacja') || t.includes('posiłek') || t.includes('podwieczorek')) return 'meal'
   if (t.includes('sen') || t.includes('odpoczynek') || t.includes('drzemka')) return 'rest'
   return 'activity' // default
@@ -28,17 +47,22 @@ const getIcon = (category: string) => {
   switch (category) {
     case 'meal': return '🍽️'
     case 'medication': return '💊'
+    case 'therapy': return '🧩'
+    case 'hygiene': return '🧼'
     case 'rest': return '💤'
     case 'activity': return '🌿'
     default: return '📅'
   }
 }
 
-const categoryColors = {
+const categoryColors: Record<string, string> = {
   meal: "var(--chart-1)",
   activity: "var(--chart-2)",
   medication: "var(--chart-3)",
+  therapy: "var(--chart-4)",
   rest: "var(--chart-5)",
+  hygiene: "var(--chart-2)",
+  other: "var(--muted-foreground)",
 }
 
 export function AgendaTimelineClient({ items, accentColor = "var(--primary)", viewDateStr }: AgendaTimelineClientProps) {
@@ -128,7 +152,7 @@ export function AgendaTimelineClient({ items, accentColor = "var(--primary)", vi
         <div className="space-y-1">
           {items.map((event, i) => {
             const past = isPast(event.time)
-            const cat = getCategory(event.title)
+            const cat = getCategory(event)
             const catColor = categoryColors[cat]
             const icon = getIcon(cat)
 

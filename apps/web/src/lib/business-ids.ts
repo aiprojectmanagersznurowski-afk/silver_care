@@ -3,13 +3,14 @@
  * ADR-002, INT-CORE-DECOUPLED: Database operates on UUID, UI presents readable business IDs.
  */
 
-export type BusinessEntityType = 'organization' | 'resident' | 'room' | 'staff';
+export type BusinessEntityType = 'organization' | 'resident' | 'room' | 'staff' | 'user';
 
 export const BUSINESS_PREFIXES: Record<BusinessEntityType, string> = {
   organization: 'PLC',
   resident: 'PEN',
   room: 'POK',
   staff: 'PRAC',
+  user: 'USR',
 };
 
 const PADDING_LENGTHS: Record<BusinessEntityType, number> = {
@@ -17,6 +18,7 @@ const PADDING_LENGTHS: Record<BusinessEntityType, number> = {
   resident: 4,
   room: 3,
   staff: 2,
+  user: 3,
 };
 
 export function formatBusinessId(
@@ -42,7 +44,7 @@ export function formatBusinessId(
 
 export function isValidBusinessId(code: string): boolean {
   if (!code || typeof code !== 'string') return false;
-  return /^(PLC|PEN|POK|PRAC)-[A-Z0-9]{2,6}$/.test(code);
+  return /^(PLC|PEN|POK|PRAC|USR)-[A-Z0-9]{2,6}$/.test(code);
 }
 
 export function parseBusinessId(

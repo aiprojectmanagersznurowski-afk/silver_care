@@ -14,6 +14,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  useSidebar,
 } from '@/components/ui/sidebar'
 
 export interface SidebarNavItem {
@@ -38,6 +39,13 @@ function isActivePath(pathname: string, item: Pick<SidebarNavItem, 'href' | 'exa
 /** Nawigacja paska bocznego w układzie szablonu shadcn-admin (nav-main). */
 export function SidebarNav({ groups }: { groups: SidebarNavGroup[] }) {
   const pathname = usePathname()
+  const { isMobile, setOpenMobile } = useSidebar()
+
+  const handleLinkClick = () => {
+    if (isMobile) {
+      setOpenMobile(false)
+    }
+  }
 
   return (
     <nav aria-label="Nawigacja główna">
@@ -66,7 +74,8 @@ export function SidebarNav({ groups }: { groups: SidebarNavGroup[] }) {
                         <SidebarMenuSubItem key={child.href}>
                           <SidebarMenuSubButton
                             isActive={isActivePath(pathname, child)}
-                            render={<Link href={child.href} />}
+                            render={<Link href={child.href} onClick={handleLinkClick} />}
+                            onClick={handleLinkClick}
                           >
                             <child.icon />
                             <span>{child.label}</span>
@@ -81,7 +90,8 @@ export function SidebarNav({ groups }: { groups: SidebarNavGroup[] }) {
                   <SidebarMenuButton
                     isActive={isActivePath(pathname, item)}
                     tooltip={item.label}
-                    render={<Link href={item.href} />}
+                    render={<Link href={item.href} onClick={handleLinkClick} />}
+                    onClick={handleLinkClick}
                   >
                     <item.icon />
                     <span>{item.label}</span>
