@@ -1,9 +1,10 @@
 # Instrukcja i kolejność scalania PR-ów dla Darka (Merge Cheat Sheet)
 
-Data przygotowania: **08.10.2026**  
-Status: Na repozytorium znajduje się **16 otwartych Pull Requestów**, z których wszystkie są w stanie `MERGEABLE` względem gałęzi `main`.
-
-Poniższy przewodnik wyznacza **optymalną, bezkolizyjną kolejność recenzji i scalania (merge)** opartą na dokładnym grafie kolizji zmienianych plików.
+Data przygotowania: **11.10.2026** (Aktualizacja po wykonaniu zadań 1-4)  
+Status: Poprzednie 12 PR-ów zostało pomyślnie scalonych z gałęzią `main`.  
+Na repozytorium oczekują już tylko **2 kluczowe, zsynchronizowane PR-y**, oba w stanie **`CLEAN`**, **`MERGEABLE`** i z zielonym CI (100% PASS):
+- **PR #75** (`feat(iam): uproszczenie tabeli IAM...`)
+- **PR #76** (`fix(security): ochrona ról w OAuth Callback oraz bezpieczne przypisywanie administratora placówki...`) — łączy w sobie ujednolicone poprawki bezpieczeństwa z zachowaniem ochrony personelu (`STAFF_ROLE_CONFLICT`).
 
 ---
 
