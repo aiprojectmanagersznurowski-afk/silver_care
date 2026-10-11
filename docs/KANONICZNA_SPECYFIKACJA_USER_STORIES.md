@@ -449,7 +449,7 @@
 - **AC3:** Dyktowanie pokoju: transkrypcja, ekstrakcja parametrów (numer, piętro, sektor, łóżka) przez model w EOG do **edytowalnego podglądu** przed zapisem.
 
 #### [SC-ADM-13] Masowy import pensjonariuszy z pliku
-🔗 **Kontrakt:** brak dedykowanego REQ (dotyka `ADM-RESIDENT-ADD`, `SEC-PESEL-HASH`) · **WO:** [`ADM-BULK-IMPORT`](workorders/ADM-BULK-IMPORT.md) · **Status:** 🟡 📝
+🔗 **Kontrakt:** `ADM-RESIDENT-ADD`, `SEC-PESEL-HASH` · **WO:** [`ADM-BULK-IMPORT`](workorders/ADM-BULK-IMPORT.md) · **Status:** ✅ 📝 — zrealizowane w `BulkImportDialog`, testy w `bulk_import.test.ts` oraz E2E w `admin-export-import.spec.ts`
 
 **User story:** Jako Administrator placówki przechodzącej z papieru lub innego systemu, chcę zaimportować listę pensjonariuszy z pliku Excel/CSV z podglądem błędów, aby uruchomić placówkę w jeden dzień.
 
@@ -460,7 +460,7 @@
 - **AC4:** Szablon pliku do pobrania z panelu.
 
 #### [SC-ADM-14] Bezpieczny eksport danych placówki
-🔗 **Kontrakt:** brak dedykowanego REQ · **WO:** [`ADM-DATA-EXPORT`](workorders/ADM-DATA-EXPORT.md) · **Status:** ❌ 📝
+🔗 **Kontrakt:** `ADM-FACILITY-MANAGE`, `SEC-NO-PII-LOGS`, `MDR-VOCABULARY` · **WO:** [`ADM-DATA-EXPORT`](workorders/ADM-DATA-EXPORT.md) · **Status:** ✅ 📝 — zrealizowane w `ExportDataDialog`, testy w `data_export.test.ts` oraz E2E w `admin-export-import.spec.ts`
 
 **User story:** Jako Administrator, chcę wygenerować zestawienie podopiecznych i obłożenia (XLSX/CSV/PDF), aby przekazać je do rozliczeń lub kontroli bez ręcznego przepisywania.
 
@@ -516,13 +516,14 @@
 - **AC5:** Rejestracja rutynowej obserwacji 1-kliknięciem („Stan stabilny”) poprawnie utrwala rekord w `daily_logs` z `resident_id`, `nurse_id` oraz ustrukturyzowanym obiektem `data` (typ `ROUTINE_OBSERVATION`), natychmiast aktualizując stan kafelka w widoku obchodu dyżuru.
 
 #### [SC-NUR-09] Strażnik kompletności raportu przed publikacją
-🔗 **Kontrakt:** `REPORT-AI-FEEDBACK`, `REPORT-APPROVAL`, `MDR-VOCABULARY` · **WO:** [`NUR-REPORT-COMPLETENESS-GATE`](workorders/NUR-REPORT-COMPLETENESS-GATE.md) · **Status:** ✅ 📝
+🔗 **Kontrakt:** `REPORT-AI-FEEDBACK`, `REPORT-APPROVAL`, `MDR-VOCABULARY` · **WO:** [`NUR-REPORT-COMPLETENESS-GATE`](workorders/NUR-REPORT-COMPLETENESS-GATE.md) · **Status:** ✅ 📝 — zrealizowane w `completeness-gate.ts`, `ReportCard.tsx`, testy w `completeness_gate.test.ts` oraz E2E w `staff-portal.spec.ts`
 
 **User story:** Jako Pielęgniarka, chcę dostać podpowiedź, że raport nie odpowiada na typowe pytania rodziny (posiłki, nastrój, aktywność, sen), zanim go zatwierdzę, aby rodzina nie dzwoniła z dopytaniem.
 
 **Kryteria akceptacji:**
-- **AC1:** Analiza strumienia behawioralnego pod kątem czterech wymiarów troski rodziny.
+- **AC1:** Analiza strumienia behawioralnego pod kątem czterech wymiarów troski rodziny (posiłki, nastrój, aktywność, sen).
 - **AC2:** Brakujący wymiar = podpowiedź dla personelu, nie blokada i nie dopisanie treści przez model.
+- **AC3:** Personel zachowuje 1-kliknięciową autonomię publikacji raportu niezależnie od wyniku kompletności.
 
 #### [SC-NUR-10] Kontrolowany podgląd PESEL (step-up) — 🚫 Wycofane
 🔗 **Kontrakt:** `SEC-PESEL-HASH` · **WO:** [`SEC-PESEL-STEP-UP`](workorders/SEC-PESEL-STEP-UP.md) · **Status:** 🚫 Wycofane (zastąpione przez `SEC-PESEL-HASH`, ADR-008, PR #39)

@@ -26,7 +26,22 @@ export interface ReportItem {
 
 export function ReportCard({ report }: { report: ReportItem }) {
   const [isEditing, setIsEditing] = useState(false)
-  const [content, setContent] = useState(report.content?.text || '')
+  const rawContent: unknown = report.content
+  const parsedText = typeof rawContent === 'string'
+    ? (rawContent.startsWith('{')
+        ? (() => {
+            try {
+              const parsed = JSON.parse(rawContent) as Record<string, unknown>
+              return typeof parsed.text === 'string' ? parsed.text : rawContent
+            } catch {
+              return rawContent
+            }
+          })()
+        : rawContent)
+    : typeof (rawContent as Record<string, unknown>)?.text === 'string'
+      ? (rawContent as { text: string }).text
+      : ''
+  const [content, setContent] = useState(parsedText)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const supabase = createClient()
@@ -56,7 +71,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
   }
 
   return (
-    <Card className="rounded-xl border-border bg-card overflow-hidden">
+    <Card className="rounded-xl border-border bg-card overflow-hidden" data-testid="report-card">
       <CardHeader className="pb-3 border-b border-border bg-muted/30">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -79,12 +94,12 @@ export function ReportCard({ report }: { report: ReportItem }) {
 
           <div>
             {isPublished ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary border border-primary/20">
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary border border-primary/20" data-testid="report-status-published">
                 <CheckCircle2 className="h-3 w-3" />
                 Opublikowany dla rodziny
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-foreground border border-border">
+              <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-foreground border border-border" data-testid="report-status-draft">
                 <Clock className="h-3 w-3" />
                 Szkic do weryfikacji
               </span>
@@ -99,18 +114,19 @@ export function ReportCard({ report }: { report: ReportItem }) {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Treść raportu..."
+            data-testid="report-content-textarea"
           />
         ) : (
-          <div className="p-4 bg-muted/30 rounded-xl text-sm leading-relaxed text-foreground whitespace-pre-wrap border border-border">
+          <div className="p-4 bg-muted/30 rounded-xl text-sm leading-relaxed text-foreground whitespace-pre-wrap border border-border" data-testid="report-content-text">
             {content || 'Brak treści raportu.'}
           </div>
         )}
 
         {/* Strażnik kompletności raportu opiekuńczego (AI Quality Gate) */}
         {!isPublished && (
-          <div className="rounded-xl border border-border bg-muted p-3 space-y-2.5 text-xs">
+          <div className="rounded-xl border border-border bg-muted p-3 space-y-2.5 text-xs" data-testid="completeness-gate">
             <div className="flex items-center justify-between">
-              <span className="font-semibold text-foreground flex items-center gap-1.5">
+              <span className="font-semibold text-foreground flex items-center gap-1.5" data-testid="completeness-score">
                 <Sparkles className="w-3.5 h-3.5 text-foreground" />
                 Kompletność informacji dla rodziny ({completeness.scorePercent}%)
               </span>
@@ -127,6 +143,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
               {completeness.dimensions.map((dim) => (
                 <div
                   key={dim.id}
+                  data-testid={`completeness-dimension-${dim.id}`}
                   className={`p-2 rounded-lg border flex items-center gap-1.5 transition-colors ${
                     dim.isCovered
                       ? 'bg-muted border-border text-foreground'
@@ -145,7 +162,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
             </div>
 
             {!completeness.isComplete && (
-              <p className="text-muted-foreground italic text-[11px] pt-0.5">
+              <p className="text-muted-foreground italic text-[11px] pt-0.5" data-testid="completeness-suggestion">
                 Podpowiedź asystenta: Bliscy najbardziej wyczekują informacji o apetycie, samopoczuciu i aktywności. Możesz uzupełnić treść lub opublikować raport w obecnym kształcie.
               </p>
             )}
@@ -159,6 +176,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
                 disabled={loading} 
                 onClick={handleSave} 
                 className="rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-semibold gap-1.5"
+                data-testid="save-report-button"
               >
                 <Save className="h-3.5 w-3.5" />
                 Zapisz zmiany
@@ -171,6 +189,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
                 }} 
                 variant="outline"
                 className="rounded-xl border-border text-foreground hover:bg-muted/50 text-xs font-medium gap-1.5"
+                data-testid="cancel-edit-report-button"
               >
                 <X className="h-3.5 w-3.5" />
                 Anuluj
@@ -183,6 +202,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
                   disabled={loading} 
                   onClick={handlePublish} 
                   className="rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-semibold gap-1.5"
+                  data-testid="publish-report-button"
                 >
                   <Send className="h-3.5 w-3.5" />
                   Zatwierdź i publikuj dla rodziny
@@ -193,6 +213,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
                 onClick={() => setIsEditing(true)} 
                 variant="outline"
                 className="rounded-xl border-border text-foreground hover:bg-muted/50 text-xs font-medium gap-1.5"
+                data-testid="edit-report-button"
               >
                 <Edit3 className="h-3.5 w-3.5" />
                 {isPublished ? 'Edytuj treść' : 'Edytuj szkic'}

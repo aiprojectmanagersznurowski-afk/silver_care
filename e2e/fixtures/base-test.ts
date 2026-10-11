@@ -4,6 +4,7 @@ import { AcceptInvitePage } from '../page-objects/AcceptInvitePage';
 import { UnauthorizedPage } from '../page-objects/UnauthorizedPage';
 import { FamilyDashboardPage } from '../page-objects/FamilyDashboardPage';
 import { StaffBoardPage } from '../page-objects/StaffBoardPage';
+import { StaffReportsPage } from '../page-objects/StaffReportsPage';
 import { AdminDashboardPage } from '../page-objects/AdminDashboardPage';
 import { AuthHelper } from './auth';
 
@@ -13,6 +14,7 @@ type TestFixtures = {
   unauthorizedPage: UnauthorizedPage;
   familyDashboardPage: FamilyDashboardPage;
   staffBoardPage: StaffBoardPage;
+  staffReportsPage: StaffReportsPage;
   adminDashboardPage: AdminDashboardPage;
   authHelper: AuthHelper;
 };
@@ -32,6 +34,9 @@ export const test = baseTest.extend<TestFixtures>({
   },
   staffBoardPage: async ({ page }, use) => {
     await use(new StaffBoardPage(page));
+  },
+  staffReportsPage: async ({ page }, use) => {
+    await use(new StaffReportsPage(page));
   },
   adminDashboardPage: async ({ page }, use) => {
     await use(new AdminDashboardPage(page));
