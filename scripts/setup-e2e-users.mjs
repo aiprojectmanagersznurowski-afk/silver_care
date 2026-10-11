@@ -76,6 +76,7 @@ export async function setupE2EUsers() {
       // Aktualizuj hasło i metadane roli
       await supabase.auth.admin.updateUserById(existing.id, {
         password: E2E_PASSWORD,
+        email_confirm: true,
         app_metadata: {
           role: config.role,
           organization_id: config.organization_id,

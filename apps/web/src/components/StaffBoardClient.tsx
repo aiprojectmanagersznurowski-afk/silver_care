@@ -230,7 +230,7 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                 onClick={() => setStatusFilter('all')}
                 className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                   statusFilter === 'all'
-                    ? 'bg-foreground text-white'
+                    ? 'bg-foreground text-background'
                     : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
               >
@@ -241,7 +241,7 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                 onClick={() => setStatusFilter('none')}
                 className={`rounded-full px-3 py-1 text-xs font-medium transition-colors flex items-center gap-1.5 ${
                   statusFilter === 'none'
-                    ? 'bg-primary text-white'
+                    ? 'bg-primary text-primary-foreground'
                     : 'bg-muted text-foreground ring-1 ring-inset ring-border hover:bg-muted'
                 }`}
               >
@@ -253,7 +253,7 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                 onClick={() => setStatusFilter('draft')}
                 className={`rounded-full px-3 py-1 text-xs font-medium transition-colors flex items-center gap-1.5 ${
                   statusFilter === 'draft'
-                    ? 'bg-primary text-white'
+                    ? 'bg-primary text-primary-foreground'
                     : 'bg-muted text-foreground ring-1 ring-inset ring-border hover:bg-muted'
                 }`}
               >
@@ -265,7 +265,7 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                 onClick={() => setStatusFilter('ready')}
                 className={`rounded-full px-3 py-1 text-xs font-medium transition-colors flex items-center gap-1.5 ${
                   statusFilter === 'ready'
-                    ? 'bg-primary text-white'
+                    ? 'bg-primary text-primary-foreground'
                     : 'bg-muted text-foreground ring-1 ring-inset ring-border hover:bg-muted'
                 }`}
               >
@@ -283,7 +283,7 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                   onClick={() => setFloorFilter('all')}
                   className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                     floorFilter === 'all'
-                      ? 'bg-foreground text-white'
+                      ? 'bg-foreground text-background'
                       : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
                   }`}
                 >
@@ -296,7 +296,7 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                     onClick={() => setFloorFilter(f)}
                     className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                       floorFilter === f
-                        ? 'bg-foreground text-white'
+                        ? 'bg-foreground text-background'
                         : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
                     }`}
                   >
@@ -315,7 +315,7 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                   onClick={() => setRoomFilter('all')}
                   className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                     roomFilter === 'all'
-                      ? 'bg-foreground text-white'
+                      ? 'bg-foreground text-background'
                       : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
                   }`}
                 >
@@ -328,7 +328,7 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                     onClick={() => setRoomFilter(r)}
                     className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                       roomFilter === r
-                        ? 'bg-foreground text-white'
+                        ? 'bg-foreground text-background'
                         : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
                     }`}
                   >
@@ -438,7 +438,7 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                 <div className="grid grid-cols-2 gap-2 pt-1">
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Link href={`/voice?resident=${resId}`} className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-3 text-xs font-semibold text-white hover:bg-primary/90 transition-colors min-h-[48px]">
+                      <Link href={`/voice?resident=${resId}`} className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-3 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors min-h-[48px]">
                         <Mic className="h-4 w-4" />
                         Dyktuj (1-klik)
                       </Link>
@@ -547,7 +547,7 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                   <div className="border-t border-border p-4 bg-muted/50 flex flex-col gap-3">
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Link href={`/voice?resident=${resident.id}`} className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 transition-colors min-h-[44px]">
+                        <Link href={`/voice?resident=${resident.id}`} className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors min-h-[44px]">
                           <Mic className="h-4 w-4" />
                           Nagraj notatkę
                         </Link>

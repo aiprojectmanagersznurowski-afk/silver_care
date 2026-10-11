@@ -123,15 +123,22 @@ export async function quickLogRoutineObservationAction(
     return { success: false, error: 'Nie znaleziono podopiecznego.' }
   }
 
+  if (role !== 'super_admin' && orgId && resident.organization_id !== orgId) {
+    return { success: false, error: 'Brak uprawnień do podopiecznego w tej placówce.' }
+  }
+
   const { data: newLog, error: insertErr } = await adminClient
     .from('daily_logs')
     .insert({
-      organization_id: resident.organization_id,
       resident_id: residentId,
-      author_id: user.id,
-      activity_type: 'ROUTINE_OBSERVATION',
-      notes: summary,
-      metadata: { source: 'quick_rounds_1click' },
+      nurse_id: user.id,
+      data: {
+        action: 'ROUTINE_OBSERVATION',
+        note: summary,
+        behavioral_items: [summary],
+        source: 'quick_rounds_1click',
+        recorded_at: new Date().toISOString(),
+      },
     })
     .select('id')
     .single()

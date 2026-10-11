@@ -155,20 +155,33 @@ export function AdmissionWizard() {
 
   return (
     <Dialog open={open} onOpenChange={(val) => { setOpen(val); if (!val) resetForm(); }}>
-      <DialogTrigger render={<Button className="bg-primary hover:bg-primary/90 text-white gap-2" />}>
+      <DialogTrigger render={<Button className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2" />}>
         <UserPlus className="w-4 h-4" />
         Nowe Przyjęcie (Kreator)
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <UserPlus className="w-5 h-5 text-primary" />
-            Przyjęcie podopiecznego — Krok {step} z 3
+            {createdResidentId ? (
+              <>
+                <Check className="w-5 h-5 text-primary" />
+                Przyjęcie podopiecznego zakończone
+              </>
+            ) : (
+              <>
+                <UserPlus className="w-5 h-5 text-primary" />
+                Przyjęcie podopiecznego — Krok {step} z 3
+              </>
+            )}
           </DialogTitle>
           <DialogDescription>
-            {step === 1 && 'Krok 1: Wprowadź dane osobowe i profil opiekuńczy podopiecznego.'}
-            {step === 2 && 'Krok 2: Dobór pokoju i łóżka z uwzględnieniem płci i poziomu sprawności.'}
-            {step === 3 && 'Krok 3: Podsumowanie danych i zatwierdzenie przyjęcia.'}
+            {createdResidentId
+              ? 'Podsumowanie procedury przyjęcia podopiecznego do placówki.'
+              : step === 1
+              ? 'Krok 1: Wprowadź dane osobowe i profil opiekuńczy podopiecznego.'
+              : step === 2
+              ? 'Krok 2: Dobór pokoju i łóżka z uwzględnieniem płci i poziomu sprawności.'
+              : 'Krok 3: Podsumowanie danych i zatwierdzenie przyjęcia.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -203,7 +216,7 @@ export function AdmissionWizard() {
               </Button>
               <Link
                 href={`/admin/residents/${createdResidentId}`}
-                className={buttonVariants({ className: 'bg-primary hover:bg-primary/90 text-white gap-2' })}
+                className={buttonVariants({ className: 'bg-primary hover:bg-primary/90 text-primary-foreground gap-2' })}
               >
                 <FileText className="w-4 h-4" />
                 Przejdź do profilu podopiecznego i dodaj umowę
@@ -342,13 +355,14 @@ export function AdmissionWizard() {
                     {suggestions.map((s) => {
                       const isSelected = selectedBedId === s.bedId
                       return (
-                        <div
+                        <button
+                          type="button"
                           key={s.bedId}
                           onClick={() => {
                             setSelectedBedId(s.bedId)
                             setSelectedBedInfo(`Pokój ${s.roomNumber} (piętro ${s.floorNumber}), Łóżko ${s.bedNumber}`)
                           }}
-                          className={`p-3 rounded-lg border cursor-pointer transition-all flex items-start justify-between ${
+                          className={`w-full text-left p-3 rounded-lg border cursor-pointer transition-all flex items-start justify-between outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                             isSelected
                               ? 'border-primary bg-primary/5 ring-1 ring-primary'
                               : 'border-border hover:border-border bg-card'
@@ -374,13 +388,13 @@ export function AdmissionWizard() {
                           <div className="pt-1">
                             <div
                               className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                                isSelected ? 'border-primary bg-primary text-white' : 'border-border'
+                                isSelected ? 'border-primary bg-primary text-primary-foreground' : 'border-border'
                               }`}
                             >
                               {isSelected && <Check className="w-3 h-3" />}
                             </div>
                           </div>
-                        </div>
+                        </button>
                       )
                     })}
                   </div>
@@ -467,7 +481,7 @@ export function AdmissionWizard() {
                     type="button"
                     onClick={handleNextToStep2}
                     disabled={!firstName.trim() || !lastName.trim() || !calculatedGender || !!idError || idValue.trim().length !== 11}
-                    className="bg-primary text-white"
+                    className="bg-primary text-primary-foreground"
                   >
                     Dalej (Wybór łóżka)
                   </Button>
@@ -477,7 +491,7 @@ export function AdmissionWizard() {
                   <Button
                     type="button"
                     onClick={handleNextToStep3}
-                    className="bg-primary text-white"
+                    className="bg-primary text-primary-foreground"
                   >
                     Dalej (Podsumowanie)
                   </Button>
@@ -488,7 +502,7 @@ export function AdmissionWizard() {
                     type="button"
                     onClick={handleSubmitAdmission}
                     disabled={submitting}
-                    className="bg-primary text-white gap-2"
+                    className="bg-primary text-primary-foreground gap-2"
                   >
                     {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                     {submitting ? 'Przyjmowanie...' : 'Zatwierdź przyjęcie'}
