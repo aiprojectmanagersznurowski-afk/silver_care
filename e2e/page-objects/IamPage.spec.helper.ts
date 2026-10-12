@@ -53,9 +53,17 @@ export class IamPage {
     await expect(this.page.locator('text=zostanie wygenerowany i przesłany bezpieczny link do zresetowania hasła, text=Wyślij link')).toBeVisible();
   }
 
-  async getRoleOptionsForUser(email: string): Promise<string[]> {
+  async openChangeRoleForUser(email: string) {
     const row = this.page.locator('tbody tr', { hasText: email });
-    const select = row.locator('select');
+    await expect(row).toBeVisible();
+    const changeBtn = row.locator('button:has-text("Zmień rolę")');
+    await changeBtn.click();
+    await expect(this.page.locator('text=Zmień uprawnienia użytkownika')).toBeVisible();
+  }
+
+  async getRoleOptionsForUser(email: string): Promise<string[]> {
+    await this.openChangeRoleForUser(email);
+    const select = this.page.locator('#change-role-select');
     return await select.locator('option').allTextContents();
   }
 

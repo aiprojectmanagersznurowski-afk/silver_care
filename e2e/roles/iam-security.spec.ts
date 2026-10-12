@@ -9,6 +9,10 @@ import { IamPage } from '../page-objects/IamPage.spec.helper';
  * AC2: Blokada wyboru roli super_admin w UI (brak opcji super_admin w selektorach)
  */
 test.describe('IAM Hardening & Privilege Escalation UI (@REQ: SUP-IAM-PANEL)', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.context().clearCookies();
+  });
+
   test('@REQ: SUP-IAM-PANEL - AC2: Lista ról do przypisania nie zawiera roli super_admin', async ({ loginPage, page }) => {
     const iamPage = new IamPage(page);
     await loginPage.loginAs('super_admin');
@@ -16,7 +20,11 @@ test.describe('IAM Hardening & Privilege Escalation UI (@REQ: SUP-IAM-PANEL)', (
     await iamPage.expectLoaded();
 
     // Sprawdzamy pierwszy wiersz użytkownika (nie-superadmina)
-    const select = page.locator('tbody tr select').first();
+    const firstRow = page.locator('tbody tr').first();
+    const email = await firstRow.locator('td div.font-medium').first().innerText();
+    await iamPage.openChangeRoleForUser(email);
+
+    const select = page.locator('#change-role-select');
     await expect(select).toBeVisible();
 
     const options = await select.locator('option').allTextContents();

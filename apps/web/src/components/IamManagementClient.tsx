@@ -10,6 +10,7 @@ import { toast } from 'sonner'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 
 import { UserTable } from './iam/UserTable'
+import { ChangeRoleDialog } from './iam/ChangeRoleDialog'
 import { ResetPasswordDialog } from './iam/ResetPasswordDialog'
 import { AuditLogTable } from './iam/AuditLogTable'
 
@@ -45,6 +46,8 @@ const ROLE_LABELS: Record<string, string> = {
   super_admin: 'Super Admin (Globalny)',
   org_admin: 'Administrator Placówki (Org Admin)',
   nurse: 'Personel Opiekuńczy (Nurse)',
+  caregiver: 'Opiekun (Caregiver)',
+  paramedic: 'Ratownik (Paramedic)',
   legal_guardian: 'Opiekun Prawny (Legal Guardian)',
   family: 'Członek Rodziny (Family)',
 }
@@ -66,8 +69,12 @@ export function IamManagementClient({
   const [users, setUsers] = useState<UserItem[]>(initialUsers)
   const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>(initialAuditLogs)
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-  const [selectedRoles, setSelectedRoles] = useState<Record<string, string>>({})
   const [isPending, startTransition] = useTransition()
+
+  // Stan dialogu zmiany roli
+  const [changeRoleUser, setChangeRoleUser] = useState<UserItem | null>(null)
+  const [changeRoleSelectedRole, setChangeRoleSelectedRole] = useState<string>('')
+  const [changeRoleError, setChangeRoleError] = useState<string | null>(null)
 
   // Stan dialogu dodawania użytkownika
   const [isAddUserOpen, setIsAddUserOpen] = useState(false)
@@ -127,28 +134,38 @@ export function IamManagementClient({
   // Stan UI wymuszany przez prop (np. w Storybooku / testach) lub obliczany
   const currentState = forcedState || (errorMessage ? 'error' : users.length === 0 ? 'empty' : 'success')
 
-  const handleRoleSelect = (userId: string, newRole: string) => {
-    setSelectedRoles(prev => ({ ...prev, [userId]: newRole }))
+  const handleChangeRoleClick = (user: UserItem) => {
+    setChangeRoleUser(user)
+    const initialNewRole = AVAILABLE_ROLES.find(r => r.id !== user.role)?.id || AVAILABLE_ROLES[0]?.id || ''
+    setChangeRoleSelectedRole(initialNewRole)
+    setChangeRoleError(null)
   }
 
-  const handleApplyRole = (userId: string) => {
-    const newRole = selectedRoles[userId]
-    if (!newRole) return
+  const handleConfirmChangeRole = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!changeRoleUser || !changeRoleSelectedRole) return
+    if (changeRoleSelectedRole === changeRoleUser.role) return
 
+    setChangeRoleError(null)
     setStatusMessage(null)
+
     startTransition(async () => {
       const formData = new FormData()
-      formData.set('userId', userId)
-      formData.set('role', newRole)
+      formData.set('userId', changeRoleUser.id)
+      formData.set('role', changeRoleSelectedRole)
 
       const result = await updateUserRoleAction(formData)
       if (result?.error) {
+        setChangeRoleError(result.error)
         setStatusMessage({ type: 'error', text: result.error })
         toast.error(result.error)
       } else {
-        setStatusMessage({ type: 'success', text: `Pomyślnie zaktualizowano rolę dla użytkownika.` })
+        const targetId = changeRoleUser.id
+        const newRole = changeRoleSelectedRole
+        setStatusMessage({ type: 'success', text: `Pomyślnie zaktualizowano rolę dla użytkownika ${changeRoleUser.email}.` })
         toast.success('Pomyślnie zaktualizowano rolę dla użytkownika')
-        setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u))
+        setUsers(prev => prev.map(u => u.id === targetId ? { ...u, role: newRole } : u))
+        setChangeRoleUser(null)
       }
     })
   }
@@ -355,15 +372,12 @@ export function IamManagementClient({
       {/* Sekcja 1: Użytkownicy i Uprawnienia */}
       <UserTable
         users={users}
-        selectedRoles={selectedRoles}
-        onRoleSelect={handleRoleSelect}
-        onApplyRole={handleApplyRole}
+        onChangeRoleClick={handleChangeRoleClick}
         onResetPasswordClick={user => {
           setResetPasswordUser(user)
           setResetPasswordError(null)
         }}
-        isPending={isPending}
-        availableRoles={AVAILABLE_ROLES}
+        roleLabels={ROLE_LABELS}
         addUserProps={{
           isOpen: isAddUserOpen,
           onOpenChange: setIsAddUserOpen,
@@ -380,6 +394,19 @@ export function IamManagementClient({
           isPending,
           onSubmit: handleCreateUser,
         }}
+      />
+
+      {/* Dialog zmiany uprawnień i roli */}
+      <ChangeRoleDialog
+        user={changeRoleUser}
+        selectedRole={changeRoleSelectedRole}
+        onRoleChange={setChangeRoleSelectedRole}
+        availableRoles={AVAILABLE_ROLES}
+        roleLabels={ROLE_LABELS}
+        isPending={isPending}
+        error={changeRoleError}
+        onSubmit={handleConfirmChangeRole}
+        onClose={() => setChangeRoleUser(null)}
       />
 
       {/* Dialog resetowania hasła (AC1: bezpieczny link e-mail) */}

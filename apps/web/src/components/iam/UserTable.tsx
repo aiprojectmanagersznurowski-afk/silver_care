@@ -2,34 +2,27 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Shield, Key } from 'lucide-react'
+import { Shield, Key, ShieldAlert } from 'lucide-react'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import type { UserItem } from '@/components/IamManagementClient'
 import { AddUserDialog } from './AddUserDialog'
 import type { ComponentProps } from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 
 interface UserTableProps {
   users: UserItem[]
-  selectedRoles: Record<string, string>
-  onRoleSelect: (userId: string, newRole: string) => void
-  onApplyRole: (userId: string) => void
+  onChangeRoleClick: (user: UserItem) => void
   onResetPasswordClick: (user: UserItem) => void
-  isPending: boolean
-  availableRoles: { id: string; label: string }[]
+  roleLabels: Record<string, string>
   addUserProps: ComponentProps<typeof AddUserDialog>
 }
 
 export function UserTable({
   users,
-  selectedRoles,
-  onRoleSelect,
-  onApplyRole,
+  onChangeRoleClick,
   onResetPasswordClick,
-  isPending,
-  availableRoles,
+  roleLabels,
   addUserProps,
 }: UserTableProps) {
   return (
@@ -57,16 +50,13 @@ export function UserTable({
               <TableRow>
                 <TableHead scope="col">Użytkownik</TableHead>
                 <TableHead scope="col">Placówka</TableHead>
-                <TableHead scope="col">Aktualna rola</TableHead>
-                <TableHead scope="col">Nowa rola</TableHead>
+                <TableHead scope="col">Rola</TableHead>
                 <TableHead scope="col" className="text-right">Akcja</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {users.map(user => {
-                const currentSelected = selectedRoles[user.id] || user.role
-                const hasChanged = currentSelected !== user.role
-                const roleLabel = availableRoles.find(r => r.id === user.role)?.label || user.role
+                const displayRole = roleLabels[user.role] || user.role
 
                 return (
                   <TableRow key={user.id}>
@@ -85,25 +75,29 @@ export function UserTable({
                     </TableCell>
                     <TableCell>
                       <span className="inline-flex items-center rounded-lg bg-muted px-2.5 py-1 text-xs font-medium text-foreground">
-                        {roleLabel}
+                        {displayRole}
                       </span>
-                    </TableCell>
-                    <TableCell>
-                      <NativeSelect
-                        aria-label={`Wybierz rolę dla ${user.email}`}
-                        value={currentSelected}
-                        onChange={e => onRoleSelect(user.id, e.target.value)}
-                        className="min-w-[170px]"
-                      >
-                        {availableRoles.map(r => (
-                          <NativeSelectOption key={r.id} value={r.id}>
-                            {r.label}
-                          </NativeSelectOption>
-                        ))}
-                      </NativeSelect>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => onChangeRoleClick(user)}
+                              className="min-h-[40px] rounded-xl border-border text-foreground hover:bg-muted/50"
+                            >
+                              <ShieldAlert className="h-4 w-4 mr-1.5 text-muted-foreground" />
+                              Zmień rolę
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            Zmień uprawnienia i przypisaną rolę
+                          </TooltipContent>
+                        </Tooltip>
+
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
@@ -119,23 +113,6 @@ export function UserTable({
                           </TooltipTrigger>
                           <TooltipContent>
                             Resetuj hasło lub wyślij link e-mail
-                          </TooltipContent>
-                        </Tooltip>
-
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span>
-                              <Button
-                                disabled={!hasChanged || isPending}
-                                onClick={() => onApplyRole(user.id)}
-                                className="min-h-[40px] rounded-xl bg-primary px-4 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-40"
-                              >
-                                Zastosuj
-                              </Button>
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            {hasChanged ? 'Zapisz nową rolę w systemie' : 'Wybierz inną rolę z listy, aby zapisać'}
                           </TooltipContent>
                         </Tooltip>
                       </div>

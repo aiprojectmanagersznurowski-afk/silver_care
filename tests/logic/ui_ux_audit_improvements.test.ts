@@ -68,10 +68,11 @@ describe('Wdrożenie audytów UI/UX (@REQ: UI-TEMPLATE-ALIGNMENT, @REQ: UI-ACCES
       expect(src).toContain('shrink-0');
     });
 
-    it('tabela IAM wyświetla czytelne polskie etykiety ról i ma zabezpieczoną szerokość selecta @REQ: UI-TEMPLATE-ALIGNMENT', () => {
+    it('tabela IAM wyświetla czytelne polskie etykiety ról i współpracuje z ChangeRoleDialog @REQ: UI-TEMPLATE-ALIGNMENT', () => {
       const src = read('apps/web/src/components/iam/UserTable.tsx');
-      expect(src).toMatch(/roleLabel|availableRoles\.find/);
-      expect(src).toContain('min-w-');
+      expect(src).toMatch(/displayRole|roleLabels/);
+      const dialogSrc = read('apps/web/src/components/iam/ChangeRoleDialog.tsx');
+      expect(dialogSrc).toMatch(/currentRoleLabel|roleLabels/);
     });
   });
 });

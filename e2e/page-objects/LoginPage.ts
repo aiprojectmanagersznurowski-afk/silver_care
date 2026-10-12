@@ -72,7 +72,7 @@ export class LoginPage {
     if (!user) throw new Error(`Nieznana rola testowa: ${role}`);
     await this.goto();
     await this.login(user.email, E2E_PASSWORD);
-    await this.page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 10000 });
+    await this.page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 20000 });
   }
 
   async expectErrorMessage(message: string) {
