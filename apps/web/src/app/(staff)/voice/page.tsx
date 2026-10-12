@@ -70,24 +70,51 @@ function VoiceNoteContent() {
     }
   }, [activeResidentId, supabase])
 
+  const getSupportedMimeType = () => {
+    if (typeof window === 'undefined' || typeof MediaRecorder === 'undefined') return ''
+    const types = [
+      'audio/webm;codecs=opus',
+      'audio/webm',
+      'audio/mp4',
+      'audio/aac',
+      'audio/ogg;codecs=opus',
+      'audio/wav'
+    ]
+    return types.find((t) => MediaRecorder.isTypeSupported(t)) || ''
+  }
+
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      mediaRecorder.current = new MediaRecorder(stream)
-      
-      mediaRecorder.current.ondataavailable = (e) => {
+      const mimeType = getSupportedMimeType()
+      const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream)
+      mediaRecorder.current = recorder
+      audioChunks.current = []
+
+      recorder.ondataavailable = (e) => {
         if (e.data.size > 0) {
           audioChunks.current.push(e.data)
         }
       }
-      
-      mediaRecorder.current.onstop = async () => {
-        const audioBlob = new Blob(audioChunks.current, { type: 'audio/webm' })
+
+      recorder.onstop = async () => {
+        try {
+          stream.getTracks().forEach((track) => track.stop())
+        } catch {}
+
+        const actualMimeType = recorder.mimeType || mimeType || 'audio/webm'
+        const audioBlob = new Blob(audioChunks.current, { type: actualMimeType })
         audioChunks.current = []
-        await processAudio(audioBlob)
+
+        if (audioBlob.size === 0) {
+          setError('Nagranie jest puste (brak danych audio). Upewnij się, że mikrofon działa poprawnie i spróbuj ponownie.')
+          return
+        }
+
+        await processAudio(audioBlob, actualMimeType)
       }
-      
-      mediaRecorder.current.start()
+
+      recorder.start(1000)
       setIsRecording(true)
       setError(null)
       // Jeśli użytkownik nagrywa od zera (brak draftId), czyścimy poprzednie wyniki
@@ -105,7 +132,6 @@ function VoiceNoteContent() {
   const stopRecording = () => {
     if (mediaRecorder.current && isRecording) {
       mediaRecorder.current.stop()
-      mediaRecorder.current.stream.getTracks().forEach(track => track.stop())
       setIsRecording(false)
     }
   }
@@ -123,7 +149,7 @@ function VoiceNoteContent() {
     }
   }
 
-  const processAudio = async (audioBlob: Blob) => {
+  const processAudio = async (audioBlob: Blob, mimeType: string = 'audio/webm') => {
     if (!activeResidentId) {
       setError('Nie wybrano podopiecznego.')
       return
@@ -132,8 +158,15 @@ function VoiceNoteContent() {
     setIsProcessing(true)
     setError(null)
 
+    const ext = mimeType.includes('mp4') || mimeType.includes('aac')
+      ? 'm4a'
+      : mimeType.includes('ogg')
+        ? 'ogg'
+        : mimeType.includes('wav')
+          ? 'wav'
+          : 'webm'
     const formData = new FormData()
-    formData.append('file', audioBlob, 'recording.webm')
+    formData.append('file', audioBlob, `recording.${ext}`)
     formData.append('resident_id', activeResidentId)
     const currentDraftId = draftIdRef.current
     if (currentDraftId) {
@@ -148,7 +181,9 @@ function VoiceNoteContent() {
         body: formData,
       })
 
-      if (response.status === 401) {
+      const data = await response.json().catch(() => ({}))
+
+      if (response.status === 401 && data.error === 'Unauthorized') {
         setError('Sesja wygasła. Zaloguj się ponownie, aby zapisać notatkę.')
         setTimeout(() => {
           window.location.href = '/login'
@@ -156,17 +191,23 @@ function VoiceNoteContent() {
         return
       }
 
-      const data = await response.json()
-
       if (response.ok && data.success) {
         updateDraftId(data.draftId)
-        
+
+        const newChunkText = (data.newChunk || data.transcript || data.text || '').trim()
+        const fullText = (data.text || data.transcript || newChunkText).trim()
+
+        if (!fullText) {
+          setError('Nie udało się rozpoznać mowy w nagraniu. Upewnij się, że mikrofon nie był wyciszony i spróbuj ponownie.')
+          return
+        }
+
         // Zaktualizuj lub dodaj transkrypcję
-        setTranscription(prev => {
-          if (!prev) return data.transcript
-          return `${prev}\n\n[Uzupełnienie]: ${data.transcript}`
+        setTranscription((prev) => {
+          if (!prev) return fullText
+          return `${prev}\n\n[Uzupełnienie]: ${newChunkText}`
         })
-        
+
         // Jeśli pojawiło się pytanie doprecyzowujące z backendu
         if (data.needsFollowup && data.question) {
           setFollowupQuestion(data.question)

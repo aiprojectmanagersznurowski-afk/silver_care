@@ -76,7 +76,7 @@ export async function POST(req: Request) {
           parsedMsg = `Błąd Groq API: ${parsed.error.message}`
         }
       } catch {}
-      return NextResponse.json({ error: parsedMsg }, { status: response.status || 500 })
+      return NextResponse.json({ error: parsedMsg }, { status: 502 })
     }
 
     const result = await response.json()
@@ -86,6 +86,7 @@ export async function POST(req: Request) {
       return NextResponse.json({
         success: true,
         text: transcription,
+        transcript: transcription,
       })
     }
 
@@ -141,6 +142,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
       text: finalTranscript,
+      transcript: finalTranscript,
       newChunk: transcription,
       draftId: finalDraftId
     })
