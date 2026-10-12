@@ -538,6 +538,18 @@
 
 > ⚖️ **Rozstrzygnięcie:** Wycofane w PR #39 (`SEC-PESEL-HASH`, ADR-008). Zgodnie z nadrzędną regułą `AGENTS.md` (*„PESEL wyłącznie jako `pesel_hash`."*) oraz kontraktem `SEC-PESEL-HASH`, w bazie danych nie ma kolumny z wartością jawną ani odwracalną (`pesel_encrypted` i moduł kryptograficzny zostały usunięte z bazy i kodu). Podgląd wartości PESEL nie jest wspierany.
 
+#### [SC-NUR-11] Wskaźnik nieodpowiedzianych wiadomości na pulpicie dyżuru i odpowiedź głosowa personelu
+🔗 **Kontrakt:** brak REQ · **Status:** 📝 PROPOZYCJA
+
+**User story:** Jako Pielęgniarka / Pracownik personelu na dyżurze, chcę widzieć na głównym pulpicie (`/staff`) informację o oczekujących, nieodpowiedzianych wiadomościach od rodzin podopiecznych oraz móc odpowiedzieć na nie głosowo, aby sprawnie zamykać pętlę komunikacji z bliskimi seniora bez konieczności ciągłego sprawdzania skrzynki i bez odrywania się od czynności opiekuńczych na pisanie na klawiaturze.
+
+**Kryteria akceptacji:**
+- **AC1 (Wskaźnik nieodpowiedzianych wiadomości na pulpicie):** Na kafelku każdego podopiecznego w widoku `/staff` pojawia się wyraźny wskaźnik / badge (np. „Nowa wiadomość od rodziny” lub licznik oczekujących wiadomości), jeśli ostatnia wiadomość w wątku pochodzi od rodziny i nie doczekała się jeszcze odpowiedzi personelu. W nagłówku lub panelu filtrów widoczny jest globalny licznik podopiecznych z oczekującymi wiadomościami.
+- **AC2 (Dostępność dyżurowa dla zespołu):** Wiadomości nie są przypisywane personalnie do jednej pielęgniarki — każdy dyżurujący członek personelu (`nurse`, `caregiver`, `org_admin`) w placówce widzi status nieodpowiedzianej wiadomości i może przejść do wątku podopiecznego bezpośrednio z kafelka (`/staff/messages?residentId=...`).
+- **AC3 (Szybka odpowiedź głosowa):** W oknie konwersacji (`StaffMessagesInbox`), obok pola tekstowego odpowiedzi, znajduje się przycisk dyktowania (ikona mikrofonu). Pracownik może podyktować odpowiedź, która jest transkrybowana (z możliwością szybkiego odsłuchu / edycji) i wysyłana do rodziny.
+- **AC4 (Automatyczne wygaszenie wskaźnika):** Wysłanie odpowiedzi przez pracownika automatycznie oznacza wątek jako obsłużony i natychmiast zdejmuje wskaźnik „nieodpowiedziana” na pulpicie dla wszystkich pracowników placówki.
+- **AC5 (Ochrona danych i granica MDR):** Wiadomości i odpowiedzi podlegają ścisłej izolacji placówki w RLS (`organization_id`) oraz zasadzie niemutowalności (`append-only` w `family_messages`). Interfejs i transkrypcja rygorystycznie przestrzegają zakazu używania słowa „pacjent” (wyłącznie pensjonariusz / podopieczny).
+
 #### [SC-USR-01] Własny profil i bezpieczeństwo konta
 🔗 **Kontrakt:** `SEC-SESSION`, `SEC-MFA-STAFF` · **WO:** [`NUR-PROFILE-SECURITY`](workorders/NUR-PROFILE-SECURITY.md) · **Status:** ✅ 📝
 
@@ -746,3 +758,4 @@
 | 2026-10-04 | 2.5 | Przeniesienie do repo; mapowanie na `@REQ` i ADR; dopisanie `SC-SUP-04`, `SC-ADM-10…16`, `SC-NUR-07…10`, `SC-USR-01` oraz 7 NFR z Work Orderów; oznaczenie dwóch sprzeczności jako WYMAGA DECYZJI. |
 | 2026-10-06 | 2.6 | Rozstrzygnięcie dwóch sprzeczności z v2.5 (odwracalny PESEL: PR #39, fallback Groq: PR #38; statusy zaktualizowane w `SC-NUR-10` i `NFR-INFRA-02`); kryteria `SC-ADM-08` i `SC-ADM-15` po PR #49; dopisanie `NFR-UI-03` (szablon shadcn-admin, ADR-014, PR #51–#54) i `NFR-UI-04` (kontrast wykresów, PR #55); notka ADR-014 przy `NFR-UI-01`. |
 | 2026-10-10 | 2.7 | Poprawki błędów UI z audytu DevTools: spójny nagłówek sukcesu i kontrast przycisków w kreatorze przyjęcia (`SC-ADM-11`), utrwalanie rutynowej obserwacji 1-kliknięciem w `daily_logs` (`SC-NUR-08`), dodanie `NFR-UI-05` (dostępność WCAG, focus-visible, kontrast motywu ciemnego). |
+| 2026-10-12 | 2.8 | Dopisanie `SC-NUR-11` (wskaźnik nieodpowiedzianych wiadomości na dashboardzie personelu i dyktowanie odpowiedzi głosowej) ze statusem 📝 PROPOZYCJA. |
