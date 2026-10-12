@@ -6,6 +6,7 @@ import { FamilyDashboardPage } from '../page-objects/FamilyDashboardPage';
 import { StaffBoardPage } from '../page-objects/StaffBoardPage';
 import { StaffReportsPage } from '../page-objects/StaffReportsPage';
 import { AdminDashboardPage } from '../page-objects/AdminDashboardPage';
+import { VoiceNotePage } from '../page-objects/VoiceNotePage';
 import { AuthHelper } from './auth';
 
 type TestFixtures = {
@@ -16,6 +17,7 @@ type TestFixtures = {
   staffBoardPage: StaffBoardPage;
   staffReportsPage: StaffReportsPage;
   adminDashboardPage: AdminDashboardPage;
+  voiceNotePage: VoiceNotePage;
   authHelper: AuthHelper;
 };
 
@@ -40,6 +42,9 @@ export const test = baseTest.extend<TestFixtures>({
   },
   adminDashboardPage: async ({ page }, use) => {
     await use(new AdminDashboardPage(page));
+  },
+  voiceNotePage: async ({ page }, use) => {
+    await use(new VoiceNotePage(page));
   },
   authHelper: async ({ page }, use) => {
     await use(new AuthHelper(page));
