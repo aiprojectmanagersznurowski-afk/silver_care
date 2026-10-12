@@ -162,3 +162,38 @@ export function evaluateOAuthInviteClaim(input: OAuthInviteClaimInput): OAuthInv
   };
 }
 
+export interface FormatInviteResponseInput {
+  invitationId: string;
+  registerUrl: string;
+  isProduction: boolean;
+  emailSent: boolean;
+}
+
+export interface InviteSuccessResponse {
+  success: true;
+  emailSent: boolean;
+  url?: string;
+  id?: string;
+}
+
+export function formatInviteResponse({
+  invitationId,
+  registerUrl,
+  isProduction,
+  emailSent,
+}: FormatInviteResponseInput): InviteSuccessResponse {
+  if (isProduction) {
+    return {
+      success: true,
+      emailSent,
+    };
+  }
+
+  return {
+    success: true,
+    emailSent,
+    url: registerUrl,
+    id: invitationId,
+  };
+}
+

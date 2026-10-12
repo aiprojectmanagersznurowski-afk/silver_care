@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { validateOrganizationUpdate } from '@/lib/org-helpers'
 import { renderAdminInviteEmail } from '@/lib/notification-templates'
+import { findUserByEmail, evaluateAdminAssignment } from '@/lib/admin-assign-safety'
 
 async function sendAdminInviteEmail(adminEmail: string, orgName: string): Promise<{ inviteUrl: string | null; emailSent: boolean; error?: string }> {
   try {
@@ -227,14 +228,21 @@ export async function addAdminToOrganizationAction(formData: FormData) {
   try {
     const adminClient = createAdminClient()
 
-    // Sprawdzamy czy użytkownik już istnieje
-    const { data: listData } = await adminClient.auth.admin.listUsers()
-    const existingUser = listData?.users?.find(u => u.email?.toLowerCase() === adminEmail)
+    // Bezpieczne, paginowane wyszukiwanie i walidacja przypisania roli (ORG-ASSIGN-ADMIN-SAFETY)
+    const existingUser = await findUserByEmail(adminClient, adminEmail)
+    const assignmentDecision = evaluateAdminAssignment({
+      existingUser,
+      targetOrgId: orgId,
+    })
+
+    if (!assignmentDecision.allowed) {
+      return { error: assignmentDecision.error }
+    }
 
     let targetUserId = existingUser?.id
 
     if (existingUser) {
-      // Aktualizujemy metadane istniejącego użytkownika
+      // Aktualizujemy metadane istniejącego użytkownika po pomyślnej walidacji
       const { error: updateErr } = await adminClient.auth.admin.updateUserById(existingUser.id, {
         app_metadata: {
           ...existingUser.app_metadata,

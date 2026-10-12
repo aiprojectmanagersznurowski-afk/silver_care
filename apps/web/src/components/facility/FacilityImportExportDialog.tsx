@@ -97,17 +97,28 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
     setVoiceSuccess(null)
   }
 
-  // --- EXPORT HANDLERS ---
+  // --- EXPORT & TEMPLATE HANDLERS ---
   const handleDownloadTemplate = () => {
     const wsData = [
       ['Piętro', 'Numer pokoju', 'Sektor', 'Liczba łóżek', 'Etykiety łóżek'],
       ['Parter', '101', 'Skrzydło A', '2', '1, 2'],
       ['1', '201', 'Skrzydło B', '3', 'A, B, C'],
+      ['2', '305', 'Główne', '1', '1'],
+    ]
+    const instructionsData = [
+      ['Kolumna', 'Wymagana?', 'Opis i dozwolone formaty'],
+      ['Piętro', 'TAK', 'Oznaczenie piętra lub kondygnacji (tekst, np. Parter, 1, 2, Niski parter)'],
+      ['Numer pokoju', 'TAK', 'Numer lub symbol pokoju (unikalny w placówce, np. 101, 204A)'],
+      ['Sektor', 'NIE', 'Opcjonalna nazwa skrzydła lub sektora (tekst, np. Skrzydło A, Pawilon 2)'],
+      ['Liczba łóżek', 'NIE', 'Liczba łóżek w pokoju (liczba całkowita, np. 2)'],
+      ['Etykiety łóżek', 'NIE', 'Etykiety łóżek oddzielone przecinkami (np. "1, 2" lub "A, B, C"). Jeśli podano liczbę łóżek bez etykiet, system wygeneruje etykiety automatycznie.'],
     ]
     const wb = XLSX.utils.book_new()
     const ws = XLSX.utils.aoa_to_sheet(wsData)
+    const wsInstrukcja = XLSX.utils.aoa_to_sheet(instructionsData)
     XLSX.utils.book_append_sheet(wb, ws, 'Pokoje i Łóżka')
-    XLSX.writeFile(wb, 'szablon_struktury_placowki.xlsx')
+    XLSX.utils.book_append_sheet(wb, wsInstrukcja, 'Instrukcja')
+    XLSX.writeFile(wb, 'formatka_struktury_placowki.xlsx')
   }
 
   const handleExportXLSX = async () => {
@@ -511,21 +522,23 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
                 </div>
               </div>
 
-              <div className="p-4 bg-muted rounded-xl border border-border">
-                <h4 className="text-sm font-semibold text-foreground mb-1">
-                  Wzorcowy szablon importu
-                </h4>
-                <p className="text-xs text-foreground mb-3">
-                  Potrzebujesz formatki do przygotowania danych pokoi? Pobierz czysty szablon z przykładowymi wierszami.
-                </p>
+              <div className="p-4 bg-muted rounded-xl border border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h4 className="text-sm font-semibold text-foreground mb-1">
+                    Wzorcowa formatka arkusza (Pokoje i Łóżka)
+                  </h4>
+                  <p className="text-xs text-muted-foreground">
+                    Potrzebujesz formatki do przygotowania danych pokoi? Pobierz czysty szablon z arkuszem instrukcji.
+                  </p>
+                </div>
                 <Button
                   onClick={handleDownloadTemplate}
                   variant="outline"
                   size="sm"
-                  className="gap-2 border-border text-foreground hover:bg-muted"
+                  className="gap-2 border-border text-foreground hover:bg-muted bg-card shrink-0"
                 >
-                  <Download className="w-3.5 h-3.5" />
-                  Pobierz szablon Excel (.xlsx)
+                  <Download className="w-3.5 h-3.5 text-foreground" />
+                  Pobierz formatkę Excel (.xlsx)
                 </Button>
               </div>
 
@@ -550,12 +563,33 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
             <div className="space-y-4">
               {!dryRunResult ? (
                 <div className="space-y-4">
+                  <div className="p-4 bg-muted rounded-xl border border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <h4 className="text-sm font-semibold text-foreground">
+                        Wzorcowa formatka arkusza (Pokoje i Łóżka)
+                      </h4>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Pobierz przygotowany plik z prawidłowymi kolumnami i arkuszem instrukcji, aby upewnić się, że import zadziała bezbłędnie.
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      onClick={handleDownloadTemplate}
+                      variant="outline"
+                      size="sm"
+                      className="gap-2 border-border text-foreground hover:bg-muted shrink-0 bg-card"
+                    >
+                      <Download className="w-3.5 h-3.5 text-foreground" />
+                      Pobierz formatkę Excel (.xlsx)
+                    </Button>
+                  </div>
+
                   <div className="border-2 border-dashed border-border rounded-xl p-8 text-center bg-muted hover:bg-muted transition-colors">
                     <FileSpreadsheet className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
                     <p className="text-sm font-medium text-foreground mb-1">
                       Wybierz lub przeciągnij plik Excel (.xlsx) lub CSV
                     </p>
-                    <p className="text-xs text-muted-foreground mb-4">
+                    <p className="text-xs text-muted-foreground mb-3">
                       Kolumny: Piętro, Numer pokoju, Sektor (opcjonalnie), Liczba łóżek lub Etykiety łóżek
                     </p>
                     <input
@@ -578,11 +612,25 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
                       )}
                       Wybierz plik z dysku
                     </Button>
+                    <div className="mt-3">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleDownloadTemplate();
+                        }}
+                        className="text-xs text-primary underline hover:text-primary/80 inline-flex items-center gap-1 cursor-pointer"
+                      >
+                        <Download className="w-3 h-3" />
+                        Nie masz pliku? Pobierz formatkę Excel (.xlsx)
+                      </button>
+                    </div>
                   </div>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between p-3 bg-muted rounded-lg border border-border text-sm">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-muted rounded-lg border border-border text-sm gap-2">
                     <div>
                       <span className="font-semibold text-foreground">Podsumowanie analizy: </span>
                       <span className="text-foreground font-medium">Poprawnych: {dryRunResult.validRowsCount}</span>
@@ -592,14 +640,27 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
                         </span>
                       )}
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setDryRunResult(null)}
-                      className="text-xs text-muted-foreground"
-                    >
-                      Wgraj inny plik
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleDownloadTemplate}
+                        className="text-xs gap-1.5 bg-card"
+                      >
+                        <Download className="w-3 h-3 text-foreground" />
+                        Pobierz formatkę Excel
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setDryRunResult(null)}
+                        className="text-xs text-muted-foreground"
+                      >
+                        Wgraj inny plik
+                      </Button>
+                    </div>
                   </div>
 
                   {/* Tabela podglądu dry-run */}
@@ -668,9 +729,21 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
               )}
 
               {importError && (
-                <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>{importError}</span>
+                <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{importError}</span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDownloadTemplate}
+                    className="gap-1.5 text-xs bg-card shrink-0 h-8 text-foreground"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    Pobierz formatkę Excel (.xlsx)
+                  </Button>
                 </div>
               )}
 

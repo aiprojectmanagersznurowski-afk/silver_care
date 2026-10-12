@@ -4,7 +4,7 @@ import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronDown, Bell, Check, LayoutDashboard, Calendar, MessageSquare } from "lucide-react";
+import { ChevronDown, Bell, Check, LayoutDashboard, Calendar, MessageSquare, User, ShieldCheck } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,11 +14,13 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { ThemeToggle } from "./ThemeToggle";
 
 const navItems = [
   { label: "Pulpit", href: "/dashboard", icon: LayoutDashboard },
   { label: "Plan Dnia", href: "/agenda", icon: Calendar },
   { label: "Wiadomości", href: "/messages", icon: MessageSquare },
+  { label: "Zgody", href: "/consents", icon: ShieldCheck },
 ];
 
 interface Resident {
@@ -64,20 +66,20 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
               className="h-8 sm:h-9 w-auto object-contain"
               priority
             />
-            <span className="hidden text-[0.8rem] text-muted-foreground sm:inline-block border-l border-border pl-3">
+            <span className="hidden text-[0.8rem] text-muted-foreground xl:inline-block border-l border-border pl-3">
               Portal rodzinnej opieki
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="ml-4 hidden items-center gap-1 md:flex">
+          <nav className="ml-4 hidden items-center gap-1 lg:flex">
             {navItems.map((item) => {
               const isActive = pathname?.startsWith(item.href) || (pathname === '/' && item.href === '/dashboard');
               return (
                 <Link
                   key={item.label}
                   href={item.href}
-                  className={`rounded-full px-5 py-2.5 transition-colors text-sm font-medium ${
+                  className={`rounded-full px-5 py-2.5 transition-colors text-sm font-medium whitespace-nowrap ${
                     isActive
                       ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
@@ -90,6 +92,7 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
           </nav>
 
           <div className="ml-auto flex items-center gap-3">
+            <ThemeToggle className="h-11 w-11 rounded-full bg-card ring-1 ring-border text-muted-foreground hover:text-foreground" />
             <DropdownMenu>
               <DropdownMenuTrigger className="relative flex h-11 w-11 items-center justify-center rounded-full bg-card text-muted-foreground ring-1 ring-border transition-colors hover:text-foreground">
                 <Bell className="h-5 w-5" />
@@ -137,6 +140,13 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
                   ))}
                   
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="flex w-full cursor-pointer items-center gap-2.5 py-2.5 text-left font-medium text-foreground"
+                    render={<Link href="/settings/profile" />}
+                  >
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <span>Profil i bezpieczeństwo</span>
+                  </DropdownMenuItem>
                   <form action="/auth/signout" method="post" className="w-full">
                     <DropdownMenuItem 
                       nativeButton
@@ -157,6 +167,13 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
                 <DropdownMenuContent align="end" className="w-56 rounded-xl p-2">
                   <DropdownMenuLabel className="text-muted-foreground">Profil rodziny</DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="flex w-full cursor-pointer items-center gap-2.5 py-2.5 text-left font-medium text-foreground"
+                    render={<Link href="/settings/profile" />}
+                  >
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <span>Profil i bezpieczeństwo</span>
+                  </DropdownMenuItem>
                   <form action="/auth/signout" method="post" className="w-full">
                     <DropdownMenuItem 
                       nativeButton
@@ -173,8 +190,8 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
         </div>
       </header>
 
-      {/* Mobile Bottom Navigation Bar (Dead End #1 Fix) */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-border/80 bg-background/95 py-2 px-2 backdrop-blur-lg shadow-lg md:hidden">
+      {/* Mobile & Tablet Bottom Navigation Bar (Dead End #1 Fix: tablet coverage up to lg breakpoint) */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-border/80 bg-background/95 py-2 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] backdrop-blur-lg shadow-lg lg:hidden">
         {navItems.map((item) => {
           const isActive = pathname?.startsWith(item.href) || (pathname === '/' && item.href === '/dashboard');
           const Icon = item.icon;

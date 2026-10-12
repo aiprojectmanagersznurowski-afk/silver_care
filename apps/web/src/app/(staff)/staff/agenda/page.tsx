@@ -18,10 +18,7 @@ import {
   CheckCircle2,
   AlertCircle
 } from 'lucide-react'
-const toast = {
-  success: (msg: string) => console.log('[SUCCESS]', msg),
-  error: (msg: string) => console.error('[ERROR]', msg),
-}
+import { toast } from 'sonner'
 import {
   Dialog,
   DialogContent,
@@ -183,11 +180,13 @@ export default function StaffAgendaPage() {
 
       const data = await res.json()
       if (!res.ok) {
-        setFormError(data.error || 'Wystąpił błąd zapisu.')
+        const errorMsg = data.error || 'Wystąpił błąd zapisu.'
+        setFormError(errorMsg)
+        toast.error(errorMsg)
         return
       }
 
-      toast.success('Dodano wpis do harmonogramu.')
+      toast.success('Wydarzenie zostało dodane do harmonogramu.')
       setTitle('')
       setTime('')
       setType('meal')
@@ -196,6 +195,7 @@ export default function StaffAgendaPage() {
       fetchItems()
     } catch {
       setFormError('Błąd połączenia z serwerem.')
+      toast.error('Błąd połączenia z serwerem.')
     } finally {
       setSubmitting(false)
     }
@@ -236,15 +236,18 @@ export default function StaffAgendaPage() {
 
       const data = await res.json()
       if (!res.ok) {
-        setEditError(data.error || 'Nie udało się zaktualizować wpisu.')
+        const errorMsg = data.error || 'Nie udało się zaktualizować wpisu.'
+        setEditError(errorMsg)
+        toast.error(errorMsg)
         return
       }
 
-      toast.success('Zaktualizowano wpis.')
+      toast.success('Zaktualizowano wpis w harmonogramie.')
       setEditingItem(null)
       fetchItems()
     } catch {
       setEditError('Błąd połączenia z serwerem.')
+      toast.error('Błąd połączenia z serwerem.')
     } finally {
       setEditSubmitting(false)
     }
@@ -259,7 +262,7 @@ export default function StaffAgendaPage() {
     try {
       const res = await fetch(`/api/staff/agenda?id=${deleteItemId}`, { method: 'DELETE' })
       if (res.ok) {
-        toast.success('Usunięto wpis.')
+        toast.success('Usunięto wpis z harmonogramu.')
         fetchItems()
       } else {
         toast.error('Nie udało się usunąć wpisu.')
@@ -325,16 +328,6 @@ export default function StaffAgendaPage() {
               {loading ? (
                 <div className="py-12 text-center text-sm font-medium text-muted-foreground">
                   Ładowanie harmonogramu...
-                </div>
-              ) : items.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 px-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted/50 text-muted-foreground mb-4">
-                    <CalendarX className="h-8 w-8" />
-                  </div>
-                  <p className="text-base font-semibold text-foreground">Brak wpisów na ten dzień.</p>
-                  <p className="text-sm mt-1 text-muted-foreground text-center max-w-sm">
-                    Dodaj nowy punkt harmonogramu za pomocą formularza po prawej stronie.
-                  </p>
                 </div>
               ) : (
                 /* Podział na pory dnia */

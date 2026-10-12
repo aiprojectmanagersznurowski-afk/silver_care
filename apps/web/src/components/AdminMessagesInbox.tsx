@@ -19,6 +19,10 @@ interface FamilyMessage {
   };
 }
 
+/**
+ * @deprecated Ten komponent został wycofany i zastąpiony przez StaffMessagesInbox.
+ * Zachowany wyłącznie w celu spełnienia wymogów integralności szablonu w testach logicznych.
+ */
 export function AdminMessagesInbox() {
   const [state, setState] = useState<UIState>('loading');
   const [messages, setMessages] = useState<FamilyMessage[]>([]);

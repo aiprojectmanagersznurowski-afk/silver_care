@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "test": "vitest run --passWithNoTests",
+    "test:db": "TEST_DB=true vitest run --passWithNoTests tests/db/",
     "db:types": "node tools/sc-generate-types.mjs",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",

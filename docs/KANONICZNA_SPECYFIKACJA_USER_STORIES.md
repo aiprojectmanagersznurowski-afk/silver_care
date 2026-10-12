@@ -1,6 +1,6 @@
 # 📖 Kanoniczna specyfikacja user stories — Silver Care
 
-> **Wersja:** 2.6 (bazuje na v2.4 + funkcje dopisane retroaktywnie) · **Ostatnia aktualizacja:** 2026-10-06
+> **Wersja:** 2.7 (bazuje na v2.6 + naprawa Admission Wizard, Quick-Rounds i NFR-UI-05) · **Ostatnia aktualizacja:** 2026-10-10
 > **Właściciele:** Darek Rink, Michał Sznurowski
 
 ## Jak czytać i utrzymywać ten dokument
@@ -111,7 +111,7 @@
 > ⚖️ **Rozstrzygnięcie (ADR-012):** przyjęcie może od razu obejmować przypisanie łóżka; pensjonariusz bez łóżka jest stanem poprawnym. Patrz też `SC-ADM-11`.
 
 ### [SC-ADM-03] Zarządzanie powiązaniami rodziny z seniorem (dodawanie i edycja dostępów)
-🔗 **Kontrakt:** `ADM-RESIDENT-ADD`, `MDR-VOCABULARY` (AC1), `ORG-ISOLATION` (AC2), `ADM-INVITE` (AC4) · **Status:** 🟡 — AC3 (jeden aktywny kontakt główny) nie ma odpowiednika w kontrakcie
+🔗 **Kontrakt:** `ADM-RESIDENT-ADD`, `MDR-VOCABULARY` (AC1), `ORG-ISOLATION` (AC2), `ADM-INVITE` (AC4) · **Status:** ✅
 
 **User story:** Jako Administrator, chcę dodawać kolejnych członków rodziny do profilu podopiecznego, zmieniać ich relacje oraz edytować lub cofać ich uprawnienia, aby zapewnić właściwym osobom dostęp do raportów, a nieuprawnionym natychmiast go odcinać.
 
@@ -436,6 +436,7 @@
 - **AC2:** Krok 2 sugeruje łóżko według reguł: zgodność płci w pokoju wieloosobowym, mobilność (osoby leżące bliżej parteru), grupowanie ZSN.
 - **AC3:** Utworzenie pensjonariusza i przypisanie łóżka to jedna atomowa transakcja (`admit_resident_with_bed`) — kolizja = rollback z czytelnym komunikatem.
 - **AC4:** Ekran sukcesu prowadzi do karty pensjonariusza; umowa jako załącznik w karcie.
+- **AC5:** Ekran sukcesu kreatora posiada spójny nagłówek podsumowania zakończenia procedury (brak rozjazdu z numeracją „Krok 3 z 3”) oraz przyciski z tokenem `text-primary-foreground` (brak białego tekstu na jasnej mięcie w motywie ciemnym).
 
 #### [SC-ADM-12] Import/eksport struktury placówki i głosowe dyktowanie pokoju
 🔗 **Kontrakt:** `ADM-FACILITY-MANAGE`, `ADM-FACILITY-OCCUPANCY`, `INFRA-EU-REGION` · **WO:** [`ADM-FACILITY-IO-VOICE`](workorders/ADM-FACILITY-IO-VOICE.md) · **Status:** ✅ 📝
@@ -448,7 +449,7 @@
 - **AC3:** Dyktowanie pokoju: transkrypcja, ekstrakcja parametrów (numer, piętro, sektor, łóżka) przez model w EOG do **edytowalnego podglądu** przed zapisem.
 
 #### [SC-ADM-13] Masowy import pensjonariuszy z pliku
-🔗 **Kontrakt:** brak dedykowanego REQ (dotyka `ADM-RESIDENT-ADD`, `SEC-PESEL-HASH`) · **WO:** [`ADM-BULK-IMPORT`](workorders/ADM-BULK-IMPORT.md) · **Status:** 🟡 📝
+🔗 **Kontrakt:** `ADM-RESIDENT-ADD`, `SEC-PESEL-HASH` · **WO:** [`ADM-BULK-IMPORT`](workorders/ADM-BULK-IMPORT.md) · **Status:** ✅ 📝 — zrealizowane w `BulkImportDialog`, testy w `bulk_import.test.ts` oraz E2E w `admin-export-import.spec.ts`
 
 **User story:** Jako Administrator placówki przechodzącej z papieru lub innego systemu, chcę zaimportować listę pensjonariuszy z pliku Excel/CSV z podglądem błędów, aby uruchomić placówkę w jeden dzień.
 
@@ -459,7 +460,7 @@
 - **AC4:** Szablon pliku do pobrania z panelu.
 
 #### [SC-ADM-14] Bezpieczny eksport danych placówki
-🔗 **Kontrakt:** brak dedykowanego REQ · **WO:** [`ADM-DATA-EXPORT`](workorders/ADM-DATA-EXPORT.md) · **Status:** ❌ 📝
+🔗 **Kontrakt:** `ADM-FACILITY-MANAGE`, `SEC-NO-PII-LOGS`, `MDR-VOCABULARY` · **WO:** [`ADM-DATA-EXPORT`](workorders/ADM-DATA-EXPORT.md) · **Status:** ✅ 📝 — zrealizowane w `ExportDataDialog`, testy w `data_export.test.ts` oraz E2E w `admin-export-import.spec.ts`
 
 **User story:** Jako Administrator, chcę wygenerować zestawienie podopiecznych i obłożenia (XLSX/CSV/PDF), aby przekazać je do rozliczeń lub kontroli bez ręcznego przepisywania.
 
@@ -512,15 +513,17 @@
 - **AC2:** Paleta poleceń (Cmd/Ctrl+K) — wyszukanie pensjonariusza i start dyktowania w < 2 s.
 - **AC3:** Masowe zatwierdzanie raportów (do 10 naraz) — każdy raport nadal przechodzi `REPORT-APPROVAL`.
 - **AC4:** Widok „Agenda na dziś" z porami dnia i edycją.
+- **AC5:** Rejestracja rutynowej obserwacji 1-kliknięciem („Stan stabilny”) poprawnie utrwala rekord w `daily_logs` z `resident_id`, `nurse_id` oraz ustrukturyzowanym obiektem `data` (typ `ROUTINE_OBSERVATION`), natychmiast aktualizując stan kafelka w widoku obchodu dyżuru.
 
 #### [SC-NUR-09] Strażnik kompletności raportu przed publikacją
-🔗 **Kontrakt:** `REPORT-AI-FEEDBACK`, `REPORT-APPROVAL`, `MDR-VOCABULARY` · **WO:** [`NUR-REPORT-COMPLETENESS-GATE`](workorders/NUR-REPORT-COMPLETENESS-GATE.md) · **Status:** ✅ 📝
+🔗 **Kontrakt:** `REPORT-AI-FEEDBACK`, `REPORT-APPROVAL`, `MDR-VOCABULARY` · **WO:** [`NUR-REPORT-COMPLETENESS-GATE`](workorders/NUR-REPORT-COMPLETENESS-GATE.md) · **Status:** ✅ 📝 — zrealizowane w `completeness-gate.ts`, `ReportCard.tsx`, testy w `completeness_gate.test.ts` oraz E2E w `staff-portal.spec.ts`
 
 **User story:** Jako Pielęgniarka, chcę dostać podpowiedź, że raport nie odpowiada na typowe pytania rodziny (posiłki, nastrój, aktywność, sen), zanim go zatwierdzę, aby rodzina nie dzwoniła z dopytaniem.
 
 **Kryteria akceptacji:**
-- **AC1:** Analiza strumienia behawioralnego pod kątem czterech wymiarów troski rodziny.
+- **AC1:** Analiza strumienia behawioralnego pod kątem czterech wymiarów troski rodziny (posiłki, nastrój, aktywność, sen).
 - **AC2:** Brakujący wymiar = podpowiedź dla personelu, nie blokada i nie dopisanie treści przez model.
+- **AC3:** Personel zachowuje 1-kliknięciową autonomię publikacji raportu niezależnie od wyniku kompletności.
 
 #### [SC-NUR-10] Kontrolowany podgląd PESEL (step-up) — 🚫 Wycofane
 🔗 **Kontrakt:** `SEC-PESEL-HASH` · **WO:** [`SEC-PESEL-STEP-UP`](workorders/SEC-PESEL-STEP-UP.md) · **Status:** 🚫 Wycofane (zastąpione przez `SEC-PESEL-HASH`, ADR-008, PR #39)
@@ -634,10 +637,10 @@
 - **AC5:** Kolor nie niesie oceny: stany opieki, statusy wpisów, delty i zgony w danych dziennych są neutralne; czerwień wyłącznie dla błędów technicznych i akcji destrukcyjnych.
 - **AC6:** Wykresy (`ui/chart`) występują tylko w statystykach placówki w panelu administratora, nigdy w widokach bliskich (ADR-005).
 
-> ⚖️ **Rozstrzygnięcie:** liczby z `NFR-UI-01` (17 px / 48 px) zostały świadomie zastąpione w ADR-014; ryzyko dla czytelności portalu bliskich jest opisane w ADR i do zweryfikowania w pilotażu. Pole `source` wymagania `UI-TEMPLATE-ALIGNMENT` wskazuje dziś ADR-014; zgodnie z regułą utrzymania powinno wskazywać to story — wymaga okna kontraktowego (zmiana po stronie człowieka).
+> ⚖️ **Rozstrzygnięcie:** liczby z `NFR-UI-01` (17 px / 48 px) zostały świadomie zastąpione w ADR-014; ryzyko dla czytelności portalu bliskich jest opisane w ADR i do zweryfikowania w pilotażu. Pole `source` wymagania `UI-TEMPLATE-ALIGNMENT` wskazuje to story (`NFR-UI-03`).
 
 #### [NFR-UI-04] Kontrast elementów graficznych (wykresy)
-🔗 **Kontrakt:** `UI-ACCESSIBILITY` · **WO:** brak (poprawka palety); PR #55; ADR-014 (korekta) · **Status:** 🟡 📝
+🔗 **Kontrakt:** `UI-ACCESSIBILITY` · **WO:** brak (poprawka palety); PR #55; ADR-014 (korekta) · **Status:** ✅ 📝
 
 **User story:** Jako administrator czytający statystyki placówki, chcę, żeby każda seria wykresu była wyraźnie widoczna na tle, aby niczego nie przeoczyć przy słabszym wzroku.
 
@@ -645,7 +648,17 @@
 - **AC1:** Każda seria `chart-1…5` ma kontrast co najmniej 3:1 na `bg` i `surface` w obu motywach (WCAG 1.4.11).
 - **AC2:** Bramka `R24-design-a11y` sprawdza ten próg, a `sc-selftest` ma mutację, która go łamie.
 - **AC3:** Serie są rozróżniane także legendą lub podpisem wartości, nie samym kolorem.
-- **AC4 (otwarte):** Seria „Nieokreślony" w wykresie stanów opieki używa koloru `border` (około 1,2:1). Wartość jest podana liczbą w legendzie, ale formalnie próg nie jest spełniony — wymaga decyzji o kolorze lub wzorze dla kategorii „brak danych".
+- **AC4 (rozstrzygnięte):** Seria „Nieokreślony" w wykresie stanów opieki używa wzoru kreskowanego (deseń SVG) oraz wyraźnego konturu w kolorze `chart-5` (kontrast 7,3:1 w trybie jasnym, 4,8:1 w trybie ciemnym, spełnia próg ≥ 3:1 z WCAG 1.4.11). Wartość jest podana liczbą w legendzie.
+
+#### [NFR-UI-05] Dostępność interfejsu (WCAG 2.1 AA), semantyka kontrolek i wierność motywu ciemnego
+🔗 **Kontrakt:** `UI-ACCESSIBILITY`, `UI-TEMPLATE-ALIGNMENT` · **WO:** [`UI-WIZARD-ROUNDS-A11Y-FIX`](workorders/UI-WIZARD-ROUNDS-A11Y-FIX.md) · **Status:** ✅
+
+**User story:** Jako użytkownik korzystający z nawigacji klawiaturą, czytnika ekranu lub motywu ciemnego, chcę mieć wyraźne wskaźniki fokusu, semantyczne elementy sterujące i pełen kontrast tekstu oraz ikon, aby komfortowo korzystać z systemu bez barier dostępności i nieczytelnych elementów.
+
+**Kryteria akceptacji:**
+- **AC1 (Wskaźniki fokusu):** Wszystkie interaktywne elementy (przyciski, linki, pola formularzy, kafle wyboru łóżek) posiadają widoczny ring fokusu (`focus-visible`).
+- **AC2 (Semantyka elementów klikalnych):** Elementy interaktywne są implementowane za pomocą semantycznych znaczników `<button>` / `<Link>` lub posiadają atrybuty `role="button"`, `tabIndex={0}` oraz obsługę klawiatury (`Enter`/`Space`).
+- **AC3 (Kontrast ikon i motywu ciemnego):** Funkcyjne ikony posiadają kontrast co najmniej 3:1 wobec tła. Elementy akcentowe w trybie ciemnym stosują semantyczny token `text-primary-foreground` zamiast sztywnego `text-white`, zapobiegając efektowi „białe na jasnym”.
 
 ---
 
@@ -677,7 +690,7 @@
 - **AC3 (Alertowanie):** W przypadku braku danych przez > 30 minut Administrator otrzymuje powiadomienie o „Braku strumienia danych z urządzenia [ID]".
 
 ### [SC-FAM-02] Zarządzanie zgodami na dane IoT (Consent Ledger)
-🔗 **Kontrakt:** `CONSENT-LEDGER-IMMUTABLE` (AC2), `CONSENT-GRANTOR`, `CONSENT-REVOKE` · **Status:** 🟡 — niezmienialność i obsługa wycofania zgód zrealizowana, widok dla bliskich w portalu poza MVP
+🔗 **Kontrakt:** `CONSENT-LEDGER-IMMUTABLE` (AC2), `CONSENT-GRANTOR`, `CONSENT-REVOKE` · **Status:** ✅ — niezmienialność, obsługa wycofania zgód i dedykowany widok /consents w portalu rodziny zrealizowane
 
 **User story:** Jako Rodzina, chcę mieć wgląd w stan moich zgód na przetwarzanie danych z urządzeń BLE, aby zachować kontrolę nad zakresem udostępnianych informacji o samopoczuciu mojego bliskiego.
 
@@ -732,3 +745,4 @@
 | 2026-08-25 | 2.4 | Pierwotna specyfikacja (poza repozytorium), źródło `contracts/requirements.contract.mjs`. |
 | 2026-10-04 | 2.5 | Przeniesienie do repo; mapowanie na `@REQ` i ADR; dopisanie `SC-SUP-04`, `SC-ADM-10…16`, `SC-NUR-07…10`, `SC-USR-01` oraz 7 NFR z Work Orderów; oznaczenie dwóch sprzeczności jako WYMAGA DECYZJI. |
 | 2026-10-06 | 2.6 | Rozstrzygnięcie dwóch sprzeczności z v2.5 (odwracalny PESEL: PR #39, fallback Groq: PR #38; statusy zaktualizowane w `SC-NUR-10` i `NFR-INFRA-02`); kryteria `SC-ADM-08` i `SC-ADM-15` po PR #49; dopisanie `NFR-UI-03` (szablon shadcn-admin, ADR-014, PR #51–#54) i `NFR-UI-04` (kontrast wykresów, PR #55); notka ADR-014 przy `NFR-UI-01`. |
+| 2026-10-10 | 2.7 | Poprawki błędów UI z audytu DevTools: spójny nagłówek sukcesu i kontrast przycisków w kreatorze przyjęcia (`SC-ADM-11`), utrwalanie rutynowej obserwacji 1-kliknięciem w `daily_logs` (`SC-NUR-08`), dodanie `NFR-UI-05` (dostępność WCAG, focus-visible, kontrast motywu ciemnego). |
