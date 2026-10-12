@@ -20,13 +20,52 @@ test.describe('Notatka głosowa personelu opiekuńczego (@REQ: VOICE-ZERO-GUESSI
     // Uprawnienia do mikrofonu w przeglądarce
     await context.grantPermissions(['microphone']);
 
-    // Logowanie jako personel opiekuńczy
-    await loginPage.loginAs('nurse');
-    await expect(page).toHaveURL(/\/staff$/);
+    // Mock getUserMedia i MediaRecorder w kontekście strony przed nawigacją, aby test działał stabilnie w headless
+    await page.addInitScript(() => {
+      class MockMediaRecorder {
+        stream: MediaStream;
+        state: 'inactive' | 'recording' | 'paused' = 'inactive';
+        mimeType: string = 'audio/webm';
+        ondataavailable: ((e: { data: Blob }) => void) | null = null;
+        onstop: (() => void) | null = null;
 
-    // Przejście do modułu notatki głosowej
-    await voiceNotePage.goto();
-    await voiceNotePage.expectResidentSelectionVisible();
+        constructor(stream: MediaStream) {
+          this.stream = stream;
+        }
+
+        start() {
+          this.state = 'recording';
+        }
+
+        stop() {
+          this.state = 'inactive';
+          if (this.ondataavailable) {
+            this.ondataavailable({ data: new Blob(['fake-audio-data-chunks'], { type: 'audio/webm' }) });
+          }
+          if (this.onstop) {
+            this.onstop();
+          }
+        }
+
+        static isTypeSupported() {
+          return true;
+        }
+      }
+
+      Object.defineProperty(window, 'MediaRecorder', {
+        writable: true,
+        configurable: true,
+        value: MockMediaRecorder
+      });
+
+      if (navigator.mediaDevices) {
+        navigator.mediaDevices.getUserMedia = async () => {
+          return {
+            getTracks: () => [{ stop: () => {} } as MediaStreamTrack],
+          } as unknown as MediaStream;
+        };
+      }
+    });
 
     // Mock API transkrypcji (sprawdzający czy odpowiedź z tekstem odblokowuje widok)
     await page.route('**/api/voice/transcribe', async (route) => {
@@ -42,19 +81,13 @@ test.describe('Notatka głosowa personelu opiekuńczego (@REQ: VOICE-ZERO-GUESSI
       });
     });
 
-    // Mock getUserMedia i MediaRecorder w kontekście strony, aby test działał powtarzalnie w headless
-    await page.addInitScript(() => {
-      if (navigator.mediaDevices) {
-        navigator.mediaDevices.getUserMedia = async () => {
-          const ctx = new AudioContext();
-          const osc = ctx.createOscillator();
-          const dst = ctx.createMediaStreamDestination();
-          osc.connect(dst);
-          osc.start();
-          return dst.stream;
-        };
-      }
-    });
+    // Logowanie jako personel opiekuńczy
+    await loginPage.loginAs('nurse');
+    await expect(page).toHaveURL(/\/staff$/);
+
+    // Przejście do modułu notatki głosowej
+    await voiceNotePage.goto();
+    await voiceNotePage.expectResidentSelectionVisible();
 
     // Wybór pierwszego dostępnego podopiecznego
     await voiceNotePage.selectFirstResident();
@@ -62,7 +95,7 @@ test.describe('Notatka głosowa personelu opiekuńczego (@REQ: VOICE-ZERO-GUESSI
 
     // Rozpoczęcie i zakończenie nagrywania
     await voiceNotePage.startRecording();
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(300);
     await voiceNotePage.stopRecording();
 
     // Weryfikacja: po zakończeniu nagrania treść transkrypcji MUSI pojawić się na ekranie
