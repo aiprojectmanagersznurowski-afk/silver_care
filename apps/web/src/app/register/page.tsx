@@ -361,11 +361,12 @@ function RegisterContent() {
             type="button" 
             variant="outline" 
             className="w-full text-xs" 
-            disabled={isSubmitting}
+            disabled={isSubmitting || !consentsValid}
             onClick={async () => {
-              if (!token) return
+              if (!token || !consentsValid) return
               setIsSubmitting(true)
               document.cookie = `invite_token=${token}; path=/; max-age=3600; SameSite=Lax`
+              document.cookie = `invite_consents_accepted=true; path=/; max-age=3600; SameSite=Lax`
               
               const supabase = createClient()
               await supabase.auth.signInWithOAuth({
