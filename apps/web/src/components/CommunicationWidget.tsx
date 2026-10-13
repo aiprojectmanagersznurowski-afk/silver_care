@@ -92,6 +92,23 @@ export function CommunicationWidget({ residentId }: { residentId?: string }) {
             </div>
           </div>
 
+          {/* status bar */}
+          {messages.length > 0 && (
+            <div className="px-4 py-2 bg-muted/50 border-b border-border flex items-center justify-between text-[11px] text-muted-foreground">
+              {messages[messages.length - 1]?.is_from_family ? (
+                <div className="flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                  <span className="font-medium text-foreground">Oczekuje na odpowiedź personelu</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                  <span>Odpowiedź dyżuru: {format(new Date(messages[messages.length - 1].created_at), "HH:mm")}</span>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* body */}
           <div className="flex-1 flex flex-col overflow-y-auto p-4 bg-surface-sunken" ref={scrollRef}>
             {messages.length === 0 ? (
@@ -128,7 +145,9 @@ export function CommunicationWidget({ residentId }: { residentId?: string }) {
                           <div className="max-w-[80%] rounded-xl rounded-br-md bg-primary px-4 py-2.5 text-primary-foreground">
                             <p className="text-[0.92rem] leading-relaxed whitespace-pre-wrap">{m.content}</p>
                           </div>
-                          <span className="mt-1 text-[0.7rem] text-muted-foreground">{format(new Date(m.created_at), "HH:mm")}</span>
+                          <span className="mt-1 text-[0.7rem] text-muted-foreground flex items-center gap-1">
+                            {format(new Date(m.created_at), "HH:mm")} • <span className="text-primary font-medium">✓ Doręczono</span>
+                          </span>
                         </div>
                       ) : (
                         <div className="flex gap-2.5">
@@ -140,7 +159,7 @@ export function CommunicationWidget({ residentId }: { residentId?: string }) {
                               <p className="text-[0.92rem] leading-relaxed text-foreground whitespace-pre-wrap">{m.content}</p>
                             </div>
                             <span className="ml-1 mt-1 block text-[0.7rem] text-muted-foreground">
-                              Personel · {format(new Date(m.created_at), "HH:mm")}
+                              Personel dyżurny · {format(new Date(m.created_at), "HH:mm")}
                             </span>
                           </div>
                         </div>

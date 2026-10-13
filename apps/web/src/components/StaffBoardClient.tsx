@@ -52,14 +52,19 @@ const STATUS_CONFIG: Record<NoteStatus, { label: string; className: string }> = 
 interface StaffBoardClientProps {
   residents: Record<string, unknown>[]
   floors: string[]
+  unansweredMessagesMap?: Record<
+    string,
+    { hasUnanswered: boolean; unansweredCount: number; lastMessageAt?: string; lastMessageSnippet?: string }
+  >
 }
 
-export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
+export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {} }: StaffBoardClientProps) {
   const [viewMode, setViewMode] = useState<'standard' | 'rounds'>('rounds')
   const [searchFilter, setSearchFilter] = useState<string>('')
   const [floorFilter, setFloorFilter] = useState<string>('all')
   const [roomFilter, setRoomFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [onlyUnansweredFilter, setOnlyUnansweredFilter] = useState<boolean>(false)
 
   // Śledzenie pensjonariuszy z potwierdzoną obserwacją 1-kliknięciem
   const [loggedResidentIds, setLoggedResidentIds] = useState<Record<string, boolean>>({})
@@ -70,6 +75,10 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
   useEffect(() => {
     setRoomFilter('all')
   }, [floorFilter])
+
+  const totalUnansweredCount = useMemo(() => {
+    return Object.values(unansweredMessagesMap).filter((s) => s.hasUnanswered).length
+  }, [unansweredMessagesMap])
 
   const roomsForCurrentFloor = useMemo(() => {
     if (floorFilter === 'all') return []
@@ -85,6 +94,10 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
 
   const filtered = useMemo(() => {
     return residents.filter((r) => {
+      const resId = String(r.id || '')
+      if (onlyUnansweredFilter && !unansweredMessagesMap[resId]?.hasUnanswered) {
+        return false
+      }
       const name = `${r.first_name} ${r.last_name}`.toLowerCase()
       if (searchFilter.trim() !== '' && !name.includes(searchFilter.toLowerCase().trim())) {
         return false
@@ -100,13 +113,14 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
       }
       return true
     })
-  }, [residents, searchFilter, floorFilter, roomFilter, statusFilter])
+  }, [residents, searchFilter, floorFilter, roomFilter, statusFilter, onlyUnansweredFilter, unansweredMessagesMap])
 
   const clearFilters = () => {
     setSearchFilter('')
     setFloorFilter('all')
     setRoomFilter('all')
     setStatusFilter('all')
+    setOnlyUnansweredFilter(false)
   }
 
   const handleQuickLog = (residentId: string) => {
@@ -136,7 +150,9 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
     (floorFilter !== 'all' ? 1 : 0) +
     (roomFilter !== 'all' ? 1 : 0) +
     (statusFilter !== 'all' ? 1 : 0) +
-    (searchFilter !== '' ? 1 : 0)
+    (searchFilter !== '' ? 1 : 0) +
+    (onlyUnansweredFilter ? 1 : 0)
+
 
   return (
     <div className="space-y-6">
@@ -337,6 +353,26 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                 ))}
               </div>
             )}
+
+            {/* Token oczekujących wiadomości od rodzin */}
+            <div data-filter-group="messages" className="flex flex-wrap items-center gap-1.5 pt-1">
+              <span className="text-xs font-medium text-muted-foreground w-14 shrink-0">Kontakt:</span>
+              <button
+                type="button"
+                data-testid="filter-unanswered-messages"
+                onClick={() => setOnlyUnansweredFilter((prev) => !prev)}
+                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                  onlyUnansweredFilter
+                    ? 'bg-primary text-primary-foreground'
+                    : totalUnansweredCount > 0
+                    ? 'bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20'
+                    : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
+                }`}
+              >
+                <MessageSquare className="h-3.5 w-3.5" />
+                <span>Oczekujące wiadomości ({totalUnansweredCount})</span>
+              </button>
+            </div>
           </div>
 
           {/* Aktywne tokeny filtrów (Active chips) */}
@@ -349,6 +385,15 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                 <span className="inline-flex items-center gap-1 bg-primary/10 text-primary text-xs font-medium px-2.5 py-0.5 rounded-full">
                   Szukaj: &quot;{searchFilter}&quot;
                   <button type="button" onClick={() => setSearchFilter('')} className="hover:opacity-75">
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
+              {onlyUnansweredFilter && (
+                <span className="inline-flex items-center gap-1 bg-primary/10 text-primary text-xs font-medium px-2.5 py-0.5 rounded-full border border-primary/20">
+                  <MessageSquare className="h-3 w-3" />
+                  Tylko z oczekującą wiadomością
+                  <button type="button" onClick={() => setOnlyUnansweredFilter(false)} className="hover:opacity-75">
                     <X className="h-3 w-3" />
                   </button>
                 </span>
@@ -394,6 +439,8 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
             const roomNumber = rooms?.number as string | undefined
             const isLogged = Boolean(loggedResidentIds[resId])
             const isSubmitting = pendingResidentId === resId
+            const unansweredInfo = unansweredMessagesMap[resId]
+            const hasUnanswered = Boolean(unansweredInfo?.hasUnanswered)
 
             return (
               <div
@@ -434,6 +481,46 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                     </span>
                   )}
                 </div>
+
+                {hasUnanswered && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center justify-between rounded-lg bg-muted/60 border border-border px-3 py-1.5 text-xs hover:border-primary/40 transition-colors cursor-help">
+                        <span
+                          data-testid="unanswered-message-badge"
+                          className="inline-flex items-center gap-1.5 font-medium text-foreground"
+                        >
+                          <MessageSquare className="h-3.5 w-3.5 text-primary" />
+                          Nowa wiadomość od rodziny
+                        </span>
+                        <Link
+                          href={`/staff/messages?residentId=${resId}`}
+                          className="font-semibold text-primary hover:underline text-[11px]"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          Odpowiedz &rarr;
+                        </Link>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" align="center" className="max-w-xs p-3 space-y-1.5 bg-popover text-popover-foreground border border-border">
+                      <div className="flex items-center justify-between text-[11px] font-semibold text-primary">
+                        <span>Wiadomość od bliskich</span>
+                        {unansweredInfo?.lastMessageAt && (
+                          <span className="text-muted-foreground font-normal">
+                            {new Date(unansweredInfo.lastMessageAt).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs italic text-foreground leading-snug">
+                        &ldquo;{unansweredInfo?.lastMessageSnippet || 'Nowa wiadomość oczekująca na odpowiedź.'}&rdquo;
+                      </p>
+                      <div className="pt-1 text-[10px] text-muted-foreground flex justify-between items-center border-t border-border/50">
+                        <span>{unansweredInfo?.unansweredCount ? `${unansweredInfo.unansweredCount} oczekująca(e)` : 'Wymaga odpowiedzi'}</span>
+                        <span className="text-primary font-medium">Kliknij &bdquo;Odpowiedz&rdquo;</span>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
 
                 <div className="grid grid-cols-2 gap-2 pt-1">
                   <Tooltip>
@@ -499,6 +586,8 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
             const roomNumber = rooms?.number as string | undefined
             const noteStatus = getNoteStatus(resident)
             const statusCfg = STATUS_CONFIG[noteStatus]
+            const unansweredInfo = unansweredMessagesMap[resident.id as string]
+            const hasUnanswered = Boolean(unansweredInfo?.hasUnanswered)
 
             return (
               <Card
@@ -542,6 +631,46 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                         )}
                       </div>
                     </div>
+
+                    {hasUnanswered && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center justify-between rounded-lg bg-muted/60 border border-border px-3 py-1.5 text-xs hover:border-primary/40 transition-colors cursor-help">
+                            <span
+                              data-testid="unanswered-message-badge"
+                              className="inline-flex items-center gap-1.5 font-medium text-foreground"
+                            >
+                              <MessageSquare className="h-3.5 w-3.5 text-primary" />
+                              Nowa wiadomość od rodziny
+                            </span>
+                            <Link
+                              href={`/staff/messages?residentId=${resident.id as string}`}
+                              className="font-semibold text-primary hover:underline text-[11px]"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              Odpowiedz &rarr;
+                            </Link>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" align="center" className="max-w-xs p-3 space-y-1.5 bg-popover text-popover-foreground border border-border">
+                          <div className="flex items-center justify-between text-[11px] font-semibold text-primary">
+                            <span>Wiadomość od bliskich</span>
+                            {unansweredInfo?.lastMessageAt && (
+                              <span className="text-muted-foreground font-normal">
+                                {new Date(unansweredInfo.lastMessageAt).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs italic text-foreground leading-snug">
+                            &ldquo;{unansweredInfo?.lastMessageSnippet || 'Nowa wiadomość oczekująca na odpowiedź.'}&rdquo;
+                          </p>
+                          <div className="pt-1 text-[10px] text-muted-foreground flex justify-between items-center border-t border-border/50">
+                            <span>{unansweredInfo?.unansweredCount ? `${unansweredInfo.unansweredCount} oczekująca(e)` : 'Wymaga odpowiedzi'}</span>
+                            <span className="text-primary font-medium">Kliknij &bdquo;Odpowiedz&rdquo;</span>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
                   </div>
 
                   <div className="border-t border-border p-4 bg-muted/50 flex flex-col gap-3">
@@ -571,9 +700,21 @@ export function StaffBoardClient({ residents, floors }: StaffBoardClientProps) {
                       </Tooltip>
                     )}
 
-                    <Link href={`/staff/messages?residentId=${resident.id}`} className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-card px-4 py-2.5 text-sm font-medium text-foreground ring-1 ring-inset ring-border hover:bg-muted/50 transition-colors min-h-[44px]">
+                    <Link
+                      href={`/staff/messages?residentId=${resident.id}`}
+                      className={`w-full inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors min-h-[44px] ${
+                        hasUnanswered
+                          ? 'bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 font-semibold'
+                          : 'bg-card text-foreground ring-1 ring-inset ring-border hover:bg-muted/50'
+                      }`}
+                    >
                       <MessageSquare className="h-4 w-4 text-primary" />
-                      Wiadomości od rodziny
+                      <span>Wiadomości od rodziny</span>
+                      {hasUnanswered && (
+                        <span className="ml-1 rounded-full bg-primary text-primary-foreground px-1.5 py-0.5 text-[10px] font-bold">
+                          !
+                        </span>
+                      )}
                     </Link>
 
                     <div className="mt-1">

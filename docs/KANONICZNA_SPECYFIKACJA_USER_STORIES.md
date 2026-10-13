@@ -539,7 +539,7 @@
 > ⚖️ **Rozstrzygnięcie:** Wycofane w PR #39 (`SEC-PESEL-HASH`, ADR-008). Zgodnie z nadrzędną regułą `AGENTS.md` (*„PESEL wyłącznie jako `pesel_hash`."*) oraz kontraktem `SEC-PESEL-HASH`, w bazie danych nie ma kolumny z wartością jawną ani odwracalną (`pesel_encrypted` i moduł kryptograficzny zostały usunięte z bazy i kodu). Podgląd wartości PESEL nie jest wspierany.
 
 #### [SC-NUR-11] Wskaźnik nieodpowiedzianych wiadomości na pulpicie dyżuru i odpowiedź głosowa personelu
-🔗 **Kontrakt:** brak REQ · **Status:** 📝 PROPOZYCJA
+🔗 **Kontrakt:** `NUR-BOARD`, `FAM-MESSAGES`, `INFRA-GROQ-TRANSCRIPTION` · **WO:** [`NUR-UNANSWERED-MESSAGES`](workorders/NUR-UNANSWERED-MESSAGES.md) · **Status:** 🟡 W TRAKCIE
 
 **User story:** Jako Pielęgniarka / Pracownik personelu na dyżurze, chcę widzieć na głównym pulpicie (`/staff`) informację o oczekujących, nieodpowiedzianych wiadomościach od rodzin podopiecznych oraz móc odpowiedzieć na nie głosowo, aby sprawnie zamykać pętlę komunikacji z bliskimi seniora bez konieczności ciągłego sprawdzania skrzynki i bez odrywania się od czynności opiekuńczych na pisanie na klawiaturze.
 
