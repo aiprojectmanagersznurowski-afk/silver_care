@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
+import { Logo } from '@/components/Logo'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -228,9 +229,7 @@ function RegisterContent() {
     <Card className="w-full max-w-md shadow-lg border-border">
       <CardHeader className="space-y-1 text-center">
         <div className="mx-auto mb-3 flex justify-center">
-          <Image
-            src="/logo.png"
-            alt="Silver Care"
+          <Logo
             width={150}
             height={42}
             className="h-9 w-auto object-contain"

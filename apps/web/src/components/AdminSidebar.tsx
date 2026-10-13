@@ -13,6 +13,7 @@ import {
   Users,
 } from 'lucide-react'
 import Image from 'next/image'
+import { Logo } from '@/components/Logo'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -80,7 +81,7 @@ export function AdminSidebar({
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" render={<Link href="/admin" aria-label="Silver Care — strona główna" />}>
               <Image src="/logo-mark.png" alt="" width={32} height={32} className="hidden size-8 object-contain group-data-[collapsible=icon]:block" />
-              <Image src="/logo.png" alt="Silver Care" width={124} height={36} className="h-7 w-auto object-contain group-data-[collapsible=icon]:hidden" priority />
+              <Logo width={124} height={36} className="h-7 w-auto object-contain group-data-[collapsible=icon]:hidden" priority />
               <Badge variant="secondary" className="ml-auto group-data-[collapsible=icon]:hidden">{role === 'super_admin' ? 'Super Admin' : 'Admin'}</Badge>
             </SidebarMenuButton>
           </SidebarMenuItem>

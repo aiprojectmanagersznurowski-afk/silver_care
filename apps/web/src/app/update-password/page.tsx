@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import { Logo } from '@/components/Logo'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -79,9 +80,7 @@ export default function UpdatePasswordPage() {
         <form onSubmit={handleUpdatePassword}>
           <CardHeader className="text-center">
             <div className="mx-auto mb-3 flex justify-center">
-              <Image
-                src="/logo.png"
-                alt="Silver Care"
+              <Logo
                 width={150}
                 height={42}
                 className="h-9 w-auto object-contain"
@@ -93,7 +92,7 @@ export default function UpdatePasswordPage() {
               Witaj! Ustaw hasło dla swojego konta, aby móc się logować.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 pb-6">
             {error && (
               <div className="text-sm font-medium text-destructive">{error}</div>
             )}
@@ -118,7 +117,7 @@ export default function UpdatePasswordPage() {
               />
             </div>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="p-6 pt-4">
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Zapisywanie...' : 'Zapisz hasło i przejdź dalej'}
             </Button>
