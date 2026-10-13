@@ -138,3 +138,80 @@ export function parseFacilityVoiceJson(raw: string): {
     return { _parseError: true }
   }
 }
+
+export function fallbackExtractFacilityVoiceParams(text: string): {
+  number?: string
+  floor?: string
+  sector?: string
+  bedLabels?: string[]
+} {
+  const normalized = text.toLowerCase()
+  let number: string | undefined
+  let floor: string | undefined
+  let sector: string | undefined
+  let bedLabels: string[] | undefined
+
+  // 1. Numer pokoju: np. "pokój 101", "pokój numer 205B", "sala 12"
+  const roomMatch = text.match(/(?:pok[oó]j|sala)\s*(?:nr|numer)?\s*([0-9]+[a-zA-Z]?|[a-zA-Z]+-?[0-9]+)/i)
+  if (roomMatch) {
+    number = roomMatch[1]
+  }
+
+  // 2. Piętro: "parter", "piętro 1", "piętro pierwsze", "na pierwszym piętrze", "1 piętro"
+  if (normalized.includes('parter')) {
+    floor = 'Parter'
+  } else {
+    const beforeMatch = text.match(/(pierwsz[a-zęóąśłżźćń]*|drugi[a-zęóąśłżźćń]*|trzeci[a-zęóąśłżźćń]*|czwart[a-zęóąśłżźćń]*|pi[aą]t[a-zęóąśłżźćń]*|[0-9]+)\s*pi[eę]tr/i)
+    const afterMatch = text.match(/pi[eę]tr(?:o|ze|a|u)?\s*([0-9]+|pierwsz[a-zęóąśłżźćń]*|drugi[a-zęóąśłżźćń]*|trzeci[a-zęóąśłżźćń]*|czwart[a-zęóąśłżźćń]*|pi[aą]t[a-zęóąśłżźćń]*)/i)
+    const floorToken = beforeMatch ? beforeMatch[1].toLowerCase() : (afterMatch ? afterMatch[1].toLowerCase() : '')
+    if (floorToken) {
+      if (floorToken.startsWith('pierwsz') || floorToken === '1') floor = '1'
+      else if (floorToken.startsWith('drug') || floorToken === '2') floor = '2'
+      else if (floorToken.startsWith('trzec') || floorToken === '3') floor = '3'
+      else if (floorToken.startsWith('czwart') || floorToken === '4') floor = '4'
+      else if (floorToken.startsWith('piąt') || floorToken.startsWith('piat') || floorToken === '5') floor = '5'
+      else if (/^[0-9]+$/.test(floorToken)) floor = floorToken
+    }
+  }
+
+  // 3. Sektor / skrzydło: np. "skrzydło A", "sektor Zachód"
+  const sectorMatch = text.match(/(?:skrzyd[łl]o|sektor)\s*([a-zA-Z0-9ąćęłńóśźż\s]+?)(?:,|\.|$|łóżk|sala|pokój)/i)
+  if (sectorMatch) {
+    sector = sectorMatch[1].trim()
+  }
+
+  // 4. Etykiety i liczba łóżek:
+  // Jawne etykiety (np. "łóżka A i B", "łóżka o oznaczeniach A, B, C")
+  const explicitLabelsMatch = text.match(/ł[oó]żk(?:a|o|i)?\s*(?:o\s*oznaczeniach|o\s*nazwach|oznaczone\s*jako|:)?\s*([A-Za-z0-9](?:\s*(?:,|i|oraz)\s*[A-Za-z0-9])+)/i)
+  if (explicitLabelsMatch) {
+    const rawLabels = explicitLabelsMatch[1]
+      .split(/(?:,|\si\s|\soraz\s|\s+)/)
+      .map(s => s.trim())
+      .filter(s => s && s.length <= 4 && !['dwa', 'trzy', 'cztery', 'pięć'].includes(s.toLowerCase()))
+    if (rawLabels.length > 0) {
+      bedLabels = rawLabels
+    }
+  }
+
+  // Jeśli brak jawnych etykiet, wyznacz etykiety z liczby łóżek (np. "3 łóżka", "dwa łóżka")
+  if (!bedLabels || bedLabels.length === 0) {
+    const countMatch = text.match(/([0-9]+|jedno|dwa|trzy|cztery|pięć|sześć)\s*ł[oó]żk/i)
+    if (countMatch) {
+      const countWordMap: Record<string, number> = {
+        'jedno': 1, '1': 1,
+        'dwa': 2, '2': 2,
+        'trzy': 3, '3': 3,
+        'cztery': 4, '4': 4,
+        'pięć': 5, '5': 5,
+        'sześć': 6, '6': 6,
+      }
+      const count = countWordMap[countMatch[1].toLowerCase()] || parseInt(countMatch[1], 10)
+      if (count > 0) {
+        bedLabels = Array.from({ length: count }, (_, i) => String(i + 1))
+      }
+    }
+  }
+
+  return { number, floor, sector, bedLabels }
+}
+

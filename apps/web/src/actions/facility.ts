@@ -11,6 +11,7 @@ import {
   FacilityExportRoom,
   validateFacilityRows,
   parseFacilityVoiceJson,
+  fallbackExtractFacilityVoiceParams,
 } from '@/lib/facility-helpers'
 
 async function requireOrgAdmin() {
@@ -204,17 +205,35 @@ ZASADY:
 {"number":"101","floor":"Parter","sector":null,"bedCount":2,"bedLabels":["1","2"]}
 3. Jeśli jakaś wartość nie padła w notatce, ustaw null.`
 
-    const raw = await callEuLlmCompletion(
-      [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: transcription },
-      ],
-      0.1,
-      400
-    )
+    try {
+      const raw = await callEuLlmCompletion(
+        [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: transcription },
+        ],
+        0.1,
+        400
+      )
 
-    const parsed = parseFacilityVoiceJson(raw)
-    return { parsed }
+      const parsed = parseFacilityVoiceJson(raw)
+      if (!parsed._parseError) {
+        return { parsed }
+      }
+    } catch (llmErr: any) {
+      // W razie błędu LLM (np. brak konfiguracji klucza lub brak sieci), użyj inteligentnego fallbacku heurystycznego
+      const fallback = fallbackExtractFacilityVoiceParams(transcription)
+      if (fallback.number || fallback.floor || fallback.bedLabels) {
+        return { parsed: fallback }
+      }
+      throw llmErr
+    }
+
+    const fallback = fallbackExtractFacilityVoiceParams(transcription)
+    if (fallback.number || fallback.floor || fallback.bedLabels) {
+      return { parsed: fallback }
+    }
+
+    return { error: 'Nie udało się wyodrębnić parametrów pokoju. Wprowadź dane ręcznie.' }
   } catch (err: any) {
     return { error: err.message || 'Błąd parsowania notatki głosowej' }
   }
