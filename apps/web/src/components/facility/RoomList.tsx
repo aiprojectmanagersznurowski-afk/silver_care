@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, Fragment } from 'react'
 import {
   ChevronDown,
   ChevronUp,
@@ -51,6 +51,26 @@ export function formatSectorName(sector?: string | null): string {
 export default function RoomList({ rooms, onUpdate }: RoomListProps) {
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
   const [expandedRooms, setExpandedRooms] = useState<Record<string, boolean>>({})
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('silver_care_facility_room_view_mode')
+      if (saved === 'grid' || saved === 'table') {
+        setViewMode(saved)
+      }
+    } catch {
+      // Ignore in SSR
+    }
+  }, [])
+
+  const handleModeChange = (mode: 'grid' | 'table') => {
+    setViewMode(mode)
+    try {
+      localStorage.setItem('silver_care_facility_room_view_mode', mode)
+    } catch {
+      // Ignore in SSR
+    }
+  }
 
   // Filtry
   const [searchQuery, setSearchQuery] = useState('')
@@ -157,7 +177,7 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
               type="button"
               variant={viewMode === 'grid' ? 'default' : 'ghost'}
               size="sm"
-              onClick={() => setViewMode('grid')}
+              onClick={() => handleModeChange('grid')}
               className={`h-8 px-3 rounded-lg text-xs font-medium ${
                 viewMode === 'grid' ? 'bg-primary hover:bg-primary/90 text-white' : 'text-foreground'
               }`}
@@ -169,7 +189,7 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
               type="button"
               variant={viewMode === 'table' ? 'default' : 'ghost'}
               size="sm"
-              onClick={() => setViewMode('table')}
+              onClick={() => handleModeChange('table')}
               className={`h-8 px-3 rounded-lg text-xs font-medium ${
                 viewMode === 'table' ? 'bg-primary hover:bg-primary/90 text-white' : 'text-foreground'
               }`}
@@ -404,66 +424,97 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
                   const isExpanded = expandedRooms[room.id]
 
                   return (
-                    <TableRow
-                      key={room.id}
-                    >
-                      <TableCell className="font-semibold text-foreground">
-                        <div className="flex items-center gap-2">
-                          <DoorOpen className="w-4 h-4 text-primary" />
-                          <span>Pokój {room.number}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{room.floor}</TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {room.sector ? formatSectorName(room.sector) : '—'}
-                      </TableCell>
-                      <TableCell className="text-center font-medium">
-                        {room.beds || 0}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                            room.free > 0
-                              ? 'bg-muted text-foreground'
-                              : 'bg-muted text-foreground'
-                          }`}
-                        >
-                          {room.occupied || 0} / {room.beds || 0} ({room.free || 0} wolnych)
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap items-center gap-1.5 text-xs">
-                          {isGround && (
-                            <span className="inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-[11px] font-medium text-foreground">
-                              Parter
-                            </span>
-                          )}
+                    <Fragment key={room.id}>
+                      <TableRow
+                        className={isExpanded ? 'bg-muted/30 border-b-0' : undefined}
+                      >
+                        <TableCell className="font-semibold text-foreground">
+                          <div className="flex items-center gap-2">
+                            <DoorOpen className="w-4 h-4 text-primary" />
+                            <span>Pokój {room.number}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">{room.floor}</TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {room.sector ? formatSectorName(room.sector) : '—'}
+                        </TableCell>
+                        <TableCell className="text-center font-medium">
+                          {room.beds || 0}
+                        </TableCell>
+                        <TableCell className="text-center">
                           <span
-                            className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium ${
-                              genderInfo.variant === 'warning'
-                                ? 'bg-muted text-foreground'
-                                : 'bg-muted text-foreground'
-                            }`}
+                            className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-muted text-foreground"
                           >
-                            {genderInfo.label}
+                            {room.occupied || 0} / {room.beds || 0} ({room.free || 0} wolnych)
                           </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <AddBedDialog roomId={room.id} onBedAdded={onUpdate} />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => toggleRoom(room.id)}
-                            className="h-8 px-2 text-xs text-primary hover:text-primary"
-                          >
-                            {isExpanded ? 'Zwiń' : 'Łóżka'}
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                            {isGround && (
+                              <span className="inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-[11px] font-medium text-foreground">
+                                Parter
+                              </span>
+                            )}
+                            <span
+                              className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium bg-muted text-foreground"
+                            >
+                              {genderInfo.variant === 'warning' && (
+                                <AlertTriangle className="w-3 h-3 text-foreground" />
+                              )}
+                              {genderInfo.label}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <AddBedDialog roomId={room.id} onBedAdded={onUpdate} />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => toggleRoom(room.id)}
+                              className="h-8 px-2 text-xs text-primary hover:text-primary font-medium"
+                            >
+                              {isExpanded ? (
+                                <>
+                                  <ChevronUp className="w-3.5 h-3.5 mr-1" />
+                                  Zwiń
+                                </>
+                              ) : (
+                                <>
+                                  <ChevronDown className="w-3.5 h-3.5 mr-1" />
+                                  Łóżka
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                      {isExpanded && (
+                        <TableRow
+                          key={`${room.id}-expanded`}
+                          className="bg-muted/10 hover:bg-muted/10 border-t-0"
+                          data-testid="room-expanded-beds"
+                        >
+                          <TableCell colSpan={7} className="p-4 pt-1 pb-4">
+                            <div className="rounded-lg border border-border/80 bg-background/90 p-4 shadow-none">
+                              <div className="mb-3 flex items-center justify-between text-xs font-medium text-muted-foreground">
+                                <span>
+                                  Łóżka w pokoju {room.number} ({room.occupied || 0}/{room.beds || 0} zajęte)
+                                </span>
+                                <span>{room.free || 0} wolnych</span>
+                              </div>
+                              <BedList
+                                roomId={room.id}
+                                roomNumber={room.number}
+                                floor={room.floor}
+                                onUpdate={onUpdate}
+                              />
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </Fragment>
                   )
                 })}
               </TableBody>

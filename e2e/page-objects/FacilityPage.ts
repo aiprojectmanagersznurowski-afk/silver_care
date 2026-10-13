@@ -16,6 +16,8 @@ export class FacilityPage {
   readonly occupancyFilter: Locator;
   readonly roomCards: Locator;
   readonly roomTable: Locator;
+  readonly bedsTable: Locator;
+  readonly expandedBedRows: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -27,6 +29,8 @@ export class FacilityPage {
     this.occupancyFilter = page.locator('select[name="occupancyFilter"]');
     this.roomCards = page.locator('[data-testid="room-card"]');
     this.roomTable = page.locator('[data-testid="room-table"]');
+    this.bedsTable = page.locator('[data-testid="beds-table"]');
+    this.expandedBedRows = page.locator('[data-testid="room-expanded-beds"]');
   }
 
   async goto() {
