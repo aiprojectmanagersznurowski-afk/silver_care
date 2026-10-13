@@ -82,9 +82,12 @@ export default async function OrganizationDetailsPage({
               <Building2 className="h-6 w-6" />
             </div>
             <div>
-              <h2 className="text-3xl font-display font-semibold tracking-tight text-foreground">
-                {organization.name}
-              </h2>
+              <div className="flex items-center gap-3 flex-wrap">
+                <h2 className="text-3xl font-display font-semibold tracking-tight text-foreground">
+                  {organization.name}
+                </h2>
+                <BusinessIdBadge type="organization" id={organization.id} />
+              </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                 <MapPin className="h-4 w-4" />
                 <span>{organization.address || 'Brak adresu'}</span>
@@ -100,7 +103,6 @@ export default async function OrganizationDetailsPage({
                 resident_limit: organization.resident_limit || 50,
               }}
             />
-            <BusinessIdBadge type="organization" id={organization.id} />
           </div>
         </div>
       </div>

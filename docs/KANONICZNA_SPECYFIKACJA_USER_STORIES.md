@@ -492,6 +492,28 @@
 - **AC2:** Aktualizacja optymistyczna z rollbackiem i komunikatem przy błędzie.
 - **AC3:** Uprawnienia zgodne z `MATRIX`; każda zmiana w `audit_logs` z listą zmienionych pól, bez wartości wrażliwych.
 
+#### [SC-ADM-17] Pełnofunkcyjna wyszukiwarka globalna (Command Palette / Spotlight Cmd+K)
+🔗 **Kontrakt:** `UI-TEMPLATE-ALIGNMENT`, `UI-ACCESSIBILITY`, `ORG-ISOLATION`, `SEC-NO-PII-LOGS`, `MDR-VOCABULARY` · **WO:** [`UI-GLOBAL-SEARCH`](workorders/UI-GLOBAL-SEARCH.md) · **Status:** 📝 PROPOZYCJA
+
+**User story:** Jako Administrator lub Członek Personelu, chcę błyskawicznie przeszukiwać cały system (podopiecznych, pokoje i łóżka, plan dnia, raporty, personel, a dla superadmina placówki) za pomocą skrótu Cmd+K / Ctrl+K lub przycisku w nagłówku, aby nawigować po placówce w ułamku sekundy bez przeklikiwania menu.
+
+**Kryteria akceptacji:**
+- **AC1 (Uniwersalny kontrakt i kategoryzacja):** Wyniki są pogrupowane w kategorie (`residents`, `facility`, `agenda`, `reports`, `staff`, `organizations`) z czytelnymi badge'ami i metadanymi.
+- **AC2 (Bezpieczeństwo i RODO):** Wyszukiwanie jest ściśle izolowane do `organization_id` bieżącego użytkownika (poza rolą `super_admin`). Brak wyszukiwania po PESEL w plaintext, zero-PII w logach systemowych.
+- **AC3 (Słownictwo i brak danych medycznych):** Całkowity zakaz słowa „pacjent”; podtytuły raportów i aktywności nie zawierają danych medycznych ani diagnostycznych.
+- **AC4 (Ergonomia Spotlight i dostępność):** Obsługa skrótu `Cmd+K` / `Ctrl+K`, nawigacja strzałkami `ArrowUp` / `ArrowDown`, wybór klawiszem `Enter`, zamykanie `Escape`, 4 stany UI (loading, empty, success, error) oraz szybkie filtry kategorii.
+
+#### [SC-ADM-18] Trwałe zapamiętywanie preferencji widoku UI (Kafelki / Tabela / Obchód)
+🔗 **Kontrakt:** `UI-TEMPLATE-ALIGNMENT`, `UI-ACCESSIBILITY` · **WO:** [`UI-PERSISTENT-VIEW-PREFERENCES`](workorders/UI-PERSISTENT-VIEW-PREFERENCES.md) · **Status:** 📝 PROPOZYCJA
+
+**User story:** Jako Użytkownik systemu (Administrator lub Personel), chcę, aby raz wybrany tryb wyświetlania danych (np. kafelki vs tabela w strukturze placówki, obchód vs lista na tablicy personelu, kafelki vs tabela na liście pensjonariuszy i organizacji) był trwale zapamiętany w mojej przeglądarce, aby przy kolejnym otwarciu widoku nie musieć ponownie przełączać go ręcznie.
+
+**Kryteria akceptacji:**
+- **AC1 (Trwałość preferencji):** Każda zmiana trybu wyświetlania (`viewMode`) jest automatycznie zapisywana w pamięci lokalnej z unikalnym prefiksem kontekstu.
+- **AC2 (Domyślny stan przy ponownym wejściu):** Po odświeżeniu strony lub powrocie z innej podstrony interfejs automatycznie ładuje ostatnio wybrany tryb widoku.
+- **AC3 (Brak błędów hydratacji SSR):** Inicjalizacja stanu w Next.js nie powoduje błędów hydratacji ani migotania (flicker) przy renderowaniu serwerowym.
+- **AC4 (Pokrycie kluczowych widoków):** Mechanizm obejmuje strukturę placówki (`/admin/facility` — pokoje grid/table), tablicę personelu (`/staff` — rounds/standard), organizacje (`/admin/organizations` — cards/table) oraz listę pensjonariuszy (`/admin/residents` — cards/table).
+
 ### Domena 2 — Personel
 
 #### [SC-NUR-07] Skrzynka wiadomości od rodzin
