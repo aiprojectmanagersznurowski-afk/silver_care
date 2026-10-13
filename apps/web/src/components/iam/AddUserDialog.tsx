@@ -109,7 +109,7 @@ export function AddUserDialog({
             <Input
               id="new-user-org"
               type="text"
-              placeholder="UUID placówki (pozostaw puste dla ról globalnych)"
+              placeholder="Identyfikator placówki (pozostaw puste dla ról globalnych)"
               value={newOrgId}
               onChange={e => onOrgIdChange(e.target.value)}
             />

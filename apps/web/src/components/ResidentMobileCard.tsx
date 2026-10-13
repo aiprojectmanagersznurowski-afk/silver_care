@@ -10,6 +10,7 @@ import { ResidentZsnCheckbox } from '@/components/ResidentZsnCheckbox'
 import { type CareLevel } from '@/lib/reporting-constants'
 import { format } from 'date-fns'
 import { pl } from 'date-fns/locale'
+import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 
 export interface ResidentMobileItem {
   id: string
@@ -73,12 +74,15 @@ export function ResidentMobileCard({ resident }: ResidentMobileCardProps) {
 
         {/* Imię, nazwisko i status */}
         <div className="flex-1 min-w-0">
-          <Link
-            href={`/admin/residents/${resident.id}`}
-            className="font-medium text-foreground text-base hover:text-primary transition-colors truncate block"
-          >
-            {resident.first_name} {resident.last_name}
-          </Link>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Link
+              href={`/admin/residents/${resident.id}`}
+              className="font-medium text-foreground text-base hover:text-primary transition-colors truncate block"
+            >
+              {resident.first_name} {resident.last_name}
+            </Link>
+            <BusinessIdBadge type="resident" id={resident.id} />
+          </div>
           <div className="flex flex-wrap items-center gap-2 mt-1">
             <Badge className={statusBadge.className}>{statusBadge.label}</Badge>
             {activeBed ? (

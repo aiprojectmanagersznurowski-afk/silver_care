@@ -23,6 +23,7 @@ import { PolarWearableCard } from '@/components/PolarWearableCard'
 import { ResidentContractAttachment } from '@/components/facility/ResidentContractAttachment'
 import { InviteFamilyDialog } from '@/components/InviteFamilyDialog'
 import { PrimaryContactButton } from '@/components/PrimaryContactButton'
+import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 
 export default async function ResidentProfilePage({
   params,
@@ -124,6 +125,7 @@ export default async function ResidentProfilePage({
                   <h1 className="text-3xl font-display font-semibold text-foreground">
                     {resident.first_name} {resident.last_name}
                   </h1>
+                  <BusinessIdBadge type="resident" id={resident.id} />
                   {isActive ? (
                     <Badge className="bg-muted text-foreground border-border">
                       Aktywny

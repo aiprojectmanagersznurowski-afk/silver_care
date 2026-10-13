@@ -22,6 +22,7 @@ import { toast } from 'sonner';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { groupMessagesIntoThreads, filterThreadsBySearch } from '@/lib/messages-helper';
 import { Textarea } from '@/components/ui/textarea'
+import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 
 interface RawMessage {
   id: string;
@@ -434,9 +435,9 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
                 </div>
 
                 <div className="text-right shrink-0">
-                  <span className="text-[11px] text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-full border border-border hidden sm:inline-block">
-                    ID wątku: {activeThread.residentId.slice(0, 8)}
-                  </span>
+                  <div className="hidden sm:inline-block">
+                    <BusinessIdBadge type="resident" id={activeThread.residentId} />
+                  </div>
                 </div>
               </div>
 

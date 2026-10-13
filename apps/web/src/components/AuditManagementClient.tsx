@@ -13,6 +13,7 @@ import {
   filterAuditLogsByDate
 } from '@/lib/audit-helpers'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 
 interface AuditManagementClientProps {
   initialLogs: AuditLogEntry[]
@@ -189,7 +190,7 @@ export function AuditManagementClient({
                 <TableRow>
                   <TableHead scope="col">Czas</TableHead>
                   <TableHead scope="col">Akcja</TableHead>
-                  <TableHead scope="col">User ID (Aktor)</TableHead>
+                  <TableHead scope="col">Aktor</TableHead>
                   <TableHead scope="col">Szczegóły techniczne</TableHead>
                 </TableRow>
               </TableHeader>
@@ -204,11 +205,11 @@ export function AuditManagementClient({
                         {log.action}
                       </span>
                     </TableCell>
-                    <TableCell className="font-mono text-foreground">
-                      {log.performed_by ? (
-                        <span className="bg-muted/50 px-2 py-1 rounded font-semibold text-foreground">{log.performed_by}</span>
+                    <TableCell>
+                      {log.performed_by && log.performed_by.toLowerCase() !== 'system' ? (
+                        <BusinessIdBadge type="user" id={log.performed_by} />
                       ) : (
-                        <span className="text-muted-foreground italic">System / Automat</span>
+                        <span className="text-muted-foreground italic text-xs">System / Automat</span>
                       )}
                     </TableCell>
                     <TableCell className="font-mono text-muted-foreground max-w-md truncate">

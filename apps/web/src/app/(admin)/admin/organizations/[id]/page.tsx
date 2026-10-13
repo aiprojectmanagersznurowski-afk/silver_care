@@ -193,7 +193,9 @@ export default async function OrganizationDetailsPage({
                   <TableRow key={admin.id}>
                     <TableCell>
                       <div className="font-medium text-foreground">{admin.email}</div>
-                      <div className="font-mono text-xs text-muted-foreground">{admin.id}</div>
+                      <div className="mt-1">
+                        <BusinessIdBadge type="user" id={admin.id} />
+                      </div>
                     </TableCell>
                     <TableCell>
                       <span className="inline-flex items-center rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
@@ -275,7 +277,9 @@ export default async function OrganizationDetailsPage({
                   <TableRow key={person.id}>
                     <TableCell>
                       <div className="font-medium text-foreground">{person.email}</div>
-                      <div className="font-mono text-xs text-muted-foreground">{person.id}</div>
+                      <div className="mt-1">
+                        <BusinessIdBadge type="user" id={person.id} />
+                      </div>
                     </TableCell>
                     <TableCell>
                       <span className="inline-flex items-center rounded-lg bg-muted px-2.5 py-1 text-xs font-medium text-foreground">

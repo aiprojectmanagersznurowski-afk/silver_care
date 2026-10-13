@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 
 interface ProfileData {
   user: {
@@ -101,13 +102,17 @@ export function ProfileSecurityClient({ initialData }: { initialData: ProfileDat
               </div>
             </div>
             <div>
-              <span className="text-muted-foreground block">Identyfikator (UUID):</span>
-              <span className="font-mono text-xs text-foreground">{initialData.user.id}</span>
+              <span className="text-muted-foreground block">Identyfikator konta:</span>
+              <div className="mt-1">
+                <BusinessIdBadge type="user" id={initialData.user.id} />
+              </div>
             </div>
             {initialData.user.organizationId && (
               <div>
-                <span className="text-muted-foreground block">Identyfikator Placówki:</span>
-                <span className="font-mono text-xs text-foreground">{initialData.user.organizationId}</span>
+                <span className="text-muted-foreground block">Identyfikator placówki:</span>
+                <div className="mt-1">
+                  <BusinessIdBadge type="organization" id={initialData.user.organizationId} />
+                </div>
               </div>
             )}
           </div>

@@ -8,6 +8,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import AssignBedDialog from './AssignBedDialog'
 import ReassignBedDialog from './ReassignBedDialog'
+import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 
 interface BedListProps {
   roomId: string
@@ -128,8 +129,11 @@ export default function BedList({ roomId, roomNumber, floor, onUpdate }: BedList
               {bed.active_assignment ? (
                 <div className="text-sm space-y-1.5">
                   <div className="text-muted-foreground text-xs">Przypisano:</div>
-                  <div className="font-medium text-foreground">
-                    {bed.active_assignment.resident.first_name} {bed.active_assignment.resident.last_name}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-medium text-foreground">
+                      {bed.active_assignment.resident.first_name} {bed.active_assignment.resident.last_name}
+                    </span>
+                    <BusinessIdBadge type="resident" id={bed.active_assignment.resident.id} />
                   </div>
                   <div className="flex flex-wrap gap-1 text-[11px]">
                     {bed.active_assignment.resident.gender && (

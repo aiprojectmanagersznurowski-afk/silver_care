@@ -93,5 +93,52 @@ describe('System Business IDs Presentation Logic (@REQ: INT-CORE-DECOUPLED, @REQ
       expect(userTableSource).toContain('<BusinessIdBadge type="user" id={user.id}')
       expect(userTableSource).not.toContain('<div className="font-mono text-xs text-muted-foreground">{user.id}</div>')
     })
+
+    it('AuditLogTable renderuje BusinessIdBadge dla operatora (performed_by) zamiast surowego UUID', async () => {
+      const fs = await import('node:fs')
+      const path = await import('node:path')
+      const auditTableSource = fs.readFileSync(
+        path.resolve(process.cwd(), 'apps/web/src/components/iam/AuditLogTable.tsx'),
+        'utf8'
+      )
+      expect(auditTableSource).toContain('<BusinessIdBadge type="user" id={log.performed_by}')
+      expect(auditTableSource).not.toContain('{log.performed_by || \'system\'}')
+    })
+
+    it('AuditManagementClient renderuje BusinessIdBadge dla aktora zamiast surowego UUID', async () => {
+      const fs = await import('node:fs')
+      const path = await import('node:path')
+      const auditClientSource = fs.readFileSync(
+        path.resolve(process.cwd(), 'apps/web/src/components/AuditManagementClient.tsx'),
+        'utf8'
+      )
+      expect(auditClientSource).toContain('<BusinessIdBadge type="user" id={log.performed_by}')
+      expect(auditClientSource).not.toContain('>{log.performed_by}</span>')
+    })
+
+    it('OrganizationDetailsPage renderuje BusinessIdBadge dla przypisanych kont personelu i administratorów', async () => {
+      const fs = await import('node:fs')
+      const path = await import('node:path')
+      const orgDetailsSource = fs.readFileSync(
+        path.resolve(process.cwd(), 'apps/web/src/app/(admin)/admin/organizations/[id]/page.tsx'),
+        'utf8'
+      )
+      expect(orgDetailsSource).toContain('<BusinessIdBadge type="user" id={admin.id}')
+      expect(orgDetailsSource).toContain('<BusinessIdBadge type="user" id={person.id}')
+      expect(orgDetailsSource).not.toContain('<div className="font-mono text-xs text-muted-foreground">{admin.id}</div>')
+      expect(orgDetailsSource).not.toContain('<div className="font-mono text-xs text-muted-foreground">{person.id}</div>')
+    })
+
+    it('ProfileClient renderuje BusinessIdBadge dla ID użytkownika i ID placówki', async () => {
+      const fs = await import('node:fs')
+      const path = await import('node:path')
+      const profileSource = fs.readFileSync(
+        path.resolve(process.cwd(), 'apps/web/src/app/settings/profile/profile-client.tsx'),
+        'utf8'
+      )
+      expect(profileSource).toContain('<BusinessIdBadge type="user" id={initialData.user.id}')
+      expect(profileSource).toContain('<BusinessIdBadge type="organization" id={initialData.user.organizationId}')
+      expect(profileSource).not.toContain('<span className="font-mono text-xs text-foreground">{initialData.user.id}</span>')
+    })
   })
 })

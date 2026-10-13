@@ -17,6 +17,7 @@ import { isImpersonationSessionActive, maskResidentListForImpersonation } from '
 import { format } from 'date-fns'
 import { pl } from 'date-fns/locale'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 
 interface BedAssignmentItem {
   id: string
@@ -150,9 +151,12 @@ export default async function AdminResidentsPage() {
                               <UserCircle2 className="h-5 w-5" />
                             </AvatarFallback>
                           </Avatar>
-                          <span className="font-medium text-foreground text-base group-hover:text-primary transition-colors">
-                            {resident.first_name} {resident.last_name}
-                          </span>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium text-foreground text-base group-hover:text-primary transition-colors">
+                              {resident.first_name} {resident.last_name}
+                            </span>
+                            <BusinessIdBadge type="resident" id={resident.id} />
+                          </div>
                         </Link>
                       </TableCell>
                       <TableCell>
