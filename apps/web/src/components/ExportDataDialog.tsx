@@ -79,7 +79,7 @@ export function ExportDataDialog() {
         <Download className="w-4 h-4 text-primary" />
         Eksportuj dane
       </DialogTrigger>
-      <DialogContent data-testid="export-data-dialog" className="max-w-md">
+      <DialogContent data-testid="export-data-dialog" className="sm:max-w-xl md:max-w-2xl p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Download className="w-5 h-5 text-primary" />

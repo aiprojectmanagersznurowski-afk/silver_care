@@ -54,7 +54,7 @@ export function AddUserDialog({
         <UserPlus className="h-4 w-4 mr-2" />
         Dodaj użytkownika
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-xl md:max-w-2xl p-6">
         <DialogHeader>
           <DialogTitle>Utwórz użytkownika i nadaj rolę</DialogTitle>
           <DialogDescription>
@@ -63,31 +63,34 @@ export function AddUserDialog({
         </DialogHeader>
 
         <form onSubmit={onSubmit} className="space-y-4 py-2">
-          <div className="space-y-2">
-            <Label htmlFor="new-user-email">Adres e-mail *</Label>
-            <Input
-              id="new-user-email"
-              type="email"
-              placeholder="np. jan.kowalski@placowka.pl"
-              value={newEmail}
-              onChange={e => onEmailChange(e.target.value)}
-              required
-            />
-          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-user-email">Adres e-mail *</Label>
+              <Input
+                id="new-user-email"
+                type="email"
+                placeholder="np. jan.kowalski@placowka.pl"
+                value={newEmail}
+                onChange={e => onEmailChange(e.target.value)}
+                required
+              />
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="new-user-role">Rola systemowa *</Label>
-            <NativeSelect
-              id="new-user-role"
-              value={newRole}
-              onChange={e => onRoleChange(e.target.value)} className="flex w-full items-center justify-between"
-            >
-              {availableRoles.map(r => (
-                <NativeSelectOption key={r.id} value={r.id}>
-                  {r.label}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
+            <div className="space-y-2">
+              <Label htmlFor="new-user-role">Rola systemowa *</Label>
+              <NativeSelect
+                id="new-user-role"
+                value={newRole}
+                onChange={e => onRoleChange(e.target.value)}
+                className="flex w-full items-center justify-between"
+              >
+                {availableRoles.map(r => (
+                  <NativeSelectOption key={r.id} value={r.id}>
+                    {r.label}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+            </div>
           </div>
 
           <div className="space-y-2">

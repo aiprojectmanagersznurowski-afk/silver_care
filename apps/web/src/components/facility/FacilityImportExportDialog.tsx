@@ -428,7 +428,7 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
         <ArrowUpDown className="w-4 h-4 text-primary" />
         Import / Eksport / Głosowo
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-6 overflow-hidden">
+      <DialogContent className="max-w-3xl md:max-w-4xl lg:max-w-5xl max-h-[90vh] flex flex-col p-6 overflow-hidden">
         <DialogHeader className="shrink-0 mb-4">
           <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-foreground">
             <FileSpreadsheet className="w-5 h-5 text-primary" />

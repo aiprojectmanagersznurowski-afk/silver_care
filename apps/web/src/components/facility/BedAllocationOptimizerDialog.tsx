@@ -133,7 +133,7 @@ export function BedAllocationOptimizerDialog({
         <Sparkles className="w-4 h-4 text-foreground" />
         Optymalizator przydziału (AI)
       </DialogTrigger>
-      <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col p-6 overflow-hidden">
+      <DialogContent className="max-w-4xl lg:max-w-5xl max-h-[90vh] flex flex-col p-6 overflow-hidden">
         <DialogHeader className="shrink-0 mb-4">
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-foreground">

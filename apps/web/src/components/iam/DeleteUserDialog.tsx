@@ -55,7 +55,7 @@ export function DeleteUserDialog({
 
   return (
     <Dialog open={Boolean(user)} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-xl md:max-w-2xl p-6">
         <DialogHeader>
           <div className="flex items-center gap-2">
             <div className={cn(

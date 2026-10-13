@@ -62,7 +62,7 @@ export default function AddBedDialog({ roomId, onBedAdded }: AddBedDialogProps) 
         <Plus className="w-4 h-4 mr-2" />
         Dodaj łóżko
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-lg md:max-w-xl p-6">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Dodaj nowe łóżko</DialogTitle>
@@ -70,19 +70,17 @@ export default function AddBedDialog({ roomId, onBedAdded }: AddBedDialogProps) 
               Wprowadź oznaczenie łóżka (np. A, B, C lub 1, 2, 3).
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <div className="space-y-4 py-4">
             {error && (
               <div className="text-sm font-medium text-destructive">{error}</div>
             )}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="label" className="text-right">
-                Oznaczenie
-              </Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="label">Oznaczenie łóżka</Label>
               <Input
                 id="label"
                 value={label}
                 onChange={(e) => setLabel(e.target.value)}
-                className="col-span-3"
+                placeholder="np. A, B lub 1, 2"
                 required
               />
             </div>

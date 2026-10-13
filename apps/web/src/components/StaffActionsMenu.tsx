@@ -135,7 +135,7 @@ export function StaffActionsMenu({ staffId, email, isActive }: StaffActionsMenuP
 
       {/* Modal Resetu Hasła */}
       <Dialog open={dialogType === 'reset'} onOpenChange={(open) => !open && setDialogType('none')}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-lg md:max-w-xl p-6">
           <DialogHeader>
             <DialogTitle>Reset Hasła Pracownika</DialogTitle>
             <DialogDescription>
@@ -177,7 +177,7 @@ export function StaffActionsMenu({ staffId, email, isActive }: StaffActionsMenuP
 
       {/* Modal Zawieszenia Konta (Wpisanie DEZAKTYWUJ) */}
       <Dialog open={dialogType === 'suspend'} onOpenChange={(open) => !open && setDialogType('none')}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-lg md:max-w-xl p-6">
           <DialogHeader>
             <DialogTitle>Zawieszenie Konta Pracownika</DialogTitle>
             <DialogDescription>
@@ -220,7 +220,7 @@ export function StaffActionsMenu({ staffId, email, isActive }: StaffActionsMenuP
 
       {/* Modal Przywrócenia Konta */}
       <Dialog open={dialogType === 'restore'} onOpenChange={(open) => !open && setDialogType('none')}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-lg md:max-w-xl p-6">
           <DialogHeader>
             <DialogTitle>Przywrócenie Konta Pracownika</DialogTitle>
             <DialogDescription>

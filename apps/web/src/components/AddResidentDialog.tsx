@@ -113,7 +113,7 @@ export function AddResidentDialog() {
       <DialogTrigger render={<Button />}>
         Dodaj pensjonariusza
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="sm:max-w-xl md:max-w-2xl p-6">
         <DialogHeader>
           <DialogTitle>Nowy pensjonariusz</DialogTitle>
           <DialogDescription>
@@ -121,25 +121,27 @@ export function AddResidentDialog() {
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="firstName">Imię</Label>
-            <Input
-              id="firstName"
-              placeholder="np. Jan"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="lastName">Nazwisko</Label>
-            <Input
-              id="lastName"
-              placeholder="np. Kowalski"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              required
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="firstName">Imię</Label>
+              <Input
+                id="firstName"
+                placeholder="np. Jan"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Nazwisko</Label>
+              <Input
+                id="lastName"
+                placeholder="np. Kowalski"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                required
+              />
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="nationalId">PESEL</Label>

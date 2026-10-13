@@ -92,7 +92,7 @@ export function EditOrganizationDialog({
         </Button>
       )}>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-xl md:max-w-2xl p-6">
         <DialogHeader>
           <DialogTitle>Edycja danych placówki</DialogTitle>
           <DialogDescription>
@@ -101,15 +101,31 @@ export function EditOrganizationDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 py-2">
-          <div className="space-y-2">
-            <Label htmlFor="edit-org-name">Nazwa placówki *</Label>
-            <Input
-              id="edit-org-name"
-              placeholder="np. Dom Seniora Złota Jesień"
-              value={orgName}
-              onChange={(e) => setOrgName(e.target.value)}
-              required
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="edit-org-name">Nazwa placówki *</Label>
+              <Input
+                id="edit-org-name"
+                placeholder="np. Dom Seniora Złota Jesień"
+                value={orgName}
+                onChange={(e) => setOrgName(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-org-limit">Limit podopiecznych</Label>
+              <Input
+                id="edit-org-limit"
+                type="number"
+                min="1"
+                max="10000"
+                placeholder="50"
+                value={residentLimit}
+                onChange={(e) => setResidentLimit(e.target.value)}
+                required
+              />
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -119,20 +135,6 @@ export function EditOrganizationDialog({
               value={address}
               onChange={setAddress}
               placeholder="np. ul. Leśna 10, 00-001 Warszawa"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="edit-org-limit">Limit podopiecznych</Label>
-            <Input
-              id="edit-org-limit"
-              type="number"
-              min="1"
-              max="10000"
-              placeholder="50"
-              value={residentLimit}
-              onChange={(e) => setResidentLimit(e.target.value)}
-              required
             />
           </div>
 

@@ -113,7 +113,7 @@ export function InviteFamilyDialog({
       <DialogTrigger render={<Button variant={triggerVariant} />}>
         {triggerLabel}
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="sm:max-w-xl md:max-w-2xl p-6">
         <DialogHeader>
           <DialogTitle>Zaproś rodzinę podopiecznego</DialogTitle>
           <DialogDescription>
@@ -121,70 +121,75 @@ export function InviteFamilyDialog({
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="resident">Podopieczny</Label>
-            <NativeSelect
-              id="resident"
-              value={residentId}
-              onChange={(e) => setResidentId(e.target.value)}
-              className="flex w-full items-center justify-between disabled:cursor-not-allowed disabled:opacity-50"
-              required
-            >
-              {residents.map(r => (
-                <NativeSelectOption key={r.id} value={r.id}>{r.first_name} {r.last_name}</NativeSelectOption>
-              ))}
-            </NativeSelect>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="family-role">Rola i uprawnienia</Label>
-            <NativeSelect
-              id="family-role"
-              value={familyRole}
-              onChange={(e) => setFamilyRole(e.target.value as 'legal_guardian' | 'family')}
-              className="flex w-full items-center justify-between disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <NativeSelectOption value="legal_guardian">Opiekun prawny (pełne uprawnienia, zgody Art. 9)</NativeSelectOption>
-              <NativeSelectOption value="family">Obserwator (tylko wgląd w raporty, brak zgód Art. 9)</NativeSelectOption>
-            </NativeSelect>
-            <p className="text-xs text-muted-foreground">
-              Zgodnie z RODO (Art. 9) wyłącznie podopieczny lub opiekun prawny może decydować o przetwarzaniu danych szczególnych kategorii. Obserwator posiada wyłącznie wgląd do publikowanych raportów.
-            </p>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="email">Adres e-mail członka rodziny</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="np. jan.kowalski@gmail.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="phone">Numer telefonu (opcjonalnie do powiadomień SMS)</Label>
-            <div className="flex gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="resident">Podopieczny</Label>
               <NativeSelect
-                value={countryCode}
-                onChange={(e) => setCountryCode(e.target.value)}
-                className="flex w-[120px] items-center justify-between"
+                id="resident"
+                value={residentId}
+                onChange={(e) => setResidentId(e.target.value)}
+                className="flex w-full items-center justify-between disabled:cursor-not-allowed disabled:opacity-50"
+                required
               >
-                <NativeSelectOption value="48">🇵🇱 +48</NativeSelectOption>
-                <NativeSelectOption value="44">🇬🇧 +44</NativeSelectOption>
-                <NativeSelectOption value="49">🇩🇪 +49</NativeSelectOption>
-                <NativeSelectOption value="380">🇺🇦 +380</NativeSelectOption>
-                <NativeSelectOption value="1">🇺🇸 +1</NativeSelectOption>
+                {residents.map(r => (
+                  <NativeSelectOption key={r.id} value={r.id}>{r.first_name} {r.last_name}</NativeSelectOption>
+                ))}
               </NativeSelect>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="family-role">Rola i uprawnienia</Label>
+              <NativeSelect
+                id="family-role"
+                value={familyRole}
+                onChange={(e) => setFamilyRole(e.target.value as 'legal_guardian' | 'family')}
+                className="flex w-full items-center justify-between disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <NativeSelectOption value="legal_guardian">Opiekun prawny (pełne uprawnienia, zgody Art. 9)</NativeSelectOption>
+                <NativeSelectOption value="family">Obserwator (tylko wgląd w raporty, brak zgód Art. 9)</NativeSelectOption>
+              </NativeSelect>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Zgodnie z RODO (Art. 9) wyłącznie podopieczny lub opiekun prawny może decydować o przetwarzaniu danych szczególnych kategorii. Obserwator posiada wyłącznie wgląd do publikowanych raportów.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Adres e-mail członka rodziny</Label>
               <Input
-                id="phone"
-                type="tel"
-                placeholder="np. 123 456 789"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="flex-1"
+                id="email"
+                type="email"
+                placeholder="np. jan.kowalski@gmail.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
               />
             </div>
-            <p className="text-xs text-muted-foreground">Podaj numer bez początkowego zera (np. 123456789).</p>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Numer telefonu (opcjonalnie do SMS)</Label>
+              <div className="flex gap-2">
+                <NativeSelect
+                  value={countryCode}
+                  onChange={(e) => setCountryCode(e.target.value)}
+                  className="flex w-[110px] shrink-0 items-center justify-between"
+                >
+                  <NativeSelectOption value="48">🇵🇱 +48</NativeSelectOption>
+                  <NativeSelectOption value="44">🇬🇧 +44</NativeSelectOption>
+                  <NativeSelectOption value="49">🇩🇪 +49</NativeSelectOption>
+                  <NativeSelectOption value="380">🇺🇦 +380</NativeSelectOption>
+                  <NativeSelectOption value="1">🇺🇸 +1</NativeSelectOption>
+                </NativeSelect>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="np. 123 456 789"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="flex-1"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">Podaj numer bez początkowego zera (np. 123456789).</p>
+            </div>
           </div>
           {error && (
             <p className="text-sm font-medium text-destructive">{error}</p>

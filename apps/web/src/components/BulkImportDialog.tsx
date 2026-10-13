@@ -153,7 +153,7 @@ export function BulkImportDialog() {
         <FileSpreadsheet className="w-4 h-4 text-foreground" />
         Masowy import (Excel/CSV)
       </DialogTrigger>
-      <DialogContent data-testid="bulk-import-dialog" className="max-w-3xl max-h-[85vh] flex flex-col">
+      <DialogContent data-testid="bulk-import-dialog" className="max-w-4xl lg:max-w-5xl max-h-[90vh] flex flex-col p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileSpreadsheet className="w-5 h-5 text-foreground" />

@@ -76,7 +76,7 @@ export function ResendAdminInviteButton({
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg md:max-w-xl p-6">
           <DialogHeader>
             <DialogTitle>Zaproszenie administratora</DialogTitle>
             <DialogDescription>
@@ -218,7 +218,7 @@ export function AddAdminToOrgDialog({
         <UserPlus className="h-4 w-4 mr-2" />
         Dodaj administratora
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-xl md:max-w-2xl p-6">
         <DialogHeader>
           <DialogTitle>Dodaj administratora placówki</DialogTitle>
           <DialogDescription>

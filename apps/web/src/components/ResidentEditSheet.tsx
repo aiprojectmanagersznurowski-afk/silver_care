@@ -120,7 +120,7 @@ export function ResidentEditSheet({ resident, onUpdated }: ResidentEditSheetProp
       </button>
 
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent className="w-full sm:max-w-md p-6 flex flex-col justify-between overflow-y-auto">
+        <SheetContent className="w-full sm:max-w-lg md:max-w-xl p-6 flex flex-col justify-between overflow-y-auto">
           <div>
             <SheetHeader className="p-0 mb-6">
               <SheetTitle className="text-xl font-display font-semibold text-foreground">

@@ -624,7 +624,7 @@ export default function StaffAgendaPage() {
       {/* Modal edycji wpisu agendy */}
       {editingItem && (
         <Dialog open={Boolean(editingItem)} onOpenChange={(open) => !open && setEditingItem(null)}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="sm:max-w-xl md:max-w-2xl p-6">
             <DialogHeader>
               <DialogTitle>Edycja wpisu harmonogramu</DialogTitle>
               <DialogDescription>
