@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import { Logo } from '@/components/Logo'
 
 export const dynamic = 'force-dynamic'
 
@@ -7,9 +8,7 @@ export default function NotFound() {
   return (
     <div className="flex h-[calc(100vh-100px)] flex-col items-center justify-center space-y-4">
       <div className="mx-auto mb-2 flex justify-center">
-        <Image
-          src="/logo.png"
-          alt="Silver Care"
+        <Logo
           width={150}
           height={42}
           className="h-10 w-auto object-contain"

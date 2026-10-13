@@ -3,6 +3,7 @@
 import { useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
+import { Logo } from '@/components/Logo'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
@@ -25,9 +26,7 @@ function AcceptInviteContent() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-3 flex justify-center">
-            <Image
-              src="/logo.png"
-              alt="Silver Care"
+            <Logo
               width={150}
               height={42}
               className="h-9 w-auto object-contain"

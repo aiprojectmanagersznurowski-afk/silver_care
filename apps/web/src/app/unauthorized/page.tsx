@@ -1,14 +1,13 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import { Logo } from '@/components/Logo'
 
 export default function UnauthorizedPage() {
   return (
     <div className="flex h-screen w-full items-center justify-center bg-background px-4">
       <div className="text-center">
         <div className="mx-auto mb-6 flex justify-center">
-          <Image
-            src="/logo.png"
-            alt="Silver Care"
+          <Logo
             width={150}
             height={42}
             className="h-10 w-auto object-contain"

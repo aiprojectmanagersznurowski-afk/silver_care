@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import { Logo } from '@/components/Logo'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -242,8 +243,7 @@ export default function LoginPage() {
         <div className="flex flex-col items-center mb-6">
           <div className="relative">
             <div className="absolute -inset-4 rounded-full bg-primary/10 blur-xl opacity-60" />
-            <Image
-              src="/logo.png"
+            <Logo
               alt="Silver Care"
               width={200}
               height={55}
@@ -268,7 +268,7 @@ export default function LoginPage() {
               </CardDescription>
             </CardHeader>
 
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pb-6">
               {error && (
                 <div className="rounded-lg bg-destructive/10 p-3 text-sm font-medium text-destructive">
                   {error}
@@ -323,14 +323,14 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-1">
+              <div className="flex items-center justify-between pt-1.5">
                 <div className="flex items-center gap-2">
                   <Checkbox
                     id="remember"
                     checked={rememberMe}
                     onCheckedChange={(checked) => setRememberMe(!!checked)}
                   />
-                  <Label htmlFor="remember" className="text-xs text-muted-foreground cursor-pointer">
+                  <Label htmlFor="remember" className="text-xs text-muted-foreground cursor-pointer select-none">
                     Zapamiętaj mnie
                   </Label>
                 </div>
@@ -343,7 +343,7 @@ export default function LoginPage() {
               </div>
             </CardContent>
 
-            <CardFooter className="flex-col gap-3.5 pt-2">
+            <CardFooter className="flex-col gap-3.5 p-6 pt-5">
               <Button
                 type="submit"
                 className="w-full h-11 md:h-10 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium transition-all"
