@@ -87,6 +87,7 @@
 - **AC1:** Panel widoczny i dostępny wyłącznie dla konta o roli `super_admin`.
 - **AC2:** Możliwość zarządzania przypisaniem ról do kont użytkowników.
 - **AC3:** Widok audytu zmian uprawnień zintegrowany z `audit_logs`; wpis `role_change` bez danych osobowych.
+- **AC4 (Zarządzanie statusem i usuwaniem kont):** Możliwość zablokowania konta (deaktywacja / unieważnienie sesji) lub trwałego usunięcia (dla kont testowych/błędnych) z poziomu panelu IAM z zabezpieczeniem przed modyfikacją własnego konta i rejestracją w audit_logs.
 
 > ℹ️ Kontrakt od początku wskazywał `source: 'SC-SUP-04'`, ale story nie istniało w v2.4 — tu zostało uzupełnione.
 

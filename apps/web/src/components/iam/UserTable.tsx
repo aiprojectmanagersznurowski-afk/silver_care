@@ -2,18 +2,21 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Shield, Key, ShieldAlert } from 'lucide-react'
+import { Shield, Key, ShieldAlert, Trash2, ShieldBan } from 'lucide-react'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import type { UserItem } from '@/components/IamManagementClient'
 import { AddUserDialog } from './AddUserDialog'
 import type { ComponentProps } from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
+import { cn } from '@/lib/utils'
 
 interface UserTableProps {
   users: UserItem[]
   onChangeRoleClick: (user: UserItem) => void
   onResetPasswordClick: (user: UserItem) => void
+  onDeleteUserClick: (user: UserItem) => void
+  currentUserId?: string
   roleLabels: Record<string, string>
   addUserProps: ComponentProps<typeof AddUserDialog>
 }
@@ -22,6 +25,8 @@ export function UserTable({
   users,
   onChangeRoleClick,
   onResetPasswordClick,
+  onDeleteUserClick,
+  currentUserId,
   roleLabels,
   addUserProps,
 }: UserTableProps) {
@@ -57,6 +62,8 @@ export function UserTable({
             <TableBody>
               {users.map(user => {
                 const displayRole = roleLabels[user.role] || user.role
+                const isDeactivated = user.isActive === false
+                const isSelf = user.id === currentUserId
 
                 return (
                   <TableRow key={user.id}>
@@ -74,9 +81,17 @@ export function UserTable({
                       )}
                     </TableCell>
                     <TableCell>
-                      <span className="inline-flex items-center rounded-lg bg-muted px-2.5 py-1 text-xs font-medium text-foreground">
-                        {displayRole}
-                      </span>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="inline-flex items-center rounded-lg bg-muted px-2.5 py-1 text-xs font-medium text-foreground">
+                          {displayRole}
+                        </span>
+                        {isDeactivated && (
+                          <span className="inline-flex items-center gap-1 rounded-lg bg-destructive/10 text-destructive border border-destructive/20 px-2 py-0.5 text-[11px] font-semibold">
+                            <ShieldBan className="h-3 w-3" />
+                            Zablokowany
+                          </span>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
@@ -113,6 +128,40 @@ export function UserTable({
                           </TooltipTrigger>
                           <TooltipContent>
                             Resetuj hasło lub wyślij link e-mail
+                          </TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled={isSelf}
+                              onClick={() => onDeleteUserClick(user)}
+                              className={cn(
+                                'min-h-[40px] rounded-xl border-border',
+                                isSelf
+                                  ? 'opacity-50 cursor-not-allowed text-muted-foreground'
+                                  : isDeactivated
+                                  ? 'text-primary hover:bg-primary/10 border-primary/30'
+                                  : 'text-destructive hover:bg-destructive/10 border-destructive/30'
+                              )}
+                            >
+                              {isDeactivated ? (
+                                <ShieldBan className="h-4 w-4 mr-1.5" />
+                              ) : (
+                                <Trash2 className="h-4 w-4 mr-1.5" />
+                              )}
+                              {isDeactivated ? 'Status' : 'Usuń'}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {isSelf
+                              ? 'Nie możesz zablokować ani usunąć własnego konta'
+                              : isDeactivated
+                              ? 'Zarządzaj statusem (odblokuj lub usuń trwale)'
+                              : 'Zablokuj konto lub usuń trwale'}
                           </TooltipContent>
                         </Tooltip>
                       </div>

@@ -32,20 +32,26 @@ export default async function IamPage() {
       console.error('Błąd pobierania użytkowników:', userError)
       errorMessage = userError.message
     } else {
-      users = (userData?.users || []).map(u => ({
-        id: u.id,
-        email: u.email || 'Brak emaila',
-        role: u.app_metadata?.role || 'brak',
-        organizationId: u.app_metadata?.organization_id || null,
-        lastSignInAt: u.last_sign_in_at || null
-      }))
+      users = (userData?.users || []).map(u => {
+        const isBanned = Boolean(u.banned_until && new Date(u.banned_until) > new Date())
+        const isActive = u.app_metadata?.is_active !== false && !isBanned
+
+        return {
+          id: u.id,
+          email: u.email || 'Brak emaila',
+          role: u.app_metadata?.role || 'brak',
+          organizationId: u.app_metadata?.organization_id || null,
+          lastSignInAt: u.last_sign_in_at || null,
+          isActive
+        }
+      })
     }
 
     // AC3: Widok audytu zmian uprawnień zintegrowany z audit_logs
     const { data: logsData, error: logsError } = await supabase
       .from('audit_logs')
       .select('id, action, performed_by, payload, created_at')
-      .eq('action', 'role_change')
+      .in('action', ['role_change', 'USER_DEACTIVATED', 'USER_ACTIVATED', 'USER_HARD_DELETED', 'password_reset'])
       .order('created_at', { ascending: false })
       .limit(50)
 
@@ -72,6 +78,7 @@ export default async function IamPage() {
       <IamManagementClient
         initialUsers={users}
         initialAuditLogs={auditLogs}
+        currentUserId={user.id}
         errorMessage={errorMessage}
       />
     </div>

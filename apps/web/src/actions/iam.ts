@@ -238,4 +238,142 @@ export async function resetUserPasswordAction(formData: FormData) {
   }
 }
 
+export type UserStatusMode = 'deactivate' | 'activate' | 'hard_delete'
+
+export async function manageUserStatusAction(formData: FormData) {
+  const targetUserId = (formData.get('userId') as string)?.trim()
+  const mode = (formData.get('mode') as string)?.trim() as UserStatusMode
+
+  if (!targetUserId || !mode) {
+    return { error: 'Brak wymaganych parametrów (userId, mode).' }
+  }
+
+  if (mode !== 'deactivate' && mode !== 'activate' && mode !== 'hard_delete') {
+    return { error: 'Nieprawidłowy tryb operacji.' }
+  }
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const callerRole = user?.app_metadata?.role || user?.user_metadata?.role
+  if (!user || callerRole !== 'super_admin') {
+    return { error: 'Brak uprawnień. Wymagana rola super_admin.', status: 403, code: 403 }
+  }
+
+  // AC1: Blokada modyfikacji/usunięcia własnego konta przez superadmina
+  if (targetUserId === user.id) {
+    return {
+      error: 'Nie możesz usunąć ani zablokować własnego konta administratora.',
+      status: 403,
+      code: 403
+    }
+  }
+
+  const adminClient = createAdminClient()
+  const { data: targetUserData, error: fetchErr } = await adminClient.auth.admin.getUserById(targetUserId)
+
+  if (fetchErr || !targetUserData?.user) {
+    return { error: 'Nie znaleziono wskazanego użytkownika.' }
+  }
+
+  const targetUser = targetUserData.user
+  const targetOrgId = targetUser.app_metadata?.organization_id || null
+  const targetRole = targetUser.app_metadata?.role || 'brak'
+
+  if (mode === 'deactivate') {
+    // 1. Zablokuj użytkownika (ban 10 lat) i zaktualizuj app_metadata
+    const { error: updateErr } = await adminClient.auth.admin.updateUserById(targetUserId, {
+      ban_duration: '87600h',
+      app_metadata: {
+        ...targetUser.app_metadata,
+        is_active: false
+      }
+    })
+
+    if (updateErr) {
+      console.error('Błąd blokady użytkownika:', updateErr)
+      return { error: 'Błąd deaktywacji konta: ' + updateErr.message }
+    }
+
+    // 2. Rejestracja w audit_logs (bez PII)
+    const { error: auditErr } = await adminClient.from('audit_logs').insert({
+      organization_id: targetOrgId,
+      action: 'USER_DEACTIVATED',
+      performed_by: user.id,
+      payload: {
+        target_user_id: targetUserId,
+        previous_role: targetRole,
+        mode: 'deactivate'
+      }
+    })
+
+    if (auditErr) {
+      console.error('Błąd audytu deaktywacji użytkownika:', auditErr)
+    }
+  } else if (mode === 'activate') {
+    // 1. Zdejmij blokadę konta
+    const { error: updateErr } = await adminClient.auth.admin.updateUserById(targetUserId, {
+      ban_duration: 'none',
+      app_metadata: {
+        ...targetUser.app_metadata,
+        is_active: true
+      }
+    })
+
+    if (updateErr) {
+      console.error('Błąd odblokowania użytkownika:', updateErr)
+      return { error: 'Błąd aktywacji konta: ' + updateErr.message }
+    }
+
+    // 2. Rejestracja w audit_logs (bez PII)
+    const { error: auditErr } = await adminClient.from('audit_logs').insert({
+      organization_id: targetOrgId,
+      action: 'USER_ACTIVATED',
+      performed_by: user.id,
+      payload: {
+        target_user_id: targetUserId,
+        role: targetRole,
+        mode: 'activate'
+      }
+    })
+
+    if (auditErr) {
+      console.error('Błąd audytu aktywacji użytkownika:', auditErr)
+    }
+  } else if (mode === 'hard_delete') {
+    // 1. Rejestracja w audit_logs przed usunięciem konta
+    const { error: auditErr } = await adminClient.from('audit_logs').insert({
+      organization_id: targetOrgId,
+      action: 'USER_HARD_DELETED',
+      performed_by: user.id,
+      payload: {
+        target_user_id: targetUserId,
+        previous_role: targetRole,
+        mode: 'hard_delete'
+      }
+    })
+
+    if (auditErr) {
+      console.error('Błąd audytu usunięcia użytkownika:', auditErr)
+    }
+
+    // 2. Trwałe usunięcie z auth.users
+    const { error: deleteErr } = await adminClient.auth.admin.deleteUser(targetUserId)
+
+    if (deleteErr) {
+      console.error('Błąd trwałego usunięcia użytkownika:', deleteErr)
+      return { error: 'Błąd usuwania użytkownika: ' + deleteErr.message }
+    }
+  }
+
+  safeRevalidateIam()
+
+  return {
+    success: true,
+    userId: targetUserId,
+    mode
+  }
+}
+
+
 
