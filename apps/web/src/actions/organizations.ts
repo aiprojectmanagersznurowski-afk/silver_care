@@ -10,7 +10,7 @@ import { findUserByEmail, evaluateAdminAssignment } from '@/lib/admin-assign-saf
 async function sendAdminInviteEmail(adminEmail: string, orgName: string): Promise<{ inviteUrl: string | null; emailSent: boolean; error?: string }> {
   try {
     const adminClient = createAdminClient()
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://silver-care-six.vercel.app'
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://silvercase.space'
 
     let { data: linkData, error: linkErr } = await adminClient.auth.admin.generateLink({
       type: 'invite',
