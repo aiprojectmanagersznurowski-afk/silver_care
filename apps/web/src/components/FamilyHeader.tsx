@@ -4,6 +4,7 @@ import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { Logo } from "./Logo";
 import { ChevronDown, Bell, Check, LayoutDashboard, Calendar, MessageSquare, User, ShieldCheck } from "lucide-react";
 import {
   DropdownMenu,
@@ -58,9 +59,7 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
       <header className="sticky top-0 z-30 border-b border-border/70 bg-background/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-[1600px] items-center gap-4 px-4 py-3 sm:gap-6 sm:px-6 sm:py-4">
           <Link href="/dashboard" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
-            <Image
-              src="/logo.png"
-              alt="Silver Care"
+            <Logo
               width={140}
               height={40}
               className="h-8 sm:h-9 w-auto object-contain"

@@ -123,7 +123,7 @@ export function ProfileSecurityClient({ initialData }: { initialData: ProfileDat
           </CardDescription>
         </CardHeader>
         <form onSubmit={handlePasswordSubmit}>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 pb-6">
             {passwordState.status === 'error' && (
               <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md border border-destructive/20">
                 {passwordState.message}
@@ -171,7 +171,7 @@ export function ProfileSecurityClient({ initialData }: { initialData: ProfileDat
               />
             </div>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="p-6 pt-4">
             <Button type="submit" disabled={isPending || passwordState.status === 'loading'}>
               {passwordState.status === 'loading' ? 'Zmienianie hasła...' : 'Zmień hasło'}
             </Button>
