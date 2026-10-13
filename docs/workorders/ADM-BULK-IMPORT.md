@@ -15,3 +15,4 @@ Moduł dwuetapowego importu pensjonariuszy:
 - AC2: Podgląd i walidacja z raportem błędnych rekordów (np. błędna suma kontrolna PESEL, duplikaty).
 - AC3: Możliwość importu poprawnych rekordów z pominięciem błędnych.
 - AC4: Zapis w bazie danych z uwzględnieniem `organization_id`, `pesel_hash`, `pesel_encrypted` i logu audytowego.
+- AC5: Wykrywanie przekroczenia zadeklarowanej pojemności placówki (`resident_limit`), ostrzeżenie w podglądzie dla administratora oraz automatyczna aktualizacja pojemności placówki po zatwierdzeniu importu.

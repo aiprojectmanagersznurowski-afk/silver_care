@@ -459,6 +459,7 @@
 - **AC2:** Podgląd wierszy poprawnych i błędnych z opisem problemu.
 - **AC3:** Zapis wyłącznie poprawnych wierszy, w chunkach, z wpisem w `audit_logs` (liczba rekordów, bez PII).
 - **AC4:** Szablon pliku do pobrania z panelu.
+- **AC5:** Jeśli import przekracza zadeklarowaną pojemność placówki (`resident_limit`), interfejs wyświetla ostrzeżenie dla administratora w kroku podglądu, a po zatwierdzeniu importu limit pojemności placówki (`organizations.resident_limit`) jest automatycznie aktualizowany do rzeczywistej liczby pensjonariuszy, co odzwierciedla się w widoku u Super Administratora.
 
 #### [SC-ADM-14] Bezpieczny eksport danych placówki
 🔗 **Kontrakt:** `ADM-FACILITY-MANAGE`, `SEC-NO-PII-LOGS`, `MDR-VOCABULARY` · **WO:** [`ADM-DATA-EXPORT`](workorders/ADM-DATA-EXPORT.md) · **Status:** ✅ 📝 — zrealizowane w `ExportDataDialog`, testy w `data_export.test.ts` oraz E2E w `admin-export-import.spec.ts`

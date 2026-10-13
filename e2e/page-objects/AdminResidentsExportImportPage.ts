@@ -23,6 +23,7 @@ export class AdminResidentsExportImportPage {
   readonly bulkDownloadTemplateMain: Locator;
   readonly bulkFileInput: Locator;
   readonly bulkCommitButton: Locator;
+  readonly capacityWarningBanner: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -41,6 +42,7 @@ export class AdminResidentsExportImportPage {
     this.bulkDownloadTemplateMain = page.locator('[data-testid="bulk-download-template-main"]');
     this.bulkFileInput = page.locator('[data-testid="bulk-file-input"]');
     this.bulkCommitButton = page.locator('[data-testid="bulk-commit-button"]');
+    this.capacityWarningBanner = page.locator('[data-testid="capacity-warning-banner"]');
   }
 
   async goto() {

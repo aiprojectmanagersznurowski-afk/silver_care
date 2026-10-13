@@ -25,6 +25,7 @@ export function BulkImportDialog() {
   const [dryRunResult, setDryRunResult] = useState<DryRunResult | null>(null)
   const [importCount, setImportCount] = useState<number>(0)
   const [onlyValid, setOnlyValid] = useState(true)
+  const [capacityUpdated, setCapacityUpdated] = useState<{ updated: boolean; newCapacity: number } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Generowanie i pobranie wzorcowej formatki Excel wraz z arkuszem instrukcji
@@ -129,12 +130,15 @@ export function BulkImportDialog() {
       setError(res.error)
     } else {
       setImportCount(res.importedCount || 0)
+      if (res.capacityUpdated && res.newCapacity) {
+        setCapacityUpdated({ updated: true, newCapacity: res.newCapacity })
+      }
       setStep('success')
       setTimeout(() => {
         setOpen(false)
         resetState()
         window.location.reload()
-      }, 1500)
+      }, 1800)
     }
   }
 
@@ -145,6 +149,7 @@ export function BulkImportDialog() {
     setDryRunResult(null)
     setImportCount(0)
     setOnlyValid(true)
+    setCapacityUpdated(null)
   }
 
   return (
@@ -262,6 +267,27 @@ export function BulkImportDialog() {
               </div>
             </div>
 
+            {dryRunResult.willExceedLimit && (
+              <div
+                data-testid="capacity-warning-banner"
+                className="p-3 bg-muted border border-border rounded-lg text-xs flex items-start gap-3 text-foreground"
+              >
+                <AlertTriangle className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <div className="font-semibold text-foreground flex items-center gap-2">
+                    <span>Ostrzeżenie: Przekroczenie zadeklarowanej pojemności placówki</span>
+                  </div>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Liczba pensjonariuszy po zaimportowaniu ({dryRunResult.projectedTotal}) przekroczy zadeklarowaną pojemność placówki ({dryRunResult.residentLimit}) o{' '}
+                    <strong className="text-foreground">{dryRunResult.excessCount}</strong>.
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Po zatwierdzeniu importu zadeklarowany limit pojemności placówki zostanie automatycznie powiększony do <strong>{dryRunResult.projectedTotal}</strong>, co odzwierciedli się w widoku placówek u Super Administratora.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {dryRunResult.invalidRowsCount > 0 && (
               <div className="p-3 bg-muted border border-border rounded-lg text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-foreground">
                 <div className="flex items-center gap-2">
@@ -347,6 +373,11 @@ export function BulkImportDialog() {
             <h3 className="text-base font-semibold text-foreground">
               Pomyślnie zaimportowano {importCount} pensjonariuszy!
             </h3>
+            {capacityUpdated?.updated && (
+              <p className="text-xs text-foreground font-medium bg-muted p-2 rounded border border-border inline-block">
+                Zadeklarowana pojemność placówki została automatycznie zaktualizowana do <strong>{capacityUpdated.newCapacity}</strong>.
+              </p>
+            )}
             <p className="text-xs text-muted-foreground">
               Dane zostały zabezpieczone, a lista placówki została zaktualizowana.
             </p>

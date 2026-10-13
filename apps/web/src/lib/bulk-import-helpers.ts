@@ -31,6 +31,35 @@ export interface DryRunResult {
   validRowsCount: number
   invalidRowsCount: number
   rows: ValidatedResidentRow[]
+  currentResidentCount?: number
+  residentLimit?: number
+  willExceedLimit?: boolean
+  projectedTotal?: number
+  excessCount?: number
+}
+
+export function evaluateCapacityExceeded(
+  validRowsCount: number,
+  currentResidentCount: number,
+  residentLimit: number
+): {
+  willExceedLimit: boolean
+  currentResidentCount: number
+  residentLimit: number
+  projectedTotal: number
+  excessCount: number
+} {
+  const projectedTotal = currentResidentCount + validRowsCount
+  const willExceedLimit = projectedTotal > residentLimit
+  const excessCount = willExceedLimit ? projectedTotal - residentLimit : 0
+
+  return {
+    willExceedLimit,
+    currentResidentCount,
+    residentLimit,
+    projectedTotal,
+    excessCount,
+  }
 }
 
 export function validateResidentRows(
