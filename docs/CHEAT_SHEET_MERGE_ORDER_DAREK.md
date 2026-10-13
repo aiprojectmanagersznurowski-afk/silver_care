@@ -1,10 +1,8 @@
-# Instrukcja i kolejność scalania PR-ów dla Darka (Merge Cheat Sheet)
+# Instrukcja i kolejność scalania PR-ów dla Darka (Merge Cheat Sheet) [ZREALIZOWANE ✅]
 
-Data przygotowania: **11.10.2026** (Aktualizacja po wykonaniu zadań 1-4)  
-Status: Poprzednie 12 PR-ów zostało pomyślnie scalonych z gałęzią `main`.  
-Na repozytorium oczekują już tylko **2 kluczowe, zsynchronizowane PR-y**, oba w stanie **`CLEAN`**, **`MERGEABLE`** i z zielonym CI (100% PASS):
-- **PR #75** (`feat(iam): uproszczenie tabeli IAM...`)
-- **PR #76** (`fix(security): ochrona ról w OAuth Callback oraz bezpieczne przypisywanie administratora placówki...`) — łączy w sobie ujednolicone poprawki bezpieczeństwa z zachowaniem ochrony personelu (`STAFF_ROLE_CONFLICT`).
+Data aktualizacji: **13.10.2026**  
+Status: **Wszystkie PR-y z klastrów 1-4 oraz PR #82 i #83 zostały w 100% zrecenzowane i scalone do gałęzi `main`.**  
+W repozytorium jest obecnie **0 otwartych PR-ów**. Wszystkie gałęzie funkcyjne zostały posprzątane, a bramka jakościowa `bash scripts/verify.sh --full` jest w 100% ZIELONA.
 
 ---
 

@@ -470,7 +470,7 @@
 - **AC3:** Każdy eksport rejestrowany w `audit_logs` bez danych osobowych.
 
 #### [SC-ADM-15] Zarządzanie kontami personelu i zaproszeniami ról
-🔗 **Kontrakt:** `ORG-ISOLATION`, `SEC-SESSION`, `CONSENT-GRANTOR` (podział `legal_guardian` / `family`) · **WO:** [`NUR-STAFF-MANAGEMENT`](workorders/NUR-STAFF-MANAGEMENT.md); commit `ADM-STAFF-INVITATIONS-ROLES` · **Status:** 🟡 📝
+🔗 **Kontrakt:** `ORG-ISOLATION`, `SEC-SESSION`, `CONSENT-GRANTOR` (podział `legal_guardian` / `family`) · **WO:** [`NUR-STAFF-MANAGEMENT`](workorders/NUR-STAFF-MANAGEMENT.md); PR #63, #72, #75 · **Status:** ✅ 📝
 
 **User story:** Jako Administrator placówki, chcę zapraszać personel i kolejnych administratorów, resetować im hasła i zawieszać konta, aby samodzielnie obsługiwać rotację pracowników bez angażowania Silver Care.
 
@@ -482,7 +482,7 @@
 - **AC5:** Każda akcja w `audit_logs` bez PII.
 
 #### [SC-ADM-16] Szybka edycja danych pensjonariusza (inline i panel boczny)
-🔗 **Kontrakt:** `ADM-RESIDENT-ADD`, `SEC-NO-PII-LOGS` · **WO:** [`UI-GRANULAR-EDITING`](workorders/UI-GRANULAR-EDITING.md) · **Status:** 🟡 📝
+🔗 **Kontrakt:** `ADM-RESIDENT-ADD`, `SEC-NO-PII-LOGS` · **WO:** [`UI-GRANULAR-EDITING`](workorders/UI-GRANULAR-EDITING.md) · **Status:** ✅ 📝
 
 **User story:** Jako Administrator, chcę edytować poziom opieki, ZSN i podstawowe dane pensjonariusza bez opuszczania listy, aby drobne korekty zajmowały sekundy.
 
@@ -759,3 +759,4 @@
 | 2026-10-06 | 2.6 | Rozstrzygnięcie dwóch sprzeczności z v2.5 (odwracalny PESEL: PR #39, fallback Groq: PR #38; statusy zaktualizowane w `SC-NUR-10` i `NFR-INFRA-02`); kryteria `SC-ADM-08` i `SC-ADM-15` po PR #49; dopisanie `NFR-UI-03` (szablon shadcn-admin, ADR-014, PR #51–#54) i `NFR-UI-04` (kontrast wykresów, PR #55); notka ADR-014 przy `NFR-UI-01`. |
 | 2026-10-10 | 2.7 | Poprawki błędów UI z audytu DevTools: spójny nagłówek sukcesu i kontrast przycisków w kreatorze przyjęcia (`SC-ADM-11`), utrwalanie rutynowej obserwacji 1-kliknięciem w `daily_logs` (`SC-NUR-08`), dodanie `NFR-UI-05` (dostępność WCAG, focus-visible, kontrast motywu ciemnego). |
 | 2026-10-12 | 2.8 | Dopisanie `SC-NUR-11` (wskaźnik nieodpowiedzianych wiadomości na dashboardzie personelu i dyktowanie odpowiedzi głosowej) ze statusem 📝 PROPOZYCJA. |
+| 2026-10-13 | 2.9 | Podbicie statusów `SC-ADM-15` i `SC-ADM-16` do ✅ 📝 po pełnej integracji klastrów Auth/OAuth Art. 9 (`OAUTH-GUARDIAN-CONSENTS`, PR #63), IAM (`ChangeRoleDialog`, PR #75), Caregiver (`SC-ADM-15`, PR #72) oraz potoku notatek głosowych (PR #83). |
