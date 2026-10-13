@@ -54,7 +54,7 @@ export default async function StaffDashboard() {
   const unansweredMap = calculateUnansweredMessagesPerResident(messages)
   const serializableUnansweredMap: Record<
     string,
-    { hasUnanswered: boolean; unansweredCount: number; lastMessageAt: string }
+    { hasUnanswered: boolean; unansweredCount: number; lastMessageAt: string; lastMessageSnippet?: string }
   > = {}
 
   for (const [resId, status] of unansweredMap.entries()) {
@@ -62,6 +62,7 @@ export default async function StaffDashboard() {
       hasUnanswered: status.hasUnanswered,
       unansweredCount: status.unansweredCount,
       lastMessageAt: status.lastMessageAt,
+      lastMessageSnippet: status.lastMessageSnippet,
     }
   }
 

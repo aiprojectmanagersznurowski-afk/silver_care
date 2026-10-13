@@ -70,6 +70,33 @@ export function FamilyMessageForm({ residentId }: FamilyMessageFormProps) {
   return (
     <div className="flex flex-col h-[500px] relative bg-card rounded-xl border border-border overflow-hidden">
       
+      {/* Pasek statusu kontaktu z personelem dyżurnym */}
+      {messages.length > 0 && (
+        <div className="px-5 py-2.5 bg-muted/40 border-b border-border flex items-center justify-between text-xs text-muted-foreground">
+          {messages[messages.length - 1]?.is_from_family ? (
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <span className="font-medium text-foreground">
+                Twoja wiadomość oczekuje na odpowiedź personelu dyżurnego
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-primary" />
+              <span>
+                Ostatnia odpowiedź personelu:{' '}
+                <strong className="font-medium text-foreground">
+                  {format(new Date(messages[messages.length - 1].created_at), 'HH:mm, d MMMM', { locale: pl })}
+                </strong>
+              </span>
+            </div>
+          )}
+          <span className="text-[11px] text-muted-foreground hidden sm:inline">
+            Dyżur opiekuńczy aktywny
+          </span>
+        </div>
+      )}
+
       {/* Okno czatu */}
       <div 
         ref={scrollRef}
@@ -118,8 +145,13 @@ export function FamilyMessageForm({ residentId }: FamilyMessageFormProps) {
                     <p className="text-[14px] leading-relaxed font-normal whitespace-pre-wrap">{msg.content}</p>
                   </div>
                   <div className="flex items-center gap-1 mt-0.5 px-1">
-                    <span className="text-[10px] text-text-secondary">
-                      {format(new Date(msg.created_at), "HH:mm")} • {isFamily ? 'Ty' : 'Personel'}
+                    <span className="text-[10px] text-text-secondary flex items-center gap-1">
+                      {format(new Date(msg.created_at), "HH:mm")} • {isFamily ? 'Ty' : 'Personel dyżurny'}
+                      {isFamily && (
+                        <span className="inline-flex items-center text-primary font-medium ml-1">
+                          ✓ Doręczono do dyżurki
+                        </span>
+                      )}
                     </span>
                   </div>
                 </div>

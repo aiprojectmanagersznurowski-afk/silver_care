@@ -80,18 +80,21 @@ describe('Wskaźnik nieodpowiedzianych wiadomości personelu (@REQ: NUR-BOARD, @
       hasUnanswered: false,
       unansweredCount: 0,
       lastMessageAt: '2026-10-13T07:30:00Z',
+      lastMessageSnippet: undefined,
     });
 
     expect(unansweredMap.get('resident-2')).toEqual({
       hasUnanswered: true,
       unansweredCount: 1,
       lastMessageAt: '2026-10-13T08:00:00Z',
+      lastMessageSnippet: 'Czy tata brał dzisiaj poranne leki na nadciśnienie?',
     });
 
     expect(unansweredMap.get('resident-3')).toEqual({
       hasUnanswered: true,
       unansweredCount: 1,
       lastMessageAt: '2026-10-13T08:45:00Z',
+      lastMessageSnippet: 'Proszę o informację czy potrzebne są dodatkowe kosmetyki pielęgnacyjne.',
     });
 
     // Pensjonariusz bez żadnych wiadomości
@@ -145,5 +148,26 @@ describe('Wskaźnik nieodpowiedzianych wiadomości personelu (@REQ: NUR-BOARD, @
 
     expect(formData.get('file')).toBeTruthy();
     expect((formData.get('file') as File).name).toBe('reply.webm');
+  });
+
+  it('przycina treść podglądu wiadomości rodziny jeśli przekracza 90 znaków @REQ: NUR-BOARD', () => {
+    const longMessage: RawMessage[] = [
+      {
+        id: 'msg-long',
+        content:
+          'Bardzo prosimy o informację, czy podopieczny zjadł dzisiejsze śniadanie i czy brał udział w porannej gimnastyce rehabilitacyjnej w sali gimnastycznej.',
+        created_at: '2026-10-13T10:00:00Z',
+        resident_id: 'resident-long',
+        relative_user_id: 'relative-1',
+        is_from_family: true,
+      },
+    ];
+
+    const map = calculateUnansweredMessagesPerResident(longMessage);
+    const status = map.get('resident-long');
+
+    expect(status?.hasUnanswered).toBe(true);
+    expect(status?.lastMessageSnippet?.length).toBeLessThanOrEqual(90);
+    expect(status?.lastMessageSnippet?.endsWith('...')).toBe(true);
   });
 });

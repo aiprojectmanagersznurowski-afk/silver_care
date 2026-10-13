@@ -54,7 +54,7 @@ interface StaffBoardClientProps {
   floors: string[]
   unansweredMessagesMap?: Record<
     string,
-    { hasUnanswered: boolean; unansweredCount: number; lastMessageAt?: string }
+    { hasUnanswered: boolean; unansweredCount: number; lastMessageAt?: string; lastMessageSnippet?: string }
   >
 }
 
@@ -483,21 +483,43 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
                 </div>
 
                 {hasUnanswered && (
-                  <div className="flex items-center justify-between rounded-lg bg-muted/60 border border-border px-3 py-1.5 text-xs">
-                    <span
-                      data-testid="unanswered-message-badge"
-                      className="inline-flex items-center gap-1.5 font-medium text-foreground"
-                    >
-                      <MessageSquare className="h-3.5 w-3.5 text-primary" />
-                      Nowa wiadomość od rodziny
-                    </span>
-                    <Link
-                      href={`/staff/messages?residentId=${resId}`}
-                      className="font-semibold text-primary hover:underline text-[11px]"
-                    >
-                      Odpowiedz &rarr;
-                    </Link>
-                  </div>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center justify-between rounded-lg bg-muted/60 border border-border px-3 py-1.5 text-xs hover:border-primary/40 transition-colors cursor-help">
+                        <span
+                          data-testid="unanswered-message-badge"
+                          className="inline-flex items-center gap-1.5 font-medium text-foreground"
+                        >
+                          <MessageSquare className="h-3.5 w-3.5 text-primary" />
+                          Nowa wiadomość od rodziny
+                        </span>
+                        <Link
+                          href={`/staff/messages?residentId=${resId}`}
+                          className="font-semibold text-primary hover:underline text-[11px]"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          Odpowiedz &rarr;
+                        </Link>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" align="center" className="max-w-xs p-3 space-y-1.5 bg-popover text-popover-foreground border border-border">
+                      <div className="flex items-center justify-between text-[11px] font-semibold text-primary">
+                        <span>Wiadomość od bliskich</span>
+                        {unansweredInfo?.lastMessageAt && (
+                          <span className="text-muted-foreground font-normal">
+                            {new Date(unansweredInfo.lastMessageAt).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs italic text-foreground leading-snug">
+                        &ldquo;{unansweredInfo?.lastMessageSnippet || 'Nowa wiadomość oczekująca na odpowiedź.'}&rdquo;
+                      </p>
+                      <div className="pt-1 text-[10px] text-muted-foreground flex justify-between items-center border-t border-border/50">
+                        <span>{unansweredInfo?.unansweredCount ? `${unansweredInfo.unansweredCount} oczekująca(e)` : 'Wymaga odpowiedzi'}</span>
+                        <span className="text-primary font-medium">Kliknij &bdquo;Odpowiedz&rdquo;</span>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
                 )}
 
                 <div className="grid grid-cols-2 gap-2 pt-1">
@@ -611,18 +633,43 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
                     </div>
 
                     {hasUnanswered && (
-                      <div className="flex items-center justify-between rounded-lg bg-muted/60 border border-border px-3 py-1.5 text-xs">
-                        <span
-                          data-testid="unanswered-message-badge"
-                          className="inline-flex items-center gap-1.5 font-medium text-foreground"
-                        >
-                          <MessageSquare className="h-3.5 w-3.5 text-primary" />
-                          Nowa wiadomość od rodziny
-                        </span>
-                        <span className="font-semibold text-primary text-[11px]">
-                          Oczekuje
-                        </span>
-                      </div>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center justify-between rounded-lg bg-muted/60 border border-border px-3 py-1.5 text-xs hover:border-primary/40 transition-colors cursor-help">
+                            <span
+                              data-testid="unanswered-message-badge"
+                              className="inline-flex items-center gap-1.5 font-medium text-foreground"
+                            >
+                              <MessageSquare className="h-3.5 w-3.5 text-primary" />
+                              Nowa wiadomość od rodziny
+                            </span>
+                            <Link
+                              href={`/staff/messages?residentId=${resident.id as string}`}
+                              className="font-semibold text-primary hover:underline text-[11px]"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              Odpowiedz &rarr;
+                            </Link>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" align="center" className="max-w-xs p-3 space-y-1.5 bg-popover text-popover-foreground border border-border">
+                          <div className="flex items-center justify-between text-[11px] font-semibold text-primary">
+                            <span>Wiadomość od bliskich</span>
+                            {unansweredInfo?.lastMessageAt && (
+                              <span className="text-muted-foreground font-normal">
+                                {new Date(unansweredInfo.lastMessageAt).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs italic text-foreground leading-snug">
+                            &ldquo;{unansweredInfo?.lastMessageSnippet || 'Nowa wiadomość oczekująca na odpowiedź.'}&rdquo;
+                          </p>
+                          <div className="pt-1 text-[10px] text-muted-foreground flex justify-between items-center border-t border-border/50">
+                            <span>{unansweredInfo?.unansweredCount ? `${unansweredInfo.unansweredCount} oczekująca(e)` : 'Wymaga odpowiedzi'}</span>
+                            <span className="text-primary font-medium">Kliknij &bdquo;Odpowiedz&rdquo;</span>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
                     )}
                   </div>
 

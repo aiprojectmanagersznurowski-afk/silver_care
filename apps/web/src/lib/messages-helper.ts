@@ -92,6 +92,7 @@ export interface ResidentUnansweredStatus {
   hasUnanswered: boolean;
   unansweredCount: number;
   lastMessageAt: string;
+  lastMessageSnippet?: string;
 }
 
 /**
@@ -127,10 +128,20 @@ export function calculateUnansweredMessagesPerResident(
       0
     );
 
+    let lastMessageSnippet: string | undefined = undefined;
+    if (hasUnanswered) {
+      const awaitingThread = awaitingThreads[0];
+      const familyMsgs = awaitingThread.messages.filter((m) => m.is_from_family);
+      const lastFamilyMsg = familyMsgs[familyMsgs.length - 1];
+      const rawText = lastFamilyMsg?.content || awaitingThread.lastMessage?.content || '';
+      lastMessageSnippet = rawText.length > 90 ? rawText.slice(0, 87) + '...' : rawText;
+    }
+
     result.set(residentId, {
       hasUnanswered,
       unansweredCount: hasUnanswered ? unansweredCount : 0,
       lastMessageAt: latestThread.lastMessage.created_at,
+      lastMessageSnippet,
     });
   }
 
