@@ -41,9 +41,7 @@ export function StaffActionsMenu({ staffId, email, isActive }: StaffActionsMenuP
     setDropdownOpen(false)
     setStatusMsg(null)
     setConfirmationInput('')
-    setTimeout(() => {
-      setDialogType(type)
-    }, 100)
+    setDialogType(type)
   }
 
   const handleResetPassword = (mode: 'email' | 'temp') => {
@@ -53,14 +51,20 @@ export function StaffActionsMenu({ staffId, email, isActive }: StaffActionsMenuP
     formData.append('mode', mode)
 
     startTransition(async () => {
-      const res = await resetStaffPasswordAction(formData)
-      if (res.error) {
-        setStatusMsg({ type: 'error', text: res.error })
-        toast.error(res.error)
-      } else {
-        const msg = res.message || 'Wykonano pomyślnie.'
-        setStatusMsg({ type: 'success', text: msg })
-        toast.success(msg)
+      try {
+        const res = await resetStaffPasswordAction(formData)
+        if (res?.error) {
+          setStatusMsg({ type: 'error', text: res.error })
+          toast.error(res.error)
+        } else {
+          const msg = res?.message || 'Wykonano pomyślnie.'
+          setStatusMsg({ type: 'success', text: msg })
+          toast.success(msg)
+        }
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Wystąpił nieoczekiwany błąd podczas resetu hasła.'
+        setStatusMsg({ type: 'error', text: msg })
+        toast.error(msg)
       }
     })
   }
@@ -72,15 +76,21 @@ export function StaffActionsMenu({ staffId, email, isActive }: StaffActionsMenuP
     formData.append('confirmation', confirmationInput)
 
     startTransition(async () => {
-      const res = await suspendStaffAction(formData)
-      if (res.error) {
-        setStatusMsg({ type: 'error', text: res.error })
-        toast.error(res.error)
-      } else {
-        const msg = res.message || 'Konto pracownika zostało zawieszone.'
-        toast.success(msg)
-        setDialogType('none')
-        setConfirmationInput('')
+      try {
+        const res = await suspendStaffAction(formData)
+        if (res?.error) {
+          setStatusMsg({ type: 'error', text: res.error })
+          toast.error(res.error)
+        } else {
+          const msg = res?.message || 'Konto pracownika zostało zawieszone.'
+          toast.success(msg)
+          setDialogType('none')
+          setConfirmationInput('')
+        }
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Wystąpił nieoczekiwany błąd podczas zawieszania konta.'
+        setStatusMsg({ type: 'error', text: msg })
+        toast.error(msg)
       }
     })
   }
@@ -91,14 +101,20 @@ export function StaffActionsMenu({ staffId, email, isActive }: StaffActionsMenuP
     formData.append('staffId', staffId)
 
     startTransition(async () => {
-      const res = await restoreStaffAction(formData)
-      if (res.error) {
-        setStatusMsg({ type: 'error', text: res.error })
-        toast.error(res.error)
-      } else {
-        const msg = res.message || 'Konto pracownika zostało przywrócone.'
-        toast.success(msg)
-        setDialogType('none')
+      try {
+        const res = await restoreStaffAction(formData)
+        if (res?.error) {
+          setStatusMsg({ type: 'error', text: res.error })
+          toast.error(res.error)
+        } else {
+          const msg = res?.message || 'Konto pracownika zostało przywrócone.'
+          toast.success(msg)
+          setDialogType('none')
+        }
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Wystąpił nieoczekiwany błąd podczas przywracania konta.'
+        setStatusMsg({ type: 'error', text: msg })
+        toast.error(msg)
       }
     })
   }
