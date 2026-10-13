@@ -60,4 +60,25 @@ describe('Granular Inline & Sheet Editing (UI-14)', () => {
     expect(content).toContain('ResidentInlineCareLevel')
     expect(content).toContain('ResidentEditSheet')
   })
+
+  it('integrates EditResidentDialog into resident profile page header and card @REQ: ADM-RESIDENT-ADD', () => {
+    const profilePagePath = path.resolve(
+      __dirname,
+      '../../apps/web/src/app/(admin)/admin/residents/[id]/page.tsx'
+    )
+    const dialogPath = path.resolve(
+      __dirname,
+      '../../apps/web/src/components/EditResidentDialog.tsx'
+    )
+    expect(fs.existsSync(dialogPath)).toBe(true)
+    expect(fs.existsSync(profilePagePath)).toBe(true)
+
+    const profileContent = fs.readFileSync(profilePagePath, 'utf8')
+    const dialogContent = fs.readFileSync(dialogPath, 'utf8')
+
+    expect(profileContent).toContain('EditResidentDialog')
+    expect(dialogContent).toContain('Edycja danych podopiecznego')
+    expect(dialogContent).toContain('data-testid="edit-resident-btn"')
+    expect(dialogContent).toContain('updateResidentInlineAction')
+  })
 })

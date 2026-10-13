@@ -10,6 +10,7 @@ export interface UpdateResidentPayload {
   residentId: string
   first_name?: string
   last_name?: string
+  gender?: 'M' | 'F' | null
   birth_date?: string | null
   care_level?: 'walking' | 'sitting' | 'bedridden' | 'hospice' | null
   notes?: string | null
@@ -97,6 +98,13 @@ export async function updateResidentInlineAction(
     updateData.last_name = trimmed
   }
 
+  if (payload.gender !== undefined) {
+    if (payload.gender !== null && payload.gender !== 'M' && payload.gender !== 'F') {
+      return { success: false, error: 'Nieprawidłowa wartość płci.' }
+    }
+    updateData.gender = payload.gender
+  }
+
   if (payload.care_level !== undefined) {
     const validLevels = ['walking', 'sitting', 'bedridden', 'hospice', null]
     if (!validLevels.includes(payload.care_level)) {
@@ -148,6 +156,7 @@ export async function updateResidentInlineAction(
   })
 
   revalidatePath('/admin/residents')
+  revalidatePath(`/admin/residents/${payload.residentId}`)
 
   return {
     success: true,
