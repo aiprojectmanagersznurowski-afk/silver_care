@@ -78,3 +78,76 @@ export function filterThreadsBySearch(threads: MessageThread[], query: string): 
       t.messages.some((m) => m.content.toLowerCase().includes(q))
   );
 }
+
+/**
+ * Sprawdza czy dany wątek oczekuje na odpowiedź personelu
+ * (ostatnia wiadomość w wątku pochodzi od rodziny).
+ */
+export function isThreadAwaitingReply(thread: MessageThread): boolean {
+  if (!thread || !thread.lastMessage) return false;
+  return Boolean(thread.lastMessage.is_from_family);
+}
+
+export interface ResidentUnansweredStatus {
+  hasUnanswered: boolean;
+  unansweredCount: number;
+  lastMessageAt: string;
+}
+
+/**
+ * Wylicza mapę statusu oczekujących wiadomości od rodzin per pensjonariusz.
+ */
+export function calculateUnansweredMessagesPerResident(
+  messages: RawMessage[]
+): Map<string, ResidentUnansweredStatus> {
+  const result = new Map<string, ResidentUnansweredStatus>();
+  if (!messages || messages.length === 0) return result;
+
+  const threads = groupMessagesIntoThreads(messages);
+
+  const residentThreadsMap = new Map<string, MessageThread[]>();
+  for (const thread of threads) {
+    const list = residentThreadsMap.get(thread.residentId) || [];
+    list.push(thread);
+    residentThreadsMap.set(thread.residentId, list);
+  }
+
+  for (const [residentId, rThreads] of residentThreadsMap.entries()) {
+    rThreads.sort(
+      (a, b) =>
+        new Date(b.lastMessage.created_at).getTime() -
+        new Date(a.lastMessage.created_at).getTime()
+    );
+
+    const latestThread = rThreads[0];
+    const awaitingThreads = rThreads.filter(isThreadAwaitingReply);
+    const hasUnanswered = awaitingThreads.length > 0;
+    const unansweredCount = awaitingThreads.reduce(
+      (acc, t) => acc + (t.unreadCount || 1),
+      0
+    );
+
+    result.set(residentId, {
+      hasUnanswered,
+      unansweredCount: hasUnanswered ? unansweredCount : 0,
+      lastMessageAt: latestThread.lastMessage.created_at,
+    });
+  }
+
+  return result;
+}
+
+/**
+ * Filtruje listę podopiecznych wyłącznie do osób z oczekującą wiadomością.
+ */
+export function filterResidentsByUnansweredMessages<T extends { id?: unknown }>(
+  residents: T[],
+  unansweredMap: Map<string, { hasUnanswered: boolean }>
+): T[] {
+  return residents.filter((r) => {
+    const resId = String(r.id || '');
+    const status = unansweredMap.get(resId);
+    return Boolean(status?.hasUnanswered);
+  });
+}
+
