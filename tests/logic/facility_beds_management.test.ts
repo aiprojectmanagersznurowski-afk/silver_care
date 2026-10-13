@@ -244,4 +244,23 @@ describe('Facility & Bed Management Logic (@REQ: ADM-FACILITY-MANAGE, @REQ: ADM-
     // Weryfikacja: zakaz słowa pacjent
     expect(bedListSrc.toLowerCase()).not.toContain('pacjent');
   });
+
+  it('ensures beds/assign endpoint inserts only valid schema columns into bed_assignments @REQ: ADM-BED-ASSIGNMENT', async () => {
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const routeSrc = fs.readFileSync(
+      path.resolve(__dirname, '../../apps/web/src/app/api/facility/beds/assign/route.ts'),
+      'utf8'
+    );
+
+    // Weryfikacja: bed_assignments.insert NIE przekazuje kolumny 'reason', która nie istnieje w schemacie tabeli
+    const insertStartIndex = routeSrc.indexOf(".from('bed_assignments')")
+    const insertEndIndex = routeSrc.indexOf('if (assignError)', insertStartIndex)
+    const insertSnippet = routeSrc.slice(insertStartIndex, insertEndIndex)
+
+    expect(insertSnippet).not.toContain('reason')
+    expect(insertSnippet).toContain('bed_id')
+    expect(insertSnippet).toContain('resident_id')
+    expect(routeSrc).toContain('transfer_resident_bed')
+  });
 });

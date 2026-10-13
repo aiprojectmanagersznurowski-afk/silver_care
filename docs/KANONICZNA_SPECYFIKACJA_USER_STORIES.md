@@ -515,6 +515,18 @@
 - **AC3 (Brak błędów hydratacji SSR):** Inicjalizacja stanu w Next.js nie powoduje błędów hydratacji ani migotania (flicker) przy renderowaniu serwerowym.
 - **AC4 (Pokrycie kluczowych widoków):** Mechanizm obejmuje strukturę placówki (`/admin/facility` — pokoje grid/table), tablicę personelu (`/staff` — rounds/standard), organizacje (`/admin/organizations` — cards/table) oraz listę pensjonariuszy (`/admin/residents` — cards/table).
 
+#### [SC-ADM-19] Wypis pensjonariusza, rejestracja zgonu i zakończenie umowy
+🔗 **Kontrakt:** `ADM-ARCHIVE`, `ADM-BED-ASSIGNMENT` · **WO:** [`ADM-RESIDENT-DISCHARGE-LIFECYCLE`](workorders/ADM-RESIDENT-DISCHARGE-LIFECYCLE.md) · **Status:** 📝 PROPOZYCJA
+
+**User story:** Jako Administrator placówki, chcę mieć możliwość zarejestrowania wypisu pensjonariusza, oznaczenia zgonu lub zakończenia umowy z podaniem daty i powodu zerwania/rozwiązania umowy, aby pobyt został formalnie zamknięty, zajmowane łóżko natychmiast zwolnione, a zdarzenie odnotowane w historii i statystykach placówki.
+
+**Kryteria akceptacji:**
+- **AC1 (Procedura wypisu i powody rozwiązania):** Administrator ma dostęp do akcji „Wypisz / Zakończ pobyt” na karcie pensjonariusza. Formularz wymaga podania daty zakończenia (`contract_end_date`) oraz ustandaryzowanego powodu rozwiązania umowy (`contract_end_reason`: `death`, `family_request`, `transfer`, `non_payment`, `health_improvement`, `other`).
+- **AC2 (Rejestracja zgonu):** W przypadku wyboru powodu `death` formularz wymaga podania daty zgonu (`death_date`). Zdarzenie jest rejestrowane z należytą powagą i neutralnością emocjonalną (zgodnie z ADR-005 i ADR-011).
+- **AC3 (Automatyczne zwolnienie łóżka):** Zakończenie pobytu atomowo zamyka aktywne przypisanie do łóżka pensjonariusza (`bed_assignments.unassigned_at = now()`), przywracając łóżko do puli wolnych miejsc placówki.
+- **AC4 (Izolacja dostępu i archiwizacja):** Wraz z wypisem następuje odcięcie dostępu bliskich (ustawienie `archived_at = now()`) zgodnie z `ADM-ARCHIVE` oraz rejestracja zdarzenia w `resident_events` (`contract_ended` i/lub `death`) na potrzeby modułu BI i wskaźników rotacji.
+- **AC5 (Ślad audytowy i ochrona danych):** Całość operacji jest rejestrowana w `audit_logs` pod akcją `RESIDENT_DISCHARGE` bez wycieku danych wrażliwych. W trybie impersonacji Super Admina akcja jest zablokowana.
+
 ### Domena 2 — Personel
 
 #### [SC-NUR-07] Skrzynka wiadomości od rodzin
