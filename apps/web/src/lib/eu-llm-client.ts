@@ -60,14 +60,66 @@ export function isEuEndpoint(endpoint: string): boolean {
  * podpisania DPA (operacyjne, nie wymuszone tu technicznie — tak jak zerowa
  * retencja Groq dla TRANSCRIBE w ADR-009 jest przełącznikiem w panelu, nie kodem).
  */
+function ensureEnvLoaded() {
+  if (typeof process === 'undefined' || !process.env) return
+  if (process.env.VITEST) return // nie nadpisuj w testach izolowanych vitest
+  if (process.env.ALLOW_DEMO_GROQ_FALLBACK && process.env.GROQ_API_KEY) return
+
+  try {
+    // Dynamiczny import fs i path tylko w środowisku Node
+    const fs = require('fs')
+    const path = require('path')
+    const candidates = [
+      path.resolve(process.cwd(), '.env.local'),
+      path.resolve(process.cwd(), '../../.env.local'),
+      path.resolve(process.cwd(), '../.env.local'),
+    ]
+    for (const p of candidates) {
+      if (fs.existsSync(p)) {
+        const content = fs.readFileSync(p, 'utf8')
+        for (const line of content.split('\n')) {
+          const trimmed = line.trim()
+          if (trimmed && !trimmed.startsWith('#')) {
+            const idx = trimmed.indexOf('=')
+            if (idx > 0) {
+              const key = trimmed.slice(0, idx).trim()
+              let val = trimmed.slice(idx + 1).trim()
+              if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+                val = val.slice(1, -1)
+              }
+              if (!process.env[key]) {
+                process.env[key] = val
+              }
+            }
+          }
+        }
+        break
+      }
+    }
+  } catch {
+    // ignoruj błędy odczytu plików
+  }
+}
+
+/**
+ * ADR-015: tymczasowy fallback CLASSIFY/GENERATE na Groq, wyłącznie na czas demo,
+ * przed podpisaniem DPA z Groq na te etapy (PROVIDERS.GROQ_DEMO_LLM w
+ * integration.contract.mjs). Wymaga jawnej, osobnej od GROQ_API_KEY zmiennej —
+ * sama obecność klucza transkrypcji nic nie aktywuje. Wyłącznie dane syntetyczne/
+ * demonstracyjne: zakaz użycia z rzeczywistymi danymi pensjonariuszy do czasu
+ * podpisania DPA (operacyjne, nie wymuszone tu technicznie — tak jak zerowa
+ * retencja Groq dla TRANSCRIBE w ADR-009 jest przełącznikiem w panelu, nie kodem).
+ */
 function getDemoGroqFallbackConfig(): EuLlmConfig | null {
+  ensureEnvLoaded()
   if (process.env.ALLOW_DEMO_GROQ_FALLBACK !== 'true') return null
   const apiKey = process.env.GROQ_API_KEY
   if (!apiKey) return null
+  const model = process.env.GROQ_LLM_MODEL || 'llama-3.3-70b-versatile'
   return {
     endpoint: 'https://api.groq.com/openai/v1/chat/completions',
     apiKey,
-    model: 'llama-3.3-70b-versatile',
+    model,
     region: 'US_DEMO_INTERIM',
   }
 }
@@ -77,6 +129,7 @@ export async function callEuLlmCompletion(
   temperature: number = 0.1,
   maxTokens: number = 600
 ): Promise<string> {
+  ensureEnvLoaded()
   const euConfig = getEuLlmConfig()
   const hasEuKey = !!euConfig.apiKey && euConfig.apiKey !== 'mock_eu_llm_key'
 
@@ -108,7 +161,7 @@ export async function callEuLlmCompletion(
     )
   }
 
-  const response = await fetch(config.endpoint, {
+  let response = await fetch(config.endpoint, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${config.apiKey}`,
@@ -121,6 +174,32 @@ export async function callEuLlmCompletion(
       max_tokens: maxTokens,
     }),
   })
+
+  // Jeśli w trybie demo model zwróci 404 (np. llama-3.3-70b-versatile nie istnieje na danym koncie Groq),
+  // wykonaj automatyczny fallback na dostępne modele czatowe (openai/gpt-oss-120b, openai/gpt-oss-20b, qwen/qwen3.8-27b)
+  if (!response.ok && config.region === 'US_DEMO_INTERIM' && response.status === 404) {
+    const fallbackModels = ['openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'qwen/qwen3.8-27b']
+    for (const altModel of fallbackModels) {
+      if (altModel === config.model) continue
+      const retryRes = await fetch(config.endpoint, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${config.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: altModel,
+          messages,
+          temperature,
+          max_tokens: maxTokens,
+        }),
+      })
+      if (retryRes.ok) {
+        response = retryRes
+        break
+      }
+    }
+  }
 
   if (!response.ok) {
     // Bez treści odpowiedzi w komunikacie: może odbijać fragmenty promptu.
