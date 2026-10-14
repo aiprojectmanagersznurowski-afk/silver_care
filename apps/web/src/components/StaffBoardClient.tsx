@@ -11,6 +11,7 @@ import { toast } from 'sonner'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
+import { useViewPreference, VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-preference'
 
 type NoteStatus = 'ready' | 'draft' | 'none'
 
@@ -60,7 +61,11 @@ interface StaffBoardClientProps {
 }
 
 export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {} }: StaffBoardClientProps) {
-  const [viewMode, setViewMode] = useState<'standard' | 'rounds'>('rounds')
+  const [viewMode, setViewMode] = useViewPreference(
+    VIEW_PREFERENCE_KEYS.staffBoard,
+    'rounds',
+    ['rounds', 'standard'] as const
+  )
   const [searchFilter, setSearchFilter] = useState<string>('')
   const [floorFilter, setFloorFilter] = useState<string>('all')
   const [roomFilter, setRoomFilter] = useState<string>('all')

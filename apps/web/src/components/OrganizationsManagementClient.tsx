@@ -21,6 +21,7 @@ import { isValidViewMode, OrgViewMode } from '@/lib/org-helpers'
 import { EditOrganizationDialog } from '@/components/EditOrganizationDialog'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { useViewPreference, VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-preference'
 
 export interface OrganizationSummaryItem {
   organization_id: string
@@ -47,20 +48,14 @@ export function OrganizationsManagementClient({
   renderActionSlot
 }: OrganizationsManagementClientProps) {
   const organizations = initialOrganizations
-  const [viewMode, setViewMode] = useState<OrgViewMode>('cards')
-
-  useEffect(() => {
-    const saved = localStorage.getItem('silver_care_org_view_mode')
-    if (isValidViewMode(saved)) {
-      setViewMode(saved)
-    }
-  }, [])
+  const [viewMode, setViewMode] = useViewPreference<OrgViewMode>(
+    VIEW_PREFERENCE_KEYS.organizations,
+    'cards',
+    ['cards', 'table'] as const
+  )
 
   const handleModeChange = (mode: OrgViewMode) => {
     setViewMode(mode)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('silver_care_org_view_mode', mode)
-    }
   }
 
   const currentState = forcedState || (errorMessage ? 'error' : organizations.length === 0 ? 'empty' : 'success')

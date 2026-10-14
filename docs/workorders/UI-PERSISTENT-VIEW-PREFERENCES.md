@@ -1,5 +1,7 @@
 # Work Order: UI-PERSISTENT-VIEW-PREFERENCES
 
+Status: ✅ WYKONANE
+
 ## Wymaganie
 Rejestr: SC-ADM-18 (Trwałe zapamiętywanie preferencji widoku UI — Kafelki / Tabela / Obchód)
 Powiązane wymagania kontraktowe:

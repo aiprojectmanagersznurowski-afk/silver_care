@@ -4,10 +4,10 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { StaffSidebar } from '@/components/StaffSidebar'
 import { cookies } from 'next/headers'
-import { Separator } from '@/components/ui/separator'
-import { StaffCommandPalette } from '@/components/StaffCommandPalette'
 import { StaffNotificationBell } from '@/components/StaffNotificationBell'
+import { GlobalCommandPalette } from '@/components/GlobalCommandPalette'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
+import { Separator } from '@/components/ui/separator'
 
 export default async function StaffLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient()
@@ -34,7 +34,7 @@ export default async function StaffLayout({ children }: { children: ReactNode })
             </div>
             <div className="flex items-center gap-2">
               <StaffNotificationBell />
-              <StaffCommandPalette />
+              <GlobalCommandPalette userRole={role} />
             </div>
           </div>
         </header>

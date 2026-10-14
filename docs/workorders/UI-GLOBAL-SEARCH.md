@@ -1,4 +1,9 @@
-# Work Order: UI-GLOBAL-SEARCH
+## Metadane
+- **Wymaganie:** `UI-TEMPLATE-ALIGNMENT`, `UI-ACCESSIBILITY`, `ORG-ISOLATION`, `SEC-NO-PII-LOGS`, `MDR-VOCABULARY`
+- **User Story:** `[SC-ADM-17]`
+- **Domena:** ui / navigation / search
+- **Ryzyko:** MEDIUM
+- **Status:** ✅ WYKONANE
 
 ## Wymaganie
 Rejestr: SC-ADM-17 (Pełnofunkcyjna wyszukiwarka globalna — Command Palette / Spotlight Cmd+K)

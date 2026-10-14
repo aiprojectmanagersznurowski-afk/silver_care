@@ -494,7 +494,7 @@
 - **AC3:** Uprawnienia zgodne z `MATRIX`; każda zmiana w `audit_logs` z listą zmienionych pól, bez wartości wrażliwych.
 
 #### [SC-ADM-17] Pełnofunkcyjna wyszukiwarka globalna (Command Palette / Spotlight Cmd+K)
-🔗 **Kontrakt:** `UI-TEMPLATE-ALIGNMENT`, `UI-ACCESSIBILITY`, `ORG-ISOLATION`, `SEC-NO-PII-LOGS`, `MDR-VOCABULARY` · **WO:** [`UI-GLOBAL-SEARCH`](workorders/UI-GLOBAL-SEARCH.md) · **Status:** 📝 PROPOZYCJA
+🔗 **Kontrakt:** `UI-TEMPLATE-ALIGNMENT`, `UI-ACCESSIBILITY`, `ORG-ISOLATION`, `SEC-NO-PII-LOGS`, `MDR-VOCABULARY` · **WO:** [`UI-GLOBAL-SEARCH`](workorders/UI-GLOBAL-SEARCH.md) · **Status:** ✅ 📝
 
 **User story:** Jako Administrator lub Członek Personelu, chcę błyskawicznie przeszukiwać cały system (podopiecznych, pokoje i łóżka, plan dnia, raporty, personel, a dla superadmina placówki) za pomocą skrótu Cmd+K / Ctrl+K lub przycisku w nagłówku, aby nawigować po placówce w ułamku sekundy bez przeklikiwania menu.
 
@@ -505,7 +505,7 @@
 - **AC4 (Ergonomia Spotlight i dostępność):** Obsługa skrótu `Cmd+K` / `Ctrl+K`, nawigacja strzałkami `ArrowUp` / `ArrowDown`, wybór klawiszem `Enter`, zamykanie `Escape`, 4 stany UI (loading, empty, success, error) oraz szybkie filtry kategorii.
 
 #### [SC-ADM-18] Trwałe zapamiętywanie preferencji widoku UI (Kafelki / Tabela / Obchód)
-🔗 **Kontrakt:** `UI-TEMPLATE-ALIGNMENT`, `UI-ACCESSIBILITY` · **WO:** [`UI-PERSISTENT-VIEW-PREFERENCES`](workorders/UI-PERSISTENT-VIEW-PREFERENCES.md) · **Status:** 📝 PROPOZYCJA
+🔗 **Kontrakt:** `UI-TEMPLATE-ALIGNMENT`, `UI-ACCESSIBILITY` · **WO:** [`UI-PERSISTENT-VIEW-PREFERENCES`](workorders/UI-PERSISTENT-VIEW-PREFERENCES.md) · **Status:** ✅ 📝
 
 **User story:** Jako Użytkownik systemu (Administrator lub Personel), chcę, aby raz wybrany tryb wyświetlania danych (np. kafelki vs tabela w strukturze placówki, obchód vs lista na tablicy personelu, kafelki vs tabela na liście pensjonariuszy i organizacji) był trwale zapamiętany w mojej przeglądarce, aby przy kolejnym otwarciu widoku nie musieć ponownie przełączać go ręcznie.
 

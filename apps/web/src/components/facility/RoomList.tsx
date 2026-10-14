@@ -20,6 +20,7 @@ import AddBedDialog from './AddBedDialog'
 import { isGroundFloor } from '@/lib/bed-allocation-optimizer'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { useViewPreference, VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-preference'
 
 interface RoomItem {
   id: string
@@ -49,27 +50,16 @@ export function formatSectorName(sector?: string | null): string {
 }
 
 export default function RoomList({ rooms, onUpdate }: RoomListProps) {
-  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
+  // Trwały klucz preferencji widoku w localStorage: silver_care_facility_room_view_mode
+  const [viewMode, setViewMode] = useViewPreference(
+    VIEW_PREFERENCE_KEYS.facilityRooms,
+    'grid',
+    ['grid', 'table'] as const
+  )
   const [expandedRooms, setExpandedRooms] = useState<Record<string, boolean>>({})
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('silver_care_facility_room_view_mode')
-      if (saved === 'grid' || saved === 'table') {
-        setViewMode(saved)
-      }
-    } catch {
-      // Ignore in SSR
-    }
-  }, [])
 
   const handleModeChange = (mode: 'grid' | 'table') => {
     setViewMode(mode)
-    try {
-      localStorage.setItem('silver_care_facility_room_view_mode', mode)
-    } catch {
-      // Ignore in SSR
-    }
   }
 
   // Filtry
