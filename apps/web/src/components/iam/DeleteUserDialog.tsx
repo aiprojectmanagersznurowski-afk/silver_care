@@ -37,8 +37,10 @@ export function DeleteUserDialog({
 
   useEffect(() => {
     if (user) {
-      setMode(user.isActive === false ? 'activate' : 'deactivate')
-      setConfirmText('')
+      void Promise.resolve().then(() => {
+        setMode(user.isActive === false ? 'activate' : 'deactivate')
+        setConfirmText('')
+      })
     }
   }, [user])
 

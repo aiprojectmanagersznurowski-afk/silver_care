@@ -92,8 +92,9 @@ export async function POST(req: Request) {
       },
       { status: 202 }
     )
-  } catch (error: any) {
-    console.error('Submit voice job error:', error?.message || error)
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error)
+    console.error('Submit voice job error:', msg)
     return NextResponse.json({ error: 'Wewnętrzny błąd serwera' }, { status: 500 })
   }
 }

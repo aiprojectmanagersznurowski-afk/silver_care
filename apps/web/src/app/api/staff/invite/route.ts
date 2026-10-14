@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     
     // Tworzymy użytkownika od razu z odpowiednimi metadanymi, aby nie używać updateUserById, 
     // które unieważnia wygenerowany token zaproszenia.
-    const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
+    const { error: createError } = await adminClient.auth.admin.createUser({
       email: email.trim(),
       email_confirm: false,
       app_metadata: {
@@ -126,8 +126,8 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ success: true, url: proxyUrl })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API error: An unexpected error occurred')
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Błąd serwera' }, { status: 500 })
   }
 }

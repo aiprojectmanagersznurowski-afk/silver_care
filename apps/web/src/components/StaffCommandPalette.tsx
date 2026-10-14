@@ -26,7 +26,7 @@ export function StaffCommandPalette({ residents = [] }: StaffCommandPaletteProps
   // Pobierz listę podopiecznych jeśli nie przekazano w propsach
   useEffect(() => {
     if (residents.length > 0) {
-      setCachedResidents(residents)
+      void Promise.resolve().then(() => setCachedResidents(residents))
       return
     }
     async function load() {
@@ -68,8 +68,10 @@ export function StaffCommandPalette({ residents = [] }: StaffCommandPaletteProps
 
   useEffect(() => {
     if (isOpen) {
-      setQuery('')
-      setSelectedIndex(0)
+      void Promise.resolve().then(() => {
+        setQuery('')
+        setSelectedIndex(0)
+      })
       setTimeout(() => inputRef.current?.focus(), 50)
     }
   }, [isOpen])

@@ -21,7 +21,6 @@ import {
   Check,
   AlertCircle,
   Loader2,
-  AlertTriangle,
   FileCode,
   Sparkles,
   ArrowUpDown,
@@ -135,7 +134,7 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
     }
 
     const rooms = res.rooms || []
-    const flatRows: any[] = []
+    const flatRows: Record<string, unknown>[] = []
 
     for (const r of rooms) {
       if (r.beds.length === 0) {
@@ -216,7 +215,7 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
       const wb = XLSX.read(buffer, { type: 'array' })
       const firstSheetName = wb.SheetNames[0]
       const ws = wb.Sheets[firstSheetName]
-      const jsonData: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 })
+      const jsonData: unknown[][] = XLSX.utils.sheet_to_json(ws, { header: 1 })
 
       if (jsonData.length < 2) {
         setImportError('Plik jest pusty lub zawiera tylko nagłówki.')
@@ -232,11 +231,11 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
           continue
         }
         rows.push({
-          floor: row[0],
-          number: row[1],
-          sector: row[2],
-          bedCount: row[3],
-          bedLabels: row[4],
+          floor: row[0] != null ? String(row[0]) : undefined,
+          number: row[1] != null ? String(row[1]) : undefined,
+          sector: row[2] != null ? String(row[2]) : undefined,
+          bedCount: row[3] != null ? (typeof row[3] === 'number' ? row[3] : String(row[3])) : undefined,
+          bedLabels: row[4] != null ? String(row[4]) : undefined,
         })
       }
 
@@ -252,8 +251,8 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
       } else if (res.result) {
         setDryRunResult(res.result)
       }
-    } catch (err: any) {
-      setImportError('Błąd odczytu pliku: ' + (err?.message || 'Nieznany błąd'))
+    } catch (err: unknown) {
+      setImportError('Błąd odczytu pliku: ' + (err instanceof Error ? err.message : 'Nieznany błąd'))
     } finally {
       setImportLoading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
@@ -310,7 +309,7 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
 
       mediaRecorderRef.current.start()
       setIsRecording(true)
-    } catch (err) {
+    } catch {
       setVoiceError('Brak dostępu do mikrofonu. Upewnij się, że przyznano uprawnienia.')
     }
   }
@@ -358,8 +357,8 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
           setVoiceBedLabels(parseRes.parsed.bedLabels.join(', '))
         }
       }
-    } catch (err: any) {
-      setVoiceError(err.message || 'Błąd przetwarzania głosu')
+    } catch (err: unknown) {
+      setVoiceError(err instanceof Error ? err.message : 'Błąd przetwarzania głosu')
     } finally {
       setIsProcessingVoice(false)
     }
@@ -383,8 +382,8 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
           setVoiceBedLabels(parseRes.parsed.bedLabels.join(', '))
         }
       }
-    } catch (err: any) {
-      setVoiceError(err.message || 'Błąd parsowania')
+    } catch (err: unknown) {
+      setVoiceError(err instanceof Error ? err.message : 'Błąd parsowania')
     } finally {
       setIsProcessingVoice(false)
     }

@@ -59,7 +59,7 @@ export async function POST(request: Request) {
       }
     }
 
-    let rowsToInsert: any[] = []
+    let rowsToInsert: Record<string, unknown>[] = []
 
     if (Array.isArray(target_dates) && target_dates.length > 0) {
       rowsToInsert = target_dates.map(date => ({
@@ -151,8 +151,8 @@ export async function PUT(request: Request) {
     }
 
     return NextResponse.json({ success: true })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Błąd serwera' }, { status: 500 })
+  } catch (error: unknown) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Błąd serwera' }, { status: 500 })
   }
 }
 

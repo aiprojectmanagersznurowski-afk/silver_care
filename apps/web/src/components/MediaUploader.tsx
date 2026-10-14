@@ -24,7 +24,7 @@ export function MediaUploader({ residentId }: { residentId: string }) {
 
     try {
       // 1. Kompresja i czyszczenie metadanych w przeglądarce
-      const { file: optimizedFile, originalSize, optimizedSize, savedPercent } = await optimizeImageForUpload(
+      const { file: optimizedFile, optimizedSize, savedPercent } = await optimizeImageForUpload(
         originalFile,
         { maxWidth: 1600, maxHeight: 1600, quality: 0.85, prefix: 'res_media' }
       )
@@ -64,10 +64,10 @@ export function MediaUploader({ residentId }: { residentId: string }) {
         setStatus('idle')
         setStatusMessage(null)
       }, 4000)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Błąd wgrywania zdjęcia:', error)
       setStatus('error')
-      const err = error.message || 'Nie udało się wgrać zdjęcia. Spróbuj ponownie.'
+      const err = error instanceof Error ? error.message : 'Nie udało się wgrać zdjęcia. Spróbuj ponownie.'
       setErrorMessage(err)
       toast.error(err)
     } finally {

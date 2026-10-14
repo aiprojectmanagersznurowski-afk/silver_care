@@ -27,6 +27,24 @@ async function requireOrgAdmin() {
   return { user, orgId, supabase, adminClient: createAdminClient() }
 }
 
+interface BedAssignmentRecord {
+  unassigned_at: string | null
+  residents?: {
+    first_name: string
+    last_name: string
+  } | Array<{
+    first_name: string
+    last_name: string
+  }> | null
+}
+
+interface RoomBedRecord {
+  id: string
+  label: string
+  is_active: boolean
+  bed_assignments?: BedAssignmentRecord[] | null
+}
+
 export async function exportFacilityStructureAction(): Promise<{
   error?: string
   rooms?: FacilityExportRoom[]
@@ -46,18 +64,19 @@ export async function exportFacilityStructureAction(): Promise<{
     }
 
     const rooms: FacilityExportRoom[] = (rawRooms || []).map((r) => {
-      const beds = Array.isArray(r.beds) ? r.beds : []
+      const beds = (Array.isArray(r.beds) ? r.beds : []) as unknown as RoomBedRecord[]
       return {
         id: r.id,
         number: r.number,
         floor: r.floor,
         sector: r.sector,
         is_active: r.is_active,
-        beds: beds.map((b: any) => {
+        beds: beds.map((b) => {
           const assignments = Array.isArray(b.bed_assignments) ? b.bed_assignments : []
-          const active = assignments.find((a: any) => a.unassigned_at === null)
-          const residentName = active?.residents
-            ? `${active.residents.first_name} ${active.residents.last_name}`
+          const active = assignments.find((a) => a.unassigned_at === null)
+          const resident = Array.isArray(active?.residents) ? active.residents[0] : active?.residents
+          const residentName = resident
+            ? `${resident.first_name} ${resident.last_name}`
             : null
           return {
             id: b.id,
@@ -86,8 +105,8 @@ export async function exportFacilityStructureAction(): Promise<{
       rooms,
       json: JSON.stringify({ organization_id: orgId, exported_at: new Date().toISOString(), rooms }, null, 2),
     }
-  } catch (err: any) {
-    return { error: err.message || 'Wystąpił nieoczekiwany błąd' }
+  } catch (err: unknown) {
+    return { error: err instanceof Error ? err.message : 'Wystąpił nieoczekiwany błąd' }
   }
 }
 
@@ -111,8 +130,8 @@ export async function analyzeFacilityImportAction(
     const result = validateFacilityRows(rawRows, existingNumbers)
 
     return { result }
-  } catch (err: any) {
-    return { error: err.message || 'Wystąpił błąd analizy pliku' }
+  } catch (err: unknown) {
+    return { error: err instanceof Error ? err.message : 'Wystąpił błąd analizy pliku' }
   }
 }
 
@@ -180,8 +199,8 @@ export async function commitFacilityImportAction(
 
     revalidatePath('/admin/facility')
     return { importedRooms, importedBeds }
-  } catch (err: any) {
-    return { error: err.message || 'Wystąpił błąd podczas importu' }
+  } catch (err: unknown) {
+    return { error: err instanceof Error ? err.message : 'Wystąpił błąd podczas importu' }
   }
 }
 
@@ -219,7 +238,7 @@ ZASADY:
       if (!parsed._parseError) {
         return { parsed }
       }
-    } catch (llmErr: any) {
+    } catch (llmErr: unknown) {
       // W razie błędu LLM (np. brak konfiguracji klucza lub brak sieci), użyj inteligentnego fallbacku heurystycznego
       const fallback = fallbackExtractFacilityVoiceParams(transcription)
       if (fallback.number || fallback.floor || fallback.bedLabels) {
@@ -234,8 +253,8 @@ ZASADY:
     }
 
     return { error: 'Nie udało się wyodrębnić parametrów pokoju. Wprowadź dane ręcznie.' }
-  } catch (err: any) {
-    return { error: err.message || 'Błąd parsowania notatki głosowej' }
+  } catch (err: unknown) {
+    return { error: err instanceof Error ? err.message : 'Błąd parsowania notatki głosowej' }
   }
 }
 
@@ -314,8 +333,8 @@ export async function createRoomWithBedsAction(data: {
 
     revalidatePath('/admin/facility')
     return { success: true, roomId: room.id }
-  } catch (err: any) {
-    return { error: err.message || 'Wystąpił nieoczekiwany błąd' }
+  } catch (err: unknown) {
+    return { error: err instanceof Error ? err.message : 'Wystąpił nieoczekiwany błąd' }
   }
 }
 

@@ -7,7 +7,6 @@ import {
   Search, 
   Send, 
   MessageSquare, 
-  User, 
   Clock, 
   CheckCircle2, 
   AlertCircle, 
@@ -200,7 +199,7 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
   };
 
   useEffect(() => {
-    fetchMessages();
+    void Promise.resolve().then(() => fetchMessages());
     const interval = setInterval(fetchMessages, 30000);
     return () => clearInterval(interval);
   }, [initialResidentId]);

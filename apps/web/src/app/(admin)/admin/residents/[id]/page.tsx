@@ -74,27 +74,69 @@ export default async function ResidentProfilePage({
     ? differenceInDays(new Date(), new Date(resident.admission_date))
     : null
 
+interface ResidentBedAssignment {
+  id: string
+  assigned_at: string
+  unassigned_at: string | null
+  beds?: {
+    id: string
+    label: string
+    rooms?: {
+      number: string
+      floor: string
+      sector?: string | null
+    } | null
+  } | null
+}
+
+interface ResidentEventItem {
+  id: string
+  event_type: string
+  event_date: string
+  event_reason?: string | null
+  metadata?: unknown
+  created_at: string
+}
+
+interface ResidentPackageItem {
+  id: string
+  package_type: string
+  package_name: string
+  monthly_rate?: number | string | null
+  started_at: string
+  ended_at?: string | null
+}
+
+interface ResidentRelativeLinkItem {
+  id: string
+  relative_user_id: string
+  relationship_code: string
+  role: string
+  is_primary_contact?: boolean | null
+  created_at: string
+}
+
   const isActive = !resident.archived_at && !resident.death_date &&
     (!resident.contract_end_date || new Date(resident.contract_end_date) > new Date())
 
   const activeAssignment = Array.isArray(resident.bed_assignments)
-    ? resident.bed_assignments.find((a: any) => a.unassigned_at === null)
+    ? (resident.bed_assignments as ResidentBedAssignment[]).find((a) => a.unassigned_at === null)
     : null
 
   const sortedEvents = Array.isArray(resident.resident_events)
-    ? [...resident.resident_events].sort(
-        (a: any, b: any) => new Date(b.event_date).getTime() - new Date(a.event_date).getTime()
+    ? [...(resident.resident_events as ResidentEventItem[])].sort(
+        (a, b) => new Date(b.event_date).getTime() - new Date(a.event_date).getTime()
       )
     : []
 
   const activePackages = Array.isArray(resident.resident_packages)
-    ? resident.resident_packages.filter((p: any) => !p.ended_at)
+    ? (resident.resident_packages as ResidentPackageItem[]).filter((p) => !p.ended_at)
     : []
 
   const pastAssignments = Array.isArray(resident.bed_assignments)
-    ? resident.bed_assignments
-        .filter((a: any) => a.unassigned_at !== null)
-        .sort((a: any, b: any) => new Date(b.assigned_at).getTime() - new Date(a.assigned_at).getTime())
+    ? (resident.bed_assignments as ResidentBedAssignment[])
+        .filter((a) => a.unassigned_at !== null)
+        .sort((a, b) => new Date(b.assigned_at).getTime() - new Date(a.assigned_at).getTime())
     : []
 
   const careLevel = (resident.care_level || 'unknown') as CareLevel | 'unknown'
@@ -384,7 +426,7 @@ export default async function ResidentProfilePage({
                   {/* Timeline line */}
                   <div className="absolute left-5 top-2 bottom-2 w-px bg-muted" />
 
-                  {sortedEvents.map((event: any, index: number) => (
+                  {sortedEvents.map((event) => (
                     <div key={event.id} className="relative flex gap-4 py-3">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-card ring-1 ring-border text-lg z-10">
                         {EVENT_TYPE_ICONS[event.event_type as EventType] || '📌'}
@@ -452,13 +494,13 @@ export default async function ResidentProfilePage({
                 <>
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Historia</p>
                   <div className="space-y-2">
-                    {pastAssignments.slice(0, 5).map((a: any) => (
+                    {pastAssignments.slice(0, 5).map((a) => (
                       <div key={a.id} className="text-sm text-muted-foreground flex justify-between">
                         <span>
                           Pokój {a.beds?.rooms?.number}, łóżko {a.beds?.label}
                         </span>
                         <span className="text-xs">
-                          {format(new Date(a.assigned_at), 'd.MM.yy', { locale: pl })} – {format(new Date(a.unassigned_at), 'd.MM.yy', { locale: pl })}
+                          {format(new Date(a.assigned_at), 'd.MM.yy', { locale: pl })} – {format(new Date(a.unassigned_at!), 'd.MM.yy', { locale: pl })}
                         </span>
                       </div>
                     ))}
@@ -496,7 +538,7 @@ export default async function ResidentProfilePage({
                 </p>
               ) : (
                 <div className="space-y-3">
-                  {resident.resident_relative_links.map((link: any) => (
+                  {((resident.resident_relative_links as ResidentRelativeLinkItem[]) || []).map((link) => (
                     <div key={link.id} className="flex items-center justify-between rounded-xl bg-muted/50 p-3">
                       <div>
                         <div className="flex items-center gap-2">
@@ -537,7 +579,7 @@ export default async function ResidentProfilePage({
                 </p>
               ) : (
                 <div className="space-y-2">
-                  {activePackages.map((pkg: any) => (
+                  {activePackages.map((pkg) => (
                     <div key={pkg.id} className="flex items-center justify-between rounded-xl bg-primary/5 p-3">
                       <div>
                         <p className="text-sm font-medium text-foreground">{pkg.package_name}</p>

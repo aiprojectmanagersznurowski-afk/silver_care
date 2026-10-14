@@ -91,9 +91,9 @@ async function sendAdminInviteEmail(adminEmail: string, orgName: string): Promis
     }
 
     return { inviteUrl, emailSent }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[ADMIN_INVITE] Nieoczekiwany błąd zaproszenia:', err)
-    return { inviteUrl: null, emailSent: false, error: err?.message || 'Błąd zaproszenia.' }
+    return { inviteUrl: null, emailSent: false, error: err instanceof Error ? err.message : 'Błąd zaproszenia.' }
   }
 }
 

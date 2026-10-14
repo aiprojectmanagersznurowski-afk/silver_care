@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js'
-import type { Database } from '@/types/database.types'
 
 // Ten klient omija RLS, pozwala na zapraszanie uzytkownikow i modyfikacje auth.users
 export function createAdminClient() {

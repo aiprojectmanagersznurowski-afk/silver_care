@@ -14,7 +14,7 @@ export const GET = withAuth(async (request, { supabase }) => {
   const url = new URL(request.url)
   const isPaginated = url.searchParams.has('page')
 
-  let query = supabase
+  const query = supabase
     .from('residents')
     .select('id, first_name, last_name, pesel_hash', { count: isPaginated ? 'exact' : undefined })
     .order('last_name', { ascending: true })

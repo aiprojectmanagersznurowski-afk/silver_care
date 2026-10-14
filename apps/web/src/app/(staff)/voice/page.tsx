@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
-import { Mic, Square, Loader2, Sparkles, AlertTriangle, ArrowRight, ArrowLeft, X, Search, Users } from 'lucide-react'
+import { Mic, Square, Loader2, Sparkles, AlertTriangle, ArrowRight, ArrowLeft, X, Search } from 'lucide-react'
 import Link from 'next/link'
 import { Textarea } from '@/components/ui/textarea'
 
@@ -47,7 +47,7 @@ function VoiceNoteContent() {
 
   useEffect(() => {
     if (initialResidentId) {
-      setActiveResidentId(initialResidentId)
+      void Promise.resolve().then(() => setActiveResidentId(initialResidentId))
     }
   }, [initialResidentId])
 
@@ -57,7 +57,7 @@ function VoiceNoteContent() {
         if (data) setResident(data)
       })
     } else {
-      setLoadingResidents(true)
+      void Promise.resolve().then(() => setLoadingResidents(true))
       supabase
         .from('residents')
         .select('id, first_name, last_name')

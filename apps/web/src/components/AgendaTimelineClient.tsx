@@ -69,7 +69,7 @@ export function AgendaTimelineClient({ items, accentColor = "var(--primary)", vi
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
-    setLoaded(false)
+    void Promise.resolve().then(() => setLoaded(false))
     const t = setTimeout(() => setLoaded(true), 250)
     return () => clearTimeout(t)
   }, [items, viewDateStr])

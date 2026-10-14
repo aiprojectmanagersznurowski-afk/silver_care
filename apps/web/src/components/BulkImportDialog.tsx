@@ -12,7 +12,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { FileSpreadsheet, Download, Upload, Check, AlertCircle, Loader2, AlertTriangle } from 'lucide-react'
-import { RawResidentRow, ValidatedResidentRow, DryRunResult } from '@/lib/bulk-import-helpers'
+import { RawResidentRow, DryRunResult } from '@/lib/bulk-import-helpers'
 import { analyzeBulkImportAction, commitBulkImportAction } from '@/actions/bulk-import'
 import * as XLSX from 'xlsx'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -66,7 +66,7 @@ export function BulkImportDialog() {
       const wb = XLSX.read(buffer, { type: 'array' })
       const firstSheetName = wb.SheetNames[0]
       const ws = wb.Sheets[firstSheetName]
-      const jsonData: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 })
+      const jsonData: unknown[][] = XLSX.utils.sheet_to_json(ws, { header: 1 })
 
       if (jsonData.length < 2) {
         setError('Plik jest pusty lub zawiera tylko nagłówki.')
@@ -82,12 +82,12 @@ export function BulkImportDialog() {
           continue
         }
         rows.push({
-          firstName: row[0],
-          lastName: row[1],
-          nationalId: row[2],
-          careLevel: row[3],
-          isZsn: row[4],
-          notes: row[5],
+          firstName: row[0] != null ? String(row[0]) : undefined,
+          lastName: row[1] != null ? String(row[1]) : undefined,
+          nationalId: row[2] != null ? String(row[2]) : undefined,
+          careLevel: row[3] != null ? String(row[3]) : undefined,
+          isZsn: row[4] != null ? (typeof row[4] === 'boolean' ? row[4] : String(row[4])) : undefined,
+          notes: row[5] != null ? String(row[5]) : undefined,
         })
       }
 
@@ -104,8 +104,8 @@ export function BulkImportDialog() {
         setDryRunResult(res.result)
         setStep('preview')
       }
-    } catch (err: any) {
-      setError('Błąd przetwarzania pliku: ' + (err?.message || 'Nieznany błąd.'))
+    } catch (err: unknown) {
+      setError('Błąd przetwarzania pliku: ' + (err instanceof Error ? err.message : 'Nieznany błąd.'))
     } finally {
       setLoading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''

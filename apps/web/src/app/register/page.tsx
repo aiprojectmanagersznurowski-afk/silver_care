@@ -2,14 +2,13 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import Image from 'next/image'
 import { Logo } from '@/components/Logo'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client'
-import { Loader2, AlertCircle, CheckCircle2, ShieldCheck, HeartHandshake } from 'lucide-react'
+import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react'
 
 type UIState = 'LOADING' | 'ERROR' | 'FORM' | 'SUCCESS'
 
@@ -36,9 +35,11 @@ function RegisterContent() {
 
   useEffect(() => {
     if (!token) {
-      setErrorStatus('MISSING_TOKEN')
-      setErrorMessage('Brak tokena rejestracji. Upewnij się, że używasz linku przesłanego w wiadomości e-mail.')
-      setUiState('ERROR')
+      void Promise.resolve().then(() => {
+        setErrorStatus('MISSING_TOKEN')
+        setErrorMessage('Brak tokena rejestracji. Upewnij się, że używasz linku przesłanego w wiadomości e-mail.')
+        setUiState('ERROR')
+      })
       return
     }
 
@@ -61,7 +62,7 @@ function RegisterContent() {
           setErrorMessage(data.message || 'To zaproszenie jest nieprawidłowe lub straciło ważność.')
           setUiState('ERROR')
         }
-      } catch (err) {
+      } catch {
         if (!isMounted) return
         setErrorStatus('NETWORK_ERROR')
         setErrorMessage('Nie udało się nawiązać połączenia w celu weryfikacji zaproszenia.')

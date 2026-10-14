@@ -10,8 +10,12 @@ export function useAgenda(residentId: string | undefined) {
     if (!residentId) return;
 
     let mounted = true;
-    setLoading(true);
-    setError(null);
+    void Promise.resolve().then(() => {
+      if (mounted) {
+        setLoading(true);
+        setError(null);
+      }
+    });
 
     fetch(`/api/residents/${residentId}/agenda`)
       .then(async (res) => {

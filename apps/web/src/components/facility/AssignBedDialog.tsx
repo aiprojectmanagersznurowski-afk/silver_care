@@ -20,10 +20,16 @@ interface AssignBedDialogProps {
   onAssigned: () => void
 }
 
+interface AssignableResident {
+  id: string
+  first_name: string
+  last_name: string
+}
+
 export default function AssignBedDialog({ bedId, onAssigned }: AssignBedDialogProps) {
   const [open, setOpen] = useState(false)
   const [residentId, setResidentId] = useState('')
-  const [residents, setResidents] = useState<any[]>([])
+  const [residents, setResidents] = useState<AssignableResident[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isFetching, setIsFetching] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -76,8 +82,8 @@ export default function AssignBedDialog({ bedId, onAssigned }: AssignBedDialogPr
       setResidentId('')
       setOpen(false)
       onAssigned()
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Wystąpił błąd')
     } finally {
       setIsLoading(false)
     }

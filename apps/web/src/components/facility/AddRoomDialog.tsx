@@ -52,8 +52,8 @@ export default function AddRoomDialog({ onRoomAdded }: AddRoomDialogProps) {
       setSector('')
       setOpen(false)
       onRoomAdded()
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Wystąpił błąd')
     } finally {
       setIsLoading(false)
     }

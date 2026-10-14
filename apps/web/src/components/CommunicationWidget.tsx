@@ -41,7 +41,7 @@ export function CommunicationWidget({ residentId }: { residentId?: string }) {
 
   useEffect(() => {
     if (open) {
-      loadMessages();
+      void Promise.resolve().then(() => loadMessages());
       const interval = setInterval(loadMessages, 30000);
       return () => clearInterval(interval);
     }

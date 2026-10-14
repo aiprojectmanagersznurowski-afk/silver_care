@@ -22,7 +22,7 @@ import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useViewPreference, VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-preference'
 
-interface RoomItem {
+export interface RoomItem {
   id: string
   number: string
   floor: string

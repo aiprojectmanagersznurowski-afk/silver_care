@@ -67,10 +67,12 @@ export function GlobalCommandPalette({ userRole }: GlobalCommandPaletteProps) {
   // 2. Focus na input po otwarciu
   useEffect(() => {
     if (isOpen) {
-      setQuery('')
-      setResults([])
-      setSelectedIndex(0)
-      setErrorMessage(null)
+      void Promise.resolve().then(() => {
+        setQuery('')
+        setResults([])
+        setSelectedIndex(0)
+        setErrorMessage(null)
+      })
       setTimeout(() => inputRef.current?.focus(), 50)
     }
   }, [isOpen])

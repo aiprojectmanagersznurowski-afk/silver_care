@@ -20,6 +20,17 @@ export default async function OrganizationsPage() {
     redirect('/admin')
   }
 
+interface SuperadminOrgSummaryRow {
+  organization_id: string
+  organization_name: string
+  address?: string | null
+  resident_limit?: number | string | null
+  created_at: string
+  active_resident_count?: number | string | null
+  staff_count?: number | string | null
+  administrator_count?: number | string | null
+}
+
   let organizations: OrganizationSummaryItem[] = []
   let errorMessage: string | undefined
 
@@ -29,7 +40,7 @@ export default async function OrganizationsPage() {
       console.error('Błąd pobierania podsumowania placówek:', error)
       errorMessage = error.message
     } else {
-      organizations = (data || []).map((row: any) => ({
+      organizations = ((data as SuperadminOrgSummaryRow[]) || []).map((row) => ({
         organization_id: row.organization_id,
         organization_name: row.organization_name,
         address: row.address,

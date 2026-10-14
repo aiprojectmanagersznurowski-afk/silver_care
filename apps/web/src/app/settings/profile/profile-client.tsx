@@ -21,7 +21,7 @@ interface ProfileData {
     id: string
     action: string
     created_at: string
-    payload: any
+    payload: unknown
   }>
 }
 
@@ -76,8 +76,6 @@ export function ProfileSecurityClient({ initialData }: { initialData: ProfileDat
     family: 'Bliski / Rodzina',
     legal_guardian: 'Opiekun Prawny',
   }
-
-  const isStaffOrAdmin = ['super_admin', 'org_admin', 'admin', 'nurse', 'caregiver', 'paramedic'].includes(initialData.user.role)
 
   return (
     <div className="space-y-6">

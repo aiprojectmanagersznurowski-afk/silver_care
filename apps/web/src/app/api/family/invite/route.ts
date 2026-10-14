@@ -143,9 +143,9 @@ export async function POST(request: Request) {
         emailSent,
       })
     )
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Wystąpił błąd serwera' }, { status: 500 })
   }
 }
 
@@ -267,8 +267,8 @@ export async function PATCH(request: Request) {
     }
 
     return NextResponse.json({ error: 'Nieznana akcja' }, { status: 400 })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Wystąpił błąd serwera' }, { status: 500 })
   }
 }

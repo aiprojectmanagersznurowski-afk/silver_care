@@ -49,8 +49,8 @@ export default function AddBedDialog({ roomId, onBedAdded }: AddBedDialogProps) 
       setLabel('')
       setOpen(false)
       onBedAdded()
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Wystąpił błąd')
     } finally {
       setIsLoading(false)
     }

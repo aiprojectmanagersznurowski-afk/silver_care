@@ -19,8 +19,30 @@ interface BedListProps {
   onUpdate: () => void
 }
 
+interface BedResident {
+  id: string
+  first_name: string
+  last_name: string
+  gender?: 'M' | 'F'
+  is_zsn?: boolean
+  care_level?: string
+}
+
+interface BedItem {
+  id: string
+  label: string
+  is_active: boolean
+  active_assignment?: {
+    id: string
+    resident_id: string
+    resident: BedResident
+  } | null
+  resident?: BedResident | null
+  [key: string]: unknown
+}
+
 export default function BedList({ roomId, roomNumber, floor, onUpdate }: BedListProps) {
-  const [beds, setBeds] = useState<any[]>([])
+  const [beds, setBeds] = useState<BedItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [unassignTarget, setUnassignTarget] = useState<{
     bedId: string
@@ -45,7 +67,7 @@ export default function BedList({ roomId, roomNumber, floor, onUpdate }: BedList
   }
 
   useEffect(() => {
-    fetchBeds()
+    void Promise.resolve().then(() => fetchBeds())
   }, [roomId])
 
   const handleDeactivate = async (bedId: string, is_active: boolean) => {
@@ -215,13 +237,15 @@ export default function BedList({ roomId, roomNumber, floor, onUpdate }: BedList
                                     variant="outline"
                                     size="sm"
                                     className="text-destructive hover:bg-destructive/10 hover:text-destructive h-8 px-2.5 text-xs"
-                                    onClick={() =>
-                                      setUnassignTarget({
-                                        bedId: bed.id,
-                                        residentId: bed.active_assignment.resident.id,
-                                        residentName: `${bed.active_assignment.resident.first_name} ${bed.active_assignment.resident.last_name}`,
-                                      })
-                                    }
+                                    onClick={() => {
+                                      if (bed.active_assignment?.resident) {
+                                        setUnassignTarget({
+                                          bedId: bed.id,
+                                          residentId: bed.active_assignment.resident.id,
+                                          residentName: `${bed.active_assignment.resident.first_name} ${bed.active_assignment.resident.last_name}`,
+                                        })
+                                      }
+                                    }}
                                   >
                                     Wypisz
                                   </Button>

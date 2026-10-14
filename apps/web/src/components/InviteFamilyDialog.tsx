@@ -45,12 +45,14 @@ export function InviteFamilyDialog({
   const [generatedUrl, setGeneratedUrl] = useState<string | null>(null)
 
   useEffect(() => {
-    if (defaultResidentId) {
-      setResidentId(defaultResidentId)
-    } else if (residents.length > 0 && !residentId) {
-      setResidentId(residents[0].id)
-    }
-  }, [defaultResidentId, residents, open])
+    void Promise.resolve().then(() => {
+      if (defaultResidentId) {
+        setResidentId(defaultResidentId)
+      } else if (residents.length > 0 && !residentId) {
+        setResidentId(residents[0].id)
+      }
+    })
+  }, [defaultResidentId, residents, open, residentId])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

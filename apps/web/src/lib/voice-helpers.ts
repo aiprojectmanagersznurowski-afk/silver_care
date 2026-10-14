@@ -15,13 +15,14 @@ export function extractJson(raw: string, _fallbackText?: string): ClassifiedNote
   const firstBrace = cleaned.indexOf('{')
   const lastBrace = cleaned.lastIndexOf('}')
 
-  const parseObj = (parsed: any): ClassifiedNote => {
+  const parseObj = (parsed: Record<string, unknown>): ClassifiedNote => {
+    const extractedStreams = parsed.extracted_streams as Record<string, unknown> | undefined
     const getStream = (key: 'medical' | 'discomfort' | 'behavioral') => {
-      if (parsed[key]) return parsed[key]
-      if (parsed.extracted_streams?.[key]) {
-        return Array.isArray(parsed.extracted_streams[key])
-          ? parsed.extracted_streams[key].join('; ')
-          : String(parsed.extracted_streams[key])
+      if (typeof parsed[key] === 'string') return parsed[key] as string
+      if (extractedStreams && extractedStreams[key]) {
+        return Array.isArray(extractedStreams[key])
+          ? (extractedStreams[key] as unknown[]).join('; ')
+          : String(extractedStreams[key])
       }
       return null
     }
@@ -30,7 +31,7 @@ export function extractJson(raw: string, _fallbackText?: string): ClassifiedNote
       medical: getStream('medical'),
       discomfort: getStream('discomfort'),
       behavioral: getStream('behavioral'),
-      followup_question: parsed.followup_question || null,
+      followup_question: typeof parsed.followup_question === 'string' ? parsed.followup_question : null,
     }
   }
 

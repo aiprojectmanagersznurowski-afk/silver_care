@@ -79,7 +79,7 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
 
   // Zabezpieczenie przed trzymaniem przestarzałego pokoju jak user zmienia piętro
   useEffect(() => {
-    setRoomFilter('all')
+    void Promise.resolve().then(() => setRoomFilter('all'))
   }, [floorFilter])
 
   const totalUnansweredCount = useMemo(() => {

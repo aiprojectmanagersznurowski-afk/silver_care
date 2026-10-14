@@ -1,4 +1,4 @@
-import { Dumbbell, Utensils, Sparkles, Pill, ChevronRight, Calendar } from "lucide-react";
+import { Dumbbell, Utensils, Sparkles, Pill, ChevronRight, Calendar, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 
 type Status = "completed" | "upcoming" | "menu";
@@ -38,7 +38,7 @@ export function ServiceActivityFeed({
 }) {
   let activities: Array<{
     id: string | number;
-    icon: any;
+    icon: LucideIcon;
     title: string;
     time: string;
     detail: string;

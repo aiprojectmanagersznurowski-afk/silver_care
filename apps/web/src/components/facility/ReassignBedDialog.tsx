@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ArrowRightLeft, AlertTriangle, CheckCircle2, BedDouble } from 'lucide-react'
+import { ArrowRightLeft, AlertTriangle, CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -76,12 +76,22 @@ export default function ReassignBedDialog({
             if (bedRes.ok) {
               const bedData = await bedRes.json()
               const roomBeds = bedData.beds || []
+              interface RoomBedItem {
+                id: string
+                label: string
+                is_active: boolean
+                active_assignment?: {
+                  resident?: {
+                    gender?: 'M' | 'F'
+                  } | null
+                } | null
+              }
 
-              const roomGenders: Array<'M' | 'F'> = roomBeds
-                .filter((b: any) => b.active_assignment?.resident?.gender)
-                .map((b: any) => b.active_assignment.resident.gender)
+              const roomGenders: Array<'M' | 'F'> = (roomBeds as RoomBedItem[])
+                .map((b) => b.active_assignment?.resident?.gender)
+                .filter((g): g is 'M' | 'F' => g === 'M' || g === 'F')
 
-              for (const bed of roomBeds) {
+              for (const bed of roomBeds as RoomBedItem[]) {
                 if (bed.is_active && !bed.active_assignment && bed.id !== currentBedId) {
                   options.push({
                     bedId: bed.id,
@@ -97,8 +107,8 @@ export default function ReassignBedDialog({
             }
           }
           setAvailableBeds(options)
-        } catch (err: any) {
-          toast.error(err.message || 'Nie udało się pobrać listy wolnych łóżek')
+        } catch (err: unknown) {
+          toast.error(err instanceof Error ? err.message : 'Nie udało się pobrać listy wolnych łóżek')
         } finally {
           setIsLoadingBeds(false)
         }
@@ -155,8 +165,8 @@ export default function ReassignBedDialog({
       toast.success(`Pomyślnie przeniesiono podopiecznego do pokoju ${selectedOption?.roomNumber}, łóżko ${selectedOption?.bedLabel}`)
       setOpen(false)
       onReassigned()
-    } catch (err: any) {
-      toast.error(err.message || 'Wystąpił błąd podczas przenoszenia')
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Wystąpił błąd podczas przenoszenia')
     } finally {
       setIsSubmitting(false)
     }

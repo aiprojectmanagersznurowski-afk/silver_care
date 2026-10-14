@@ -14,8 +14,8 @@ export interface StaffActionResult {
 }
 
 async function logStaffAction(
-  supabase: any,
-  adminClient: any,
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  adminClient: ReturnType<typeof createAdminClient>,
   callerId: string,
   staffId: string,
   action: string,

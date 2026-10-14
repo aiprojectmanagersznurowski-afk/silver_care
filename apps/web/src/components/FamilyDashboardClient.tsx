@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useSyncExternalStore } from 'react'
+
+const emptySubscribe = () => () => {}
 import { format } from 'date-fns'
 import { pl } from 'date-fns/locale'
 import { useRouter } from 'next/navigation'
@@ -45,14 +47,10 @@ type TabType = 'DASHBOARD' | 'AGENDA' | 'GALERIA';
 
 export function FamilyDashboardClient({ resident, reports, selectedDateMedia = [], agenda = [], selectedDate }: FamilyDashboardClientProps) {
   const [activeTab, setActiveTab] = useState<TabType>('DASHBOARD');
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const [galleryModalOpen, setGalleryModalOpen] = useState(false);
   const [galleryModalIndex, setGalleryModalIndex] = useState(0);
   const router = useRouter();
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   if (!mounted) return null;
 

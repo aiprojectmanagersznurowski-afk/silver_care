@@ -45,8 +45,10 @@ export function FamilyMessageForm({ residentId }: FamilyMessageFormProps) {
   };
 
   useEffect(() => {
-    setLoadingHistory(true);
-    loadMessages();
+    void Promise.resolve().then(() => {
+      setLoadingHistory(true);
+      loadMessages();
+    });
     
     // Proste odświeżanie co 30 sekund (pseudo real-time)
     const interval = setInterval(loadMessages, 30000);

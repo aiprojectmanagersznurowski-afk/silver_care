@@ -104,28 +104,30 @@ export default function LoginPage() {
       setIsRevealed(true)
     }, 400)
 
-    // 1. Obsługa błędu z parametrów zapytania URL (?error=...)
-    const searchParams = new URLSearchParams(window.location.search)
-    const queryError = searchParams.get('error')
-    if (queryError) {
-      setError(queryError)
-      window.history.replaceState(null, '', window.location.pathname)
-    }
-
-    // 2. Obsługa hasha z zaproszenia lub tokenu resetu hasła (#access_token=... lub #error=...)
-    const hash = window.location.hash
-    if (hash.includes('access_token')) {
-      router.push(`/update-password${hash}`)
-    } else if (hash.includes('error=')) {
-      const params = new URLSearchParams(hash.replace('#', '?'))
-      const errorDescription = params.get('error_description')
-      if (errorDescription) {
-        setError(errorDescription.replace(/\+/g, ' '))
-      } else {
-        setError('Wystąpił błąd autoryzacji.')
+    void Promise.resolve().then(() => {
+      // 1. Obsługa błędu z parametrów zapytania URL (?error=...)
+      const searchParams = new URLSearchParams(window.location.search)
+      const queryError = searchParams.get('error')
+      if (queryError) {
+        setError(queryError)
+        window.history.replaceState(null, '', window.location.pathname)
       }
-      window.history.replaceState(null, '', window.location.pathname)
-    }
+
+      // 2. Obsługa hasha z zaproszenia lub tokenu resetu hasła (#access_token=... lub #error=...)
+      const hash = window.location.hash
+      if (hash.includes('access_token')) {
+        router.push(`/update-password${hash}`)
+      } else if (hash.includes('error=')) {
+        const params = new URLSearchParams(hash.replace('#', '?'))
+        const errorDescription = params.get('error_description')
+        if (errorDescription) {
+          setError(errorDescription.replace(/\+/g, ' '))
+        } else {
+          setError('Wystąpił błąd autoryzacji.')
+        }
+        window.history.replaceState(null, '', window.location.pathname)
+      }
+    })
 
     return () => clearTimeout(timer)
   }, [router])
@@ -379,8 +381,8 @@ export default function LoginPage() {
                       setError(oauthError.message)
                       setLoading(false)
                     }
-                  } catch (err: any) {
-                    setError(err?.message || 'Nie udało się połączyć z usługą Google.')
+                  } catch (err: unknown) {
+                    setError(err instanceof Error ? err.message : 'Nie udało się połączyć z usługą Google.')
                     setLoading(false)
                   }
                 }}

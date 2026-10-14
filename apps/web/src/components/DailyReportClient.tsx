@@ -93,7 +93,7 @@ export function DailyReportClient({ organizationId }: { organizationId?: string 
   }, [organizationId, year, month])
 
   useEffect(() => {
-    fetchData()
+    void Promise.resolve().then(() => fetchData())
   }, [fetchData])
 
   const goToPrevMonth = () => {

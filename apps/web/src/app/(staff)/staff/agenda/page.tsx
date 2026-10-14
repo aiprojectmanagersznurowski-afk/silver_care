@@ -144,11 +144,11 @@ export default function StaffAgendaPage() {
   }
 
   useEffect(() => {
-    fetchItems()
+    void Promise.resolve().then(() => fetchItems())
   }, [viewDate])
 
   useEffect(() => {
-    fetchResidents()
+    void Promise.resolve().then(() => fetchResidents())
   }, [])
 
   const handleAdd = async (e: React.FormEvent) => {

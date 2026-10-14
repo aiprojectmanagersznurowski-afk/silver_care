@@ -19,18 +19,20 @@ function AcceptInviteContent() {
   const [isNavigating, setIsNavigating] = useState(false)
 
   useEffect(() => {
-    const origin = typeof window !== 'undefined' ? window.location.origin : ''
-    const result = resolveAcceptInviteAction(
-      { url: urlParam, token: tokenParam },
-      origin
-    )
+    void Promise.resolve().then(() => {
+      const origin = typeof window !== 'undefined' ? window.location.origin : ''
+      const result = resolveAcceptInviteAction(
+        { url: urlParam, token: tokenParam },
+        origin
+      )
 
-    setResolution(result)
+      setResolution(result)
 
-    // Jeśli to token zaproszenia rodziny, automatycznie przekierowujemy do rejestracji
-    if (result.state === 'REDIRECT' && result.destinationUrl) {
-      router.replace(result.destinationUrl)
-    }
+      // Jeśli to token zaproszenia rodziny, automatycznie przekierowujemy do rejestracji
+      if (result.state === 'REDIRECT' && result.destinationUrl) {
+        router.replace(result.destinationUrl)
+      }
+    })
   }, [urlParam, tokenParam, router])
 
   // 1. Stan: LOADING / REDIRECT

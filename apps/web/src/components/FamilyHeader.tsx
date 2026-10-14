@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { Logo } from "./Logo";
 import { formatDistanceToNow } from "date-fns";
 import { pl } from "date-fns/locale";
@@ -34,6 +33,12 @@ interface Resident {
   avatar_url: string | null;
 }
 
+function setResidentCookie(id: string) {
+  if (typeof document !== 'undefined') {
+    document.cookie = `family_resident_id=${id}; path=/; max-age=31536000`;
+  }
+}
+
 export function FamilyHeader({ residents }: { residents: Resident[] }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -52,9 +57,7 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
 
   const handleSelect = (s: Resident) => {
     setCurrent(s);
-    if (typeof document !== 'undefined') {
-      document.cookie = `family_resident_id=${s.id}; path=/; max-age=31536000`;
-    }
+    setResidentCookie(s.id);
     router.refresh();
   };
 
