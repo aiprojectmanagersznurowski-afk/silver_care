@@ -32,6 +32,10 @@ export function FamilyMessageForm({ residentId }: FamilyMessageFormProps) {
         // Filtracja po wybranym podopiecznym, o ile API tego nie zrobiło (chronologicznie = od najstarszych do najnowszych)
         const relevant = data.messages.filter((m: Message) => m.resident_id === residentId);
         setMessages(relevant);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('silvercare_family_last_read_messages_at', new Date().toISOString());
+          window.dispatchEvent(new CustomEvent('family-messages-read'));
+        }
       }
     } catch (e) {
       console.error(e);

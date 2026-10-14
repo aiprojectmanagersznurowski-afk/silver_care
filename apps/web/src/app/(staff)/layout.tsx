@@ -6,6 +6,7 @@ import { StaffSidebar } from '@/components/StaffSidebar'
 import { cookies } from 'next/headers'
 import { Separator } from '@/components/ui/separator'
 import { StaffCommandPalette } from '@/components/StaffCommandPalette'
+import { StaffNotificationBell } from '@/components/StaffNotificationBell'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 
 export default async function StaffLayout({ children }: { children: ReactNode }) {
@@ -31,7 +32,10 @@ export default async function StaffLayout({ children }: { children: ReactNode })
               <Separator orientation="vertical" className="mx-2 data-[orientation=vertical]:h-4 data-[orientation=vertical]:self-center" />
               <span className="text-sm font-medium">Panel personelu</span>
             </div>
-            <div className="flex items-center gap-2"><StaffCommandPalette /></div>
+            <div className="flex items-center gap-2">
+              <StaffNotificationBell />
+              <StaffCommandPalette />
+            </div>
           </div>
         </header>
         <div className="flex-1 p-4 md:p-6">

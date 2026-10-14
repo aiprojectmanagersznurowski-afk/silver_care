@@ -148,6 +148,7 @@ export function calculateUnansweredMessagesPerResident(
   return result;
 }
 
+
 /**
  * Filtruje listę podopiecznych wyłącznie do osób z oczekującą wiadomością.
  */
@@ -160,5 +161,33 @@ export function filterResidentsByUnansweredMessages<T extends { id?: unknown }>(
     const status = unansweredMap.get(resId);
     return Boolean(status?.hasUnanswered);
   });
+}
+
+/**
+ * Zwraca listę wątków oczekujących na odpowiedź personelu.
+ */
+export function getAwaitingThreads(messages: RawMessage[]): MessageThread[] {
+  if (!messages || messages.length === 0) return [];
+  const threads = groupMessagesIntoThreads(messages);
+  return threads.filter(isThreadAwaitingReply);
+}
+
+/**
+ * Zlicza łączną liczbę wątków oczekujących na odpowiedź personelu.
+ */
+export function countAwaitingThreads(messages: RawMessage[]): number {
+  return getAwaitingThreads(messages).length;
+}
+
+/**
+ * Zgodnie z S3 notifications.contract.mjs — formatuje inicjały pensjonariusza
+ * dla powiadomień in-app bez ujawniania pełnego nazwiska.
+ */
+export function formatResidentInitials(firstName?: string, lastName?: string): string {
+  const f = firstName?.trim() ? firstName.trim()[0].toUpperCase() + '.' : '';
+  const l = lastName?.trim() ? lastName.trim()[0].toUpperCase() + '.' : '';
+  if (f && l) return `${f} ${l}`;
+  if (f || l) return `${f || l}`;
+  return 'P.';
 }
 

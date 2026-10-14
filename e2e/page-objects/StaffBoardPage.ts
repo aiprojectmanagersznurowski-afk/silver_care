@@ -23,7 +23,7 @@ export class StaffBoardPage {
     this.agendaLink = page.locator('a[href="/staff/agenda"]').first();
     this.reportsLink = page.locator('a[href="/staff/reports"]');
     this.logoutButton = page.locator('form[action="/auth/signout"] button[type="submit"]');
-    this.familyMessagesLinks = page.locator('a[href^="/staff/messages?residentId="]');
+    this.familyMessagesLinks = page.locator('a[href^="/staff/messages?residentId="]').filter({ hasText: 'Wiadomości od rodziny' });
     this.buttonsNestedInLinks = page.locator('a button');
     this.dictateLinks = page.locator('a[href^="/voice?resident="]');
   }

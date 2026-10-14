@@ -247,6 +247,9 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
 
       setReplyText('');
       await fetchMessages();
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('staff-messages-updated'));
+      }
     } catch (err: unknown) {
       console.error(err);
       setSendError(err instanceof Error ? err.message : 'Błąd podczas wysyłania wiadomości');
