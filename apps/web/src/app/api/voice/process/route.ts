@@ -106,7 +106,7 @@ Podziel informacje i zwróć czysty format JSON:
 
       return NextResponse.json({ 
         success: false, 
-        error: 'Błąd klasyfikacji treści notatki. Ze względów bezpieczeństwa (ADR-007) dane nie zostały przekazane do generatora raportu.' 
+        error: 'Nie udało się przetworzyć struktury notatki (błąd techniczny klasyfikatora AI). Ze względów bezpieczeństwa (ADR-007) dane nie zostały przekazane do generatora raportu. Spróbuj zatwierdzić ponownie lub doprecyzuj treść w polu tekstowym.' 
       }, { status: 422 })
     }
 
