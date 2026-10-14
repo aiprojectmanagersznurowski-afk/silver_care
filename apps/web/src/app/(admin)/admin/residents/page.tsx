@@ -178,8 +178,12 @@ export default async function AdminResidentsPage() {
                             Zarchiwizowany
                           </Badge>
                         ) : resident.death_date ? (
-                          <Badge className="bg-muted text-muted-foreground border-none text-xs">
+                          <Badge className="bg-destructive/10 text-destructive border-none text-xs">
                             Zgon
+                          </Badge>
+                        ) : resident.contract_end_date && new Date(resident.contract_end_date) <= new Date() ? (
+                          <Badge className="bg-muted text-muted-foreground border-none text-xs">
+                            Wypisany
                           </Badge>
                         ) : (
                           <Badge className="bg-muted text-foreground border-none text-xs">

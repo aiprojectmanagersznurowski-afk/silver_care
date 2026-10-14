@@ -27,6 +27,7 @@ import { InviteFamilyDialog } from '@/components/InviteFamilyDialog'
 import { PrimaryContactButton } from '@/components/PrimaryContactButton'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 import { EditResidentDialog } from '@/components/EditResidentDialog'
+import { DischargeResidentDialog } from '@/components/DischargeResidentDialog'
 import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
 
 export default async function ResidentProfilePage({
@@ -140,8 +141,12 @@ export default async function ResidentProfilePage({
                           Aktywny
                         </Badge>
                       ) : resident.death_date ? (
-                        <Badge className="bg-muted text-muted-foreground border-border">
+                        <Badge className="bg-destructive/10 text-destructive border border-destructive/20">
                           Zgon
+                        </Badge>
+                      ) : resident.contract_end_date && new Date(resident.contract_end_date) <= new Date() ? (
+                        <Badge className="bg-muted text-muted-foreground border border-border">
+                          Wypisany
                         </Badge>
                       ) : (
                         <Badge className="bg-muted text-muted-foreground border-border">
@@ -199,6 +204,20 @@ export default async function ResidentProfilePage({
                           notes: resident.notes,
                         }}
                       />
+                      {isActive && (
+                        <DischargeResidentDialog
+                          resident={{
+                            id: resident.id,
+                            first_name: resident.first_name,
+                            last_name: resident.last_name,
+                          }}
+                          activeBedLabel={
+                            activeAssignment?.beds
+                              ? `Pokój ${activeAssignment.beds.rooms?.number}, łóżko ${activeAssignment.beds.label}`
+                              : null
+                          }
+                        />
+                      )}
                     </div>
                   )}
                 </div>
@@ -317,6 +336,12 @@ export default async function ResidentProfilePage({
                     ? CONTRACT_END_REASON_LABELS[resident.contract_end_reason as ContractEndReason | 'Nieznany'] || resident.contract_end_reason
                     : null}
                 />
+                {resident.death_date && (
+                  <DataField
+                    label="Data zgonu"
+                    value={format(new Date(resident.death_date), 'd MMMM yyyy', { locale: pl })}
+                  />
+                )}
                 <DataField
                   label="Źródło"
                   value={resident.contract_source

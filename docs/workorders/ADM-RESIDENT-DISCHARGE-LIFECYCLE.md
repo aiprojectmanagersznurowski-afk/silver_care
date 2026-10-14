@@ -5,7 +5,7 @@
 - **User Story:** `[SC-ADM-19]`
 - **Domena:** residents / facility
 - **Ryzyko:** HIGH
-- **Status:** 📝 PROPOZYCJA
+- **Status:** ✅ WYKONANE
 - **Zależności:** `ADM-RESIDENT-ADD`, `ADM-BED-ASSIGNMENT`, `ADM-ARCHIVE`
 
 ## Cel
@@ -81,13 +81,26 @@ Plik: `tests/logic/adm_resident_discharge.test.ts`
 
 ---
 
-## Otwarte Pytania / WYMAGA DECYZJI
+## Decyzje projektowe (Rozstrzygnięte)
 
-1. **WYMAGA DECYZJI: Dostęp rodziny po wypisie pensjonariusza**
-   - **Wariant A (Rekomendowany):** Ustawienie `archived_at = now()` natychmiastowo wygasza dostęp rodziny do Portalu Rodziny (zgodnie z `ADM-ARCHIVE`). Rodzina widzi komunikat o zakończeniu pobytu lub wygaśnięciu dostępu.
-   - **Wariant B:** Dostęp rodziny pozostaje w trybie tylko do odczytu (read-only) do czasu upłynięcia okresu retencji lub ręcznej archiwizacji przez administratora.
-   - *Rekomendacja:* Wariant A, ponieważ pensjonariusz nie przebywa już w placówce, a ewentualne raporty archiwalne wydaje placówka na wniosek.
+1. **Dostęp rodziny po wypisie pensjonariusza — Wariant B:**
+   - Dostęp bliskich w Portalu Rodziny pozostaje w trybie tylko do odczytu (read-only) do czasu upłynięcia okresu retencji lub ręcznej, celowej archiwizacji przez administratora (`ADM-ARCHIVE`).
+   - Wypis / rejestracja zgonu NIE ustawia automatycznie flagi `archived_at = now()`. Ustawiane są `contract_end_date`, `contract_end_reason` oraz w razie zgonu `death_date`.
+2. **Rejestracja zgonu vs wypis w UI — Wariant A:**
+   - Jeden zintegrowany dialog/kreator „Zakończ pobyt / Wypisz pensjonariusza” na karcie pensjonariusza.
+   - Dynamiczny wybór powodu z ustandaryzowanej listy `CONTRACT_END_REASONS` (w tym powód `death`), z automatycznym odsłonięciem pola `death_date` przy zgonie.
 
-2. **WYMAGA DECYZJI: Rejestracja zgonu vs wypis**
-   - Czy rejestracja zgonu powinna być osobnym przyciskiem („Zgłoś zgon”) czy opcją/powodem w ramach jednego kreatora „Zakończ pobyt / Wypisz”?
-   - *Rekomendacja:* Jeden zintegrowany dialog „Zakończ pobyt / Wypisz pensjonariusza” z przełącznikiem „Powód zakończenia pobytu: Zgon / Wypis / Przeniesienie...”, co zapobiega rozproszeniu akcji w nagłówku i zapewnia spójną obsługę zwolnienia łóżka.
+---
+
+## Kryteria Akceptacji
+
+1. **AC1 (Dostępność akcji w UI):** Na karcie pensjonariusza (`/admin/residents/[id]`) dla aktywnego pensjonariusza dostępny jest czytelny przycisk akcji: **„Zakończ pobyt”** obok przycisku „Edytuj”.
+2. **AC2 (Formularz zakończenia pobytu — Wariant A):** Zintegrowane okno dialogowe umożliwia:
+   - Wybór ustandaryzowanego powodu rozwiązania umowy z listy `CONTRACT_END_REASONS` (`family_request`, `transfer`, `health_improvement`, `non_payment`, `death`, `other`).
+   - Podanie daty zakończenia umowy (`contract_end_date`, domyślnie data bieżąca).
+   - W przypadku wyboru powodu `death` — dynamiczne odsłonięcie i walidację pola daty zgonu (`death_date`).
+   - Opcjonalne pole na uwagi/notatki do rejestru placówki.
+3. **AC3 (Atomowe zwolnienie łóżka):** Zakończenie pobytu natychmiast zamyka aktywne przypisanie do łóżka (`bed_assignments.unassigned_at = now()`). Obłożenie placówki i dostępność łóżek aktualizują się bezzwłocznie.
+4. **AC4 (Zachowanie dostępu rodziny w trybie read-only — Wariant B):** Pensjonariusz zostaje oznaczony jako nieaktywny w placówce (`contract_end_date <= now()`), ale `archived_at` pozostaje `null`, co zapewnia bliskim wgląd w historyczne notatki w Portalu Rodziny bez możliwości dopisywania nowych spraw.
+5. **AC5 (Zdarzenia analityczne i audyt):** Tworzy rekord w `resident_events` z `event_type = 'contract_ended'` (oraz `'death'` w razie zgonu), co zasila istniejące funkcje BI (`fn_contract_end_reasons`, `fn_deaths_by_stay_length`), oraz wpis w `audit_logs` pod akcją `RESIDENT_DISCHARGE` (bez PII).
+6. **AC6 (Zgodność z RODO i MDR):** Brak słowa „pacjent” w UI i komunikatach. Weryfikacja braku impersonacji Super Admina (`isImpersonating`).
