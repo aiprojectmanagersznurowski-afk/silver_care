@@ -19,16 +19,16 @@ describe('URL Helper and Domain Origin Standardization', () => {
   it('preserves custom domain from x-forwarded-host header @REQ: SEC-SESSION', () => {
     const request = new Request('https://silver-care-six.vercel.app/auth/signout', {
       headers: {
-        'x-forwarded-host': 'silvercase.space',
+        'x-forwarded-host': 'silvercare.space',
         'x-forwarded-proto': 'https'
       }
     })
 
     const origin = getRequestOrigin(request)
-    expect(origin).toBe('https://silvercase.space')
+    expect(origin).toBe('https://silvercare.space')
 
     const redirectUrl = getRedirectUrl('/login', request)
-    expect(redirectUrl.toString()).toBe('https://silvercase.space/login')
+    expect(redirectUrl.toString()).toBe('https://silvercare.space/login')
   })
 
   it('preserves localhost during local development @REQ: SEC-SESSION', () => {
@@ -45,7 +45,7 @@ describe('URL Helper and Domain Origin Standardization', () => {
     expect(redirectUrl.toString()).toBe('http://localhost:3000/login')
   })
 
-  it('redirects to silvercase.space instead of vercel.app when request arrives on vercel domain @REQ: SEC-SESSION', () => {
+  it('redirects to silvercare.space instead of vercel.app when request arrives on vercel domain @REQ: SEC-SESSION', () => {
     const request = new Request('https://silver-care-six.vercel.app/auth/signout', {
       headers: {
         host: 'silver-care-six.vercel.app',
@@ -54,10 +54,10 @@ describe('URL Helper and Domain Origin Standardization', () => {
     })
 
     const origin = getRequestOrigin(request)
-    expect(origin).toBe('https://silvercase.space')
+    expect(origin).toBe('https://silvercare.space')
 
     const redirectUrl = getRedirectUrl('/login', request)
-    expect(redirectUrl.toString()).toBe('https://silvercase.space/login')
+    expect(redirectUrl.toString()).toBe('https://silvercare.space/login')
   })
 
   it('respects NEXT_PUBLIC_SITE_URL environment variable when set @REQ: SEC-SESSION', () => {

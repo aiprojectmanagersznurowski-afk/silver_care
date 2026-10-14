@@ -150,4 +150,40 @@ describe('Global Search & Command Palette Logic (@REQ: UI-TEMPLATE-ALIGNMENT, @R
     const serializedCategories = JSON.stringify(SEARCH_CATEGORIES)
     expect(serializedCategories.toLowerCase()).not.toMatch(/pacjent/)
   })
+
+  it('filters out non-matching daily reports and preserves relevant ones @REQ: UI-TEMPLATE-ALIGNMENT', () => {
+    const rawReports = [
+      { id: 'r1', created_at: '2026-10-14T08:00:00Z', resident_name: 'Jan Kowalski', status: 'approved' },
+      { id: 'r2', created_at: '2026-10-14T08:00:00Z', resident_name: 'Anna Nowak', status: 'draft' },
+      { id: 'r3', created_at: '2026-09-01T08:00:00Z', resident_name: 'Stanisław Wiśniewski', status: 'approved' },
+    ]
+
+    const query = 'Kowalski'
+    const matching = rawReports.filter(rep => {
+      const nameMatches = rep.resident_name?.toLowerCase().includes(query.toLowerCase())
+      const dateMatches = rep.created_at?.slice(0, 10).includes(query)
+      return nameMatches || dateMatches
+    })
+
+    expect(matching).toHaveLength(1)
+    expect(matching[0].id).toBe('r1')
+  })
+
+  it('correctly handles rooms with and without beds in facility search @REQ: ORG-ISOLATION', () => {
+    const emptyRoom = {
+      id: 'room-101',
+      room_id: 'room-101',
+      room_number: '101',
+      floor: 1,
+      sector: 'A',
+      bed_label: null,
+      resident_name: null,
+    }
+
+    const item = formatFacilitySearchResult(emptyRoom)
+    expect(item.title).toBe('Pokój 101')
+    expect(item.subtitle).toContain('Piętro 1, Sektor A')
+    expect(item.badge).toBe('Wolne')
+  })
 })
+

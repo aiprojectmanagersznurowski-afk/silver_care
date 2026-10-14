@@ -66,7 +66,7 @@ function resolveSiteUrl(explicitUrl?: string): string {
       }
     } catch {}
   }
-  return (process.env.NEXT_PUBLIC_SITE_URL || 'https://silvercase.space').replace(/\/$/, '')
+  return (process.env.NEXT_PUBLIC_SITE_URL || 'https://silvercare.space').replace(/\/$/, '')
 }
 
 /**

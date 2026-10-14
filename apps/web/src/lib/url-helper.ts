@@ -2,11 +2,11 @@
  * @REQ: SEC-SESSION
  *
  * Pomocnicze funkcje wyznaczania publicznego adresu bazowego (origin) i URL-i przekierowań.
- * Zapewnia zachowanie domeny niestandardowej (np. https://silvercase.space) i zapobiega
+ * Zapewnia zachowanie domeny niestandardowej (np. https://silvercare.space) i zapobiega
  * niepożądanemu przełączaniu użytkownika na wewnętrzny adres wdrożenia Vercel (*.vercel.app).
  */
 
-const DEFAULT_SITE_URL = 'https://silvercase.space'
+const DEFAULT_SITE_URL = 'https://silvercare.space'
 
 export function getRequestOrigin(request: Request): string {
   // 1. Sprawdź nagłówki proxy
@@ -16,7 +16,7 @@ export function getRequestOrigin(request: Request): string {
     request.headers.get('x-forwarded-proto') ||
     (host && host.includes('localhost') ? 'http' : 'https')
 
-  // Jeśli żądanie przyszło na domenę inną niż domyślny *.vercel.app (np. silvercase.space lub localhost)
+  // Jeśli żądanie przyszło na domenę inną niż domyślny *.vercel.app (np. silvercare.space lub localhost)
   if (host && !host.includes('vercel.app')) {
     return `${proto}://${host}`
   }
@@ -27,7 +27,7 @@ export function getRequestOrigin(request: Request): string {
   }
 
   // 3. Jeśli żądanie przyszło na pierwotny adres wdrożenia Vercel (silver-care-six.vercel.app),
-  // zawsze preferuj naszą domenę domenową silvercase.space
+  // zawsze preferuj naszą domenę domenową silvercare.space
   if (host && host.includes('silver-care-six.vercel.app')) {
     return DEFAULT_SITE_URL
   }

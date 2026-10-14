@@ -21,6 +21,25 @@ export interface GlobalSearchResponse {
   error?: string
 }
 
+interface RawRoomWithBeds {
+  id: string
+  number: string
+  floor: number | null
+  sector: string | null
+  organization_id: string
+  beds: Array<{
+    id: string
+    label: string
+    bed_assignments: Array<{
+      unassigned_at: string | null
+      residents: {
+        first_name: string
+        last_name: string
+      } | null
+    }> | null
+  }> | null
+}
+
 interface RawBedWithRoom {
   id: string
   label: string
@@ -132,9 +151,20 @@ export async function searchGlobalAction(
     }
 
     // 2. Wyszukiwanie pokoi i łóżek (facility)
+    let roomsQuery = supabase
+      .from('rooms')
+      .select('id, number, floor, sector, organization_id, beds(id, label, bed_assignments(unassigned_at, residents(first_name, last_name)))')
+      .or(`number.ilike.%${cleanQ}%,sector.ilike.%${cleanQ}%`)
+      .limit(6)
+
+    if (!isSuperAdmin && orgId) {
+      roomsQuery = roomsQuery.eq('organization_id', orgId)
+    }
+
     let bedsQuery = supabase
       .from('beds')
       .select('id, label, rooms!inner(id, number, floor, sector, organization_id), bed_assignments(unassigned_at, residents(first_name, last_name))')
+      .ilike('label', `%${cleanQ}%`)
       .limit(6)
 
     if (!isSuperAdmin && orgId) {
@@ -153,6 +183,7 @@ export async function searchGlobalAction(
     }
 
     // 4. Wyszukiwanie raportów dobowych (reports)
+    const isDateSearch = /^\d{4}/.test(cleanQ) || /^\d{2}-\d{2}/.test(cleanQ)
     let reportsQuery = supabase
       .from('daily_reports')
       .select('id, created_at, status, residents!inner(first_name, last_name, organization_id)')
@@ -160,6 +191,12 @@ export async function searchGlobalAction(
 
     if (!isSuperAdmin && orgId) {
       reportsQuery = reportsQuery.eq('residents.organization_id', orgId)
+    }
+
+    if (isDateSearch) {
+      reportsQuery = reportsQuery.gte('created_at', `${cleanQ}T00:00:00Z`).lte('created_at', `${cleanQ}T23:59:59Z`)
+    } else {
+      reportsQuery = reportsQuery.or(`first_name.ilike.%${cleanQ}%,last_name.ilike.%${cleanQ}%`, { foreignTable: 'residents' })
     }
 
     // 5. Wyszukiwanie placówek (tylko dla super_admin)
@@ -171,9 +208,10 @@ export async function searchGlobalAction(
           .limit(6)
       : Promise.resolve({ data: [] })
 
-    const [resResult, bedsResult, agendaResult, reportsResult, orgsResult] =
+    const [resResult, roomsResult, bedsResult, agendaResult, reportsResult, orgsResult] =
       await Promise.allSettled([
         residentQuery,
+        roomsQuery,
         bedsQuery,
         agendaQuery,
         reportsQuery,
@@ -203,13 +241,61 @@ export async function searchGlobalAction(
     }
 
     // Formatowanie: Pokoje i łóżka
+    const seenFacilityIds = new Set<string>()
+
+    if (roomsResult.status === 'fulfilled' && roomsResult.value.data) {
+      const rows = roomsResult.value.data as unknown as RawRoomWithBeds[]
+      for (const r of rows) {
+        const bedsList = Array.isArray(r.beds) ? r.beds : []
+        if (bedsList.length === 0) {
+          if (!seenFacilityIds.has(r.id)) {
+            seenFacilityIds.add(r.id)
+            results.push(
+              formatFacilitySearchResult({
+                id: r.id,
+                room_id: r.id,
+                room_number: r.number,
+                floor: r.floor,
+                sector: r.sector,
+                bed_label: null,
+                resident_name: null,
+              })
+            )
+          }
+        } else {
+          for (const b of bedsList) {
+            if (seenFacilityIds.has(b.id)) continue
+            seenFacilityIds.add(b.id)
+
+            const activeAssignment = Array.isArray(b.bed_assignments)
+              ? b.bed_assignments.find((a) => a.unassigned_at === null)
+              : null
+
+            const residentName = activeAssignment?.residents
+              ? `${activeAssignment.residents.first_name} ${activeAssignment.residents.last_name}`
+              : null
+
+            results.push(
+              formatFacilitySearchResult({
+                id: b.id,
+                room_id: r.id,
+                room_number: r.number,
+                floor: r.floor,
+                sector: r.sector,
+                bed_label: b.label,
+                resident_name: residentName,
+              })
+            )
+          }
+        }
+      }
+    }
+
     if (bedsResult.status === 'fulfilled' && bedsResult.value.data) {
       const rows = bedsResult.value.data as unknown as RawBedWithRoom[]
       for (const b of rows) {
-        if (!b.rooms) continue
-        const roomMatches = b.rooms.number.toLowerCase().includes(cleanQ.toLowerCase())
-        const bedMatches = b.label.toLowerCase().includes(cleanQ.toLowerCase())
-        if (!roomMatches && !bedMatches) continue
+        if (!b.rooms || seenFacilityIds.has(b.id)) continue
+        seenFacilityIds.add(b.id)
 
         const activeAssignment = Array.isArray(b.bed_assignments)
           ? b.bed_assignments.find((a) => a.unassigned_at === null)
@@ -260,6 +346,11 @@ export async function searchGlobalAction(
         const residentName = rep.residents
           ? `${rep.residents.first_name} ${rep.residents.last_name}`
           : null
+
+        // Weryfikacja dopasowania w wynikach
+        const nameMatches = residentName?.toLowerCase().includes(cleanQ.toLowerCase())
+        const dateMatches = dateStr.includes(cleanQ)
+        if (!nameMatches && !dateMatches) continue
 
         results.push(
           formatReportSearchResult({
