@@ -167,11 +167,21 @@ export async function dischargeResidentAction(
   }
 
   // 8. Rejestracja w resident_events na potrzeby modułu BI i raportów (AC5)
-  const eventsToInsert = [
+  interface ResidentEventInsert {
+    organization_id: string
+    resident_id: string
+    event_type: 'contract_ended' | 'death'
+    event_date: string
+    event_reason: string | null
+    metadata: Record<string, unknown>
+    performed_by: string
+  }
+
+  const eventsToInsert: ResidentEventInsert[] = [
     {
       organization_id: currentResident.organization_id,
       resident_id: residentId,
-      event_type: 'contract_ended' as const,
+      event_type: 'contract_ended',
       event_date: contractEndDate,
       event_reason: contractEndReason,
       metadata: {
@@ -185,7 +195,7 @@ export async function dischargeResidentAction(
     eventsToInsert.push({
       organization_id: currentResident.organization_id,
       resident_id: residentId,
-      event_type: 'death' as const,
+      event_type: 'death',
       event_date: deathDate,
       event_reason: 'death',
       metadata: {

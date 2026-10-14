@@ -41,6 +41,8 @@ interface ResidentWithAssignments {
   archived_at?: string | null
   death_date?: string | null
   admission_date?: string | null
+  contract_end_date?: string | null
+  contract_end_reason?: string | null
   created_at: string
   bed_assignments?: BedAssignmentItem[]
 }
