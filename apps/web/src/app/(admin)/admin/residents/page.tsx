@@ -23,7 +23,7 @@ export default async function AdminResidentsPage() {
     .select('*, bed_assignments(id, unassigned_at, beds(id, label, rooms(number)))')
     .order('created_at', { ascending: false })
 
-  const { residents, masked, totalCount } = maskResidentListForImpersonation(
+  const { residents, masked, count } = maskResidentListForImpersonation(
     rawResidents || [],
     isImpersonating
   )
@@ -66,7 +66,7 @@ export default async function AdminResidentsPage() {
           </p>
           <div className="inline-flex items-center gap-3 bg-card px-5 py-3 rounded-xl border border-border">
             <span className="text-xs text-muted-foreground">Liczba zarejestrowanych podopiecznych:</span>
-            <span className="text-xl font-bold text-foreground">{totalCount}</span>
+            <span className="text-xl font-bold text-foreground">{count}</span>
           </div>
         </Card>
       ) : (
