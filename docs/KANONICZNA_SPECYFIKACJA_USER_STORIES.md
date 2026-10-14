@@ -163,7 +163,7 @@
 - **AC4 (Zachowanie roli w OAuth):** Rola z zaproszenia (`legal_guardian` lub `family`) jest zachowywana także przy realizacji zaproszenia przez Google OAuth (`/auth/callback`), nie tylko przy rejestracji hasłem.
 
 ### [SC-ADM-09] Zarządzanie siecią placówek (Multi-Org View)
-🔗 **Kontrakt:** brak REQ · **Status:** ❌
+🔗 **Kontrakt:** brak REQ · **Status:** ⏸️ ZAPARKOWANE (poza MVP — zarządzanie siecią placówek w MVP realizuje rola `super_admin`; powiązanie `org_admin` z wieloma placówkami odłożone do etapu po pilotażu)
 
 **User story:** Jako Administrator przypisany do sieci placówek, chcę widzieć wszystkie ośrodki w mojej sieci, aby szybko przełączać się między nimi i zarządzać personelem centralnie.
 
@@ -172,7 +172,7 @@
 - **AC2 (Kontekstualność):** Zmiana placówki w dropdownie odświeża RLS całego interfejsu (widzimy tylko seniorów i notatki z wybranej placówki).
 - **AC3 (Raportowanie sieciowe):** Dashboard główny pokazuje agregat danych dla całej sieci (np. „Łącznie podopiecznych w sieci: 450").
 
-> ⚠️ Wymaga decyzji przed realizacją: obecny model ról (`roles.contract.mjs`) zakłada jeden `organization_id` w tokenie dla `org_admin`.
+> ⚖️ **Rozstrzygnięcie:** Zaparkowane poza zakresem MVP decyzją product ownera. Obecny model ról (`roles.contract.mjs`) zakłada jeden `organization_id` w tokenie dla `org_admin`, a zarządzanie siecią ośrodków i impersonację placówek zapewnia rola `super_admin` (`/admin/organizations`). Rozszerzenie relacji `org_admin` do wielu placówek powróci przy skalowaniu platformy na grupy kapitałowe.
 
 ---
 
