@@ -1,12 +1,12 @@
 ---
 project_name: "Silver Care — Backlog"
 trello_board_url: "https://trello.com/b/XB1Hig7g"
-last_updated: "2026-10-13T09:45:00"
+last_updated: "2026-10-14T09:30:00"
 status: "ON_TRACK"
-progress_pct: 96
-progress_last_week_pct: 6
-eta_remaining: "ok. 10-15h / 2 dni robocze (testy akceptacyjne, konfiguracja kluczy produkcyjnych i audyt pre-prod)"
-git_branch: "main"
+progress_pct: 99
+progress_last_week_pct: 9
+eta_remaining: "ok. 4-8h / 1 dzień roboczy (Code Review PR #86, audyt pre-prod, konfiguracja kluczy produkcyjnych)"
+git_branch: "feature/nur-unanswered-messages-voice-reply"
 requires_user_action: true
 daily_history:
   - date: "2026-10-05"
@@ -15,41 +15,41 @@ daily_history:
     progress: 90
   - date: "2026-10-13"
     progress: 96
+  - date: "2026-10-14"
+    progress: 99
 ---
 
 ## 🎯 Wymagane działania człowieka
-- **Kolejka Code Review: ZAKOŃCZONA ✅** — Wszystkie zaległe PR-y z klastrów 1-4 (w tym #75, #63, #61-#74) oraz najnowsze PR #82 i #83 zostały w 100% zrecenzowane i scalone do gałęzi `main`. W repozytorium jest obecnie **0 otwartych PR-ów**.
-- **#146 Infra:** konto API Mistral (EU LLM) i zmienna `EU_LLM_API_KEY` na Vercelu (niezbędna do generowania raportów dla bliskich na produkcji).
-- **Karty z listy HUMAN (13):**
-  - #152 Pre Prod Audyt.
+- **Code Review i Merge PR #86 przez partnera (Darek):**
+  - Pull Request #86 zawiera komplet zrealizowanych historyjek użytkownika (wypis pensjonariusza `SC-ADM-19`, command palette `SC-ADM-17`, zapamiętywanie widoków `SC-ADM-18`, routing zaproszeń `SC-ADM-08`/`SC-FAM-01`, wskaźniki dyżuru `SC-NUR-11`, demo fallback Groq `ADR-015`).
+  - Zgodnie z `AGENTS.md` autor nie wykonuje merge do `main` — scalenia dokonuje druga osoba po review.
+- **#146 Infra:** konto API Mistral (EU LLM) i zmienna `EU_LLM_API_KEY` na Vercelu (do generowania raportów dla bliskich na środowisku produkcyjnym).
+- **Karty z listy HUMAN:**
+  - #152 Pre Prod Audyt & Kontrola Przedwdrożeniowa (`/sc-release-gate`).
   - #147 Prezentacja dla KIDO.
   - #149–#151 Cennik i oferta Marconi.
   - Realna referencja umowy DPA Groq (podmiana wartości TESTXXXX w rejestrze dostawców).
 - Wdrożenie produkcyjne i publikacja pierwszych raportów do bliskich.
 
 ## 🚧 Blokery i Ryzyka
-- **Wąskie gardło Code Review: ROZWIĄZANE ✅** — Wszystkie gałęzie scalone, brak blokerów w kodzie i procesie review.
+- **Wąskie gardło Code Review: ROZWIĄZANE ✅** — Wszystkie wcześniejsze PR-y scalone; bieżący PR #86 z pełnym zestawem testów i zieloną bramką (6/6).
 - **Zgody OAuth dla opiekuna prawnego: ROZWIĄZANE ✅** — Wdrożono w PR #63 (`OAUTH-GUARDIAN-CONSENTS`).
-- **Klucz EU LLM na Vercelu:** Brak `EU_LLM_API_KEY` blokuje pipeline raportów dla bliskich w środowisku produkcyjnym (na czas testów/demo działa syntetyczne obejście z PR #59).
+- **Klucz EU LLM na Vercelu:** Na czas testów/demo działa odporny fallback Groq Whisper + LLM (`ADR-015`); do produkcji wymagany docelowy `EU_LLM_API_KEY`.
 
-## 🛠 Ostatnio zrobione (Changelog — 08.10 – 13.10)
-- **Scalenie klastrów PR i likwidacja długu review (PR #55–#76, #81–#83):**
-  - Scalono klastry: niezależny (#67, #69, #70, #71, #72, #73, #74), zaproszeń rodziny (#64, #68), UI & IAM (#65, #66, #75) oraz bezpieczeństwa Auth/OAuth (#61, #62, #63, #76).
-  - Scalono PR #83 (`fix(voice): naprawa wyświetlania transkrypcji i zakończenia nagrania notatki`) z testem E2E Playwright `voice-note.spec.ts` i Page Object Model.
-  - Scalono PR #82 (`docs(spec): [SC-NUR-11] wskaźnik wiadomości na pulpicie i odpowiedź głosowa`).
-- **Zgody Art. 9 RODO przy Google OAuth (PR #63, #163):**
-  - Dodano modal wymuszenia zgód RODO na `/register` dla opiekuna prawnego uwierzytelniającego się przez OAuth, zapis zdarzenia w `consent_ledger` oraz claim zaproszenia `evaluateOAuthInviteClaim`.
-- **Zarządzanie kontami personelu i szybka edycja (SC-ADM-15, SC-ADM-16):**
-  - Podbito statusy w kanonicznej specyfikacji user stories do ✅ 📝.
-- **Higiena repozytorium:**
-  - Usunięto wszystkie scalone gałęzie robocze (lokalnie i zdalnie), gałąź `main` zsynchronizowana z `origin/main`.
+## 🛠 Ostatnio zrobione (Changelog — 14.10)
+- **Kompletna realizacja zaległych User Stories z Backlogu:**
+  - **`[SC-ADM-19]` Cykl życia pensjonariusza:** Zintegrowany proces wypisu, rejestracja zgonu, powody rozwiązania umowy, atomowe zwalnianie łóżek (`unassigned_at = now()`) i wgląd read-only dla rodziny.
+  - **`[SC-ADM-17]` Global Command Palette (Spotlight `Cmd+K`):** Pełnofunkcyjna wyszukiwarka globalna w panelu admina i personelu z filtrami kategorii, obsługą klawiatury i 4 stanami UI.
+  - **`[SC-ADM-18]` Trwałe preferencje widoku UI:** Uniwersalny hook `useViewPreference` z bezpiecznym SSR, zapamiętywaniem w `localStorage` i integracją w strukturze placówki, tablicy personelu i zarządzaniu organizacjami.
+  - **`[SC-ADM-08] / [SC-FAM-01]` Bezpieczny routing zaproszeń:** Obsługa `/accept-invite` z automatycznym routingiem tokenów rodziny do `/register`, ochrona przed Open Redirect (`validateRedirectUrl`) i 4 stany interfejsu.
+  - **`[SC-NUR-11]` Wiadomości dyżuru:** Wskaźnik oczekujących wiadomości na kafelkach podopiecznych, filtr obchodu oraz dyktowanie odpowiedzi głosowej personelu.
+  - **`[SC-ADM-09]` Zarządzanie siecią placówek:** Formalnie zaparkowane poza MVP (zarządzanie siecią realizuje `super_admin`).
 - **Weryfikacja jakościowa:**
-  - Pełna bramka `bash scripts/verify.sh --full` zaliczona: **6/6 ETAPÓW ZIELONYCH (100% PASS)**, 82 pliki testowe, 431 testów logicznych, testy E2E zielone.
-- **Stan Trello / PR:**
-  - PR Created / In Review: **0 PR-ów** (100% wdrożone do `main`)
-  - HUMAN: **13 kart**
+  - Pełna bramka `bash scripts/verify.sh --full`: **6/6 ETAPÓW ZIELONYCH (100% PASS)**.
+  - Testy jednostkowe: **91 plików, 496/496 testów PASS**.
+  - Testy E2E Playwright: **100% PASS** (`onboarding.spec.ts`, `global-search-command-palette.spec.ts`, `resident-discharge.spec.ts`, `voice-note.spec.ts`).
+  - Build Next.js: **0 błędów**.
 
-## 📋 Rekomendowana sekwencja zadań w Trello (Next Up)
-1. **[#152] Pre Prod Audyt & Kontrola Przedwdrożeniowa (`/sc-release-gate`)** — weryfikacja środowiska produkcyjnego i konfiguracji Vercel/Supabase.
-2. **[#146] Konfiguracja EU LLM (Mistral API Key)** — uzupełnienie klucza produkcyjnego na Vercelu.
-3. **[SC-NUR-11] Work Order & Implementacja wskaźnika wiadomości na dyżurze** — realizacja karty `https://trello.com/c/uD0Yqk5b`.
+## 📋 Rekomendowane następne kroki
+1. **Zatwierdzenie i scalenie PR #86 do `main` przez Darka** (Code Review).
+2. **Uruchomienie procedury przedwydaniowej (`/sc-release-gate`)** w celu formalnego odbioru release'u pilotażowego.
