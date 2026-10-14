@@ -140,6 +140,43 @@ describe('Wskaźnik nieodpowiedzianych wiadomości personelu (@REQ: NUR-BOARD, @
     });
   });
 
+  it('resetuje licznik nieodpowiedzianych wiadomości po odpowiedzi personelu i liczy tylko nowe wiadomości rodziny @REQ: FAM-MESSAGES', () => {
+    const threadConversation: RawMessage[] = [
+      {
+        id: 'msg-1',
+        content: 'Jak się czuje mama?',
+        created_at: '2026-10-13T07:00:00Z',
+        resident_id: 'resident-1',
+        relative_user_id: 'relative-1',
+        is_from_family: true,
+      },
+      {
+        id: 'msg-2',
+        content: 'Mama czuje się dobrze.',
+        created_at: '2026-10-13T07:30:00Z',
+        resident_id: 'resident-1',
+        relative_user_id: 'relative-1',
+        is_from_family: false,
+        staff_user_id: 'nurse-1',
+      },
+      {
+        id: 'msg-3',
+        content: 'A czy zjadła obiad?',
+        created_at: '2026-10-14T12:00:00Z',
+        resident_id: 'resident-1',
+        relative_user_id: 'relative-1',
+        is_from_family: true,
+      },
+    ];
+
+    const threads = groupMessagesIntoThreads(threadConversation);
+    expect(threads[0].unreadCount).toBe(1);
+
+    const map = calculateUnansweredMessagesPerResident(threadConversation);
+    expect(map.get('resident-1')?.unansweredCount).toBe(1);
+    expect(map.get('resident-1')?.hasUnanswered).toBe(true);
+  });
+
   it('weryfikuje poprawność danych wejściowych transkrypcji audio odpowiedzi @REQ: INFRA-GROQ-TRANSCRIPTION', () => {
     // Sprawdzenie czy payload nagrania audio odpowiedzi ma wymagane parametry dla endpointu transcribe
     const formData = new FormData();

@@ -59,6 +59,8 @@ export function groupMessagesIntoThreads(messages: RawMessage[]): MessageThread[
       thread.messages.push(msg);
       if (msg.is_from_family) {
         thread.unreadCount += 1;
+      } else {
+        thread.unreadCount = 0;
       }
     }
   }
