@@ -355,19 +355,19 @@ else if (Number(m[1]) < 7 || Number(m[2]) > 21) {
   }
 }
 
-// R24 — system projektowy spełnia próg dostępności (ADR-011, progi zmienione w ADR-014).
-// Skala szablonu shadcn: tekst 14px, przycisk 32px. Poniżej tych progów bramka się zapala.
+// R24 — system projektowy spełnia próg dostępności (ADR-011, norma UI/Mobile-First).
+// Skala: tekst 16px, minimalny tekst pomocniczy 14px, przycisk/cel dotykowy 44px. Poniżej tych progów bramka się zapala.
 {
   const base = parseInt(TYPOGRAPHY.baseSize, 10);
-  if (!base || base < 14) err('R24-design-a11y', `Bazowy rozmiar tekstu ${TYPOGRAPHY.baseSize} jest za mały (minimum 14px, ADR-014).`);
+  if (!base || base < 16) err('R24-design-a11y', `Bazowy rozmiar tekstu ${TYPOGRAPHY.baseSize} jest za mały (minimum 16px).`);
   for (const s of TYPOGRAPHY.scale) {
-    if (parseInt(s.size, 10) < 12) err('R24-design-a11y', `Rozmiar "${s.id}" (${s.size}) poniżej progu czytelności 12px.`);
+    if (parseInt(s.size, 10) < 14) err('R24-design-a11y', `Rozmiar "${s.id}" (${s.size}) poniżej minimalnego progu czytelności 14px (text-sm).`);
   }
   if (!/latin-ext/.test(TYPOGRAPHY.webfont.subset)) {
     err('R24-design-a11y', 'Krój bez zestawu latin-ext — polskie znaki diakrytyczne byłyby zastępowane.');
   }
   if (ACCESSIBILITY.contrastMinimum < 4.5) err('R24-design-a11y', `Minimalny kontrast ${ACCESSIBILITY.contrastMinimum} poniżej progu WCAG AA.`);
-  if (parseInt(ACCESSIBILITY.touchTargetMinimum, 10) < 32) err('R24-design-a11y', 'Cel dotykowy poniżej 32px (ADR-014).');
+  if (parseInt(ACCESSIBILITY.touchTargetMinimum, 10) < 44) err('R24-design-a11y', 'Cel dotykowy poniżej 44px (min-h-11 min-w-11).');
   for (const tok of ['bg', 'surface', 'text', 'text-secondary', 'accent', 'border', 'focus']) {
     if (!COLORS.light[tok]) err('R24-design-a11y', `Brak tokenu koloru "${tok}" w motywie jasnym.`);
     if (!COLORS.dark[tok]) err('R24-design-a11y', `Brak tokenu koloru "${tok}" w motywie ciemnym.`);

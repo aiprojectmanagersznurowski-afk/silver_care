@@ -23,15 +23,35 @@ Praktyczne konsekwencje w kodzie:
 - **Żadna metryka nie wyzwala powiadomienia.** Jedynym wyzwalaczem jest publikacja raportu zatwierdzonego przez personel.
 - **Słowo „pacjent" jest zakazane w warstwie widocznej dla użytkownika**, łącznie z odmianą („o pacjencie"). Używaj: podopieczny, senior, pensjonariusz.
 
-## Dane osobowe i zdrowotne
+## Dane osobowe, zdrowotne i bezpieczeństwo (Security & GDPR/MDR)
 
 Wszystko, co dotyczy pensjonariusza, to dane szczególnej kategorii z artykułu 9 RODO. Z tego wynika:
 
+- **Bezwzględny obowiązek weryfikacji sesji i ról**: RLS po stronie bazy danych + weryfikacja w `api-auth.ts` na poziomie endpointów i Server Actions.
+- **Surowy zakaz wysyłania niezanonimizowanych danych medycznych/PII do zewnętrznych API LLM**: dane medyczne muszą zostać wycięte przed modelem (etap REDACT).
+- **Zakaz fabrykowania danych w fallbackach**: surowy zakaz wstawiania zmyślonych faktów w fallbackach (np. tekstu „spędził spokojny dzień"). Brak danych = jawna informacja o braku danych.
 - **Zgodę może wyrazić wyłącznie pensjonariusz albo jego opiekun prawny.** Rola `family` nie może wyrażać ani cofać zgód — to dwie różne role, nie dwa odcienie tej samej.
 - **Rejestr zgód i rejestr audytowy są niezmienialne.** Cofnięcie zgody to nowy stan przez `revoked_at`, nie edycja wiersza.
 - **Nie loguj danych osobowych.** Wolno logować `residentId` jako UUID i kody techniczne. Nie wolno logować obiektów z treścią notatek, imionami, PESEL-em.
 - **PESEL wyłącznie jako `pesel_hash`.** Brak wartości jawnej w bazie, w logach i w treści zaproszeń.
 - **Klucz `service_role` omija RLS** i nie ma prawa pojawić się w warstwie klienta.
+
+## Stack technologiczny i standardy inżynierskie (apps/web)
+
+- **Stack**: **Next.js 16 (App Router), React 19, Tailwind CSS v4 (`@tailwindcss/postcss`), shadcn + `@base-ui/react`**. Zakaz używania przestarzałych konwencji z Tailwind v3 i React 18.
+- **RSC domyślnie**: Domyślnie używamy **React Server Components (RSC)**. Dyrektywa `'use client'` jest dozwolona wyłącznie w małych liściach drzewa DOM wymagających hooków przeglądarkowych lub bezpośredniej interakcji ze stanem klienta.
+- **Limit rozmiaru pliku**: Żaden komponent ani plik logiki nie może przekraczać **250 linii kodu**. W przypadku zbliżania się do limitu podziel komponent na mniejsze podkomponenty lub wyodrębnij logikę do pomocniczych modułów.
+- **Limit zakresu zmian**: W jednym zadaniu wolno zmodyfikować maksymalnie **3 pliki** (chyba że zadanie dotyczy globalnego refaktoru typów/skryptów).
+
+## Norma UI / Mobile-First
+
+W całym systemie obowiązuje jedna, niesprzeczna norma UI:
+- **Tekst bazowy (body)**: `16px` (`text-base`).
+- **Minimalny dopuszczalny tekst pomocniczy**: `14px` (`text-sm`). Klasy `text-xs`, `text-[11px]`, `text-[10px]` są **surowo zabronione**.
+- **Minimalny cel dotykowy (touch target)**: dla przycisków i elementów interaktywnych wynosi **44x44px** (`min-h-11 min-w-11`).
+- Tokeny są generowane z kontraktu do `packages/contracts/src/generated/tokens.css`. Nie wpisujesz wartości kolorów ani odstępów na sztywno — używasz zmiennych CSS.
+- **Kolor nie niesie oceny**: zakaz czerwieni/zieleni jako oceny stanu zdrowia. Czerwień wyłącznie dla błędów technicznych w panelu personelu.
+- **Metryki prezentujesz jako fakty**, bez wykresów sugerujących trend lub ocenę kondycji (ADR-005).
 
 ## Potok głosowy
 
@@ -89,43 +109,15 @@ Zawsze na koniec pracy:
 - Przenieś kartę na Trello do listy **PR Created / In Review** i przypisz ją do drugiej osoby (Darek ↔ Michał).
 - Otwórz lub zaktualizuj Pull Request na GitHubie i przypisz partnera jako recenzenta.
 
-## Tryb autonomiczny (ADR-010)
+## Zasada pytań i obsługa sprzeczności (Koniec zasady „Zero Pytań”)
 
-**Pracujesz samodzielnie. Nie pytasz o rzeczy, które możesz rozstrzygnąć sam.**
+W projekcie **nie obowiązuje** zasada „zero pytań / pełna autonomia przy niejasnościach”.
+Nowa reguła nadrzędna:
+**W przypadku wykrycia sprzeczności między kontraktem, istniejącym kodem a poleceniem użytkownika — ZATRZYMAJ SIĘ i zadaj 1 precyzyjne pytanie weryfikujące przed zapisaniem plików.**
 
-Każdą napotkaną niejednoznaczność klasyfikujesz do jednej z trzech klas z `autonomy.contract.mjs`:
-
-**AUTO** — decyzja techniczna, odwracalna, bez wpływu na dane osobowe i granice prawne. Wybierz opcję rekomendowaną, odnotuj jednym zdaniem w podsumowaniu, kontynuuj. Nazwy zmiennych, struktura katalogów, obsługa błędu technicznego, podział komponentu.
-
-**AUTO_LOGGED** — decyzja projektowa o trwałych skutkach, ale mieszcząca się w kontrakcie. Wybierz opcję rekomendowaną, zapisz decyzję i odrzuconą alternatywę w `docs/decisions/AUTO-<data>.md`, kontynuuj. Kształt tabeli pomocniczej, strategia buforowania, wybór między dwoma poprawnymi sposobami spełnienia kryterium.
-
-**ESCALATE** — zatrzymaj się i zapytaj. Lista wyzwalaczy jest zamknięta i znajduje się w `ESCALATION_TRIGGERS`. Skrótowo: zmiana kontraktu, granica MDR, klasyfikacja danych jako medyczne, podstawa prawna i zgody, nowy dostawca zewnętrzny, rozluźnienie reguły bramki, operacja nieodwracalna, wdrożenie, sprzeczność w dokumentach źródłowych.
-
-**Zanim zapytasz, sprawdź `DEFAULTS`.** Czternaście powtarzalnych rozwidleń ma już rozstrzygnięcie z uzasadnieniem: obsługa błędu, stan pusty, format daty, strefa czasowa, paginacja, typ identyfikatora, strategia migracji i inne. To jest właściwe miejsce na „opcję rekomendowaną" — rekomendacja jest zapisana z góry, a nie wymyślana w locie.
-
-**Trzy nieudane próby tego samego podejścia oznaczają eskalację.** Czwarta próba to kręcenie się w kółko, które spala czas i kontekst.
-
-**Pytania zbierasz na koniec, nie zadajesz w trakcie.** Jeśli w trakcie sesji napotkasz coś klasy ESCALATE w obszarze, który nie blokuje dalszej pracy — odłóż to, pracuj dalej nad resztą i zbierz wszystkie pytania w sekcji „Wymaga decyzji" raportu końcowego. Każde pytanie z rekomendacją i uzasadnieniem, żeby odpowiedź była jednym słowem.
-
-**Raport końcowy** ma pięć sekcji z `SESSION_REPORT_SECTIONS`: co ukończone, decyzje podjęte samodzielnie, co zablokowane, pytania wymagające decyzji, stan bramki z jawnym wskazaniem etapów pominiętych.
-
-## System projektowy (ADR-011)
-
-Tokeny są generowane z kontraktu do `packages/contracts/src/generated/tokens.css`. Nie wpisujesz wartości kolorów, rozmiarów ani odstępów — używasz zmiennych CSS.
-
-Styl: czysty i minimalistyczny, oparty na typografii i przestrzeni. Jedna rodzina krojów, jeden kolor akcentu, reszta to skala szarości. Bez gradientów, bez cieni na kartach, bez ikon dekoracyjnych. Przed sięgnięciem po ramkę zwiększ odstęp.
-
-**Odbiorcą jest często osoba starsza albo zaniepokojona.** Dlatego bazowy tekst ma 17px, minimalny kontrast to 4.5:1 także dla tekstu drugorzędnego, a cel dotykowy 48px. Minimalizm nie może kosztować czytelności.
-
-**Kolor nie niesie oceny.** Nigdzie nie ma czerwieni oznaczającej „źle" ani zieleni oznaczającej „dobrze" w kontekście pensjonariusza. Zieleń jest kolorem marki. Czerwień wyłącznie dla błędów technicznych w panelu personelu.
-
-**Metryki prezentujesz jako fakty, bez wykresów sugerujących trend.** Wykres kroków tydzień po tygodniu to zestawienie w celu oceny kondycji — czyli dokładnie to, czego zakazuje ADR-005.
+Decyzje techniczne mieszczące się w kontrakcie (odwracalne, bez wpływu na dane osobowe i granice prawne) realizujesz zgodnie z `DEFAULTS` z `autonomy.contract.mjs`. Jeśli jednak polecenie użytkownika lub istniejący kod koliduje z kontraktem lub granicami MDR/RODO — zadaj pytanie.
 
 ## Czego nie robisz sam
 
 Otwarcie okna kontraktowego i publikacja raportu do bliskich należą do człowieka.
 **Zakaz samodzielnego merge do gałęzi głównej (`main`):** Autor nigdy nie wykonuje merge własnego Pull Requesta. Merge'a i przeniesienia karty do 'Done' dokonuje wyłącznie druga osoba z zespołu (Darek lub Michał) po pozytywnym Code Review.
-
-## Przy sprzeczności — zatrzymaj się
-
-Jeżeli dokumenty źródłowe mówią różne rzeczy, nie wybieraj samodzielnie. Wypisz sprzeczność z cytatem i numerem sekcji, oznacz `WYMAGA DECYZJI` i zakończ turę. Zgadywanie przy danych artykułu 9 kosztuje więcej niż tydzień przepisywania.

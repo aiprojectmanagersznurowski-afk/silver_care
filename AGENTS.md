@@ -16,13 +16,32 @@ Narzędzie komunikacji i organizacji codziennego życia placówki. **Nie jest wy
 - Żadna metryka nie wyzwala powiadomienia. Jedynym wyzwalaczem jest publikacja raportu.
 - Słowo „pacjent" jest zakazane w warstwie widocznej dla użytkownika, łącznie z odmianą.
 
-## Dane artykułu 9
+## Dane artykułu 9, prywatność i bezpieczeństwo (Security & GDPR/MDR)
 
+- Bezwzględny obowiązek weryfikacji sesji i ról: RLS w bazie + `api-auth.ts` na poziomie endpointów i Server Actions.
+- Surowy zakaz wysyłania niezanonimizowanych danych medycznych/PII do zewnętrznych API LLM (etap REDACT usuwa dane medyczne).
+- Zakaz fabrykowania danych w fallbackach (np. wstawiania tekstu „spędził spokojny dzień"). Brak danych = jawna informacja o braku danych.
 - Zgodę wyraża pensjonariusz albo opiekun prawny. Rola `family` nie może wyrażać ani cofać zgód.
 - Rejestr zgód i rejestr audytowy są niezmienialne.
 - Nie loguj danych osobowych. UUID i kody techniczne — tak.
 - PESEL wyłącznie jako `pesel_hash`.
 - Klucz `service_role` nigdy w warstwie klienta.
+
+## Stack technologiczny i standardy inżynierskie (apps/web)
+
+- Stack w `apps/web`: **Next.js 16 (App Router), React 19, Tailwind CSS v4 (`@tailwindcss/postcss`), shadcn + `@base-ui/react`**. Zakaz używania przestarzałych konwencji z Tailwind v3 i React 18.
+- Domyślnie używamy **React Server Components (RSC)**. Dyrektywa `'use client'` jest dozwolona wyłącznie w małych liściach drzewa DOM wymagających hooków przeglądarkowych lub bezpośredniej interakcji.
+- **Limit rozmiaru pliku:** Żaden komponent ani plik logiki nie może przekraczać **250 linii kodu**.
+- **Limit zakresu zmian:** W jednym zadaniu wolno zmodyfikować maksymalnie **3 pliki** (chyba że zadanie dotyczy globalnego refaktoru typów/skryptów).
+
+## Norma UI / Mobile-First
+
+W całym systemie obowiązuje jedna, niesprzeczna norma UI:
+- Tekst bazowy (body): `16px` (`text-base`).
+- Minimalny dopuszczalny tekst pomocniczy: `14px` (`text-sm`). Klasy `text-xs`, `text-[11px]`, `text-[10px]` są **surowo zabronione**.
+- Minimalny cel dotykowy (touch target) dla przycisków/interakcji: `44x44px` (`min-h-11 min-w-11`).
+- Tokeny są generowane z kontraktu do `packages/contracts/src/generated/tokens.css`. Używaj zmiennych CSS.
+- Kolor nie niesie oceny stanu pensjonariusza (brak czerwieni/zieleni jako oceny). Metryki prezentowane jako fakty (ADR-005).
 
 ## Potok głosowy
 
@@ -66,11 +85,13 @@ Zawsze na koniec pracy:
 - Przenieś kartę na Trello do listy **PR Created / In Review** i przypisz ją do drugiej osoby (Darek ↔ Michał).
 - Otwórz lub zaktualizuj Pull Request na GitHubie i przypisz partnera jako recenzenta.
 
+## Zasada pytań i obsługa sprzeczności (Koniec zasady „Zero Pytań”)
+
+W projekcie **nie obowiązuje** zasada „zero pytań / pełna autonomia przy niejasnościach”.
+Nowa reguła nadrzędna:
+**W przypadku wykrycia sprzeczności między kontraktem, istniejącym kodem a poleceniem użytkownika — ZATRZYMAJ SIĘ i zadaj 1 precyzyjne pytanie weryfikujące przed zapisaniem plików.**
+
 ## Czego nie robisz sam
 
 Otwarcie okna kontraktowego i publikacja raportu do bliskich należą do człowieka.
 **Zakaz samodzielnego merge do gałęzi głównej (`main`):** Autor nigdy nie wykonuje merge własnego Pull Requesta. Merge'a i przeniesienia karty do 'Done' dokonuje wyłącznie druga osoba z zespołu (Darek lub Michał) po pozytywnym Code Review.
-
-## Przy sprzeczności
-
-Nie wybieraj samodzielnie. Wypisz sprzeczność z cytatem, oznacz `WYMAGA DECYZJI`, zakończ turę.

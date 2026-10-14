@@ -26,9 +26,9 @@ function scan(dir: string, ext: string[]): string[] {
 describe('Tokeny z kontraktu w motywie aplikacji (@REQ: UI-TEMPLATE-ALIGNMENT)', () => {
   const globals = read('apps/web/src/app/globals.css');
 
-  it('kontrakt ma skalę szablonu: tekst 14px, cel dotykowy 32px @REQ: UI-TEMPLATE-ALIGNMENT', () => {
-    expect(TYPOGRAPHY.baseSize).toBe('14px');
-    expect(ACCESSIBILITY.touchTargetMinimum).toBe('32px');
+  it('kontrakt ma skalę UI/Mobile-First: tekst 16px, cel dotykowy 44px @REQ: UI-TEMPLATE-ALIGNMENT', () => {
+    expect(TYPOGRAPHY.baseSize).toBe('16px');
+    expect(ACCESSIBILITY.touchTargetMinimum).toBe('44px');
   });
 
   it('globals.css importuje wygenerowany tokens.css @REQ: UI-TEMPLATE-ALIGNMENT', () => {
