@@ -4,11 +4,19 @@ import { useState, useRef, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
-import { Mic, Square, Loader2, Sparkles, AlertTriangle, ArrowRight, ArrowLeft, X, Search, Users } from 'lucide-react'
+import { Mic, Square, Loader2, Sparkles, AlertTriangle, ArrowRight, ArrowLeft, X, Search, Users, LayoutGrid, Table as TableIcon } from 'lucide-react'
 import Link from 'next/link'
 import { Textarea } from '@/components/ui/textarea'
+import { Button } from '@/components/ui/button'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { useViewPreference, VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-preference'
 
 function VoiceNoteContent() {
+  const [viewMode, setViewMode] = useViewPreference(
+    VIEW_PREFERENCE_KEYS.voiceResidents,
+    'grid',
+    ['grid', 'table'] as const
+  )
   const searchParams = useSearchParams()
   const initialResidentId = searchParams.get('resident')
   const [activeResidentId, setActiveResidentId] = useState<string>(initialResidentId || '')
@@ -313,10 +321,39 @@ function VoiceNoteContent() {
             </div>
           </div>
 
-          <div className="space-y-2 pt-2">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Wybierz podopiecznego ({filteredResidents.length})
-            </h4>
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Wybierz podopiecznego ({filteredResidents.length})
+              </h4>
+              <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-xl border border-border">
+                <Button
+                  type="button"
+                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                  className={`h-7 px-2.5 rounded-lg text-xs font-medium transition-all ${
+                    viewMode === 'grid' ? 'bg-primary text-white hover:bg-primary/90' : 'text-foreground'
+                  }`}
+                >
+                  <LayoutGrid className="w-3.5 h-3.5 mr-1" />
+                  Kafelki
+                </Button>
+                <Button
+                  type="button"
+                  variant={viewMode === 'table' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('table')}
+                  className={`h-7 px-2.5 rounded-lg text-xs font-medium transition-all ${
+                    viewMode === 'table' ? 'bg-primary text-white hover:bg-primary/90' : 'text-foreground'
+                  }`}
+                >
+                  <TableIcon className="w-3.5 h-3.5 mr-1" />
+                  Tabela
+                </Button>
+              </div>
+            </div>
+
             {loadingResidents ? (
               <div className="flex justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -325,7 +362,7 @@ function VoiceNoteContent() {
               <p className="text-sm text-muted-foreground py-6 text-center">
                 Nie znaleziono podopiecznych pasujących do wyszukiwania.
               </p>
-            ) : (
+            ) : viewMode === 'grid' ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[420px] overflow-y-auto pr-1">
                 {filteredResidents.map((r) => (
                   <button
@@ -348,6 +385,46 @@ function VoiceNoteContent() {
                     </div>
                   </button>
                 ))}
+              </div>
+            ) : (
+              <div className="border border-border rounded-xl overflow-hidden max-h-[420px] overflow-y-auto">
+                <Table>
+                  <TableHeader className="bg-muted/30">
+                    <TableRow>
+                      <TableHead>Podopieczny</TableHead>
+                      <TableHead className="w-36 text-right">Akcja</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredResidents.map((r) => (
+                      <TableRow
+                        key={r.id}
+                        onClick={() => {
+                          setActiveResidentId(r.id)
+                          setResident(r)
+                        }}
+                        className="cursor-pointer hover:bg-muted/40 transition-colors"
+                      >
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-xs shrink-0">
+                              {r.first_name?.[0]}{r.last_name?.[0]}
+                            </div>
+                            <span className="font-semibold text-sm text-foreground">
+                              {r.first_name} {r.last_name}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white transition-colors text-xs font-medium">
+                            <Mic className="w-3.5 h-3.5" />
+                            Nagraj
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
             )}
           </div>

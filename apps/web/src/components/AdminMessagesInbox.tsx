@@ -106,7 +106,7 @@ export function AdminMessagesInbox() {
   };
 
   return (
-    <div className="flex gap-6 h-[600px]">
+    <div className="flex gap-6 flex-1 min-h-[500px] h-[calc(100dvh-12rem)]">
       {/* Lista wątków */}
       <div className="w-[300px] border border-border rounded-lg overflow-y-auto bg-card flex-shrink-0">
         <div className="p-4 border-b border-border bg-muted/20">
