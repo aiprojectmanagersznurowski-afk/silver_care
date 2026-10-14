@@ -259,18 +259,18 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
   };
 
   return (
-    <div className="flex flex-col h-[750px] bg-card rounded-xl border border-border overflow-hidden">
+    <div className="flex flex-col flex-1 min-h-0 bg-card rounded-xl border border-border overflow-hidden">
       {/* Pasek statusu / nagłówek wewnętrzny */}
-      <div className="flex items-center justify-between border-b border-border bg-background/50 px-6 py-4">
+      <div className="flex items-center justify-between border-b border-border bg-background/50 px-4 md:px-6 py-3 shrink-0">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+          <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
             <MessageSquare className="h-5 w-5" />
           </div>
           <div>
             <h3 className="text-base font-semibold text-foreground font-display">
               Skrzynka wiadomości personelu
             </h3>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground hidden sm:block">
               Bezpośrednia komunikacja z bliskimi pensjonariuszy placówki.
             </p>
           </div>
@@ -279,22 +279,22 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
         <button
           onClick={fetchMessages}
           disabled={loading}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted/50 transition-colors disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted/50 transition-colors disabled:opacity-50 shrink-0"
         >
           <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
           Odśwież
         </button>
       </div>
 
-      <div className="flex flex-1 overflow-hidden relative">
+      <div className="flex flex-1 min-h-0 overflow-hidden relative">
         {/* Lewa kolumna: Lista wątków */}
         <div 
           className={`${
             activeThreadId ? 'hidden md:flex' : 'flex'
-          } w-full md:w-96 border-r border-border flex-col bg-muted/50 shrink-0`}
+          } w-full md:w-80 lg:w-96 border-r border-border flex-col bg-muted/50 shrink-0 min-h-0`}
         >
           {/* Szukajka */}
-          <div className="p-3 border-b border-border bg-card">
+          <div className="p-3 border-b border-border bg-card shrink-0">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
@@ -308,7 +308,7 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
           </div>
 
           {/* Lista wątków */}
-          <div className="flex-1 overflow-y-auto divide-y divide-border" data-testid="message-threads-list">
+          <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-border" data-testid="message-threads-list">
             {loading && threads.length === 0 ? (
               <div className="p-6 text-center text-xs text-muted-foreground space-y-2">
                 <div className="inline-block animate-spin text-primary">
@@ -400,7 +400,7 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
 
         {/* Prawa kolumna: Obszar rozmowy */}
         <div 
-          className={`w-full flex md:flex-1 flex-col bg-card min-w-0 ${
+          className={`w-full flex md:flex-1 flex-col bg-card min-w-0 min-h-0 ${
             activeThreadId ? '' : 'hidden md:flex'
           }`}
         >
@@ -409,7 +409,7 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
               {/* Nagłówek wątku */}
               <div 
                 data-testid="conversation-header"
-                className="px-4 md:px-6 py-4 border-b border-border flex items-center justify-between bg-card"
+                className="px-4 md:px-6 py-3 border-b border-border flex items-center justify-between bg-card shrink-0"
               >
                 <div className="flex items-center gap-2 md:gap-3 min-w-0">
                   <button
@@ -448,7 +448,7 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
               <div
                 ref={scrollRef}
                 data-testid="messages-scroll-container"
-                className="flex-1 overflow-y-auto p-6 space-y-4 bg-muted/50"
+                className="flex-1 min-h-0 overflow-y-auto p-4 md:p-6 space-y-4 bg-muted/50"
               >
                 {activeThread.messages.map((msg, idx) => {
                   const isStaff = !msg.is_from_family;
@@ -491,7 +491,7 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
               </div>
 
               {/* Formularz odpowiedzi */}
-              <div className="p-4 border-t border-border bg-card">
+              <div className="p-3 md:p-4 border-t border-border bg-card shrink-0">
                 {isRecording && (
                   <div
                     data-testid="voice-recording-indicator"

@@ -155,4 +155,33 @@ test.describe('Wskaźnik nieodpowiedzianych wiadomości i odpowiedź głosowa (@
       await expect(messagesPage.replyTextarea).toHaveValue(/Pani Helena zjadła dziś cały obiad/);
     }
   });
+
+  test('@REQ: UI-ACCESSIBILITY - Pole wprowadzania odpowiedzi w skrzynce wiadomości jest widoczne w oknie bez konieczności przewijania strony', async ({
+    loginPage,
+    page,
+  }) => {
+    await loginPage.loginAs('nurse');
+    const messagesPage = new StaffMessagesPage(page);
+    await messagesPage.goto();
+    await messagesPage.expectPageLoaded();
+
+    const threadItems = page.locator('[data-testid="thread-item"]');
+    if ((await threadItems.count()) > 0) {
+      await threadItems.first().click();
+      await expect(messagesPage.replyTextarea).toBeVisible();
+
+      // Weryfikacja: textarea oraz przycisk wysłania mieszczą się w widocznym oknie przeglądarki (viewport)
+      const viewportSize = page.viewportSize();
+      const textareaBox = await messagesPage.replyTextarea.boundingBox();
+      const sendButtonBox = await messagesPage.sendButton.boundingBox();
+
+      expect(textareaBox).not.toBeNull();
+      expect(sendButtonBox).not.toBeNull();
+      if (textareaBox && sendButtonBox && viewportSize) {
+        expect(textareaBox.y + textareaBox.height).toBeLessThanOrEqual(viewportSize.height);
+        expect(sendButtonBox.y + sendButtonBox.height).toBeLessThanOrEqual(viewportSize.height);
+      }
+    }
+  });
 });
+

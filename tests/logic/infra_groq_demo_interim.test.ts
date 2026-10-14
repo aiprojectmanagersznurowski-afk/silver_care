@@ -146,4 +146,25 @@ describe('Tryb demo Groq dla CLASSIFY/GENERATE (@REQ: INFRA-GROQ-DEMO-INTERIM)',
     expect(entry?.kind).toBe('TRANSCRIPTION')
     expect(entry?.exceptionApprovedBy).toBe('Michal, 2026-08-27')
   })
+
+  it('AC6: przy 404 dla modelu głównego Groq, fallback automatycznie kieruje do qwen/qwen3.8-27b @REQ: INFRA-GROQ-DEMO-INTERIM', async () => {
+    const calls: any[] = []
+    globalThis.fetch = (async (url: string, opts: any) => {
+      const parsedBody = JSON.parse(opts.body)
+      calls.push({ url, model: parsedBody.model })
+      if (parsedBody.model === 'llama-3.3-70b-versatile') {
+        return { ok: false, status: 404, json: async () => ({ error: { message: 'model not found' } }) } as any
+      }
+      return { ok: true, status: 200, json: async () => ({ choices: [{ message: { content: 'Raport z fallback qwen' } }] }) } as any
+    }) as any
+
+    await withEnv({ GROQ_API_KEY: 'test_groq_key', ALLOW_DEMO_GROQ_FALLBACK: 'true' }, async () => {
+      const result = await callEuLlmCompletion([{ role: 'user', content: 'test' }])
+      expect(result).toBe('Raport z fallback qwen')
+    })
+
+    expect(calls).toHaveLength(2)
+    expect(calls[0].model).toBe('llama-3.3-70b-versatile')
+    expect(calls[1].model).toBe('qwen/qwen3.8-27b')
+  })
 })
