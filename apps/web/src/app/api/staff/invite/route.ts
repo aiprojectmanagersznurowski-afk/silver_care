@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { renderStaffInviteEmail } from '@/lib/notification-templates'
+import { getRequestOrigin } from '@/lib/url-helper'
 
 export async function POST(request: Request) {
   try {
@@ -42,7 +43,7 @@ export async function POST(request: Request) {
 
     const adminClient = createAdminClient()
 
-    const origin = request.headers.get('origin') || 'https://silver-care-six.vercel.app'
+    const origin = getRequestOrigin(request)
     
     // Tworzymy użytkownika od razu z odpowiednimi metadanymi, aby nie używać updateUserById, 
     // które unieważnia wygenerowany token zaproszenia.

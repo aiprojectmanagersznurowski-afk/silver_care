@@ -159,7 +159,7 @@ export function AdmissionWizard() {
         <UserPlus className="w-4 h-4" />
         Nowe Przyjęcie (Kreator)
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {createdResidentId ? (

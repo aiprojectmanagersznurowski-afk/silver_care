@@ -10,6 +10,8 @@ import Link from 'next/link'
 import { toast } from 'sonner'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { BusinessIdBadge } from '@/components/BusinessIdBadge'
+import { useViewPreference, VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-preference'
 
 type NoteStatus = 'ready' | 'draft' | 'none'
 
@@ -59,7 +61,11 @@ interface StaffBoardClientProps {
 }
 
 export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {} }: StaffBoardClientProps) {
-  const [viewMode, setViewMode] = useState<'standard' | 'rounds'>('rounds')
+  const [viewMode, setViewMode] = useViewPreference(
+    VIEW_PREFERENCE_KEYS.staffBoard,
+    'rounds',
+    ['rounds', 'standard'] as const
+  )
   const [searchFilter, setSearchFilter] = useState<string>('')
   const [floorFilter, setFloorFilter] = useState<string>('all')
   const [roomFilter, setRoomFilter] = useState<string>('all')
@@ -617,9 +623,12 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
                     </div>
 
                     <div>
-                      <h3 className="text-lg font-semibold text-foreground truncate">
-                        {resident.first_name as string} {resident.last_name as string}
-                      </h3>
+                      <div className="flex items-center justify-between gap-2">
+                        <h3 className="text-lg font-semibold text-foreground truncate">
+                          {resident.first_name as string} {resident.last_name as string}
+                        </h3>
+                        <BusinessIdBadge type="resident" id={resident.id as string} />
+                      </div>
                       <div className="mt-1 flex items-center text-sm text-muted-foreground">
                         <Bed className="h-4 w-4 mr-1.5 shrink-0" />
                         {roomNumber && bedLabel ? (

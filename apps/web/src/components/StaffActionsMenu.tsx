@@ -41,9 +41,7 @@ export function StaffActionsMenu({ staffId, email, isActive }: StaffActionsMenuP
     setDropdownOpen(false)
     setStatusMsg(null)
     setConfirmationInput('')
-    setTimeout(() => {
-      setDialogType(type)
-    }, 100)
+    setDialogType(type)
   }
 
   const handleResetPassword = (mode: 'email' | 'temp') => {
@@ -53,14 +51,20 @@ export function StaffActionsMenu({ staffId, email, isActive }: StaffActionsMenuP
     formData.append('mode', mode)
 
     startTransition(async () => {
-      const res = await resetStaffPasswordAction(formData)
-      if (res.error) {
-        setStatusMsg({ type: 'error', text: res.error })
-        toast.error(res.error)
-      } else {
-        const msg = res.message || 'Wykonano pomyślnie.'
-        setStatusMsg({ type: 'success', text: msg })
-        toast.success(msg)
+      try {
+        const res = await resetStaffPasswordAction(formData)
+        if (res?.error) {
+          setStatusMsg({ type: 'error', text: res.error })
+          toast.error(res.error)
+        } else {
+          const msg = res?.message || 'Wykonano pomyślnie.'
+          setStatusMsg({ type: 'success', text: msg })
+          toast.success(msg)
+        }
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Wystąpił nieoczekiwany błąd podczas resetu hasła.'
+        setStatusMsg({ type: 'error', text: msg })
+        toast.error(msg)
       }
     })
   }
@@ -72,15 +76,21 @@ export function StaffActionsMenu({ staffId, email, isActive }: StaffActionsMenuP
     formData.append('confirmation', confirmationInput)
 
     startTransition(async () => {
-      const res = await suspendStaffAction(formData)
-      if (res.error) {
-        setStatusMsg({ type: 'error', text: res.error })
-        toast.error(res.error)
-      } else {
-        const msg = res.message || 'Konto pracownika zostało zawieszone.'
-        toast.success(msg)
-        setDialogType('none')
-        setConfirmationInput('')
+      try {
+        const res = await suspendStaffAction(formData)
+        if (res?.error) {
+          setStatusMsg({ type: 'error', text: res.error })
+          toast.error(res.error)
+        } else {
+          const msg = res?.message || 'Konto pracownika zostało zawieszone.'
+          toast.success(msg)
+          setDialogType('none')
+          setConfirmationInput('')
+        }
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Wystąpił nieoczekiwany błąd podczas zawieszania konta.'
+        setStatusMsg({ type: 'error', text: msg })
+        toast.error(msg)
       }
     })
   }
@@ -91,14 +101,20 @@ export function StaffActionsMenu({ staffId, email, isActive }: StaffActionsMenuP
     formData.append('staffId', staffId)
 
     startTransition(async () => {
-      const res = await restoreStaffAction(formData)
-      if (res.error) {
-        setStatusMsg({ type: 'error', text: res.error })
-        toast.error(res.error)
-      } else {
-        const msg = res.message || 'Konto pracownika zostało przywrócone.'
-        toast.success(msg)
-        setDialogType('none')
+      try {
+        const res = await restoreStaffAction(formData)
+        if (res?.error) {
+          setStatusMsg({ type: 'error', text: res.error })
+          toast.error(res.error)
+        } else {
+          const msg = res?.message || 'Konto pracownika zostało przywrócone.'
+          toast.success(msg)
+          setDialogType('none')
+        }
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Wystąpił nieoczekiwany błąd podczas przywracania konta.'
+        setStatusMsg({ type: 'error', text: msg })
+        toast.error(msg)
       }
     })
   }
@@ -135,7 +151,7 @@ export function StaffActionsMenu({ staffId, email, isActive }: StaffActionsMenuP
 
       {/* Modal Resetu Hasła */}
       <Dialog open={dialogType === 'reset'} onOpenChange={(open) => !open && setDialogType('none')}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-lg md:max-w-xl p-6">
           <DialogHeader>
             <DialogTitle>Reset Hasła Pracownika</DialogTitle>
             <DialogDescription>
@@ -177,7 +193,7 @@ export function StaffActionsMenu({ staffId, email, isActive }: StaffActionsMenuP
 
       {/* Modal Zawieszenia Konta (Wpisanie DEZAKTYWUJ) */}
       <Dialog open={dialogType === 'suspend'} onOpenChange={(open) => !open && setDialogType('none')}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-lg md:max-w-xl p-6">
           <DialogHeader>
             <DialogTitle>Zawieszenie Konta Pracownika</DialogTitle>
             <DialogDescription>
@@ -220,7 +236,7 @@ export function StaffActionsMenu({ staffId, email, isActive }: StaffActionsMenuP
 
       {/* Modal Przywrócenia Konta */}
       <Dialog open={dialogType === 'restore'} onOpenChange={(open) => !open && setDialogType('none')}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-lg md:max-w-xl p-6">
           <DialogHeader>
             <DialogTitle>Przywrócenie Konta Pracownika</DialogTitle>
             <DialogDescription>

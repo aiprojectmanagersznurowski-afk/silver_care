@@ -3,8 +3,8 @@
 import { useState, useTransition } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { updateUserRoleAction, createUserWithRoleAction, resetUserPasswordAction } from '@/actions/iam'
-import { ShieldAlert, CheckCircle2, UserCog, RefreshCw, AlertCircle, Key, Copy, Check } from 'lucide-react'
+import { updateUserRoleAction, createUserWithRoleAction, resetUserPasswordAction, manageUserStatusAction } from '@/actions/iam'
+import { ShieldAlert, CheckCircle2, UserCog, RefreshCw, AlertCircle, Key, Copy, Check, Trash2, ShieldBan } from 'lucide-react'
 import { ROLES } from '@silvercare/contracts/src/generated/roles'
 import { toast } from 'sonner'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
@@ -12,6 +12,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip
 import { UserTable } from './iam/UserTable'
 import { ChangeRoleDialog } from './iam/ChangeRoleDialog'
 import { ResetPasswordDialog } from './iam/ResetPasswordDialog'
+import { DeleteUserDialog } from './iam/DeleteUserDialog'
 import { AuditLogTable } from './iam/AuditLogTable'
 
 export interface UserItem {
@@ -20,6 +21,7 @@ export interface UserItem {
   role: string
   organizationId?: string | null
   lastSignInAt?: string | null
+  isActive?: boolean
 }
 
 export interface AuditLogItem {
@@ -38,6 +40,7 @@ export interface AuditLogItem {
 export interface IamManagementClientProps {
   initialUsers: UserItem[]
   initialAuditLogs: AuditLogItem[]
+  currentUserId?: string
   forcedState?: 'loading' | 'empty' | 'success' | 'error'
   errorMessage?: string
 }
@@ -63,6 +66,7 @@ const AVAILABLE_ROLES = ROLES
 export function IamManagementClient({
   initialUsers,
   initialAuditLogs,
+  currentUserId,
   forcedState,
   errorMessage
 }: IamManagementClientProps) {
@@ -93,6 +97,53 @@ export function IamManagementClient({
   // Stan dialogu resetowania hasła (AC1: bezpieczny link e-mail)
   const [resetPasswordUser, setResetPasswordUser] = useState<UserItem | null>(null)
   const [resetPasswordError, setResetPasswordError] = useState<string | null>(null)
+
+  // Stan dialogu blokady / trwałego usuwania konta
+  const [deleteUserTarget, setDeleteUserTarget] = useState<UserItem | null>(null)
+  const [deleteUserError, setDeleteUserError] = useState<string | null>(null)
+
+  const handleDeleteUserSubmit = async (userId: string, mode: 'deactivate' | 'activate' | 'hard_delete') => {
+    setDeleteUserError(null)
+
+    startTransition(async () => {
+      const formData = new FormData()
+      formData.set('userId', userId)
+      formData.set('mode', mode)
+
+      const result = await manageUserStatusAction(formData)
+      if (result?.error) {
+        setDeleteUserError(result.error)
+        toast.error(result.error)
+      } else if (result?.success) {
+        if (mode === 'hard_delete') {
+          toast.success('Pomyślnie usunięto konto użytkownika.')
+          setUsers(prev => prev.filter(u => u.id !== userId))
+        } else if (mode === 'deactivate') {
+          toast.success('Konto użytkownika zostało pomyślnie zablokowane.')
+          setUsers(prev => prev.map(u => u.id === userId ? { ...u, isActive: false } : u))
+        } else if (mode === 'activate') {
+          toast.success('Konto użytkownika zostało pomyślnie odblokowane.')
+          setUsers(prev => prev.map(u => u.id === userId ? { ...u, isActive: true } : u))
+        }
+
+        setAuditLogs(prev => [
+          {
+            id: `local-del-${Date.now()}`,
+            action: mode === 'deactivate' ? 'USER_DEACTIVATED' : mode === 'activate' ? 'USER_ACTIVATED' : 'USER_HARD_DELETED',
+            performed_by: 'super_admin',
+            payload: {
+              target_user_id: userId,
+              changed_at: new Date().toISOString()
+            },
+            created_at: new Date().toISOString()
+          },
+          ...prev
+        ])
+
+        setDeleteUserTarget(null)
+      }
+    })
+  }
 
   const handleResetPassword = (e: React.FormEvent) => {
     e.preventDefault()
@@ -377,6 +428,11 @@ export function IamManagementClient({
           setResetPasswordUser(user)
           setResetPasswordError(null)
         }}
+        onDeleteUserClick={user => {
+          setDeleteUserTarget(user)
+          setDeleteUserError(null)
+        }}
+        currentUserId={currentUserId}
         roleLabels={ROLE_LABELS}
         addUserProps={{
           isOpen: isAddUserOpen,
@@ -416,6 +472,15 @@ export function IamManagementClient({
         isPending={isPending}
         onSubmit={handleResetPassword}
         onClose={() => setResetPasswordUser(null)}
+      />
+
+      {/* Dialog zarządzania statusem / blokady i usuwania konta */}
+      <DeleteUserDialog
+        user={deleteUserTarget}
+        isPending={isPending}
+        error={deleteUserError}
+        onSubmit={handleDeleteUserSubmit}
+        onClose={() => setDeleteUserTarget(null)}
       />
 
       {/* Sekcja 2: Zintegrowany Rejestr Audytu Zmian Uprawnień */}

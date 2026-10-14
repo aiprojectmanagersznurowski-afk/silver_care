@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   validateFacilityRows,
   parseFacilityVoiceJson,
+  fallbackExtractFacilityVoiceParams,
   RawFacilityRoomRow,
 } from '../../apps/web/src/lib/facility-helpers'
 
@@ -129,6 +130,25 @@ Extracted room info from nurse speech
       const raw = 'Nie udało się ustalić pokoju.'
       const parsed = parseFacilityVoiceJson(raw)
       expect(parsed._parseError).toBe(true)
+    })
+  })
+
+  describe('fallbackExtractFacilityVoiceParams (@REQ: ADM-FACILITY-MANAGE)', () => {
+    it('extracts room number, floor, and bed labels from Polish natural language speech', () => {
+      const speech = 'Dodaj pokój 102 na parterze, skrzydło A, dwa łóżka A i B'
+      const extracted = fallbackExtractFacilityVoiceParams(speech)
+      expect(extracted.number).toBe('102')
+      expect(extracted.floor).toBe('Parter')
+      expect(extracted.sector).toBe('A')
+      expect(extracted.bedLabels).toEqual(['A', 'B'])
+    })
+
+    it('handles numeric beds count and floor numbering words', () => {
+      const speech = 'Pokój 205 na pierwszym piętrze, 3 łóżka'
+      const extracted = fallbackExtractFacilityVoiceParams(speech)
+      expect(extracted.number).toBe('205')
+      expect(extracted.floor).toBe('1')
+      expect(extracted.bedLabels).toEqual(['1', '2', '3'])
     })
   })
 })

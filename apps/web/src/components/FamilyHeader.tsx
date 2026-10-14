@@ -5,6 +5,9 @@ import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Logo } from "./Logo";
+import { formatDistanceToNow } from "date-fns";
+import { pl } from "date-fns/locale";
+import { useFamilyUnreadMessages } from "@/hooks/useFamilyUnreadMessages";
 import { ChevronDown, Bell, Check, LayoutDashboard, Calendar, MessageSquare, User, ShieldCheck } from "lucide-react";
 import {
   DropdownMenu,
@@ -34,6 +37,7 @@ interface Resident {
 export function FamilyHeader({ residents }: { residents: Resident[] }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { unreadCount, recentReplies, markAllAsRead } = useFamilyUnreadMessages();
 
   const [current, setCurrent] = useState<Resident | undefined>(() => {
     if (typeof document !== 'undefined') {
@@ -74,17 +78,26 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
           <nav className="ml-4 hidden items-center gap-1 lg:flex">
             {navItems.map((item) => {
               const isActive = pathname?.startsWith(item.href) || (pathname === '/' && item.href === '/dashboard');
+              const isMessages = item.href === '/messages';
               return (
                 <Link
                   key={item.label}
                   href={item.href}
-                  className={`rounded-full px-5 py-2.5 transition-colors text-sm font-medium whitespace-nowrap ${
+                  className={`inline-flex items-center rounded-full px-5 py-2.5 transition-colors text-sm font-medium whitespace-nowrap ${
                     isActive
                       ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
                   }`}
                 >
-                  {item.label}
+                  <span>{item.label}</span>
+                  {isMessages && unreadCount > 0 && (
+                    <span
+                      data-testid="family-nav-messages-badge"
+                      className="ml-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground animate-pulse"
+                    >
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
                 </Link>
               );
             })}
@@ -92,16 +105,107 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
 
           <div className="ml-auto flex items-center gap-3">
             <ThemeToggle className="h-11 w-11 rounded-full bg-card ring-1 ring-border text-muted-foreground hover:text-foreground" />
+            
+            {/* Dzwonek powiadomień */}
             <DropdownMenu>
-              <DropdownMenuTrigger className="relative flex h-11 w-11 items-center justify-center rounded-full bg-card text-muted-foreground ring-1 ring-border transition-colors hover:text-foreground">
+              <DropdownMenuTrigger
+                data-testid="family-notifications-bell"
+                aria-label="Powiadomienia i wiadomości"
+                className="relative flex h-11 w-11 items-center justify-center rounded-full bg-card text-muted-foreground ring-1 ring-border transition-colors hover:text-foreground focus:outline-none"
+              >
                 <Bell className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <span
+                    data-testid="family-notifications-badge"
+                    className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground ring-2 ring-background animate-pulse"
+                  >
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64 rounded-xl p-2">
-                <DropdownMenuLabel className="text-muted-foreground">Powiadomienia</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <div className="py-5 text-center text-[0.85rem] text-muted-foreground">
-                  Brak nowych powiadomień
+              <DropdownMenuContent
+                align="end"
+                data-testid="family-notifications-dropdown"
+                className="w-80 rounded-xl p-2 border border-border"
+              >
+                <div className="flex items-center justify-between px-2 py-1.5">
+                  <DropdownMenuLabel className="p-0 text-sm font-semibold text-foreground">
+                    Powiadomienia
+                  </DropdownMenuLabel>
+                  {unreadCount > 0 && (
+                    <span
+                      data-testid="family-notifications-count"
+                      className="rounded-full bg-destructive/15 px-2 py-0.5 text-[11px] font-semibold text-destructive border border-destructive/25"
+                    >
+                      {unreadCount} nowe
+                    </span>
+                  )}
                 </div>
+                <DropdownMenuSeparator />
+
+                {unreadCount === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-6 px-4 text-center">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground mb-2">
+                      <Bell className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <p className="text-sm font-medium text-foreground">Brak nowych powiadomień</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Jesteś na bieżąco ze wszystkimi wiadomościami.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="max-h-72 overflow-y-auto space-y-1">
+                    {recentReplies.map((reply) => {
+                      const timeAgo = formatDistanceToNow(new Date(reply.created_at), {
+                        addSuffix: true,
+                        locale: pl,
+                      });
+                      const snippet = reply.content.length > 70
+                        ? `${reply.content.slice(0, 67)}...`
+                        : reply.content;
+
+                      return (
+                        <DropdownMenuItem
+                          key={reply.id}
+                          data-testid={`family-notification-item-${reply.id}`}
+                          render={
+                            <Link
+                              href="/messages"
+                              onClick={() => markAllAsRead()}
+                              className="flex flex-col items-start gap-1 p-2.5 rounded-lg cursor-pointer hover:bg-accent/60 transition-colors"
+                            />
+                          }
+                        >
+                          <div className="flex w-full items-center justify-between">
+                            <span className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+                              <MessageSquare className="h-3.5 w-3.5 text-primary shrink-0" />
+                              <span>Wiadomość od personelu</span>
+                            </span>
+                            <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                              {timeAgo}
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground line-clamp-2 pl-5">
+                            {snippet}
+                          </p>
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </div>
+                )}
+
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  render={
+                    <Link
+                      href="/messages"
+                      onClick={() => markAllAsRead()}
+                      className="flex w-full items-center justify-center py-2 text-center text-xs font-medium text-primary hover:text-primary/80 transition-colors cursor-pointer"
+                    />
+                  }
+                >
+                  Przejdź do wiadomości
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -204,7 +308,15 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <Icon className={`h-5 w-5 ${isActive ? "text-primary" : "text-muted-foreground"}`} />
+              <div className="relative">
+                <Icon className={`h-5 w-5 ${isActive ? "text-primary" : "text-muted-foreground"}`} />
+                {item.href === '/messages' && unreadCount > 0 && (
+                  <span
+                    data-testid="family-mobile-messages-badge"
+                    className="absolute -top-1 -right-1 flex h-2.5 w-2.5 rounded-full bg-destructive ring-2 ring-background animate-pulse"
+                  />
+                )}
+              </div>
               <span>{item.label}</span>
             </Link>
           );

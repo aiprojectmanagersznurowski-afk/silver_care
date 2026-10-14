@@ -21,6 +21,7 @@ import { isValidViewMode, OrgViewMode } from '@/lib/org-helpers'
 import { EditOrganizationDialog } from '@/components/EditOrganizationDialog'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { useViewPreference, VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-preference'
 
 export interface OrganizationSummaryItem {
   organization_id: string
@@ -47,20 +48,14 @@ export function OrganizationsManagementClient({
   renderActionSlot
 }: OrganizationsManagementClientProps) {
   const organizations = initialOrganizations
-  const [viewMode, setViewMode] = useState<OrgViewMode>('cards')
-
-  useEffect(() => {
-    const saved = localStorage.getItem('silver_care_org_view_mode')
-    if (isValidViewMode(saved)) {
-      setViewMode(saved)
-    }
-  }, [])
+  const [viewMode, setViewMode] = useViewPreference<OrgViewMode>(
+    VIEW_PREFERENCE_KEYS.organizations,
+    'cards',
+    ['cards', 'table'] as const
+  )
 
   const handleModeChange = (mode: OrgViewMode) => {
     setViewMode(mode)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('silver_care_org_view_mode', mode)
-    }
   }
 
   const currentState = forcedState || (errorMessage ? 'error' : organizations.length === 0 ? 'empty' : 'success')
@@ -180,13 +175,15 @@ export function OrganizationsManagementClient({
                 return (
                   <TableRow key={org.organization_id} className="hover:bg-muted/30">
                     <TableCell>
-                      <Link
-                        href={`/admin/organizations/${org.organization_id}`}
-                        className="font-semibold text-foreground hover:text-primary transition-colors block"
-                      >
-                        {org.organization_name}
-                      </Link>
-                      <BusinessIdBadge type="organization" id={org.organization_id} />
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Link
+                          href={`/admin/organizations/${org.organization_id}`}
+                          className="font-semibold text-foreground hover:text-primary transition-colors"
+                        >
+                          {org.organization_name}
+                        </Link>
+                        <BusinessIdBadge type="organization" id={org.organization_id} />
+                      </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground max-w-[220px] truncate">
                       {org.address || '—'}
@@ -239,16 +236,17 @@ export function OrganizationsManagementClient({
               >
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                   <div className="space-y-1 min-w-0 flex-1">
-                    <div className="flex items-center gap-2 min-w-0">
+                    <div className="flex items-center gap-2 min-w-0 flex-wrap">
                       <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
                         <Building2 className="h-5 w-5" />
                       </span>
                       <Link
                         href={`/admin/organizations/${org.organization_id}`}
-                        className="text-lg font-bold text-foreground group-hover:text-primary transition-colors truncate block"
+                        className="text-lg font-bold text-foreground group-hover:text-primary transition-colors truncate"
                       >
                         {org.organization_name}
                       </Link>
+                      <BusinessIdBadge type="organization" id={org.organization_id} />
                     </div>
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground pl-11 truncate">
                       <MapPin className="h-3.5 w-3.5 shrink-0" />

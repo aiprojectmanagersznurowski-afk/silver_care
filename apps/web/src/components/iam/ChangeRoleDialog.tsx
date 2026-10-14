@@ -44,7 +44,7 @@ export function ChangeRoleDialog({
 
   return (
     <Dialog open={Boolean(user)} onOpenChange={open => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg md:max-w-xl p-6">
         <DialogHeader>
           <DialogTitle>Zmień uprawnienia użytkownika</DialogTitle>
           <DialogDescription>

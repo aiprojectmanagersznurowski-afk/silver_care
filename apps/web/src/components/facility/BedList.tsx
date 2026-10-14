@@ -8,6 +8,9 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import AssignBedDialog from './AssignBedDialog'
 import ReassignBedDialog from './ReassignBedDialog'
+import { BusinessIdBadge } from '@/components/BusinessIdBadge'
+
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 interface BedListProps {
   roomId: string
@@ -107,139 +110,182 @@ export default function BedList({ roomId, roomNumber, floor, onUpdate }: BedList
 
   return (
     <>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {beds.map(bed => (
-          <div key={bed.id} className={`p-4 rounded-lg border ${!bed.is_active ? 'opacity-50 bg-muted/50' : 'bg-background'}`}>
-            <div className="flex justify-between items-start mb-2">
-              <div className="flex items-center space-x-2">
-                <BedDouble className="w-4 h-4 text-primary" />
-                <span className="font-semibold">{bed.label}</span>
-              </div>
-              {!bed.is_active ? (
-                <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-secondary text-secondary-foreground">Nieaktywne</span>
-              ) : bed.active_assignment ? (
-                <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-primary text-white">Zajęte</span>
-              ) : (
-                <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold text-foreground border-border">Wolne</span>
-              )}
-            </div>
+      <div className="rounded-lg border border-border bg-card overflow-hidden" data-testid="beds-table">
+        <Table>
+          <TableHeader className="bg-muted/50 font-semibold text-muted-foreground">
+            <TableRow>
+              <TableHead className="w-[120px]">Łóżko</TableHead>
+              <TableHead className="w-[100px]">Status</TableHead>
+              <TableHead>Pensjonariusz</TableHead>
+              <TableHead className="text-right">Akcje</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {beds.map((bed) => {
+              const displayLabel =
+                bed.label.toLowerCase().startsWith('łóżko') || bed.label.toLowerCase().startsWith('lozko')
+                  ? bed.label
+                  : `Łóżko ${bed.label}`
 
-            <div className="mt-4 min-h-[60px]">
-              {bed.active_assignment ? (
-                <div className="text-sm space-y-1.5">
-                  <div className="text-muted-foreground text-xs">Przypisano:</div>
-                  <div className="font-medium text-foreground">
-                    {bed.active_assignment.resident.first_name} {bed.active_assignment.resident.last_name}
-                  </div>
-                  <div className="flex flex-wrap gap-1 text-[11px]">
-                    {bed.active_assignment.resident.gender && (
-                      <span className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 font-medium text-foreground">
-                        {bed.active_assignment.resident.gender === 'M' ? 'Mężczyzna' : 'Kobieta'}
-                      </span>
-                    )}
-                    {bed.active_assignment.resident.is_zsn && (
-                      <span className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 font-medium text-foreground">
-                        ZSN
-                      </span>
-                    )}
-                    {bed.active_assignment.resident.care_level && (
-                      <span className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 font-medium text-foreground">
-                        {bed.active_assignment.resident.care_level === 'bedridden' ? 'Leżący' : bed.active_assignment.resident.care_level === 'sitting' ? 'Na wózku' : 'Chodzący'}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div className="text-sm text-muted-foreground">
-                  Brak przypisania
-                </div>
-              )}
-            </div>
-
-            <div className="mt-4 pt-4 border-t flex items-center justify-between gap-2">
-              {bed.is_active ? (
-                <>
-                  {bed.active_assignment ? (
-                    <div className="flex items-center gap-1.5">
-                      <ReassignBedDialog
-                        currentBedId={bed.id}
-                        currentBedLabel={bed.label}
-                        currentRoomNumber={roomNumber || ''}
-                        currentFloor={floor}
-                        residentId={bed.active_assignment.resident.id}
-                        residentName={`${bed.active_assignment.resident.first_name} ${bed.active_assignment.resident.last_name}`}
-                        residentGender={bed.active_assignment.resident.gender}
-                        residentIsZsn={bed.active_assignment.resident.is_zsn}
-                        residentCareLevel={bed.active_assignment.resident.care_level}
-                        onReassigned={() => {
-                          fetchBeds()
-                          onUpdate()
-                        }}
-                      />
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="text-destructive hover:bg-destructive/10 hover:text-destructive h-8 px-2.5 text-xs"
-                            onClick={() => setUnassignTarget({
-                              bedId: bed.id,
-                              residentId: bed.active_assignment.resident.id,
-                              residentName: `${bed.active_assignment.resident.first_name} ${bed.active_assignment.resident.last_name}`,
-                            })}
-                          >
-                            Wypisz
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          Zwolnij to łóżko i usuń bieżące przypisanie pensjonariusza
-                        </TooltipContent>
-                      </Tooltip>
+              return (
+                <TableRow
+                  key={bed.id}
+                  className={!bed.is_active ? 'opacity-60 bg-muted/30' : undefined}
+                >
+                  <TableCell className="font-semibold text-foreground py-2.5">
+                    <div className="flex items-center gap-2">
+                      <BedDouble className="w-4 h-4 text-primary shrink-0" />
+                      <span>{displayLabel}</span>
                     </div>
-                  ) : (
-                    <AssignBedDialog bedId={bed.id} onAssigned={() => { fetchBeds(); onUpdate() }} />
-                  )}
-                  
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => handleDeactivate(bed.id, false)}
-                          disabled={!!bed.active_assignment}
-                        >
-                          Dezaktywuj
-                        </Button>
+                  </TableCell>
+                  <TableCell className="py-2.5">
+                    {!bed.is_active ? (
+                      <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-secondary text-secondary-foreground">
+                        Nieaktywne
                       </span>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {bed.active_assignment 
-                        ? 'Nie można dezaktywować zajętego łóżka — najpierw wypisz pensjonariusza'
-                        : 'Wyłącz łóżko z puli dostępnych w placówce'}
-                    </TooltipContent>
-                  </Tooltip>
-                </>
-              ) : (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => handleDeactivate(bed.id, true)}
-                      className="w-full"
-                    >
-                      Aktywuj łóżko
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    Przywróć łóżko do puli dostępnych do przypisania
-                  </TooltipContent>
-                </Tooltip>
-              )}
-            </div>
-          </div>
-        ))}
+                    ) : bed.active_assignment ? (
+                      <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-primary text-white">
+                        Zajęte
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold text-foreground border-border">
+                        Wolne
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell className="py-2.5">
+                    {bed.active_assignment ? (
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium text-foreground">
+                            {bed.active_assignment.resident.first_name} {bed.active_assignment.resident.last_name}
+                          </span>
+                          <BusinessIdBadge type="resident" id={bed.active_assignment.resident.id} />
+                        </div>
+                        <div className="flex flex-wrap gap-1 text-[11px]">
+                          {bed.active_assignment.resident.gender && (
+                            <span className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 font-medium text-foreground">
+                              {bed.active_assignment.resident.gender === 'M' ? 'Mężczyzna' : 'Kobieta'}
+                            </span>
+                          )}
+                          {bed.active_assignment.resident.is_zsn && (
+                            <span className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 font-medium text-foreground">
+                              ZSN
+                            </span>
+                          )}
+                          {bed.active_assignment.resident.care_level && (
+                            <span className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 font-medium text-foreground">
+                              {bed.active_assignment.resident.care_level === 'bedridden'
+                                ? 'Leżący'
+                                : bed.active_assignment.resident.care_level === 'sitting'
+                                ? 'Na wózku'
+                                : 'Chodzący'}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Brak przypisania</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right py-2.5">
+                    <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                      {bed.is_active ? (
+                        <>
+                          {bed.active_assignment ? (
+                            <>
+                              <ReassignBedDialog
+                                currentBedId={bed.id}
+                                currentBedLabel={bed.label}
+                                currentRoomNumber={roomNumber || ''}
+                                currentFloor={floor}
+                                residentId={bed.active_assignment.resident.id}
+                                residentName={`${bed.active_assignment.resident.first_name} ${bed.active_assignment.resident.last_name}`}
+                                residentGender={bed.active_assignment.resident.gender}
+                                residentIsZsn={bed.active_assignment.resident.is_zsn}
+                                residentCareLevel={bed.active_assignment.resident.care_level}
+                                onReassigned={() => {
+                                  fetchBeds()
+                                  onUpdate()
+                                }}
+                              />
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-destructive hover:bg-destructive/10 hover:text-destructive h-8 px-2.5 text-xs"
+                                    onClick={() =>
+                                      setUnassignTarget({
+                                        bedId: bed.id,
+                                        residentId: bed.active_assignment.resident.id,
+                                        residentName: `${bed.active_assignment.resident.first_name} ${bed.active_assignment.resident.last_name}`,
+                                      })
+                                    }
+                                  >
+                                    Wypisz
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  Zwolnij to łóżko i usuń bieżące przypisanie pensjonariusza
+                                </TooltipContent>
+                              </Tooltip>
+                            </>
+                          ) : (
+                            <AssignBedDialog
+                              bedId={bed.id}
+                              onAssigned={() => {
+                                fetchBeds()
+                                onUpdate()
+                              }}
+                            />
+                          )}
+
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground"
+                                  onClick={() => handleDeactivate(bed.id, false)}
+                                  disabled={!!bed.active_assignment}
+                                >
+                                  Dezaktywuj
+                                </Button>
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {bed.active_assignment
+                                ? 'Nie można dezaktywować zajętego łóżka — najpierw wypisz pensjonariusza'
+                                : 'Wyłącz łóżko z puli dostępnych w placówce'}
+                            </TooltipContent>
+                          </Tooltip>
+                        </>
+                      ) : (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeactivate(bed.id, true)}
+                              className="h-8 px-3 text-xs"
+                            >
+                              Aktywuj łóżko
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            Przywróć łóżko do puli dostępnych do przypisania
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+          </TableBody>
+        </Table>
       </div>
 
       <ConfirmDialog

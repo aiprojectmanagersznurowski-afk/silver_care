@@ -203,4 +203,64 @@ describe('Facility & Bed Management Logic (@REQ: ADM-FACILITY-MANAGE, @REQ: ADM-
     expect(oldForRes1[0].bed_id).toBe('b-1');
     expect(oldForRes1[0].unassigned_at).not.toBeNull();
   });
+
+  it('renders beds in table view when expanded and uses persistent view preference @REQ: ADM-FACILITY-OCCUPANCY', async () => {
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const roomListSrc = fs.readFileSync(
+      path.resolve(__dirname, '../../apps/web/src/components/facility/RoomList.tsx'),
+      'utf8'
+    );
+
+    // Weryfikacja: widok tabeli renderuje wiersz z łóżkami po rozwinięciu
+    expect(roomListSrc).toContain('data-testid="room-expanded-beds"');
+    expect(roomListSrc).toContain('<BedList');
+    expect(roomListSrc).toMatch(/isExpanded\s*\?\s*\(?[\s\S]*?Zwiń[\s\S]*?Łóżka/);
+
+    // Weryfikacja: preferencja widoku jest zapamiętywana w localStorage
+    expect(roomListSrc).toContain('silver_care_facility_room_view_mode');
+    expect(roomListSrc).toContain('handleModeChange');
+  });
+
+  it('renders beds tabularly in rows instead of card grid in BedList @REQ: ADM-FACILITY-MANAGE', async () => {
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const bedListSrc = fs.readFileSync(
+      path.resolve(__dirname, '../../apps/web/src/components/facility/BedList.tsx'),
+      'utf8'
+    );
+
+    // Weryfikacja: BedList używa komponentu Table z @/components/ui/table
+    expect(bedListSrc).toContain('@/components/ui/table');
+    expect(bedListSrc).toContain('data-testid="beds-table"');
+    expect(bedListSrc).toContain('<Table>');
+    expect(bedListSrc).toContain('<TableRow');
+    expect(bedListSrc).toContain('<TableCell');
+
+    // Weryfikacja: brak nieczytelnego gridu miniaturowych kafelków
+    expect(bedListSrc).not.toContain('sm:grid-cols-2');
+    expect(bedListSrc).not.toContain('lg:grid-cols-3');
+
+    // Weryfikacja: zakaz słowa pacjent
+    expect(bedListSrc.toLowerCase()).not.toContain('pacjent');
+  });
+
+  it('ensures beds/assign endpoint inserts only valid schema columns into bed_assignments @REQ: ADM-BED-ASSIGNMENT', async () => {
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const routeSrc = fs.readFileSync(
+      path.resolve(__dirname, '../../apps/web/src/app/api/facility/beds/assign/route.ts'),
+      'utf8'
+    );
+
+    // Weryfikacja: bed_assignments.insert NIE przekazuje kolumny 'reason', która nie istnieje w schemacie tabeli
+    const insertStartIndex = routeSrc.indexOf(".from('bed_assignments')")
+    const insertEndIndex = routeSrc.indexOf('if (assignError)', insertStartIndex)
+    const insertSnippet = routeSrc.slice(insertStartIndex, insertEndIndex)
+
+    expect(insertSnippet).not.toContain('reason')
+    expect(insertSnippet).toContain('bed_id')
+    expect(insertSnippet).toContain('resident_id')
+    expect(routeSrc).toContain('transfer_resident_bed')
+  });
 });

@@ -38,11 +38,13 @@ describe('Voice Fidelity & Medical Stripping (VOICE-MEDICAL-STRIP, VOICE-ZERO-GU
     const origKey = process.env.EU_LLM_API_KEY
     const origMistralKey = process.env.MISTRAL_API_KEY
     const origGroqKey = process.env.GROQ_API_KEY
+    const origDemoFallback = process.env.ALLOW_DEMO_GROQ_FALLBACK
 
     try {
       delete process.env.EU_LLM_API_KEY
       delete process.env.MISTRAL_API_KEY
       delete process.env.GROQ_API_KEY
+      delete process.env.ALLOW_DEMO_GROQ_FALLBACK
 
       await expect(
         callEuLlmCompletion([{ role: 'user', content: 'test' }])
@@ -51,6 +53,7 @@ describe('Voice Fidelity & Medical Stripping (VOICE-MEDICAL-STRIP, VOICE-ZERO-GU
       if (origKey) process.env.EU_LLM_API_KEY = origKey
       if (origMistralKey) process.env.MISTRAL_API_KEY = origMistralKey
       if (origGroqKey) process.env.GROQ_API_KEY = origGroqKey
+      if (origDemoFallback) process.env.ALLOW_DEMO_GROQ_FALLBACK = origDemoFallback
     }
   })
 
@@ -58,7 +61,7 @@ describe('Voice Fidelity & Medical Stripping (VOICE-MEDICAL-STRIP, VOICE-ZERO-GU
     ['Groq', 'test_groq_key', 'GROQ_API_KEY'],
     ['xAI', 'xai-test-key-12345', 'XAI_API_KEY'],
   ])('callEuLlmCompletion refuses and makes no network call when only a %s key is present @REQ: INFRA-EU-REGION @REQ: INFRA-GROQ-TRANSCRIPTION', async (_name, key, envName) => {
-    const saved = ['EU_LLM_API_KEY', 'MISTRAL_API_KEY', 'GROQ_API_KEY', 'XAI_API_KEY', 'EU_LLM_ENDPOINT'].map(
+    const saved = ['EU_LLM_API_KEY', 'MISTRAL_API_KEY', 'GROQ_API_KEY', 'XAI_API_KEY', 'EU_LLM_ENDPOINT', 'ALLOW_DEMO_GROQ_FALLBACK'].map(
       (k) => [k, process.env[k]] as const
     )
     const originalFetch = globalThis.fetch

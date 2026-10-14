@@ -31,7 +31,7 @@ export function OnboardingModal() {
     <Dialog open={open} onOpenChange={(val) => {
       if (!val) handleClose()
     }}>
-      <DialogContent className="sm:max-w-md bg-surface text-foreground">
+      <DialogContent className="sm:max-w-xl md:max-w-2xl p-6 bg-surface text-foreground">
         <DialogHeader>
           <DialogTitle className="text-xl">Witaj w Silver Care! 👋</DialogTitle>
           <DialogDescription className="pt-2 text-base text-text-secondary">

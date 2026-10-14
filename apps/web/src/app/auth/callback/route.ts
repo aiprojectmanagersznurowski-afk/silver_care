@@ -4,9 +4,11 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { resolveRelativeRole } from '@/lib/onboarding'
 import { evaluateOAuthInviteClaim } from '@/lib/invite-authorization'
+import { getRequestOrigin } from '@/lib/url-helper'
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url)
+  const { searchParams } = new URL(request.url)
+  const origin = getRequestOrigin(request)
   const code = searchParams.get('code')
   
   if (!code) {

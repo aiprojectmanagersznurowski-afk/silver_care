@@ -9,6 +9,7 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
@@ -23,6 +24,7 @@ export interface SidebarNavItem {
   icon: LucideIcon
   /** Dokładne dopasowanie ścieżki — dla pozycji-korzeni jak /admin czy /staff. */
   exact?: boolean
+  badge?: string | number
   children?: Omit<SidebarNavItem, 'children'>[]
 }
 
@@ -93,9 +95,22 @@ export function SidebarNav({ groups }: { groups: SidebarNavGroup[] }) {
                     render={<Link href={item.href} onClick={handleLinkClick} />}
                     onClick={handleLinkClick}
                   >
-                    <item.icon />
+                    <div className="relative flex items-center justify-center">
+                      <item.icon />
+                      {item.badge !== undefined && (
+                        <span className="hidden group-data-[collapsible=icon]:block absolute -top-1 -right-1 h-2 w-2 rounded-full bg-destructive ring-1 ring-background" />
+                      )}
+                    </div>
                     <span>{item.label}</span>
                   </SidebarMenuButton>
+                  {item.badge !== undefined && (
+                    <SidebarMenuBadge
+                      data-testid="sidebar-nav-badge"
+                      className="bg-destructive/15 text-destructive font-semibold border border-destructive/25 tabular-nums"
+                    >
+                      {item.badge}
+                    </SidebarMenuBadge>
+                  )}
                 </SidebarMenuItem>
               ),
             )}

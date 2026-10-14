@@ -148,7 +148,7 @@ export function CreateOrganizationDialog() {
           <Plus className="h-4 w-4 mr-2" />
           Dodaj placówkę
         </DialogTrigger>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-xl md:max-w-2xl p-6">
           <DialogHeader>
             <DialogTitle>Utwórz nową placówkę</DialogTitle>
             <DialogDescription>
@@ -157,15 +157,30 @@ export function CreateOrganizationDialog() {
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label htmlFor="create-org-name">Nazwa placówki *</Label>
-              <Input
-                id="create-org-name"
-                placeholder="np. Dom Seniora Złota Jesień"
-                value={orgName}
-                onChange={e => setOrgName(e.target.value)}
-                required
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="create-org-name">Nazwa placówki *</Label>
+                <Input
+                  id="create-org-name"
+                  placeholder="np. Dom Seniora Złota Jesień"
+                  value={orgName}
+                  onChange={e => setOrgName(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="create-org-limit">Limit podopiecznych</Label>
+                <Input
+                  id="create-org-limit"
+                  type="number"
+                  min="1"
+                  max="10000"
+                  placeholder="50"
+                  value={residentLimit}
+                  onChange={e => setResidentLimit(e.target.value)}
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -178,39 +193,33 @@ export function CreateOrganizationDialog() {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="create-org-limit">Limit podopiecznych</Label>
-              <Input
-                id="create-org-limit"
-                type="number"
-                min="1"
-                max="10000"
-                placeholder="50"
-                value={residentLimit}
-                onChange={e => setResidentLimit(e.target.value)}
-              />
-            </div>
+            <div className="pt-2 border-t border-border space-y-3">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
+                Dane pierwszego administratora placówki
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="create-org-admin-email">E-mail administratora *</Label>
+                  <Input
+                    id="create-org-admin-email"
+                    type="email"
+                    placeholder="np. admin@zlotajesien.pl"
+                    value={adminEmail}
+                    onChange={e => setAdminEmail(e.target.value)}
+                    required
+                  />
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="create-org-admin-email">E-mail administratora *</Label>
-              <Input
-                id="create-org-admin-email"
-                type="email"
-                placeholder="np. admin@zlotajesien.pl"
-                value={adminEmail}
-                onChange={e => setAdminEmail(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="create-org-admin-name">Imię i nazwisko administratora</Label>
-              <Input
-                id="create-org-admin-name"
-                placeholder="np. Anna Nowak"
-                value={adminFullName}
-                onChange={e => setAdminFullName(e.target.value)}
-              />
+                <div className="space-y-2">
+                  <Label htmlFor="create-org-admin-name">Imię i nazwisko administratora</Label>
+                  <Input
+                    id="create-org-admin-name"
+                    placeholder="np. Anna Nowak"
+                    value={adminFullName}
+                    onChange={e => setAdminFullName(e.target.value)}
+                  />
+                </div>
+              </div>
             </div>
 
             {error && (

@@ -114,7 +114,7 @@ export function ManageResidentBedDialog({ residentId, currentBedLabel, currentRo
       <DialogTrigger render={<Button variant="ghost" size="icon" title="Zarządzaj łóżkiem" className="text-primary hover:bg-primary/10 h-8 w-8" />}>
         <BedDouble className="h-4 w-4" />
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-xl md:max-w-2xl p-6">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Przypisz / Zmień Łóżko</DialogTitle>
@@ -126,7 +126,7 @@ export function ManageResidentBedDialog({ residentId, currentBedLabel, currentRo
               )}
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <div className="space-y-4 py-4">
             {error && (
               <div className="text-sm font-medium text-destructive bg-destructive/10 p-2 rounded-md">{error}</div>
             )}
@@ -135,13 +135,13 @@ export function ManageResidentBedDialog({ residentId, currentBedLabel, currentRo
                 <Check className="h-4 w-4" /> Przypisano poprawnie!
               </div>
             )}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="bed" className="text-right">
-                Nowe łóżko
+            <div className="space-y-1.5">
+              <Label htmlFor="bed">
+                Nowe wolne łóżko
               </Label>
-              <div className="col-span-3">
+              <div>
                 {isFetching ? (
-                  <div className="text-sm text-muted-foreground">Ładowanie wolnych łóżek...</div>
+                  <div className="text-sm text-muted-foreground py-2">Ładowanie wolnych łóżek...</div>
                 ) : (
                   <NativeSelect
                     id="bed" className="flex w-full placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"

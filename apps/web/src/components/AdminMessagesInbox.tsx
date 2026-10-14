@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { Textarea } from '@/components/ui/textarea'
+import { formatBusinessId } from '@/lib/business-ids'
 
 interface FamilyMessage {
   id: string;
@@ -124,8 +125,8 @@ export function AdminMessagesInbox() {
                 }}
               >
                 <div className="flex justify-between items-start mb-1">
-                  <span className="text-sm font-medium text-foreground truncate max-w-[160px]" title={msg.residents ? `${msg.residents.first_name} ${msg.residents.last_name}` : msg.resident_id.substring(0, 8)}>
-                    {msg.residents ? `${msg.residents.first_name} ${msg.residents.last_name}` : `Pensjonariusz: ${msg.resident_id.substring(0, 8)}...`}
+                  <span className="text-sm font-medium text-foreground truncate max-w-[160px]" title={msg.residents ? `${msg.residents.first_name} ${msg.residents.last_name}` : formatBusinessId('resident', msg.resident_id)}>
+                    {msg.residents ? `${msg.residents.first_name} ${msg.residents.last_name}` : formatBusinessId('resident', msg.resident_id)}
                   </span>
                   <span className="text-[10px] text-muted-foreground whitespace-nowrap ml-2 shrink-0">
                     {format(new Date(msg.created_at), "d MMM, HH:mm", { locale: pl })}

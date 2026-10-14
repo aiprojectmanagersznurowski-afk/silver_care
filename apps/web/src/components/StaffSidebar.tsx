@@ -16,21 +16,29 @@ import {
 } from '@/components/ui/sidebar'
 import { SidebarNav, type SidebarNavGroup } from '@/components/SidebarNav'
 import { SidebarAccount } from '@/components/SidebarAccount'
-
-const STAFF_GROUPS: SidebarNavGroup[] = [
-  {
-    label: 'Dyżur',
-    items: [
-      { href: '/staff', label: 'Podopieczni', icon: Users, exact: true },
-      { href: '/staff/agenda', label: 'Agenda na dziś', icon: Calendar },
-      { href: '/voice', label: 'Notatka głosowa', icon: Mic },
-      { href: '/staff/reports', label: 'Raporty', icon: FileText },
-      { href: '/staff/messages', label: 'Wiadomości', icon: MessageSquare },
-    ],
-  },
-]
+import { useStaffUnansweredMessages } from '@/hooks/useStaffUnansweredMessages'
 
 export function StaffSidebar({ userEmail }: { userEmail: string | undefined }) {
+  const { unansweredCount } = useStaffUnansweredMessages()
+
+  const groups: SidebarNavGroup[] = [
+    {
+      label: 'Dyżur',
+      items: [
+        { href: '/staff', label: 'Podopieczni', icon: Users, exact: true },
+        { href: '/staff/agenda', label: 'Agenda na dziś', icon: Calendar },
+        { href: '/voice', label: 'Notatka głosowa', icon: Mic },
+        { href: '/staff/reports', label: 'Raporty', icon: FileText },
+        {
+          href: '/staff/messages',
+          label: 'Wiadomości',
+          icon: MessageSquare,
+          badge: unansweredCount > 0 ? unansweredCount : undefined,
+        },
+      ],
+    },
+  ]
+
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
@@ -45,7 +53,7 @@ export function StaffSidebar({ userEmail }: { userEmail: string | undefined }) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarNav groups={STAFF_GROUPS} />
+        <SidebarNav groups={groups} />
       </SidebarContent>
       <SidebarAccount userEmail={userEmail} />
       <SidebarRail />

@@ -82,9 +82,12 @@ export default async function OrganizationDetailsPage({
               <Building2 className="h-6 w-6" />
             </div>
             <div>
-              <h2 className="text-3xl font-display font-semibold tracking-tight text-foreground">
-                {organization.name}
-              </h2>
+              <div className="flex items-center gap-3 flex-wrap">
+                <h2 className="text-3xl font-display font-semibold tracking-tight text-foreground">
+                  {organization.name}
+                </h2>
+                <BusinessIdBadge type="organization" id={organization.id} />
+              </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                 <MapPin className="h-4 w-4" />
                 <span>{organization.address || 'Brak adresu'}</span>
@@ -100,7 +103,6 @@ export default async function OrganizationDetailsPage({
                 resident_limit: organization.resident_limit || 50,
               }}
             />
-            <BusinessIdBadge type="organization" id={organization.id} />
           </div>
         </div>
       </div>
@@ -193,7 +195,9 @@ export default async function OrganizationDetailsPage({
                   <TableRow key={admin.id}>
                     <TableCell>
                       <div className="font-medium text-foreground">{admin.email}</div>
-                      <div className="font-mono text-xs text-muted-foreground">{admin.id}</div>
+                      <div className="mt-1">
+                        <BusinessIdBadge type="user" id={admin.id} />
+                      </div>
                     </TableCell>
                     <TableCell>
                       <span className="inline-flex items-center rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
@@ -275,7 +279,9 @@ export default async function OrganizationDetailsPage({
                   <TableRow key={person.id}>
                     <TableCell>
                       <div className="font-medium text-foreground">{person.email}</div>
-                      <div className="font-mono text-xs text-muted-foreground">{person.id}</div>
+                      <div className="mt-1">
+                        <BusinessIdBadge type="user" id={person.id} />
+                      </div>
                     </TableCell>
                     <TableCell>
                       <span className="inline-flex items-center rounded-lg bg-muted px-2.5 py-1 text-xs font-medium text-foreground">

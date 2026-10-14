@@ -85,11 +85,11 @@ export default function AssignBedDialog({ bedId, onAssigned }: AssignBedDialogPr
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button size="sm" />}>
-        <UserPlus className="w-4 h-4 mr-2" />
+      <DialogTrigger render={<Button size="sm" className="h-8 text-xs" />}>
+        <UserPlus className="w-3.5 h-3.5 mr-1.5" />
         Przypisz
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-lg md:max-w-xl p-6">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Przypisz pensjonariusza</DialogTitle>
@@ -98,17 +98,17 @@ export default function AssignBedDialog({ bedId, onAssigned }: AssignBedDialogPr
               Jeżeli ma on przypisanie do innego łóżka, zostanie przeniesiony.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <div className="space-y-4 py-4">
             {error && (
               <div className="text-sm font-medium text-destructive">{error}</div>
             )}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="resident" className="text-right">
+            <div className="space-y-1.5">
+              <Label htmlFor="resident">
                 Pensjonariusz
               </Label>
-              <div className="col-span-3">
+              <div>
                 {isFetching ? (
-                  <div className="text-sm text-muted-foreground">Ładowanie...</div>
+                  <div className="text-sm text-muted-foreground py-2">Ładowanie pensjonariuszy...</div>
                 ) : (
                   <NativeSelect
                     id="resident" className="flex w-full placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"

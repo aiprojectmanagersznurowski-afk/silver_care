@@ -5,7 +5,13 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { isImpersonationSessionActive, assertMutationAllowedDuringImpersonation } from '@/lib/impersonation-guards'
-import { RawResidentRow, validateResidentRows, ValidatedResidentRow, DryRunResult } from '@/lib/bulk-import-helpers'
+import {
+  RawResidentRow,
+  validateResidentRows,
+  ValidatedResidentRow,
+  DryRunResult,
+  evaluateCapacityExceeded,
+} from '@/lib/bulk-import-helpers'
 import { hashNationalId } from '@/lib/national-id-hash'
 
 export async function analyzeBulkImportAction(rows: RawResidentRow[]): Promise<{
@@ -21,25 +27,43 @@ export async function analyzeBulkImportAction(rows: RawResidentRow[]): Promise<{
 
   const adminClient = createAdminClient()
 
-  // Pobierz wszystkie istniejące pesel_hash z tej placówki
+  // Pobierz wszystkie istniejące pesel_hash z tej placówki oraz status archiwizacji
   const { data: existing, error: existingErr } = await adminClient
     .from('residents')
-    .select('pesel_hash')
+    .select('pesel_hash, archived_at')
     .eq('organization_id', orgId)
 
   if (existingErr) {
     return { error: 'Błąd sprawdzania bazy danych: ' + existingErr.message }
   }
 
+  // Pobierz zadeklarowaną pojemność placówki
+  const { data: orgData } = await adminClient
+    .from('organizations')
+    .select('resident_limit')
+    .eq('id', orgId)
+    .single()
+
+  const residentLimit = Number(orgData?.resident_limit || 50)
+  const currentActiveCount = (existing || []).filter((r) => !r.archived_at).length
   const existingHashes = new Set<string>((existing || []).map((r) => r.pesel_hash).filter(Boolean))
 
   const dryRun = validateResidentRows(rows, existingHashes)
-  return { result: dryRun }
+  const capacityInfo = evaluateCapacityExceeded(dryRun.validRowsCount, currentActiveCount, residentLimit)
+
+  return {
+    result: {
+      ...dryRun,
+      ...capacityInfo,
+    },
+  }
 }
 
 export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[]): Promise<{
   error?: string
   importedCount?: number
+  capacityUpdated?: boolean
+  newCapacity?: number
 }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -97,7 +121,49 @@ export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[
     totalImported += (inserted || []).length
   }
 
-  // Wpis do audit_logs
+  // Sprawdzenie i aktualizacja pojemności placówki w razie przekroczenia limitu
+  const { count: totalActiveCount } = await adminClient
+    .from('residents')
+    .select('*', { count: 'exact', head: true })
+    .eq('organization_id', orgId)
+    .is('archived_at', null)
+
+  const activeTotal = totalActiveCount || totalImported
+
+  const { data: orgRecord } = await adminClient
+    .from('organizations')
+    .select('resident_limit, name')
+    .eq('id', orgId)
+    .single()
+
+  const currentLimit = Number(orgRecord?.resident_limit || 50)
+  let capacityUpdated = false
+  let newCapacity = currentLimit
+
+  if (activeTotal > currentLimit) {
+    newCapacity = activeTotal
+    capacityUpdated = true
+
+    await adminClient
+      .from('organizations')
+      .update({ resident_limit: newCapacity })
+      .eq('id', orgId)
+
+    await adminClient.from('audit_logs').insert({
+      organization_id: orgId,
+      resident_id: null,
+      action: 'ORGANIZATION_CAPACITY_UPDATED',
+      performed_by: user.id,
+      payload: {
+        previous_limit: currentLimit,
+        new_limit: newCapacity,
+        reason: 'bulk_import_capacity_exceeded',
+        total_active_residents: activeTotal,
+      },
+    })
+  }
+
+  // Wpis do audit_logs dla masowego importu
   await adminClient.from('audit_logs').insert({
     organization_id: orgId,
     resident_id: null,
@@ -106,9 +172,18 @@ export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[
     payload: {
       imported_count: totalImported,
       source: 'excel_csv_import',
+      capacity_updated: capacityUpdated,
+      new_capacity: newCapacity,
     },
   })
 
   revalidatePath('/admin/residents')
-  return { importedCount: totalImported }
+  revalidatePath('/admin/organizations')
+  revalidatePath(`/admin/organizations/${orgId}`)
+
+  return {
+    importedCount: totalImported,
+    capacityUpdated,
+    newCapacity,
+  }
 }

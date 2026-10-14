@@ -106,14 +106,38 @@ export function AuditLogTable({
                         {log.action === 'password_reset' && (
                           <span className="text-muted-foreground">Reset i aktualizacja hasła konta</span>
                         )}
-                        {log.action !== 'role_change' && log.action !== 'password_reset' && (
+                        {log.action === 'USER_DEACTIVATED' && (
+                          <span className="text-muted-foreground font-medium">Blokada konta (deaktywacja)</span>
+                        )}
+                        {log.action === 'USER_ACTIVATED' && (
+                          <span className="text-primary font-medium">Odblokowanie konta (reaktywacja)</span>
+                        )}
+                        {log.action === 'USER_HARD_DELETED' && (
+                          <span className="text-destructive font-medium">Trwałe usunięcie konta z bazy</span>
+                        )}
+                        {log.action !== 'role_change' &&
+                          log.action !== 'password_reset' &&
+                          log.action !== 'USER_DEACTIVATED' &&
+                          log.action !== 'USER_ACTIVATED' &&
+                          log.action !== 'USER_HARD_DELETED' && (
                           <span className="font-mono text-[0.7rem] text-muted-foreground">
                             {JSON.stringify(log.payload)}
                           </span>
                         )}
                       </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {log.performed_by || 'system'}
+                      <TableCell>
+                        {log.performed_by && log.performed_by.toLowerCase() !== 'system' ? (
+                          <div className="flex flex-col gap-1 items-start">
+                            {users.find(u => u.id === log.performed_by)?.email && (
+                              <span className="font-medium text-foreground text-xs">
+                                {users.find(u => u.id === log.performed_by)!.email}
+                              </span>
+                            )}
+                            <BusinessIdBadge type="user" id={log.performed_by} />
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground italic text-xs">system</span>
+                        )}
                       </TableCell>
                     </TableRow>
                   )

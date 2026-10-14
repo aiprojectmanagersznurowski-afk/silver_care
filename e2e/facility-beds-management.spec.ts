@@ -39,4 +39,34 @@ test.describe('Zarządzanie strukturą pokoi i łóżek (@REQ: ADM-FACILITY-MANA
     await facilityPage.searchInput.fill('10');
     await page.waitForTimeout(300);
   });
+
+  test('@REQ: ADM-FACILITY-OCCUPANCY - AC3: Rozwijanie łóżek w widoku tabeli i kafelkowym z tabelarycznym układem łóżek', async ({ loginPage, page }) => {
+    await loginPage.loginAs('org_admin');
+    const facilityPage = new FacilityPage(page);
+    await facilityPage.goto();
+
+    // 1. Widok tabeli: rozwijanie wiersza łóżek
+    await facilityPage.switchToTable();
+    await expect(facilityPage.roomTable).toBeVisible();
+
+    const bedsButtonInTable = page.locator('[data-testid="room-table"] tbody button:has-text("Łóżka")').first();
+    if (await bedsButtonInTable.isVisible()) {
+      await bedsButtonInTable.click();
+      await expect(facilityPage.expandedBedRows.first()).toBeVisible();
+      await expect(facilityPage.bedsTable.first()).toBeVisible();
+
+      // Kliknięcie Zwiń
+      const collapseButton = page.locator('[data-testid="room-table"] tbody button:has-text("Zwiń")').first();
+      await collapseButton.click();
+      await expect(facilityPage.expandedBedRows.first()).not.toBeVisible();
+    }
+
+    // 2. Widok kafli: rozwijanie łóżek i weryfikacja tabelarycznego formatu
+    await facilityPage.switchToGrid();
+    const manageBedsButtonInGrid = page.locator('[data-testid="room-card"] button:has-text("Zarządzaj łóżkami")').first();
+    if (await manageBedsButtonInGrid.isVisible()) {
+      await manageBedsButtonInGrid.click();
+      await expect(facilityPage.bedsTable.first()).toBeVisible();
+    }
+  });
 });

@@ -1,6 +1,7 @@
 # WO: NUR-UNANSWERED-MESSAGES — Wskaźnik nieodpowiedzianych wiadomości na pulpicie dyżuru i odpowiedź głosowa personelu
 
 ## Metadane
+- **Status:** ✅ WYKONANE
 - **Story:** `SC-NUR-11` (docs/KANONICZNA_SPECYFIKACJA_USER_STORIES.md)
 - **Kontrakt / Wymagania bazowe:** `NUR-BOARD`, `FAM-MESSAGES`, `INFRA-GROQ-TRANSCRIPTION`, `MDR-VOCABULARY`
 - **Domena:** `staff` / `presentation` / `voice`

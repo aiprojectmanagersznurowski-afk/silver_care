@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { ImpersonationBanner } from '@/components/ImpersonationBanner'
 import { getActiveImpersonation } from '@/lib/impersonation-guards'
+import { GlobalCommandPalette } from '@/components/GlobalCommandPalette'
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient()
@@ -38,6 +39,9 @@ export default async function AdminLayout({ children }: { children: ReactNode })
               <SidebarTrigger className="-ml-1" aria-label="Zwiń lub rozwiń menu" />
               <Separator orientation="vertical" className="mx-2 data-[orientation=vertical]:h-4 data-[orientation=vertical]:self-center" />
               <span className="text-sm font-medium">{role === 'super_admin' && !impersonationSession ? 'Panel platformy' : 'Panel placówki'}</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <GlobalCommandPalette userRole={role} />
             </div>
           </div>
         </header>

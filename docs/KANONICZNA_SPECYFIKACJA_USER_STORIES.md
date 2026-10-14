@@ -87,6 +87,7 @@
 - **AC1:** Panel widoczny i dostępny wyłącznie dla konta o roli `super_admin`.
 - **AC2:** Możliwość zarządzania przypisaniem ról do kont użytkowników.
 - **AC3:** Widok audytu zmian uprawnień zintegrowany z `audit_logs`; wpis `role_change` bez danych osobowych.
+- **AC4 (Zarządzanie statusem i usuwaniem kont):** Możliwość zablokowania konta (deaktywacja / unieważnienie sesji) lub trwałego usunięcia (dla kont testowych/błędnych) z poziomu panelu IAM z zabezpieczeniem przed modyfikacją własnego konta i rejestracją w audit_logs.
 
 > ℹ️ Kontrakt od początku wskazywał `source: 'SC-SUP-04'`, ale story nie istniało w v2.4 — tu zostało uzupełnione.
 
@@ -162,7 +163,7 @@
 - **AC4 (Zachowanie roli w OAuth):** Rola z zaproszenia (`legal_guardian` lub `family`) jest zachowywana także przy realizacji zaproszenia przez Google OAuth (`/auth/callback`), nie tylko przy rejestracji hasłem.
 
 ### [SC-ADM-09] Zarządzanie siecią placówek (Multi-Org View)
-🔗 **Kontrakt:** brak REQ · **Status:** ❌
+🔗 **Kontrakt:** brak REQ · **Status:** ⏸️ ZAPARKOWANE (poza MVP — zarządzanie siecią placówek w MVP realizuje rola `super_admin`; powiązanie `org_admin` z wieloma placówkami odłożone do etapu po pilotażu)
 
 **User story:** Jako Administrator przypisany do sieci placówek, chcę widzieć wszystkie ośrodki w mojej sieci, aby szybko przełączać się między nimi i zarządzać personelem centralnie.
 
@@ -171,7 +172,7 @@
 - **AC2 (Kontekstualność):** Zmiana placówki w dropdownie odświeża RLS całego interfejsu (widzimy tylko seniorów i notatki z wybranej placówki).
 - **AC3 (Raportowanie sieciowe):** Dashboard główny pokazuje agregat danych dla całej sieci (np. „Łącznie podopiecznych w sieci: 450").
 
-> ⚠️ Wymaga decyzji przed realizacją: obecny model ról (`roles.contract.mjs`) zakłada jeden `organization_id` w tokenie dla `org_admin`.
+> ⚖️ **Rozstrzygnięcie:** Zaparkowane poza zakresem MVP decyzją product ownera. Obecny model ról (`roles.contract.mjs`) zakłada jeden `organization_id` w tokenie dla `org_admin`, a zarządzanie siecią ośrodków i impersonację placówek zapewnia rola `super_admin` (`/admin/organizations`). Rozszerzenie relacji `org_admin` do wielu placówek powróci przy skalowaniu platformy na grupy kapitałowe.
 
 ---
 
@@ -458,6 +459,7 @@
 - **AC2:** Podgląd wierszy poprawnych i błędnych z opisem problemu.
 - **AC3:** Zapis wyłącznie poprawnych wierszy, w chunkach, z wpisem w `audit_logs` (liczba rekordów, bez PII).
 - **AC4:** Szablon pliku do pobrania z panelu.
+- **AC5:** Jeśli import przekracza zadeklarowaną pojemność placówki (`resident_limit`), interfejs wyświetla ostrzeżenie dla administratora w kroku podglądu, a po zatwierdzeniu importu limit pojemności placówki (`organizations.resident_limit`) jest automatycznie aktualizowany do rzeczywistej liczby pensjonariuszy, co odzwierciedla się w widoku u Super Administratora.
 
 #### [SC-ADM-14] Bezpieczny eksport danych placówki
 🔗 **Kontrakt:** `ADM-FACILITY-MANAGE`, `SEC-NO-PII-LOGS`, `MDR-VOCABULARY` · **WO:** [`ADM-DATA-EXPORT`](workorders/ADM-DATA-EXPORT.md) · **Status:** ✅ 📝 — zrealizowane w `ExportDataDialog`, testy w `data_export.test.ts` oraz E2E w `admin-export-import.spec.ts`
@@ -490,6 +492,40 @@
 - **AC1:** Edycja w miejscu: poziom opieki, ZSN, uwagi; panel boczny dla danych profilu.
 - **AC2:** Aktualizacja optymistyczna z rollbackiem i komunikatem przy błędzie.
 - **AC3:** Uprawnienia zgodne z `MATRIX`; każda zmiana w `audit_logs` z listą zmienionych pól, bez wartości wrażliwych.
+
+#### [SC-ADM-17] Pełnofunkcyjna wyszukiwarka globalna (Command Palette / Spotlight Cmd+K)
+🔗 **Kontrakt:** `UI-TEMPLATE-ALIGNMENT`, `UI-ACCESSIBILITY`, `ORG-ISOLATION`, `SEC-NO-PII-LOGS`, `MDR-VOCABULARY` · **WO:** [`UI-GLOBAL-SEARCH`](workorders/UI-GLOBAL-SEARCH.md) · **Status:** ✅ 📝
+
+**User story:** Jako Administrator lub Członek Personelu, chcę błyskawicznie przeszukiwać cały system (podopiecznych, pokoje i łóżka, plan dnia, raporty, personel, a dla superadmina placówki) za pomocą skrótu Cmd+K / Ctrl+K lub przycisku w nagłówku, aby nawigować po placówce w ułamku sekundy bez przeklikiwania menu.
+
+**Kryteria akceptacji:**
+- **AC1 (Uniwersalny kontrakt i kategoryzacja):** Wyniki są pogrupowane w kategorie (`residents`, `facility`, `agenda`, `reports`, `staff`, `organizations`) z czytelnymi badge'ami i metadanymi.
+- **AC2 (Bezpieczeństwo i RODO):** Wyszukiwanie jest ściśle izolowane do `organization_id` bieżącego użytkownika (poza rolą `super_admin`). Brak wyszukiwania po PESEL w plaintext, zero-PII w logach systemowych.
+- **AC3 (Słownictwo i brak danych medycznych):** Całkowity zakaz słowa „pacjent”; podtytuły raportów i aktywności nie zawierają danych medycznych ani diagnostycznych.
+- **AC4 (Ergonomia Spotlight i dostępność):** Obsługa skrótu `Cmd+K` / `Ctrl+K`, nawigacja strzałkami `ArrowUp` / `ArrowDown`, wybór klawiszem `Enter`, zamykanie `Escape`, 4 stany UI (loading, empty, success, error) oraz szybkie filtry kategorii.
+
+#### [SC-ADM-18] Trwałe zapamiętywanie preferencji widoku UI (Kafelki / Tabela / Obchód)
+🔗 **Kontrakt:** `UI-TEMPLATE-ALIGNMENT`, `UI-ACCESSIBILITY` · **WO:** [`UI-PERSISTENT-VIEW-PREFERENCES`](workorders/UI-PERSISTENT-VIEW-PREFERENCES.md) · **Status:** ✅ 📝
+
+**User story:** Jako Użytkownik systemu (Administrator lub Personel), chcę, aby raz wybrany tryb wyświetlania danych (np. kafelki vs tabela w strukturze placówki, obchód vs lista na tablicy personelu, kafelki vs tabela na liście pensjonariuszy i organizacji) był trwale zapamiętany w mojej przeglądarce, aby przy kolejnym otwarciu widoku nie musieć ponownie przełączać go ręcznie.
+
+**Kryteria akceptacji:**
+- **AC1 (Trwałość preferencji):** Każda zmiana trybu wyświetlania (`viewMode`) jest automatycznie zapisywana w pamięci lokalnej z unikalnym prefiksem kontekstu.
+- **AC2 (Domyślny stan przy ponownym wejściu):** Po odświeżeniu strony lub powrocie z innej podstrony interfejs automatycznie ładuje ostatnio wybrany tryb widoku.
+- **AC3 (Brak błędów hydratacji SSR):** Inicjalizacja stanu w Next.js nie powoduje błędów hydratacji ani migotania (flicker) przy renderowaniu serwerowym.
+- **AC4 (Pokrycie kluczowych widoków):** Mechanizm obejmuje strukturę placówki (`/admin/facility` — pokoje grid/table), tablicę personelu (`/staff` — rounds/standard), organizacje (`/admin/organizations` — cards/table) oraz listę pensjonariuszy (`/admin/residents` — cards/table).
+
+#### [SC-ADM-19] Wypis pensjonariusza, rejestracja zgonu i zakończenie umowy
+🔗 **Kontrakt:** `ADM-ARCHIVE`, `ADM-BED-ASSIGNMENT` · **WO:** [`ADM-RESIDENT-DISCHARGE-LIFECYCLE`](workorders/ADM-RESIDENT-DISCHARGE-LIFECYCLE.md) · **Status:** ✅ 📝
+
+**User story:** Jako Administrator placówki, chcę mieć możliwość zarejestrowania wypisu pensjonariusza, oznaczenia zgonu lub zakończenia umowy z podaniem daty i powodu zerwania/rozwiązania umowy w zintegrowanym kreatorze (Wariant A), aby pobyt został formalnie zamknięty, zajmowane łóżko natychmiast zwolnione, zdarzenie odnotowane w historii i statystykach placówki, a rodzina zachowała wgląd do historii pobytu w trybie read-only (Wariant B).
+
+**Kryteria akceptacji:**
+- **AC1 (Procedura wypisu i powody rozwiązania):** Administrator ma dostęp do akcji „Zakończ pobyt” na karcie pensjonariusza. Zintegrowany formularz wymaga podania daty zakończenia (`contract_end_date`) oraz ustandaryzowanego powodu rozwiązania umowy (`contract_end_reason`: `death`, `family_request`, `transfer`, `non_payment`, `health_improvement`, `other`).
+- **AC2 (Rejestracja zgonu — Wariant A):** W przypadku wyboru powodu `death` formularz dynamicznie odsłania i wymaga podania daty zgonu (`death_date`). Zdarzenie jest rejestrowane z należytą powagą i neutralnością emocjonalną (zgodnie z ADR-005 i ADR-011).
+- **AC3 (Automatyczne zwolnienie łóżka):** Zakończenie pobytu atomowo zamyka aktywne przypisanie do łóżka pensjonariusza (`bed_assignments.unassigned_at = now()`), przywracając łóżko do puli wolnych miejsc placówki.
+- **AC4 (Wgląd rodziny read-only — Wariant B):** Wypis i zakończenie umowy nie ustawiają automatycznie `archived_at` — bliscy w Portalu Rodziny zachowują dostęp w trybie tylko do odczytu (read-only) do czasu ręcznej archiwizacji (`ADM-ARCHIVE`). Zdarzenie rejestrowane jest w `resident_events` (`contract_ended` i/lub `death`) na potrzeby modułu BI i wskaźników rotacji.
+- **AC5 (Ślad audytowy i ochrona danych):** Całość operacji jest rejestrowana w `audit_logs` pod akcją `RESIDENT_DISCHARGE` bez wycieku danych wrażliwych. W trybie impersonacji Super Admina akcja jest zablokowana.
 
 ### Domena 2 — Personel
 
@@ -539,7 +575,7 @@
 > ⚖️ **Rozstrzygnięcie:** Wycofane w PR #39 (`SEC-PESEL-HASH`, ADR-008). Zgodnie z nadrzędną regułą `AGENTS.md` (*„PESEL wyłącznie jako `pesel_hash`."*) oraz kontraktem `SEC-PESEL-HASH`, w bazie danych nie ma kolumny z wartością jawną ani odwracalną (`pesel_encrypted` i moduł kryptograficzny zostały usunięte z bazy i kodu). Podgląd wartości PESEL nie jest wspierany.
 
 #### [SC-NUR-11] Wskaźnik nieodpowiedzianych wiadomości na pulpicie dyżuru i odpowiedź głosowa personelu
-🔗 **Kontrakt:** `NUR-BOARD`, `FAM-MESSAGES`, `INFRA-GROQ-TRANSCRIPTION` · **WO:** [`NUR-UNANSWERED-MESSAGES`](workorders/NUR-UNANSWERED-MESSAGES.md) · **Status:** 🟡 W TRAKCIE
+🔗 **Kontrakt:** `NUR-BOARD`, `FAM-MESSAGES`, `INFRA-GROQ-TRANSCRIPTION` · **WO:** [`NUR-UNANSWERED-MESSAGES`](workorders/NUR-UNANSWERED-MESSAGES.md) · **Status:** ✅ 📝
 
 **User story:** Jako Pielęgniarka / Pracownik personelu na dyżurze, chcę widzieć na głównym pulpicie (`/staff`) informację o oczekujących, nieodpowiedzianych wiadomościach od rodzin podopiecznych oraz móc odpowiedzieć na nie głosowo, aby sprawnie zamykać pętlę komunikacji z bliskimi seniora bez konieczności ciągłego sprawdzania skrzynki i bez odrywania się od czynności opiekuńczych na pisanie na klawiaturze.
 

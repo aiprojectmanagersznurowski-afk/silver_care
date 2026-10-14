@@ -5,9 +5,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import {
   UserCircle2, Calendar, Heart, BedDouble, Users, FileText,
-  Clock, ArrowLeft, MapPin
+  Clock, ArrowLeft, MapPin, Pencil
 } from 'lucide-react'
 import Link from 'next/link'
+import { cookies } from 'next/headers'
+import { Button } from '@/components/ui/button'
 import {
   CARE_LEVEL_LABELS, CARE_LEVEL_COLORS,
   CONTRACT_SOURCE_LABELS, CONTRACT_END_REASON_LABELS,
@@ -23,6 +25,10 @@ import { PolarWearableCard } from '@/components/PolarWearableCard'
 import { ResidentContractAttachment } from '@/components/facility/ResidentContractAttachment'
 import { InviteFamilyDialog } from '@/components/InviteFamilyDialog'
 import { PrimaryContactButton } from '@/components/PrimaryContactButton'
+import { BusinessIdBadge } from '@/components/BusinessIdBadge'
+import { EditResidentDialog } from '@/components/EditResidentDialog'
+import { DischargeResidentDialog } from '@/components/DischargeResidentDialog'
+import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
 
 export default async function ResidentProfilePage({
   params,
@@ -31,6 +37,9 @@ export default async function ResidentProfilePage({
 }) {
   const { id } = await params
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const cookieStore = await cookies()
+  const isImpersonating = isImpersonationSessionActive(cookieStore, user)
 
   // Fetch resident with all relations
   const { data: resident, error } = await supabase
@@ -120,55 +129,96 @@ export default async function ResidentProfilePage({
               </Avatar>
 
               <div className="flex-1 pt-4 sm:pt-8">
-                <div className="flex flex-wrap items-center gap-3">
-                  <h1 className="text-3xl font-display font-semibold text-foreground">
-                    {resident.first_name} {resident.last_name}
-                  </h1>
-                  {isActive ? (
-                    <Badge className="bg-muted text-foreground border-border">
-                      Aktywny
-                    </Badge>
-                  ) : resident.death_date ? (
-                    <Badge className="bg-muted text-muted-foreground border-border">
-                      Zgon
-                    </Badge>
-                  ) : (
-                    <Badge className="bg-muted text-muted-foreground border-border">
-                      Zarchiwizowany
-                    </Badge>
-                  )}
-                  {resident.care_level && (
-                    <Badge
-                      style={{ backgroundColor: `${careLevelColor}20`, color: careLevelColor, borderColor: `${careLevelColor}40` }}
-                      className="border"
-                    >
-                      {CARE_LEVEL_LABELS[careLevel]}
-                    </Badge>
-                  )}
-                  {resident.is_zsn && (
-                    <Badge className="bg-muted text-foreground border-border border">
-                      ZSN: Znaczny stopień niepełnosprawności
-                    </Badge>
-                  )}
-                </div>
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h1 className="text-3xl font-display font-semibold text-foreground">
+                        {resident.first_name} {resident.last_name}
+                      </h1>
+                      <BusinessIdBadge type="resident" id={resident.id} />
+                      {isActive ? (
+                        <Badge className="bg-muted text-foreground border-border">
+                          Aktywny
+                        </Badge>
+                      ) : resident.death_date ? (
+                        <Badge className="bg-destructive/10 text-destructive border border-destructive/20">
+                          Zgon
+                        </Badge>
+                      ) : resident.contract_end_date && new Date(resident.contract_end_date) <= new Date() ? (
+                        <Badge className="bg-muted text-muted-foreground border border-border">
+                          Wypisany
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-muted text-muted-foreground border-border">
+                          Zarchiwizowany
+                        </Badge>
+                      )}
+                      {resident.care_level && (
+                        <Badge
+                          style={{ backgroundColor: `${careLevelColor}20`, color: careLevelColor, borderColor: `${careLevelColor}40` }}
+                          className="border"
+                        >
+                          {CARE_LEVEL_LABELS[careLevel]}
+                        </Badge>
+                      )}
+                      {resident.is_zsn && (
+                        <Badge className="bg-muted text-foreground border-border border">
+                          ZSN: Znaczny stopień niepełnosprawności
+                        </Badge>
+                      )}
+                    </div>
 
-                {/* Quick stats row */}
-                <div className="mt-3 flex flex-wrap gap-6 text-sm text-muted-foreground">
-                  {age !== null && (
-                    <span className="flex items-center gap-1.5">
-                      <Calendar className="h-4 w-4" /> {age} lat
-                    </span>
-                  )}
-                  {stayDays !== null && (
-                    <span className="flex items-center gap-1.5">
-                      <Clock className="h-4 w-4" /> Pobyt: {stayDays} dni
-                    </span>
-                  )}
-                  {activeAssignment && (
-                    <span className="flex items-center gap-1.5">
-                      <MapPin className="h-4 w-4" />
-                      Pokój {activeAssignment.beds?.rooms?.number}, łóżko {activeAssignment.beds?.label}
-                    </span>
+                    {/* Quick stats row */}
+                    <div className="mt-3 flex flex-wrap gap-6 text-sm text-muted-foreground">
+                      {age !== null && (
+                        <span className="flex items-center gap-1.5">
+                          <Calendar className="h-4 w-4" /> {age} lat
+                        </span>
+                      )}
+                      {stayDays !== null && (
+                        <span className="flex items-center gap-1.5">
+                          <Clock className="h-4 w-4" /> Pobyt: {stayDays} dni
+                        </span>
+                      )}
+                      {activeAssignment && (
+                        <span className="flex items-center gap-1.5">
+                          <MapPin className="h-4 w-4" />
+                          Pokój {activeAssignment.beds?.rooms?.number}, łóżko {activeAssignment.beds?.label}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {!isImpersonating && (
+                    <div className="flex items-center gap-2 shrink-0">
+                      <EditResidentDialog
+                        resident={{
+                          id: resident.id,
+                          first_name: resident.first_name,
+                          last_name: resident.last_name,
+                          gender: resident.gender,
+                          birth_date: resident.birth_date,
+                          admission_date: resident.admission_date,
+                          care_level: resident.care_level,
+                          is_zsn: resident.is_zsn,
+                          notes: resident.notes,
+                        }}
+                      />
+                      {isActive && (
+                        <DischargeResidentDialog
+                          resident={{
+                            id: resident.id,
+                            first_name: resident.first_name,
+                            last_name: resident.last_name,
+                          }}
+                          activeBedLabel={
+                            activeAssignment?.beds
+                              ? `Pokój ${activeAssignment.beds.rooms?.number}, łóżko ${activeAssignment.beds.label}`
+                              : null
+                          }
+                        />
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
@@ -190,10 +240,35 @@ export default async function ResidentProfilePage({
 
           {/* Personal data */}
           <Card className="rounded-xl border-none ring-1 ring-border">
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="flex items-center gap-2 text-lg text-foreground">
                 <UserCircle2 className="h-5 w-5 text-primary" /> Dane osobowe
               </CardTitle>
+              {!isImpersonating && (
+                <EditResidentDialog
+                  resident={{
+                    id: resident.id,
+                    first_name: resident.first_name,
+                    last_name: resident.last_name,
+                    gender: resident.gender,
+                    birth_date: resident.birth_date,
+                    admission_date: resident.admission_date,
+                    care_level: resident.care_level,
+                    is_zsn: resident.is_zsn,
+                    notes: resident.notes,
+                  }}
+                  trigger={
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                      Edytuj
+                    </Button>
+                  }
+                />
+              )}
             </CardHeader>
             <CardContent>
               <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
@@ -261,6 +336,12 @@ export default async function ResidentProfilePage({
                     ? CONTRACT_END_REASON_LABELS[resident.contract_end_reason as ContractEndReason | 'Nieznany'] || resident.contract_end_reason
                     : null}
                 />
+                {resident.death_date && (
+                  <DataField
+                    label="Data zgonu"
+                    value={format(new Date(resident.death_date), 'd MMMM yyyy', { locale: pl })}
+                  />
+                )}
                 <DataField
                   label="Źródło"
                   value={resident.contract_source

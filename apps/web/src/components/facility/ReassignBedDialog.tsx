@@ -176,7 +176,7 @@ export default function ReassignBedDialog({
         <ArrowRightLeft className="w-3.5 h-3.5 mr-1.5 text-primary" />
         Zmień łóżko
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-xl md:max-w-2xl p-6">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Przenieś pensjonariusza</DialogTitle>

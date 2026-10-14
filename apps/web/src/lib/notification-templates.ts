@@ -55,6 +55,21 @@ export function assertNoPiiOrHealthData(content: string): void {
 }
 
 /**
+ * Rozwiązuje bazowy URL aplikacji dla odnośników i zasobów statycznych (takich jak logo).
+ */
+function resolveSiteUrl(explicitUrl?: string): string {
+  if (explicitUrl) {
+    try {
+      const parsed = new URL(explicitUrl)
+      if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+        return `${parsed.protocol}//${parsed.host}`
+      }
+    } catch {}
+  }
+  return (process.env.NEXT_PUBLIC_SITE_URL || 'https://silvercare.space').replace(/\/$/, '')
+}
+
+/**
  * Główny generator responsywnego szablonu HTML kompatybilnego z klientami pocztowymi (Outlook, Gmail, Apple Mail).
  */
 function buildHtmlEmail(options: {
@@ -63,8 +78,11 @@ function buildHtmlEmail(options: {
   ctaText?: string
   ctaUrl?: string
   footerNote?: string
+  siteUrl?: string
 }): string {
   const { title, bodyHtml, ctaText, ctaUrl, footerNote } = options
+  const baseSiteUrl = options.siteUrl || resolveSiteUrl(ctaUrl)
+  const logoUrl = `${baseSiteUrl}/logo.png`
 
   const ctaSection = ctaText && ctaUrl
     ? `
@@ -109,9 +127,9 @@ function buildHtmlEmail(options: {
               <table border="0" cellpadding="0" cellspacing="0" width="100%">
                 <tr>
                   <td align="left">
-                    <span style="display: inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 20px; font-weight: 700; color: #2F6F5E; letter-spacing: -0.02em;">
-                      🌿 Silver Care
-                    </span>
+                    <a href="${baseSiteUrl}" target="_blank" style="text-decoration: none; display: inline-block;">
+                      <img src="${logoUrl}" alt="Silver Care" width="160" height="37" style="display: block; width: 160px; max-width: 100%; height: auto; border: 0; outline: none; text-decoration: none; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 20px; font-weight: 700; color: #2F6F5E;" />
+                    </a>
                   </td>
                 </tr>
               </table>

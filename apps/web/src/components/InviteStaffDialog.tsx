@@ -106,7 +106,7 @@ export function InviteStaffDialog() {
       <DialogTrigger render={<Button />}>
         Zaproś pracownika
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="sm:max-w-xl md:max-w-2xl p-6">
         <DialogHeader>
           <DialogTitle>Zaproś pracownika do placówki</DialogTitle>
           <DialogDescription>
@@ -114,29 +114,32 @@ export function InviteStaffDialog() {
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Adres e-mail</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="np. jan.kowalski@szpital.pl"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="role">Rola</Label>
-            <NativeSelect
-              id="role"
-              value={role}
-              onChange={(e) => setRole(e.target.value)} className="flex w-full items-center justify-between disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <NativeSelectOption value="nurse">Pielęgniarka / Pielęgniarz</NativeSelectOption>
-              <NativeSelectOption value="caregiver">Opiekun / Opiekunka (caregiver)</NativeSelectOption>
-              <NativeSelectOption value="paramedic">Sanitariusz / Sanitariuszka</NativeSelectOption>
-              <NativeSelectOption value="org_admin">Administrator Placówki (org_admin)</NativeSelectOption>
-            </NativeSelect>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Adres e-mail</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="np. jan.kowalski@szpital.pl"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="role">Rola</Label>
+              <NativeSelect
+                id="role"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="flex w-full items-center justify-between disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <NativeSelectOption value="nurse">Pielęgniarka / Pielęgniarz</NativeSelectOption>
+                <NativeSelectOption value="caregiver">Opiekun / Opiekunka (caregiver)</NativeSelectOption>
+                <NativeSelectOption value="paramedic">Sanitariusz / Sanitariuszka</NativeSelectOption>
+                <NativeSelectOption value="org_admin">Administrator Placówki (org_admin)</NativeSelectOption>
+              </NativeSelect>
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="avatar">Zdjęcie profilowe (opcjonalnie)</Label>

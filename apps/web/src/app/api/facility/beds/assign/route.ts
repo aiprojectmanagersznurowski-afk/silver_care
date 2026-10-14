@@ -76,7 +76,6 @@ export async function POST(request: Request) {
         .insert({
           bed_id,
           resident_id,
-          reason: reason || 'initial_assignment'
         })
 
       if (assignError) {

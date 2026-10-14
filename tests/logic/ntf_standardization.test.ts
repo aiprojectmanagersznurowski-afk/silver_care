@@ -30,6 +30,8 @@ describe('Standardized Notifications (@REQ: NTF-REPORT-READY, @REQ: NTF-NO-PII)'
       // HTML template verification
       expect(email.html).toContain('<!DOCTYPE html>')
       expect(email.html).toContain('Silver Care')
+      expect(email.html).toContain('/logo.png')
+      expect(email.html).toContain('alt="Silver Care"')
       expect(email.html).toContain('Zobacz raport w portalu')
       expect(email.html).toContain(portalUrl)
       // Check branding colors (sage green #2F6F5E or #6B8E73)
