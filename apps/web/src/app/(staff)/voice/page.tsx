@@ -35,30 +35,21 @@ function VoiceNoteContent() {
   }
 
   const resetNote = () => {
-    updateDraftId(null)
-    setTranscription(null)
-    setFollowupQuestion(null)
-    setFinalReport(null)
-    setError(null)
-    recorder.reset()
+    updateDraftId(null); setTranscription(null); setFollowupQuestion(null)
+    setFinalReport(null); setError(null); recorder.reset()
   }
 
   useEffect(() => {
-    if (initialResidentId) {
-      void Promise.resolve().then(() => setActiveResidentId(initialResidentId))
-    }
+    if (initialResidentId) void Promise.resolve().then(() => setActiveResidentId(initialResidentId))
   }, [initialResidentId])
 
   useEffect(() => {
     if (activeResidentId) {
-      supabase.from('residents').select('*').eq('id', activeResidentId).single().then(({ data }) => {
-        if (data) setResident(data)
-      })
+      supabase.from('residents').select('*').eq('id', activeResidentId).single().then(({ data }) => { if (data) setResident(data) })
     } else {
       void Promise.resolve().then(() => setLoadingResidents(true))
       supabase.from('residents').select('id, first_name, last_name').is('archived_at', null).order('last_name').then(({ data }) => {
-        if (data) setResidentsList(data)
-        setLoadingResidents(false)
+        if (data) setResidentsList(data); setLoadingResidents(false)
       })
     }
   }, [activeResidentId, supabase])
@@ -217,6 +208,12 @@ function VoiceNoteContent() {
           {(error || recorder.error) && (
             <div className="w-full rounded-xl bg-destructive/10 p-4 border border-destructive/20 text-center">
               <p className="text-sm font-medium text-destructive">{error || recorder.error}</p>
+              {recorder.fallbackAudioBlob && (
+                <div className="mt-3 flex flex-wrap justify-center gap-2">
+                  <button type="button" onClick={recorder.downloadFallbackAudio} className="min-h-11 rounded-lg bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground">Pobierz nagranie lokalnie</button>
+                  <button type="button" onClick={() => void recorder.retryFallbackAudio()} className="min-h-11 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Ponów próbę</button>
+                </div>
+              )}
             </div>
           )}
 

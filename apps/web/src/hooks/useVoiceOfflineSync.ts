@@ -7,7 +7,7 @@ import { toast } from 'sonner'
 export function useVoiceOfflineSync() {
   const syncQueue = useCallback(async () => {
     if (!isOnline()) return
-    const queue = getOfflineVoiceQueue()
+    const queue = await getOfflineVoiceQueue()
     if (queue.length === 0) return
 
     const res = await flushOfflineVoiceQueue()
