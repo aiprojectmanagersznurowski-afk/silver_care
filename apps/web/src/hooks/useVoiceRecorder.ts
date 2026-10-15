@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { detectSupportedAudioFormat } from '@/lib/voice-helpers'
-import { generateClientUuid, enqueueOfflineVoiceItem, isOnline } from '@/lib/voice-offline-queue'
+import { generateClientUuid, enqueueOfflineVoiceItem, isOnline, blobToBase64 } from '@/lib/voice-offline-queue'
 
 export type VoiceRecorderState = 'idle' | 'recording' | 'transcribing' | 'error'
 
@@ -97,9 +97,12 @@ export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}) {
       if (!isOnline()) {
         const clientUuid = (formData.get('client_uuid') as string) || generateClientUuid()
         const residentId = (formData.get('resident_id') as string) || ''
+        const base64Audio = await blobToBase64(blob).catch(() => '')
         enqueueOfflineVoiceItem({
           client_uuid: clientUuid,
           resident_id: residentId,
+          audioBlob: blob,
+          audioBase64: base64Audio,
           mimeType: blob.type || `audio/${ext}`,
           createdAt: Date.now(),
         })

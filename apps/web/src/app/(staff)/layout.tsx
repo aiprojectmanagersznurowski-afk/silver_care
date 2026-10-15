@@ -8,6 +8,7 @@ import { StaffNotificationBell } from '@/components/StaffNotificationBell'
 import { GlobalCommandPalette } from '@/components/GlobalCommandPalette'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
+import { StaffVoiceSyncListener } from '@/components/staff/StaffVoiceSyncListener'
 
 export default async function StaffLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient()
@@ -39,6 +40,7 @@ export default async function StaffLayout({ children }: { children: ReactNode })
           </div>
         </header>
         <div className="flex-1 p-4 md:p-6">
+          <StaffVoiceSyncListener />
           <div className="mx-auto w-full max-w-screen-2xl">{children}</div>
         </div>
       </SidebarInset>

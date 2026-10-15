@@ -7,6 +7,7 @@ export interface OfflineVoiceItem {
   client_uuid: string
   resident_id: string
   audioBlob?: Blob | null
+  audioBase64?: string
   mimeType?: string
   createdAt: number
   attempts?: number
@@ -67,6 +68,66 @@ export function clearOfflineVoiceQueue(): void {
   } catch {}
 }
 
+export function base64ToBlob(base64: string, mimeType = 'audio/webm'): Blob {
+  const byteCharacters = atob(base64)
+  const byteArrays: Uint8Array[] = []
+  const sliceSize = 512
+
+  for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+    const slice = byteCharacters.slice(offset, offset + sliceSize)
+    const byteNumbers = new Array(slice.length)
+    for (let i = 0; i < slice.length; i++) {
+      byteNumbers[i] = slice.charCodeAt(i)
+    }
+    byteArrays.push(new Uint8Array(byteNumbers))
+  }
+  return new Blob(byteArrays as BlobPart[], { type: mimeType })
+}
+
+export async function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      const dataUrl = reader.result as string
+      const base64 = dataUrl.split(',')[1] || ''
+      resolve(base64)
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
+  })
+}
+
+export async function sendOfflineVoiceItemToServer(item: OfflineVoiceItem): Promise<boolean> {
+  try {
+    const formData = new FormData()
+    formData.append('client_uuid', item.client_uuid)
+    formData.append('resident_id', item.resident_id)
+
+    let blob = item.audioBlob
+    const mime = item.mimeType || 'audio/webm'
+    if (!blob && item.audioBase64) {
+      blob = base64ToBlob(item.audioBase64, mime)
+    }
+    if (!blob) {
+      blob = new Blob(['empty-offline-recording'], { type: mime })
+    }
+
+    const ext = mime.includes('mp4') || mime.includes('m4a') ? 'm4a' : 'webm'
+    formData.append('file', blob, `offline-${item.client_uuid}.${ext}`)
+
+    const res = await fetch('/api/voice/transcribe', {
+      method: 'POST',
+      body: formData,
+    })
+
+    if (!res.ok) return false
+    const data = await res.json().catch(() => ({}))
+    return Boolean(data.success)
+  } catch {
+    return false
+  }
+}
+
 export async function flushOfflineVoiceQueue(
   syncFn?: (item: OfflineVoiceItem) => Promise<boolean>
 ): Promise<{ synced: number; failed: number }> {
@@ -77,9 +138,11 @@ export async function flushOfflineVoiceQueue(
   let failed = 0
   const remaining: OfflineVoiceItem[] = []
 
+  const performSync = syncFn || sendOfflineVoiceItemToServer
+
   for (const item of queue) {
     try {
-      const ok = syncFn ? await syncFn(item) : true
+      const ok = await performSync(item)
       if (ok) {
         synced++
       } else {

@@ -27,7 +27,11 @@ const STAFF_COMPONENTS = [
   'AgendaTimeline', 'AgendaTimelineClient', 'ReportCard', 'ResidentZsnCheckbox', 'AdminMessagesInbox', 'ResidentMobileCard',
 ].map((n) => path.join(WEB, `components/${n}.tsx`));
 
-const STAFF_FILES = [...scan(path.join(WEB, 'app/(staff)')), ...STAFF_COMPONENTS].filter((f) => fs.existsSync(f));
+const STAFF_FILES = [
+  ...scan(path.join(WEB, 'app/(staff)')),
+  ...scan(path.join(WEB, 'components/staff')),
+  ...STAFF_COMPONENTS,
+].filter((f) => fs.existsSync(f));
 
 const violations = (re: RegExp) =>
   STAFF_FILES.flatMap((f) => {
@@ -57,7 +61,10 @@ describe('Panel personelu: tokeny szablonu (@REQ: UI-TEMPLATE-ALIGNMENT)', () =>
   });
 
   it('przełącznik widoku tablicy to ToggleGroup z szablonu @REQ: UI-TEMPLATE-ALIGNMENT', () => {
-    const board = fs.readFileSync(path.join(WEB, 'components/StaffBoardClient.tsx'), 'utf-8');
+    const headerPath = path.join(WEB, 'components/staff/board/StaffBoardHeader.tsx');
+    const board = fs.existsSync(headerPath)
+      ? fs.readFileSync(headerPath, 'utf-8')
+      : fs.readFileSync(path.join(WEB, 'components/StaffBoardClient.tsx'), 'utf-8');
     expect(board).toContain("@/components/ui/toggle-group");
     expect(board).toContain('<ToggleGroup');
   });
@@ -84,7 +91,13 @@ describe('Kolor nie niesie oceny w panelu personelu (@REQ: MDR-NO-INTERPRETATION
   });
 
   it('status „Brak wpisu" i brak łóżka są neutralne, bez czerwieni @REQ: MDR-NO-INTERPRETATION', () => {
-    const board = fs.readFileSync(path.join(WEB, 'components/StaffBoardClient.tsx'), 'utf-8');
+    const filterPath = path.join(WEB, 'components/staff/board/StaffBoardFilterBar.tsx');
+    const standardCardPath = path.join(WEB, 'components/staff/board/StaffStandardCard.tsx');
+    const boardPath = path.join(WEB, 'components/StaffBoardClient.tsx');
+    const board = [filterPath, standardCardPath, boardPath]
+      .filter((f) => fs.existsSync(f))
+      .map((f) => fs.readFileSync(f, 'utf-8'))
+      .join('\n');
     expect(board).not.toMatch(/Brak wpisu[^\n]*(destructive|rose|red)/);
     expect(board).not.toMatch(/(destructive|rose-|red-)[^\n]*Brak przypisanego łóżka/);
   });

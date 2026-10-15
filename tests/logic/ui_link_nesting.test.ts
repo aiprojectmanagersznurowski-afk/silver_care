@@ -37,10 +37,18 @@ describe('Brak <button> zagnieżdżonego w <Link> (@REQ: UI-ACCESSIBILITY)', () 
   });
 
   it('akcja „Wiadomości od rodziny" na tablicy personelu jest linkiem do wątku pensjonariusza @REQ: FAM-MESSAGES', () => {
-    const src = fs.readFileSync(path.join(webSrcDir, 'components/StaffBoardClient.tsx'), 'utf-8');
-    const link = src.match(/<Link\b[^>]*href=\{`\/staff\/messages\?residentId=\$\{resident\.id\}`\}[^>]*>([\s\S]*?)<\/Link>/);
+    const cardPath = path.join(webSrcDir, 'components/staff/board/StaffStandardCard.tsx');
+    const src = fs.existsSync(cardPath)
+      ? fs.readFileSync(cardPath, 'utf-8')
+      : fs.readFileSync(path.join(webSrcDir, 'components/StaffBoardClient.tsx'), 'utf-8');
+    const matches = [
+      ...src.matchAll(
+        /<Link\b[^>]*href=\{`\/staff\/messages\?residentId=\$\{(?:resId|resident\.id)\}`\}[^>]*>([\s\S]*?)<\/Link>/g
+      ),
+    ];
+    const link = matches.find((m) => m[1].includes('Wiadomości od rodziny'));
 
-    expect(link).not.toBeNull();
+    expect(link).toBeDefined();
     expect(link![0]).toMatch(/min-h-\[44px\]/);
     expect(link![1]).toContain('Wiadomości od rodziny');
     expect(link![1]).not.toMatch(/<button\b/);
