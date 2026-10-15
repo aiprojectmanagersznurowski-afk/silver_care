@@ -96,7 +96,7 @@ export function StaffMessageComposer({
           onClick={toggleVoiceRecording}
           disabled={isSending || isTranscribing}
           aria-label={isRecording ? 'Zatrzymaj nagrywanie' : 'Podyktuj odpowiedź'}
-          className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all ${
+          className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3.5 py-2.5 text-sm font-semibold min-h-11 min-w-11 transition-all ${
             isRecording
               ? 'bg-destructive text-white hover:bg-destructive/90 animate-pulse'
               : isTranscribing
@@ -122,7 +122,7 @@ export function StaffMessageComposer({
         <button
           onClick={onSendReply}
           disabled={isSending || !replyText.trim()}
-          className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${
+          className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold min-h-11 min-w-11 transition-all ${
             replyText.trim() && !isSending
               ? 'bg-primary text-white hover:bg-primary/90'
               : 'bg-muted text-muted-foreground cursor-not-allowed'

@@ -105,7 +105,7 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
         <button
           onClick={fetchMessages}
           disabled={loading}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted/50 transition-colors disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted/50 transition-colors disabled:opacity-50 min-h-11"
         >
           <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} /> Odśwież
         </button>

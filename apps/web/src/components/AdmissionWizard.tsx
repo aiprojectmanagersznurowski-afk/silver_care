@@ -39,7 +39,7 @@ export function AdmissionWizard() {
 
   return (
     <Dialog open={open} onOpenChange={(val) => { setOpen(val); if (!val) resetForm(); }}>
-      <DialogTrigger render={<Button className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2" />}>
+      <DialogTrigger render={<Button className="min-h-11 px-4 bg-primary hover:bg-primary/90 text-primary-foreground gap-2" />}>
         <UserPlus className="w-4 h-4" />
         Nowe Przyjęcie (Kreator)
       </DialogTrigger>
@@ -132,6 +132,7 @@ export function AdmissionWizard() {
                   variant="outline"
                   onClick={() => setStep((s) => (s === 3 ? 2 : 1) as WizardStep)}
                   disabled={submitting}
+                  className="min-h-11 px-4"
                 >
                   Wstecz
                 </Button>
@@ -145,7 +146,7 @@ export function AdmissionWizard() {
                     type="button"
                     onClick={handleNextToStep2}
                     disabled={!firstName.trim() || !lastName.trim() || !calculatedGender || !!idError || idValue.trim().length !== 11}
-                    className="bg-primary text-primary-foreground"
+                    className="min-h-11 px-4 bg-primary text-primary-foreground"
                   >
                     Dalej (Wybór łóżka)
                   </Button>
@@ -155,7 +156,7 @@ export function AdmissionWizard() {
                   <Button
                     type="button"
                     onClick={() => { setStatusMessage(null); setStep(3); }}
-                    className="bg-primary text-primary-foreground"
+                    className="min-h-11 px-4 bg-primary text-primary-foreground"
                   >
                     Dalej (Podsumowanie)
                   </Button>
@@ -166,7 +167,7 @@ export function AdmissionWizard() {
                     type="button"
                     onClick={handleSubmitAdmission}
                     disabled={submitting}
-                    className="bg-primary text-primary-foreground gap-2"
+                    className="min-h-11 px-4 bg-primary text-primary-foreground gap-2"
                   >
                     {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                     {submitting ? 'Przyjmowanie...' : 'Zatwierdź przyjęcie'}

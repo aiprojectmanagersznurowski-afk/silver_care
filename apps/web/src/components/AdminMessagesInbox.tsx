@@ -106,9 +106,9 @@ export function AdminMessagesInbox() {
   };
 
   return (
-    <div className="flex gap-6 h-[600px]">
+    <div className="flex flex-col md:flex-row gap-6 h-[600px]">
       {/* Lista wątków */}
-      <div className="w-[300px] border border-border rounded-lg overflow-y-auto bg-card flex-shrink-0">
+      <div className="w-full md:w-[300px] border border-border rounded-lg overflow-y-auto bg-card shrink-0">
         <div className="p-4 border-b border-border bg-muted/20">
           <h2 className="font-semibold text-lg">Skrzynka wiadomości</h2>
         </div>

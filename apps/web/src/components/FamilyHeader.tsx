@@ -225,7 +225,7 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
             <Link
               key={item.label}
               href={item.href}
-              className={`flex flex-col items-center gap-1 rounded-xl px-4 py-1.5 text-sm font-medium transition-colors ${
+              className={`flex flex-col items-center justify-center gap-1 rounded-xl px-4 py-1.5 text-sm font-medium min-h-11 min-w-11 transition-colors ${
                 isActive 
                   ? "text-primary font-bold bg-accent/60" 
                   : "text-muted-foreground hover:text-foreground"

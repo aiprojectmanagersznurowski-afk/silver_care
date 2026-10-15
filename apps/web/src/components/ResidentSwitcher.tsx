@@ -34,7 +34,7 @@ export function ResidentSwitcher({ residents, selectedId, onSelect }: ResidentSw
           aria-selected={r.id === selectedId}
           onClick={() => onSelect(r.id)}
           className={`
-            inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all
+            inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all min-h-11 min-w-11
             ${r.id === selectedId
               ? 'bg-primary text-primary-foreground'
               : 'bg-muted text-muted-foreground hover:bg-muted/80'

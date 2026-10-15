@@ -190,7 +190,7 @@ export function FamilyDashboardClient({ resident, reports, selectedDateMedia = [
                         <div 
                           key={i} 
                           onClick={() => openGalleryModal(i)}
-                          className="group relative h-[250px] w-[350px] overflow-hidden rounded-xl shrink-0 cursor-pointer"
+                          className="group relative h-[250px] w-[280px] sm:w-[350px] max-w-[85vw] overflow-hidden rounded-xl shrink-0 cursor-pointer"
                         >
                           <img
                             src={url}
