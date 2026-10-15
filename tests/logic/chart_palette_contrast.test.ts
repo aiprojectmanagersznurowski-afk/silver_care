@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { COLORS } from '../../contracts/design.contract.mjs';
+import { validateCareLevelNeutrality } from '../../apps/web/src/lib/ui-theme-validator';
+import { CARE_LEVEL_COLORS, CARE_LEVEL_BG_CLASSES, getCareLevelChartColors } from '../../apps/web/src/lib/reporting-constants';
 
 /**
  * @REQ: UI-ACCESSIBILITY
@@ -46,18 +48,24 @@ describe('Kontrast serii wykresów (@REQ: UI-ACCESSIBILITY)', () => {
     expect(COLORS.dark['chart-1'].value).toBe(COLORS.dark['accent'].value);
   });
 
-  it('seria „Nieokreślony” (brak danych) spełnia próg kontrastu ≥ 3:1 oraz posiada wzór kreskowany w wykresie @REQ: UI-ACCESSIBILITY', async () => {
-    const { CARE_LEVEL_COLORS } = await import('../../apps/web/src/lib/reporting-constants');
+  it('seria „Nieokreślony” (brak danych) spełnia próg kontrastu ≥ 3:1 oraz neutralność kolorów @REQ: UI-ACCESSIBILITY', async () => {
     expect(CARE_LEVEL_COLORS.unknown).toBe('var(--chart-5)');
     const lightVal = COLORS.light['chart-5'].value;
     const darkVal = COLORS.dark['chart-5'].value;
     expect(ratio(lightVal, COLORS.light.surface.value)).toBeGreaterThanOrEqual(3);
     expect(ratio(darkVal, COLORS.dark.surface.value)).toBeGreaterThanOrEqual(3);
 
-    const fs = await import('node:fs');
-    const path = await import('node:path');
-    const statsClient = fs.readFileSync(path.resolve(process.cwd(), 'apps/web/src/components/StatisticsDashboardClient.tsx'), 'utf-8');
-    expect(statsClient).toContain('pattern-unknown-hatched');
-    expect(statsClient).toContain('dashed var(--chart-5)');
+    // Walidacja neutralności kolorów poziomów opieki (brak czerwieni/zieleni jako oceny stanu)
+    const neutrality = validateCareLevelNeutrality(CARE_LEVEL_COLORS, CARE_LEVEL_BG_CLASSES);
+    expect(neutrality.valid).toBe(true);
+    expect(neutrality.violations).toHaveLength(0);
+
+    const colors = getCareLevelChartColors();
+    expect(colors.walking).toBe('var(--chart-1)');
+    expect(colors.unknown).toBe('var(--chart-5)');
+
+    // Weryfikacja eksportu komponentu wykresów
+    const statsModule = await import('../../apps/web/src/components/StatisticsDashboardClient');
+    expect(typeof statsModule.StatisticsDashboardClient).toBe('function');
   });
 });

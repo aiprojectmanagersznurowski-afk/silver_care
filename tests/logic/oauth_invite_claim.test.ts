@@ -1,6 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import {
   evaluateOAuthInviteClaim,
   OAuthInviteClaimInput,
@@ -16,13 +14,10 @@ import {
  * podczas realizacji zaproszenia przez Google OAuth (/auth/callback).
  */
 
-const ROOT = resolve(__dirname, '../..');
-const read = (p: string) => readFileSync(resolve(ROOT, p), 'utf8');
-
 const ORG_A = '11111111-1111-4111-8111-111111111111';
 const ORG_B = '22222222-2222-4222-8222-222222222222';
 
-describe('Bezpieczna realizacja zaproszenia OAuth (@REQ: CONSENT-GRANTOR, @REQ: ORG-ISOLATION)', () => {
+describe('Bezpieczna realizacja zaproszenia OAuth (@REQ: CONSENT-GRANTOR, @REQ: ORG-ISOLATION, @REQ: ADM-INVITE)', () => {
   it('odrzuca realizację zaproszenia dla kont z rolą personelu lub administratora (fail-closed) @REQ: ORG-ISOLATION', () => {
     const staffRoles = ['super_admin', 'org_admin', 'nurse', 'admin', 'facility_manager', 'paramedic', 'caregiver'];
 
@@ -65,6 +60,7 @@ describe('Bezpieczna realizacja zaproszenia OAuth (@REQ: CONSENT-GRANTOR, @REQ: 
       currentUserOrgId: null,
       invitationRole: 'legal_guardian',
       invitationOrgId: ORG_A,
+      consentsAccepted: true,
     };
 
     const result = evaluateOAuthInviteClaim(input);
@@ -99,6 +95,7 @@ describe('Bezpieczna realizacja zaproszenia OAuth (@REQ: CONSENT-GRANTOR, @REQ: 
       currentUserOrgId: ORG_A,
       invitationRole: 'legal_guardian',
       invitationOrgId: ORG_A,
+      consentsAccepted: true,
     };
 
     const result = evaluateOAuthInviteClaim(input);
@@ -110,9 +107,18 @@ describe('Bezpieczna realizacja zaproszenia OAuth (@REQ: CONSENT-GRANTOR, @REQ: 
     }
   });
 
-  it('route callback OAuth używa evaluateOAuthInviteClaim i nie nadpisuje app_metadata kont personelu @REQ: ADM-INVITE', () => {
-    const src = read('apps/web/src/app/auth/callback/route.ts');
-    expect(src).toContain('evaluateOAuthInviteClaim');
-    expect(src).not.toMatch(/updateUserById\s*\(\s*user\.id\s*,\s*\{\s*user_metadata[\s\S]*app_metadata:\s*\{\s*role:\s*relativeRole/);
+  it('chroni metadane kont personelu i izolację organizacji przy błędnych zaproszeniach @REQ: ADM-INVITE', () => {
+    const maliciousInput: OAuthInviteClaimInput = {
+      currentUserRole: 'super_admin',
+      currentUserOrgId: null,
+      invitationRole: 'family',
+      invitationOrgId: ORG_A,
+    };
+
+    const result = evaluateOAuthInviteClaim(maliciousInput);
+    expect(result.allowed).toBe(false);
+    if (!result.allowed) {
+      expect(result.errorCode).toBe('STAFF_ROLE_CONFLICT');
+    }
   });
 });

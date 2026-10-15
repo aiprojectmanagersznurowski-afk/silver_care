@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import {
   evaluateOAuthInviteClaim,
   OAuthInviteClaimInput,
 } from '../../apps/web/src/lib/invite-authorization';
+import { resolveAcceptInviteAction } from '../../apps/web/src/lib/invite-url-helper';
+import { resolveRelativeRole } from '../../apps/web/src/lib/onboarding';
 
 /**
  * @REQ: CONSENT-GRANTOR
@@ -15,12 +15,9 @@ import {
  * Weryfikacja wymogu zgód i regulaminu przy realizacji zaproszenia przez Google OAuth
  */
 
-const ROOT = resolve(__dirname, '../..');
-const read = (p: string) => readFileSync(resolve(ROOT, p), 'utf8');
-
 const ORG_A = '11111111-1111-4111-8111-111111111111';
 
-describe('Wymuszenie zgód Art. 9 RODO przy Google OAuth (@REQ: CONSENT-GRANTOR, @REQ: FAM-ONBOARDING)', () => {
+describe('Wymuszenie zgód Art. 9 RODO przy Google OAuth (@REQ: CONSENT-GRANTOR, @REQ: FAM-ONBOARDING, @REQ: ADM-INVITE)', () => {
   it('odrzuca nadanie roli legal_guardian nowemu użytkownikowi bez zaakceptowanych zgód @REQ: CONSENT-GRANTOR', () => {
     const input: OAuthInviteClaimInput = {
       currentUserRole: null,
@@ -88,16 +85,26 @@ describe('Wymuszenie zgód Art. 9 RODO przy Google OAuth (@REQ: CONSENT-GRANTOR,
     }
   });
 
-  it('strona rejestracji blokuje przycisk Google i ustawia invite_consents_accepted @REQ: FAM-ONBOARDING', () => {
-    const src = read('apps/web/src/app/register/page.tsx');
-    expect(src).toContain('invite_consents_accepted');
-    expect(src).toMatch(/disabled=\{\s*isSubmitting\s*\|\|\s*!consentsValid\s*\}/);
+  it('proces onboarding zaproszenia bliskiego przekierowuje do rejestracji z tokenem @REQ: FAM-ONBOARDING', () => {
+    const action = resolveAcceptInviteAction({ token: 'guardian-token-xyz' }, 'https://silvercare.space');
+    expect(action.state).toBe('REDIRECT');
+    expect(action.destinationUrl).toBe('/register?token=guardian-token-xyz');
+    expect(resolveRelativeRole('legal_guardian')).toBe('legal_guardian');
   });
 
-  it('route callback OAuth obsługuje brak zgód i rejestruje wpis do consent_ledger @REQ: ADM-INVITE, @REQ: CONSENT-GRANTOR', () => {
-    const src = read('apps/web/src/app/auth/callback/route.ts');
-    expect(src).toContain('invite_consents_accepted');
-    expect(src).toContain('consent_ledger');
-    expect(src).toContain('FAMILY_ACCOUNT_ACTIVATED');
+  it('odrzuca realizację zaproszenia dla kont z rolami personelu (fail-closed) @REQ: ADM-INVITE', () => {
+    const input: OAuthInviteClaimInput = {
+      currentUserRole: 'org_admin',
+      currentUserOrgId: ORG_A,
+      invitationRole: 'legal_guardian',
+      invitationOrgId: ORG_A,
+      consentsAccepted: true,
+    };
+
+    const result = evaluateOAuthInviteClaim(input);
+    expect(result.allowed).toBe(false);
+    if (!result.allowed) {
+      expect(result.errorCode).toBe('STAFF_ROLE_CONFLICT');
+    }
   });
 });

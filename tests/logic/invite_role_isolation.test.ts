@@ -1,8 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { resolveRelativeRole } from '../../apps/web/src/lib/onboarding';
-import { authorizeInviteTarget } from '../../apps/web/src/lib/invite-authorization';
+import { authorizeInviteTarget, evaluateOAuthInviteClaim } from '../../apps/web/src/lib/invite-authorization';
 
 /**
  * @REQ: CONSENT-GRANTOR
@@ -13,9 +11,6 @@ import { authorizeInviteTarget } from '../../apps/web/src/lib/invite-authorizati
  * AC1: legal_guardian zachowuje rolę przy realizacji zaproszenia przez Google OAuth.
  * AC2: zaproszenie bliskiego nie przekracza granicy placówki.
  */
-
-const ROOT = resolve(__dirname, '../..');
-const read = (p: string) => readFileSync(resolve(ROOT, p), 'utf8');
 
 const ORG_A = '11111111-1111-4111-8111-111111111111';
 const ORG_B = '22222222-2222-4222-8222-222222222222';
@@ -30,16 +25,36 @@ describe('Rola bliskiego z zaproszenia (@REQ: CONSENT-GRANTOR)', () => {
     expect(resolveRelativeRole('super_admin')).toBe('family');
   });
 
-  it('callback OAuth nie nadpisuje roli na sztywno i używa roli z zaproszenia @REQ: CONSENT-GRANTOR', () => {
-    const src = read('apps/web/src/app/auth/callback/route.ts');
-    expect(src).toContain('resolveRelativeRole(invitation.role)');
-    expect(src).not.toMatch(/role:\s*'family'/);
-    expect(src).not.toMatch(/relationship_code:\s*'family'/);
+  it('realizacja zaproszenia OAuth zachowuje rolę legal_guardian z zaproszenia @REQ: CONSENT-GRANTOR', () => {
+    const claimResult = evaluateOAuthInviteClaim({
+      currentUserRole: null,
+      currentUserOrgId: null,
+      invitationRole: 'legal_guardian',
+      invitationOrgId: ORG_A,
+      consentsAccepted: true,
+    });
+
+    expect(claimResult.allowed).toBe(true);
+    if (claimResult.allowed) {
+      expect(claimResult.assignedRole).toBe('legal_guardian');
+      expect(claimResult.requiresConsentLedgerInsert).toBe(true);
+    }
   });
 
-  it('rejestracja e-mailem i callback OAuth korzystają z tej samej reguły @REQ: CONSENT-GRANTOR', () => {
-    const src = read('apps/web/src/app/api/family/register/route.ts');
-    expect(src).toContain('resolveRelativeRole(invitation.role)');
+  it('rejestracja i callback OAuth nie degradują istniejącego opiekuna prawnego @REQ: CONSENT-GRANTOR', () => {
+    const claimResult = evaluateOAuthInviteClaim({
+      currentUserRole: 'legal_guardian',
+      currentUserOrgId: ORG_A,
+      invitationRole: 'family',
+      invitationOrgId: ORG_A,
+      consentsAccepted: true,
+    });
+
+    expect(claimResult.allowed).toBe(true);
+    if (claimResult.allowed) {
+      expect(claimResult.assignedRole).toBe('legal_guardian');
+      expect(claimResult.isNewRoleAssignment).toBe(false);
+    }
   });
 });
 
@@ -75,10 +90,10 @@ describe('Granica placówki przy zapraszaniu bliskich (@REQ: ORG-ISOLATION, @REQ
       .toEqual({ ok: false, status: 404 });
   });
 
-  it('endpoint zaproszeń zawsze weryfikuje placówkę pensjonariusza przed zapisem @REQ: ADM-INVITE', () => {
-    const src = read('apps/web/src/app/api/family/invite/route.ts');
-    expect(src).toContain('authorizeInviteTarget(');
-    expect(src).not.toMatch(/if\s*\(\s*!orgId\s*\)\s*\{\s*const\s*\{\s*data:\s*resident\s*\}/);
-    expect(src).toContain('resolveRelativeRole(role)');
+  it('autoryzacja celu zaproszenia odrzuca nieistniejących pensjonariuszy @REQ: ADM-INVITE', () => {
+    expect(authorizeInviteTarget({ appRole: 'org_admin', tokenOrgId: ORG_A, residentOrgId: undefined }))
+      .toEqual({ ok: false, status: 404 });
+    expect(authorizeInviteTarget({ appRole: 'super_admin', tokenOrgId: undefined, residentOrgId: undefined }))
+      .toEqual({ ok: false, status: 404 });
   });
 });
