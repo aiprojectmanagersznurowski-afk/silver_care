@@ -303,7 +303,7 @@ interface ResidentRelativeLinkItem {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+                      className="h-8 gap-1.5 text-sm text-muted-foreground hover:text-foreground"
                     >
                       <Pencil className="h-3.5 w-3.5" />
                       Edytuj
@@ -399,7 +399,7 @@ interface ResidentRelativeLinkItem {
               </dl>
 
               <div className="mt-6 pt-6 border-t border-border">
-                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">
+                <h4 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-2">
                   Dokument umowy (Załącznik)
                 </h4>
                 <ResidentContractAttachment
@@ -436,11 +436,11 @@ interface ResidentRelativeLinkItem {
                           {EVENT_TYPE_LABELS[event.event_type as EventType] || event.event_type}
                         </p>
                         {event.event_reason && (
-                          <p className="text-xs text-muted-foreground mt-0.5">
+                          <p className="text-sm text-muted-foreground mt-0.5">
                             {CONTRACT_END_REASON_LABELS[event.event_reason as ContractEndReason | 'Nieznany'] || event.event_reason}
                           </p>
                         )}
-                        <p className="text-xs text-muted-foreground/60 mt-0.5">
+                        <p className="text-sm text-muted-foreground/60 mt-0.5">
                           {format(new Date(event.event_date), 'd MMMM yyyy', { locale: pl })}
                         </p>
                       </div>
@@ -480,7 +480,7 @@ interface ResidentRelativeLinkItem {
                       Sektor: {activeAssignment.beds.rooms.sector}
                     </p>
                   )}
-                  <p className="text-xs text-muted-foreground/60 mt-2">
+                  <p className="text-sm text-muted-foreground/60 mt-2">
                     Od: {format(new Date(activeAssignment.assigned_at), 'd MMM yyyy', { locale: pl })}
                   </p>
                 </div>
@@ -492,14 +492,14 @@ interface ResidentRelativeLinkItem {
 
               {pastAssignments.length > 0 && (
                 <>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Historia</p>
+                  <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Historia</p>
                   <div className="space-y-2">
                     {pastAssignments.slice(0, 5).map((a) => (
                       <div key={a.id} className="text-sm text-muted-foreground flex justify-between">
                         <span>
                           Pokój {a.beds?.rooms?.number}, łóżko {a.beds?.label}
                         </span>
-                        <span className="text-xs">
+                        <span className="text-sm">
                           {format(new Date(a.assigned_at), 'd.MM.yy', { locale: pl })} – {format(new Date(a.unassigned_at!), 'd.MM.yy', { locale: pl })}
                         </span>
                       </div>
@@ -551,11 +551,11 @@ interface ResidentRelativeLinkItem {
                             isPrimary={!!link.is_primary_contact}
                           />
                         </div>
-                        <p className="text-xs text-muted-foreground mt-0.5">
+                        <p className="text-sm text-muted-foreground mt-0.5">
                           {link.role === 'legal_guardian' ? 'Opiekun prawny' : 'Rodzina'}
                         </p>
                       </div>
-                      <Badge variant="outline" className="text-xs">
+                      <Badge variant="outline" className="text-sm">
                         {link.role}
                       </Badge>
                     </div>
@@ -583,7 +583,7 @@ interface ResidentRelativeLinkItem {
                     <div key={pkg.id} className="flex items-center justify-between rounded-xl bg-primary/5 p-3">
                       <div>
                         <p className="text-sm font-medium text-foreground">{pkg.package_name}</p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-sm text-muted-foreground">
                           {PACKAGE_TYPE_LABELS[pkg.package_type as PackageType] || pkg.package_type}
                         </p>
                       </div>

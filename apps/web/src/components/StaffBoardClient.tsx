@@ -204,7 +204,7 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
           {activeFiltersCount > 0 && (
             <button
               onClick={clearFilters}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-muted/50 px-3 py-2 text-xs font-semibold text-muted-foreground hover:bg-muted hover:text-foreground transition-colors min-h-[40px]"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-muted/50 px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-muted hover:text-foreground transition-colors min-h-[40px]"
             >
               Wyczyść ({activeFiltersCount})
               <X className="h-3.5 w-3.5" />
@@ -237,7 +237,7 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
               )}
             </div>
 
-            <div className="text-xs font-medium text-muted-foreground self-end sm:self-center">
+            <div className="text-sm font-medium text-muted-foreground self-end sm:self-center">
               Wyników: <span className="font-semibold text-foreground">{filtered.length}</span> z {residents.length}
             </div>
           </div>
@@ -246,11 +246,11 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
           <div className="space-y-2.5 pt-1 border-t border-border">
             {/* Tokeny statusu notatki */}
             <div data-filter-group="status" className="flex flex-wrap items-center gap-1.5">
-              <span className="text-xs font-medium text-muted-foreground w-14 shrink-0">Status:</span>
+              <span className="text-sm font-medium text-muted-foreground w-14 shrink-0">Status:</span>
               <button
                 type="button"
                 onClick={() => setStatusFilter('all')}
-                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                className={`rounded-full px-3 py-1 text-sm font-medium transition-colors ${
                   statusFilter === 'all'
                     ? 'bg-foreground text-background'
                     : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -261,7 +261,7 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
               <button
                 type="button"
                 onClick={() => setStatusFilter('none')}
-                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                className={`rounded-full px-3 py-1 text-sm font-medium transition-colors flex items-center gap-1.5 ${
                   statusFilter === 'none'
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-muted text-foreground ring-1 ring-inset ring-border hover:bg-muted'
@@ -273,7 +273,7 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
               <button
                 type="button"
                 onClick={() => setStatusFilter('draft')}
-                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                className={`rounded-full px-3 py-1 text-sm font-medium transition-colors flex items-center gap-1.5 ${
                   statusFilter === 'draft'
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-muted text-foreground ring-1 ring-inset ring-border hover:bg-muted'
@@ -285,7 +285,7 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
               <button
                 type="button"
                 onClick={() => setStatusFilter('ready')}
-                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                className={`rounded-full px-3 py-1 text-sm font-medium transition-colors flex items-center gap-1.5 ${
                   statusFilter === 'ready'
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-muted text-foreground ring-1 ring-inset ring-border hover:bg-muted'
@@ -299,11 +299,11 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
             {/* Tokeny piętra */}
             {floors.length > 0 && (
               <div data-filter-group="floor" className="flex flex-wrap items-center gap-1.5">
-                <span className="text-xs font-medium text-muted-foreground w-14 shrink-0">Piętro:</span>
+                <span className="text-sm font-medium text-muted-foreground w-14 shrink-0">Piętro:</span>
                 <button
                   type="button"
                   onClick={() => setFloorFilter('all')}
-                  className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                  className={`rounded-full px-3 py-1 text-sm font-medium transition-colors ${
                     floorFilter === 'all'
                       ? 'bg-foreground text-background'
                       : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -316,7 +316,7 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
                     key={f}
                     type="button"
                     onClick={() => setFloorFilter(f)}
-                    className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                    className={`rounded-full px-3 py-1 text-sm font-medium transition-colors ${
                       floorFilter === f
                         ? 'bg-foreground text-background'
                         : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -331,11 +331,11 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
             {/* Tokeny sali (gdy wybrane piętro) */}
             {floorFilter !== 'all' && roomsForCurrentFloor.length > 0 && (
               <div data-filter-group="room" className="flex flex-wrap items-center gap-1.5">
-                <span className="text-xs font-medium text-muted-foreground w-14 shrink-0">Sala:</span>
+                <span className="text-sm font-medium text-muted-foreground w-14 shrink-0">Sala:</span>
                 <button
                   type="button"
                   onClick={() => setRoomFilter('all')}
-                  className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                  className={`rounded-full px-3 py-1 text-sm font-medium transition-colors ${
                     roomFilter === 'all'
                       ? 'bg-foreground text-background'
                       : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -348,7 +348,7 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
                     key={r}
                     type="button"
                     onClick={() => setRoomFilter(r)}
-                    className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                    className={`rounded-full px-3 py-1 text-sm font-medium transition-colors ${
                       roomFilter === r
                         ? 'bg-foreground text-background'
                         : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -362,12 +362,12 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
 
             {/* Token oczekujących wiadomości od rodzin */}
             <div data-filter-group="messages" className="flex flex-wrap items-center gap-1.5 pt-1">
-              <span className="text-xs font-medium text-muted-foreground w-14 shrink-0">Kontakt:</span>
+              <span className="text-sm font-medium text-muted-foreground w-14 shrink-0">Kontakt:</span>
               <button
                 type="button"
                 data-testid="filter-unanswered-messages"
                 onClick={() => setOnlyUnansweredFilter((prev) => !prev)}
-                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                className={`rounded-full px-3 py-1 text-sm font-medium transition-colors flex items-center gap-1.5 ${
                   onlyUnansweredFilter
                     ? 'bg-primary text-primary-foreground'
                     : totalUnansweredCount > 0
@@ -384,11 +384,11 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
           {/* Aktywne tokeny filtrów (Active chips) */}
           {activeFiltersCount > 0 && (
             <div className="pt-2 border-t border-border flex flex-wrap items-center gap-2">
-              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
                 Aktywne filtry:
               </span>
               {searchFilter && (
-                <span className="inline-flex items-center gap-1 bg-primary/10 text-primary text-xs font-medium px-2.5 py-0.5 rounded-full">
+                <span className="inline-flex items-center gap-1 bg-primary/10 text-primary text-sm font-medium px-2.5 py-0.5 rounded-full">
                   Szukaj: &quot;{searchFilter}&quot;
                   <button type="button" onClick={() => setSearchFilter('')} className="hover:opacity-75">
                     <X className="h-3 w-3" />
@@ -396,7 +396,7 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
                 </span>
               )}
               {onlyUnansweredFilter && (
-                <span className="inline-flex items-center gap-1 bg-primary/10 text-primary text-xs font-medium px-2.5 py-0.5 rounded-full border border-primary/20">
+                <span className="inline-flex items-center gap-1 bg-primary/10 text-primary text-sm font-medium px-2.5 py-0.5 rounded-full border border-primary/20">
                   <MessageSquare className="h-3 w-3" />
                   Tylko z oczekującą wiadomością
                   <button type="button" onClick={() => setOnlyUnansweredFilter(false)} className="hover:opacity-75">
@@ -405,7 +405,7 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
                 </span>
               )}
               {statusFilter !== 'all' && (
-                <span className="inline-flex items-center gap-1 bg-muted text-foreground text-xs font-medium px-2.5 py-0.5 rounded-full">
+                <span className="inline-flex items-center gap-1 bg-muted text-foreground text-sm font-medium px-2.5 py-0.5 rounded-full">
                   Status: {STATUS_CONFIG[statusFilter as NoteStatus]?.label}
                   <button type="button" onClick={() => setStatusFilter('all')} className="hover:opacity-75">
                     <X className="h-3 w-3" />
@@ -413,7 +413,7 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
                 </span>
               )}
               {floorFilter !== 'all' && (
-                <span className="inline-flex items-center gap-1 bg-muted text-foreground text-xs font-medium px-2.5 py-0.5 rounded-full">
+                <span className="inline-flex items-center gap-1 bg-muted text-foreground text-sm font-medium px-2.5 py-0.5 rounded-full">
                   Piętro: {floorFilter}
                   <button type="button" onClick={() => setFloorFilter('all')} className="hover:opacity-75">
                     <X className="h-3 w-3" />
@@ -421,7 +421,7 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
                 </span>
               )}
               {roomFilter !== 'all' && (
-                <span className="inline-flex items-center gap-1 bg-muted text-foreground text-xs font-medium px-2.5 py-0.5 rounded-full">
+                <span className="inline-flex items-center gap-1 bg-muted text-foreground text-sm font-medium px-2.5 py-0.5 rounded-full">
                   Pokój: {roomFilter}
                   <button type="button" onClick={() => setRoomFilter('all')} className="hover:opacity-75">
                     <X className="h-3 w-3" />
@@ -471,7 +471,7 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
                       <h4 className="font-semibold text-foreground text-base">
                         {resident.first_name as string} {resident.last_name as string}
                       </h4>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                      <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
                         <Bed className="h-3.5 w-3.5" />
                         {roomNumber && bedLabel
                           ? `Pokój ${roomNumber}, Łóżko ${bedLabel}`
@@ -481,7 +481,7 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
                   </div>
 
                   {isLogged && (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-foreground bg-muted px-2.5 py-1 rounded-full border border-border">
+                    <span className="inline-flex items-center gap-1 text-sm font-semibold text-foreground bg-muted px-2.5 py-1 rounded-full border border-border">
                       <CheckCircle2 className="h-3.5 w-3.5 text-foreground" />
                       Odnotowano
                     </span>
@@ -491,7 +491,7 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
                 {hasUnanswered && (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className="flex items-center justify-between rounded-lg bg-muted/60 border border-border px-3 py-1.5 text-xs hover:border-primary/40 transition-colors cursor-help">
+                      <div className="flex items-center justify-between rounded-lg bg-muted/60 border border-border px-3 py-1.5 text-sm hover:border-primary/40 transition-colors cursor-help">
                         <span
                           data-testid="unanswered-message-badge"
                           className="inline-flex items-center gap-1.5 font-medium text-foreground"
@@ -501,7 +501,7 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
                         </span>
                         <Link
                           href={`/staff/messages?residentId=${resId}`}
-                          className="font-semibold text-primary hover:underline text-[11px]"
+                          className="font-semibold text-primary hover:underline text-sm"
                           onClick={(e) => e.stopPropagation()}
                         >
                           Odpowiedz &rarr;
@@ -509,7 +509,7 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
                       </div>
                     </TooltipTrigger>
                     <TooltipContent side="top" align="center" className="max-w-xs p-3 space-y-1.5 bg-popover text-popover-foreground border border-border">
-                      <div className="flex items-center justify-between text-[11px] font-semibold text-primary">
+                      <div className="flex items-center justify-between text-sm font-semibold text-primary">
                         <span>Wiadomość od bliskich</span>
                         {unansweredInfo?.lastMessageAt && (
                           <span className="text-muted-foreground font-normal">
@@ -517,10 +517,10 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
                           </span>
                         )}
                       </div>
-                      <p className="text-xs italic text-foreground leading-snug">
+                      <p className="text-sm italic text-foreground leading-snug">
                         &ldquo;{unansweredInfo?.lastMessageSnippet || 'Nowa wiadomość oczekująca na odpowiedź.'}&rdquo;
                       </p>
-                      <div className="pt-1 text-[10px] text-muted-foreground flex justify-between items-center border-t border-border/50">
+                      <div className="pt-1 text-sm text-muted-foreground flex justify-between items-center border-t border-border/50">
                         <span>{unansweredInfo?.unansweredCount ? `${unansweredInfo.unansweredCount} oczekująca(e)` : 'Wymaga odpowiedzi'}</span>
                         <span className="text-primary font-medium">Kliknij &bdquo;Odpowiedz&rdquo;</span>
                       </div>
@@ -531,7 +531,7 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
                 <div className="grid grid-cols-2 gap-2 pt-1">
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Link href={`/voice?resident=${resId}`} className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-3 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors min-h-[48px]">
+                      <Link href={`/voice?resident=${resId}`} className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors min-h-[48px]">
                         <Mic className="h-4 w-4" />
                         Dyktuj (1-klik)
                       </Link>
@@ -548,7 +548,7 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
                           type="button"
                           onClick={() => handleQuickLog(resId)}
                           disabled={isSubmitting || isLogged}
-                          className={`w-full inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-3 text-xs font-semibold transition-colors min-h-[48px] ${
+                          className={`w-full inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-3 text-sm font-semibold transition-colors min-h-[48px] ${
                             isLogged
                               ? 'bg-muted text-foreground border border-border cursor-default'
                               : 'bg-card border border-border text-foreground hover:bg-muted/50'
@@ -616,7 +616,7 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
                         </AvatarFallback>
                       </Avatar>
                       <span
-                        className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${statusCfg.className}`}
+                        className={`inline-flex items-center rounded-md px-2 py-1 text-sm font-medium ring-1 ring-inset ${statusCfg.className}`}
                       >
                         {statusCfg.label}
                       </span>
@@ -644,7 +644,7 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
                     {hasUnanswered && (
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="flex items-center justify-between rounded-lg bg-muted/60 border border-border px-3 py-1.5 text-xs hover:border-primary/40 transition-colors cursor-help">
+                          <div className="flex items-center justify-between rounded-lg bg-muted/60 border border-border px-3 py-1.5 text-sm hover:border-primary/40 transition-colors cursor-help">
                             <span
                               data-testid="unanswered-message-badge"
                               className="inline-flex items-center gap-1.5 font-medium text-foreground"
@@ -654,7 +654,7 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
                             </span>
                             <Link
                               href={`/staff/messages?residentId=${resident.id as string}`}
-                              className="font-semibold text-primary hover:underline text-[11px]"
+                              className="font-semibold text-primary hover:underline text-sm"
                               onClick={(e) => e.stopPropagation()}
                             >
                               Odpowiedz &rarr;
@@ -662,7 +662,7 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
                           </div>
                         </TooltipTrigger>
                         <TooltipContent side="top" align="center" className="max-w-xs p-3 space-y-1.5 bg-popover text-popover-foreground border border-border">
-                          <div className="flex items-center justify-between text-[11px] font-semibold text-primary">
+                          <div className="flex items-center justify-between text-sm font-semibold text-primary">
                             <span>Wiadomość od bliskich</span>
                             {unansweredInfo?.lastMessageAt && (
                               <span className="text-muted-foreground font-normal">
@@ -670,10 +670,10 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
                               </span>
                             )}
                           </div>
-                          <p className="text-xs italic text-foreground leading-snug">
+                          <p className="text-sm italic text-foreground leading-snug">
                             &ldquo;{unansweredInfo?.lastMessageSnippet || 'Nowa wiadomość oczekująca na odpowiedź.'}&rdquo;
                           </p>
-                          <div className="pt-1 text-[10px] text-muted-foreground flex justify-between items-center border-t border-border/50">
+                          <div className="pt-1 text-sm text-muted-foreground flex justify-between items-center border-t border-border/50">
                             <span>{unansweredInfo?.unansweredCount ? `${unansweredInfo.unansweredCount} oczekująca(e)` : 'Wymaga odpowiedzi'}</span>
                             <span className="text-primary font-medium">Kliknij &bdquo;Odpowiedz&rdquo;</span>
                           </div>
@@ -720,7 +720,7 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
                       <MessageSquare className="h-4 w-4 text-primary" />
                       <span>Wiadomości od rodziny</span>
                       {hasUnanswered && (
-                        <span className="ml-1 rounded-full bg-primary text-primary-foreground px-1.5 py-0.5 text-[10px] font-bold">
+                        <span className="ml-1 rounded-full bg-primary text-primary-foreground px-1.5 py-0.5 text-sm font-bold">
                           !
                         </span>
                       )}

@@ -168,7 +168,7 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
               variant={viewMode === 'grid' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => handleModeChange('grid')}
-              className={`h-8 px-3 rounded-lg text-xs font-medium ${
+              className={`h-8 px-3 rounded-lg text-sm font-medium ${
                 viewMode === 'grid' ? 'bg-primary hover:bg-primary/90 text-white' : 'text-foreground'
               }`}
             >
@@ -180,7 +180,7 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
               variant={viewMode === 'table' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => handleModeChange('table')}
-              className={`h-8 px-3 rounded-lg text-xs font-medium ${
+              className={`h-8 px-3 rounded-lg text-sm font-medium ${
                 viewMode === 'table' ? 'bg-primary hover:bg-primary/90 text-white' : 'text-foreground'
               }`}
             >
@@ -192,7 +192,7 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
 
         {/* Kontrolki filtrów */}
         <div className="flex flex-wrap items-center gap-3 pt-3 border-t text-sm">
-          <div className="flex items-center gap-1.5 text-muted-foreground text-xs font-medium">
+          <div className="flex items-center gap-1.5 text-muted-foreground text-sm font-medium">
             <Filter className="w-3.5 h-3.5" />
             <span>Filtry:</span>
           </div>
@@ -244,7 +244,7 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
           </NativeSelect>
 
           {/* Licznik wyników */}
-          <div className="ml-auto text-xs text-muted-foreground">
+          <div className="ml-auto text-sm text-muted-foreground">
             Znaleziono: <strong>{filteredRooms.length}</strong> z {rooms.length} pokoi
           </div>
         </div>
@@ -279,12 +279,12 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
                         <DoorOpen className="w-5 h-5 text-primary" />
                         <h4 className="font-semibold text-base text-foreground">Pokój {room.number}</h4>
                       </div>
-                      <div className="text-xs text-muted-foreground mt-0.5">
+                      <div className="text-sm text-muted-foreground mt-0.5">
                         {room.floor} {room.sector ? `• ${formatSectorName(room.sector)}` : ''}
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5 text-xs font-medium">
+                    <div className="flex items-center gap-1.5 text-sm font-medium">
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-full ${
                           room.free > 0
@@ -298,7 +298,7 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
                   </div>
 
                   {/* Transparentne reguły alokacji */}
-                  <div className="flex flex-wrap gap-1.5 text-[11px]">
+                  <div className="flex flex-wrap gap-1.5 text-sm">
                     {/* Reguła parteru */}
                     {isGround ? (
                       <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 font-medium text-foreground border border-border">
@@ -333,7 +333,7 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
 
                   {/* Pasek postępu zajętości */}
                   <div className="space-y-1 pt-1">
-                    <div className="flex justify-between text-xs text-muted-foreground">
+                    <div className="flex justify-between text-sm text-muted-foreground">
                       <span>Łóżka ({room.occupied || 0}/{room.beds || 0})</span>
                       <span>{room.free || 0} wolnych</span>
                     </div>
@@ -356,7 +356,7 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
                       variant="ghost"
                       size="sm"
                       onClick={() => toggleRoom(room.id)}
-                      className="text-xs text-primary hover:text-primary font-medium p-0 h-auto"
+                      className="text-sm text-primary hover:text-primary font-medium p-0 h-auto"
                     >
                       {isExpanded ? (
                         <>
@@ -433,20 +433,20 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
                         </TableCell>
                         <TableCell className="text-center">
                           <span
-                            className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-muted text-foreground"
+                            className="inline-flex items-center px-2 py-0.5 rounded-full text-sm font-medium bg-muted text-foreground"
                           >
                             {room.occupied || 0} / {room.beds || 0} ({room.free || 0} wolnych)
                           </span>
                         </TableCell>
                         <TableCell>
-                          <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                          <div className="flex flex-wrap items-center gap-1.5 text-sm">
                             {isGround && (
-                              <span className="inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-[11px] font-medium text-foreground">
+                              <span className="inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-sm font-medium text-foreground">
                                 Parter
                               </span>
                             )}
                             <span
-                              className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium bg-muted text-foreground"
+                              className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-sm font-medium bg-muted text-foreground"
                             >
                               {genderInfo.variant === 'warning' && (
                                 <AlertTriangle className="w-3 h-3 text-foreground" />
@@ -463,7 +463,7 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
                               variant="ghost"
                               size="sm"
                               onClick={() => toggleRoom(room.id)}
-                              className="h-8 px-2 text-xs text-primary hover:text-primary font-medium"
+                              className="h-8 px-2 text-sm text-primary hover:text-primary font-medium"
                             >
                               {isExpanded ? (
                                 <>
@@ -488,7 +488,7 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
                         >
                           <TableCell colSpan={7} className="p-4 pt-1 pb-4">
                             <div className="rounded-lg border border-border/80 bg-background/90 p-4 shadow-none">
-                              <div className="mb-3 flex items-center justify-between text-xs font-medium text-muted-foreground">
+                              <div className="mb-3 flex items-center justify-between text-sm font-medium text-muted-foreground">
                                 <span>
                                   Łóżka w pokoju {room.number} ({room.occupied || 0}/{room.beds || 0} zajęte)
                                 </span>

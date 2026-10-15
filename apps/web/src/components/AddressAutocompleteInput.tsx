@@ -285,11 +285,11 @@ export function AddressAutocompleteInput({
               >
                 <MapPin className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                 <div className="flex flex-col min-w-0">
-                  <span className="font-medium text-xs sm:text-sm truncate">
+                  <span className="font-medium text-sm sm:text-sm truncate">
                     {p.main_text || p.description}
                   </span>
                   {p.secondary_text && (
-                    <span className="text-[11px] text-muted-foreground truncate">
+                    <span className="text-sm text-muted-foreground truncate">
                       {p.secondary_text}
                     </span>
                   )}

@@ -91,7 +91,7 @@ export function MediaUploader({ residentId }: { residentId: string }) {
       />
       <Button 
         variant="outline" 
-        className="w-full text-xs font-semibold h-10 border-border hover:bg-muted/50" 
+        className="w-full text-sm font-semibold h-10 border-border hover:bg-muted/50" 
         onClick={() => fileInputRef.current?.click()}
         disabled={isBusy}
       >
@@ -114,14 +114,14 @@ export function MediaUploader({ residentId }: { residentId: string }) {
       </Button>
 
       {statusMessage && status !== 'error' && (
-        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground px-1">
+        <div className="flex items-center gap-1.5 text-sm text-muted-foreground px-1">
           <Sparkles className="h-3 w-3 text-primary shrink-0" />
           <span className="truncate">{statusMessage}</span>
         </div>
       )}
 
       {errorMessage && (
-        <div className="flex items-center gap-1.5 text-[11px] text-destructive px-1">
+        <div className="flex items-center gap-1.5 text-sm text-destructive px-1">
           <AlertCircle className="h-3 w-3 shrink-0" />
           <span className="truncate">{errorMessage}</span>
         </div>

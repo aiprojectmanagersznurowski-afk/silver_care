@@ -179,7 +179,7 @@ export default function ReassignBedDialog({
           <Button
             variant="outline"
             size="sm"
-            className="text-xs h-8 text-foreground hover:bg-muted/50 border-border"
+            className="text-sm h-8 text-foreground hover:bg-muted/50 border-border"
           />
         }
       >
@@ -200,12 +200,12 @@ export default function ReassignBedDialog({
             {/* Aktualne przypisanie */}
             <div className="rounded-lg bg-muted/40 p-3 text-sm border space-y-1">
               <div className="font-medium text-foreground">{residentName}</div>
-              <div className="text-muted-foreground text-xs">
+              <div className="text-muted-foreground text-sm">
                 Obecne miejsce: <strong>Pokój {currentRoomNumber}</strong>, Łóżko {currentBedLabel}
                 {currentFloor ? ` (${currentFloor})` : ''}
               </div>
               {residentGender && (
-                <div className="text-xs text-muted-foreground">
+                <div className="text-sm text-muted-foreground">
                   Płeć: <strong>{residentGender === 'M' ? 'Mężczyzna' : 'Kobieta'}</strong>
                   {residentIsZsn ? ' • ZSN (Zwiększone zapotrzebowanie na opiekę)' : ''}
                 </div>
@@ -216,12 +216,12 @@ export default function ReassignBedDialog({
             <div className="space-y-2">
               <Label htmlFor="target-bed">Docelowe wolne łóżko</Label>
               {isLoadingBeds ? (
-                <div className="text-xs text-muted-foreground py-2 flex items-center gap-2">
+                <div className="text-sm text-muted-foreground py-2 flex items-center gap-2">
                   <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-primary" />
                   Wyszukiwanie wolnych łóżek w placówce...
                 </div>
               ) : availableBeds.length === 0 ? (
-                <div className="text-xs text-foreground bg-muted p-2.5 rounded border border-border">
+                <div className="text-sm text-foreground bg-muted p-2.5 rounded border border-border">
                   Brak wolnych łóżek w innych pokojach placówki.
                 </div>
               ) : (
@@ -243,21 +243,21 @@ export default function ReassignBedDialog({
 
             {/* Transparentne reguły i ostrzeżenia */}
             {genderWarning && (
-              <div className="flex items-start gap-2 p-2.5 rounded-lg bg-muted border border-border text-foreground text-xs">
+              <div className="flex items-start gap-2 p-2.5 rounded-lg bg-muted border border-border text-foreground text-sm">
                 <AlertTriangle className="w-4 h-4 shrink-0 text-foreground mt-0.5" />
                 <div>{genderWarning}</div>
               </div>
             )}
 
             {mobilityWarning && (
-              <div className="flex items-start gap-2 p-2.5 rounded-lg bg-muted border border-border text-foreground text-xs">
+              <div className="flex items-start gap-2 p-2.5 rounded-lg bg-muted border border-border text-foreground text-sm">
                 <AlertTriangle className="w-4 h-4 shrink-0 text-foreground mt-0.5" />
                 <div>{mobilityWarning}</div>
               </div>
             )}
 
             {selectedOption && !genderWarning && !mobilityWarning && (
-              <div className="flex items-center gap-2 p-2 rounded-lg bg-muted border border-border text-foreground text-xs">
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-muted border border-border text-foreground text-sm">
                 <CheckCircle2 className="w-4 h-4 shrink-0 text-foreground" />
                 <span>Wybrane miejsce spełnia wszystkie standardy transparentnej alokacji.</span>
               </div>

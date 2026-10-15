@@ -116,7 +116,7 @@ export default async function OrganizationDetailsPage({
                 <Users className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground font-medium">Aktywni podopieczni</p>
+                <p className="text-sm text-muted-foreground font-medium">Aktywni podopieczni</p>
                 <div className="text-xl font-bold text-foreground">
                   {activeResidentCount || 0}
                   <span className="text-sm font-normal text-muted-foreground"> / {organization.resident_limit || 50}</span>
@@ -133,7 +133,7 @@ export default async function OrganizationDetailsPage({
                 <UserCog className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground font-medium">Administratorzy placówki</p>
+                <p className="text-sm text-muted-foreground font-medium">Administratorzy placówki</p>
                 <div className="text-xl font-bold text-foreground">
                   {administrators.length}
                 </div>
@@ -149,7 +149,7 @@ export default async function OrganizationDetailsPage({
                 <UserCheck className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground font-medium">Personel opiekuńczy</p>
+                <p className="text-sm text-muted-foreground font-medium">Personel opiekuńczy</p>
                 <div className="text-xl font-bold text-foreground">
                   {staff.length}
                 </div>
@@ -200,7 +200,7 @@ export default async function OrganizationDetailsPage({
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className="inline-flex items-center rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+                      <span className="inline-flex items-center rounded-lg bg-primary/10 px-2.5 py-1 text-sm font-semibold text-primary">
                         Administrator Ośrodka
                       </span>
                     </TableCell>
@@ -229,7 +229,7 @@ export default async function OrganizationDetailsPage({
                             type="submit"
                             variant="outline"
                             size="sm"
-                            className="rounded-xl border-border bg-muted text-foreground hover:bg-muted text-xs h-9 font-medium"
+                            className="rounded-xl border-border bg-muted text-foreground hover:bg-muted text-sm h-9 font-medium"
                             title="Zaloguj jako ten administrator placówki"
                           >
                             Zaloguj jako
@@ -284,7 +284,7 @@ export default async function OrganizationDetailsPage({
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className="inline-flex items-center rounded-lg bg-muted px-2.5 py-1 text-xs font-medium text-foreground">
+                      <span className="inline-flex items-center rounded-lg bg-muted px-2.5 py-1 text-sm font-medium text-foreground">
                         {person.app_metadata?.role || person.user_metadata?.role || 'Personel'}
                       </span>
                     </TableCell>

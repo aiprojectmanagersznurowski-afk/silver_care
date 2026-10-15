@@ -288,7 +288,7 @@ function SummaryCard({
 
   return (
     <div className={`rounded-xl p-4 ${colorMap[variant]}`}>
-      <p className="text-xs font-medium opacity-70">{label}</p>
+      <p className="text-sm font-medium opacity-70">{label}</p>
       <p className="text-2xl font-bold mt-1 tabular-nums">{value ?? '—'}</p>
     </div>
   )

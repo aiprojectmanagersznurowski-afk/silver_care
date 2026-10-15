@@ -162,15 +162,15 @@ export default function BedList({ roomId, roomNumber, floor, onUpdate }: BedList
                   </TableCell>
                   <TableCell className="py-2.5">
                     {!bed.is_active ? (
-                      <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-secondary text-secondary-foreground">
+                      <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-sm font-semibold bg-secondary text-secondary-foreground">
                         Nieaktywne
                       </span>
                     ) : bed.active_assignment ? (
-                      <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-primary text-white">
+                      <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-sm font-semibold bg-primary text-white">
                         Zajęte
                       </span>
                     ) : (
-                      <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold text-foreground border-border">
+                      <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-sm font-semibold text-foreground border-border">
                         Wolne
                       </span>
                     )}
@@ -184,7 +184,7 @@ export default function BedList({ roomId, roomNumber, floor, onUpdate }: BedList
                           </span>
                           <BusinessIdBadge type="resident" id={bed.active_assignment.resident.id} />
                         </div>
-                        <div className="flex flex-wrap gap-1 text-[11px]">
+                        <div className="flex flex-wrap gap-1 text-sm">
                           {bed.active_assignment.resident.gender && (
                             <span className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 font-medium text-foreground">
                               {bed.active_assignment.resident.gender === 'M' ? 'Mężczyzna' : 'Kobieta'}
@@ -207,7 +207,7 @@ export default function BedList({ roomId, roomNumber, floor, onUpdate }: BedList
                         </div>
                       </div>
                     ) : (
-                      <span className="text-xs text-muted-foreground">Brak przypisania</span>
+                      <span className="text-sm text-muted-foreground">Brak przypisania</span>
                     )}
                   </TableCell>
                   <TableCell className="text-right py-2.5">
@@ -236,7 +236,7 @@ export default function BedList({ roomId, roomNumber, floor, onUpdate }: BedList
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    className="text-destructive hover:bg-destructive/10 hover:text-destructive h-8 px-2.5 text-xs"
+                                    className="text-destructive hover:bg-destructive/10 hover:text-destructive h-8 px-2.5 text-sm"
                                     onClick={() => {
                                       if (bed.active_assignment?.resident) {
                                         setUnassignTarget({
@@ -271,7 +271,7 @@ export default function BedList({ roomId, roomNumber, floor, onUpdate }: BedList
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground"
+                                  className="h-8 px-2.5 text-sm text-muted-foreground hover:text-foreground"
                                   onClick={() => handleDeactivate(bed.id, false)}
                                   disabled={!!bed.active_assignment}
                                 >
@@ -293,7 +293,7 @@ export default function BedList({ roomId, roomNumber, floor, onUpdate }: BedList
                               variant="outline"
                               size="sm"
                               onClick={() => handleDeactivate(bed.id, true)}
-                              className="h-8 px-3 text-xs"
+                              className="h-8 px-3 text-sm"
                             >
                               Aktywuj łóżko
                             </Button>

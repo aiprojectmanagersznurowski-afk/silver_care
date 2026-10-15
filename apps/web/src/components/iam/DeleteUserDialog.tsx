@@ -82,7 +82,7 @@ export function DeleteUserDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 py-2">
-          <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50 border border-border text-xs">
+          <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50 border border-border text-sm">
             <span className="text-muted-foreground">Identyfikator użytkownika:</span>
             <BusinessIdBadge type="user" id={user.id} />
           </div>
@@ -102,10 +102,10 @@ export function DeleteUserDialog({
                   )}
                 >
                   <ShieldBan className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                  <div className="space-y-1 text-xs">
+                  <div className="space-y-1 text-sm">
                     <div className="font-semibold text-foreground text-sm flex items-center gap-1.5">
                       <span>Zablokuj konto</span>
-                      <span className="text-[10px] font-normal px-2 py-0.5 rounded-full bg-primary/20 text-primary">
+                      <span className="text-sm font-normal px-2 py-0.5 rounded-full bg-primary/20 text-primary">
                         Zalecane
                       </span>
                     </div>
@@ -125,7 +125,7 @@ export function DeleteUserDialog({
                   )}
                 >
                   <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                  <div className="space-y-1 text-xs">
+                  <div className="space-y-1 text-sm">
                     <div className="font-semibold text-foreground text-sm">Odblokuj konto</div>
                     <p className="text-muted-foreground leading-relaxed">
                       Zdejmuje blokadę dostępu i przywraca użytkownikowi możliwość logowania do systemu.
@@ -145,10 +145,10 @@ export function DeleteUserDialog({
                 )}
               >
                 <Trash2 className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-                <div className="space-y-1 text-xs">
+                <div className="space-y-1 text-sm">
                   <div className="font-semibold text-foreground text-sm flex items-center gap-1.5">
                     <span>Usuń trwale</span>
-                    <span className="text-[10px] font-normal px-2 py-0.5 rounded-full bg-destructive/20 text-destructive">
+                    <span className="text-sm font-normal px-2 py-0.5 rounded-full bg-destructive/20 text-destructive">
                       Nieodwracalne
                     </span>
                   </div>
@@ -163,11 +163,11 @@ export function DeleteUserDialog({
           {/* Ostrzeżenie i pole potwierdzenia dla hard delete */}
           {mode === 'hard_delete' && (
             <div className="space-y-2 p-3.5 rounded-xl bg-destructive/10 border border-destructive/20">
-              <div className="flex items-center gap-2 text-xs font-semibold text-destructive">
+              <div className="flex items-center gap-2 text-sm font-semibold text-destructive">
                 <AlertTriangle className="h-4 w-4 shrink-0" />
                 <span>Wymagane dodatkowe potwierdzenie</span>
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Aby trwale usunąć to konto, wpisz poniżej słowo <strong className="text-destructive font-mono">USUŃ</strong>:
               </p>
               <Input
@@ -181,7 +181,7 @@ export function DeleteUserDialog({
           )}
 
           {error && (
-            <div className="flex items-center gap-2 p-3 text-xs text-destructive bg-destructive/10 rounded-xl border border-destructive/20">
+            <div className="flex items-center gap-2 p-3 text-sm text-destructive bg-destructive/10 rounded-xl border border-destructive/20">
               <AlertCircle className="h-4 w-4 shrink-0" />
               <span>{error}</span>
             </div>

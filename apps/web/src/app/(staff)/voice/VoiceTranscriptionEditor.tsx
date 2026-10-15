@@ -27,7 +27,7 @@ export function VoiceTranscriptionEditor({
     <div className="w-full rounded-xl bg-muted/50 p-6 border border-border shadow-inner">
       <div className="flex items-center justify-between mb-4">
         <h4 className="text-sm font-semibold text-foreground">Treść notatki:</h4>
-        <span className="text-xs font-medium text-muted-foreground">Możesz edytować lub dopisać tekst</span>
+        <span className="text-sm font-medium text-muted-foreground">Możesz edytować lub dopisać tekst</span>
       </div>
       <Textarea className="w-full mb-6" value={transcription} onChange={(e) => setTranscription(e.target.value)} />
       {followupQuestion && (
@@ -37,7 +37,7 @@ export function VoiceTranscriptionEditor({
             <div className="flex-1">
               <span className="text-foreground font-bold text-sm block mb-1">AI dopytuje:</span>
               <p className="text-sm text-foreground font-semibold">{followupQuestion}</p>
-              <p className="text-xs text-foreground mt-2 font-medium">Możesz nagrać odpowiedź mikrofonem powyżej LUB dopisać brakujące dane bezpośrednio w polu tekstowym powyżej.</p>
+              <p className="text-sm text-foreground mt-2 font-medium">Możesz nagrać odpowiedź mikrofonem powyżej LUB dopisać brakujące dane bezpośrednio w polu tekstowym powyżej.</p>
             </div>
           </div>
         </div>

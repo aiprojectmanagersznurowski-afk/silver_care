@@ -64,7 +64,7 @@ export function PolarWearableCard({
             <Watch className="h-5 w-5 text-foreground" />
             <CardTitle className="text-lg font-display text-foreground">Opaska telemetryczna Polar 360</CardTitle>
           </div>
-          <CardDescription className="text-xs text-muted-foreground">
+          <CardDescription className="text-sm text-muted-foreground">
             Integracja przez Polar AccessLink API v3 (kroki, sen, czas aktywności)
           </CardDescription>
         </div>
@@ -86,11 +86,11 @@ export function PolarWearableCard({
           <div className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm bg-muted p-3.5 rounded-xl border border-border">
               <div>
-                <span className="text-xs text-muted-foreground block mb-0.5">Identyfikator użytkownika Polar</span>
+                <span className="text-sm text-muted-foreground block mb-0.5">Identyfikator użytkownika Polar</span>
                 <span className="font-mono font-medium text-foreground">{externalUserId || 'Brak'}</span>
               </div>
               <div>
-                <span className="text-xs text-muted-foreground block mb-0.5">Data sparowania</span>
+                <span className="text-sm text-muted-foreground block mb-0.5">Data sparowania</span>
                 <span className="font-medium text-foreground">
                   {linkedAt ? new Date(linkedAt).toLocaleDateString('pl-PL') : 'Aktywne'}
                 </span>
@@ -98,7 +98,7 @@ export function PolarWearableCard({
             </div>
 
             {syncStatus && (
-              <div className={`p-3 rounded-xl text-xs flex items-center gap-2 ${
+              <div className={`p-3 rounded-xl text-sm flex items-center gap-2 ${
                 isError ? 'bg-destructive/10 text-destructive border border-destructive/20' : 'bg-muted text-foreground border border-border'
               }`}>
                 {isError ? <AlertTriangle className="h-4 w-4 shrink-0" /> : <CheckCircle2 className="h-4 w-4 shrink-0" />}
@@ -112,7 +112,7 @@ export function PolarWearableCard({
                 size="sm"
                 onClick={handleSync}
                 disabled={isSyncing}
-                className="gap-2 text-xs font-medium"
+                className="gap-2 text-sm font-medium"
               >
                 <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
                 {isSyncing ? 'Pobieranie danych...' : 'Synchronizuj teraz'}
@@ -120,7 +120,7 @@ export function PolarWearableCard({
 
               <a
                 href={`/api/polar/auth?residentId=${residentId}`}
-                className="text-xs text-foreground hover:text-foreground inline-flex items-center gap-1 font-medium transition-colors"
+                className="text-sm text-foreground hover:text-foreground inline-flex items-center gap-1 font-medium transition-colors"
               >
                 Zmień powiązanie
                 <ExternalLink className="h-3 w-3" />
@@ -134,7 +134,7 @@ export function PolarWearableCard({
             </p>
             <a
               href={`/api/polar/auth?residentId=${residentId}`}
-              className="inline-flex items-center justify-center bg-primary hover:bg-primary text-white gap-2 text-xs font-medium rounded-xl h-9 px-4 transition-colors"
+              className="inline-flex items-center justify-center bg-primary hover:bg-primary text-white gap-2 text-sm font-medium rounded-xl h-9 px-4 transition-colors"
             >
               <Watch className="h-4 w-4" />
               Sparuj opaskę w Polar Flow

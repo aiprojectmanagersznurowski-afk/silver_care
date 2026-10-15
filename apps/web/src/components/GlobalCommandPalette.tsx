@@ -161,13 +161,13 @@ export function GlobalCommandPalette({ userRole }: GlobalCommandPaletteProps) {
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-border bg-card/80 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-colors min-h-[38px]"
+        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-border bg-card/80 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-colors min-h-[38px]"
         title="Otwórz wyszukiwarkę globalną (Cmd+K)"
         aria-label="Wyszukaj w systemie"
       >
         <Search className="h-4 w-4 text-muted-foreground" />
         <span className="hidden sm:inline">Szukaj w systemie...</span>
-        <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground">
+        <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded bg-muted px-1.5 py-0.5 text-sm font-mono text-muted-foreground">
           <Command className="h-2.5 w-2.5" />K
         </kbd>
       </button>
@@ -211,8 +211,8 @@ export function GlobalCommandPalette({ userRole }: GlobalCommandPaletteProps) {
             </div>
 
             {/* Szybkie filtry pigułkowe (Pills) */}
-            <div className="flex items-center gap-1.5 px-4 py-2 border-b border-border bg-muted/30 overflow-x-auto text-xs">
-              <span className="text-[11px] text-muted-foreground shrink-0 mr-1">Filtruj:</span>
+            <div className="flex items-center gap-1.5 px-4 py-2 border-b border-border bg-muted/30 overflow-x-auto text-sm">
+              <span className="text-sm text-muted-foreground shrink-0 mr-1">Filtruj:</span>
               {availableCategories.map((cat) => {
                 const isActive = categoryFilter === cat.key
                 return (
@@ -220,7 +220,7 @@ export function GlobalCommandPalette({ userRole }: GlobalCommandPaletteProps) {
                     key={cat.key}
                     type="button"
                     onClick={() => handleCategoryFilterChange(cat.key)}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors shrink-0 ${
+                    className={`px-2.5 py-1 rounded-lg text-sm font-medium transition-colors shrink-0 ${
                       isActive
                         ? 'bg-primary text-primary-foreground'
                         : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80'
@@ -243,7 +243,7 @@ export function GlobalCommandPalette({ userRole }: GlobalCommandPaletteProps) {
                   <div className="text-sm font-medium text-foreground">
                     Szybkie przeszukiwanie placówki
                   </div>
-                  <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                  <p className="text-sm text-muted-foreground max-w-sm mx-auto">
                     Wpisz co najmniej 2 znaki, aby odnaleźć podopiecznego, sprawdzić pokój i łóżko,
                     przejrzeć plan dnia lub otworzyć raport dobowy.
                   </p>
@@ -252,7 +252,7 @@ export function GlobalCommandPalette({ userRole }: GlobalCommandPaletteProps) {
 
               {/* Stan 2: Błąd */}
               {errorMessage && (
-                <div className="p-4 text-center text-xs text-destructive">
+                <div className="p-4 text-center text-sm text-destructive">
                   {errorMessage}
                 </div>
               )}
@@ -289,19 +289,19 @@ export function GlobalCommandPalette({ userRole }: GlobalCommandPaletteProps) {
                           <div className="text-sm font-semibold truncate flex items-center gap-2">
                             <span>{item.title}</span>
                             {item.badge && (
-                              <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4">
+                              <Badge variant="outline" className="text-sm py-0 px-1.5 h-4">
                                 {item.badge}
                               </Badge>
                             )}
                           </div>
-                          <div className="text-xs text-muted-foreground truncate">
+                          <div className="text-sm text-muted-foreground truncate">
                             {item.subtitle}
                           </div>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-2 shrink-0 text-muted-foreground ml-3">
-                        <span className="text-[10px] hidden sm:inline uppercase tracking-wider font-medium">
+                        <span className="text-sm hidden sm:inline uppercase tracking-wider font-medium">
                           {SEARCH_CATEGORIES[item.category]?.label}
                         </span>
                         {isSelected && <CornerDownLeft className="h-3.5 w-3.5 text-primary" />}
@@ -312,7 +312,7 @@ export function GlobalCommandPalette({ userRole }: GlobalCommandPaletteProps) {
             </div>
 
             {/* Stopka nawigacji klawiaturowej */}
-            <div className="border-t border-border px-4 py-2.5 bg-muted/40 flex items-center justify-between text-[11px] text-muted-foreground">
+            <div className="border-t border-border px-4 py-2.5 bg-muted/40 flex items-center justify-between text-sm text-muted-foreground">
               <span>Nawigacja: ↑ ↓ strzałki | Wybierz: Enter</span>
               <span>Zamknij: Esc</span>
             </div>

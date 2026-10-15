@@ -49,7 +49,7 @@ export function StaffMessageComposer({
       {isRecording && (
         <div
           data-testid="voice-recording-indicator"
-          className="mb-3 flex items-center justify-between rounded-xl bg-destructive/10 border border-destructive/20 p-2.5 text-xs text-destructive animate-pulse"
+          className="mb-3 flex items-center justify-between rounded-xl bg-destructive/10 border border-destructive/20 p-2.5 text-sm text-destructive animate-pulse"
         >
           <div className="flex items-center gap-2">
             <span className="relative flex h-2 w-2">
@@ -62,14 +62,14 @@ export function StaffMessageComposer({
       )}
 
       {isTranscribing && (
-        <div className="mb-3 flex items-center gap-2 rounded-xl bg-primary/10 border border-primary/20 p-2.5 text-xs text-primary">
+        <div className="mb-3 flex items-center gap-2 rounded-xl bg-primary/10 border border-primary/20 p-2.5 text-sm text-primary">
           <RefreshCw className="h-4 w-4 animate-spin text-primary" />
           <span>Przetwarzanie i transkrypcja odpowiedzi audio...</span>
         </div>
       )}
 
       {sendError && (
-        <div className="mb-3 flex items-center gap-2 rounded-xl bg-destructive/10 border border-destructive/20 p-2.5 text-xs text-destructive">
+        <div className="mb-3 flex items-center gap-2 rounded-xl bg-destructive/10 border border-destructive/20 p-2.5 text-sm text-destructive">
           <ShieldAlert className="h-4 w-4 shrink-0 text-destructive" />
           <span>{sendError}</span>
         </div>
@@ -96,7 +96,7 @@ export function StaffMessageComposer({
           onClick={toggleVoiceRecording}
           disabled={isSending || isTranscribing}
           aria-label={isRecording ? 'Zatrzymaj nagrywanie' : 'Podyktuj odpowiedź'}
-          className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3.5 py-2.5 text-xs font-semibold transition-all ${
+          className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all ${
             isRecording
               ? 'bg-destructive text-white hover:bg-destructive/90 animate-pulse'
               : isTranscribing
@@ -122,7 +122,7 @@ export function StaffMessageComposer({
         <button
           onClick={onSendReply}
           disabled={isSending || !replyText.trim()}
-          className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-semibold transition-all ${
+          className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${
             replyText.trim() && !isSending
               ? 'bg-primary text-white hover:bg-primary/90'
               : 'bg-muted text-muted-foreground cursor-not-allowed'
@@ -138,7 +138,7 @@ export function StaffMessageComposer({
           )}
         </button>
       </div>
-      <p className="text-xs text-muted-foreground mt-1.5 px-2 flex items-center gap-1">
+      <p className="text-sm text-muted-foreground mt-1.5 px-2 flex items-center gap-1">
         <CornerDownRight className="h-3 w-3 text-muted-foreground" />
         Wciśnij Enter, aby wysłać odpowiedź. Shift+Enter tworzy nową linię.
       </p>

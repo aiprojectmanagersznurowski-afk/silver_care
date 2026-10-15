@@ -137,7 +137,7 @@ function VoiceNoteContent() {
             <h2 className="text-3xl font-display font-semibold tracking-tight text-foreground">Notatka Głosowa</h2>
             <p className="mt-1 text-sm text-muted-foreground">Wybierz podopiecznego, dla którego chcesz nagrać notatkę ze statusu dnia.</p>
           </div>
-          <Link href="/staff" className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-2 text-xs font-semibold text-foreground hover:bg-muted/50 transition-colors w-fit">
+          <Link href="/staff" className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-2 text-sm font-semibold text-foreground hover:bg-muted/50 transition-colors w-fit">
             <ArrowLeft className="h-4 w-4" /> Wróć do tablicy dyżuru
           </Link>
         </div>
@@ -160,13 +160,13 @@ function VoiceNoteContent() {
           {resident && (
             <div className="mt-2 flex items-center gap-2">
               <p className="text-muted-foreground text-lg">Dla: <span className="font-semibold text-foreground">{resident.first_name} {resident.last_name}</span></p>
-              <button type="button" onClick={() => { setActiveResidentId(''); setResident(null); resetNote() }} className="text-xs text-primary hover:underline ml-2">
+              <button type="button" onClick={() => { setActiveResidentId(''); setResident(null); resetNote() }} className="text-sm text-primary hover:underline ml-2">
                 (Zmień podopiecznego)
               </button>
             </div>
           )}
         </div>
-        <Link href="/staff" className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-2 text-xs font-semibold text-foreground hover:bg-muted/50 transition-colors w-fit">
+        <Link href="/staff" className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-2 text-sm font-semibold text-foreground hover:bg-muted/50 transition-colors w-fit">
           <ArrowLeft className="h-4 w-4" /> Wróć do tablicy dyżuru
         </Link>
       </div>
@@ -194,7 +194,7 @@ function VoiceNoteContent() {
                   <Square className="h-8 w-8 fill-current" />
                 </button>
               )}
-              <span className="text-xs font-medium text-muted-foreground">
+              <span className="text-sm font-medium text-muted-foreground">
                 {recorder.isRecording ? `Nagrywanie (${recorder.duration}s)... Naciśnij kwadrat, aby zatrzymać` : draftId ? (followupQuestion ? 'Naciśnij mikrofon, aby dograć odpowiedź' : 'Naciśnij mikrofon, aby dograć uzupełnienie') : 'Naciśnij mikrofon, aby nagrać notatkę'}
               </span>
             </div>

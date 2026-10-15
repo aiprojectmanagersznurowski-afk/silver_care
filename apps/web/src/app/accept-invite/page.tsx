@@ -72,7 +72,7 @@ function AcceptInviteContent() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground space-y-1">
+            <div className="rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground space-y-1">
               <p className="font-semibold text-foreground">Co możesz zrobić?</p>
               <p>• Otwórz wiadomość e-mail z zaproszeniem i kliknij bezpośrednio w przesłany przycisk.</p>
               <p>• Jeśli posiadasz już aktywne konto, zaloguj się podając swoje dane.</p>

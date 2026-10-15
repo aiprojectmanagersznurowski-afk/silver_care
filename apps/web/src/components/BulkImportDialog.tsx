@@ -183,7 +183,7 @@ export function BulkImportDialog() {
               size="sm"
               data-testid="bulk-download-template"
               onClick={handleDownloadTemplate}
-              className="gap-1.5 text-xs bg-card shrink-0 h-8 text-foreground"
+              className="gap-1.5 text-sm bg-card shrink-0 h-8 text-foreground"
             >
               <Download className="w-3.5 h-3.5 text-foreground" />
               Pobierz formatkę Excel (.xlsx)
@@ -197,7 +197,7 @@ export function BulkImportDialog() {
             <div className="bg-muted p-4 rounded-xl border border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h4 className="text-sm font-semibold text-foreground">Wzorcowa formatka arkusza Excel</h4>
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <p className="text-sm text-muted-foreground mt-0.5">
                   Pobierz przygotowany plik z prawidłowymi kolumnami i arkuszem instrukcji, wklej dane i załaduj poniżej.
                 </p>
               </div>
@@ -207,7 +207,7 @@ export function BulkImportDialog() {
                 size="sm"
                 data-testid="bulk-download-template-main"
                 onClick={handleDownloadTemplate}
-                className="gap-2 text-xs bg-card shrink-0"
+                className="gap-2 text-sm bg-card shrink-0"
               >
                 <Download className="w-3.5 h-3.5 text-foreground" />
                 Pobierz formatkę Excel (.xlsx)
@@ -231,7 +231,7 @@ export function BulkImportDialog() {
                 <div className="text-sm font-medium text-foreground">
                   {loading ? 'Analizowanie pliku...' : 'Kliknij, aby wybrać plik .xlsx lub .csv'}
                 </div>
-                <p className="text-xs text-muted-foreground">Obsługiwane formaty: Excel 2007+ (.xlsx) oraz CSV</p>
+                <p className="text-sm text-muted-foreground">Obsługiwane formaty: Excel 2007+ (.xlsx) oraz CSV</p>
                 <button
                   type="button"
                   onClick={(e) => {
@@ -239,7 +239,7 @@ export function BulkImportDialog() {
                     e.stopPropagation();
                     handleDownloadTemplate();
                   }}
-                  className="mt-1 text-xs text-primary underline hover:text-primary/80 inline-flex items-center gap-1 cursor-pointer"
+                  className="mt-1 text-sm text-primary underline hover:text-primary/80 inline-flex items-center gap-1 cursor-pointer"
                 >
                   <Download className="w-3 h-3" />
                   Nie masz pliku? Pobierz formatkę Excel (.xlsx)
@@ -252,7 +252,7 @@ export function BulkImportDialog() {
         {/* KROK 2: PREVIEW */}
         {step === 'preview' && dryRunResult && (
           <div className="space-y-4 py-2 flex-1 overflow-hidden flex flex-col">
-            <div className="flex items-center gap-4 text-xs">
+            <div className="flex items-center gap-4 text-sm">
               <div className="p-2.5 rounded-lg bg-muted flex-1">
                 <span className="text-muted-foreground block">Wszystkich wierszy</span>
                 <span className="font-semibold text-base text-foreground">{dryRunResult.totalRows}</span>
@@ -270,7 +270,7 @@ export function BulkImportDialog() {
             {dryRunResult.willExceedLimit && (
               <div
                 data-testid="capacity-warning-banner"
-                className="p-3 bg-muted border border-border rounded-lg text-xs flex items-start gap-3 text-foreground"
+                className="p-3 bg-muted border border-border rounded-lg text-sm flex items-start gap-3 text-foreground"
               >
                 <AlertTriangle className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                 <div className="space-y-1">
@@ -281,7 +281,7 @@ export function BulkImportDialog() {
                     Liczba pensjonariuszy po zaimportowaniu ({dryRunResult.projectedTotal}) przekroczy zadeklarowaną pojemność placówki ({dryRunResult.residentLimit}) o{' '}
                     <strong className="text-foreground">{dryRunResult.excessCount}</strong>.
                   </p>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-sm text-muted-foreground">
                     Po zatwierdzeniu importu zadeklarowany limit pojemności placówki zostanie automatycznie powiększony do <strong>{dryRunResult.projectedTotal}</strong>, co odzwierciedli się w widoku placówek u Super Administratora.
                   </p>
                 </div>
@@ -289,7 +289,7 @@ export function BulkImportDialog() {
             )}
 
             {dryRunResult.invalidRowsCount > 0 && (
-              <div className="p-3 bg-muted border border-border rounded-lg text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-foreground">
+              <div className="p-3 bg-muted border border-border rounded-lg text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-foreground">
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-primary shrink-0" />
                   <span>Część wierszy zawiera błędy formatu. Pobierz formatkę Excel, aby zweryfikować kolumny i wartości.</span>
@@ -299,7 +299,7 @@ export function BulkImportDialog() {
                   variant="outline"
                   size="sm"
                   onClick={handleDownloadTemplate}
-                  className="gap-1.5 text-xs bg-card shrink-0 h-7 text-foreground"
+                  className="gap-1.5 text-sm bg-card shrink-0 h-7 text-foreground"
                 >
                   <Download className="w-3 h-3 text-foreground" />
                   Pobierz formatkę Excel
@@ -357,7 +357,7 @@ export function BulkImportDialog() {
                 onChange={(e) => setOnlyValid(e.target.checked)}
                 className="rounded border-border text-foreground"
               />
-              <label htmlFor="only-valid-check" className="text-xs text-foreground cursor-pointer">
+              <label htmlFor="only-valid-check" className="text-sm text-foreground cursor-pointer">
                 Importuj wyłącznie poprawne rekordy (pomiń {dryRunResult.invalidRowsCount} błędnych)
               </label>
             </div>
@@ -374,11 +374,11 @@ export function BulkImportDialog() {
               Pomyślnie zaimportowano {importCount} pensjonariuszy!
             </h3>
             {capacityUpdated?.updated && (
-              <p className="text-xs text-foreground font-medium bg-muted p-2 rounded border border-border inline-block">
+              <p className="text-sm text-foreground font-medium bg-muted p-2 rounded border border-border inline-block">
                 Zadeklarowana pojemność placówki została automatycznie zaktualizowana do <strong>{capacityUpdated.newCapacity}</strong>.
               </p>
             )}
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               Dane zostały zabezpieczone, a lista placówki została zaktualizowana.
             </p>
           </div>
@@ -401,7 +401,7 @@ export function BulkImportDialog() {
                 variant="outline"
                 size="sm"
                 onClick={handleDownloadTemplate}
-                className="gap-1.5 text-xs"
+                className="gap-1.5 text-sm"
               >
                 <Download className="w-3.5 h-3.5 text-foreground" />
                 Pobierz formatkę Excel

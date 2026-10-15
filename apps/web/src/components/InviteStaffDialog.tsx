@@ -159,11 +159,11 @@ export function InviteStaffDialog() {
               <p className="text-sm font-semibold text-foreground">
                 Zaproszenie wygenerowane pomyślnie!
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Wyślij poniższy link pracownikowi, aby umożliwić założenie konta:
               </p>
               <div className="flex items-center gap-2 mt-2">
-                <Input readOnly value={generatedUrl} className="text-xs font-mono h-8 bg-background" />
+                <Input readOnly value={generatedUrl} className="text-sm font-mono h-8 bg-background" />
                 <Button 
                   type="button" 
                   variant="outline" 

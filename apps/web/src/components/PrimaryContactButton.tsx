@@ -19,7 +19,7 @@ export function PrimaryContactButton({ linkId, residentId, isPrimary }: PrimaryC
     return (
       <span
         data-testid="badge-primary-contact"
-        className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full"
+        className="inline-flex items-center gap-1 text-sm font-semibold text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full"
       >
         <Star className="w-3 h-3 fill-primary text-primary" />
         Główny kontakt
@@ -47,7 +47,7 @@ export function PrimaryContactButton({ linkId, residentId, isPrimary }: PrimaryC
       data-testid="btn-set-primary-contact"
       onClick={handleSetPrimary}
       disabled={loading}
-      className="text-xs text-muted-foreground hover:text-foreground gap-1.5 h-7 px-2"
+      className="text-sm text-muted-foreground hover:text-foreground gap-1.5 h-7 px-2"
     >
       {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Star className="w-3 h-3" />}
       Ustaw jako główny

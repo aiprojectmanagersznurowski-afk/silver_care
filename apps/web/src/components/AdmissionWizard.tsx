@@ -200,7 +200,7 @@ export function AdmissionWizard() {
                 {selectedBedInfo ? ` Przypisano: ${selectedBedInfo}.` : ''}
               </p>
             </div>
-            <div className="p-4 bg-primary/10 rounded-xl border border-primary/20 text-left text-xs text-foreground max-w-md mx-auto">
+            <div className="p-4 bg-primary/10 rounded-xl border border-primary/20 text-left text-sm text-foreground max-w-md mx-auto">
               <span className="font-semibold text-foreground block mb-1">Kolejny krok: Uzupełnienie dokumentacji</span>
               Możesz teraz przejść bezpośrednio do profilu podopiecznego, aby załączyć skan umowy oraz uzupełnić dane kontaktowe bliskich.
             </div>
@@ -271,9 +271,9 @@ export function AdmissionWizard() {
                     value={idValue}
                     onChange={(e) => handleIdChange(e.target.value)}
                   />
-                  {idError && <p data-testid="national-id-error" className="text-xs text-destructive">{idError}</p>}
+                  {idError && <p data-testid="national-id-error" className="text-sm text-destructive">{idError}</p>}
                   {calculatedBirthDate && calculatedGender && (
-                    <div className="flex items-center gap-3 mt-1 text-xs text-foreground bg-muted p-2 rounded border border-border">
+                    <div className="flex items-center gap-3 mt-1 text-sm text-foreground bg-muted p-2 rounded border border-border">
                       <span>Data ur.: <strong>{calculatedBirthDate}</strong></span>
                       <span>Płeć: <strong>{calculatedGender === 'F' ? 'Kobieta' : 'Mężczyzna'}</strong></span>
                     </div>
@@ -328,14 +328,14 @@ export function AdmissionWizard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <h4 className="text-sm font-semibold text-foreground">Rekomendowane łóżka</h4>
-                    <p className="text-xs text-muted-foreground">Dopasowane według kryteriów płci w pokoju oraz piętra.</p>
+                    <p className="text-sm text-muted-foreground">Dopasowane według kryteriów płci w pokoju oraz piętra.</p>
                   </div>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={handleFetchSuggestions}
                     disabled={loadingSuggestions}
-                    className="gap-1 text-xs"
+                    className="gap-1 text-sm"
                   >
                     {loadingSuggestions ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 text-foreground" />}
                     Przelicz ponownie
@@ -374,14 +374,14 @@ export function AdmissionWizard() {
                               <span className="font-semibold text-sm text-foreground">
                                 Pokój {s.roomNumber} — Łóżko {s.bedNumber}
                               </span>
-                              <Badge variant="outline" className="text-xs font-normal">
+                              <Badge variant="outline" className="text-sm font-normal">
                                 Piętro {s.floorNumber}
                               </Badge>
-                              <Badge variant="outline" className="text-xs font-normal text-muted-foreground">
+                              <Badge variant="outline" className="text-sm font-normal text-muted-foreground">
                                 Dopasowanie: {s.score} pkt
                               </Badge>
                             </div>
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-sm text-muted-foreground">
                               {s.reason}
                             </p>
                           </div>
@@ -400,7 +400,7 @@ export function AdmissionWizard() {
                   </div>
                 )}
 
-                <div className="pt-2 border-t flex items-center justify-between text-xs text-muted-foreground">
+                <div className="pt-2 border-t flex items-center justify-between text-sm text-muted-foreground">
                   <span>{selectedBedInfo ? `Wybrano: ${selectedBedInfo}` : 'Nie wybrano żadnego łóżka'}</span>
                   {selectedBedId && (
                     <button
@@ -424,28 +424,28 @@ export function AdmissionWizard() {
                 <div className="bg-muted p-4 rounded-lg border border-border space-y-3">
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <span className="text-xs text-muted-foreground block">Imię i nazwisko</span>
+                      <span className="text-sm text-muted-foreground block">Imię i nazwisko</span>
                       <span className="font-semibold">{firstName} {lastName}</span>
                     </div>
                     <div>
-                      <span className="text-xs text-muted-foreground block">Identyfikator (PESEL)</span>
+                      <span className="text-sm text-muted-foreground block">Identyfikator (PESEL)</span>
                       <span className="font-mono">{idValue.slice(0, 6)}*****</span>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <span className="text-xs text-muted-foreground block">Płeć i data ur.</span>
+                      <span className="text-sm text-muted-foreground block">Płeć i data ur.</span>
                       <span>{calculatedGender === 'F' ? 'Kobieta' : 'Mężczyzna'}, {calculatedBirthDate}</span>
                     </div>
                     <div>
-                      <span className="text-xs text-muted-foreground block">Profil opiekuńczy</span>
+                      <span className="text-sm text-muted-foreground block">Profil opiekuńczy</span>
                       <span>{careLevel} {isZsn ? '(ZSN: Znaczny stopień niepełnosprawności)' : ''}</span>
                     </div>
                   </div>
 
                   <div>
-                    <span className="text-xs text-muted-foreground block">Przypisane łóżko</span>
+                    <span className="text-sm text-muted-foreground block">Przypisane łóżko</span>
                     <span className="font-medium text-foreground">
                       {selectedBedInfo || 'Brak przypisanego łóżka (można przypisać później)'}
                     </span>
@@ -453,7 +453,7 @@ export function AdmissionWizard() {
 
                   {notes && (
                     <div>
-                      <span className="text-xs text-muted-foreground block">Uwagi</span>
+                      <span className="text-sm text-muted-foreground block">Uwagi</span>
                       <span className="italic">{notes}</span>
                     </div>
                   )}

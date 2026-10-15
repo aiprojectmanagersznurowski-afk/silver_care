@@ -145,7 +145,7 @@ export function BedAllocationOptimizerDialog({
               size="sm"
               onClick={loadAnalysis}
               disabled={isLoading || isExecuting}
-              className="gap-1.5 text-xs text-foreground"
+              className="gap-1.5 text-sm text-foreground"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
               Przelicz ponownie
@@ -169,7 +169,7 @@ export function BedAllocationOptimizerDialog({
             {metrics && (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="p-3 bg-muted rounded-xl border border-border">
-                  <p className="text-xs text-muted-foreground">Wskaźnik jakości</p>
+                  <p className="text-sm text-muted-foreground">Wskaźnik jakości</p>
                   <p
                     className={`text-xl font-bold ${
                       metrics.overallScore >= 90
@@ -184,7 +184,7 @@ export function BedAllocationOptimizerDialog({
                 </div>
 
                 <div className="p-3 bg-muted rounded-xl border border-border">
-                  <p className="text-xs text-muted-foreground">Konflikty płci</p>
+                  <p className="text-sm text-muted-foreground">Konflikty płci</p>
                   <p
                     className={`text-xl font-bold ${
                       metrics.genderConflictsCount > 0 ? 'text-foreground' : 'text-foreground'
@@ -195,7 +195,7 @@ export function BedAllocationOptimizerDialog({
                 </div>
 
                 <div className="p-3 bg-muted rounded-xl border border-border">
-                  <p className="text-xs text-muted-foreground">Bariery mobilności</p>
+                  <p className="text-sm text-muted-foreground">Bariery mobilności</p>
                   <p
                     className={`text-xl font-bold ${
                       metrics.mobilityMismatchCount > 0 ? 'text-foreground' : 'text-foreground'
@@ -206,7 +206,7 @@ export function BedAllocationOptimizerDialog({
                 </div>
 
                 <div className="p-3 bg-muted rounded-xl border border-border">
-                  <p className="text-xs text-muted-foreground">Wolne łóżka</p>
+                  <p className="text-sm text-muted-foreground">Wolne łóżka</p>
                   <p className="text-xl font-bold text-foreground">{metrics.freeBeds}</p>
                 </div>
               </div>
@@ -234,7 +234,7 @@ export function BedAllocationOptimizerDialog({
                 <h4 className="text-base font-semibold text-foreground">
                   Brak konfliktów alokacji
                 </h4>
-                <p className="text-xs text-foreground max-w-md mx-auto">
+                <p className="text-sm text-foreground max-w-md mx-auto">
                   Wszystkie pokoje wieloosobowe są zgodne płciowo, a pensjonariusze o ograniczonej mobilności przebywają na parterze.
                 </p>
               </div>
@@ -247,7 +247,7 @@ export function BedAllocationOptimizerDialog({
                   <h4 className="text-sm font-semibold text-foreground">
                     Rekomendowane przeniesienia ({suggestions.length})
                   </h4>
-                  <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer">
+                  <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
                     <input
                       type="checkbox"
                       checked={selectedIds.size === suggestions.length && suggestions.length > 0}
@@ -279,11 +279,11 @@ export function BedAllocationOptimizerDialog({
 
                         <div className="flex-1 space-y-1">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-foreground tracking-wide font-mono">
+                            <span className="text-sm font-bold text-foreground tracking-wide font-mono">
                               Pensjonariusz {s.residentPseudonym} ({s.gender === 'F' ? 'K' : 'M'})
                             </span>
                             <span
-                              className={`text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full ${
+                              className={`text-sm uppercase font-semibold px-2 py-0.5 rounded-full ${
                                 s.priority === 'high'
                                   ? 'bg-muted text-foreground'
                                   : 'bg-muted text-foreground'
@@ -293,7 +293,7 @@ export function BedAllocationOptimizerDialog({
                             </span>
                           </div>
 
-                          <div className="flex items-center gap-2 text-xs text-foreground">
+                          <div className="flex items-center gap-2 text-sm text-foreground">
                             <span className="bg-muted px-2 py-0.5 rounded-md font-medium">
                               Pokój {s.fromRoomNumber} (P.{s.fromFloor}), Łóżko {s.fromBedLabel}
                             </span>
@@ -303,7 +303,7 @@ export function BedAllocationOptimizerDialog({
                             </span>
                           </div>
 
-                          <p className="text-xs text-foreground pt-0.5">{s.reason}</p>
+                          <p className="text-sm text-foreground pt-0.5">{s.reason}</p>
                         </div>
                       </div>
                     </div>
@@ -311,7 +311,7 @@ export function BedAllocationOptimizerDialog({
                 </div>
 
                 <div className="pt-3 border-t border-border flex items-center justify-between">
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-sm text-muted-foreground">
                     Wybrano: {selectedIds.size} z {suggestions.length} propozycji
                   </p>
                   <Button

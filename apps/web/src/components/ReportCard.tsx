@@ -80,7 +80,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
                 : 'Podopieczny'
               }
             </CardTitle>
-            <CardDescription className="text-xs text-muted-foreground mt-0.5">
+            <CardDescription className="text-sm text-muted-foreground mt-0.5">
               Utworzono: {report.created_at ? new Date(report.created_at).toLocaleDateString('pl-PL', {
                 year: 'numeric',
                 month: 'long',
@@ -93,12 +93,12 @@ export function ReportCard({ report }: { report: ReportItem }) {
 
           <div>
             {isPublished ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary border border-primary/20" data-testid="report-status-published">
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-sm font-medium text-primary border border-primary/20" data-testid="report-status-published">
                 <CheckCircle2 className="h-3 w-3" />
                 Opublikowany dla rodziny
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-foreground border border-border" data-testid="report-status-draft">
+              <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-sm font-medium text-foreground border border-border" data-testid="report-status-draft">
                 <Clock className="h-3 w-3" />
                 Szkic do weryfikacji
               </span>
@@ -123,7 +123,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
 
         {/* Strażnik kompletności raportu opiekuńczego (AI Quality Gate) */}
         {!isPublished && (
-          <div className="rounded-xl border border-border bg-muted p-3 space-y-2.5 text-xs" data-testid="completeness-gate">
+          <div className="rounded-xl border border-border bg-muted p-3 space-y-2.5 text-sm" data-testid="completeness-gate">
             <div className="flex items-center justify-between">
               <span className="font-semibold text-foreground flex items-center gap-1.5" data-testid="completeness-score">
                 <Sparkles className="w-3.5 h-3.5 text-foreground" />
@@ -161,7 +161,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
             </div>
 
             {!completeness.isComplete && (
-              <p className="text-muted-foreground italic text-[11px] pt-0.5" data-testid="completeness-suggestion">
+              <p className="text-muted-foreground italic text-sm pt-0.5" data-testid="completeness-suggestion">
                 Podpowiedź asystenta: Bliscy najbardziej wyczekują informacji o apetycie, samopoczuciu i aktywności. Możesz uzupełnić treść lub opublikować raport w obecnym kształcie.
               </p>
             )}
@@ -174,7 +174,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
               <Button 
                 disabled={loading} 
                 onClick={handleSave} 
-                className="rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-semibold gap-1.5"
+                className="rounded-xl bg-primary hover:bg-primary/90 text-white text-sm font-semibold gap-1.5"
                 data-testid="save-report-button"
               >
                 <Save className="h-3.5 w-3.5" />
@@ -187,7 +187,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
                   setIsEditing(false)
                 }} 
                 variant="outline"
-                className="rounded-xl border-border text-foreground hover:bg-muted/50 text-xs font-medium gap-1.5"
+                className="rounded-xl border-border text-foreground hover:bg-muted/50 text-sm font-medium gap-1.5"
                 data-testid="cancel-edit-report-button"
               >
                 <X className="h-3.5 w-3.5" />
@@ -200,7 +200,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
                 <Button 
                   disabled={loading} 
                   onClick={handlePublish} 
-                  className="rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-semibold gap-1.5"
+                  className="rounded-xl bg-primary hover:bg-primary/90 text-white text-sm font-semibold gap-1.5"
                   data-testid="publish-report-button"
                 >
                   <Send className="h-3.5 w-3.5" />
@@ -211,7 +211,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
                 disabled={loading} 
                 onClick={() => setIsEditing(true)} 
                 variant="outline"
-                className="rounded-xl border-border text-foreground hover:bg-muted/50 text-xs font-medium gap-1.5"
+                className="rounded-xl border-border text-foreground hover:bg-muted/50 text-sm font-medium gap-1.5"
                 data-testid="edit-report-button"
               >
                 <Edit3 className="h-3.5 w-3.5" />

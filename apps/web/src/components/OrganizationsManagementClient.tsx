@@ -125,7 +125,7 @@ export function OrganizationsManagementClient({
             type="button"
             aria-label="Widok kafelków"
             onClick={() => handleModeChange('cards')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               viewMode === 'cards'
                 ? 'bg-card text-primary font-semibold'
                 : 'text-muted-foreground hover:text-foreground'
@@ -138,7 +138,7 @@ export function OrganizationsManagementClient({
             type="button"
             aria-label="Widok tabeli"
             onClick={() => handleModeChange('table')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               viewMode === 'table'
                 ? 'bg-card text-primary font-semibold'
                 : 'text-muted-foreground hover:text-foreground'
@@ -192,14 +192,14 @@ export function OrganizationsManagementClient({
                       {org.resident_limit}
                     </TableCell>
                     <TableCell className="text-center">
-                      <div className="font-semibold text-xs text-foreground">
+                      <div className="font-semibold text-sm text-foreground">
                         {org.active_resident_count} / {org.resident_limit}
                       </div>
-                      <div className="text-[10px] text-muted-foreground">{occupancyPercent}%</div>
+                      <div className="text-sm text-muted-foreground">{occupancyPercent}%</div>
                     </TableCell>
                     <TableCell className="text-center">
                       <span className="font-medium text-foreground">{org.staff_count}</span>
-                      <span className="text-[10px] text-muted-foreground block">({org.administrator_count} adm.)</span>
+                      <span className="text-sm text-muted-foreground block">({org.administrator_count} adm.)</span>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {new Date(org.created_at).toLocaleDateString('pl-PL')}
@@ -209,7 +209,7 @@ export function OrganizationsManagementClient({
                         <EditOrganizationDialog organization={org} />
                         <Link
                           href={`/admin/organizations/${org.organization_id}`}
-                          className="inline-flex items-center gap-1 rounded-lg bg-muted/50 px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                          className="inline-flex items-center gap-1 rounded-lg bg-muted/50 px-2.5 py-1.5 text-sm font-medium text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
                         >
                           Szczegóły
                           <ChevronRight className="h-3.5 w-3.5" />
@@ -248,7 +248,7 @@ export function OrganizationsManagementClient({
                       </Link>
                       <BusinessIdBadge type="organization" id={org.organization_id} />
                     </div>
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground pl-11 truncate">
+                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground pl-11 truncate">
                       <MapPin className="h-3.5 w-3.5 shrink-0" />
                       <span className="truncate">{org.address || 'Brak podanego adresu'}</span>
                     </div>
@@ -258,7 +258,7 @@ export function OrganizationsManagementClient({
                     <EditOrganizationDialog organization={org} />
                     <Link
                       href={`/admin/organizations/${org.organization_id}`}
-                      className="flex items-center gap-1 rounded-lg bg-muted/50 px-2.5 py-1 text-xs font-medium text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors"
+                      className="flex items-center gap-1 rounded-lg bg-muted/50 px-2.5 py-1 text-sm font-medium text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors"
                     >
                       <span>Szczegóły</span>
                       <ChevronRight className="h-3.5 w-3.5" />
@@ -268,41 +268,41 @@ export function OrganizationsManagementClient({
 
                 <div className="mt-6 pt-4 border-t border-border grid grid-cols-3 gap-4 text-center">
                   <div className="bg-muted/50 rounded-xl p-3">
-                    <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mb-1">
+                    <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground mb-1">
                       <Users className="h-3.5 w-3.5 text-primary" />
                       <span>Podopieczni</span>
                     </div>
                     <div className="text-base font-bold text-foreground">
                       {org.active_resident_count}
-                      <span className="text-xs font-normal text-muted-foreground"> / {org.resident_limit}</span>
+                      <span className="text-sm font-normal text-muted-foreground"> / {org.resident_limit}</span>
                     </div>
-                    <div className="text-[10px] text-muted-foreground mt-0.5">{occupancyPercent}% limitu</div>
+                    <div className="text-sm text-muted-foreground mt-0.5">{occupancyPercent}% limitu</div>
                   </div>
 
                   <div className="bg-muted/50 rounded-xl p-3">
-                    <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mb-1">
+                    <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground mb-1">
                       <UserCheck className="h-3.5 w-3.5 text-primary" />
                       <span>Personel</span>
                     </div>
                     <div className="text-base font-bold text-foreground">
                       {org.staff_count}
                     </div>
-                    <div className="text-[10px] text-muted-foreground mt-0.5">Opiekunowie</div>
+                    <div className="text-sm text-muted-foreground mt-0.5">Opiekunowie</div>
                   </div>
 
                   <div className="bg-muted/50 rounded-xl p-3">
-                    <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mb-1">
+                    <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground mb-1">
                       <UserCog className="h-3.5 w-3.5 text-primary" />
                       <span>Admini</span>
                     </div>
                     <div className="text-base font-bold text-foreground">
                       {org.administrator_count}
                     </div>
-                    <div className="text-[10px] text-muted-foreground mt-0.5">Org Admini</div>
+                    <div className="text-sm text-muted-foreground mt-0.5">Org Admini</div>
                   </div>
                 </div>
 
-                <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
+                <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
                     <span>W systemie od: {new Date(org.created_at).toLocaleDateString('pl-PL')}</span>

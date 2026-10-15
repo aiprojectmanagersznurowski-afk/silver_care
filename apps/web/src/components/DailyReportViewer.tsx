@@ -70,7 +70,7 @@ export function DailyReportViewer({ residentId }: DailyReportViewerProps) {
         )}
       </div>
 
-      <div className="mt-6 pt-4 border-t text-xs text-muted-foreground text-center">
+      <div className="mt-6 pt-4 border-t text-sm text-muted-foreground text-center">
         Podsumowanie generowane przy wsparciu AI, zatwierdzone przez personel placówki
       </div>
     </div>

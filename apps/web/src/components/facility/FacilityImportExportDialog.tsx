@@ -177,7 +177,7 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
                   <div className="p-4 bg-muted rounded-xl border border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                       <h4 className="text-sm font-semibold text-foreground">Wzorcowa formatka arkusza (Pokoje i Łóżka)</h4>
-                      <p className="text-xs text-muted-foreground mt-0.5">
+                      <p className="text-sm text-muted-foreground mt-0.5">
                         Pobierz przygotowany plik z prawidłowymi kolumnami i arkuszem instrukcji.
                       </p>
                     </div>
@@ -196,7 +196,7 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
                       Wybierz plik z dysku
                     </Button>
                     <div className="mt-3">
-                      <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDownloadTemplate(); }} className="text-xs text-primary underline hover:text-primary/80 inline-flex items-center gap-1 cursor-pointer">
+                      <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDownloadTemplate(); }} className="text-sm text-primary underline hover:text-primary/80 inline-flex items-center gap-1 cursor-pointer">
                         <Download className="w-3 h-3" /> Nie masz pliku? Pobierz formatkę Excel (.xlsx)
                       </button>
                     </div>
@@ -220,7 +220,7 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
                     <AlertCircle className="w-4 h-4 shrink-0" />
                     <span>{importError}</span>
                   </div>
-                  <Button type="button" variant="outline" size="sm" onClick={handleDownloadTemplate} className="gap-1.5 text-xs bg-card shrink-0 h-8 text-foreground">
+                  <Button type="button" variant="outline" size="sm" onClick={handleDownloadTemplate} className="gap-1.5 text-sm bg-card shrink-0 h-8 text-foreground">
                     <Download className="w-3.5 h-3.5" /> Pobierz formatkę Excel
                   </Button>
                 </div>

@@ -91,7 +91,7 @@ export default function AssignBedDialog({ bedId, onAssigned }: AssignBedDialogPr
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button size="sm" className="h-8 text-xs" />}>
+      <DialogTrigger render={<Button size="sm" className="h-8 text-sm" />}>
         <UserPlus className="w-3.5 h-3.5 mr-1.5" />
         Przypisz
       </DialogTrigger>

@@ -128,11 +128,11 @@ export function AdminMessagesInbox() {
                   <span className="text-sm font-medium text-foreground truncate max-w-[160px]" title={msg.residents ? `${msg.residents.first_name} ${msg.residents.last_name}` : formatBusinessId('resident', msg.resident_id)}>
                     {msg.residents ? `${msg.residents.first_name} ${msg.residents.last_name}` : formatBusinessId('resident', msg.resident_id)}
                   </span>
-                  <span className="text-[10px] text-muted-foreground whitespace-nowrap ml-2 shrink-0">
+                  <span className="text-sm text-muted-foreground whitespace-nowrap ml-2 shrink-0">
                     {format(new Date(msg.created_at), "d MMM, HH:mm", { locale: pl })}
                   </span>
                 </div>
-                <p className="text-xs text-muted-foreground truncate">
+                <p className="text-sm text-muted-foreground truncate">
                   {msg.is_from_family ? 'Rodzina: ' : 'Ty: '}
                   {msg.content}
                 </p>
@@ -158,7 +158,7 @@ export function AdminMessagesInbox() {
                     key={msg.id} 
                     className={`flex flex-col max-w-[80%] ${isStaff ? 'ml-auto items-end' : 'mr-auto items-start'}`}
                   >
-                    <span className="text-[10px] text-muted-foreground mb-1 mx-1">
+                    <span className="text-sm text-muted-foreground mb-1 mx-1">
                       {format(new Date(msg.created_at), "d MMM, HH:mm", { locale: pl })}
                     </span>
                     <div 
@@ -170,7 +170,7 @@ export function AdminMessagesInbox() {
                     >
                       <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
                     </div>
-                    <span className="text-[10px] text-muted-foreground mt-1 mx-1">
+                    <span className="text-sm text-muted-foreground mt-1 mx-1">
                       {isStaff ? 'Personel' : 'Rodzina'}
                     </span>
                   </div>

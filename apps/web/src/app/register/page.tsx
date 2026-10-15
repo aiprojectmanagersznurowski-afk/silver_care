@@ -160,7 +160,7 @@ function RegisterContent() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3 pt-2">
-          <div className="rounded-lg bg-surface-sunken p-3 text-xs text-text-secondary space-y-1">
+          <div className="rounded-lg bg-surface-sunken p-3 text-sm text-text-secondary space-y-1">
             <p className="font-semibold text-foreground">Co możesz zrobić?</p>
             <p>• Jeśli zaproszenie wygasło lub zostało odwołane, skontaktuj się z personelem placówki opiekuńczej, aby otrzymać nowy link.</p>
             <p>• Jeśli konto zostało już utworzone, przejdź do strony logowania.</p>
@@ -204,7 +204,7 @@ function RegisterContent() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="rounded-lg bg-surface-sunken p-3 text-xs text-text-secondary space-y-1">
+          <div className="rounded-lg bg-surface-sunken p-3 text-sm text-text-secondary space-y-1">
             <p className="font-semibold text-foreground">Gotowe do użycia:</p>
             <p>• Dostęp do codziennych podsumowań i aktywności podopiecznego.</p>
             <p>• Możliwość bezpośredniego kontaktu z personelem placówki.</p>
@@ -245,14 +245,14 @@ function RegisterContent() {
 
       <CardContent className="space-y-4">
         {/* Informacja o zaproszeniu */}
-        <div className="rounded-lg border border-border bg-surface-sunken p-3 text-xs space-y-1.5">
+        <div className="rounded-lg border border-border bg-surface-sunken p-3 text-sm space-y-1.5">
           <div className="flex justify-between items-center">
             <span className="text-text-secondary">Adres e-mail:</span>
             <span className="font-medium text-foreground">{maskedEmail || 'Twój adres e-mail'}</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-text-secondary">Przyznana rola:</span>
-            <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold ${
+            <span className={`inline-flex items-center px-2 py-0.5 rounded text-sm font-semibold ${
               isGuardian ? 'bg-primary/15 text-primary' : 'bg-secondary text-secondary-foreground'
             }`}>
               {isGuardian ? 'Opiekun prawny' : 'Bliski / Rodzina'}
@@ -295,7 +295,7 @@ function RegisterContent() {
           </div>
 
           <div className="space-y-3 rounded-lg border border-border p-3 bg-surface-sunken">
-            <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
+            <p className="text-sm font-semibold text-text-secondary uppercase tracking-wider">
               Wymagane oświadczenia
             </p>
             <label className="flex items-start gap-2 cursor-pointer select-none">
@@ -306,7 +306,7 @@ function RegisterContent() {
                 className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary"
                 disabled={isSubmitting}
               />
-              <span className="text-xs text-foreground leading-relaxed">
+              <span className="text-sm text-foreground leading-relaxed">
                 Akceptuję regulamin korzystania z platformy Silver Care oraz zasady ochrony prywatności.
               </span>
             </label>
@@ -319,7 +319,7 @@ function RegisterContent() {
                 className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary"
                 disabled={isSubmitting}
               />
-              <span className="text-xs text-foreground leading-relaxed">
+              <span className="text-sm text-foreground leading-relaxed">
                 {isGuardian ? (
                   <>
                     Oświadczam, że jestem opiekunem prawnym pensjonariusza i wyrażam zgodę na przetwarzanie danych niezbędnych do opieki i generowania raportów dziennych (zgodnie z Art. 9 RODO).
@@ -352,7 +352,7 @@ function RegisterContent() {
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
+            <div className="relative flex justify-center text-sm uppercase">
               <span className="bg-card px-2 text-muted-foreground">lub</span>
             </div>
           </div>
@@ -360,7 +360,7 @@ function RegisterContent() {
           <Button 
             type="button" 
             variant="outline" 
-            className="w-full text-xs" 
+            className="w-full text-sm" 
             disabled={isSubmitting || !consentsValid}
             onClick={async () => {
               if (!token || !consentsValid) return

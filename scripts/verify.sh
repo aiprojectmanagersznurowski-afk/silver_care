@@ -28,29 +28,38 @@ run_step(){
   return $code
 }
 
-step "1/7 Spójność kontraktów"
+step "1/8 Spójność kontraktów"
 node tools/sc-validate.mjs && ok "kontrakty spójne" || bad "sc-validate"
 
-step "2/7 Żywotność reguł bramki"
+step "2/8 Żywotność reguł bramki"
 run_step "wszystkie reguły blokują swoje mutacje" node tools/sc-selftest.mjs
 
-step "3/7 Dryf artefaktów generowanych"
+step "3/8 Dryf artefaktów generowanych"
 node tools/sc-codegen.mjs --check && ok "artefakty zgodne z kontraktem" || bad "dryf codegenu"
 
-step "4/7 Nazewnictwo rdzenia"
+step "4/8 Nazewnictwo rdzenia"
 run_step "brak porzuconych nazw" node tools/sc-naming.mjs
 
-step "5/7 Spójność typów TypeScript (apps/web)"
+step "5/8 Spójność typów TypeScript (apps/web)"
 run_step "typy TypeScript poprawne" pnpm --filter web exec tsc --noEmit
 
-step "6/7 Testy jednostkowe"
+step "6/8 Kontrakt typograficzny UI (zakaz mikro-fontów <14px)"
+TYPO_VIOLATIONS=$(git grep -n -E "text-xs|text-\[(8|9|10|11|12|13)px\]" apps/web/src/ 2>/dev/null || true)
+if [ -n "$TYPO_VIOLATIONS" ]; then
+  printf "%s\n" "$TYPO_VIOLATIONS"
+  bad "znaleziono zakazane mikro-fonty (<14px) w apps/web/src/"
+else
+  ok "brak zakazanych mikro-fontów (<14px) w apps/web/src/"
+fi
+
+step "7/8 Testy jednostkowe"
 if [ -f package.json ] && command -v pnpm >/dev/null 2>&1 && grep -q '"test"' package.json 2>/dev/null; then
   run_step "testy przechodzą" pnpm test --run
 else
   skip "brak pnpm albo skryptu test — aplikacja nie jest jeszcze zbudowana"
 fi
 
-step "7/7 Identyfikowalność"
+step "8/8 Identyfikowalność"
 if [ "$FULL" = "1" ]; then
   run_step "każdy test wskazuje wymaganie" node tools/sc-trace.mjs --enforce
 else

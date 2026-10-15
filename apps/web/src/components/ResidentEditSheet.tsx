@@ -135,7 +135,7 @@ export function ResidentEditSheet({ resident, onUpdated }: ResidentEditSheetProp
               {errorMessage && (
                 <div
                   role="alert"
-                  className="flex items-center gap-2 p-3 text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-lg"
+                  className="flex items-center gap-2 p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg"
                 >
                   <AlertCircle className="h-4 w-4 shrink-0" />
                   <span>{errorMessage}</span>
@@ -145,7 +145,7 @@ export function ResidentEditSheet({ resident, onUpdated }: ResidentEditSheetProp
               {successMessage && (
                 <div
                   role="status"
-                  className="flex items-center gap-2 p-3 text-xs text-foreground bg-muted border border-border rounded-lg"
+                  className="flex items-center gap-2 p-3 text-sm text-foreground bg-muted border border-border rounded-lg"
                 >
                   <Check className="h-4 w-4 shrink-0" />
                   <span>Zmiany zostały pomyślnie zapisane!</span>
@@ -153,7 +153,7 @@ export function ResidentEditSheet({ resident, onUpdated }: ResidentEditSheetProp
               )}
 
               <div className="space-y-1.5">
-                <Label htmlFor="first_name" className="text-xs font-medium text-foreground">
+                <Label htmlFor="first_name" className="text-sm font-medium text-foreground">
                   Imię *
                 </Label>
                 <Input
@@ -166,7 +166,7 @@ export function ResidentEditSheet({ resident, onUpdated }: ResidentEditSheetProp
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="last_name" className="text-xs font-medium text-foreground">
+                <Label htmlFor="last_name" className="text-sm font-medium text-foreground">
                   Nazwisko *
                 </Label>
                 <Input
@@ -180,7 +180,7 @@ export function ResidentEditSheet({ resident, onUpdated }: ResidentEditSheetProp
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="birth_date" className="text-xs font-medium text-foreground">
+                  <Label htmlFor="birth_date" className="text-sm font-medium text-foreground">
                     Data urodzenia
                   </Label>
                   <Input
@@ -193,7 +193,7 @@ export function ResidentEditSheet({ resident, onUpdated }: ResidentEditSheetProp
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="admission_date" className="text-xs font-medium text-foreground">
+                  <Label htmlFor="admission_date" className="text-sm font-medium text-foreground">
                     Data przyjęcia
                   </Label>
                   <Input
@@ -207,7 +207,7 @@ export function ResidentEditSheet({ resident, onUpdated }: ResidentEditSheetProp
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="care_level" className="text-xs font-medium text-foreground">
+                <Label htmlFor="care_level" className="text-sm font-medium text-foreground">
                   Poziom opieki
                 </Label>
                 <NativeSelect
@@ -224,7 +224,7 @@ export function ResidentEditSheet({ resident, onUpdated }: ResidentEditSheetProp
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="notes" className="text-xs font-medium text-foreground">
+                <Label htmlFor="notes" className="text-sm font-medium text-foreground">
                   Notatki / uwagi organizacyjne
                 </Label>
                 <Textarea

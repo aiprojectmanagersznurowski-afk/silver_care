@@ -68,7 +68,7 @@ export function ResendAdminInviteButton({
         size="sm"
         disabled={isPending}
         onClick={handleResend}
-        className="rounded-xl border-border text-foreground hover:bg-muted/50 text-xs h-9 font-medium gap-1.5"
+        className="rounded-xl border-border text-foreground hover:bg-muted/50 text-sm h-9 font-medium gap-1.5"
         title="Wyślij e-mail z zaproszeniem lub wygeneruj link aktywacyjny"
       >
         {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Mail className="h-3.5 w-3.5 text-primary" />}
@@ -85,13 +85,13 @@ export function ResendAdminInviteButton({
           </DialogHeader>
 
           {resultData?.error ? (
-            <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-4 text-xs text-destructive flex items-center gap-2">
+            <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-4 text-sm text-destructive flex items-center gap-2">
               <AlertCircle className="h-4 w-4 shrink-0" />
               <span>{resultData.error}</span>
             </div>
           ) : (
             <div className="space-y-4 py-2">
-              <div className="rounded-xl bg-primary/10 border border-primary/20 p-4 text-xs text-foreground space-y-1">
+              <div className="rounded-xl bg-primary/10 border border-primary/20 p-4 text-sm text-foreground space-y-1">
                 <div className="flex items-center gap-2 font-semibold text-foreground">
                   <CheckCircle2 className="h-4 w-4 text-primary" />
                   <span>
@@ -111,19 +111,19 @@ export function ResendAdminInviteButton({
 
               {resultData?.inviteUrl && (
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Bezpośredni link aktywacyjny:</Label>
+                  <Label className="text-sm text-muted-foreground">Bezpośredni link aktywacyjny:</Label>
                   <div className="flex items-center gap-2">
                     <Input
                       readOnly
                       value={resultData.inviteUrl}
-                      className="font-mono text-xs bg-muted/50"
+                      className="font-mono text-sm bg-muted/50"
                     />
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => handleCopy(resultData.inviteUrl!)}
-                      className="shrink-0 gap-1 text-xs"
+                      className="shrink-0 gap-1 text-sm"
                     >
                       {copied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
                       {copied ? 'Skopiowano' : 'Kopiuj'}
@@ -228,7 +228,7 @@ export function AddAdminToOrgDialog({
 
         {successData ? (
           <div className="space-y-4 py-2">
-            <div className="rounded-xl bg-primary/10 border border-primary/20 p-4 text-xs text-foreground space-y-1">
+            <div className="rounded-xl bg-primary/10 border border-primary/20 p-4 text-sm text-foreground space-y-1">
               <div className="flex items-center gap-2 font-semibold text-foreground">
                 <CheckCircle2 className="h-4 w-4 text-primary" />
                 <span>
@@ -248,19 +248,19 @@ export function AddAdminToOrgDialog({
 
             {successData.inviteUrl && (
               <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Link aktywacyjny:</Label>
+                <Label className="text-sm text-muted-foreground">Link aktywacyjny:</Label>
                 <div className="flex items-center gap-2">
                   <Input
                     readOnly
                     value={successData.inviteUrl}
-                    className="font-mono text-xs bg-muted/50"
+                    className="font-mono text-sm bg-muted/50"
                   />
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     onClick={() => handleCopy(successData.inviteUrl!)}
-                    className="shrink-0 gap-1 text-xs"
+                    className="shrink-0 gap-1 text-sm"
                   >
                     {copied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
                     {copied ? 'Skopiowano' : 'Kopiuj'}
@@ -278,7 +278,7 @@ export function AddAdminToOrgDialog({
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label htmlFor="newAdminEmail" className="text-xs font-semibold text-foreground">
+              <Label htmlFor="newAdminEmail" className="text-sm font-semibold text-foreground">
                 Adres e-mail <span className="text-destructive">*</span>
               </Label>
               <Input
@@ -294,7 +294,7 @@ export function AddAdminToOrgDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="newAdminFullName" className="text-xs font-semibold text-foreground">
+              <Label htmlFor="newAdminFullName" className="text-sm font-semibold text-foreground">
                 Imię i nazwisko (opcjonalnie)
               </Label>
               <Input
@@ -308,7 +308,7 @@ export function AddAdminToOrgDialog({
             </div>
 
             {error && (
-              <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-3 text-xs text-destructive flex items-center gap-2">
+              <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive flex items-center gap-2">
                 <AlertCircle className="h-4 w-4 shrink-0" />
                 <span>{error}</span>
               </div>

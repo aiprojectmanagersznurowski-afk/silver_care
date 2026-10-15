@@ -87,27 +87,27 @@ export function InvitationsTable({ initialInvitations }: { initialInvitations: I
   const getStatusBadge = (inv: InvitationRecord) => {
     if (inv.claimed_at) {
       return (
-        <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-primary text-primary-foreground">
+        <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-sm font-semibold bg-primary text-primary-foreground">
           Zrealizowane
         </span>
       )
     }
     if (inv.revoked_at) {
       return (
-        <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-destructive/10 text-destructive border-destructive/20">
+        <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-sm font-semibold bg-destructive/10 text-destructive border-destructive/20">
           Odwołane
         </span>
       )
     }
     if (new Date(inv.expires_at) < new Date()) {
       return (
-        <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-muted text-muted-foreground border-border">
+        <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-sm font-semibold bg-muted text-muted-foreground border-border">
           Wygasłe
         </span>
       )
     }
     return (
-      <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-muted text-muted-foreground border-border">
+      <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-sm font-semibold bg-muted text-muted-foreground border-border">
         Oczekujące
       </span>
     )
@@ -134,12 +134,12 @@ export function InvitationsTable({ initialInvitations }: { initialInvitations: I
               <TableRow key={inv.id} className="hover:bg-muted/50 data-[state=selected]:bg-muted">
                 <TableCell className="font-medium text-foreground">
                   {inv.email}
-                  {inv.phone && <span className="block text-xs text-muted-foreground font-normal">{inv.phone}</span>}
+                  {inv.phone && <span className="block text-sm text-muted-foreground font-normal">{inv.phone}</span>}
                 </TableCell>
                 <TableCell className="text-foreground">
                   {inv.residents ? `${inv.residents.first_name} ${inv.residents.last_name}` : '—'}
                 </TableCell>
-                <TableCell className="text-xs text-muted-foreground">
+                <TableCell className="text-sm text-muted-foreground">
                   {inv.role === 'legal_guardian' ? 'Opiekun prawny' : 'Obserwator'}
                 </TableCell>
                 <TableCell>
@@ -153,7 +153,7 @@ export function InvitationsTable({ initialInvitations }: { initialInvitations: I
                         variant="ghost"
                         size="sm"
                         onClick={() => handleCopyLink(inv.id)}
-                        className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
+                        className="h-8 px-2 text-sm text-muted-foreground hover:text-foreground"
                         title="Kopiuj link do rejestracji"
                       >
                         <Copy className="h-3.5 w-3.5 mr-1" />
@@ -167,7 +167,7 @@ export function InvitationsTable({ initialInvitations }: { initialInvitations: I
                         size="sm"
                         disabled={resendingId === inv.id}
                         onClick={() => handleResend(inv.id)}
-                        className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
+                        className="h-8 px-2 text-sm text-muted-foreground hover:text-foreground"
                         title="Wyślij ponownie e-mail z zaproszeniem"
                       >
                         <RotateCw className={`h-3.5 w-3.5 mr-1 ${resendingId === inv.id ? 'animate-spin' : ''}`} />
@@ -180,7 +180,7 @@ export function InvitationsTable({ initialInvitations }: { initialInvitations: I
                         variant="ghost"
                         size="sm"
                         onClick={() => setRevokingId(inv.id)}
-                        className="h-8 px-2 text-xs text-destructive hover:bg-destructive/10"
+                        className="h-8 px-2 text-sm text-destructive hover:bg-destructive/10"
                         title="Odwołaj zaproszenie"
                       >
                         <Ban className="h-3.5 w-3.5 mr-1" />

@@ -100,7 +100,7 @@ export function FacilityVoiceTab({ onStructureChanged }: FacilityVoiceTabProps) 
             <h4 className="text-sm font-semibold text-foreground">
               Podyktuj parametry nowego pokoju
             </h4>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               Np.: &quot;Dodaj pokój 205 na drugim piętrze, sektor B, z dwoma łóżkami A i B&quot;.
             </p>
           </div>
@@ -126,14 +126,14 @@ export function FacilityVoiceTab({ onStructureChanged }: FacilityVoiceTabProps) 
         </div>
 
         {isBusy && (
-          <div className="flex items-center gap-2 text-xs text-foreground bg-card p-3 rounded-lg border border-border">
+          <div className="flex items-center gap-2 text-sm text-foreground bg-card p-3 rounded-lg border border-border">
             <Loader2 className="w-4 h-4 animate-spin text-primary" />
             <span>Przetwarzanie audio i ekstrakcja parametrów struktury...</span>
           </div>
         )}
 
         <div className="mt-3">
-          <Label htmlFor="voice-transcript" className="text-xs font-medium text-foreground mb-1 block">
+          <Label htmlFor="voice-transcript" className="text-sm font-medium text-foreground mb-1 block">
             Transkrypcja lub polecenie słowne:
           </Label>
           <div className="flex gap-2">
@@ -142,7 +142,7 @@ export function FacilityVoiceTab({ onStructureChanged }: FacilityVoiceTabProps) 
               value={voiceTranscription}
               onChange={(e) => setVoiceTranscription(e.target.value)}
               placeholder="Możesz również wpisać polecenie słowne tutaj..."
-              className="text-xs"
+              className="text-sm"
             />
             <Button
               type="button"
@@ -150,7 +150,7 @@ export function FacilityVoiceTab({ onStructureChanged }: FacilityVoiceTabProps) 
               size="sm"
               onClick={handleManualTranscribeParse}
               disabled={isBusy || !voiceTranscription.trim()}
-              className="gap-1 text-xs shrink-0"
+              className="gap-1 text-sm shrink-0"
             >
               <Sparkles className="w-3.5 h-3.5 text-primary" />
               Przetwórz AI
@@ -160,13 +160,13 @@ export function FacilityVoiceTab({ onStructureChanged }: FacilityVoiceTabProps) 
       </div>
 
       <form onSubmit={handleSaveVoiceRoom} className="p-4 bg-card rounded-xl border border-border space-y-3">
-        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
           Wyodrębnione parametry pokoju (do weryfikacji)
         </h4>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <Label htmlFor="v-number" className="text-xs">Numer pokoju *</Label>
+            <Label htmlFor="v-number" className="text-sm">Numer pokoju *</Label>
             <Input
               id="v-number"
               value={voiceRoomNumber}
@@ -177,7 +177,7 @@ export function FacilityVoiceTab({ onStructureChanged }: FacilityVoiceTabProps) 
             />
           </div>
           <div>
-            <Label htmlFor="v-floor" className="text-xs">Piętro *</Label>
+            <Label htmlFor="v-floor" className="text-sm">Piętro *</Label>
             <Input
               id="v-floor"
               value={voiceFloor}
@@ -191,7 +191,7 @@ export function FacilityVoiceTab({ onStructureChanged }: FacilityVoiceTabProps) 
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <Label htmlFor="v-sector" className="text-xs">Sektor / Skrzydło (opcjonalnie)</Label>
+            <Label htmlFor="v-sector" className="text-sm">Sektor / Skrzydło (opcjonalnie)</Label>
             <Input
               id="v-sector"
               value={voiceSector}
@@ -201,7 +201,7 @@ export function FacilityVoiceTab({ onStructureChanged }: FacilityVoiceTabProps) 
             />
           </div>
           <div>
-            <Label htmlFor="v-beds" className="text-xs">Etykiety łóżek (oddzielone przecinkami)</Label>
+            <Label htmlFor="v-beds" className="text-sm">Etykiety łóżek (oddzielone przecinkami)</Label>
             <Input
               id="v-beds"
               value={voiceBedLabels}

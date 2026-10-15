@@ -150,7 +150,7 @@ export function EditResidentDialog({
           {errorMessage && (
             <div
               role="alert"
-              className="flex items-center gap-2 p-3 text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-lg"
+              className="flex items-center gap-2 p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg"
             >
               <AlertCircle className="h-4 w-4 shrink-0" />
               <span>{errorMessage}</span>
@@ -159,7 +159,7 @@ export function EditResidentDialog({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="edit-first-name" className="text-xs font-medium text-foreground">
+              <Label htmlFor="edit-first-name" className="text-sm font-medium text-foreground">
                 Imię *
               </Label>
               <Input
@@ -172,7 +172,7 @@ export function EditResidentDialog({
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="edit-last-name" className="text-xs font-medium text-foreground">
+              <Label htmlFor="edit-last-name" className="text-sm font-medium text-foreground">
                 Nazwisko *
               </Label>
               <Input
@@ -187,7 +187,7 @@ export function EditResidentDialog({
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="edit-gender" className="text-xs font-medium text-foreground">
+              <Label htmlFor="edit-gender" className="text-sm font-medium text-foreground">
                 Płeć
               </Label>
               <NativeSelect
@@ -203,7 +203,7 @@ export function EditResidentDialog({
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="edit-birth-date" className="text-xs font-medium text-foreground">
+              <Label htmlFor="edit-birth-date" className="text-sm font-medium text-foreground">
                 Data urodzenia
               </Label>
               <Input
@@ -216,7 +216,7 @@ export function EditResidentDialog({
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="edit-admission-date" className="text-xs font-medium text-foreground">
+              <Label htmlFor="edit-admission-date" className="text-sm font-medium text-foreground">
                 Data przyjęcia
               </Label>
               <Input
@@ -231,7 +231,7 @@ export function EditResidentDialog({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="edit-care-level" className="text-xs font-medium text-foreground">
+              <Label htmlFor="edit-care-level" className="text-sm font-medium text-foreground">
                 Poziom opieki
               </Label>
               <NativeSelect
@@ -257,7 +257,7 @@ export function EditResidentDialog({
                   onChange={(e) => setFormData({ ...formData, is_zsn: e.target.checked })}
                   className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
                 />
-                <span className="text-xs font-medium text-foreground">
+                <span className="text-sm font-medium text-foreground">
                   ZSN: Znaczny stopień niepełnosprawności
                 </span>
               </label>
@@ -265,7 +265,7 @@ export function EditResidentDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="edit-notes" className="text-xs font-medium text-foreground">
+            <Label htmlFor="edit-notes" className="text-sm font-medium text-foreground">
               Notatki / uwagi organizacyjne
             </Label>
             <Textarea

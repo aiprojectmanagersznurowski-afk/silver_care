@@ -43,7 +43,7 @@ export function FacilityDryRunTable({
             variant="outline"
             size="sm"
             onClick={handleDownloadTemplate}
-            className="text-xs gap-1.5 bg-card"
+            className="text-sm gap-1.5 bg-card"
           >
             <Download className="w-3 h-3 text-foreground" />
             Pobierz formatkę Excel
@@ -53,7 +53,7 @@ export function FacilityDryRunTable({
             variant="ghost"
             size="sm"
             onClick={onResetFile}
-            className="text-xs text-muted-foreground"
+            className="text-sm text-muted-foreground"
           >
             Wgraj inny plik
           </Button>
@@ -99,7 +99,7 @@ export function FacilityDryRunTable({
       </div>
 
       <div className="flex items-center justify-between pt-2">
-        <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer">
+        <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
           <input
             type="checkbox"
             checked={onlyValid}

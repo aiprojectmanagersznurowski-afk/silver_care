@@ -106,7 +106,7 @@ export function ExportDataDialog() {
 
         <div className="space-y-4 py-2 text-sm text-foreground">
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-foreground block">Format pliku</label>
+            <label className="text-sm font-semibold text-foreground block">Format pliku</label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
@@ -138,7 +138,7 @@ export function ExportDataDialog() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-foreground block">Status pensjonariuszy</label>
+            <label className="text-sm font-semibold text-foreground block">Status pensjonariuszy</label>
             <NativeSelect
               data-testid="export-status-select"
               value={statusFilter}
@@ -159,12 +159,12 @@ export function ExportDataDialog() {
               onChange={(e) => setZsnOnly(e.target.checked)}
               className="rounded border-border text-primary focus:ring-primary"
             />
-            <label htmlFor="export-zsn-only" className="text-xs text-foreground cursor-pointer">
+            <label htmlFor="export-zsn-only" className="text-sm text-foreground cursor-pointer">
               Eksportuj wyłącznie pensjonariuszy z pakietem ZSN
             </label>
           </div>
 
-          <div className="p-3 bg-muted border border-border rounded-lg text-xs text-muted-foreground space-y-1">
+          <div className="p-3 bg-muted border border-border rounded-lg text-sm text-muted-foreground space-y-1">
             <p className="font-medium text-foreground">Ochrona prywatności i MDR:</p>
             <p>Zgodnie z procedurami Silver Care, plik nie zawiera surowych danych biometrycznych ani medycznych. Operacja pobrania zostanie zapisana w rejestrze audytowym.</p>
           </div>

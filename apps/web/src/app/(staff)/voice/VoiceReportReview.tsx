@@ -22,7 +22,7 @@ export function VoiceReportReview({ finalReport, onResetNote }: VoiceReportRevie
 
       <div className="flex items-start gap-3 mb-6 p-4 rounded-xl bg-muted ring-1 ring-inset ring-border">
         <AlertTriangle className="h-5 w-5 text-foreground shrink-0 mt-0.5" />
-        <p className="text-xs text-foreground font-medium leading-relaxed">
+        <p className="text-sm text-foreground font-medium leading-relaxed">
           Twarde dane medyczne (np. parametry, leki) zostały usunięte z powyższego tekstu i bezpiecznie zarchiwizowane. Szkic możesz zatwierdzić w zakładce Raporty.
         </p>
       </div>

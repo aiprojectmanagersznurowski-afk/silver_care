@@ -99,13 +99,13 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
           </div>
           <div>
             <h3 className="text-base font-semibold text-foreground font-display">Skrzynka wiadomości personelu</h3>
-            <p className="text-xs text-muted-foreground">Bezpośrednia komunikacja z bliskimi pensjonariuszy placówki.</p>
+            <p className="text-sm text-muted-foreground">Bezpośrednia komunikacja z bliskimi pensjonariuszy placówki.</p>
           </div>
         </div>
         <button
           onClick={fetchMessages}
           disabled={loading}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted/50 transition-colors disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted/50 transition-colors disabled:opacity-50"
         >
           <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} /> Odśwież
         </button>
@@ -121,25 +121,25 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Szukaj podopiecznego lub treści..."
-                className="w-full rounded-xl bg-muted/50 pl-9 pr-4 py-2 text-xs text-foreground outline-none placeholder:text-muted-foreground focus:ring-1 focus:ring-primary border border-transparent focus:border-primary"
+                className="w-full rounded-xl bg-muted/50 pl-9 pr-4 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-1 focus:ring-primary border border-transparent focus:border-primary"
               />
             </div>
           </div>
 
           <div className="flex-1 overflow-y-auto divide-y divide-border" data-testid="message-threads-list">
             {loading && threads.length === 0 ? (
-              <div className="p-6 text-center text-xs text-muted-foreground space-y-2">
+              <div className="p-6 text-center text-sm text-muted-foreground space-y-2">
                 <RefreshCw className="h-5 w-5 animate-spin text-primary mx-auto" />
                 <p>Ładowanie wątków...</p>
               </div>
             ) : error && threads.length === 0 ? (
-              <div className="p-6 text-center text-xs text-destructive space-y-2">
+              <div className="p-6 text-center text-sm text-destructive space-y-2">
                 <AlertCircle className="h-5 w-5 mx-auto" />
                 <p>{error}</p>
-                <button onClick={fetchMessages} className="mt-2 text-xs font-semibold underline text-foreground">Spróbuj ponownie</button>
+                <button onClick={fetchMessages} className="mt-2 text-sm font-semibold underline text-foreground">Spróbuj ponownie</button>
               </div>
             ) : filteredThreads.length === 0 ? (
-              <div className="p-8 text-center text-xs text-muted-foreground" data-testid="messages-empty-state">
+              <div className="p-8 text-center text-sm text-muted-foreground" data-testid="messages-empty-state">
                 <p className="font-medium text-foreground">Brak wiadomości</p>
                 <p className="mt-1">{searchQuery ? 'Brak wyników pasujących do wyszukiwania.' : 'Nie ma jeszcze wiadomości od rodzin.'}</p>
               </div>
@@ -155,27 +155,27 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
                     className={`w-full text-left p-4 transition-all flex items-start gap-3 border-l-4 ${isSelected ? 'bg-card border-primary' : 'border-transparent hover:bg-card/60'}`}
                   >
                     <Avatar className="h-10 w-10 shrink-0 border border-border">
-                      <AvatarFallback className="bg-primary/10 text-primary font-medium text-xs">{thread.residentName.split(' ').map((n) => n[0]).join('')}</AvatarFallback>
+                      <AvatarFallback className="bg-primary/10 text-primary font-medium text-sm">{thread.residentName.split(' ').map((n) => n[0]).join('')}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-1 mb-1">
-                        <span className="font-semibold text-xs text-foreground truncate">{thread.residentName}</span>
-                        <span className="text-[10px] text-muted-foreground whitespace-nowrap flex items-center gap-0.5">
+                        <span className="font-semibold text-sm text-foreground truncate">{thread.residentName}</span>
+                        <span className="text-sm text-muted-foreground whitespace-nowrap flex items-center gap-0.5">
                           <Clock className="h-3 w-3" />
                           {format(new Date(lastMsg.created_at), 'd MMM, HH:mm', { locale: pl })}
                         </span>
                       </div>
-                      <p className="text-xs text-muted-foreground truncate">
+                      <p className="text-sm text-muted-foreground truncate">
                         {lastMsg.is_from_family ? <span className="font-medium text-foreground">Rodzina: </span> : <span className="font-medium text-primary">Personel: </span>}
                         {lastMsg.content}
                       </p>
                       <div className="mt-2 flex items-center justify-between">
-                        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
+                        <span className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground">
                           <MessageSquare className="h-3 w-3 text-muted-foreground" />
                           {thread.messages.length} {thread.messages.length === 1 ? 'wiadomość' : 'wiadomości'}
                         </span>
                         {lastMsg.is_from_family && (
-                          <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">Do odpowiedzi</span>
+                          <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-sm font-semibold text-primary">Do odpowiedzi</span>
                         )}
                       </div>
                     </div>
@@ -194,7 +194,7 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
                   <button
                     type="button"
                     onClick={() => setActiveThreadId(null)}
-                    className="md:hidden inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-border bg-muted/50 hover:bg-muted text-xs font-medium text-foreground transition-colors mr-1 shrink-0"
+                    className="md:hidden inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-border bg-muted/50 hover:bg-muted text-sm font-medium text-foreground transition-colors mr-1 shrink-0"
                     aria-label="Wróć do listy wątków"
                   >
                     <ChevronLeft className="h-4 w-4 text-muted-foreground" />
@@ -207,7 +207,7 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
                   </Avatar>
                   <div className="min-w-0">
                     <h3 className="font-semibold text-sm text-foreground truncate">{activeThread.residentName}</h3>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1.5 truncate">
+                    <p className="text-sm text-muted-foreground flex items-center gap-1.5 truncate">
                       <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
                       Wątek wiadomości z rodziną podopiecznego
                     </p>
@@ -236,7 +236,7 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
                 <MessageSquare className="h-8 w-8" />
               </div>
               <h4 className="font-semibold text-sm text-foreground font-display">Wybierz wątek z listy</h4>
-              <p className="text-xs text-muted-foreground max-w-sm mt-1">
+              <p className="text-sm text-muted-foreground max-w-sm mt-1">
                 Wybierz podopiecznego z lewego menu, aby zobaczyć historię wiadomości od rodziny i wysłać odpowiedź.
               </p>
             </div>

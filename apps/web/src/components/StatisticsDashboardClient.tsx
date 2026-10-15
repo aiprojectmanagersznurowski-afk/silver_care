@@ -384,7 +384,7 @@ function KpiCard({
       <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-2">
           <Icon className="h-4 w-4 text-muted-foreground" />
-          <span className="text-xs font-medium text-muted-foreground">{label}</span>
+          <span className="text-sm font-medium text-muted-foreground">{label}</span>
         </div>
         <p className={`text-xl font-bold tabular-nums ${color || 'text-foreground'}`}>
           {value}

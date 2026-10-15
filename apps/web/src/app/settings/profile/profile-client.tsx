@@ -205,7 +205,7 @@ export function ProfileSecurityClient({ initialData }: { initialData: ProfileDat
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 border rounded-lg bg-muted">
             <div>
               <h4 className="font-medium text-foreground">Pozostałe aktywne urządzenia</h4>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 Wyloguj wszystkie sesje poza tą przeglądarką, jeśli podejrzewasz nieautoryzowany dostęp.
               </p>
             </div>
@@ -222,11 +222,11 @@ export function ProfileSecurityClient({ initialData }: { initialData: ProfileDat
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <h4 className="font-medium text-foreground">Uwierzytelnianie dwuskładnikowe (MFA / TOTP)</h4>
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <p className="text-sm text-muted-foreground mt-0.5">
                   Drugi składnik logowania zapewnia najwyższy poziom ochrony danych pensjonariuszy zgodnie z normami RODO Art. 9.
                 </p>
               </div>
-              <Badge variant="outline" className="w-fit text-xs border-border bg-card text-muted-foreground whitespace-nowrap">
+              <Badge variant="outline" className="w-fit text-sm border-border bg-card text-muted-foreground whitespace-nowrap">
                 Planowane w kolejnym wydaniu
               </Badge>
             </div>
@@ -254,7 +254,7 @@ export function ProfileSecurityClient({ initialData }: { initialData: ProfileDat
                       {log.action === 'password_self_change' ? 'Samodzielna zmiana hasła' : log.action}
                     </span>
                   </div>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-sm text-muted-foreground">
                     {log.created_at ? new Date(log.created_at).toLocaleString('pl-PL') : '—'}
                   </span>
                 </div>

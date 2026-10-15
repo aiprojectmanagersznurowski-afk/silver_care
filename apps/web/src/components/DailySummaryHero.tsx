@@ -34,10 +34,10 @@ function WellbeingMoodIndicator({ mood, moodEmoji }: { mood: string; moodEmoji: 
   return (
     <div className="relative flex h-[140px] w-[140px] shrink-0 flex-col items-center justify-center rounded-xl bg-card/15 p-4 backdrop-blur-sm border border-white/20 shadow-inner">
       <span className="text-[3rem] leading-none select-none">{moodEmoji}</span>
-      <span className="mt-2 text-[0.85rem] font-semibold text-primary-foreground tracking-wide text-center">
+      <span className="mt-2 text-sm font-semibold text-primary-foreground tracking-wide text-center">
         {mood}
       </span>
-      <span className="text-[0.7rem] opacity-80 text-primary-foreground/90 uppercase tracking-wider">
+      <span className="text-sm opacity-80 text-primary-foreground/90 uppercase tracking-wider">
         Samopoczucie
       </span>
     </div>
@@ -105,7 +105,7 @@ export function DailySummaryHero({ resident, report, selectedDateMedia = [], onO
               <p className="text-[0.95rem] opacity-90 capitalize">{dateLabel}</p>
             </div>
             {report?.created_at && (
-              <span className="text-[10px] uppercase font-bold tracking-widest px-3 py-1 rounded-full bg-card/20">
+              <span className="text-sm uppercase font-bold tracking-widest px-3 py-1 rounded-full bg-card/20">
                 Opublikowano {format(new Date(report.created_at), 'HH:mm')}
               </span>
             )}
@@ -119,7 +119,7 @@ export function DailySummaryHero({ resident, report, selectedDateMedia = [], onO
                 <p className="text-[1rem] leading-relaxed opacity-95 text-left max-h-48 overflow-y-auto custom-scrollbar pr-2 whitespace-pre-wrap">
                   {reportText}
                 </p>
-                <p className="mt-3 border-t border-white/15 pt-2 text-[0.72rem] opacity-80 italic text-left">
+                <p className="mt-3 border-t border-white/15 pt-2 text-sm opacity-80 italic text-left">
                   Podsumowanie generowane przy wsparciu AI, zatwierdzone przez personel placówki.
                 </p>
               </div>
@@ -135,7 +135,7 @@ export function DailySummaryHero({ resident, report, selectedDateMedia = [], onO
                 <s.icon className="h-5 w-5" />
                 <div className="leading-tight">
                   <p className="text-[1.05rem] font-medium">{s.value}</p>
-                  <p className="text-[0.78rem] opacity-85">{s.label}</p>
+                  <p className="text-sm opacity-85">{s.label}</p>
                 </div>
               </div>
             ))}
@@ -154,7 +154,7 @@ export function DailySummaryHero({ resident, report, selectedDateMedia = [], onO
             {selectedDateMedia.length > 0 && onOpenGallery && (
               <button 
                 onClick={() => onOpenGallery(0)}
-                className="text-xs font-semibold text-primary hover:underline"
+                className="text-sm font-semibold text-primary hover:underline"
               >
                 Otwórz pełną galerię
               </button>
@@ -189,7 +189,7 @@ export function DailySummaryHero({ resident, report, selectedDateMedia = [], onO
                   onClick={() => onOpenGallery?.(0)}
                   className="overflow-hidden rounded-xl h-24 relative group cursor-pointer bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
                 >
-                  <span className="text-primary font-medium text-xs">Zobacz więcej</span>
+                  <span className="text-primary font-medium text-sm">Zobacz więcej</span>
                 </div>
               )}
               <div 
@@ -207,13 +207,13 @@ export function DailySummaryHero({ resident, report, selectedDateMedia = [], onO
                 <Camera className="h-6 w-6 text-primary" />
               </div>
               <p className="text-sm font-semibold text-foreground">Brak nowych zdjęć z dzisiaj</p>
-              <p className="text-xs text-muted-foreground mt-1 max-w-[220px] leading-relaxed">
+              <p className="text-sm text-muted-foreground mt-1 max-w-[220px] leading-relaxed">
                 Personel placówki dodaje zdjęcia podczas warsztatów, spacerów i wydarzeń.
               </p>
               {onOpenGallery && (
                 <button
                   onClick={() => onOpenGallery(0)}
-                  className="mt-4 rounded-full bg-card px-4 py-1.5 text-xs font-medium text-primary border border-border hover:bg-accent/60 transition-colors"
+                  className="mt-4 rounded-full bg-card px-4 py-1.5 text-sm font-medium text-primary border border-border hover:bg-accent/60 transition-colors"
                 >
                   Przeglądaj wcześniejsze zdjęcia →
                 </button>
@@ -223,7 +223,7 @@ export function DailySummaryHero({ resident, report, selectedDateMedia = [], onO
         </div>
 
         {selectedDateMedia.length > 0 && (
-          <p className="mt-4 text-[0.85rem] text-muted-foreground text-center bg-muted/50 py-2 rounded-xl">
+          <p className="mt-4 text-sm text-muted-foreground text-center bg-muted/50 py-2 rounded-xl">
             {selectedDateMedia.length === 1 ? "1 zdjęcie dodane dzisiaj" : `${selectedDateMedia.length} zdjęć dodanych dzisiaj`}
           </p>
         )}

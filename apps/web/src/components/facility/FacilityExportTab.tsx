@@ -102,7 +102,7 @@ export function FacilityExportTab({ handleDownloadTemplate }: FacilityExportTabP
         <h4 className="text-sm font-semibold text-foreground mb-1">
           Eksportuj aktualną strukturę placówki
         </h4>
-        <p className="text-xs text-muted-foreground mb-4">
+        <p className="text-sm text-muted-foreground mb-4">
           Pobierz listę wszystkich pokoi i łóżek wraz z aktualnym obłożeniem w wybranym formacie.
         </p>
         <div className="flex flex-wrap gap-3">
@@ -140,7 +140,7 @@ export function FacilityExportTab({ handleDownloadTemplate }: FacilityExportTabP
           <h4 className="text-sm font-semibold text-foreground mb-1">
             Wzorcowa formatka arkusza (Pokoje i Łóżka)
           </h4>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Potrzebujesz formatki do przygotowania danych pokoi? Pobierz czysty szablon z arkuszem instrukcji.
           </p>
         </div>

@@ -155,7 +155,7 @@ export function ResidentContractAttachment({
                 </p>
                 <CheckCircle2 className="h-4 w-4 text-foreground shrink-0" />
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Dokument zapisany w bezpiecznym rejestrze placówki
               </p>
             </div>
@@ -169,7 +169,7 @@ export function ResidentContractAttachment({
               onClick={handleDownload}
               disabled={downloading}
               data-testid="contract-download-link"
-              className="gap-1.5 text-xs text-foreground"
+              className="gap-1.5 text-sm text-foreground"
             >
               {downloading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5 text-primary" />}
               {downloading ? 'Generowanie...' : 'Podgląd / Pobierz'}
@@ -181,7 +181,7 @@ export function ResidentContractAttachment({
               size="sm"
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className="gap-1.5 text-xs text-foreground"
+              className="gap-1.5 text-sm text-foreground"
             >
               {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
               Zmień
@@ -193,7 +193,7 @@ export function ResidentContractAttachment({
               size="sm"
               onClick={() => setDeleteDialogOpen(true)}
               data-testid="contract-delete-button"
-              className="text-xs text-destructive hover:text-destructive hover:bg-destructive/10 px-2"
+              className="text-sm text-destructive hover:text-destructive hover:bg-destructive/10 px-2"
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -207,7 +207,7 @@ export function ResidentContractAttachment({
             </div>
             <div>
               <p className="text-sm font-medium text-foreground">Brak załącznika umowy</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Załącz podpisany skan umowy (PDF, JPG, PNG do 15 MB)
               </p>
             </div>
@@ -220,7 +220,7 @@ export function ResidentContractAttachment({
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
             data-testid="contract-upload-button"
-            className="gap-2 text-xs border-primary/40 text-primary hover:bg-primary/10 w-full sm:w-auto"
+            className="gap-2 text-sm border-primary/40 text-primary hover:bg-primary/10 w-full sm:w-auto"
           >
             {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
             {uploading ? 'Wgrywanie dokumentu...' : 'Załącz dokument umowy'}

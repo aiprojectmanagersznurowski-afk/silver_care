@@ -356,22 +356,22 @@ export default function StaffAgendaPage() {
                               <div className="flex items-center gap-2">
                                 <h4 className="font-semibold text-foreground text-base">{slot.label}</h4>
                                 {isNow && (
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/20 px-2 py-0.5 text-[11px] font-bold text-primary uppercase tracking-wide">
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/20 px-2 py-0.5 text-sm font-bold text-primary uppercase tracking-wide">
                                     <CheckCircle2 className="h-3 w-3" />
                                     Teraz
                                   </span>
                                 )}
                               </div>
-                              <p className="text-xs text-muted-foreground">{slot.timeRange}</p>
+                              <p className="text-sm text-muted-foreground">{slot.timeRange}</p>
                             </div>
                           </div>
-                          <span className="text-xs font-semibold text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-full">
+                          <span className="text-sm font-semibold text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-full">
                             Wpisów: {slotItems.length}
                           </span>
                         </div>
 
                         {slotItems.length === 0 ? (
-                          <div className="py-4 text-center text-xs font-medium text-muted-foreground bg-muted/50 rounded-xl border border-dashed border-border">
+                          <div className="py-4 text-center text-sm font-medium text-muted-foreground bg-muted/50 rounded-xl border border-dashed border-border">
                             Brak zaplanowanych zadań na tę porę dnia.
                           </div>
                         ) : (
@@ -394,12 +394,12 @@ export default function StaffAgendaPage() {
                                       <div className="flex items-center gap-2">
                                         <h5 className="font-semibold text-foreground text-sm">{item.title}</h5>
                                         {!item.target_date && (
-                                          <span className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                                          <span className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-sm font-medium text-muted-foreground">
                                             Codziennie
                                           </span>
                                         )}
                                       </div>
-                                      <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-muted-foreground">
+                                      <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-muted-foreground">
                                         <span className="font-medium text-foreground">
                                           {ITEM_TYPES.find(t => t.value === item.type)?.label || item.type}
                                         </span>
@@ -521,14 +521,14 @@ export default function StaffAgendaPage() {
                       </NativeSelectOption>
                     ))}
                   </NativeSelect>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-sm text-muted-foreground">
                     Możesz zaplanować zadanie ogólne lub skierowane do konkretnego pensjonariusza.
                   </p>
                 </div>
                 
                 {/* Częstotliwość */}
                 <div className="pt-3 border-t border-border">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2.5 block">
+                  <label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-2.5 block">
                     Częstotliwość
                   </label>
                   <div className="grid grid-cols-2 gap-2.5">
@@ -539,10 +539,10 @@ export default function StaffAgendaPage() {
                         isRecurring ? 'bg-primary/10 ring-2 ring-primary' : 'bg-muted/50 ring-1 ring-border hover:bg-muted'
                       }`}
                     >
-                      <span className={`text-xs font-semibold ${isRecurring ? 'text-primary' : 'text-foreground'}`}>
+                      <span className={`text-sm font-semibold ${isRecurring ? 'text-primary' : 'text-foreground'}`}>
                         Codziennie
                       </span>
-                      <span className="text-[10px] text-muted-foreground mt-0.5">Wszystkie dni</span>
+                      <span className="text-sm text-muted-foreground mt-0.5">Wszystkie dni</span>
                     </button>
                     <button
                       type="button"
@@ -551,17 +551,17 @@ export default function StaffAgendaPage() {
                         !isRecurring ? 'bg-primary/10 ring-2 ring-primary' : 'bg-muted/50 ring-1 ring-border hover:bg-muted'
                       }`}
                     >
-                      <span className={`text-xs font-semibold ${!isRecurring ? 'text-primary' : 'text-foreground'}`}>
+                      <span className={`text-sm font-semibold ${!isRecurring ? 'text-primary' : 'text-foreground'}`}>
                         Jednorazowo
                       </span>
-                      <span className="text-[10px] text-muted-foreground mt-0.5">Wybrane daty</span>
+                      <span className="text-sm text-muted-foreground mt-0.5">Wybrane daty</span>
                     </button>
                   </div>
                 </div>
 
                 {!isRecurring && (
                   <div className="space-y-3 bg-muted/50 p-3.5 rounded-xl ring-1 ring-border">
-                    <label htmlFor="agenda-date" className="text-xs font-medium text-foreground">
+                    <label htmlFor="agenda-date" className="text-sm font-medium text-foreground">
                       Wybierz daty
                     </label>
                     <div className="flex gap-2">
@@ -570,12 +570,12 @@ export default function StaffAgendaPage() {
                         type="date" 
                         value={currentDateInput} 
                         onChange={e => setCurrentDateInput(e.target.value)} 
-                        className="flex-1 rounded-xl border border-border bg-card px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="flex-1 rounded-xl border border-border bg-card px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                       />
                       <button 
                         type="button" 
                         onClick={addDate}
-                        className="rounded-xl bg-card px-3 py-1.5 text-xs font-semibold text-foreground ring-1 ring-inset ring-border hover:bg-muted/50 transition-colors"
+                        className="rounded-xl bg-card px-3 py-1.5 text-sm font-semibold text-foreground ring-1 ring-inset ring-border hover:bg-muted/50 transition-colors"
                       >
                         Dodaj
                       </button>
@@ -583,7 +583,7 @@ export default function StaffAgendaPage() {
                     {itemDates.length > 0 ? (
                       <div className="flex flex-wrap gap-1.5">
                         {itemDates.map(d => (
-                          <span key={d} className="inline-flex items-center gap-1 bg-card border border-border text-xs font-medium text-foreground pl-2 pr-1 py-1 rounded-lg">
+                          <span key={d} className="inline-flex items-center gap-1 bg-card border border-border text-sm font-medium text-foreground pl-2 pr-1 py-1 rounded-lg">
                             {new Date(d).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' })}
                             <button 
                               type="button" 
@@ -596,13 +596,13 @@ export default function StaffAgendaPage() {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-xs font-medium text-destructive">Wybierz co najmniej jedną datę.</p>
+                      <p className="text-sm font-medium text-destructive">Wybierz co najmniej jedną datę.</p>
                     )}
                   </div>
                 )}
 
                 {formError && (
-                  <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-medium">
+                  <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm font-medium">
                     <AlertCircle className="h-4 w-4 shrink-0" />
                     <span>{formError}</span>
                   </div>
@@ -696,7 +696,7 @@ export default function StaffAgendaPage() {
               </div>
 
               {editError && (
-                <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-medium">
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm font-medium">
                   <AlertCircle className="h-4 w-4 shrink-0" />
                   <span>{editError}</span>
                 </div>

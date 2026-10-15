@@ -98,28 +98,28 @@ export function AuditManagementClient({
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span className="text-xs font-medium text-foreground">Od:</span>
+              <span className="text-sm font-medium text-foreground">Od:</span>
               <input
                 id="audit-date-from"
                 type="date"
                 value={startDate}
                 onChange={e => setStartDate(e.target.value)}
-                className="h-9 rounded-xl border border-border bg-card px-3 text-xs text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                className="h-9 rounded-xl border border-border bg-card px-3 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-foreground">Do:</span>
+              <span className="text-sm font-medium text-foreground">Do:</span>
               <input
                 id="audit-date-to"
                 type="date"
                 value={endDate}
                 onChange={e => setEndDate(e.target.value)}
-                className="h-9 rounded-xl border border-border bg-card px-3 text-xs text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                className="h-9 rounded-xl border border-border bg-card px-3 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
 
-            <Button type="submit" size="sm" className="h-9 rounded-xl bg-primary text-white hover:bg-primary/90 gap-1.5 text-xs font-medium">
+            <Button type="submit" size="sm" className="h-9 rounded-xl bg-primary text-white hover:bg-primary/90 gap-1.5 text-sm font-medium">
               <Filter className="h-3.5 w-3.5" />
               Filtruj
             </Button>
@@ -130,7 +130,7 @@ export function AuditManagementClient({
                 variant="outline"
                 size="sm"
                 onClick={handleClearFilter}
-                className="h-9 rounded-xl border-border text-muted-foreground hover:bg-muted/50 gap-1.5 text-xs"
+                className="h-9 rounded-xl border-border text-muted-foreground hover:bg-muted/50 gap-1.5 text-sm"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
                 Wyczyść
@@ -144,7 +144,7 @@ export function AuditManagementClient({
               variant="outline"
               size="sm"
               onClick={handleExportCsv}
-              className="h-9 rounded-xl border-border text-foreground hover:bg-muted/50 gap-1.5 text-xs font-medium"
+              className="h-9 rounded-xl border-border text-foreground hover:bg-muted/50 gap-1.5 text-sm font-medium"
             >
               <Download className="h-3.5 w-3.5 text-muted-foreground" />
               Eksportuj CSV
@@ -155,7 +155,7 @@ export function AuditManagementClient({
               variant="outline"
               size="sm"
               onClick={handleExportJson}
-              className="h-9 rounded-xl border-border text-foreground hover:bg-muted/50 gap-1.5 text-xs font-medium"
+              className="h-9 rounded-xl border-border text-foreground hover:bg-muted/50 gap-1.5 text-sm font-medium"
             >
               <Download className="h-3.5 w-3.5 text-muted-foreground" />
               Eksportuj JSON
@@ -163,7 +163,7 @@ export function AuditManagementClient({
           </div>
         </form>
 
-        <div className="mt-3 pt-3 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
+        <div className="mt-3 pt-3 border-t border-border flex items-center justify-between text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <Clock className="h-3.5 w-3.5 text-primary" />
             <span>Strefa czasowa przeglądarki: <strong className="text-foreground font-medium">{browserTimeZone}</strong></span>
@@ -201,7 +201,7 @@ export function AuditManagementClient({
                       {formatAuditTimestamp(log.created_at, browserTimeZone)}
                     </TableCell>
                     <TableCell>
-                      <span className="inline-flex items-center rounded-lg bg-muted px-2.5 py-1 text-xs font-medium text-foreground">
+                      <span className="inline-flex items-center rounded-lg bg-muted px-2.5 py-1 text-sm font-medium text-foreground">
                         {log.action}
                       </span>
                     </TableCell>
@@ -209,7 +209,7 @@ export function AuditManagementClient({
                       {log.performed_by && log.performed_by.toLowerCase() !== 'system' ? (
                         <BusinessIdBadge type="user" id={log.performed_by} />
                       ) : (
-                        <span className="text-muted-foreground italic text-xs">System / Automat</span>
+                        <span className="text-muted-foreground italic text-sm">System / Automat</span>
                       )}
                     </TableCell>
                     <TableCell className="font-mono text-muted-foreground max-w-md truncate">

@@ -72,7 +72,7 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
               className="h-8 sm:h-9 w-auto object-contain"
               priority
             />
-            <span className="hidden text-[0.8rem] text-muted-foreground xl:inline-block border-l border-border pl-3">
+            <span className="hidden text-sm text-muted-foreground xl:inline-block border-l border-border pl-3">
               Portal rodzinnej opieki
             </span>
           </Link>
@@ -96,7 +96,7 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
                   {isMessages && unreadCount > 0 && (
                     <span
                       data-testid="family-nav-messages-badge"
-                      className="ml-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground animate-pulse"
+                      className="ml-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-sm font-bold text-destructive-foreground animate-pulse"
                     >
                       {unreadCount > 99 ? '99+' : unreadCount}
                     </span>
@@ -120,7 +120,7 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
                 {unreadCount > 0 && (
                   <span
                     data-testid="family-notifications-badge"
-                    className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground ring-2 ring-background animate-pulse"
+                    className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-sm font-bold text-destructive-foreground ring-2 ring-background animate-pulse"
                   >
                     {unreadCount > 99 ? '99+' : unreadCount}
                   </span>
@@ -138,7 +138,7 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
                   {unreadCount > 0 && (
                     <span
                       data-testid="family-notifications-count"
-                      className="rounded-full bg-destructive/15 px-2 py-0.5 text-[11px] font-semibold text-destructive border border-destructive/25"
+                      className="rounded-full bg-destructive/15 px-2 py-0.5 text-sm font-semibold text-destructive border border-destructive/25"
                     >
                       {unreadCount} nowe
                     </span>
@@ -152,7 +152,7 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
                       <Bell className="h-5 w-5 text-muted-foreground" />
                     </div>
                     <p className="text-sm font-medium text-foreground">Brak nowych powiadomień</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <p className="mt-1 text-sm text-muted-foreground">
                       Jesteś na bieżąco ze wszystkimi wiadomościami.
                     </p>
                   </div>
@@ -180,15 +180,15 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
                           }
                         >
                           <div className="flex w-full items-center justify-between">
-                            <span className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+                            <span className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
                               <MessageSquare className="h-3.5 w-3.5 text-primary shrink-0" />
                               <span>Wiadomość od personelu</span>
                             </span>
-                            <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                            <span className="text-sm text-muted-foreground whitespace-nowrap">
                               {timeAgo}
                             </span>
                           </div>
-                          <p className="text-xs text-muted-foreground line-clamp-2 pl-5">
+                          <p className="text-sm text-muted-foreground line-clamp-2 pl-5">
                             {snippet}
                           </p>
                         </DropdownMenuItem>
@@ -203,7 +203,7 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
                     <Link
                       href="/messages"
                       onClick={() => markAllAsRead()}
-                      className="flex w-full items-center justify-center py-2 text-center text-xs font-medium text-primary hover:text-primary/80 transition-colors cursor-pointer"
+                      className="flex w-full items-center justify-center py-2 text-center text-sm font-medium text-primary hover:text-primary/80 transition-colors cursor-pointer"
                     />
                   }
                 >
@@ -221,7 +221,7 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
                   </Avatar>
                   <div className="hidden text-left leading-tight sm:block">
                     <p className="text-[0.95rem] text-foreground">{current.first_name} {current.last_name}</p>
-                    <p className="text-[0.72rem] text-muted-foreground">Wyświetlany profil</p>
+                    <p className="text-sm text-muted-foreground">Wyświetlany profil</p>
                   </div>
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </DropdownMenuTrigger>
@@ -305,7 +305,7 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
             <Link
               key={item.label}
               href={item.href}
-              className={`flex flex-col items-center gap-1 rounded-xl px-4 py-1.5 text-xs font-medium transition-colors ${
+              className={`flex flex-col items-center gap-1 rounded-xl px-4 py-1.5 text-sm font-medium transition-colors ${
                 isActive 
                   ? "text-primary font-bold bg-accent/60" 
                   : "text-muted-foreground hover:text-foreground"

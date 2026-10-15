@@ -151,7 +151,7 @@ export function InviteFamilyDialog({
               </NativeSelect>
             </div>
           </div>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Zgodnie z RODO (Art. 9) wyłącznie podopieczny lub opiekun prawny może decydować o przetwarzaniu danych szczególnych kategorii. Obserwator posiada wyłącznie wgląd do publikowanych raportów.
           </p>
 
@@ -190,7 +190,7 @@ export function InviteFamilyDialog({
                   className="flex-1"
                 />
               </div>
-              <p className="text-xs text-muted-foreground">Podaj numer bez początkowego zera (np. 123456789).</p>
+              <p className="text-sm text-muted-foreground">Podaj numer bez początkowego zera (np. 123456789).</p>
             </div>
           </div>
           {error && (
@@ -202,7 +202,7 @@ export function InviteFamilyDialog({
               <p className="text-sm font-semibold text-foreground">
                 Zaproszenie wysłane pomyślnie!
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Wiadomość z linkiem aktywacyjnym została wysłana na podany adres e-mail bliskiego.
               </p>
               <Button 
@@ -225,11 +225,11 @@ export function InviteFamilyDialog({
               <p className="text-sm font-semibold text-foreground">
                 Zaproszenie wygenerowane pomyślnie!
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Wyślij poniższy link bliskim podopiecznego, aby umożliwić założenie konta:
               </p>
               <div className="flex items-center gap-2 mt-2">
-                <Input readOnly value={generatedUrl} className="text-xs font-mono h-8" />
+                <Input readOnly value={generatedUrl} className="text-sm font-mono h-8" />
                 <Button 
                   type="button" 
                   variant="outline" 

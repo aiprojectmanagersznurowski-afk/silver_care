@@ -49,7 +49,7 @@ export function VoiceResidentSelect({
       </div>
 
       <div className="space-y-2 pt-2">
-        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
           Wybierz podopiecznego ({filteredResidents.length})
         </h4>
         {loadingResidents ? (
@@ -76,7 +76,7 @@ export function VoiceResidentSelect({
                   <p className="text-sm font-semibold text-foreground truncate">
                     {r.first_name} {r.last_name}
                   </p>
-                  <p className="text-xs text-muted-foreground">Kliknij, aby nagrać</p>
+                  <p className="text-sm text-muted-foreground">Kliknij, aby nagrać</p>
                 </div>
               </button>
             ))}

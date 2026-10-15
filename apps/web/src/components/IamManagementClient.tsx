@@ -385,7 +385,7 @@ export function IamManagementClient({
           <p className="text-sm text-muted-foreground">
             Przekaż poniższe dane logowania użytkownikowi. Hasło tymczasowe nie będzie ponownie widoczne w panelu.
           </p>
-          <div className="flex flex-wrap items-center gap-4 bg-card p-3 rounded-xl border border-border font-mono text-xs">
+          <div className="flex flex-wrap items-center gap-4 bg-card p-3 rounded-xl border border-border font-mono text-sm">
             <div><strong>E-mail:</strong> {createdCredentials.email}</div>
             <div><strong>Rola:</strong> {createdCredentials.role}</div>
             {createdCredentials.temporaryPassword && (
@@ -398,7 +398,7 @@ export function IamManagementClient({
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="h-7 px-2 text-xs"
+                      className="h-7 px-2 text-sm"
                       onClick={() => {
                         navigator.clipboard.writeText(createdCredentials.temporaryPassword || '')
                         setCopiedPassword(true)

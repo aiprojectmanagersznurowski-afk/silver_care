@@ -102,7 +102,7 @@ export function AddUserDialog({
               value={newPassword}
               onChange={e => onPasswordChange(e.target.value)}
             />
-            <p className="text-[0.75rem] text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               Jeśli nie podasz hasła, system wygeneruje bezpieczny ciąg znaków i wyświetli go po utworzeniu.
             </p>
           </div>

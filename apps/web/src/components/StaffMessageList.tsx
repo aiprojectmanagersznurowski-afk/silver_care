@@ -27,7 +27,7 @@ export function StaffMessageList({ messages, scrollRef }: StaffMessageListProps)
           <React.Fragment key={msg.id}>
             {showDate && (
               <div className="flex justify-center my-4">
-                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider bg-card px-3 py-1 rounded-full border border-border shadow-2xs">
+                <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider bg-card px-3 py-1 rounded-full border border-border shadow-2xs">
                   {format(new Date(msg.created_at), 'EEEE, d MMMM yyyy', { locale: pl })}
                 </span>
               </div>
@@ -41,12 +41,12 @@ export function StaffMessageList({ messages, scrollRef }: StaffMessageListProps)
                     : 'bg-card text-foreground border border-border rounded-bl-xs'
                 }`}
               >
-                <p className="text-xs md:text-sm leading-relaxed whitespace-pre-wrap">
+                <p className="text-sm md:text-sm leading-relaxed whitespace-pre-wrap">
                   {msg.content}
                 </p>
               </div>
               <div className="flex items-center gap-1.5 mt-1 px-1">
-                <span className="text-[10px] text-muted-foreground">
+                <span className="text-sm text-muted-foreground">
                   {isStaff ? 'Personel placówki' : 'Rodzina / Opiekun'} ·{' '}
                   {format(new Date(msg.created_at), 'HH:mm')}
                 </span>

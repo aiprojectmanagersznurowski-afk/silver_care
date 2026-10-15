@@ -80,7 +80,7 @@ export default async function AdminResidentsPage() {
             <AdmissionWizard />
           </div>
         ) : (
-          <div className="flex items-center gap-2 rounded-xl bg-muted px-4 py-2 text-xs font-medium text-foreground border border-border">
+          <div className="flex items-center gap-2 rounded-xl bg-muted px-4 py-2 text-sm font-medium text-foreground border border-border">
             <span>Tryb podglądu (impersonacja) — formularze i eksport wyłączone</span>
           </div>
         )}
@@ -99,7 +99,7 @@ export default async function AdminResidentsPage() {
             Wyświetlane jest wyłącznie podsumowanie statystyczne placówki.
           </p>
           <div className="inline-flex items-center gap-3 bg-card px-5 py-3 rounded-xl border border-border">
-            <span className="text-xs text-muted-foreground">Liczba zarejestrowanych podopiecznych:</span>
+            <span className="text-sm text-muted-foreground">Liczba zarejestrowanych podopiecznych:</span>
             <span className="text-xl font-bold text-foreground">{totalCount}</span>
           </div>
         </Card>
@@ -176,19 +176,19 @@ export default async function AdminResidentsPage() {
                       </TableCell>
                       <TableCell>
                         {resident.archived_at ? (
-                          <Badge className="bg-muted text-muted-foreground border-none text-xs">
+                          <Badge className="bg-muted text-muted-foreground border-none text-sm">
                             Zarchiwizowany
                           </Badge>
                         ) : resident.death_date ? (
-                          <Badge className="bg-destructive/10 text-destructive border-none text-xs">
+                          <Badge className="bg-destructive/10 text-destructive border-none text-sm">
                             Zgon
                           </Badge>
                         ) : resident.contract_end_date && new Date(resident.contract_end_date) <= new Date() ? (
-                          <Badge className="bg-muted text-muted-foreground border-none text-xs">
+                          <Badge className="bg-muted text-muted-foreground border-none text-sm">
                             Wypisany
                           </Badge>
                         ) : (
-                          <Badge className="bg-muted text-foreground border-none text-xs">
+                          <Badge className="bg-muted text-foreground border-none text-sm">
                             Aktywny
                           </Badge>
                         )}

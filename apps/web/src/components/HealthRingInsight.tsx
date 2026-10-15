@@ -27,7 +27,7 @@ export function HealthRingInsight({ metrics }: HealthRingInsightProps) {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h3 className="text-[1.15rem] text-foreground font-display">Aktywność i Zdrowie</h3>
-          <p className="mt-0.5 text-[0.85rem] text-muted-foreground">Pomiary z opaski</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">Pomiary z opaski</p>
         </div>
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent text-primary">
           <Activity className="h-5 w-5" />

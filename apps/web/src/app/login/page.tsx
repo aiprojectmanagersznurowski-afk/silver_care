@@ -253,7 +253,7 @@ export default function LoginPage() {
               priority
             />
           </div>
-          <p className="mt-2 text-xs tracking-wider uppercase text-muted-foreground font-medium">
+          <p className="mt-2 text-sm tracking-wider uppercase text-muted-foreground font-medium">
             Portal codziennego życia placówki
           </p>
         </div>
@@ -278,7 +278,7 @@ export default function LoginPage() {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-foreground font-medium text-xs">
+                <Label htmlFor="email" className="text-foreground font-medium text-sm">
                   Email
                 </Label>
                 <div className="relative">
@@ -299,7 +299,7 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-foreground font-medium text-xs">
+                <Label htmlFor="password" className="text-foreground font-medium text-sm">
                   Hasło
                 </Label>
                 <div className="relative">
@@ -332,13 +332,13 @@ export default function LoginPage() {
                     checked={rememberMe}
                     onCheckedChange={(checked) => setRememberMe(!!checked)}
                   />
-                  <Label htmlFor="remember" className="text-xs text-muted-foreground cursor-pointer select-none">
+                  <Label htmlFor="remember" className="text-sm text-muted-foreground cursor-pointer select-none">
                     Zapamiętaj mnie
                   </Label>
                 </div>
                 <a
                   href="mailto:pomoc@silvercare.space?subject=Nie%20pami%C4%99tam%20has%C5%82a%20-%20Silver%20Care"
-                  className="text-xs text-primary hover:underline font-medium"
+                  className="text-sm text-primary hover:underline font-medium"
                 >
                   Nie pamiętasz hasła?
                 </a>
@@ -356,7 +356,7 @@ export default function LoginPage() {
 
               <div className="relative w-full my-1">
                 <Separator />
-                <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-card px-2 text-[11px] uppercase tracking-wider text-muted-foreground font-medium">
+                <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-card px-2 text-sm uppercase tracking-wider text-muted-foreground font-medium">
                   Albo
                 </span>
               </div>
