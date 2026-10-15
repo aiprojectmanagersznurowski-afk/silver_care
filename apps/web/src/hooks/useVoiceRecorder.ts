@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { detectSupportedAudioFormat } from '@/lib/voice-helpers'
+import { generateClientUuid, enqueueOfflineVoiceItem, isOnline } from '@/lib/voice-offline-queue'
 
 export type VoiceRecorderState = 'idle' | 'recording' | 'transcribing' | 'error'
 
@@ -89,6 +90,26 @@ export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}) {
         }
       }
 
+      if (!formData.has('client_uuid')) {
+        formData.append('client_uuid', generateClientUuid())
+      }
+
+      if (!isOnline()) {
+        const clientUuid = (formData.get('client_uuid') as string) || generateClientUuid()
+        const residentId = (formData.get('resident_id') as string) || ''
+        enqueueOfflineVoiceItem({
+          client_uuid: clientUuid,
+          resident_id: residentId,
+          mimeType: blob.type || `audio/${ext}`,
+          createdAt: Date.now(),
+        })
+        const msg = 'Brak połączenia z siecią. Nagranie zostało zapisane w kolejce offline.'
+        setError(msg)
+        setState('error')
+        onError?.(msg)
+        return
+      }
+
       const headers: Record<string, string> = {}
       if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`
 
@@ -153,7 +174,7 @@ export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}) {
       setState('recording')
       setDuration(0)
       timerRef.current = setInterval(() => setDuration((prev) => prev + 1), 1000)
-    } catch (_err: unknown) {
+    } catch {
       cleanup()
       const msg = 'Brak dostępu do mikrofonu. Upewnij się, że przyznano uprawnienia.'
       setError(msg); setState('error'); onError?.(msg)

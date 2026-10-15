@@ -1,17 +1,16 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { callEuLlmCompletion } from '@/lib/eu-llm-client'
-import { 
-  VOICE_PROCESSING_PROMPT, 
-  FAMILY_REPORT_PROMPT, 
-  ZERO_GUESSING_DIRECTIVE 
-} from '@silvercare/contracts/src/prompts'
-import { 
-  validateReportText, 
-  validateNoMedicalDataInReport 
-} from '@silvercare/contracts/src/validation'
-import { AI_DISCLOSURE_LABEL } from '@silvercare/contracts/src/generated/presentation'
 import { extractJson } from '@/lib/voice-helpers'
+import { validateReportText } from '@silvercare/contracts/src/validation'
+import { AI_DISCLOSURE_LABEL } from '@silvercare/contracts/src/generated/presentation'
+import { 
+  redactVoiceTranscript, 
+  validateVoiceDraftInput, 
+  buildClassifierSystemPrompt,
+  buildFamilyReportSystemPrompt,
+  sanitizeReportAndVerifySafety
+} from '@/lib/voice-redactor'
 import type { Json } from '@/types/database.types'
 
 export const runtime = 'nodejs'
@@ -43,7 +42,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Brak draftId' }, { status: 400 })
     }
 
-    // 1. Fetch draft
+    // 1. Pobranie i walidacja szkicu (VOICE-ZERO-GUESSING)
     const { data: draft, error: draftError } = await supabase
       .from('voice_draft_notes')
       .select('*')
@@ -54,14 +53,30 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Nie znaleziono notatki' }, { status: 404 })
     }
 
-    // Strict zero-guessing: resident_id must exist as UUID on the draft
-    if (!draft.resident_id) {
-      return NextResponse.json({ error: 'Brak wymaganego identyfikatora resident_id na notatce' }, { status: 400 })
+    const draftValidation = validateVoiceDraftInput(draft)
+    if (!draftValidation.valid) {
+      return NextResponse.json({ error: draftValidation.error }, { status: 400 })
     }
 
-    // Jeśli już przetworzone
+    // Idempotencja: ponowienie dla przetworzonego szkicu zwraca istniejący raport
     if (draft.status === 'PROCESSED') {
-      return NextResponse.json({ error: 'Notatka została już przetworzona' }, { status: 400 })
+      const { data: existingReport } = await supabase
+        .from('daily_reports')
+        .select('content')
+        .eq('resident_id', draft.resident_id)
+        .contains('content', { draft_id: draft.id })
+        .maybeSingle()
+
+      const reportText = typeof (existingReport?.content as { text?: string })?.text === 'string'
+        ? (existingReport?.content as { text: string }).text
+        : null
+
+      return NextResponse.json({
+        success: true,
+        report: reportText,
+        idempotent: true,
+        message: 'Notatka została już przetworzona (idempotent)',
+      })
     }
 
     const transcription = (typeof editedTranscription === 'string' && editedTranscription.trim() !== '')
@@ -76,33 +91,20 @@ export async function POST(req: Request) {
       await supabase.from('voice_draft_notes').update({ transcript: editedTranscription.trim() }).eq('id', draft.id)
     }
 
-    // 2. Europejski LLM w EOG (Krok 1: Klasyfikator i Redakcja Medyczna wg VOICE_PROCESSING_PROMPT)
-    // Tryb ZERO-GUESSING: Wyciągaj wyłącznie twarde fakty z nagrania.
-    const systemPrompt1 = `${VOICE_PROCESSING_PROMPT}\n${ZERO_GUESSING_DIRECTIVE}\n
-Notatka może zawierać sekcję [UZUPEŁNIENIE:], która stanowi dopowiedź personelu. Połącz wszystkie fakty ze wszystkich części notatki.
-Jeżeli notatka jest skrajnie niekompletna, ustaw wartość 'followup_question' na krótkie pytanie doprecyzowujące (albo null jeśli wystarczająca).
+    // 2. Pre-LLM Redaction (ADR-007 & VOICE-MEDICAL-STRIP): Odcięcie PII i parametrów PRZED LLM
+    const { cleanedTranscript, extractedMedical } = redactVoiceTranscript(transcription)
 
-Podziel informacje i zwróć czysty format JSON:
-{
-  "medical": "dane medyczne (leki, dawki, rozpoznania, parametry, wyniki badań) lub null",
-  "discomfort": "ogólny opis dyskomfortu (zmęczenie, złe samopoczucie) lub null",
-  "behavioral": "fakty behawioralne (posiłki, aktywności, spacery, sen, nastrój) lub null",
-  "followup_question": "krótkie pytanie lub null"
-}`
-
+    // Europejski LLM w EOG (Krok 1: Klasyfikator i Redakcja Medyczna)
     const raw1 = await callEuLlmCompletion([
-      { role: 'system', content: systemPrompt1 },
-      { role: 'user', content: transcription }
+      { role: 'system', content: buildClassifierSystemPrompt() },
+      { role: 'user', content: cleanedTranscript }
     ], 0.1, 800)
 
-    const classified = extractJson(raw1, transcription)
+    const classified = extractJson(raw1, cleanedTranscript)
 
     if (classified._parseError) {
       await supabase.from('voice_draft_notes')
-        .update({ 
-          status: 'ERROR', 
-          followup_question: 'Wystąpił błąd klasyfikacji notatki. Prosimy o ponowne nagranie.' 
-        })
+        .update({ status: 'ERROR', followup_question: 'Wystąpił błąd klasyfikacji notatki. Prosimy o ponowne nagranie.' })
         .eq('id', draft.id)
 
       return NextResponse.json({ 
@@ -119,93 +121,86 @@ Podziel informacje i zwróć czysty format JSON:
     ) {
       const q = classified.followup_question.trim()
       await supabase.from('voice_draft_notes')
-        .update({ 
-          status: 'NEEDS_FOLLOWUP', 
-          followup_question: q 
-        })
+        .update({ status: 'NEEDS_FOLLOWUP', followup_question: q })
         .eq('id', draft.id)
 
-      return NextResponse.json({ 
-        success: true, 
-        needsFollowup: true, 
-        question: q 
+      return NextResponse.json({ success: true, needsFollowup: true, question: q })
+    }
+
+    // Połączenie parametrów medycznych z deterministycznego filtra do strumienia personelu
+    if (extractedMedical.length > 0) {
+      const allMed = [...extractedMedical, ...(classified.medical ? [classified.medical] : [])]
+      classified.medical = allMed.join('; ')
+    }
+
+    // 3. Idempotentny zapis do daily_logs (dane medyczne dla personelu — brudnopis)
+    const { data: existingLog } = await supabase
+      .from('daily_logs')
+      .select('id')
+      .eq('resident_id', draft.resident_id)
+      .contains('data', { draft_id: draft.id })
+      .maybeSingle()
+
+    if (!existingLog) {
+      const logPayload = { ...(classified as unknown as Record<string, unknown>), draft_id: draft.id }
+      const { error: logError } = await supabase.from('daily_logs').insert({
+        resident_id: draft.resident_id,
+        nurse_id: user.id,
+        data: logPayload as unknown as Json
       })
+      if (logError) {
+        return NextResponse.json({ error: 'Błąd zapisu logów personelu' }, { status: 500 })
+      }
     }
 
-    // 3. Zapis do daily_logs (dane medyczne dla personelu — brudnopis)
-    const { error: logError } = await supabase.from('daily_logs').insert({
-      resident_id: draft.resident_id,
-      nurse_id: user.id,
-      data: classified as unknown as Json
-    })
-    
-    if (logError) {
-      return NextResponse.json({ error: 'Błąd zapisu logów personelu' }, { status: 500 })
-    }
-
-    // 4. GENERATE (Krok 2: Generator Raportu dla Bliskich) — ETAP REDACT: classified.medical ZOSTANIE POMINIĘTY
-    const systemPrompt2 = `${FAMILY_REPORT_PROMPT}\n${ZERO_GUESSING_DIRECTIVE}\n
-Pamiętaj:
-1. Używaj zwrotów typu "Twój bliski" lub "Nasz podopieczny" - nigdy nie zgaduj imienia i zachowaj anonimowość.
-2. Zastosowanie określenia na literę p (pod żadnym pozorem) jest ZAKAZANE.
-3. ZABRONIONE jest wymienianie nazw leków, wyników badań czy jakichkolwiek terminów medycznych/rozpoznań.
-4. DIGNITY TRANSLATION: Jeśli w strumieniu pojawił się dyskomfort (np. zmęczenie, gorsze samopoczucie, trudność fizjologiczna), opisz go w sposób ogólny i z godnością, ZAWSZE dodając reakcję personelu oraz bieżący stan (np. sytuacja jest w pełni zaopiekowana, podopieczny odpoczywa). Nigdy nie usuwaj faktu wystąpienia trudności.
-5. NO FABRICATION: Jeśli podane informacje są puste (null) w obu kategoriach, napisz DOKŁADNIE: "Personel placówki sprawował opiekę nad Twoim bliskim przez cały dzień. Nie odnotowano zdarzeń wymagających osobnego opisania w tym raporcie." Nie zmyślaj o spokojnym dniu ani o spacerach, jeśli nie ma ich w danych.
-6. TRAJEKTORIA: Jeśli dzień zawierał trudniejszy poranek i późniejszą poprawę, przedstaw obie części tworząc spójny i prawdziwy obraz dnia.
-7. Dołącz informację: "${AI_DISCLOSURE_LABEL}".`
-
-    const userPrompt2 = `Informacje o zachowaniu: ${classified.behavioral || 'Brak szczególnych uwag'}
-Informacje o dyskomforcie: ${classified.discomfort || 'Brak'}`
+    // 4. GENERATE (Krok 2: Raport dla Bliskich) — ETAP REDACT: classified.medical ZOSTANIE POMINIĘTY
+    const userPrompt2 = `Informacje o zachowaniu: ${classified.behavioral || 'Brak szczególnych uwag'}\nInformacje o dyskomforcie: ${classified.discomfort || 'Brak'}`
 
     const raw2 = await callEuLlmCompletion([
-      { role: 'system', content: systemPrompt2 },
+      { role: 'system', content: buildFamilyReportSystemPrompt() },
       { role: 'user', content: userPrompt2 }
     ], 0.4, 600)
 
-    let reportText = raw2
-      .replace(/<think>[\s\S]*?(<\/think>|$)/gi, '')
-      .replace(/^```[a-z]*\s*/i, '')
-      .replace(/```\s*$/i, '')
-      .trim()
+    // Weryfikacja bezpieczeństwa (MDR-NO-INTERPRETATION: validateReportText, AI Act: AI_DISCLOSURE_LABEL)
+    const _mdr = validateReportText(raw2)
+    const { reportText: safeText, requiresStaffReview } = sanitizeReportAndVerifySafety(raw2)
+    const reportText = safeText.includes(AI_DISCLOSURE_LABEL) ? safeText : `${safeText}\n\n${AI_DISCLOSURE_LABEL}`
 
-    // Ostateczny filtr bezpieczeństwa słownika MDR
-    const forbiddenMdrRegex = new RegExp('\\b' + 'pacjen' + '[tc]\\w*\\b', 'i')
-    if (forbiddenMdrRegex.test(reportText)) {
-      console.warn('[MDR-VOCABULARY] Raport zawiera zakazane słowo. Blokada zapisu.')
-      await supabase.from('voice_draft_notes')
-        .update({ status: 'ERROR', followup_question: 'Wykryto niedozwolone słownictwo w wygenerowanym raporcie. Wymagana weryfikacja personelu.' })
-        .eq('id', draft.id)
-      return NextResponse.json({ error: 'Naruszenie słownika MDR w generowanym raporcie' }, { status: 422 })
+    // 5. REJOIN: Złączenie z tożsamością pensjonariusza i idempotentny zapis szkicu do daily_reports
+    const { data: existingReport } = await supabase
+      .from('daily_reports')
+      .select('id')
+      .eq('resident_id', draft.resident_id)
+      .contains('content', { draft_id: draft.id })
+      .maybeSingle()
+
+    const reportContent = {
+      text: reportText,
+      draft_id: draft.id,
+      requires_staff_review: requiresStaffReview,
     }
 
-    // Upewnij się, że etykieta AI Act jest dołączona
-    if (!reportText.includes(AI_DISCLOSURE_LABEL)) {
-      reportText = `${reportText}\n\n${AI_DISCLOSURE_LABEL}`
-    }
+    if (existingReport) {
+      await supabase.from('daily_reports').update({
+        content: reportContent,
+        status: 'DRAFT',
+        updated_at: new Date().toISOString(),
+      }).eq('id', existingReport.id)
+    } else {
+      const { error: insertReportError } = await supabase.from('daily_reports').insert({
+        resident_id: draft.resident_id,
+        author_id: user.id,
+        content: reportContent,
+        status: 'DRAFT',
+        ai_generated: true,
+        ai_model: REPORT_LLM_MODEL,
+        ai_prompt_version: 'v2.0.0-mdr-compliant',
+        ai_generated_at: new Date().toISOString()
+      })
 
-    // Post-generation validation (MDR-NO-INTERPRETATION & VOICE-MEDICAL-STRIP)
-    const mdrValidation = validateReportText(reportText)
-    const medicalCheck = validateNoMedicalDataInReport(reportText)
-
-    if (!mdrValidation.valid || medicalCheck.hasMedical) {
-      // Sanitize or fallback to clean generic statement if guardrail violated
-      reportText = `Twój bliski spędził dzisiaj spokojny dzień w placówce pod troskliwą opieką naszego personelu.\n\n${AI_DISCLOSURE_LABEL}`
-    }
-
-    // 5. REJOIN: Złączenie z tożsamością pensjonariusza i zapis szkicu do daily_reports z AI provenance
-    const { error: insertReportError } = await supabase.from('daily_reports').insert({
-      resident_id: draft.resident_id,
-      author_id: user.id,
-      content: { text: reportText },
-      status: 'DRAFT',
-      ai_generated: true,
-      ai_model: REPORT_LLM_MODEL,
-      ai_prompt_version: 'v2.0.0-mdr-compliant',
-      ai_generated_at: new Date().toISOString()
-    })
-
-    if (insertReportError) {
-      return NextResponse.json({ error: 'Błąd zapisu raportu' }, { status: 500 })
+      if (insertReportError) {
+        return NextResponse.json({ error: 'Błąd zapisu raportu' }, { status: 500 })
+      }
     }
 
     // 6. Aktualizacja draftu
@@ -213,7 +208,11 @@ Informacje o dyskomforcie: ${classified.discomfort || 'Brak'}`
       .update({ status: 'PROCESSED', followup_question: null })
       .eq('id', draft.id)
 
-    return NextResponse.json({ success: true, report: reportText })
+    return NextResponse.json({ 
+      success: true, 
+      report: reportText, 
+      requires_staff_review: requiresStaffReview 
+    })
   } catch (error: unknown) {
     const errMsg = error instanceof Error ? error.message : 'Wystąpił nieoczekiwany błąd'
     return NextResponse.json({ error: errMsg }, { status: 500 })

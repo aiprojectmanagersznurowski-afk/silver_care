@@ -49,6 +49,18 @@ export interface MedicalCheckResult {
   found: string[];
 }
 
+// Comprehensive clinical parameter patterns for REDACT pre-filtering
+const HARD_PARAMETER_PATTERNS: Array<{ regex: RegExp; desc: string }> = [
+  { regex: /(?:ciśnienie(?:\s+tętnicze)?\s*(?:wynosiło|to|:)?\s*)?\b\d{2,3}\s*\/\s*\d{2,3}(?:\s*mmHg)?\b/gi, desc: 'vital_sign: ciśnienie tętnicze' },
+  { regex: /(?:saturacja|spo2|sat\.?)\s*(?:wynosiła|to|:)?\s*\d{1,3}\s*%(?:\s*SpO2)?\b|\b\d{1,3}\s*%\s*(?:SpO2|saturacj[a-z]*)\b/gi, desc: 'vital_sign: saturacja SpO2' },
+  { regex: /(?:temperatura|temp\.?|gorączka)\s*(?:wynosiła|to|:)?\s*\d{1,2}(?:[.,]\d+)?\s*(?:°C|C|stopn(?:i|ie|ia|iach))\b|\b\d{1,2}[.,]\d+\s*(?:°C|C|stopn(?:i|ie|ia|iach))\b/gi, desc: 'vital_sign: temperatura ciała' },
+  { regex: /\b\d+(?:[.,]\d+)?\s*(?:mg|miligram(?:ów|y)?|g|gram(?:ów|y)?|ml|mililitr(?:ów|y)?|tabletk[a-zęó]*|kapsuł[a-zęó]*)\b/gi, desc: 'medication: dawka lub forma leku' },
+  { regex: /\b(furagin[a-z]*|paracetamol[a-z]*|ibuprofen[a-z]*|apap[a-z]*|ketonal[a-z]*|relanium|tramadol|morfin[a-z]*)\b/gi, desc: 'medication: nazwy leków' },
+  { regex: /\b(zawał[a-z]*|udar[a-z]*|omdleni[ea]|zakażeni[ea])\b/gi, desc: 'diagnosis: alarmy kliniczne' },
+];
+
+export const STAFF_REVIEW_FALLBACK_NOTICE = '[Szkic wymaga weryfikacji personelu: automatyczny raport zawierał zastrzeżone sformułowania lub parametry medyczne]';
+
 /**
  * Validates generated report text against MDR requirements and forbidden vocabulary.
  */
@@ -86,8 +98,65 @@ export function validateNoMedicalDataInReport(text: string): MedicalCheckResult 
     }
   }
 
+  for (const item of HARD_PARAMETER_PATTERNS) {
+    const r = new RegExp(item.regex.source, item.regex.flags);
+    if (r.test(text)) {
+      found.push(item.desc);
+    }
+  }
+
   return {
     hasMedical: found.length > 0,
     found,
   };
+}
+
+/**
+ * Ekstrahuje wszystkie parametry medyczne, dawki i rozpoznania z tekstu
+ * do strumienia wewnętrznego personelu (daily_logs.medical).
+ */
+export function extractClinicalFindings(text: string): string[] {
+  const findings: string[] = [];
+
+  const allPatterns = [...CLINICAL_PATTERNS, ...MEDICAL_DATA_PATTERNS, ...HARD_PARAMETER_PATTERNS];
+  for (const item of allPatterns) {
+    const flags = item.regex.flags.includes('g') ? item.regex.flags : item.regex.flags + 'g';
+    const r = new RegExp(item.regex.source, flags);
+    let m: RegExpExecArray | null;
+    while ((m = r.exec(text)) !== null) {
+      const matchText = m[0].trim();
+      if (matchText && !findings.includes(matchText)) {
+        findings.push(matchText);
+      }
+      if (m.index === r.lastIndex) {
+        r.lastIndex++;
+      }
+    }
+  }
+
+  return findings;
+}
+
+/**
+ * Deterministycznie usuwa dane kliniczne, parametry i leki z tekstu,
+ * aby do LLM trafił zredagowany tekst bez danych medycznych (ADR-007).
+ */
+export function stripClinicalData(text: string): string {
+  let cleaned = text;
+
+  const allPatterns = [...HARD_PARAMETER_PATTERNS, ...MEDICAL_DATA_PATTERNS, ...CLINICAL_PATTERNS];
+  for (const item of allPatterns) {
+    const flags = item.regex.flags.includes('g') ? item.regex.flags : item.regex.flags + 'g';
+    const r = new RegExp(item.regex.source, flags);
+    cleaned = cleaned.replace(r, '');
+  }
+
+  // Uporządkuj białe znaki i wiszące przecinki
+  return cleaned
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/^[ \t]*,[ \t]*/gm, '')
+    .replace(/,[ \t]*,/g, ',')
+    .replace(/\(\s*\)/g, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
 }

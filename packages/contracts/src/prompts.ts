@@ -72,6 +72,6 @@ CRITICAL RULES FOR GENERATION:
 OUTPUT FORMAT:
 You must return a valid JSON object strictly matching this structure:
 {
-  "family_report_pl": "Dzień dobry, Twój bliski spędził dzisiaj spokojny dzień..."
+  "family_report_pl": "Dzień dobry, Twój bliski uczestniczył dzisiaj w warsztatach i zjadł podwieczorek..."
 }
 `;
