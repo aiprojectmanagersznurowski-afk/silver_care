@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/database.types'
 
 // Ten klient omija RLS, pozwala na zapraszanie uzytkownikow i modyfikacje auth.users
 export function createAdminClient() {
@@ -9,7 +10,7 @@ export function createAdminClient() {
     throw new Error('Brak wymaganych zmiennych środowiskowych SUPABASE_URL lub SUPABASE_SERVICE_ROLE_KEY')
   }
 
-  return createClient(
+  return createClient<Database>(
     url,
     serviceRoleKey,
     {

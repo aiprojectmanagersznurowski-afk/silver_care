@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import type { Database } from '@/types/database.types'
 
 export async function createClient(accessToken?: string) {
   const cookieStore = await cookies()
@@ -10,7 +11,7 @@ export async function createClient(accessToken?: string) {
     throw new Error('Brak wymaganych zmiennych środowiskowych SUPABASE_URL lub SUPABASE_ANON_KEY')
   }
 
-  return createServerClient(
+  return createServerClient<Database>(
     url,
     anonKey,
     {

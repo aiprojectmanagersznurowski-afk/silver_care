@@ -9,15 +9,14 @@ import { CheckCircle2, Clock, Edit3, Send, Save, X, Sparkles, AlertCircle, Check
 import { analyzeReportCompleteness } from '@/lib/completeness-gate'
 import { Textarea } from '@/components/ui/textarea'
 
+import type { Json } from '@/types/database.types'
+
 export interface ReportItem {
   id: string
   resident_id: string
-  created_at: string
+  created_at: string | null
   status: 'DRAFT' | 'PUBLISHED' | string
-  content: {
-    text?: string
-    [key: string]: unknown
-  }
+  content: Json
   residents?: {
     first_name?: string
     last_name?: string
@@ -82,13 +81,13 @@ export function ReportCard({ report }: { report: ReportItem }) {
               }
             </CardTitle>
             <CardDescription className="text-xs text-muted-foreground mt-0.5">
-              Utworzono: {new Date(report.created_at).toLocaleDateString('pl-PL', {
+              Utworzono: {report.created_at ? new Date(report.created_at).toLocaleDateString('pl-PL', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit'
-              })}
+              }) : '—'}
             </CardDescription>
           </div>
 
@@ -184,7 +183,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
               <Button 
                 disabled={loading} 
                 onClick={() => {
-                  setContent(report.content?.text || '')
+                  setContent(parsedText)
                   setIsEditing(false)
                 }} 
                 variant="outline"

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import type { TablesInsert } from '@/types/database.types'
 
 export async function GET(request: Request) {
   const supabase = await createClient()
@@ -59,7 +60,7 @@ export async function POST(request: Request) {
       }
     }
 
-    let rowsToInsert: Record<string, unknown>[] = []
+    let rowsToInsert: TablesInsert<'agenda_items'>[] = []
 
     if (Array.isArray(target_dates) && target_dates.length > 0) {
       rowsToInsert = target_dates.map(date => ({

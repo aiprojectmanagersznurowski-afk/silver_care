@@ -45,7 +45,7 @@ export async function bulkPublishReportsAction(reportIds: string[]): Promise<Bul
   // Pobierz raporty aby zweryfikować stan DRAFT oraz przynależność do placówki
   const { data: reports, error: fetchErr } = await adminClient
     .from('daily_reports')
-    .select('id, resident_id, status, organization_id')
+    .select('id, resident_id, status, residents!inner(organization_id)')
     .in('id', reportIds)
 
   if (fetchErr || !reports) {
@@ -53,7 +53,7 @@ export async function bulkPublishReportsAction(reportIds: string[]): Promise<Bul
   }
 
   const validDraftIds = reports
-    .filter((r) => r.status === 'DRAFT' && (!orgId || role === 'super_admin' || r.organization_id === orgId))
+    .filter((r) => r.status === 'DRAFT' && (!orgId || role === 'super_admin' || r.residents?.organization_id === orgId))
     .map((r) => r.id)
 
   if (validDraftIds.length === 0) {
@@ -64,7 +64,8 @@ export async function bulkPublishReportsAction(reportIds: string[]): Promise<Bul
     .from('daily_reports')
     .update({
       status: 'PUBLISHED',
-      published_at: new Date().toISOString(),
+      approved_at: new Date().toISOString(),
+      approved_by: user.id,
     })
     .in('id', validDraftIds)
 
@@ -75,11 +76,11 @@ export async function bulkPublishReportsAction(reportIds: string[]): Promise<Bul
   // Zapis do audit_logs
   await adminClient.from('audit_logs').insert({
     organization_id: orgId || null,
-    user_id: user.id,
+    performed_by: user.id,
     action: 'REPORTS_BULK_PUBLISHED',
-    target_table: 'daily_reports',
-    target_id: validDraftIds[0],
-    details: {
+    payload: {
+      target_table: 'daily_reports',
+      target_id: validDraftIds[0],
       published_count: validDraftIds.length,
       report_ids: validDraftIds,
     },

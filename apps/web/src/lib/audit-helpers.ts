@@ -4,12 +4,12 @@
 
 export interface AuditLogEntry {
   id: string
-  organization_id: string
+  organization_id: string | null
   action: string
   performed_by: string | null
   created_at: string
   table_name?: string
-  payload?: Record<string, unknown>
+  payload?: unknown
 }
 
 /**
@@ -60,7 +60,7 @@ export function filterAuditLogsByDate(
 /**
  * Sanityzacja payloadu pod kątem PII przed eksportem RODO
  */
-export function sanitizeAuditPayload(payload?: Record<string, unknown>): Record<string, unknown> {
+export function sanitizeAuditPayload(payload?: unknown): Record<string, unknown> {
   if (!payload || typeof payload !== 'object') return {}
   const sanitized: Record<string, unknown> = {}
   

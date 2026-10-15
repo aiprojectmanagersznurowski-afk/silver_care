@@ -20,7 +20,7 @@ interface ProfileData {
   logs: Array<{
     id: string
     action: string
-    created_at: string
+    created_at: string | null
     payload: unknown
   }>
 }
@@ -255,7 +255,7 @@ export function ProfileSecurityClient({ initialData }: { initialData: ProfileDat
                     </span>
                   </div>
                   <span className="text-xs text-muted-foreground">
-                    {new Date(log.created_at).toLocaleString('pl-PL')}
+                    {log.created_at ? new Date(log.created_at).toLocaleString('pl-PL') : '—'}
                   </span>
                 </div>
               ))}

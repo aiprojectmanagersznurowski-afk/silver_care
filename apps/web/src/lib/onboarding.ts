@@ -8,7 +8,8 @@ export interface InvitationRecord {
   organization_id: string;
   resident_id: string;
   role: 'family' | 'legal_guardian' | string;
-  email: string;
+  email?: string | null;
+  phone?: string | null;
   expires_at: string;
   revoked_at?: string | null;
   claimed_at?: string | null;
@@ -34,7 +35,7 @@ export interface InvitationValidationResult {
  * Bezpieczne maskowanie adresu e-mail, aby nie ujawniać pełnych danych (SEC-NO-PII).
  * Np. janina.kowalska@example.com -> j***a@example.com
  */
-export function maskEmail(email: string): string {
+export function maskEmail(email?: string | null): string {
   if (!email || !email.includes('@')) return '***';
   const [local, domain] = email.split('@');
   if (local.length <= 2) {

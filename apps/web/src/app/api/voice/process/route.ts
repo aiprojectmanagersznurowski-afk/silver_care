@@ -12,6 +12,7 @@ import {
 } from '@silvercare/contracts/src/validation'
 import { AI_DISCLOSURE_LABEL } from '@silvercare/contracts/src/generated/presentation'
 import { extractJson } from '@/lib/voice-helpers'
+import type { Json } from '@/types/database.types'
 
 export const runtime = 'nodejs'
 
@@ -65,7 +66,7 @@ export async function POST(req: Request) {
 
     const transcription = (typeof editedTranscription === 'string' && editedTranscription.trim() !== '')
       ? editedTranscription.trim()
-      : ((draft.transcript || draft.transcription || '') as string).trim()
+      : (draft.transcript || '').trim()
 
     if (!transcription) {
       return NextResponse.json({ error: 'Brak treści transkrypcji do przetworzenia' }, { status: 400 })
@@ -135,7 +136,7 @@ Podziel informacje i zwróć czysty format JSON:
     const { error: logError } = await supabase.from('daily_logs').insert({
       resident_id: draft.resident_id,
       nurse_id: user.id,
-      data: classified
+      data: classified as unknown as Json
     })
     
     if (logError) {

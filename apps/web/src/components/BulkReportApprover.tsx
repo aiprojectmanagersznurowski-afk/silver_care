@@ -6,12 +6,14 @@ import { Button } from '@/components/ui/button'
 import { bulkPublishReportsAction } from '@/actions/bulk-reports'
 import { useRouter } from 'next/navigation'
 
+import type { Json } from '@/types/database.types'
+
 interface DraftReport {
   id: string
   resident_id: string
-  created_at: string
+  created_at: string | null
   status: string
-  content?: { text?: string; [key: string]: unknown }
+  content?: Json
   residents?: {
     first_name?: string
     last_name?: string

@@ -22,11 +22,11 @@ async function logStaffAction(
   orgId: string | null | undefined
 ) {
   try {
-    const { error } = await supabase.rpc('log_staff_management_action', {
+    const { error } = orgId ? await supabase.rpc('log_staff_management_action', {
       p_target_user_id: staffId,
       p_action: action,
       p_organization_id: orgId
-    })
+    }) : { error: new Error('No orgId') }
     if (error) {
       await adminClient.from('audit_logs').insert({
         organization_id: orgId || null,
