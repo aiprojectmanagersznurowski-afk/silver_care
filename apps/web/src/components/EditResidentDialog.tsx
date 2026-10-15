@@ -12,14 +12,11 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
-import { Textarea } from '@/components/ui/textarea'
 import { updateResidentInlineAction } from '@/actions/resident-inline'
 import { Pencil, Loader2, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { CareLevel } from '@/lib/reporting-constants'
+import { EditResidentFormFields, type EditResidentFormData } from './residents/EditResidentFormFields'
 
 export interface EditResidentDialogProps {
   resident: {
@@ -47,7 +44,7 @@ export function EditResidentDialog({
   const [isPending, startTransition] = useTransition()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<EditResidentFormData>({
     first_name: resident.first_name,
     last_name: resident.last_name,
     gender: (resident.gender || '') as string,
@@ -157,126 +154,7 @@ export function EditResidentDialog({
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-first-name" className="text-sm font-medium text-foreground">
-                Imię *
-              </Label>
-              <Input
-                id="edit-first-name"
-                value={formData.first_name}
-                onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                className="min-h-[44px]"
-                required
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-last-name" className="text-sm font-medium text-foreground">
-                Nazwisko *
-              </Label>
-              <Input
-                id="edit-last-name"
-                value={formData.last_name}
-                onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                className="min-h-[44px]"
-                required
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-gender" className="text-sm font-medium text-foreground">
-                Płeć
-              </Label>
-              <NativeSelect
-                id="edit-gender"
-                value={formData.gender}
-                onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                className="w-full min-h-[44px]"
-              >
-                <NativeSelectOption value="">Nieokreślona</NativeSelectOption>
-                <NativeSelectOption value="F">Kobieta</NativeSelectOption>
-                <NativeSelectOption value="M">Mężczyzna</NativeSelectOption>
-              </NativeSelect>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-birth-date" className="text-sm font-medium text-foreground">
-                Data urodzenia
-              </Label>
-              <Input
-                id="edit-birth-date"
-                type="date"
-                value={formData.birth_date}
-                onChange={(e) => setFormData({ ...formData, birth_date: e.target.value })}
-                className="min-h-[44px]"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-admission-date" className="text-sm font-medium text-foreground">
-                Data przyjęcia
-              </Label>
-              <Input
-                id="edit-admission-date"
-                type="date"
-                value={formData.admission_date}
-                onChange={(e) => setFormData({ ...formData, admission_date: e.target.value })}
-                className="min-h-[44px]"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-care-level" className="text-sm font-medium text-foreground">
-                Poziom opieki
-              </Label>
-              <NativeSelect
-                id="edit-care-level"
-                value={formData.care_level}
-                onChange={(e) => setFormData({ ...formData, care_level: e.target.value })}
-                className="w-full min-h-[44px]"
-              >
-                <NativeSelectOption value="">Nieokreślony</NativeSelectOption>
-                <NativeSelectOption value="walking">Chodzący</NativeSelectOption>
-                <NativeSelectOption value="sitting">Siedzący</NativeSelectOption>
-                <NativeSelectOption value="bedridden">Leżący</NativeSelectOption>
-                <NativeSelectOption value="hospice">Opieka paliatywna</NativeSelectOption>
-              </NativeSelect>
-            </div>
-
-            <div className="space-y-1.5 flex flex-col justify-end">
-              <label className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30 cursor-pointer min-h-[44px]">
-                <input
-                  type="checkbox"
-                  id="edit-is-zsn"
-                  checked={formData.is_zsn}
-                  onChange={(e) => setFormData({ ...formData, is_zsn: e.target.checked })}
-                  className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
-                />
-                <span className="text-sm font-medium text-foreground">
-                  ZSN: Znaczny stopień niepełnosprawności
-                </span>
-              </label>
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="edit-notes" className="text-sm font-medium text-foreground">
-              Notatki / uwagi organizacyjne
-            </Label>
-            <Textarea
-              id="edit-notes"
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              rows={3}
-              className="w-full"
-              placeholder="Wpisz istotne informacje organizacyjne..."
-            />
-          </div>
+          <EditResidentFormFields formData={formData} setFormData={setFormData} />
         </form>
 
         <DialogFooter className="p-0 pt-4 border-t border-border flex sm:flex-row justify-end gap-2">

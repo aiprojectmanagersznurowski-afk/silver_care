@@ -22,8 +22,9 @@ import {
   CONTRACT_END_REASON_LABELS,
   ContractEndReason,
 } from '@/lib/reporting-constants'
-import { LogOut, Loader2, AlertTriangle, BedDouble, ShieldCheck } from 'lucide-react'
+import { LogOut, Loader2, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
+import { DischargeConsequencesAlert } from './residents/DischargeConsequencesAlert'
 
 export interface DischargeResidentDialogProps {
   resident: {
@@ -140,38 +141,9 @@ export function DischargeResidentDialog({
             </div>
           )}
 
-          {/* Podsumowanie konsekwencji operacji */}
-          <div className="rounded-lg border border-border bg-muted/40 p-3.5 space-y-2 text-sm text-foreground">
-            <div className="flex items-center gap-2 font-medium">
-              <AlertTriangle className="h-4 w-4 text-muted-foreground shrink-0" />
-              <span>Konsekwencje formalne i zasobowe</span>
-            </div>
-            <ul className="list-disc pl-5 space-y-1 text-muted-foreground text-sm">
-              {activeBedLabel ? (
-                <li className="flex items-center gap-1.5">
-                  <BedDouble className="h-3.5 w-3.5 text-foreground shrink-0" />
-                  <span>
-                    Nastąpi natychmiastowe zwolnienie przypisanego miejsca:{' '}
-                    <strong className="text-foreground">{activeBedLabel}</strong>.
-                  </span>
-                </li>
-              ) : (
-                <li>Podopieczny nie ma obecnie aktywnego przypisania do łóżka.</li>
-              )}
-              <li className="flex items-center gap-1.5">
-                <ShieldCheck className="h-3.5 w-3.5 text-foreground shrink-0" />
-                <span>
-                  <strong>Portal Rodziny:</strong> Bliscy zachowują dostęp do wglądu w dotychczasową historię (tryb tylko do odczytu).
-                </span>
-              </li>
-              <li>
-                Zdarzenie zostanie odnotowane w rejestrze statystyk placówki (BI) oraz audycie.
-              </li>
-            </ul>
-          </div>
+          <DischargeConsequencesAlert activeBedLabel={activeBedLabel} />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Powód zakończenia pobytu */}
             <div className="space-y-1.5 sm:col-span-2">
               <Label htmlFor="discharge-reason" className="text-sm font-semibold">
                 Powód rozwiązania umowy / zakończenia pobytu *
@@ -191,7 +163,6 @@ export function DischargeResidentDialog({
               </NativeSelect>
             </div>
 
-            {/* Data zakończenia umowy */}
             <div className="space-y-1.5">
               <Label htmlFor="contract-end-date" className="text-sm font-semibold">
                 Data zakończenia umowy *
@@ -206,7 +177,6 @@ export function DischargeResidentDialog({
               />
             </div>
 
-            {/* Data zgonu (tylko gdy powód to death) */}
             {isDeath ? (
               <div className="space-y-1.5">
                 <Label htmlFor="death-date" className="text-sm font-semibold text-destructive">
@@ -226,7 +196,6 @@ export function DischargeResidentDialog({
               <div className="hidden sm:block" />
             )}
 
-            {/* Uwagi i notatka do rejestru */}
             <div className="space-y-1.5 sm:col-span-2">
               <Label htmlFor="discharge-notes" className="text-sm font-semibold">
                 Uwagi do rejestru placówki (opcjonalnie)

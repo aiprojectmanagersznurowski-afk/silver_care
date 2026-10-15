@@ -10,13 +10,13 @@ import {
   SheetFooter,
 } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { updateResidentInlineAction } from '@/actions/resident-inline'
 import { Pencil, Loader2, AlertCircle, Check } from 'lucide-react'
 import { CareLevel } from '@/lib/reporting-constants'
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
-import { Textarea } from '@/components/ui/textarea'
+import {
+  ResidentEditSheetFormFields,
+  type ResidentEditSheetFormData,
+} from './residents/ResidentEditSheetFormFields'
 
 interface ResidentData {
   id: string
@@ -40,7 +40,7 @@ export function ResidentEditSheet({ resident, onUpdated }: ResidentEditSheetProp
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState(false)
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ResidentEditSheetFormData>({
     first_name: resident.first_name,
     last_name: resident.last_name,
     birth_date: resident.birth_date ? resident.birth_date.substring(0, 10) : '',
@@ -152,89 +152,7 @@ export function ResidentEditSheet({ resident, onUpdated }: ResidentEditSheetProp
                 </div>
               )}
 
-              <div className="space-y-1.5">
-                <Label htmlFor="first_name" className="text-sm font-medium text-foreground">
-                  Imię *
-                </Label>
-                <Input
-                  id="first_name"
-                  value={formData.first_name}
-                  onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                  className="min-h-[44px]"
-                  required
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="last_name" className="text-sm font-medium text-foreground">
-                  Nazwisko *
-                </Label>
-                <Input
-                  id="last_name"
-                  value={formData.last_name}
-                  onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                  className="min-h-[44px]"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="birth_date" className="text-sm font-medium text-foreground">
-                    Data urodzenia
-                  </Label>
-                  <Input
-                    id="birth_date"
-                    type="date"
-                    value={formData.birth_date}
-                    onChange={(e) => setFormData({ ...formData, birth_date: e.target.value })}
-                    className="min-h-[44px]"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="admission_date" className="text-sm font-medium text-foreground">
-                    Data przyjęcia
-                  </Label>
-                  <Input
-                    id="admission_date"
-                    type="date"
-                    value={formData.admission_date}
-                    onChange={(e) => setFormData({ ...formData, admission_date: e.target.value })}
-                    className="min-h-[44px]"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="care_level" className="text-sm font-medium text-foreground">
-                  Poziom opieki
-                </Label>
-                <NativeSelect
-                  id="care_level"
-                  value={formData.care_level}
-                  onChange={(e) => setFormData({ ...formData, care_level: e.target.value })} className="w-full"
-                >
-                  <NativeSelectOption value="">Nieokreślony</NativeSelectOption>
-                  <NativeSelectOption value="walking">Chodzący</NativeSelectOption>
-                  <NativeSelectOption value="sitting">Siedzący</NativeSelectOption>
-                  <NativeSelectOption value="bedridden">Leżący</NativeSelectOption>
-                  <NativeSelectOption value="hospice">Opieka paliatywna</NativeSelectOption>
-                </NativeSelect>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="notes" className="text-sm font-medium text-foreground">
-                  Notatki / uwagi organizacyjne
-                </Label>
-                <Textarea
-                  id="notes"
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  rows={4} className="w-full"
-                  placeholder="Wpisz istotne informacje organizacyjne..."
-                />
-              </div>
+              <ResidentEditSheetFormFields formData={formData} setFormData={setFormData} />
             </form>
           </div>
 

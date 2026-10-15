@@ -1,44 +1,18 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { BedDouble, AlertCircle } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
-import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
-import AssignBedDialog from './AssignBedDialog'
-import ReassignBedDialog from './ReassignBedDialog'
-import { BusinessIdBadge } from '@/components/BusinessIdBadge'
-
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import type { BedItem } from './bed-types'
+import { BedTableRow } from './BedTableRow'
 
 interface BedListProps {
   roomId: string
   roomNumber?: string
   floor?: string
   onUpdate: () => void
-}
-
-interface BedResident {
-  id: string
-  first_name: string
-  last_name: string
-  gender?: 'M' | 'F'
-  is_zsn?: boolean
-  care_level?: string
-}
-
-interface BedItem {
-  id: string
-  label: string
-  is_active: boolean
-  active_assignment?: {
-    id: string
-    resident_id: string
-    resident: BedResident
-  } | null
-  resident?: BedResident | null
-  [key: string]: unknown
 }
 
 export default function BedList({ roomId, roomNumber, floor, onUpdate }: BedListProps) {
@@ -143,171 +117,20 @@ export default function BedList({ roomId, roomNumber, floor, onUpdate }: BedList
             </TableRow>
           </TableHeader>
           <TableBody>
-            {beds.map((bed) => {
-              const displayLabel =
-                bed.label.toLowerCase().startsWith('łóżko') || bed.label.toLowerCase().startsWith('lozko')
-                  ? bed.label
-                  : `Łóżko ${bed.label}`
-
-              return (
-                <TableRow
-                  key={bed.id}
-                  className={!bed.is_active ? 'opacity-60 bg-muted/30' : undefined}
-                >
-                  <TableCell className="font-semibold text-foreground py-2.5">
-                    <div className="flex items-center gap-2">
-                      <BedDouble className="w-4 h-4 text-primary shrink-0" />
-                      <span>{displayLabel}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-2.5">
-                    {!bed.is_active ? (
-                      <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-sm font-semibold bg-secondary text-secondary-foreground">
-                        Nieaktywne
-                      </span>
-                    ) : bed.active_assignment ? (
-                      <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-sm font-semibold bg-primary text-white">
-                        Zajęte
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-sm font-semibold text-foreground border-border">
-                        Wolne
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell className="py-2.5">
-                    {bed.active_assignment ? (
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-medium text-foreground">
-                            {bed.active_assignment.resident.first_name} {bed.active_assignment.resident.last_name}
-                          </span>
-                          <BusinessIdBadge type="resident" id={bed.active_assignment.resident.id} />
-                        </div>
-                        <div className="flex flex-wrap gap-1 text-sm">
-                          {bed.active_assignment.resident.gender && (
-                            <span className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 font-medium text-foreground">
-                              {bed.active_assignment.resident.gender === 'M' ? 'Mężczyzna' : 'Kobieta'}
-                            </span>
-                          )}
-                          {bed.active_assignment.resident.is_zsn && (
-                            <span className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 font-medium text-foreground">
-                              ZSN
-                            </span>
-                          )}
-                          {bed.active_assignment.resident.care_level && (
-                            <span className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 font-medium text-foreground">
-                              {bed.active_assignment.resident.care_level === 'bedridden'
-                                ? 'Leżący'
-                                : bed.active_assignment.resident.care_level === 'sitting'
-                                ? 'Na wózku'
-                                : 'Chodzący'}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ) : (
-                      <span className="text-sm text-muted-foreground">Brak przypisania</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right py-2.5">
-                    <div className="flex items-center justify-end gap-1.5 flex-wrap">
-                      {bed.is_active ? (
-                        <>
-                          {bed.active_assignment ? (
-                            <>
-                              <ReassignBedDialog
-                                currentBedId={bed.id}
-                                currentBedLabel={bed.label}
-                                currentRoomNumber={roomNumber || ''}
-                                currentFloor={floor}
-                                residentId={bed.active_assignment.resident.id}
-                                residentName={`${bed.active_assignment.resident.first_name} ${bed.active_assignment.resident.last_name}`}
-                                residentGender={bed.active_assignment.resident.gender}
-                                residentIsZsn={bed.active_assignment.resident.is_zsn}
-                                residentCareLevel={bed.active_assignment.resident.care_level}
-                                onReassigned={() => {
-                                  fetchBeds()
-                                  onUpdate()
-                                }}
-                              />
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="text-destructive hover:bg-destructive/10 hover:text-destructive h-8 px-2.5 text-sm"
-                                    onClick={() => {
-                                      if (bed.active_assignment?.resident) {
-                                        setUnassignTarget({
-                                          bedId: bed.id,
-                                          residentId: bed.active_assignment.resident.id,
-                                          residentName: `${bed.active_assignment.resident.first_name} ${bed.active_assignment.resident.last_name}`,
-                                        })
-                                      }
-                                    }}
-                                  >
-                                    Wypisz
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  Zwolnij to łóżko i usuń bieżące przypisanie pensjonariusza
-                                </TooltipContent>
-                              </Tooltip>
-                            </>
-                          ) : (
-                            <AssignBedDialog
-                              bedId={bed.id}
-                              onAssigned={() => {
-                                fetchBeds()
-                                onUpdate()
-                              }}
-                            />
-                          )}
-
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 px-2.5 text-sm text-muted-foreground hover:text-foreground"
-                                  onClick={() => handleDeactivate(bed.id, false)}
-                                  disabled={!!bed.active_assignment}
-                                >
-                                  Dezaktywuj
-                                </Button>
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              {bed.active_assignment
-                                ? 'Nie można dezaktywować zajętego łóżka — najpierw wypisz pensjonariusza'
-                                : 'Wyłącz łóżko z puli dostępnych w placówce'}
-                            </TooltipContent>
-                          </Tooltip>
-                        </>
-                      ) : (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDeactivate(bed.id, true)}
-                              className="h-8 px-3 text-sm"
-                            >
-                              Aktywuj łóżko
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            Przywróć łóżko do puli dostępnych do przypisania
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )
-            })}
+            {beds.map((bed) => (
+              <BedTableRow
+                key={bed.id}
+                bed={bed}
+                roomNumber={roomNumber}
+                floor={floor}
+                onDeactivate={handleDeactivate}
+                onUnassignClick={setUnassignTarget}
+                onRefresh={() => {
+                  fetchBeds()
+                  onUpdate()
+                }}
+              />
+            ))}
           </TableBody>
         </Table>
       </div>

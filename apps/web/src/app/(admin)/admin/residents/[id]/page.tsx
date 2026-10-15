@@ -1,34 +1,28 @@
+/**
+ * Strona profilu podopiecznego — integruje:
+ * - EditResidentDialog (w sekcji nagłówka profilu podopiecznego)
+ * - InviteFamilyDialog z triggerLabel="Zaproś bliskiego" (w sekcji bliskich i kontaktów)
+ */
+
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
-import {
-  UserCircle2, Calendar, Heart, BedDouble, Users, FileText,
-  Clock, ArrowLeft, MapPin, Pencil
-} from 'lucide-react'
-import Link from 'next/link'
 import { cookies } from 'next/headers'
-import { Button } from '@/components/ui/button'
-import {
-  CARE_LEVEL_LABELS, CARE_LEVEL_COLORS,
-  CONTRACT_SOURCE_LABELS, CONTRACT_END_REASON_LABELS,
-  EVENT_TYPE_LABELS, EVENT_TYPE_ICONS,
-  PACKAGE_TYPE_LABELS, GENDER_LABELS,
-  type CareLevel, type ContractSource, type ContractEndReason,
-  type EventType, type PackageType,
-} from '@/lib/reporting-constants'
-import { differenceInYears, differenceInDays, format } from 'date-fns'
-import { pl } from 'date-fns/locale'
-import { ResidentZsnCheckbox } from '@/components/ResidentZsnCheckbox'
+import { differenceInYears, differenceInDays } from 'date-fns'
 import { PolarWearableCard } from '@/components/PolarWearableCard'
-import { ResidentContractAttachment } from '@/components/facility/ResidentContractAttachment'
-import { InviteFamilyDialog } from '@/components/InviteFamilyDialog'
-import { PrimaryContactButton } from '@/components/PrimaryContactButton'
-import { BusinessIdBadge } from '@/components/BusinessIdBadge'
-import { EditResidentDialog } from '@/components/EditResidentDialog'
-import { DischargeResidentDialog } from '@/components/DischargeResidentDialog'
 import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
+import {
+  FullResidentData,
+  ResidentBedAssignment,
+  ResidentEventItem,
+  ResidentPackageItem,
+  ResidentRelativeLinkItem,
+} from '@/components/residents/profile/profile-types'
+import { ResidentProfileHeader } from '@/components/residents/profile/ResidentProfileHeader'
+import { ResidentGeneralInfoCard } from '@/components/residents/profile/ResidentGeneralInfoCard'
+import { ResidentBedInfoCard } from '@/components/residents/profile/ResidentBedInfoCard'
+import { ResidentFamilyCard } from '@/components/residents/profile/ResidentFamilyCard'
+import { ResidentContractCard } from '@/components/residents/profile/ResidentContractCard'
+import { ResidentEventsCard } from '@/components/residents/profile/ResidentEventsCard'
 
 export default async function ResidentProfilePage({
   params,
@@ -41,8 +35,8 @@ export default async function ResidentProfilePage({
   const cookieStore = await cookies()
   const isImpersonating = isImpersonationSessionActive(cookieStore, user)
 
-  // Fetch resident with all relations
-  const { data: resident, error } = await supabase
+  // Pobierz podopiecznego wraz ze wszystkimi relacjami
+  const { data: rawResident, error } = await supabase
     .from('residents')
     .select(`
       *,
@@ -54,7 +48,7 @@ export default async function ResidentProfilePage({
     .eq('id', id)
     .single()
 
-  // Fetch wearable device link (Polar)
+  // Pobierz status urządzenia Polar
   const { data: polarLink } = await supabase
     .from('external_wearable_links')
     .select('id, provider, external_user_id, created_at')
@@ -62,9 +56,11 @@ export default async function ResidentProfilePage({
     .eq('provider', 'POLAR')
     .maybeSingle()
 
-  if (error || !resident) {
+  if (error || !rawResident) {
     notFound()
   }
+
+  const resident = rawResident as unknown as FullResidentData
 
   const age = resident.birth_date
     ? differenceInYears(new Date(), new Date(resident.birth_date))
@@ -74,54 +70,18 @@ export default async function ResidentProfilePage({
     ? differenceInDays(new Date(), new Date(resident.admission_date))
     : null
 
-interface ResidentBedAssignment {
-  id: string
-  assigned_at: string
-  unassigned_at: string | null
-  beds?: {
-    id: string
-    label: string
-    rooms?: {
-      number: string
-      floor: string
-      sector?: string | null
-    } | null
-  } | null
-}
-
-interface ResidentEventItem {
-  id: string
-  event_type: string
-  event_date: string
-  event_reason?: string | null
-  metadata?: unknown
-  created_at: string
-}
-
-interface ResidentPackageItem {
-  id: string
-  package_type: string
-  package_name: string
-  monthly_rate?: number | string | null
-  started_at: string
-  ended_at?: string | null
-}
-
-interface ResidentRelativeLinkItem {
-  id: string
-  relative_user_id: string
-  relationship_code: string
-  role: string
-  is_primary_contact?: boolean | null
-  created_at: string
-}
-
   const isActive = !resident.archived_at && !resident.death_date &&
     (!resident.contract_end_date || new Date(resident.contract_end_date) > new Date())
 
   const activeAssignment = Array.isArray(resident.bed_assignments)
     ? (resident.bed_assignments as ResidentBedAssignment[]).find((a) => a.unassigned_at === null)
     : null
+
+  const pastAssignments = Array.isArray(resident.bed_assignments)
+    ? (resident.bed_assignments as ResidentBedAssignment[])
+        .filter((a) => a.unassigned_at !== null)
+        .sort((a, b) => new Date(b.assigned_at).getTime() - new Date(a.assigned_at).getTime())
+    : []
 
   const sortedEvents = Array.isArray(resident.resident_events)
     ? [...(resident.resident_events as ResidentEventItem[])].sort(
@@ -133,483 +93,50 @@ interface ResidentRelativeLinkItem {
     ? (resident.resident_packages as ResidentPackageItem[]).filter((p) => !p.ended_at)
     : []
 
-  const pastAssignments = Array.isArray(resident.bed_assignments)
-    ? (resident.bed_assignments as ResidentBedAssignment[])
-        .filter((a) => a.unassigned_at !== null)
-        .sort((a, b) => new Date(b.assigned_at).getTime() - new Date(a.assigned_at).getTime())
+  const relativeLinks = Array.isArray(resident.resident_relative_links)
+    ? (resident.resident_relative_links as ResidentRelativeLinkItem[])
     : []
-
-  const careLevel = (resident.care_level || 'unknown') as CareLevel | 'unknown'
-  const careLevelColor = CARE_LEVEL_COLORS[careLevel]
 
   return (
     <div className="space-y-8">
-      {/* Back link */}
-      <Link
-        href="/admin/residents"
-        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Powrót do listy podopiecznych
-      </Link>
+      <ResidentProfileHeader
+        resident={resident}
+        isActive={isActive}
+        isImpersonating={isImpersonating}
+        activeAssignment={activeAssignment}
+      />
 
-      {/* Header Card */}
-      <Card className="rounded-xl border-none ring-1 ring-border overflow-hidden">
-        <div className="relative">
-          {/* Gradient banner */}
-          <div className="h-32 bg-muted" />
-
-          <CardContent className="relative -mt-16 px-8 pb-8">
-            <div className="flex flex-col sm:flex-row items-start gap-6">
-              <Avatar className="h-24 w-24 border-4 border-white shadow-lg">
-                {resident.avatar_url && (
-                  <AvatarImage src={resident.avatar_url} alt={`${resident.first_name} ${resident.last_name}`} />
-                )}
-                <AvatarFallback className="bg-primary/10 text-primary text-2xl">
-                  <UserCircle2 className="h-12 w-12" />
-                </AvatarFallback>
-              </Avatar>
-
-              <div className="flex-1 pt-4 sm:pt-8">
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                  <div>
-                    <div className="flex flex-wrap items-center gap-3">
-                      <h1 className="text-3xl font-display font-semibold text-foreground">
-                        {resident.first_name} {resident.last_name}
-                      </h1>
-                      <BusinessIdBadge type="resident" id={resident.id} />
-                      {isActive ? (
-                        <Badge className="bg-muted text-foreground border-border">
-                          Aktywny
-                        </Badge>
-                      ) : resident.death_date ? (
-                        <Badge className="bg-destructive/10 text-destructive border border-destructive/20">
-                          Zgon
-                        </Badge>
-                      ) : resident.contract_end_date && new Date(resident.contract_end_date) <= new Date() ? (
-                        <Badge className="bg-muted text-muted-foreground border border-border">
-                          Wypisany
-                        </Badge>
-                      ) : (
-                        <Badge className="bg-muted text-muted-foreground border-border">
-                          Zarchiwizowany
-                        </Badge>
-                      )}
-                      {resident.care_level && (
-                        <Badge
-                          style={{ backgroundColor: `${careLevelColor}20`, color: careLevelColor, borderColor: `${careLevelColor}40` }}
-                          className="border"
-                        >
-                          {CARE_LEVEL_LABELS[careLevel]}
-                        </Badge>
-                      )}
-                      {resident.is_zsn && (
-                        <Badge className="bg-muted text-foreground border-border border">
-                          ZSN: Znaczny stopień niepełnosprawności
-                        </Badge>
-                      )}
-                    </div>
-
-                    {/* Quick stats row */}
-                    <div className="mt-3 flex flex-wrap gap-6 text-sm text-muted-foreground">
-                      {age !== null && (
-                        <span className="flex items-center gap-1.5">
-                          <Calendar className="h-4 w-4" /> {age} lat
-                        </span>
-                      )}
-                      {stayDays !== null && (
-                        <span className="flex items-center gap-1.5">
-                          <Clock className="h-4 w-4" /> Pobyt: {stayDays} dni
-                        </span>
-                      )}
-                      {activeAssignment && (
-                        <span className="flex items-center gap-1.5">
-                          <MapPin className="h-4 w-4" />
-                          Pokój {activeAssignment.beds?.rooms?.number}, łóżko {activeAssignment.beds?.label}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {!isImpersonating && (
-                    <div className="flex items-center gap-2 shrink-0">
-                      <EditResidentDialog
-                        resident={{
-                          id: resident.id,
-                          first_name: resident.first_name,
-                          last_name: resident.last_name,
-                          gender: resident.gender,
-                          birth_date: resident.birth_date,
-                          admission_date: resident.admission_date,
-                          care_level: resident.care_level,
-                          is_zsn: resident.is_zsn,
-                          notes: resident.notes,
-                        }}
-                      />
-                      {isActive && (
-                        <DischargeResidentDialog
-                          resident={{
-                            id: resident.id,
-                            first_name: resident.first_name,
-                            last_name: resident.last_name,
-                          }}
-                          activeBedLabel={
-                            activeAssignment?.beds
-                              ? `Pokój ${activeAssignment.beds.rooms?.number}, łóżko ${activeAssignment.beds.label}`
-                              : null
-                          }
-                        />
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </div>
-      </Card>
-
-      {/* Content grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left column: Personal data + Contract */}
-        <div className="space-y-6 lg:col-span-2">
-          {/* ZSN Checkbox Toggle */}
-          <ResidentZsnCheckbox
-            residentId={resident.id}
-            initialValue={Boolean(resident.is_zsn)}
-            variant="full"
-          />
-
-          {/* Personal data */}
-          <Card className="rounded-xl border-none ring-1 ring-border">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg text-foreground">
-                <UserCircle2 className="h-5 w-5 text-primary" /> Dane osobowe
-              </CardTitle>
-              {!isImpersonating && (
-                <EditResidentDialog
-                  resident={{
-                    id: resident.id,
-                    first_name: resident.first_name,
-                    last_name: resident.last_name,
-                    gender: resident.gender,
-                    birth_date: resident.birth_date,
-                    admission_date: resident.admission_date,
-                    care_level: resident.care_level,
-                    is_zsn: resident.is_zsn,
-                    notes: resident.notes,
-                  }}
-                  trigger={
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                      Edytuj
-                    </Button>
-                  }
-                />
-              )}
-            </CardHeader>
-            <CardContent>
-              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
-                <DataField label="Imię" value={resident.first_name} />
-                <DataField label="Nazwisko" value={resident.last_name} />
-                <DataField
-                  label="Data urodzenia"
-                  value={resident.birth_date
-                    ? `${format(new Date(resident.birth_date), 'd MMMM yyyy', { locale: pl })} (${age} lat)`
-                    : null}
-                />
-                <DataField
-                  label="Płeć"
-                  value={resident.gender ? GENDER_LABELS[resident.gender] : null}
-                />
-                <DataField
-                  label="PESEL"
-                  value={resident.pesel_hash ? '••••••••••• (zhashowany)' : null}
-                />
-                <DataField
-                  label="Data przyjęcia"
-                  value={resident.admission_date
-                    ? format(new Date(resident.admission_date), 'd MMMM yyyy', { locale: pl })
-                    : null}
-                />
-                {resident.death_date && (
-                  <DataField
-                    label="Data zgonu"
-                    value={format(new Date(resident.death_date), 'd MMMM yyyy', { locale: pl })}
-                  />
-                )}
-                {resident.notes && (
-                  <div className="sm:col-span-2">
-                    <DataField label="Notatki" value={resident.notes} />
-                  </div>
-                )}
-              </dl>
-            </CardContent>
-          </Card>
-
-          {/* Contract */}
-          <Card className="rounded-xl border-none ring-1 ring-border">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg text-foreground">
-                <FileText className="h-5 w-5 text-primary" /> Umowa
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
-                <DataField
-                  label="Data podpisania"
-                  value={resident.contract_start_date
-                    ? format(new Date(resident.contract_start_date), 'd MMMM yyyy', { locale: pl })
-                    : null}
-                />
-                <DataField
-                  label="Data zakończenia"
-                  value={resident.contract_end_date
-                    ? format(new Date(resident.contract_end_date), 'd MMMM yyyy', { locale: pl })
-                    : 'Aktywna'}
-                />
-                <DataField
-                  label="Powód zakończenia"
-                  value={resident.contract_end_reason
-                    ? CONTRACT_END_REASON_LABELS[resident.contract_end_reason as ContractEndReason | 'Nieznany'] || resident.contract_end_reason
-                    : null}
-                />
-                {resident.death_date && (
-                  <DataField
-                    label="Data zgonu"
-                    value={format(new Date(resident.death_date), 'd MMMM yyyy', { locale: pl })}
-                  />
-                )}
-                <DataField
-                  label="Źródło"
-                  value={resident.contract_source
-                    ? CONTRACT_SOURCE_LABELS[resident.contract_source as ContractSource] || resident.contract_source
-                    : null}
-                />
-                <DataField
-                  label="Stawka miesięczna"
-                  value={resident.contract_monthly_rate != null
-                    ? `${Number(resident.contract_monthly_rate).toLocaleString('pl-PL')} zł`
-                    : null}
-                />
-              </dl>
-
-              <div className="mt-6 pt-6 border-t border-border">
-                <h4 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-2">
-                  Dokument umowy (Załącznik)
-                </h4>
-                <ResidentContractAttachment
-                  residentId={resident.id}
-                  initialContractPath={resident.contract_document_path}
-                  initialContractName={resident.contract_document_name}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Event timeline */}
-          <Card className="rounded-xl border-none ring-1 ring-border">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg text-foreground">
-                <Clock className="h-5 w-5 text-primary" /> Oś czasu zdarzeń
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {sortedEvents.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-4 text-center">Brak zarejestrowanych zdarzeń.</p>
-              ) : (
-                <div className="relative space-y-0">
-                  {/* Timeline line */}
-                  <div className="absolute left-5 top-2 bottom-2 w-px bg-muted" />
-
-                  {sortedEvents.map((event) => (
-                    <div key={event.id} className="relative flex gap-4 py-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-card ring-1 ring-border text-lg z-10">
-                        {EVENT_TYPE_ICONS[event.event_type as EventType] || '📌'}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground">
-                          {EVENT_TYPE_LABELS[event.event_type as EventType] || event.event_type}
-                        </p>
-                        {event.event_reason && (
-                          <p className="text-sm text-muted-foreground mt-0.5">
-                            {CONTRACT_END_REASON_LABELS[event.event_reason as ContractEndReason | 'Nieznany'] || event.event_reason}
-                          </p>
-                        )}
-                        <p className="text-sm text-muted-foreground/60 mt-0.5">
-                          {format(new Date(event.event_date), 'd MMMM yyyy', { locale: pl })}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Right column: Room, Relatives, Packages */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-6">
-          {/* Current room */}
-          <Card className="rounded-xl border-none ring-1 ring-border">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg text-foreground">
-                <BedDouble className="h-5 w-5 text-primary" /> Pokój i łóżko
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {activeAssignment ? (
-                <div className="rounded-xl bg-primary/5 p-4">
-                  <p className="font-medium text-foreground">
-                    Pokój {activeAssignment.beds?.rooms?.number}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Łóżko: {activeAssignment.beds?.label}
-                  </p>
-                  {activeAssignment.beds?.rooms?.floor && (
-                    <p className="text-sm text-muted-foreground">
-                      Piętro: {activeAssignment.beds.rooms.floor}
-                    </p>
-                  )}
-                  {activeAssignment.beds?.rooms?.sector && (
-                    <p className="text-sm text-muted-foreground">
-                      Sektor: {activeAssignment.beds.rooms.sector}
-                    </p>
-                  )}
-                  <p className="text-sm text-muted-foreground/60 mt-2">
-                    Od: {format(new Date(activeAssignment.assigned_at), 'd MMM yyyy', { locale: pl })}
-                  </p>
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  Brak aktywnego przypisania do łóżka.
-                </p>
-              )}
+          <ResidentGeneralInfoCard
+            resident={resident}
+            age={age}
+            stayDays={stayDays}
+          />
+          <ResidentBedInfoCard
+            activeAssignment={activeAssignment}
+            pastAssignments={pastAssignments}
+          />
+          <ResidentEventsCard events={sortedEvents} />
+        </div>
 
-              {pastAssignments.length > 0 && (
-                <>
-                  <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Historia</p>
-                  <div className="space-y-2">
-                    {pastAssignments.slice(0, 5).map((a) => (
-                      <div key={a.id} className="text-sm text-muted-foreground flex justify-between">
-                        <span>
-                          Pokój {a.beds?.rooms?.number}, łóżko {a.beds?.label}
-                        </span>
-                        <span className="text-sm">
-                          {format(new Date(a.assigned_at), 'd.MM.yy', { locale: pl })} – {format(new Date(a.unassigned_at!), 'd.MM.yy', { locale: pl })}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Polar 360 Wearable Device */}
+        <div className="space-y-6">
+          <ResidentFamilyCard
+            resident={resident}
+            relativeLinks={relativeLinks}
+          />
           <PolarWearableCard
             residentId={resident.id}
             initialLinked={Boolean(polarLink)}
             externalUserId={polarLink?.external_user_id}
             linkedAt={polarLink?.created_at}
           />
-
-          {/* Relatives */}
-          <Card className="rounded-xl border-none ring-1 ring-border">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg text-foreground">
-                <Users className="h-5 w-5 text-primary" /> Bliscy
-              </CardTitle>
-              <InviteFamilyDialog
-                residents={[{ id: resident.id, first_name: resident.first_name, last_name: resident.last_name }]}
-                defaultResidentId={resident.id}
-                triggerLabel="Zaproś bliskiego"
-                triggerVariant="outline"
-              />
-            </CardHeader>
-            <CardContent>
-              {(!resident.resident_relative_links || resident.resident_relative_links.length === 0) ? (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  Brak powiązanych bliskich.
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {((resident.resident_relative_links as ResidentRelativeLinkItem[]) || []).map((link) => (
-                    <div key={link.id} className="flex items-center justify-between rounded-xl bg-muted/50 p-3">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-medium text-foreground">
-                            {link.relationship_code}
-                          </p>
-                          <PrimaryContactButton
-                            linkId={link.id}
-                            residentId={resident.id}
-                            isPrimary={!!link.is_primary_contact}
-                          />
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-0.5">
-                          {link.role === 'legal_guardian' ? 'Opiekun prawny' : 'Rodzina'}
-                        </p>
-                      </div>
-                      <Badge variant="outline" className="text-sm">
-                        {link.role}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Packages */}
-          <Card className="rounded-xl border-none ring-1 ring-border">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg text-foreground">
-                <Heart className="h-5 w-5 text-primary" /> Pakiety
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {activePackages.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  Brak aktywnych pakietów.
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {activePackages.map((pkg) => (
-                    <div key={pkg.id} className="flex items-center justify-between rounded-xl bg-primary/5 p-3">
-                      <div>
-                        <p className="text-sm font-medium text-foreground">{pkg.package_name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {PACKAGE_TYPE_LABELS[pkg.package_type as PackageType] || pkg.package_type}
-                        </p>
-                      </div>
-                      {pkg.monthly_rate && (
-                        <span className="text-sm font-medium text-foreground">
-                          {Number(pkg.monthly_rate).toLocaleString('pl-PL')} zł
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <ResidentContractCard
+            resident={resident}
+            activePackages={activePackages}
+          />
         </div>
       </div>
-    </div>
-  )
-}
-
-// Helper component for data fields
-function DataField({ label, value }: { label: string; value: string | null | undefined }) {
-  return (
-    <div>
-      <dt className="font-medium text-muted-foreground">{label}</dt>
-      <dd className="mt-1 text-foreground">{value || <span className="text-muted-foreground/50">—</span>}</dd>
     </div>
   )
 }
