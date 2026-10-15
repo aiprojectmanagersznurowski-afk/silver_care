@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
 import { Logo } from '@/components/Logo'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -10,17 +9,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Separator } from '@/components/ui/separator'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader } from '@/components/ui/card'
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
+import { useLoginParticles } from '@/components/auth/use-login-particles'
+import { LoginBackgroundStyles } from '@/components/auth/LoginBackgroundStyles'
 
 /**
- * @REQ: UI-ACCESSIBILITY
- * @REQ: UI-FOUR-STATES
- * @REQ: SEC-SESSION
- *
- * Odświeżona strona logowania Silver Care zoptymalizowana pod kątem WCAG AA,
- * estetyki 21st.dev (canvas z cząsteczkami, linie akcentowe, płynne animacje)
- * oraz tożsamości wizualnej Silver Care (Ciepłe Zaufanie, zieleń szałwiowa).
+ * @REQ: UI-ACCESSIBILITY @REQ: UI-FOUR-STATES @REQ: SEC-SESSION
  */
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -33,102 +28,27 @@ export default function LoginPage() {
   const router = useRouter()
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
-
-  // Animacja cząsteczek z 21st.dev dopasowana do palety Silver Care
-  useEffect(() => {
-    const canvas = canvasRef.current
-    const ctx = canvas?.getContext('2d')
-    if (!canvas || !ctx) return
-
-    const setSize = () => {
-      canvas.width = window.innerWidth
-      canvas.height = window.innerHeight
-    }
-    setSize()
-
-    type Particle = { x: number; y: number; v: number; o: number }
-    let particles: Particle[] = []
-    let animationFrameId = 0
-
-    const makeParticle = (): Particle => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      v: Math.random() * 0.25 + 0.05,
-      o: Math.random() * 0.35 + 0.15,
-    })
-
-    const init = () => {
-      particles = []
-      const count = Math.floor((canvas.width * canvas.height) / 10000)
-      for (let i = 0; i < count; i++) particles.push(makeParticle())
-    }
-
-    const accent = getComputedStyle(document.documentElement).getPropertyValue('--sc-accent').trim() || 'currentColor'
-
-    const draw = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-      particles.forEach((p) => {
-        p.y -= p.v
-        if (p.y < 0) {
-          p.x = Math.random() * canvas.width
-          p.y = canvas.height + Math.random() * 40
-          p.v = Math.random() * 0.25 + 0.05
-          p.o = Math.random() * 0.35 + 0.15
-        }
-        // Cząsteczki w kolorze akcentu z kontraktu (canvas nie rozumie var(), więc czytamy wartość tokenu)
-        ctx.globalAlpha = p.o * 0.45
-        ctx.fillStyle = accent
-        ctx.fillRect(p.x, p.y, 1.2, 2.4)
-        ctx.globalAlpha = 1
-      })
-      animationFrameId = requestAnimationFrame(draw)
-    }
-
-    const onResize = () => {
-      setSize()
-      init()
-    }
-
-    window.addEventListener('resize', onResize)
-    init()
-    animationFrameId = requestAnimationFrame(draw)
-
-    return () => {
-      window.removeEventListener('resize', onResize)
-      cancelAnimationFrame(animationFrameId)
-    }
-  }, [])
+  useLoginParticles(canvasRef)
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsRevealed(true)
-    }, 400)
-
+    const timer = setTimeout(() => setIsRevealed(true), 400)
     void Promise.resolve().then(() => {
-      // 1. Obsługa błędu z parametrów zapytania URL (?error=...)
       const searchParams = new URLSearchParams(window.location.search)
       const queryError = searchParams.get('error')
       if (queryError) {
         setError(queryError)
         window.history.replaceState(null, '', window.location.pathname)
       }
-
-      // 2. Obsługa hasha z zaproszenia lub tokenu resetu hasła (#access_token=... lub #error=...)
       const hash = window.location.hash
       if (hash.includes('access_token')) {
         router.push(`/update-password${hash}`)
       } else if (hash.includes('error=')) {
         const params = new URLSearchParams(hash.replace('#', '?'))
-        const errorDescription = params.get('error_description')
-        if (errorDescription) {
-          setError(errorDescription.replace(/\+/g, ' '))
-        } else {
-          setError('Wystąpił błąd autoryzacji.')
-        }
+        const desc = params.get('error_description')
+        setError(desc ? desc.replace(/\+/g, ' ') : 'Wystąpił błąd autoryzacji.')
         window.history.replaceState(null, '', window.location.pathname)
       }
     })
-
     return () => clearTimeout(timer)
   }, [router])
 
@@ -137,13 +57,10 @@ export default function LoginPage() {
     setLoading(true)
     setError(null)
     const supabase = createClient()
-
-    const normalizedEmail = email.trim().toLowerCase()
     const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: normalizedEmail,
+      email: email.trim().toLowerCase(),
       password: password.trim(),
     })
-
     if (signInError) {
       setError('Nieprawidłowy email lub hasło.')
       setLoading(false)
@@ -152,113 +69,49 @@ export default function LoginPage() {
     }
   }
 
+  const handleGoogleLogin = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const supabase = createClient()
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: `${window.location.origin}/auth/callback` },
+      })
+      if (oauthError) {
+        setError(oauthError.message)
+        setLoading(false)
+      }
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Nie udało się połączyć z usługą Google.')
+      setLoading(false)
+    }
+  }
+
   return (
     <main 
       className="relative min-h-screen flex flex-col items-center justify-center p-4 bg-background text-foreground overflow-hidden select-none"
       onClick={() => { if (!isRevealed) setIsRevealed(true) }}
     >
-      <style>{`
-        .accent-lines {
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          opacity: 0.4;
-        }
-        .hline, .vline {
-          position: absolute;
-          background: var(--color-border);
-          will-change: transform, opacity;
-        }
-        .hline {
-          left: 0;
-          right: 0;
-          height: 1px;
-          transform: scaleX(0);
-          transform-origin: 50% 50%;
-          animation: drawX .8s cubic-bezier(.22,.61,.36,1) forwards;
-        }
-        .vline {
-          top: 0;
-          bottom: 0;
-          width: 1px;
-          transform: scaleY(0);
-          transform-origin: 50% 0%;
-          animation: drawY .9s cubic-bezier(.22,.61,.36,1) forwards;
-        }
-        .hline:nth-child(1) { top: 18%; animation-delay: .12s; }
-        .hline:nth-child(2) { top: 50%; animation-delay: .22s; }
-        .hline:nth-child(3) { top: 82%; animation-delay: .32s; }
-        .vline:nth-child(4) { left: 22%; animation-delay: .42s; }
-        .vline:nth-child(5) { left: 50%; animation-delay: .54s; }
-        .vline:nth-child(6) { left: 78%; animation-delay: .66s; }
-        .vline:nth-child(4)::after { animation-delay: .42s; }
-        .vline:nth-child(5)::after { animation-delay: .54s; }
-        .vline:nth-child(6)::after { animation-delay: .66s; }
-
-        @keyframes drawX {
-          0% { transform: scaleX(0); opacity: 0; }
-          60% { opacity: .95; }
-          100% { transform: scaleX(1); opacity: .7; }
-        }
-        @keyframes drawY {
-          0% { transform: scaleY(0); opacity: 0; }
-          60% { opacity: .95; }
-          100% { transform: scaleY(1); opacity: .7; }
-        }
-        @keyframes shimmer {
-          0% { opacity: 0; }
-          35% { opacity: .25; }
-          100% { opacity: 0; }
-        }
-
-        .card-animate {
-          opacity: 0;
-          transform: translateY(16px);
-          animation: fadeUp 0.7s cubic-bezier(.22,.61,.36,1) 0.2s forwards;
-        }
-        @keyframes fadeUp {
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style>
-
-      {/* Animowane linie akcentowe */}
+      <LoginBackgroundStyles />
       <div className="accent-lines">
-        <div className="hline" />
-        <div className="hline" />
-        <div className="hline" />
-        <div className="vline" />
-        <div className="vline" />
-        <div className="vline" />
+        <div className="hline" /><div className="hline" /><div className="hline" />
+        <div className="vline" /><div className="vline" /><div className="vline" />
       </div>
 
-      {/* Cząsteczki w tle */}
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 w-full h-full opacity-60 pointer-events-none"
-      />
+      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full opacity-60 pointer-events-none" />
 
       <div className="relative z-10 w-full max-w-sm flex flex-col items-center">
-        {/* Wizualizacja Logo Silver Care */}
         <div className="flex flex-col items-center mb-6">
           <div className="relative">
             <div className="absolute -inset-4 rounded-full bg-primary/10 blur-xl opacity-60" />
-            <Logo
-              alt="Silver Care"
-              width={200}
-              height={55}
-              className="relative h-12 w-auto object-contain transition-transform duration-700"
-              priority
-            />
+            <Logo alt="Silver Care" width={200} height={55} className="relative h-12 w-auto object-contain transition-transform duration-700" priority />
           </div>
           <p className="mt-2 text-sm tracking-wider uppercase text-muted-foreground font-medium">
             Portal codziennego życia placówki
           </p>
         </div>
 
-        {/* Panel logowania */}
         <Card className="card-animate w-full border-border/80 bg-card/95 shadow-lg backdrop-blur-md">
           <form onSubmit={handleLogin}>
             <CardHeader className="text-center pb-4">
@@ -278,9 +131,7 @@ export default function LoginPage() {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-foreground font-medium text-sm">
-                  Email
-                </Label>
+                <Label htmlFor="email" className="text-foreground font-medium text-sm">Email</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -299,9 +150,7 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-foreground font-medium text-sm">
-                  Hasło
-                </Label>
+                <Label htmlFor="password" className="text-foreground font-medium text-sm">Hasło</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -366,26 +215,7 @@ export default function LoginPage() {
                 variant="outline"
                 className="w-full h-11 md:h-10 rounded-lg border-border hover:bg-muted text-foreground font-medium transition-colors inline-flex items-center justify-center gap-2"
                 disabled={loading}
-                onClick={async () => {
-                  try {
-                    setLoading(true)
-                    setError(null)
-                    const supabase = createClient()
-                    const { error: oauthError } = await supabase.auth.signInWithOAuth({
-                      provider: 'google',
-                      options: {
-                        redirectTo: `${window.location.origin}/auth/callback`,
-                      },
-                    })
-                    if (oauthError) {
-                      setError(oauthError.message)
-                      setLoading(false)
-                    }
-                  } catch (err: unknown) {
-                    setError(err instanceof Error ? err.message : 'Nie udało się połączyć z usługą Google.')
-                    setLoading(false)
-                  }
-                }}
+                onClick={handleGoogleLogin}
               >
                 <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
                   <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />

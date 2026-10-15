@@ -3,7 +3,7 @@ import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { format } from 'date-fns'
 import { pl } from 'date-fns/locale'
 
-function deriveWellbeing(text?: string) {
+export function deriveWellbeing(text?: string) {
   if (!text) return { sleep: "Brak danych", appetite: "Brak danych", mood: "Brak danych", moodEmoji: "😐" };
   const lower = text.toLowerCase();
   let sleep = "W normie";
@@ -28,6 +28,20 @@ function deriveWellbeing(text?: string) {
   }
 
   return { sleep, appetite, mood, moodEmoji };
+}
+
+export function formatHeroDateLabel(targetDate: Date, now = new Date()): string {
+  const todayDateStr = now.toISOString().slice(0, 10);
+  const targetDateStr = targetDate.toISOString().slice(0, 10);
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayDateStr = yesterday.toISOString().slice(0, 10);
+
+  return targetDateStr === todayDateStr
+    ? `Dzisiaj · ${format(targetDate, 'EEEE, d MMMM', { locale: pl })}`
+    : targetDateStr === yesterdayDateStr
+    ? `Wczoraj · ${format(targetDate, 'EEEE, d MMMM', { locale: pl })}`
+    : format(targetDate, 'EEEE, d MMMM yyyy', { locale: pl });
 }
 
 function WellbeingMoodIndicator({ mood, moodEmoji }: { mood: string; moodEmoji: string }) {
@@ -74,17 +88,7 @@ export function DailySummaryHero({ resident, report, selectedDateMedia = [], onO
     ? new Date(selectedDate)
     : (report?.created_at ? new Date(report.created_at) : new Date());
 
-  const todayDateStr = new Date().toISOString().slice(0, 10);
-  const targetDateStr = targetDate.toISOString().slice(0, 10);
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayDateStr = yesterday.toISOString().slice(0, 10);
-
-  const dateLabel = targetDateStr === todayDateStr
-    ? `Dzisiaj · ${format(targetDate, 'EEEE, d MMMM', { locale: pl })}`
-    : targetDateStr === yesterdayDateStr
-    ? `Wczoraj · ${format(targetDate, 'EEEE, d MMMM', { locale: pl })}`
-    : format(targetDate, 'EEEE, d MMMM yyyy', { locale: pl });
+  const dateLabel = formatHeroDateLabel(targetDate);
 
   const quickStats = [
     { icon: CheckCircle2, label: "Sen", value: wb.sleep },

@@ -1,16 +1,8 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Users, Bed, Heart, Activity,
-  BarChart3, PieChart as PieChartIcon, ShieldCheck
-} from 'lucide-react'
-import {
-  CARE_LEVEL_LABELS, CARE_LEVEL_COLORS,
-  CONTRACT_END_REASON_LABELS, CONTRACT_SOURCE_LABELS,
-  MONTH_LABELS_SHORT_PL, STAY_RANGE_ORDER,
-  type CareLevel, type ContractSource, type ContractEndReason,
-} from '@/lib/reporting-constants'
+import { BarChart3, PieChart as PieChartIcon } from 'lucide-react'
+import { CARE_LEVEL_LABELS, CARE_LEVEL_COLORS, type CareLevel } from '@/lib/reporting-constants'
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart as RechartsPieChart, XAxis, YAxis } from 'recharts'
 import {
   ChartContainer,
@@ -20,48 +12,17 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/ui/chart'
+import { StatisticsKpiSection, type OccupancyKpi } from './statistics/StatisticsKpiSection'
+import {
+  useStatisticsData,
+  type CareLevelStat,
+  type DeathsByStay,
+  type ContractSourceStat,
+  type AdmissionByMonth,
+  type ContractEndReasonStat,
+} from './statistics/useStatisticsData'
 
-// ── Types ───────────────────────────────────────────────────────────────────
-
-interface CareLevelStat {
-  care_level: string
-  resident_count: number
-}
-
-interface OccupancyKpi {
-  total_beds: number
-  occupied_beds: number
-  free_beds: number
-  occupancy_rate: number
-  active_residents: number
-  zsn_count: number
-  zsn_percentage: number
-  deaths_this_month: number
-  contracts_signed_this_month: number
-  contracts_ended_this_month: number
-}
-
-interface DeathsByStay {
-  stay_range: string
-  cnt: number
-}
-
-interface ContractSourceStat {
-  source: string
-  cnt: number
-}
-
-interface AdmissionByMonth {
-  admission_month: number
-  care_level: string
-  cnt: number
-}
-
-interface ContractEndReasonStat {
-  end_reason: string
-  event_month: number
-  cnt: number
-}
+export type { OccupancyKpi, CareLevelStat, DeathsByStay, ContractSourceStat, AdmissionByMonth, ContractEndReasonStat }
 
 interface Props {
   careLevelData: CareLevelStat[]
@@ -72,14 +33,6 @@ interface Props {
   contractEndReasons: ContractEndReasonStat[]
 }
 
-// Serie wykresów: tokeny chart-* z kontraktu (ADR-014). Kolejność nie niesie oceny.
-const SERIES_COLORS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)']
-
-/** Klucz serii bezpieczny dla zmiennej CSS (--color-<klucz>). */
-const slug = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
-
-// ── Component ───────────────────────────────────────────────────────────────
-
 export function StatisticsDashboardClient({
   careLevelData,
   occupancyKpi,
@@ -88,58 +41,21 @@ export function StatisticsDashboardClient({
   admissionsByMonth,
   contractEndReasons,
 }: Props) {
-  const pieData = careLevelData.map((d) => ({
-    id: CARE_LEVEL_LABELS[(d.care_level || 'unknown') as CareLevel | 'unknown'] || d.care_level,
-    label: CARE_LEVEL_LABELS[(d.care_level || 'unknown') as CareLevel | 'unknown'] || d.care_level,
-    value: d.resident_count,
-    fill: CARE_LEVEL_COLORS[(d.care_level || 'unknown') as CareLevel | 'unknown'],
-  }))
-
-  const totalResidents = careLevelData.reduce((sum, d) => sum + d.resident_count, 0)
-
-  // Deaths by stay — bar chart data
-  const deathsBarData = STAY_RANGE_ORDER.map(range => {
-    const found = deathsByStay.find(d => d.stay_range === range)
-    return { range, count: found ? found.cnt : 0 }
+  const {
+    pieData,
+    totalResidents,
+    deathsBarData,
+    sourcesBarData,
+    endReasonsPie,
+    admissionsData,
+    admissionSeries,
+  } = useStatisticsData({
+    careLevelData,
+    deathsByStay,
+    contractSources,
+    admissionsByMonth,
+    contractEndReasons,
   })
-
-  // Contract sources — horizontal bar
-  const sourcesBarData = contractSources.map(d => ({
-    source: CONTRACT_SOURCE_LABELS[d.source as ContractSource] || d.source,
-    count: d.cnt,
-  }))
-
-  // Contract end reasons — pie chart
-  const endReasonsPie = Object.entries(
-    contractEndReasons.reduce<Record<string, number>>((acc, d) => {
-      const label = CONTRACT_END_REASON_LABELS[d.end_reason as keyof typeof CONTRACT_END_REASON_LABELS] || d.end_reason
-      acc[label] = (acc[label] || 0) + d.cnt
-      return acc
-    }, {})
-  ).map(([id, value], i) => ({ id, label: id, value, fill: SERIES_COLORS[i % SERIES_COLORS.length] }))
-
-  // Admissions by month — stacked bar
-  const admissionsData = Array.from({ length: 12 }, (_, i) => {
-    const monthData: Record<string, string | number> = {
-      month: MONTH_LABELS_SHORT_PL[i],
-    }
-    const monthEntries = admissionsByMonth.filter(d => d.admission_month === i + 1)
-    for (const entry of monthEntries) {
-      const label = CARE_LEVEL_LABELS[(entry.care_level || 'unknown') as CareLevel | 'unknown'] || entry.care_level
-      monthData[slug(label)] = entry.cnt
-    }
-    return monthData
-  }).filter(d => {
-    // Only show months with data
-    return Object.keys(d).some(k => k !== 'month' && (d[k] as number) > 0)
-  })
-
-  // Klucz serii to slug (bezpieczny dla zmiennej CSS), etykieta zostaje w konfiguracji wykresu
-  const admissionSeries = [...new Set(
-    admissionsByMonth.map(d =>
-      CARE_LEVEL_LABELS[(d.care_level || 'unknown') as CareLevel | 'unknown'] || d.care_level
-    )
-  )].map(label => ({ key: slug(label), label }))
 
   const careLevelConfig: ChartConfig = Object.fromEntries(
     pieData.map((d) => [d.id, { label: d.label, color: d.fill }]),
@@ -158,44 +74,7 @@ export function StatisticsDashboardClient({
 
   return (
     <div className="space-y-6">
-      {/* KPI Row */}
-      {occupancyKpi && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-9 gap-3">
-          <KpiCard icon={Users} label="Aktywni" value={occupancyKpi.active_residents} />
-          <KpiCard icon={Bed} label="Łóżka" value={`${occupancyKpi.occupied_beds}/${occupancyKpi.total_beds}`} />
-          <KpiCard
-            icon={Activity}
-            label="Obłożenie"
-            value={`${occupancyKpi.occupancy_rate}%`}
-          />
-          <KpiCard icon={Bed} label="Wolne" value={occupancyKpi.free_beds} />
-          <KpiCard
-            icon={ShieldCheck}
-            label="ZSN"
-            value={`${occupancyKpi.zsn_count ?? 0} (${occupancyKpi.zsn_percentage ?? 0}%)`}
-          />
-          <KpiCard icon={Heart} label="Zgony (msc)" value={occupancyKpi.deaths_this_month} />
-          <KpiCard
-            icon={Users}
-            label="Nowe umowy"
-            value={occupancyKpi.contracts_signed_this_month}
-          />
-          <KpiCard
-            icon={Users}
-            label="Koniec umów"
-            value={occupancyKpi.contracts_ended_this_month}
-          />
-          <KpiCard
-            icon={Activity}
-            label="Delta (msc)"
-            value={
-              occupancyKpi.contracts_signed_this_month -
-              occupancyKpi.contracts_ended_this_month -
-              occupancyKpi.deaths_this_month
-            }
-          />
-        </div>
-      )}
+      <StatisticsKpiSection occupancyKpi={occupancyKpi} />
 
       {/* Charts Row 1: Care Level + Contract End Reasons */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -287,7 +166,6 @@ export function StatisticsDashboardClient({
 
       {/* Charts Row 2: Deaths by Stay + Contract Sources */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Deaths by stay length */}
         <Card className="rounded-xl border-none ring-1 ring-border">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg text-foreground">
@@ -311,7 +189,6 @@ export function StatisticsDashboardClient({
           </CardContent>
         </Card>
 
-        {/* Contract Sources */}
         <Card className="rounded-xl border-none ring-1 ring-border">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg text-foreground">
@@ -363,33 +240,5 @@ export function StatisticsDashboardClient({
         </CardContent>
       </Card>
     </div>
-  )
-}
-
-// ── KPI Card ────────────────────────────────────────────────────────────────
-
-function KpiCard({
-  icon: Icon,
-  label,
-  value,
-  color,
-}: {
-  icon: React.ComponentType<{ className?: string }>
-  label: string
-  value: string | number
-  color?: string
-}) {
-  return (
-    <Card className="rounded-xl border-none ring-1 ring-border">
-      <CardContent className="p-4">
-        <div className="flex items-center gap-2 mb-2">
-          <Icon className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium text-muted-foreground">{label}</span>
-        </div>
-        <p className={`text-xl font-bold tabular-nums ${color || 'text-foreground'}`}>
-          {value}
-        </p>
-      </CardContent>
-    </Card>
   )
 }

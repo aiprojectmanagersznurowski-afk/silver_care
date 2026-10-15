@@ -17,6 +17,7 @@ import * as XLSX from 'xlsx'
 import { FacilityExportTab } from './FacilityExportTab'
 import { FacilityVoiceTab } from './FacilityVoiceTab'
 import { FacilityDryRunTable } from './FacilityDryRunTable'
+import { generateFacilityStructureTemplate } from '@/lib/facility-import-template'
 
 interface FacilityImportExportDialogProps {
   onStructureChanged?: () => void
@@ -33,26 +34,7 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleDownloadTemplate = () => {
-    const wsData = [
-      ['Piętro', 'Numer pokoju', 'Sektor', 'Liczba łóżek', 'Etykiety łóżek'],
-      ['Parter', '101', 'Skrzydło A', '2', '1, 2'],
-      ['1', '201', 'Skrzydło B', '3', 'A, B, C'],
-      ['2', '305', 'Główne', '1', '1'],
-    ]
-    const instructionsData = [
-      ['Kolumna', 'Wymagana?', 'Opis i dozwolone formaty'],
-      ['Piętro', 'TAK', 'Oznaczenie piętra lub kondygnacji (tekst, np. Parter, 1, 2, Niski parter)'],
-      ['Numer pokoju', 'TAK', 'Numer lub symbol pokoju (unikalny w placówce, np. 101, 204A)'],
-      ['Sektor', 'NIE', 'Opcjonalna nazwa skrzydła lub sektora (tekst, np. Skrzydło A, Pawilon 2)'],
-      ['Liczba łóżek', 'NIE', 'Liczba łóżek w pokoju (liczba całkowita, np. 2)'],
-      ['Etykiety łóżek', 'NIE', 'Etykiety łóżek oddzielone przecinkami (np. "1, 2" lub "A, B, C"). Jeśli podano liczbę łóżek bez etykiet, system wygeneruje etykiety automatycznie.'],
-    ]
-    const wb = XLSX.utils.book_new()
-    const ws = XLSX.utils.aoa_to_sheet(wsData)
-    const wsInstrukcja = XLSX.utils.aoa_to_sheet(instructionsData)
-    XLSX.utils.book_append_sheet(wb, ws, 'Pokoje i Łóżka')
-    XLSX.utils.book_append_sheet(wb, wsInstrukcja, 'Instrukcja')
-    XLSX.writeFile(wb, 'formatka_struktury_placowki.xlsx')
+    generateFacilityStructureTemplate('formatka_struktury_placowki.xlsx', 'Instrukcja')
   }
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -17,9 +17,9 @@ interface AgendaTimelineClientProps {
   viewDateStr: string
 }
 
-type AgendaCategory = "meal" | "activity" | "medication" | "rest" | "therapy" | "hygiene" | "other"
+export type AgendaCategory = "meal" | "activity" | "medication" | "rest" | "therapy" | "hygiene" | "other"
 
-const getCategory = (item: AgendaItem | string, itemType?: string): AgendaCategory => {
+export const getCategory = (item: AgendaItem | string, itemType?: string): AgendaCategory => {
   const type = typeof item === 'object' ? item.type : itemType
   const title = typeof item === 'object' ? item.title : item
 
