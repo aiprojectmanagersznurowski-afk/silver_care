@@ -90,6 +90,9 @@ fi
 if [ "$FULL" = "1" ]; then
   step "Weryfikacja dodatkowa (--full): Linter (apps/web)"
   run_step "kod zgodny z regułami lintera" pnpm --filter web lint
+
+  step "Weryfikacja dodatkowa (--full): Kompilacja produkcyjna Next.js (apps/web)"
+  run_step "produkcyjny build Next.js poprawny" pnpm --filter web build
 fi
 
 echo ""

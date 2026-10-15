@@ -1,8 +1,10 @@
+import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { checkRateLimit } from '@/lib/rate-limiter'
 import { authorizeInviteTarget, formatInviteResponse } from '@/lib/invite-authorization'
 import { resolveRelativeRole } from '@/lib/onboarding'
+import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
 import {
   getAuthUserFromRequest,
   getBaseUrlFromRequest,
@@ -14,6 +16,11 @@ export async function POST(request: Request) {
     const { user } = await getAuthUserFromRequest(request)
     if (!user) {
       return NextResponse.json({ error: 'Brak autoryzacji' }, { status: 401 })
+    }
+
+    const cookieStore = await cookies()
+    if (isImpersonationSessionActive(cookieStore, user)) {
+      return NextResponse.json({ error: 'Operacja niedozwolona w trybie podglądu' }, { status: 403 })
     }
 
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1'
@@ -106,6 +113,11 @@ export async function PATCH(request: Request) {
     const { user } = await getAuthUserFromRequest(request)
     if (!user) {
       return NextResponse.json({ error: 'Brak autoryzacji' }, { status: 401 })
+    }
+
+    const cookieStore = await cookies()
+    if (isImpersonationSessionActive(cookieStore, user)) {
+      return NextResponse.json({ error: 'Operacja niedozwolona w trybie podglądu' }, { status: 403 })
     }
 
     const appRole = user.app_metadata?.role

@@ -1,6 +1,10 @@
+import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
 import type { TablesInsert } from '@/types/database.types'
+
+const STAFF_ROLES = ['nurse', 'paramedic', 'caregiver', 'org_admin', 'admin', 'super_admin']
 
 export async function GET(request: Request) {
   const supabase = await createClient()
@@ -33,6 +37,16 @@ export async function POST(request: Request) {
 
   if (authError || !user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const cookieStore = await cookies()
+  if (isImpersonationSessionActive(cookieStore, user)) {
+    return NextResponse.json({ error: 'Operacja niedozwolona w trybie podglądu' }, { status: 403 })
+  }
+
+  const appRole = user.app_metadata?.role
+  if (!STAFF_ROLES.includes(appRole)) {
+    return NextResponse.json({ error: 'Brak uprawnień personelu' }, { status: 403 })
   }
 
   try {
@@ -106,8 +120,13 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  const cookieStore = await cookies()
+  if (isImpersonationSessionActive(cookieStore, user)) {
+    return NextResponse.json({ error: 'Operacja niedozwolona w trybie podglądu' }, { status: 403 })
+  }
+
   const appRole = user.app_metadata?.role
-  if (!['nurse', 'paramedic', 'caregiver', 'org_admin', 'admin', 'super_admin'].includes(appRole)) {
+  if (!STAFF_ROLES.includes(appRole)) {
     return NextResponse.json({ error: 'Brak uprawnień personelu' }, { status: 403 })
   }
 
@@ -141,7 +160,7 @@ export async function PUT(request: Request) {
       })
       .eq('id', id)
 
-    if (orgId) {
+    if (orgId && appRole !== 'super_admin') {
       updateQuery = updateQuery.eq('organization_id', orgId)
     }
 
@@ -165,6 +184,16 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  const cookieStore = await cookies()
+  if (isImpersonationSessionActive(cookieStore, user)) {
+    return NextResponse.json({ error: 'Operacja niedozwolona w trybie podglądu' }, { status: 403 })
+  }
+
+  const appRole = user.app_metadata?.role
+  if (!STAFF_ROLES.includes(appRole)) {
+    return NextResponse.json({ error: 'Brak uprawnień personelu' }, { status: 403 })
+  }
+
   const { searchParams } = new URL(request.url)
   const id = searchParams.get('id')
 
@@ -172,7 +201,13 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: 'Missing id' }, { status: 400 })
   }
 
-  const { error } = await supabase.from('agenda_items').delete().eq('id', id)
+  const orgId = user.app_metadata?.organization_id
+  let delQuery = supabase.from('agenda_items').delete().eq('id', id)
+  if (orgId && appRole !== 'super_admin') {
+    delQuery = delQuery.eq('organization_id', orgId)
+  }
+
+  const { error } = await delQuery
 
   if (error) {
     return NextResponse.json({ error: 'Failed to delete' }, { status: 500 })

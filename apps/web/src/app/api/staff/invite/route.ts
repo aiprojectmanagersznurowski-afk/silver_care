@@ -1,6 +1,8 @@
+import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
+import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
 import { renderStaffInviteEmail } from '@/lib/notification-templates'
 import { getRequestOrigin } from '@/lib/url-helper'
 
@@ -11,6 +13,11 @@ export async function POST(request: Request) {
     
     if (!user) {
       return NextResponse.json({ error: 'Brak autoryzacji' }, { status: 401 })
+    }
+
+    const cookieStore = await cookies()
+    if (isImpersonationSessionActive(cookieStore, user)) {
+      return NextResponse.json({ error: 'Operacja niedozwolona w trybie podglądu' }, { status: 403 })
     }
 
     const appRole = user.app_metadata?.role

@@ -74,5 +74,5 @@ export const POST = withAuth(
 
     return NextResponse.json({ success: true, id: data.id })
   },
-  { roles: ['org_admin', 'nurse', 'super_admin'] }
+  { roles: ['org_admin', 'nurse', 'super_admin'], blockImpersonation: true }
 )

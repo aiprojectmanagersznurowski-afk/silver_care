@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
+import { isImpersonationSessionActive, assertMutationAllowedDuringImpersonation, safeGetCookieStore } from '@/lib/impersonation-guards'
 
 export interface BulkPublishResult {
   success: boolean
@@ -18,6 +19,12 @@ export async function bulkPublishReportsAction(reportIds: string[]): Promise<Bul
 
   if (!user) {
     return { success: false, error: 'Brak aktywnej sesji użytkownika.' }
+  }
+
+  const cookieStore = await safeGetCookieStore()
+  const guard = assertMutationAllowedDuringImpersonation(isImpersonationSessionActive(cookieStore, user))
+  if (!guard.allowed) {
+    return { success: false, error: guard.error }
   }
 
   const role = user.app_metadata?.role as string | undefined
@@ -101,6 +108,12 @@ export async function quickLogRoutineObservationAction(
 
   if (!user) {
     return { success: false, error: 'Brak aktywnej sesji użytkownika.' }
+  }
+
+  const cookieStore = await safeGetCookieStore()
+  const guard = assertMutationAllowedDuringImpersonation(isImpersonationSessionActive(cookieStore, user))
+  if (!guard.allowed) {
+    return { success: false, error: guard.error }
   }
 
   const role = user.app_metadata?.role as string | undefined

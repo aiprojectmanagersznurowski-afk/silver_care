@@ -55,6 +55,24 @@ describe('Panel administratora na komponentach szablonu (@REQ: UI-TEMPLATE-ALIGN
     const orgsModule = await import('../../apps/web/src/components/OrganizationsManagementClient');
     expect(typeof orgsModule.OrganizationsManagementClient).toBe('function');
   });
+
+  it('komponenty nawigacji bocznej i kart zdarzeń bezpiecznie obsługują ikony i strukturę @REQ: UI-TEMPLATE-ALIGNMENT', async () => {
+    const adminSidebarModule = await import('../../apps/web/src/components/AdminSidebar');
+    expect(typeof adminSidebarModule.AdminSidebar).toBe('function');
+
+    const sidebarNavModule = await import('../../apps/web/src/components/SidebarNav');
+    expect(typeof sidebarNavModule.SidebarNav).toBe('function');
+
+    const residentEventsModule = await import('../../apps/web/src/components/residents/profile/ResidentEventsCard');
+    expect(typeof residentEventsModule.ResidentEventsCard).toBe('function');
+
+    const reportingConstants = await import('../../apps/web/src/lib/reporting-constants');
+    expect(reportingConstants.EVENT_TYPE_ICONS).toBeDefined();
+    for (const [, icon] of Object.entries(reportingConstants.EVENT_TYPE_ICONS)) {
+      expect(typeof icon).toBe('string');
+      expect(icon.length).toBeGreaterThan(0);
+    }
+  });
 });
 
 describe('Czerwień nie niesie oceny stanu pensjonariusza (@REQ: MDR-NO-INTERPRETATION)', () => {

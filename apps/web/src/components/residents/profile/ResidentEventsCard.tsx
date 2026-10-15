@@ -2,7 +2,17 @@
 
 import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Clock, Calendar } from 'lucide-react'
+import {
+  Clock,
+  Calendar,
+  FileText,
+  Home,
+  RefreshCw,
+  Bed,
+  Plus,
+  Minus,
+  Flame,
+} from 'lucide-react'
 import {
   EVENT_TYPE_LABELS,
   EVENT_TYPE_ICONS,
@@ -12,6 +22,17 @@ import { ResidentEventItem } from './profile-types'
 
 interface ResidentEventsCardProps {
   events: ResidentEventItem[]
+}
+
+const EVENT_TYPE_LUCIDE_ICONS: Partial<Record<EventType, React.ComponentType<{ className?: string }>>> = {
+  contract_signed: FileText,
+  contract_ended: FileText,
+  death: Flame,
+  care_level_changed: RefreshCw,
+  admission: Home,
+  bed_transfer: Bed,
+  package_added: Plus,
+  package_removed: Minus,
 }
 
 export function ResidentEventsCard({ events }: ResidentEventsCardProps) {
@@ -33,7 +54,7 @@ export function ResidentEventsCard({ events }: ResidentEventsCardProps) {
             {events.map((ev) => {
               const type = ev.event_type as EventType
               const label = EVENT_TYPE_LABELS[type] || ev.event_type
-              const Icon = EVENT_TYPE_ICONS[type] || Calendar
+              const EventIcon = EVENT_TYPE_LUCIDE_ICONS[type] || EVENT_TYPE_ICONS[type] || Calendar
 
               return (
                 <div
@@ -41,7 +62,13 @@ export function ResidentEventsCard({ events }: ResidentEventsCardProps) {
                   className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/20"
                 >
                   <div className="p-2 rounded-lg bg-primary/10 text-primary mt-0.5">
-                    <Icon className="h-4 w-4" />
+                    {typeof EventIcon === 'string' ? (
+                      <span className="text-base leading-none" aria-hidden="true">
+                        {EventIcon}
+                      </span>
+                    ) : (
+                      <EventIcon className="h-4 w-4" />
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">

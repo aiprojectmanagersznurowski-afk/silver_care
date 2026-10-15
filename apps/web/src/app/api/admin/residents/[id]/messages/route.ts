@@ -12,7 +12,24 @@ export async function GET(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const role = user.app_metadata?.role as string | undefined;
+  if (!['org_admin', 'super_admin', 'nurse', 'paramedic', 'caregiver', 'admin'].includes(role || '')) {
+    return NextResponse.json({ error: 'Brak uprawnień do zasobów administracyjnych' }, { status: 403 });
+  }
+
   const { id: resident_id } = await params;
+
+  const orgId = user.app_metadata?.organization_id as string | undefined;
+  if (orgId && role !== 'super_admin') {
+    const { data: resData } = await supabase
+      .from('residents')
+      .select('organization_id')
+      .eq('id', resident_id)
+      .single();
+    if (!resData || resData.organization_id !== orgId) {
+      return NextResponse.json({ error: 'Podopieczny nie należy do Twojej placówki' }, { status: 403 });
+    }
+  }
 
 
   const { data, error } = await supabase

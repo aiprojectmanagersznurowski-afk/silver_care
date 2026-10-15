@@ -1,6 +1,8 @@
+import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
 
 export const runtime = 'nodejs'
 
@@ -24,6 +26,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const cookieStore = await cookies()
+    if (isImpersonationSessionActive(cookieStore, user)) {
+      return NextResponse.json({ error: 'Operacja niedozwolona w trybie podglądu' }, { status: 403 })
+    }
+
     const role = user.app_metadata?.role
     if (role !== 'nurse' && role !== 'org_admin' && role !== 'super_admin' && role !== 'admin') {
       return NextResponse.json({ error: 'Tylko personel może przesyłać nagrania' }, { status: 403 })
@@ -39,6 +46,19 @@ export async function POST(req: Request) {
     }
 
     const adminClient = createAdminClient()
+
+    // Weryfikacja izolacji organizacji (ORG-ISOLATION)
+    const userOrgId = user.app_metadata?.organization_id as string | undefined
+    if (userOrgId && role !== 'super_admin') {
+      const { data: resData } = await adminClient
+        .from('residents')
+        .select('organization_id')
+        .eq('id', residentId)
+        .single()
+      if (!resData || resData.organization_id !== userOrgId) {
+        return NextResponse.json({ error: 'Podopieczny nie należy do Twojej placówki' }, { status: 403 })
+      }
+    }
 
     // 1. Sprawdzamy czy istnieje już wpis dla client_uuid (idempotencja VOICE-OFFLINE)
     if (clientUuid) {

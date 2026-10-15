@@ -1,6 +1,7 @@
 import { revalidatePath } from 'next/cache'
 import { ROLES } from '@silvercare/contracts/src/generated/roles'
 import { createClient } from '@/lib/supabase/server'
+import { isImpersonationSessionActive, safeGetCookieStore } from '@/lib/impersonation-guards'
 import { generateSecureTemporaryPassword } from '@/lib/staff-helpers'
 
 export type UserStatusMode = 'deactivate' | 'activate' | 'hard_delete'
@@ -18,13 +19,26 @@ export function safeRevalidateIam() {
   }
 }
 
-export async function verifySuperAdminCaller() {
+export async function verifySuperAdminCaller(options?: { allowImpersonation?: boolean }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   const callerRole = user?.app_metadata?.role || user?.user_metadata?.role
   if (!user || callerRole !== 'super_admin') {
     return { error: 'Brak uprawnień. Wymagana rola super_admin.', status: 403, code: 403, user: null, supabase }
+  }
+
+  if (!options?.allowImpersonation) {
+    const cookieStore = await safeGetCookieStore()
+    if (isImpersonationSessionActive(cookieStore, user)) {
+      return {
+        error: 'Operacja niedozwolona w trybie podglądu (impersonacji). Tryb jest ściśle Read-Only.',
+        status: 403,
+        code: 403,
+        user: null,
+        supabase
+      }
+    }
   }
 
   return { error: null, user, supabase }

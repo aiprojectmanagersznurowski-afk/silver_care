@@ -1,5 +1,7 @@
+import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
 
 export async function PATCH(
   request: Request,
@@ -13,9 +15,26 @@ export async function PATCH(
       return NextResponse.json({ error: 'Brak autoryzacji' }, { status: 401 })
     }
 
+    const cookieStore = await cookies()
+    if (isImpersonationSessionActive(cookieStore, user)) {
+      return NextResponse.json({ error: 'Operacja niedozwolona w trybie podglądu' }, { status: 403 })
+    }
+
     const role = user.app_metadata?.role
     if (role !== 'org_admin' && role !== 'super_admin' && role !== 'nurse') {
       return NextResponse.json({ error: 'Brak uprawnień' }, { status: 403 })
+    }
+
+    const orgId = user.app_metadata?.organization_id
+    if (orgId && role !== 'super_admin') {
+      const { data: resData } = await supabase
+        .from('residents')
+        .select('organization_id')
+        .eq('id', id)
+        .single()
+      if (!resData || resData.organization_id !== orgId) {
+        return NextResponse.json({ error: 'Podopieczny nie należy do Twojej placówki' }, { status: 403 })
+      }
     }
 
     const body = await request.json()

@@ -1,5 +1,7 @@
+import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
 import { callEuLlmCompletion } from '@/lib/eu-llm-client'
 import { extractJson } from '@/lib/voice-helpers'
 import { validateReportText } from '@silvercare/contracts/src/validation'
@@ -35,6 +37,16 @@ export async function POST(req: Request) {
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const cookieStore = await cookies()
+    if (isImpersonationSessionActive(cookieStore, user)) {
+      return NextResponse.json({ error: 'Operacja niedozwolona w trybie podglądu' }, { status: 403 })
+    }
+
+    const role = user.app_metadata?.role as string | undefined
+    if (role === 'family') {
+      return NextResponse.json({ error: 'Brak uprawnień personelu' }, { status: 403 })
     }
 
     const { draftId, editedTranscription } = await req.json()
