@@ -4,14 +4,12 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Building2, ArrowLeft, Users, UserCog, UserCheck, Calendar, MapPin, Mail, ShieldAlert } from 'lucide-react'
+import { Building2, ArrowLeft, MapPin } from 'lucide-react'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
-import { startImpersonationAction } from '@/actions/impersonation'
-import { ResendAdminInviteButton, AddAdminToOrgDialog } from '@/components/AdminInviteActions'
 import { EditOrganizationDialog } from '@/components/EditOrganizationDialog'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { OrganizationKpiCards } from '@/components/organizations/OrganizationKpiCards'
+import { OrganizationAdminsSection } from '@/components/organizations/OrganizationAdminsSection'
+import { OrganizationStaffSection } from '@/components/organizations/OrganizationStaffSection'
 
 export default async function OrganizationDetailsPage({
   params,
@@ -27,7 +25,6 @@ export default async function OrganizationDetailsPage({
   }
 
   const role = user?.app_metadata?.role || user?.user_metadata?.role
-
   if (role !== 'super_admin') {
     redirect('/admin')
   }
@@ -108,209 +105,26 @@ export default async function OrganizationDetailsPage({
       </div>
 
       {/* Karty KPI placówki */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <Card className="rounded-xl border-none ring-1 ring-border">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <Users className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground font-medium">Aktywni podopieczni</p>
-                <div className="text-xl font-bold text-foreground">
-                  {activeResidentCount || 0}
-                  <span className="text-sm font-normal text-muted-foreground"> / {organization.resident_limit || 50}</span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <OrganizationKpiCards
+        activeResidentCount={activeResidentCount || 0}
+        residentLimit={organization.resident_limit || 50}
+        administratorsCount={administrators.length}
+        staffCount={staff.length}
+      />
 
-        <Card className="rounded-xl border-none ring-1 ring-border">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-foreground">
-                <UserCog className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground font-medium">Administratorzy placówki</p>
-                <div className="text-xl font-bold text-foreground">
-                  {administrators.length}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-xl border-none ring-1 ring-border">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-foreground">
-                <UserCheck className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground font-medium">Personel opiekuńczy</p>
-                <div className="text-xl font-bold text-foreground">
-                  {staff.length}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Identyfikatory kont w sekcjach potomnych:
+          <BusinessIdBadge type="user" id={admin.id} />
+          <BusinessIdBadge type="user" id={person.id} /> */}
 
       {/* Sekcja Administratorzy */}
-      <Card className="rounded-xl border-none ring-1 ring-border overflow-hidden">
-        <CardHeader className="border-b border-border bg-card px-6 py-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 text-foreground font-semibold">
-                <UserCog className="h-5 w-5 text-primary" />
-                <CardTitle className="text-lg">Administratorzy Ośrodka (org_admin)</CardTitle>
-              </div>
-              <CardDescription className="text-muted-foreground">
-                Konta posiadające uprawnienia do zarządzania personelem, podopiecznymi i salami w tej placówce.
-              </CardDescription>
-            </div>
-            <AddAdminToOrgDialog
-              organizationId={organization.id}
-              organizationName={organization.name}
-            />
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader className="text-muted-foreground">
-                <TableRow>
-                  <TableHead scope="col">Użytkownik</TableHead>
-                  <TableHead scope="col">Rola</TableHead>
-                  <TableHead scope="col">Data rejestracji</TableHead>
-                  <TableHead scope="col">Ostatnie logowanie</TableHead>
-                  <TableHead scope="col" className="text-right">Akcja</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {administrators.map(admin => (
-                  <TableRow key={admin.id}>
-                    <TableCell>
-                      <div className="font-medium text-foreground">{admin.email}</div>
-                      <div className="mt-1">
-                        <BusinessIdBadge type="user" id={admin.id} />
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className="inline-flex items-center rounded-lg bg-primary/10 px-2.5 py-1 text-sm font-semibold text-primary">
-                        Administrator Ośrodka
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {new Date(admin.created_at).toLocaleDateString('pl-PL')}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {admin.last_sign_in_at
-                        ? new Date(admin.last_sign_in_at).toLocaleString('pl-PL')
-                        : 'Nigdy'
-                      }
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <ResendAdminInviteButton
-                          adminEmail={admin.email || ''}
-                          organizationId={organization.id}
-                          organizationName={organization.name}
-                        />
-                        <form action={startImpersonationAction}>
-                          <input type="hidden" name="targetAdminId" value={admin.id} />
-                          <input type="hidden" name="targetOrgId" value={organization.id} />
-                          <input type="hidden" name="targetOrgName" value={organization.name} />
-                          <input type="hidden" name="adminEmail" value={admin.email || ''} />
-                          <Button
-                            type="submit"
-                            variant="outline"
-                            size="sm"
-                            className="rounded-xl border-border bg-muted text-foreground hover:bg-muted text-sm h-9 font-medium"
-                            title="Zaloguj jako ten administrator placówki"
-                          >
-                            Zaloguj jako
-                          </Button>
-                        </form>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {administrators.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground">
-                      Brak przypisanych administratorów placówki.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+      <OrganizationAdminsSection
+        organizationId={organization.id}
+        organizationName={organization.name}
+        administrators={administrators}
+      />
 
       {/* Sekcja Personel */}
-      <Card className="rounded-xl border-none ring-1 ring-border overflow-hidden">
-        <CardHeader className="border-b border-border bg-card px-6 py-5">
-          <div className="flex items-center gap-2 text-foreground font-semibold">
-            <UserCheck className="h-5 w-5 text-primary" />
-            <CardTitle className="text-lg">Personel Opiekuńczy</CardTitle>
-          </div>
-          <CardDescription className="text-muted-foreground">
-            Lista personelu i opiekunów przypisanych do tej placówki (wyłącznie dane techniczne kont).
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader className="text-muted-foreground">
-                <TableRow>
-                  <TableHead scope="col">Użytkownik</TableHead>
-                  <TableHead scope="col">Rola</TableHead>
-                  <TableHead scope="col">Data rejestracji</TableHead>
-                  <TableHead scope="col">Ostatnie logowanie</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {staff.map(person => (
-                  <TableRow key={person.id}>
-                    <TableCell>
-                      <div className="font-medium text-foreground">{person.email}</div>
-                      <div className="mt-1">
-                        <BusinessIdBadge type="user" id={person.id} />
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className="inline-flex items-center rounded-lg bg-muted px-2.5 py-1 text-sm font-medium text-foreground">
-                        {person.app_metadata?.role || person.user_metadata?.role || 'Personel'}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {new Date(person.created_at).toLocaleDateString('pl-PL')}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {person.last_sign_in_at
-                        ? new Date(person.last_sign_in_at).toLocaleString('pl-PL')
-                        : 'Nigdy'
-                      }
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {staff.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground">
-                      Brak zarejestrowanego personelu w tej placówce.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+      <OrganizationStaffSection staff={staff} />
     </div>
   )
 }

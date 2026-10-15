@@ -1,45 +1,22 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import {
-  Building2,
-  Users,
-  UserCog,
-  UserCheck,
-  Calendar,
-  MapPin,
-  ChevronRight,
-  AlertCircle,
-  RefreshCw,
-  LayoutGrid,
-  Table as TableIcon,
-} from 'lucide-react'
-import { isValidViewMode, OrgViewMode } from '@/lib/org-helpers'
-import { EditOrganizationDialog } from '@/components/EditOrganizationDialog'
-import { BusinessIdBadge } from '@/components/BusinessIdBadge'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import React from 'react'
+import { LayoutGrid, Table as TableIcon } from 'lucide-react'
+import { OrgViewMode } from '@/lib/org-helpers'
 import { useViewPreference, VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-preference'
+import {
+  OrganizationsLoadingState,
+  OrganizationsErrorState,
+  OrganizationsEmptyState
+} from './organizations/OrganizationsFeedbackStates'
+import { OrganizationsTableView } from './organizations/OrganizationsTableView'
+import { OrganizationsCardsView } from './organizations/OrganizationsCardsView'
+import {
+  OrganizationSummaryItem,
+  OrganizationsManagementClientProps
+} from './organizations/organizations-types'
 
-export interface OrganizationSummaryItem {
-  organization_id: string
-  organization_name: string
-  address?: string | null
-  resident_limit: number
-  created_at: string
-  active_resident_count: number
-  staff_count: number
-  administrator_count: number
-}
-
-interface OrganizationsManagementClientProps {
-  initialOrganizations: OrganizationSummaryItem[]
-  errorMessage?: string
-  forcedState?: 'loading' | 'empty' | 'success' | 'error'
-  renderActionSlot?: React.ReactNode
-}
+export type { OrganizationSummaryItem }
 
 export function OrganizationsManagementClient({
   initialOrganizations,
@@ -54,77 +31,29 @@ export function OrganizationsManagementClient({
     ['cards', 'table'] as const
   )
 
-  const handleModeChange = (mode: OrgViewMode) => {
-    setViewMode(mode)
-  }
-
   const currentState = forcedState || (errorMessage ? 'error' : organizations.length === 0 ? 'empty' : 'success')
 
-  // 1. Stan LOADING
   if (currentState === 'loading') {
-    return (
-      <div className="space-y-6 animate-pulse" aria-busy="true" aria-label="Ładowanie listy placówek">
-        <div className="h-10 w-72 rounded-xl bg-muted" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="h-56 rounded-xl bg-muted" />
-          <div className="h-56 rounded-xl bg-muted" />
-        </div>
-      </div>
-    )
+    return <OrganizationsLoadingState />
   }
 
-  // 2. Stan ERROR
   if (currentState === 'error') {
-    return (
-      <Card className="rounded-xl border-destructive/20 bg-destructive/5 p-8 text-center" role="alert">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-destructive/10 text-destructive mb-4">
-          <AlertCircle className="h-8 w-8" />
-        </div>
-        <h3 className="text-xl font-semibold text-foreground mb-2">Błąd wczytywania placówek</h3>
-        <p className="text-muted-foreground max-w-md mx-auto mb-6">
-          {errorMessage || 'Wystąpił problem podczas pobierania podsumowania organizacji.'}
-        </p>
-        <Button
-          onClick={() => window.location.reload()}
-          className="min-h-[48px] rounded-xl px-6 bg-foreground text-white hover:bg-muted"
-        >
-          <RefreshCw className="mr-2 h-4 w-4" />
-          Spróbuj ponownie
-        </Button>
-      </Card>
-    )
+    return <OrganizationsErrorState errorMessage={errorMessage} />
   }
 
-  // 3. Stan EMPTY
   if (currentState === 'empty') {
-    return (
-      <Card className="rounded-xl border-none ring-1 ring-border p-12 text-center">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary mb-4">
-          <Building2 className="h-8 w-8" />
-        </div>
-        <h3 className="text-xl font-semibold text-foreground mb-2">Brak zarejestrowanych placówek</h3>
-        <p className="text-muted-foreground max-w-md mx-auto mb-6">
-          W systemie nie zarejestrowano jeszcze żadnego ośrodka. Utwórz pierwszą placówkę, aby rozpocząć konfigurację platformy.
-        </p>
-        {renderActionSlot && (
-          <div className="flex justify-center">
-            {renderActionSlot}
-          </div>
-        )}
-      </Card>
-    )
+    return <OrganizationsEmptyState renderActionSlot={renderActionSlot} />
   }
 
-  // 4. Stan SUCCESS
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-4 min-w-0 flex-1">
         {/* View mode toggle */}
         <div className="flex items-center bg-muted/50 p-1 rounded-xl border border-border">
           <button
             type="button"
             aria-label="Widok kafelków"
-            onClick={() => handleModeChange('cards')}
+            onClick={() => setViewMode('cards')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               viewMode === 'cards'
                 ? 'bg-card text-primary font-semibold'
@@ -137,7 +66,7 @@ export function OrganizationsManagementClient({
           <button
             type="button"
             aria-label="Widok tabeli"
-            onClick={() => handleModeChange('table')}
+            onClick={() => setViewMode('table')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               viewMode === 'table'
                 ? 'bg-card text-primary font-semibold'
@@ -149,170 +78,13 @@ export function OrganizationsManagementClient({
           </button>
         </div>
 
-        {renderActionSlot && <div>{renderActionSlot}</div>}
+        {renderActionSlot && <div className="shrink-0">{renderActionSlot}</div>}
       </div>
 
       {viewMode === 'table' ? (
-        <div className="overflow-x-auto rounded-xl bg-card ring-1 ring-border">
-          <Table>
-            <TableHeader className="text-muted-foreground">
-              <TableRow>
-                <TableHead>Nazwa</TableHead>
-                <TableHead>Adres</TableHead>
-                <TableHead className="text-center">Limit</TableHead>
-                <TableHead className="text-center">Obłożenie</TableHead>
-                <TableHead className="text-center">Personel</TableHead>
-                <TableHead>Utworzono</TableHead>
-                <TableHead className="text-right">Akcje</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {organizations.map((org) => {
-                const occupancyPercent = org.resident_limit > 0
-                  ? Math.round((org.active_resident_count / org.resident_limit) * 100)
-                  : 0
-
-                return (
-                  <TableRow key={org.organization_id} className="hover:bg-muted/30">
-                    <TableCell>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Link
-                          href={`/admin/organizations/${org.organization_id}`}
-                          className="font-semibold text-foreground hover:text-primary transition-colors"
-                        >
-                          {org.organization_name}
-                        </Link>
-                        <BusinessIdBadge type="organization" id={org.organization_id} />
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground max-w-[220px] truncate">
-                      {org.address || '—'}
-                    </TableCell>
-                    <TableCell className="text-center font-medium">
-                      {org.resident_limit}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="font-semibold text-sm text-foreground">
-                        {org.active_resident_count} / {org.resident_limit}
-                      </div>
-                      <div className="text-sm text-muted-foreground">{occupancyPercent}%</div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <span className="font-medium text-foreground">{org.staff_count}</span>
-                      <span className="text-sm text-muted-foreground block">({org.administrator_count} adm.)</span>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {new Date(org.created_at).toLocaleDateString('pl-PL')}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <EditOrganizationDialog organization={org} />
-                        <Link
-                          href={`/admin/organizations/${org.organization_id}`}
-                          className="inline-flex items-center gap-1 rounded-lg bg-muted/50 px-2.5 py-1.5 text-sm font-medium text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-                        >
-                          Szczegóły
-                          <ChevronRight className="h-3.5 w-3.5" />
-                        </Link>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
-        </div>
+        <OrganizationsTableView organizations={organizations} />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {organizations.map((org) => {
-            const occupancyPercent = org.resident_limit > 0
-              ? Math.round((org.active_resident_count / org.resident_limit) * 100)
-              : 0
-
-            return (
-              <div
-                key={org.organization_id}
-                className="group block rounded-xl bg-card p-6 ring-1 ring-border hover:ring-primary transition-all"
-              >
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                  <div className="space-y-1 min-w-0 flex-1">
-                    <div className="flex items-center gap-2 min-w-0 flex-wrap">
-                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
-                        <Building2 className="h-5 w-5" />
-                      </span>
-                      <Link
-                        href={`/admin/organizations/${org.organization_id}`}
-                        className="text-lg font-bold text-foreground group-hover:text-primary transition-colors truncate"
-                      >
-                        {org.organization_name}
-                      </Link>
-                      <BusinessIdBadge type="organization" id={org.organization_id} />
-                    </div>
-                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground pl-11 truncate">
-                      <MapPin className="h-3.5 w-3.5 shrink-0" />
-                      <span className="truncate">{org.address || 'Brak podanego adresu'}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    <EditOrganizationDialog organization={org} />
-                    <Link
-                      href={`/admin/organizations/${org.organization_id}`}
-                      className="flex items-center gap-1 rounded-lg bg-muted/50 px-2.5 py-1 text-sm font-medium text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors"
-                    >
-                      <span>Szczegóły</span>
-                      <ChevronRight className="h-3.5 w-3.5" />
-                    </Link>
-                  </div>
-                </div>
-
-                <div className="mt-6 pt-4 border-t border-border grid grid-cols-3 gap-4 text-center">
-                  <div className="bg-muted/50 rounded-xl p-3">
-                    <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground mb-1">
-                      <Users className="h-3.5 w-3.5 text-primary" />
-                      <span>Podopieczni</span>
-                    </div>
-                    <div className="text-base font-bold text-foreground">
-                      {org.active_resident_count}
-                      <span className="text-sm font-normal text-muted-foreground"> / {org.resident_limit}</span>
-                    </div>
-                    <div className="text-sm text-muted-foreground mt-0.5">{occupancyPercent}% limitu</div>
-                  </div>
-
-                  <div className="bg-muted/50 rounded-xl p-3">
-                    <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground mb-1">
-                      <UserCheck className="h-3.5 w-3.5 text-primary" />
-                      <span>Personel</span>
-                    </div>
-                    <div className="text-base font-bold text-foreground">
-                      {org.staff_count}
-                    </div>
-                    <div className="text-sm text-muted-foreground mt-0.5">Opiekunowie</div>
-                  </div>
-
-                  <div className="bg-muted/50 rounded-xl p-3">
-                    <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground mb-1">
-                      <UserCog className="h-3.5 w-3.5 text-primary" />
-                      <span>Admini</span>
-                    </div>
-                    <div className="text-base font-bold text-foreground">
-                      {org.administrator_count}
-                    </div>
-                    <div className="text-sm text-muted-foreground mt-0.5">Org Admini</div>
-                  </div>
-                </div>
-
-                <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
-                    <span>W systemie od: {new Date(org.created_at).toLocaleDateString('pl-PL')}</span>
-                  </div>
-                  <BusinessIdBadge type="organization" id={org.organization_id} />
-                </div>
-              </div>
-            )
-          })}
-        </div>
+        <OrganizationsCardsView organizations={organizations} />
       )}
     </div>
   )

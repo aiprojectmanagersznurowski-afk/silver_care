@@ -15,6 +15,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
+import { InviteFamilySuccessAlert } from './family/InviteFamilySuccessAlert'
 
 type Resident = {
   id: string
@@ -63,7 +64,6 @@ export function InviteFamilyDialog({
 
     let finalPhone = ''
     if (phone.trim()) {
-      // Usunięcie wszystkich znaków niebędących cyframi
       const cleanPhone = phone.replace(/\D/g, '')
       if (cleanPhone.length < 7) {
         setError('Podany numer telefonu wydaje się zbyt krótki.')
@@ -101,6 +101,13 @@ export function InviteFamilyDialog({
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const handleAlertClose = () => {
+    setOpen(false)
+    setIsSuccess(false)
+    setGeneratedUrl(null)
+    window.location.reload()
   }
 
   return (
@@ -198,65 +205,17 @@ export function InviteFamilyDialog({
           )}
 
           {isSuccess && !generatedUrl && (
-            <div className="mt-4 p-4 border border-border bg-card rounded-md space-y-2">
-              <p className="text-sm font-semibold text-foreground">
-                Zaproszenie wysłane pomyślnie!
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Wiadomość z linkiem aktywacyjnym została wysłana na podany adres e-mail bliskiego.
-              </p>
-              <Button 
-                type="button" 
-                variant="default" 
-                className="w-full mt-2" 
-                onClick={() => {
-                  setOpen(false)
-                  setIsSuccess(false)
-                  window.location.reload()
-                }}
-              >
-                Zamknij i odśwież
-              </Button>
-            </div>
+            <InviteFamilySuccessAlert
+              generatedUrl={null}
+              onClose={handleAlertClose}
+            />
           )}
 
           {isSuccess && generatedUrl && (
-            <div className="mt-4 p-4 border border-border bg-card rounded-md space-y-2">
-              <p className="text-sm font-semibold text-foreground">
-                Zaproszenie wygenerowane pomyślnie!
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Wyślij poniższy link bliskim podopiecznego, aby umożliwić założenie konta:
-              </p>
-              <div className="flex items-center gap-2 mt-2">
-                <Input readOnly value={generatedUrl} className="text-sm font-mono h-8" />
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  size="sm" 
-                  className="h-8"
-                  onClick={() => {
-                    navigator.clipboard.writeText(generatedUrl)
-                    toast.success('Link zaproszenia skopiowano do schowka!')
-                  }}
-                >
-                  Kopiuj
-                </Button>
-              </div>
-              <Button 
-                type="button" 
-                variant="default" 
-                className="w-full mt-2" 
-                onClick={() => {
-                  setOpen(false)
-                  setIsSuccess(false)
-                  setGeneratedUrl(null)
-                  window.location.reload()
-                }}
-              >
-                Zamknij i odśwież
-              </Button>
-            </div>
+            <InviteFamilySuccessAlert
+              generatedUrl={generatedUrl}
+              onClose={handleAlertClose}
+            />
           )}
 
           {!isSuccess && (

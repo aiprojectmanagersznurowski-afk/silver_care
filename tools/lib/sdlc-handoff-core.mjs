@@ -68,7 +68,7 @@ export function formatHandoffComment({ author, reviewer, commits = [], verifyPas
     '',
     `- **Autor wdrożenia:** ${author.name} (@${author.username})`,
     `- **Przypisany recenzent:** ${reviewer.name} (@${reviewer.username})`,
-    `- **Bramka Jakościowa:** \`bash scripts/verify.sh --full\` — ${verifyPassed ? '**100% PASS (8/8 etapów)**' : '⚠️ WYMAGA WERYFIKACJI'}`,
+    `- **Bramka Jakościowa:** \`bash scripts/verify.sh --full\` — ${verifyPassed ? '**100% PASS (9/9 etapów)**' : '⚠️ WYMAGA WERYFIKACJI'}`,
     prUrl ? `- **Pull Request:** [${prUrl}](${prUrl})` : '- **Pull Request:** Do otwarcia / przypisania na GitHubie do @' + reviewer.github,
     '',
     '**Ostatnie commity na gałęzi:**',

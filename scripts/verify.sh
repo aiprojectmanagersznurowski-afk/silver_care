@@ -28,22 +28,22 @@ run_step(){
   return $code
 }
 
-step "1/8 Spójność kontraktów"
+step "1/9 Spójność kontraktów"
 node tools/sc-validate.mjs && ok "kontrakty spójne" || bad "sc-validate"
 
-step "2/8 Żywotność reguł bramki"
+step "2/9 Żywotność reguł bramki"
 run_step "wszystkie reguły blokują swoje mutacje" node tools/sc-selftest.mjs
 
-step "3/8 Dryf artefaktów generowanych"
+step "3/9 Dryf artefaktów generowanych"
 node tools/sc-codegen.mjs --check && ok "artefakty zgodne z kontraktem" || bad "dryf codegenu"
 
-step "4/8 Nazewnictwo rdzenia"
+step "4/9 Nazewnictwo rdzenia"
 run_step "brak porzuconych nazw" node tools/sc-naming.mjs
 
-step "5/8 Spójność typów TypeScript (apps/web)"
+step "5/9 Spójność typów TypeScript (apps/web)"
 run_step "typy TypeScript poprawne" pnpm --filter web exec tsc --noEmit
 
-step "6/8 Kontrakt typograficzny UI (zakaz mikro-fontów <14px)"
+step "6/9 Kontrakt typograficzny UI (zakaz mikro-fontów <14px)"
 TYPO_VIOLATIONS=$(git grep -n -E "text-xs|text-\[(8|9|10|11|12|13)px\]" apps/web/src/ 2>/dev/null || true)
 if [ -n "$TYPO_VIOLATIONS" ]; then
   printf "%s\n" "$TYPO_VIOLATIONS"
@@ -52,14 +52,26 @@ else
   ok "brak zakazanych mikro-fontów (<14px) w apps/web/src/"
 fi
 
-step "7/8 Testy jednostkowe"
+step "7/9 Limit rozmiaru plików aplikacyjnych (max 250 LOC)"
+LOC_VIOLATIONS=$(find apps/web/src -type f \( -name "*.ts" -o -name "*.tsx" \) \
+  ! -path "apps/web/src/types/database.types.ts" \
+  ! -path "apps/web/src/components/ui/*" \
+  -exec wc -l {} + | awk '$1 > 250 && $2 != "total" { print $1 " " $2 }')
+if [ -n "$LOC_VIOLATIONS" ]; then
+  printf "%s\n" "$LOC_VIOLATIONS"
+  bad "znaleziono pliki aplikacyjne przekraczające limit 250 linii kodu w apps/web/src/"
+else
+  ok "wszystkie pliki aplikacyjne spełniają limit ≤ 250 LOC"
+fi
+
+step "8/9 Testy jednostkowe"
 if [ -f package.json ] && command -v pnpm >/dev/null 2>&1 && grep -q '"test"' package.json 2>/dev/null; then
   run_step "testy przechodzą" pnpm test --run
 else
   skip "brak pnpm albo skryptu test — aplikacja nie jest jeszcze zbudowana"
 fi
 
-step "8/8 Identyfikowalność"
+step "9/9 Identyfikowalność"
 if [ "$FULL" = "1" ]; then
   run_step "każdy test wskazuje wymaganie" node tools/sc-trace.mjs --enforce
 else
