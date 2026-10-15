@@ -22,6 +22,7 @@ export function StaffMessageComposer({
   sendError,
 }: StaffMessageComposerProps) {
   const { isRecording, isTranscribing, duration, startRecording, stopRecording } = useVoiceRecorder({
+    purpose: 'staff_message',
     onSuccess: (data) => {
       const transcribedText = (data.text || data.transcript || '').trim()
       if (transcribedText) {

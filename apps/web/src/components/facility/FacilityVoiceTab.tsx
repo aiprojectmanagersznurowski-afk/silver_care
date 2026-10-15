@@ -45,6 +45,7 @@ export function FacilityVoiceTab({ onStructureChanged }: FacilityVoiceTabProps) 
   }
 
   const { isRecording, isTranscribing, startRecording, stopRecording } = useVoiceRecorder({
+    purpose: 'facility_import',
     onSuccess: async (data) => {
       const text = (data.text || data.transcript || '').trim()
       if (!text) {

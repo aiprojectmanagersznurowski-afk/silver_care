@@ -5,6 +5,7 @@
  * - ADR-007 (separacja przed LLM): dane medyczne są usuwane z transkryptu ZANIM trafi do modelu.
  * - VOICE-MEDICAL-STRIP: wycięcie ciśnienia, dawek leków, saturacji, temperatury, nazw leków.
  * - VOICE-ZERO-GUESSING: walidacja tożsamości z frontendu, brak fabrykacji w fallbacku.
+ * - MDR-NO-INTERPRETATION: blokada ocen klinicznych i deterministyczne szablony leków.
  */
 
 import {
@@ -12,6 +13,8 @@ import {
   stripClinicalData,
   validateReportText,
   validateNoMedicalDataInReport,
+  resolveMedicationTemplate,
+  MedicationEvent,
   STAFF_REVIEW_FALLBACK_NOTICE,
 } from '@silvercare/contracts/src/validation'
 import {
@@ -21,7 +24,8 @@ import {
 } from '@silvercare/contracts/src/prompts'
 import { AI_DISCLOSURE_LABEL } from '@silvercare/contracts/src/generated/presentation'
 
-export { STAFF_REVIEW_FALLBACK_NOTICE }
+export { STAFF_REVIEW_FALLBACK_NOTICE, resolveMedicationTemplate }
+export type { MedicationEvent }
 
 export interface RedactionResult {
   cleanedTranscript: string
@@ -31,15 +35,11 @@ export interface RedactionResult {
   hasPii: boolean
 }
 
-// Wzorce PII (RODO)
 const PESEL_REGEX = /\b\d{11}\b/g
 const PHONE_REGEX = /(?:\+?48\s*)?(?:\b\d{3}[\s-]?\d{3}[\s-]?\d{3}\b|\b\d{2}[\s-]?\d{3}[\s-]?\d{2}[\s-]?\d{2}\b)/g
 const EMAIL_REGEX = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g
 const FORBIDDEN_MDR_REGEX = new RegExp('\\b' + 'pacjen' + '[tc]\\w*\\b', 'i')
 
-/**
- * Deterministyczna funkcja pre-filtrująca surowy transkrypt przed wysłaniem do LLM.
- */
 export function redactVoiceTranscript(rawTranscript: string): RedactionResult {
   const maskedPii: string[] = []
   let text = rawTranscript
@@ -60,9 +60,6 @@ export function redactVoiceTranscript(rawTranscript: string): RedactionResult {
   }
 }
 
-/**
- * Walidacja obiektu szkicu przed rozpoczęciem przetwarzania (VOICE-ZERO-GUESSING).
- */
 export function validateVoiceDraftInput(
   draft: { resident_id?: string | null; transcript?: string | null } | null | undefined
 ): { valid: boolean; error?: string } {
@@ -82,6 +79,12 @@ export function createStaffReviewPlaceholder(disclosureLabel: string = AI_DISCLO
 export function buildClassifierSystemPrompt(): string {
   return `${VOICE_PROCESSING_PROMPT}\n${ZERO_GUESSING_DIRECTIVE}\n
 Notatka może zawierać sekcję [UZUPEŁNIENIE:], która stanowi dopowiedź personelu. Połącz wszystkie fakty.
+Jeżeli notatka dotyczy podania leków lub wsparcia, określ pole "medication_event":
+- "taken" - leki/wsparcie przyjęte pomyślnie
+- "refused" - podopieczny odmówił przyjęcia
+- "missed" - pominięto podanie
+- "none" - brak wzmianki o lekach
+
 Jeżeli notatka jest skrajnie niekompletna, ustaw 'followup_question' na krótkie pytanie (albo null).
 
 Zwróć czysty format JSON:
@@ -89,6 +92,7 @@ Zwróć czysty format JSON:
   "medical": "dane medyczne lub null",
   "discomfort": "ogólny opis dyskomfortu lub null",
   "behavioral": "fakty behawioralne (posiłki, aktywności, spacery, sen, nastrój) lub null",
+  "medication_event": "taken | refused | missed | none",
   "followup_question": "krótkie pytanie lub null"
 }`
 }
@@ -98,10 +102,11 @@ export function buildFamilyReportSystemPrompt(): string {
 Reguły:
 1. Używaj "Twój bliski" lub "Nasz podopieczny" - nigdy nie zgaduj tożsamości.
 2. Zastosowanie określenia na literę p jest bezwzględnie zakazane.
-3. Zakaz wymieniania leków, wyników badań i terminów medycznych.
-4. DIGNITY TRANSLATION: Opisuj dyskomfort ogólnie, dodając reakcję personelu i bieżący stan.
-5. NO FABRICATION: Przy pustych danych napisz: "Personel placówki sprawował opiekę nad Twoim bliskim przez cały dzień. Nie odnotowano zdarzeń wymagających osobnego opisania w tym raporcie."
-6. Dołącz etykietę: "${AI_DISCLOSURE_LABEL}".`
+3. Zakaz wymieniania leków, dawek, wyników badań i terminów medycznych.
+4. Zakaz oceniania parametrów ("w normie", "poza normą", "podwyższone", "obniżone").
+5. DIGNITY TRANSLATION: Opisuj dyskomfort ogólnie, dodając reakcję personelu i bieżący stan.
+6. NO FABRICATION: Przy pustych danych napisz: "Personel placówki sprawował opiekę nad Twoim bliskim przez cały dzień. Nie odnotowano zdarzeń wymagających osobnego opisania w tym raporcie."
+7. Dołącz etykietę: "${AI_DISCLOSURE_LABEL}".`
 }
 
 export function sanitizeReportAndVerifySafety(rawReport: string): {

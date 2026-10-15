@@ -3,6 +3,7 @@ export interface ClassifiedNote {
   discomfort: string | null
   behavioral: string | null
   followup_question: string | null
+  medication_event?: 'taken' | 'refused' | 'missed' | 'none' | null
   _parseError?: boolean
 }
 
@@ -27,11 +28,23 @@ export function extractJson(raw: string, _fallbackText?: string): ClassifiedNote
       return null
     }
 
+    const rawMed = typeof parsed.medication_event === 'string'
+      ? parsed.medication_event
+      : (extractedStreams && typeof extractedStreams.medication_event === 'string'
+          ? extractedStreams.medication_event
+          : null)
+
+    const validMedEvents = ['taken', 'refused', 'missed', 'none']
+    const medEvent = rawMed && validMedEvents.includes(rawMed.toLowerCase())
+      ? (rawMed.toLowerCase() as 'taken' | 'refused' | 'missed' | 'none')
+      : null
+
     return {
       medical: getStream('medical'),
       discomfort: getStream('discomfort'),
       behavioral: getStream('behavioral'),
       followup_question: typeof parsed.followup_question === 'string' ? parsed.followup_question : null,
+      medication_event: medEvent,
     }
   }
 

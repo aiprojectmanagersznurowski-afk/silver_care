@@ -27,6 +27,26 @@ describe('MDR Guardrails & Non-Medical Presentation Logic', () => {
     }
   });
 
+  it('blokuje oceny kliniczne parametrów ("w normie", "poza normą", "podwyższone", "obniżone") @REQ: MDR-NO-INTERPRETATION', () => {
+    const evaluationStatements = [
+      'Parametry ciśnienia są dzisiaj w normie.',
+      'Wyniki pomiarów są poza normą.',
+      'Cukier rano był powyżej normy.',
+      'Tętno seniora było poniżej normy.',
+      'Odnotowano podwyższone tętno po południu.',
+      'Wskaźnik był lekko podwyższony.',
+      'Ciśnienie było obniżone w spoczynku.',
+      'Stwierdzono prawidłowy poziom parametrów.',
+      'Odnotowano nieprawidłowy wynik poranny.',
+    ];
+
+    for (const statement of evaluationStatements) {
+      const result = validateReportText(statement);
+      expect(result.valid).toBe(false);
+      expect(result.violations.some(v => v.includes('norm') || v.includes('podwyższone') || v.includes('obniżone') || v.includes('wartościująca'))).toBe(true);
+    }
+  });
+
   it('rejects forbidden patient vocabulary in report text @REQ: MDR-NO-INTERPRETATION', () => {
     const patientVariants = [
       'Nasz pacjent miał dzisiaj spokojny dzień.',

@@ -55,6 +55,7 @@ W całym systemie obowiązuje jedna, niesprzeczna norma UI:
 
 ## Potok głosowy
 
+Architektura potoku: maskowanie PII (PESEL/tel/email) przed modelem → klasyfikacja w modelu UE (DPA, zero retencji) ze strukturą `medication_event` → deterministyczne szablony i post-filtr MDR przed zapisem.
 Transkrypt dzieli się na trzy strumienie **zanim** trafi do modelu:
 
 1. `MEDICAL` — leki, diagnozy, wyniki badań, parametry życiowe. Usuwane z transkryptu przed wysłaniem do LLM. Zapisywane wyłącznie w brudnopisie personelu.

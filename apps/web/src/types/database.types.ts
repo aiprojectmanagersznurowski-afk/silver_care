@@ -1,6 +1,6 @@
 // ==============================================================================
 // Automatycznie wygenerowane typy bazy danych Silver Care (PostgreSQL/Supabase)
-// Wygenerowano: 2026-10-14T20:11:45.915Z
+// Wygenerowano: 2026-10-15T19:51:04.217Z
 // ==============================================================================
 
 export type Json =
@@ -1389,6 +1389,19 @@ export interface Database {
           p_dedup_id: string
         }
         Returns: undefined
+      }
+      process_voice_draft_atomic: {
+        Args: {
+          p_draft_id: string
+          p_resident_id: string
+          p_nurse_id: string
+          p_daily_log_data: Json
+          p_report_content: Json
+          p_ai_model?: string | null
+          p_ai_prompt_version?: string | null
+          p_ai_generated_at?: string | null
+        }
+        Returns: Json
       }
       provision_organization: {
         Args: {

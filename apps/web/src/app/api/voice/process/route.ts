@@ -4,16 +4,17 @@ import { createClient } from '@/lib/supabase/server'
 import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
 import { callEuLlmCompletion } from '@/lib/eu-llm-client'
 import { extractJson } from '@/lib/voice-helpers'
-import { validateReportText } from '@silvercare/contracts/src/validation'
 import { AI_DISCLOSURE_LABEL } from '@silvercare/contracts/src/generated/presentation'
 import { 
   redactVoiceTranscript, 
   validateVoiceDraftInput, 
   buildClassifierSystemPrompt,
   buildFamilyReportSystemPrompt,
-  sanitizeReportAndVerifySafety
+  sanitizeReportAndVerifySafety,
+  resolveMedicationTemplate,
+  MedicationEvent,
 } from '@/lib/voice-redactor'
-import type { Json } from '@/types/database.types'
+import { saveProcessedVoiceDraft } from '@/lib/voice-process-persistence'
 
 export const runtime = 'nodejs'
 
@@ -106,7 +107,7 @@ export async function POST(req: Request) {
     // 2. Pre-LLM Redaction (ADR-007 & VOICE-MEDICAL-STRIP): Odcięcie PII i parametrów PRZED LLM
     const { cleanedTranscript, extractedMedical } = redactVoiceTranscript(transcription)
 
-    // Europejski LLM w EOG (Krok 1: Klasyfikator i Redakcja Medyczna)
+    // Europejski LLM w EOG (Krok 1: Klasyfikator i Redakcja Medyczna ze strukturą medication_event)
     const raw1 = await callEuLlmCompletion([
       { role: 'system', content: buildClassifierSystemPrompt() },
       { role: 'user', content: cleanedTranscript }
@@ -139,33 +140,27 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true, needsFollowup: true, question: q })
     }
 
+    // Struktura medication_event i alerty dla personelu
+    const rawMedEvent = classified.medication_event
+    const medEvent: MedicationEvent = (rawMedEvent === 'taken' || rawMedEvent === 'refused' || rawMedEvent === 'missed')
+      ? rawMedEvent
+      : 'none'
+    const requiresMedConfirmation = medEvent === 'refused' || medEvent === 'missed'
+
     // Połączenie parametrów medycznych z deterministycznego filtra do strumienia personelu
     if (extractedMedical.length > 0) {
       const allMed = [...extractedMedical, ...(classified.medical ? [classified.medical] : [])]
       classified.medical = allMed.join('; ')
     }
 
-    // 3. Idempotentny zapis do daily_logs (dane medyczne dla personelu — brudnopis)
-    const { data: existingLog } = await supabase
-      .from('daily_logs')
-      .select('id')
-      .eq('resident_id', draft.resident_id)
-      .contains('data', { draft_id: draft.id })
-      .maybeSingle()
-
-    if (!existingLog) {
-      const logPayload = { ...(classified as unknown as Record<string, unknown>), draft_id: draft.id }
-      const { error: logError } = await supabase.from('daily_logs').insert({
-        resident_id: draft.resident_id,
-        nurse_id: user.id,
-        data: logPayload as unknown as Json
-      })
-      if (logError) {
-        return NextResponse.json({ error: 'Błąd zapisu logów personelu' }, { status: 500 })
-      }
+    const logPayload = {
+      ...(classified as unknown as Record<string, unknown>),
+      draft_id: draft.id,
+      medication_event: medEvent,
+      medication_alert_requires_confirmation: requiresMedConfirmation,
     }
 
-    // 4. GENERATE (Krok 2: Raport dla Bliskich) — ETAP REDACT: classified.medical ZOSTANIE POMINIĘTY
+    // 3. GENERATE (Krok 2: Raport dla Bliskich) — ETAP REDACT: classified.medical ZOSTANIE POMINIĘTY
     const userPrompt2 = `Informacje o zachowaniu: ${classified.behavioral || 'Brak szczególnych uwag'}\nInformacje o dyskomforcie: ${classified.discomfort || 'Brak'}`
 
     const raw2 = await callEuLlmCompletion([
@@ -173,56 +168,42 @@ export async function POST(req: Request) {
       { role: 'user', content: userPrompt2 }
     ], 0.4, 600)
 
-    // Weryfikacja bezpieczeństwa (MDR-NO-INTERPRETATION: validateReportText, AI Act: AI_DISCLOSURE_LABEL)
-    const _mdr = validateReportText(raw2)
-    const { reportText: safeText, requiresStaffReview } = sanitizeReportAndVerifySafety(raw2)
-    const reportText = safeText.includes(AI_DISCLOSURE_LABEL) ? safeText : `${safeText}\n\n${AI_DISCLOSURE_LABEL}`
+    // Weryfikacja bezpieczeństwa (MDR-NO-INTERPRETATION, AI Act)
+    const { reportText: safeBaseText, requiresStaffReview } = sanitizeReportAndVerifySafety(raw2)
 
-    // 5. REJOIN: Złączenie z tożsamością pensjonariusza i idempotentny zapis szkicu do daily_reports
-    const { data: existingReport } = await supabase
-      .from('daily_reports')
-      .select('id')
-      .eq('resident_id', draft.resident_id)
-      .contains('content', { draft_id: draft.id })
-      .maybeSingle()
+    // Dołączenie deterministycznego szablonu lekowego (bez nazw leków, dawek i liczb)
+    const medTemplate = resolveMedicationTemplate(medEvent)
+    let finalText = safeBaseText
+    if (medTemplate && !requiresStaffReview) {
+      const parts = finalText.split(AI_DISCLOSURE_LABEL)
+      finalText = `${parts[0].trim()}\n\n${medTemplate}\n\n${AI_DISCLOSURE_LABEL}`
+    }
 
     const reportContent = {
-      text: reportText,
+      text: finalText,
       draft_id: draft.id,
       requires_staff_review: requiresStaffReview,
     }
 
-    if (existingReport) {
-      await supabase.from('daily_reports').update({
-        content: reportContent,
-        status: 'DRAFT',
-        updated_at: new Date().toISOString(),
-      }).eq('id', existingReport.id)
-    } else {
-      const { error: insertReportError } = await supabase.from('daily_reports').insert({
-        resident_id: draft.resident_id,
-        author_id: user.id,
-        content: reportContent,
-        status: 'DRAFT',
-        ai_generated: true,
-        ai_model: REPORT_LLM_MODEL,
-        ai_prompt_version: 'v2.0.0-mdr-compliant',
-        ai_generated_at: new Date().toISOString()
-      })
+    // 4. ATOMIC PERSISTENCE (RPC PostgreSQL + rollback kompensacyjny)
+    const persistRes = await saveProcessedVoiceDraft(supabase, {
+      draftId: draft.id,
+      residentId: draft.resident_id,
+      nurseId: user.id,
+      dailyLogData: logPayload,
+      reportContent,
+      aiModel: REPORT_LLM_MODEL,
+      aiPromptVersion: 'v2.0.0-mdr-compliant',
+      aiGeneratedAt: new Date().toISOString(),
+    })
 
-      if (insertReportError) {
-        return NextResponse.json({ error: 'Błąd zapisu raportu' }, { status: 500 })
-      }
+    if (!persistRes.success) {
+      return NextResponse.json({ error: persistRes.error || 'Błąd zapisu raportu' }, { status: 500 })
     }
-
-    // 6. Aktualizacja draftu
-    await supabase.from('voice_draft_notes')
-      .update({ status: 'PROCESSED', followup_question: null })
-      .eq('id', draft.id)
 
     return NextResponse.json({ 
       success: true, 
-      report: reportText, 
+      report: finalText, 
       requires_staff_review: requiresStaffReview 
     })
   } catch (error: unknown) {
