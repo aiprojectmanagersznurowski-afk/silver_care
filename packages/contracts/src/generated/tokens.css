@@ -1,26 +1,26 @@
 /* WYGENEROWANE z contracts/design.contract.mjs — nie edytuj ręcznie. */
 :root {
   --sc-font-sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui, sans-serif;
-  --sc-text-base-size: 14px;
-  --sc-touch-target: 32px;
+  --sc-text-base-size: 16px;
+  --sc-touch-target: 44px;
   --sc-text-display: 30px;
   --sc-text-display-weight: 600;
   --sc-text-display-leading: 1.2;
   --sc-text-title: 24px;
   --sc-text-title-weight: 600;
   --sc-text-title-leading: 1.33;
-  --sc-text-heading: 16px;
+  --sc-text-heading: 20px;
   --sc-text-heading-weight: 600;
-  --sc-text-heading-leading: 1.5;
-  --sc-text-body: 14px;
+  --sc-text-heading-leading: 1.4;
+  --sc-text-body: 16px;
   --sc-text-body-weight: 400;
-  --sc-text-body-leading: 1.43;
-  --sc-text-callout: 13px;
-  --sc-text-callout-weight: 400;
-  --sc-text-callout-leading: 1.4;
-  --sc-text-caption: 12px;
+  --sc-text-body-leading: 1.5;
+  --sc-text-callout: 14px;
+  --sc-text-callout-weight: 500;
+  --sc-text-callout-leading: 1.43;
+  --sc-text-caption: 14px;
   --sc-text-caption-weight: 400;
-  --sc-text-caption-leading: 1.33;
+  --sc-text-caption-leading: 1.43;
   --sc-space-xs: 4px;
   --sc-space-sm: 8px;
   --sc-space-md: 16px;

@@ -81,7 +81,7 @@ export function useFamilyUnreadMessages() {
   }, []);
 
   useEffect(() => {
-    fetchMessages();
+    void Promise.resolve().then(() => fetchMessages());
 
     const interval = setInterval(fetchMessages, 30000);
 

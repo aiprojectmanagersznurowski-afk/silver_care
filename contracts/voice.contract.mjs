@@ -77,3 +77,7 @@ export const AI_PROVENANCE_FIELDS = ['ai_model', 'ai_prompt_version', 'ai_genera
 
 /** Kategorie zgłoszeń błędu AI (SC-COMP-01/AC2). */
 export const AI_FEEDBACK_CATEGORIES = ['medical_error', 'hallucination', 'privacy_violation', 'tone_violation', 'mdr_violation'];
+
+/** Aktualna wersja promptów potoku głosu zgodna z MDR i EU DPA (Etap 6D). */
+export const PROMPT_VERSION = 'v2.1.0-mdr-eu-dpa';
+

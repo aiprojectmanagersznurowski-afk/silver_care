@@ -15,8 +15,20 @@ export interface ImpersonationCookieSession {
   startedAt: string;
 }
 
-type CookieJar = { get(name: string): { value: string } | undefined };
-type SessionUser = { id: string; app_metadata?: Record<string, unknown> | null } | null | undefined;
+export type CookieJar = { get(name: string): { value: string } | undefined };
+export type SessionUser = { id: string; app_metadata?: Record<string, unknown> | null } | null | undefined;
+
+/**
+ * Bezpiecznie pobiera cookieStore, chroniąc przed błędem poza zakresem żądania (np. w testach jednostkowych Vitest)
+ */
+export async function safeGetCookieStore(): Promise<CookieJar> {
+  try {
+    const { cookies } = await import('next/headers')
+    return await cookies()
+  } catch {
+    return { get: () => undefined }
+  }
+}
 
 /**
  * Zwraca sesję podglądu tylko wtedy, gdy ciasteczko należy do zalogowanego super_admina,

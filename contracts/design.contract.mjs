@@ -9,7 +9,9 @@
  * zwykle wygasza do 3:1. Minimalizm nie może kosztować czytelności.
  *
  * ADR-014 (2026-10-05): skala i komponenty szablonu shadcn-admin (styl nova) —
- * tekst bazowy 14px, przycisk 32px. Wcześniej 17px / 48px (ADR-011).
+ * zaktualizowano do jednolitej normy UI/Mobile-First: tekst bazowy 16px (text-base),
+ * minimalny dopuszczalny tekst pomocniczy 14px (text-sm), cel dotykowy 44x44px (min-h-11 min-w-11).
+ * Klasy text-xs, text-[11px], text-[10px] są surowo zabronione.
  */
 
 /**
@@ -23,18 +25,18 @@
 export const TYPOGRAPHY = {
   fontStack: '-apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui, sans-serif',
   webfont: { family: 'Inter', weights: [400, 500, 600], subset: 'latin-ext', note: 'latin-ext jest wymagany — polskie znaki diakrytyczne.' },
-  baseSize: '14px',
+  baseSize: '16px',
   scale: [
     { id: 'display', size: '30px', weight: 600, lineHeight: 1.2,  tracking: '-0.02em', use: 'Nagłówek raportu dnia. Jedyne miejsce na ten rozmiar. (text-3xl)' },
     { id: 'title',   size: '24px', weight: 600, lineHeight: 1.33, tracking: '-0.01em', use: 'Nagłówek strony i sekcji, imię pensjonariusza. (text-2xl)' },
-    { id: 'heading', size: '16px', weight: 600, lineHeight: 1.5,  tracking: '0',       use: 'Nagłówek karty. (text-base)' },
-    { id: 'body',    size: '14px', weight: 400, lineHeight: 1.43, tracking: '0',       use: 'Treść interfejsu i raportu, opisy. Domyślny rozmiar. (text-sm)' },
-    { id: 'callout', size: '13px', weight: 400, lineHeight: 1.4,  tracking: '0',       use: 'Etykiety pomocnicze, wartości metryk w tabelach.' },
-    { id: 'caption', size: '12px', weight: 400, lineHeight: 1.33, tracking: '0.01em',  use: 'Znaczniki czasu, etykieta AI. Nigdy dla treści istotnej. (text-xs)' },
+    { id: 'heading', size: '20px', weight: 600, lineHeight: 1.4,  tracking: '0',       use: 'Nagłówek karty. (text-xl)' },
+    { id: 'body',    size: '16px', weight: 400, lineHeight: 1.5,  tracking: '0',       use: 'Treść interfejsu i raportu, opisy. Domyślny rozmiar bazowy. (text-base)' },
+    { id: 'callout', size: '14px', weight: 500, lineHeight: 1.43, tracking: '0',       use: 'Etykiety pomocnicze, wartości metryk w tabelach. (text-sm)' },
+    { id: 'caption', size: '14px', weight: 400, lineHeight: 1.43, tracking: '0.01em',  use: 'Znaczniki czasu, etykieta AI. Minimalny dopuszczalny tekst pomocniczy. (text-sm)' },
   ],
   rules: [
     'Waga 600 zamiast 700 — cięższy krój psuje spokojny ton.',
-    'Nigdy poniżej 12px. Etykieta wymagana przez EU AI Act musi być czytelna, nie ukryta.',
+    'Nigdy poniżej 14px (text-sm). Klasy text-xs, text-[11px], text-[10px] są surowo zabronione.',
     'Długość wiersza w raporcie maksymalnie 68 znaków.',
     'Bez wersalików w treści — pogarszają czytelność przy zmęczonym wzroku.',
   ],
@@ -143,10 +145,11 @@ export const MOTION = {
 /** Dostępność. Wymagania ostrzejsze niż standardowe, bo odbiorca tego wymaga. */
 export const ACCESSIBILITY = {
   contrastMinimum: 4.5,
-  touchTargetMinimum: '32px',
+  touchTargetMinimum: '44px',
   focusVisible: 'Zawsze widoczny pierścień 2px w kolorze akcentu z odsunięciem 2px.',
   textZoom: 'Układ nie psuje się przy powiększeniu do 200%.',
   rules: [
+    'Minimalny cel dotykowy dla przycisków i interakcji: 44x44px (min-h-11 min-w-11).',
     'Każda ikona niosąca znaczenie ma etykietę tekstową.',
     'Formularz opisany etykietą, nigdy samym placeholderem.',
     'Nawigacja klawiaturą obejmuje wszystkie akcje.',

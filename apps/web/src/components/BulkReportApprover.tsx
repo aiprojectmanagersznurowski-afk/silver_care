@@ -6,12 +6,14 @@ import { Button } from '@/components/ui/button'
 import { bulkPublishReportsAction } from '@/actions/bulk-reports'
 import { useRouter } from 'next/navigation'
 
+import type { Json } from '@/types/database.types'
+
 interface DraftReport {
   id: string
   resident_id: string
-  created_at: string
+  created_at: string | null
   status: string
-  content?: { text?: string; [key: string]: unknown }
+  content?: Json
   residents?: {
     first_name?: string
     last_name?: string
@@ -99,7 +101,7 @@ export function BulkReportApprover({ draftReports }: BulkReportApproverProps) {
             )}
             <span>Zaznacz wszystkie zweryfikowane (max 10)</span>
           </button>
-          <span className="text-xs text-muted-foreground">
+          <span className="text-sm text-muted-foreground">
             Wybrano: <strong className="text-foreground">{selectedIds.length}</strong> / {selectableDrafts.length}
           </span>
         </div>
@@ -127,7 +129,7 @@ export function BulkReportApprover({ draftReports }: BulkReportApproverProps) {
       {errorMessage && (
         <div
           role="alert"
-          className="flex items-center gap-2 p-3 text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-lg"
+          className="flex items-center gap-2 p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg"
         >
           <AlertCircle className="h-4 w-4 shrink-0" />
           <span>{errorMessage}</span>
@@ -137,7 +139,7 @@ export function BulkReportApprover({ draftReports }: BulkReportApproverProps) {
       {successCount !== null && (
         <div
           role="status"
-          className="flex items-center gap-2 p-3 text-xs text-foreground bg-muted border border-border rounded-lg"
+          className="flex items-center gap-2 p-3 text-sm text-foreground bg-muted border border-border rounded-lg"
         >
           <CheckCircle2 className="h-4 w-4 shrink-0 text-foreground" />
           <span>
@@ -160,7 +162,7 @@ export function BulkReportApprover({ draftReports }: BulkReportApproverProps) {
               type="button"
               onClick={() => toggleSelectOne(report.id)}
               disabled={isPending}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors min-h-[40px] ${
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors min-h-11 ${
                 isSelected
                   ? 'bg-primary text-white border-primary'
                   : 'bg-card text-foreground border-border hover:border-border'

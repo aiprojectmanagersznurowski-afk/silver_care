@@ -80,7 +80,7 @@ export function ResidentZsnCheckbox({
           ) : null}
         </div>
         {checked && (
-          <span className="text-[0.7rem] font-semibold tracking-wider text-foreground bg-muted px-1.5 py-0.5 rounded border border-border">
+          <span className="text-sm font-semibold tracking-wider text-foreground bg-muted px-1.5 py-0.5 rounded border border-border">
             ZSN
           </span>
         )}
@@ -124,18 +124,18 @@ export function ResidentZsnCheckbox({
             ZSN: Znaczny stopień niepełnosprawności
           </span>
           {checked ? (
-            <Badge className="bg-muted text-foreground border-border text-[0.7rem]">
+            <Badge className="bg-muted text-foreground border-border text-sm">
               Zaznaczono
             </Badge>
           ) : (
-            <span className="text-xs text-muted-foreground">Nieoznaczone</span>
+            <span className="text-sm text-muted-foreground">Nieoznaczone</span>
           )}
         </div>
-        <p className="mt-1 text-xs text-muted-foreground">
+        <p className="mt-1 text-sm text-muted-foreground">
           Orzeczenie o znacznym stopniu niepełnosprawności. Pensjonariusz jest automatycznie uwzględniany w dobowych raportach dziennych oraz analizach BI placówki.
         </p>
         {savedMessage && (
-          <span className="mt-1.5 inline-block text-[0.7rem] font-medium text-foreground">
+          <span className="mt-1.5 inline-block text-sm font-medium text-foreground">
             ✓ Zapisano zmianę
           </span>
         )}

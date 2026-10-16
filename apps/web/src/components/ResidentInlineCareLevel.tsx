@@ -87,7 +87,7 @@ export function ResidentInlineCareLevel({
           {currentLevel ? (
             <Badge
               variant="outline"
-              className={`text-xs py-1 px-2 cursor-pointer flex items-center gap-1 ${CARE_LEVEL_BG_CLASSES[effectiveLevel]}`}
+              className={`text-sm py-1 px-2 cursor-pointer flex items-center gap-1 ${CARE_LEVEL_BG_CLASSES[effectiveLevel]}`}
             >
               {CARE_LEVEL_LABELS[effectiveLevel]}
               {isPending ? (
@@ -97,7 +97,7 @@ export function ResidentInlineCareLevel({
               )}
             </Badge>
           ) : (
-            <span className="text-muted-foreground/70 text-xs hover:text-foreground flex items-center gap-1 border border-dashed border-border px-2 py-1 rounded">
+            <span className="text-muted-foreground/70 text-sm hover:text-foreground flex items-center gap-1 border border-dashed border-border px-2 py-1 rounded">
               + Ustaw stan
               {isPending ? (
                 <Loader2 className="h-3 w-3 animate-spin text-current ml-1" />
@@ -109,7 +109,7 @@ export function ResidentInlineCareLevel({
         </DropdownMenuTrigger>
 
         <DropdownMenuContent align="start" className="w-48 py-1">
-          <DropdownMenuLabel className="px-3 py-1.5 text-[0.7rem] font-semibold text-muted-foreground uppercase tracking-wider">
+          <DropdownMenuLabel className="px-3 py-1.5 text-sm font-semibold text-muted-foreground uppercase tracking-wider">
             Zmień poziom opieki
           </DropdownMenuLabel>
           {CARE_OPTIONS.map((option) => {
@@ -118,7 +118,7 @@ export function ResidentInlineCareLevel({
               <DropdownMenuItem
                 key={option.value}
                 onClick={() => handleSelect(option.value)}
-                className="w-full flex items-center justify-between px-3 py-2 text-xs text-foreground hover:bg-muted/50 cursor-pointer min-h-[44px]"
+                className="w-full flex items-center justify-between px-3 py-2 text-sm text-foreground hover:bg-muted/50 cursor-pointer min-h-[44px]"
               >
                 <span className="flex items-center gap-2">
                   <span
@@ -137,7 +137,7 @@ export function ResidentInlineCareLevel({
       {errorMessage && (
         <div
           role="alert"
-          className="absolute z-30 top-full left-0 mt-1 flex items-center gap-1.5 text-xs text-destructive bg-destructive/10 border border-destructive/20 px-2.5 py-1.5 rounded-lg whitespace-nowrap"
+          className="absolute z-30 top-full left-0 mt-1 flex items-center gap-1.5 text-sm text-destructive bg-destructive/10 border border-destructive/20 px-2.5 py-1.5 rounded-lg whitespace-nowrap"
         >
           <AlertCircle className="h-3.5 w-3.5 shrink-0" />
           <span>{errorMessage}</span>

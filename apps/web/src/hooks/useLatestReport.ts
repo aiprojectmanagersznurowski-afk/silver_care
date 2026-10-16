@@ -1,10 +1,19 @@
 import { useState, useEffect } from 'react';
 
+export interface DailyReportContent {
+  text?: string;
+  msg?: string;
+  steps_total?: number;
+  active_minutes?: number;
+  sleep_hours?: number;
+  [key: string]: unknown;
+}
+
 export interface DailyReport {
   id: string;
   status: string;
   created_at: string;
-  content: any;
+  content: DailyReportContent | null;
 }
 
 export function useLatestReport(residentId: string | undefined) {
@@ -16,8 +25,12 @@ export function useLatestReport(residentId: string | undefined) {
     if (!residentId) return;
 
     let mounted = true;
-    setLoading(true);
-    setError(null);
+    void Promise.resolve().then(() => {
+      if (mounted) {
+        setLoading(true);
+        setError(null);
+      }
+    });
 
     fetch(`/api/residents/${residentId}/report/latest`)
       .then(async (res) => {

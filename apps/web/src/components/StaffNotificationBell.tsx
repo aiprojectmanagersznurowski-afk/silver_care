@@ -38,7 +38,7 @@ export function StaffNotificationBell() {
         {unansweredCount > 0 && (
           <span
             data-testid="staff-notifications-badge"
-            className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground ring-2 ring-background animate-pulse"
+            className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-sm font-bold text-destructive-foreground ring-2 ring-background animate-pulse"
           >
             {unansweredCount > 99 ? '99+' : unansweredCount}
           </span>
@@ -58,7 +58,7 @@ export function StaffNotificationBell() {
             <Badge
               variant="destructive"
               data-testid="staff-notifications-count"
-              className="h-5 px-1.5 text-[11px]"
+              className="h-5 px-1.5 text-sm"
             >
               {unansweredCount} oczekujące
             </Badge>
@@ -72,7 +72,7 @@ export function StaffNotificationBell() {
               <CheckCircle2 className="h-5 w-5 text-primary" />
             </div>
             <p className="text-sm font-medium text-foreground">Brak nowych powiadomień</p>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-1 text-sm text-muted-foreground">
               Wszystkie wiadomości od rodzin zostały obsłużone.
             </p>
           </div>
@@ -104,15 +104,15 @@ export function StaffNotificationBell() {
                   }
                 >
                   <div className="flex w-full items-center justify-between">
-                    <span className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+                    <span className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
                       <MessageSquare className="h-3.5 w-3.5 text-primary shrink-0" />
                       <span className="truncate max-w-[170px]">{residentDisplay}</span>
                     </span>
-                    <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                    <span className="text-sm text-muted-foreground whitespace-nowrap">
                       {timeAgo}
                     </span>
                   </div>
-                  <p className="text-xs text-muted-foreground line-clamp-2 pl-5">
+                  <p className="text-sm text-muted-foreground line-clamp-2 pl-5">
                     {snippet}
                   </p>
                 </DropdownMenuItem>
@@ -126,7 +126,7 @@ export function StaffNotificationBell() {
           render={
             <Link
               href="/staff/messages"
-              className="flex w-full items-center justify-center py-2 text-center text-xs font-medium text-primary hover:text-primary/80 transition-colors cursor-pointer"
+              className="flex w-full items-center justify-center py-2 text-center text-sm font-medium text-primary hover:text-primary/80 transition-colors cursor-pointer"
             />
           }
         >

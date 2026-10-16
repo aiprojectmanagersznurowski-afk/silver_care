@@ -64,7 +64,16 @@ export async function GET(request: Request) {
       return NextResponse.json({ predictions: [] })
     }
 
-    const predictions = (data.predictions || []).map((p: any) => ({
+    interface GooglePlacePrediction {
+      place_id: string
+      description: string
+      structured_formatting?: {
+        main_text?: string
+        secondary_text?: string
+      }
+    }
+
+    const predictions = ((data.predictions as GooglePlacePrediction[]) || []).map((p) => ({
       place_id: p.place_id,
       description: p.description,
       main_text: p.structured_formatting?.main_text || p.description,

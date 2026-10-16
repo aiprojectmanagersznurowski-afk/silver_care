@@ -48,7 +48,7 @@ export async function GET(
     const sortedAgenda = mergeAndSortAgenda(common, individual);
 
     return NextResponse.json({ agenda: sortedAgenda });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API error:', error);
     return NextResponse.json({ error: 'Wewnętrzny błąd serwera' }, { status: 500 });
   }

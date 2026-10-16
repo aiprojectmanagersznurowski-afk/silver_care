@@ -30,7 +30,7 @@ export function AuditLogTable({
     if (roleId === 'nurse') colorClass = 'bg-primary/10 text-primary'
 
     return (
-      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${colorClass}`}>
+      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-sm font-medium ${colorClass}`}>
         {label}
       </span>
     )
@@ -79,7 +79,7 @@ export function AuditLogTable({
                         {formatDateTime(log.created_at)}
                       </TableCell>
                       <TableCell className="font-medium">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-muted text-foreground">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-sm font-semibold bg-muted text-foreground">
                           {log.action}
                         </span>
                       </TableCell>
@@ -120,7 +120,7 @@ export function AuditLogTable({
                           log.action !== 'USER_DEACTIVATED' &&
                           log.action !== 'USER_ACTIVATED' &&
                           log.action !== 'USER_HARD_DELETED' && (
-                          <span className="font-mono text-[0.7rem] text-muted-foreground">
+                          <span className="font-mono text-sm text-muted-foreground">
                             {JSON.stringify(log.payload)}
                           </span>
                         )}
@@ -129,14 +129,14 @@ export function AuditLogTable({
                         {log.performed_by && log.performed_by.toLowerCase() !== 'system' ? (
                           <div className="flex flex-col gap-1 items-start">
                             {users.find(u => u.id === log.performed_by)?.email && (
-                              <span className="font-medium text-foreground text-xs">
+                              <span className="font-medium text-foreground text-sm">
                                 {users.find(u => u.id === log.performed_by)!.email}
                               </span>
                             )}
                             <BusinessIdBadge type="user" id={log.performed_by} />
                           </div>
                         ) : (
-                          <span className="text-muted-foreground italic text-xs">system</span>
+                          <span className="text-muted-foreground italic text-sm">system</span>
                         )}
                       </TableCell>
                     </TableRow>

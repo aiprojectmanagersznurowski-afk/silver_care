@@ -54,7 +54,7 @@ export default async function AdminStaffPage() {
         {!isImpersonating ? (
           <InviteStaffDialog />
         ) : (
-          <div className="flex items-center gap-2 rounded-xl bg-muted px-4 py-2 text-xs font-medium text-foreground border border-border">
+          <div className="flex items-center gap-2 rounded-xl bg-muted px-4 py-2 text-sm font-medium text-foreground border border-border">
             <span>Tryb podglądu (impersonacja) — dodawanie personelu wyłączone</span>
           </div>
         )}
@@ -88,7 +88,7 @@ export default async function AdminStaffPage() {
                         <div>
                           <div className="font-medium text-foreground text-base">{staffUser.email}</div>
                           {staffUser.app_metadata?.is_active === false && (
-                            <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground mt-1">
+                            <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-sm font-medium text-muted-foreground mt-1">
                               Zarchiwizowany
                             </span>
                           )}

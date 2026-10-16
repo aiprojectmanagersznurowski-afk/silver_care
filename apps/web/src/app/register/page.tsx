@@ -1,26 +1,24 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import Image from 'next/image'
 import { Logo } from '@/components/Logo'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client'
-import { Loader2, AlertCircle, CheckCircle2, ShieldCheck, HeartHandshake } from 'lucide-react'
-
-type UIState = 'LOADING' | 'ERROR' | 'FORM' | 'SUCCESS'
+import { Loader2, AlertCircle } from 'lucide-react'
+import { RegisterLoadingCard, RegisterErrorCard, RegisterSuccessCard } from '@/components/auth/RegisterStateCards'
+import { RegisterConsentsSection } from '@/components/auth/RegisterConsentsSection'
+import { useRegisterToken } from '@/components/auth/useRegisterToken'
 
 function RegisterContent() {
-  const [uiState, setUiState] = useState<UIState>('LOADING')
-  const [errorMessage, setErrorMessage] = useState<string>('')
-  const [errorStatus, setErrorStatus] = useState<string>('')
-  
-  // Dane zaproszenia
-  const [maskedEmail, setMaskedEmail] = useState<string>('')
-  const [role, setRole] = useState<'family' | 'legal_guardian' | string>('family')
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const token = searchParams.get('token')
+
+  const { uiState, setUiState, errorMessage, errorStatus, maskedEmail, role } = useRegisterToken(token)
 
   // Formularz
   const [password, setPassword] = useState('')
@@ -29,52 +27,6 @@ function RegisterContent() {
   const [acceptDataProcessing, setAcceptDataProcessing] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const token = searchParams.get('token')
-
-  useEffect(() => {
-    if (!token) {
-      setErrorStatus('MISSING_TOKEN')
-      setErrorMessage('Brak tokena rejestracji. Upewnij się, że używasz linku przesłanego w wiadomości e-mail.')
-      setUiState('ERROR')
-      return
-    }
-
-    let isMounted = true
-
-    async function checkToken() {
-      try {
-        setUiState('LOADING')
-        const res = await fetch(`/api/family/invite/validate?token=${encodeURIComponent(token!)}`)
-        const data = await res.json()
-
-        if (!isMounted) return
-
-        if (res.ok && data.valid) {
-          setMaskedEmail(data.maskedEmail || '')
-          setRole(data.role || 'family')
-          setUiState('FORM')
-        } else {
-          setErrorStatus(data.status || 'INVALID')
-          setErrorMessage(data.message || 'To zaproszenie jest nieprawidłowe lub straciło ważność.')
-          setUiState('ERROR')
-        }
-      } catch (err) {
-        if (!isMounted) return
-        setErrorStatus('NETWORK_ERROR')
-        setErrorMessage('Nie udało się nawiązać połączenia w celu weryfikacji zaproszenia.')
-        setUiState('ERROR')
-      }
-    }
-
-    checkToken()
-
-    return () => {
-      isMounted = false
-    }
-  }, [token])
 
   const consentsValid = acceptTerms && acceptDataProcessing
   const isGuardian = role === 'legal_guardian'
@@ -122,119 +74,35 @@ function RegisterContent() {
     }
   }
 
-  // 1. STAN: LOADING
   if (uiState === 'LOADING') {
-    return (
-      <Card className="w-full max-w-md shadow-lg border-border">
-        <CardContent className="flex flex-col items-center justify-center py-12 text-center space-y-4">
-          <Loader2 className="h-10 w-10 animate-spin text-primary" />
-          <div className="space-y-1">
-            <h3 className="text-lg font-semibold text-foreground">Weryfikacja zaproszenia</h3>
-            <p className="text-sm text-text-secondary">
-              Sprawdzamy ważność linku i Twoje uprawnienia w systemie Silver Care...
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    )
+    return <RegisterLoadingCard />
   }
 
-  // 2. STAN: ERROR
   if (uiState === 'ERROR') {
     return (
-      <Card className="w-full max-w-md shadow-lg border-destructive/20">
-        <CardHeader className="text-center space-y-2">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
-            <AlertCircle className="h-6 w-6" />
-          </div>
-          <CardTitle className="text-xl font-bold text-foreground">
-            {errorStatus === 'EXPIRED' && 'Zaproszenie wygasło'}
-            {errorStatus === 'REVOKED' && 'Zaproszenie zostało odwołane'}
-            {errorStatus === 'CLAIMED' && 'Zaproszenie zostało już wykorzystane'}
-            {errorStatus === 'MISSING_TOKEN' && 'Brak tokena zaproszenia'}
-            {(!['EXPIRED', 'REVOKED', 'CLAIMED', 'MISSING_TOKEN'].includes(errorStatus)) && 'Nieprawidłowe zaproszenie'}
-          </CardTitle>
-          <CardDescription className="text-sm text-text-secondary leading-relaxed">
-            {errorMessage}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3 pt-2">
-          <div className="rounded-lg bg-surface-sunken p-3 text-xs text-text-secondary space-y-1">
-            <p className="font-semibold text-foreground">Co możesz zrobić?</p>
-            <p>• Jeśli zaproszenie wygasło lub zostało odwołane, skontaktuj się z personelem placówki opiekuńczej, aby otrzymać nowy link.</p>
-            <p>• Jeśli konto zostało już utworzone, przejdź do strony logowania.</p>
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-col gap-2">
-          <Button 
-            className="w-full" 
-            onClick={() => router.push('/login')}
-          >
-            Przejdź do logowania
-          </Button>
-          <Button 
-            variant="outline" 
-            className="w-full" 
-            onClick={() => router.push('/')}
-          >
-            Strona główna
-          </Button>
-        </CardFooter>
-      </Card>
+      <RegisterErrorCard
+        errorStatus={errorStatus}
+        errorMessage={errorMessage}
+        onLogin={() => router.push('/login')}
+        onHome={() => router.push('/')}
+      />
     )
   }
 
-  // 3. STAN: SUCCESS
   if (uiState === 'SUCCESS') {
     return (
-      <Card className="w-full max-w-md shadow-lg border-primary/20">
-        <CardHeader className="text-center space-y-2">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <CheckCircle2 className="h-6 w-6" />
-          </div>
-          <CardTitle className="text-xl font-bold text-foreground">
-            Konto zostało aktywowane!
-          </CardTitle>
-          <CardDescription className="text-sm text-text-secondary leading-relaxed">
-            Twoje konto w portalu Silver Care zostało pomyślnie skonfigurowane z rolą{' '}
-            <span className="font-semibold text-foreground">
-              {isGuardian ? 'Opiekuna prawnego' : 'Bliskiego'}
-            </span>.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="rounded-lg bg-surface-sunken p-3 text-xs text-text-secondary space-y-1">
-            <p className="font-semibold text-foreground">Gotowe do użycia:</p>
-            <p>• Dostęp do codziennych podsumowań i aktywności podopiecznego.</p>
-            <p>• Możliwość bezpośredniego kontaktu z personelem placówki.</p>
-            {isGuardian && (
-              <p>• Uprawnienia do zarządzania zgodami i formalnościami opiekuńczymi.</p>
-            )}
-          </div>
-        </CardContent>
-        <CardFooter>
-          <Button 
-            className="w-full" 
-            onClick={() => router.push('/login?message=Konto+zostało+aktywowane.+Możesz+się+zalogować.')}
-          >
-            Zaloguj się do portalu
-          </Button>
-        </CardFooter>
-      </Card>
+      <RegisterSuccessCard
+        isGuardian={isGuardian}
+        onLogin={() => router.push('/login?message=Konto+zostało+aktywowane.+Możesz+się+zalogować.')}
+      />
     )
   }
 
-  // 4. STAN: FORM (poprawny token)
   return (
     <Card className="w-full max-w-md shadow-lg border-border">
       <CardHeader className="space-y-1 text-center">
         <div className="mx-auto mb-3 flex justify-center">
-          <Logo
-            width={150}
-            height={42}
-            className="h-9 w-auto object-contain"
-            priority
-          />
+          <Logo width={150} height={42} className="h-9 w-auto object-contain" priority />
         </div>
         <CardTitle className="text-2xl font-bold text-foreground">Dołącz do Silver Care</CardTitle>
         <CardDescription className="text-text-secondary">
@@ -243,15 +111,14 @@ function RegisterContent() {
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Informacja o zaproszeniu */}
-        <div className="rounded-lg border border-border bg-surface-sunken p-3 text-xs space-y-1.5">
+        <div className="rounded-lg border border-border bg-surface-sunken p-3 text-sm space-y-1.5">
           <div className="flex justify-between items-center">
             <span className="text-text-secondary">Adres e-mail:</span>
             <span className="font-medium text-foreground">{maskedEmail || 'Twój adres e-mail'}</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-text-secondary">Przyznana rola:</span>
-            <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold ${
+            <span className={`inline-flex items-center px-2 py-0.5 rounded text-sm font-semibold ${
               isGuardian ? 'bg-primary/15 text-primary' : 'bg-secondary text-secondary-foreground'
             }`}>
               {isGuardian ? 'Opiekun prawny' : 'Bliski / Rodzina'}
@@ -293,44 +160,14 @@ function RegisterContent() {
             />
           </div>
 
-          <div className="space-y-3 rounded-lg border border-border p-3 bg-surface-sunken">
-            <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
-              Wymagane oświadczenia
-            </p>
-            <label className="flex items-start gap-2 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={acceptTerms}
-                onChange={(e) => setAcceptTerms(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary"
-                disabled={isSubmitting}
-              />
-              <span className="text-xs text-foreground leading-relaxed">
-                Akceptuję regulamin korzystania z platformy Silver Care oraz zasady ochrony prywatności.
-              </span>
-            </label>
-
-            <label className="flex items-start gap-2 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={acceptDataProcessing}
-                onChange={(e) => setAcceptDataProcessing(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary"
-                disabled={isSubmitting}
-              />
-              <span className="text-xs text-foreground leading-relaxed">
-                {isGuardian ? (
-                  <>
-                    Oświadczam, że jestem opiekunem prawnym pensjonariusza i wyrażam zgodę na przetwarzanie danych niezbędnych do opieki i generowania raportów dziennych (zgodnie z Art. 9 RODO).
-                  </>
-                ) : (
-                  <>
-                    Wyrażam zgodę na otrzymywanie podsumowań i raportów o pobycie mojego bliskiego w placówce.
-                  </>
-                )}
-              </span>
-            </label>
-          </div>
+          <RegisterConsentsSection
+            acceptTerms={acceptTerms}
+            setAcceptTerms={setAcceptTerms}
+            acceptDataProcessing={acceptDataProcessing}
+            setAcceptDataProcessing={setAcceptDataProcessing}
+            isGuardian={isGuardian}
+            disabled={isSubmitting}
+          />
 
           <Button 
             type="submit" 
@@ -351,7 +188,7 @@ function RegisterContent() {
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
+            <div className="relative flex justify-center text-sm uppercase">
               <span className="bg-card px-2 text-muted-foreground">lub</span>
             </div>
           </div>
@@ -359,7 +196,7 @@ function RegisterContent() {
           <Button 
             type="button" 
             variant="outline" 
-            className="w-full text-xs" 
+            className="w-full text-sm" 
             disabled={isSubmitting || !consentsValid}
             onClick={async () => {
               if (!token || !consentsValid) return

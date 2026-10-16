@@ -16,7 +16,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { AddressAutocompleteInput } from '@/components/AddressAutocompleteInput'
 import { createOrganizationAction } from '@/actions/organizations'
-import { Building2, Plus, CheckCircle2, AlertCircle, Copy, Check } from 'lucide-react'
+import { Plus, AlertCircle } from 'lucide-react'
+import {
+  CreateOrgSuccessBanner,
+  CreateOrgSuccessInfo
+} from './organizations/CreateOrgSuccessBanner'
 
 export function CreateOrganizationDialog() {
   const router = useRouter()
@@ -28,13 +32,7 @@ export function CreateOrganizationDialog() {
   const [adminEmail, setAdminEmail] = useState('')
   const [adminFullName, setAdminFullName] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const [successInfo, setSuccessInfo] = useState<{
-    orgName: string
-    adminEmail: string
-    inviteUrl?: string | null
-    emailSent?: boolean
-  } | null>(null)
-  const [copied, setCopied] = useState(false)
+  const [successInfo, setSuccessInfo] = useState<CreateOrgSuccessInfo | null>(null)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -84,63 +82,13 @@ export function CreateOrganizationDialog() {
     })
   }
 
-  const handleCopy = (url: string) => {
-    navigator.clipboard.writeText(url)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2500)
-  }
-
   return (
     <>
       {successInfo && (
-        <div className="rounded-xl border border-primary/30 bg-primary/5 p-5 flex flex-col gap-3">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
-              <div>
-                <p className="text-sm font-semibold text-foreground">
-                  Placówka „{successInfo.orgName}” została pomyślnie utworzona!
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {successInfo.emailSent
-                    ? `Wysłano e-mail z zaproszeniem na adres ${successInfo.adminEmail}.`
-                    : `Konto pierwszego administratora (${successInfo.adminEmail}) zostało przygotowane.`
-                  }
-                </p>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setSuccessInfo(null)}
-              className="text-xs text-muted-foreground hover:text-foreground font-medium"
-            >
-              Zamknij
-            </button>
-          </div>
-
-          {successInfo.inviteUrl && (
-            <div className="pt-2 border-t border-primary/10 flex flex-col sm:flex-row sm:items-center gap-2">
-              <span className="text-xs text-muted-foreground font-medium shrink-0">
-                Link aktywacyjny:
-              </span>
-              <input
-                readOnly
-                value={successInfo.inviteUrl}
-                className="text-xs font-mono bg-card px-3 py-1.5 rounded-lg border border-border flex-1 truncate text-foreground"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => handleCopy(successInfo.inviteUrl!)}
-                className="h-8 text-xs shrink-0 rounded-lg gap-1.5"
-              >
-                {copied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
-                {copied ? 'Skopiowano' : 'Kopiuj link'}
-              </Button>
-            </div>
-          )}
-        </div>
+        <CreateOrgSuccessBanner
+          info={successInfo}
+          onClose={() => setSuccessInfo(null)}
+        />
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -194,7 +142,7 @@ export function CreateOrganizationDialog() {
             </div>
 
             <div className="pt-2 border-t border-border space-y-3">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
+              <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider block">
                 Dane pierwszego administratora placówki
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -223,7 +171,7 @@ export function CreateOrganizationDialog() {
             </div>
 
             {error && (
-              <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 text-destructive text-xs font-medium">
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 text-destructive text-sm font-medium">
                 <AlertCircle className="h-4 w-4 shrink-0" />
                 <span>{error}</span>
               </div>

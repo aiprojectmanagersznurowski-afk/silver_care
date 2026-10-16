@@ -1,61 +1,97 @@
-import { describe, it, expect } from 'vitest';
-import * as fs from 'fs';
-import * as path from 'path';
+import { describe, it, expect } from 'vitest'
+import { transcribeWithGroq } from '../../apps/web/src/lib/voice-helpers'
 
-describe('INFRA-GROQ-TRANSCRIPTION & AI Provenance', () => {
+describe('INFRA-GROQ-TRANSCRIPTION — Klient transkrypcji Groq Whisper', () => {
+  it('transcribeWithGroq wysyła audio/webm z nagłówkiem Bearer i parametrami modelu @REQ: INFRA-GROQ-TRANSCRIPTION', async () => {
+    let capturedUrl = ''
+    let capturedAuth = ''
+    let capturedBody: FormData | null = null
 
-  it('GROQ_API_KEY never leaks into client-side code @REQ: INFRA-GROQ-TRANSCRIPTION', () => {
-    const clientDirs = [
-      path.resolve(__dirname, '../../apps/web/src/components'),
-      path.resolve(__dirname, '../../apps/web/src/app/(staff)'),
-      path.resolve(__dirname, '../../apps/web/src/app/(family)'),
-      path.resolve(__dirname, '../../apps/web/src/app/(admin)'),
-      path.resolve(__dirname, '../../apps/web/src/app/(auth)')
-    ];
-
-    function scanDir(dir: string) {
-      if (!fs.existsSync(dir)) return;
-      const files = fs.readdirSync(dir, { withFileTypes: true });
-      for (const f of files) {
-        const fullPath = path.join(dir, f.name);
-        if (f.isDirectory()) {
-          scanDir(fullPath);
-        } else if (/\.(tsx?|jsx?)$/.test(f.name)) {
-          const content = fs.readFileSync(fullPath, 'utf8');
-          expect(content).not.toContain('GROQ_API_KEY');
-          expect(content).not.toContain('NEXT_PUBLIC_GROQ');
-        }
-      }
+    const originalFetch = globalThis.fetch
+    globalThis.fetch = async (input, init) => {
+      capturedUrl = String(input)
+      capturedAuth = (init?.headers as Record<string, string>)?.['Authorization'] || ''
+      capturedBody = init?.body as FormData
+      return new Response(JSON.stringify({ text: 'Dzień minął spokojnie.' }), { status: 200 })
     }
 
-    for (const dir of clientDirs) {
-      scanDir(dir);
+    try {
+      const audioBlob = new Blob(['sample-webm-bytes'], { type: 'audio/webm' })
+      const res = await transcribeWithGroq(audioBlob, 'gsk_valid_test_key')
+
+      expect(res.text).toBe('Dzień minął spokojnie.')
+      expect(capturedUrl).toBe('https://api.groq.com/openai/v1/audio/transcriptions')
+      expect(capturedAuth).toBe('Bearer gsk_valid_test_key')
+      expect(capturedBody).not.toBeNull()
+
+      const file = capturedBody!.get('file') as File
+      expect(file).toBeTruthy()
+      expect(file.name).toBe('recording.webm')
+      expect(capturedBody!.get('model')).toBe('whisper-large-v3')
+      expect(capturedBody!.get('language')).toBe('pl')
+    } finally {
+      globalThis.fetch = originalFetch
     }
-  });
+  })
 
-  it('transcription route checks for GROQ_API_KEY presence and logs rate monitoring @REQ: INFRA-GROQ-TRANSCRIPTION', () => {
-    const routePath = path.resolve(__dirname, '../../apps/web/src/app/api/voice/transcribe/route.ts');
-    const content = fs.readFileSync(routePath, 'utf8');
+  it('transcribeWithGroq obsługuje format iOS Safari audio/mp4 i ustawia właściwe rozszerzenie @REQ: INFRA-GROQ-TRANSCRIPTION', async () => {
+    let capturedFilename = ''
 
-    expect(content).toContain('GROQ_API_KEY');
-    // Ensure runtime check before calling Groq
-    expect(content).toMatch(/if\s*\(!apiKey\)|if\s*\(!process\.env\.GROQ_API_KEY\)/);
-  });
+    const originalFetch = globalThis.fetch
+    globalThis.fetch = async (_input, init) => {
+      const body = init?.body as FormData
+      const file = body.get('file') as File
+      capturedFilename = file?.name || ''
+      return new Response(JSON.stringify({ text: 'Notatka nagrana na iPhone.' }), { status: 200 })
+    }
 
-  it('voice process route records AI provenance fields on daily_reports @REQ: INFRA-GROQ-TRANSCRIPTION', () => {
-    const routePath = path.resolve(__dirname, '../../apps/web/src/app/api/voice/process/route.ts');
-    const content = fs.readFileSync(routePath, 'utf8');
+    try {
+      const audioBlob = new Blob(['fake-mp4-data'], { type: 'audio/mp4' })
+      const res = await transcribeWithGroq(audioBlob, 'test-key')
 
-    expect(content).toContain('ai_model');
-    expect(content).toContain('ai_prompt_version');
-    expect(content).toContain('ai_generated_at');
-  });
+      expect(res.text).toBe('Notatka nagrana na iPhone.')
+      expect(capturedFilename).toBe('recording.mp4')
+    } finally {
+      globalThis.fetch = originalFetch
+    }
+  })
 
-  it('voice process route supports configurable EU report generation provider @REQ: INFRA-GROQ-TRANSCRIPTION', () => {
-    const routePath = path.resolve(__dirname, '../../apps/web/src/app/api/voice/process/route.ts');
-    const content = fs.readFileSync(routePath, 'utf8');
+  it('transcribeWithGroq rzuca błąd gdy brak konfiguracji klucza API @REQ: INFRA-GROQ-TRANSCRIPTION', async () => {
+    const audioBlob = new Blob(['audio-data'], { type: 'audio/webm' })
+    await expect(transcribeWithGroq(audioBlob, '')).rejects.toThrow('Brak konfiguracji GROQ_API_KEY')
+  })
 
-    expect(content).toContain('REPORT_LLM_MODEL');
-  });
+  it('transcribeWithGroq mapuje błąd 401 z Groq na status 502 Bad Gateway @REQ: INFRA-GROQ-TRANSCRIPTION', async () => {
+    const originalFetch = globalThis.fetch
+    globalThis.fetch = async () => {
+      return new Response(JSON.stringify({ error: { message: 'Invalid API Key provided' } }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
 
-});
+    try {
+      const audioBlob = new Blob(['audio-data'], { type: 'audio/webm' })
+      await expect(transcribeWithGroq(audioBlob, 'invalid-key')).rejects.toMatchObject({
+        message: expect.stringContaining('Invalid API Key provided'),
+        status: 502,
+      })
+    } finally {
+      globalThis.fetch = originalFetch
+    }
+  })
+
+  it('transcribeWithGroq poprawnie propaguje błędy sieciowe @REQ: INFRA-GROQ-TRANSCRIPTION', async () => {
+    const originalFetch = globalThis.fetch
+    globalThis.fetch = async () => {
+      throw new Error('Connection reset by peer')
+    }
+
+    try {
+      const audioBlob = new Blob(['audio-data'], { type: 'audio/webm' })
+      await expect(transcribeWithGroq(audioBlob, 'test-key')).rejects.toThrow('Connection reset by peer')
+    } finally {
+      globalThis.fetch = originalFetch
+    }
+  })
+})

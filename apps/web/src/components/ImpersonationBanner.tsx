@@ -27,14 +27,14 @@ export function ImpersonationBanner({ session }: { session: ImpersonationSession
       </div>
 
       <div className="flex items-center gap-3 shrink-0">
-        <span className="hidden md:inline text-xs text-background/80">
+        <span className="hidden md:inline text-sm text-background/80">
           Akcje destrukcyjne są zablokowane
         </span>
         <Button
           onClick={handleStop}
           disabled={isPending}
           size="sm"
-          className="bg-background hover:bg-background/90 text-foreground text-xs font-semibold rounded-lg h-7 px-3"
+          className="bg-background hover:bg-background/90 text-foreground text-sm font-semibold rounded-lg h-7 px-3"
         >
           <LogOut className="h-3.5 w-3.5 mr-1.5" />
           {isPending ? 'Kończenie...' : 'Zakończ podgląd'}

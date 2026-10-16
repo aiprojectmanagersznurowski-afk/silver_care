@@ -62,15 +62,15 @@ function DailyReportPresentation({
       <p className="text-[17px] leading-relaxed text-text">{text}</p>
       <div className="grid grid-cols-3 gap-4 pt-4 border-t border-border">
         <div>
-          <span className="text-xs text-text-tertiary uppercase">Kroki</span>
+          <span className="text-sm text-text-tertiary uppercase">Kroki</span>
           <p className="text-lg font-semibold text-text">{steps}</p>
         </div>
         <div>
-          <span className="text-xs text-text-tertiary uppercase">Aktywność</span>
+          <span className="text-sm text-text-tertiary uppercase">Aktywność</span>
           <p className="text-lg font-semibold text-text">{activeMinutes} min</p>
         </div>
         <div>
-          <span className="text-xs text-text-tertiary uppercase">Sen</span>
+          <span className="text-sm text-text-tertiary uppercase">Sen</span>
           <p className="text-lg font-semibold text-text">{Math.floor(sleepMinutes / 60)}h {sleepMinutes % 60}m</p>
         </div>
       </div>

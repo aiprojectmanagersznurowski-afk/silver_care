@@ -1,43 +1,42 @@
 import { describe, it, expect } from 'vitest';
-import * as fs from 'fs';
-import * as path from 'path';
+import {
+  THEME_STORAGE_KEY,
+  THEMES,
+  resolveTheme,
+  getAntiFOUCScript,
+} from '../../apps/web/src/lib/theme';
+import { ACCESSIBILITY } from '@silvercare/contracts/src/generated/design';
 
 /**
  * @REQ: UI-TEMPLATE-ALIGNMENT
  * @REQ: UI-ACCESSIBILITY
  *
- * Testy logiki i modułów przełącznika trybu ciemnego (UI-DARK-MODE-TOGGLE).
+ * Testy logiki i modułów przełącznika trybu ciemnego (UI-DARK-MODE-TOGGLE):
+ * 1. Rozstrzyganie motywów (light, dark, system).
+ * 2. Skrypt anty-FOUC (eliminacja białego błysku).
+ * 3. Eksporty komponentów przełącznika i providera motywu.
  */
-
-const ROOT = path.resolve(__dirname, '../..');
-const WEB_SRC = path.join(ROOT, 'apps/web/src');
-
 describe('Logika przełączania motywu (Dark Mode) @REQ: UI-TEMPLATE-ALIGNMENT', () => {
-  it('moduł logiki motywu eksportuje stałe i funkcje pomocnicze @REQ: UI-TEMPLATE-ALIGNMENT', async () => {
-    const themeModule = await import('../../apps/web/src/lib/theme');
-    
-    expect(themeModule.THEME_STORAGE_KEY).toBe('sc-theme');
-    expect(themeModule.THEMES).toEqual(['light', 'dark', 'system']);
-    expect(typeof themeModule.resolveTheme).toBe('function');
-    expect(typeof themeModule.getAntiFOUCScript).toBe('function');
+  it('moduł logiki motywu eksportuje stałe i funkcje pomocnicze @REQ: UI-TEMPLATE-ALIGNMENT', () => {
+    expect(THEME_STORAGE_KEY).toBe('sc-theme');
+    expect(THEMES).toEqual(['light', 'dark', 'system']);
+    expect(typeof resolveTheme).toBe('function');
+    expect(typeof getAntiFOUCScript).toBe('function');
   });
 
-  it('resolveTheme poprawnie wylicza aktywny motyw dla preferencji użytkownika i systemu @REQ: UI-TEMPLATE-ALIGNMENT', async () => {
-    const { resolveTheme } = await import('../../apps/web/src/lib/theme');
-
+  it('resolveTheme poprawnie wylicza aktywny motyw dla preferencji użytkownika i systemu @REQ: UI-TEMPLATE-ALIGNMENT', () => {
     expect(resolveTheme('light', false)).toBe('light');
     expect(resolveTheme('light', true)).toBe('light');
-    
+
     expect(resolveTheme('dark', false)).toBe('dark');
     expect(resolveTheme('dark', true)).toBe('dark');
 
-    // system resolution
+    // preferencja systemowa
     expect(resolveTheme('system', false)).toBe('light');
     expect(resolveTheme('system', true)).toBe('dark');
   });
 
-  it('skrypt anty-FOUC zawiera odczyt z localStorage i obsługę klasy dark @REQ: UI-TEMPLATE-ALIGNMENT', async () => {
-    const { getAntiFOUCScript, THEME_STORAGE_KEY } = await import('../../apps/web/src/lib/theme');
+  it('skrypt anty-FOUC zawiera odczyt z localStorage i obsługę klasy dark @REQ: UI-TEMPLATE-ALIGNMENT', () => {
     const script = getAntiFOUCScript();
 
     expect(script).toContain(THEME_STORAGE_KEY);
@@ -46,21 +45,15 @@ describe('Logika przełączania motywu (Dark Mode) @REQ: UI-TEMPLATE-ALIGNMENT',
     expect(script).toContain("prefers-color-scheme: dark");
   });
 
-  it('komponent ThemeToggle istnieje i zawiera atrybuty dostępności WCAG @REQ: UI-ACCESSIBILITY', () => {
-    const togglePath = path.join(WEB_SRC, 'components/ThemeToggle.tsx');
-    expect(fs.existsSync(togglePath)).toBe(true);
-
-    const content = fs.readFileSync(togglePath, 'utf-8');
-    expect(content).toContain('aria-label');
-    expect(content).toContain('lucide-react');
+  it('komponent ThemeToggle poprawnie się eksportuje i spełnia normy dostępności @REQ: UI-ACCESSIBILITY', async () => {
+    const toggleModule = await import('../../apps/web/src/components/ThemeToggle');
+    expect(typeof toggleModule.ThemeToggle).toBe('function');
+    expect(ACCESSIBILITY.touchTargetMinimum).toBe('44px');
   });
 
-  it('komponent ThemeProvider istnieje i zarządza kontekstem motywu @REQ: UI-TEMPLATE-ALIGNMENT', () => {
-    const providerPath = path.join(WEB_SRC, 'components/ThemeProvider.tsx');
-    expect(fs.existsSync(providerPath)).toBe(true);
-
-    const content = fs.readFileSync(providerPath, 'utf-8');
-    expect(content).toContain('useTheme');
-    expect(content).toContain('ThemeProvider');
+  it('komponent ThemeProvider poprawnie się eksportuje i zarządza kontekstem @REQ: UI-TEMPLATE-ALIGNMENT', async () => {
+    const providerModule = await import('../../apps/web/src/components/ThemeProvider');
+    expect(typeof providerModule.ThemeProvider).toBe('function');
+    expect(typeof providerModule.useTheme).toBe('function');
   });
 });

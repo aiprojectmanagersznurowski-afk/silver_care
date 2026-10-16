@@ -15,15 +15,6 @@ export const config = {
   contractProtectedPaths: ['contracts/', 'packages/contracts/src/generated/', 'packages/database/schema.prisma'],
   testPathPatterns: ['/tests/', '.test.', '.spec.', 'e2e/'],
 
-  /** Zakresy zapisu per agent. Egzekwowane w Claude Code; w Antigravity zastępuje je sc-phase.mjs. */
-  agentWriteScopes: {
-    'test-author': ['apps/**/tests/', 'packages/**/tests/', 'e2e/'],
-    'implementer-server': ['apps/**/app/', 'apps/**/lib/', 'packages/**/src/', 'supabase/functions/'],
-    'implementer-ui': ['apps/**/components/', 'apps/**/app/', 'apps/**/styles/'],
-    'contract-steward': ['contracts/', 'packages/contracts/', 'packages/database/', 'docs/architecture/'],
-    'doc-scribe': ['docs/'],
-    'spec-analyst': ['docs/workorders/'],
-  },
 
   forbiddenPatterns: [
     // ── ADR-005: granica MDR w warstwie prezentacji ────────────────────────

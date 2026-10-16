@@ -1,11 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import * as fs from 'fs';
-import * as path from 'path';
-import { validateReportText } from '../../packages/contracts/src/validation';
-import { AI_DISCLOSURE_LABEL, MDR_GUARDRAILS, FORBIDDEN_UI_TERMS } from '../../packages/contracts/src/generated/presentation';
+import {
+  validateReportText,
+  validateNoMedicalDataInReport,
+  STAFF_REVIEW_FALLBACK_NOTICE,
+} from '../../packages/contracts/src/validation';
+import { AI_DISCLOSURE_LABEL } from '../../packages/contracts/src/generated/presentation';
 
 describe('MDR Guardrails & Non-Medical Presentation Logic', () => {
-
   it('rejects forbidden clinical statements in report text @REQ: MDR-NO-INTERPRETATION', () => {
     // Statements forbidden by MDR_GUARDRAILS
     const badStatements = [
@@ -23,6 +24,26 @@ describe('MDR Guardrails & Non-Medical Presentation Logic', () => {
       const result = validateReportText(statement);
       expect(result.valid).toBe(false);
       expect(result.violations.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('blokuje oceny kliniczne parametrów ("w normie", "poza normą", "podwyższone", "obniżone") @REQ: MDR-NO-INTERPRETATION', () => {
+    const evaluationStatements = [
+      'Parametry ciśnienia są dzisiaj w normie.',
+      'Wyniki pomiarów są poza normą.',
+      'Cukier rano był powyżej normy.',
+      'Tętno seniora było poniżej normy.',
+      'Odnotowano podwyższone tętno po południu.',
+      'Wskaźnik był lekko podwyższony.',
+      'Ciśnienie było obniżone w spoczynku.',
+      'Stwierdzono prawidłowy poziom parametrów.',
+      'Odnotowano nieprawidłowy wynik poranny.',
+    ];
+
+    for (const statement of evaluationStatements) {
+      const result = validateReportText(statement);
+      expect(result.valid).toBe(false);
+      expect(result.violations.some(v => v.includes('norm') || v.includes('podwyższone') || v.includes('obniżone') || v.includes('wartościująca'))).toBe(true);
     }
   });
 
@@ -48,12 +69,15 @@ describe('MDR Guardrails & Non-Medical Presentation Logic', () => {
     expect(result.violations).toHaveLength(0);
   });
 
-  it('verifies that process/route.ts includes post-generation validation and AI_DISCLOSURE_LABEL @REQ: MDR-NO-INTERPRETATION', () => {
-    const routePath = path.resolve(__dirname, '../../apps/web/src/app/api/voice/process/route.ts');
-    const content = fs.readFileSync(routePath, 'utf8');
+  it('rejects clinical parameters and medications from entering family presentation @REQ: MDR-NO-INTERPRETATION', () => {
+    const clinicalText = 'Podano 500mg paracetamolu, ciśnienie tętnicze 140/90, tętno 85.';
+    const medicalCheck = validateNoMedicalDataInReport(clinicalText);
+    expect(medicalCheck.hasMedical).toBe(true);
+    expect(medicalCheck.found.length).toBeGreaterThan(0);
 
-    expect(content).toContain('validateReportText');
-    expect(content).toContain('AI_DISCLOSURE_LABEL');
+    // Fallback personelu nie zawiera zakazanego słownictwa
+    const fallbackValidation = validateReportText(STAFF_REVIEW_FALLBACK_NOTICE);
+    expect(fallbackValidation.valid).toBe(true);
+    expect(fallbackValidation.violations).toHaveLength(0);
   });
-
 });

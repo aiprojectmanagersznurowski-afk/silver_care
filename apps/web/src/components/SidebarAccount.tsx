@@ -26,12 +26,12 @@ export function SidebarAccount({ userEmail }: { userEmail?: string | null }) {
       <SidebarMenu>
         {userEmail && (
           <SidebarMenuItem className="px-2 py-1 group-data-[collapsible=icon]:hidden">
-            <span className="block text-xs text-muted-foreground">Zalogowano</span>
+            <span className="block text-sm text-muted-foreground">Zalogowano</span>
             <span className="block truncate text-sm font-medium">{userEmail}</span>
           </SidebarMenuItem>
         )}
         <SidebarMenuItem className="flex items-center justify-between px-2 py-1">
-          <span className="text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">Motyw</span>
+          <span className="text-sm text-muted-foreground group-data-[collapsible=icon]:hidden">Motyw</span>
           <ThemeToggle />
         </SidebarMenuItem>
         <SidebarMenuItem>

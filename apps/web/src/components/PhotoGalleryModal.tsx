@@ -19,7 +19,9 @@ export function PhotoGalleryModal({
   const [currentIndex, setCurrentIndex] = useState(initialIndex)
 
   useEffect(() => {
-    setCurrentIndex(initialIndex)
+    void Promise.resolve().then(() => {
+      setCurrentIndex(initialIndex)
+    })
   }, [initialIndex, isOpen])
 
   useEffect(() => {

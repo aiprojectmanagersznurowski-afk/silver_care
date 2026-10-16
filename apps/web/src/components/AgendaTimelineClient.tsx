@@ -17,9 +17,9 @@ interface AgendaTimelineClientProps {
   viewDateStr: string
 }
 
-type AgendaCategory = "meal" | "activity" | "medication" | "rest" | "therapy" | "hygiene" | "other"
+export type AgendaCategory = "meal" | "activity" | "medication" | "rest" | "therapy" | "hygiene" | "other"
 
-const getCategory = (item: AgendaItem | string, itemType?: string): AgendaCategory => {
+export const getCategory = (item: AgendaItem | string, itemType?: string): AgendaCategory => {
   const type = typeof item === 'object' ? item.type : itemType
   const title = typeof item === 'object' ? item.title : item
 
@@ -69,7 +69,7 @@ export function AgendaTimelineClient({ items, accentColor = "var(--primary)", vi
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
-    setLoaded(false)
+    void Promise.resolve().then(() => setLoaded(false))
     const t = setTimeout(() => setLoaded(true), 250)
     return () => clearTimeout(t)
   }, [items, viewDateStr])
@@ -126,7 +126,7 @@ export function AgendaTimelineClient({ items, accentColor = "var(--primary)", vi
     >
       <div className="flex items-center justify-between mb-5">
         <div>
-          <p className="text-[11px] font-700 uppercase tracking-widest" style={{ color: "var(--muted-foreground)", letterSpacing: "0.1em" }}>
+          <p className="text-sm font-700 uppercase tracking-widest" style={{ color: "var(--muted-foreground)", letterSpacing: "0.1em" }}>
             Agenda dnia
           </p>
           <p className="text-[17px] font-700" style={{ color: "var(--foreground)" }}>
@@ -134,7 +134,7 @@ export function AgendaTimelineClient({ items, accentColor = "var(--primary)", vi
           </p>
         </div>
         <div
-          className="px-3 py-1 rounded-full text-[12px] font-600"
+          className="px-3 py-1 rounded-full text-sm font-600"
           style={{ background: `${accentColor}1A`, color: accentColor }}
         >
           {doneCount}/{items.length} ukończono
@@ -169,7 +169,7 @@ export function AgendaTimelineClient({ items, accentColor = "var(--primary)", vi
                 {/* Time + dot */}
                 <div className="flex flex-col items-end w-12 flex-shrink-0 pt-3.5">
                   <span
-                    className="text-[11px] font-600 tabular-nums"
+                    className="text-sm font-600 tabular-nums"
                     style={{ color: past ? "var(--muted-foreground)" : "var(--foreground)" }}
                   >
                     {event.time.substring(0, 5)}
@@ -206,7 +206,7 @@ export function AgendaTimelineClient({ items, accentColor = "var(--primary)", vi
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p
-                          className="text-[14px] font-700"
+                          className="text-sm font-700"
                           style={{
                             color: "var(--foreground)",
                             textDecoration: "none",
@@ -215,10 +215,10 @@ export function AgendaTimelineClient({ items, accentColor = "var(--primary)", vi
                           {event.title}
                         </p>
                         {past && (
-                          <span className="text-[10px]" style={{ color: catColor }}>✓</span>
+                          <span className="text-sm" style={{ color: catColor }}>✓</span>
                         )}
                         {event.resident_id && (
-                          <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded ml-auto">
+                          <span className="text-sm bg-primary/10 text-primary px-2 py-0.5 rounded ml-auto">
                             Indywidualne
                           </span>
                         )}

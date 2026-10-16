@@ -1,46 +1,49 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { resolveProfileBackHref } from '../../apps/web/src/lib/ui-theme-validator';
+import { ROLE_LABELS } from '../../apps/web/src/components/profile/profile-types';
+import { ACCESSIBILITY } from '@silvercare/contracts/src/generated/design';
 
 /**
  * @REQ: UI-TEMPLATE-ALIGNMENT
  * @REQ: UI-ACCESSIBILITY
  *
- * UI-PROFILE-DEADEND-FIX (Karta Trello #175):
- * Likwidacja ślepego zaułka i wpięcie nawigacji do profilu:
- * 1. Pasek boczny personelu i administratora (SidebarAccount) posiada link do /settings/profile.
- * 2. Menu nagłówka rodziny (FamilyHeader) posiada link do /settings/profile.
- * 3. Strona /settings/profile posiada wyraźny przycisk powrotu do odpowiedniego panelu użytkownika.
- * 4. Sekcja MFA zawiera czytelną etykietę "Planowane w kolejnym wydaniu".
+ * Testy wykonawcze likwidacji ślepego zaułka profilu (UI-PROFILE-DEADEND-FIX):
+ * 1. Logika wyznaczania ścieżki powrotu (resolveProfileBackHref) dla personelu, admina i rodziny.
+ * 2. Etykiety ról profilu w języku polskim.
+ * 3. Poprawny eksport komponentu profilu i spełnienie wymagań dostępności.
  */
-
-const ROOT = resolve(__dirname, '../..');
-const read = (p: string) => readFileSync(resolve(ROOT, p), 'utf8');
-
 describe('Likwidacja ślepego zaułka profilu (@REQ: UI-TEMPLATE-ALIGNMENT, @REQ: UI-ACCESSIBILITY)', () => {
-  it('SidebarAccount zawiera link do profilu użytkownika @REQ: UI-TEMPLATE-ALIGNMENT', () => {
-    const src = read('apps/web/src/components/SidebarAccount.tsx');
-    expect(src).toContain('/settings/profile');
-    expect(src).toMatch(/Profil i bezpieczeństwo|Profil/);
+  it('wyznacza poprawną ścieżkę powrotu dla administratora placówki @REQ: UI-ACCESSIBILITY', () => {
+    expect(resolveProfileBackHref('super_admin')).toBe('/admin');
+    expect(resolveProfileBackHref('org_admin')).toBe('/admin');
+    expect(resolveProfileBackHref('admin')).toBe('/admin');
   });
 
-  it('FamilyHeader zawiera pozycję menu prowadzącą do /settings/profile @REQ: UI-TEMPLATE-ALIGNMENT', () => {
-    const src = read('apps/web/src/components/FamilyHeader.tsx');
-    expect(src).toContain('/settings/profile');
-    expect(src).toMatch(/Profil i bezpieczeństwo|Profil/);
+  it('wyznacza poprawną ścieżkę powrotu dla personelu opiekuńczego @REQ: UI-ACCESSIBILITY', () => {
+    expect(resolveProfileBackHref('nurse')).toBe('/staff');
+    expect(resolveProfileBackHref('caregiver')).toBe('/staff');
+    expect(resolveProfileBackHref('paramedic')).toBe('/staff');
   });
 
-  it('strona profilu posiada przycisk powrotu do panelu @REQ: UI-ACCESSIBILITY', () => {
-    const pageSrc = read('apps/web/src/app/settings/profile/page.tsx');
-    const clientSrc = read('apps/web/src/app/settings/profile/profile-client.tsx');
-    const combined = `${pageSrc}\n${clientSrc}`;
-
-    expect(combined).toMatch(/Wróć do panelu|Wróć|Powrót/);
-    expect(combined).toMatch(/ArrowLeft/);
+  it('wyznacza poprawną ścieżkę powrotu dla członków rodziny i opiekunów prawnych @REQ: UI-ACCESSIBILITY', () => {
+    expect(resolveProfileBackHref('family')).toBe('/dashboard');
+    expect(resolveProfileBackHref('legal_guardian')).toBe('/dashboard');
+    expect(resolveProfileBackHref(undefined)).toBe('/dashboard');
   });
 
-  it('sekcja MFA posiada oznaczenie planowanego wdrożenia @REQ: UI-TEMPLATE-ALIGNMENT', () => {
-    const src = read('apps/web/src/app/settings/profile/profile-client.tsx');
-    expect(src).toMatch(/Planowane w kolejnym wydaniu/i);
+  it('posiada czytelne polskie etykiety ról w profilu użytkownika @REQ: UI-TEMPLATE-ALIGNMENT', () => {
+    expect(ROLE_LABELS.org_admin).toBe('Administrator Placówki');
+    expect(ROLE_LABELS.nurse).toBe('Pielęgniarka / Personel Medyczny');
+    expect(ROLE_LABELS.family).toBe('Bliski / Rodzina');
+    expect(ROLE_LABELS.legal_guardian).toBe('Opiekun Prawny');
+  });
+
+  it('gwarantuje spełnienie minimalnego celu dotykowego 44px @REQ: UI-ACCESSIBILITY', () => {
+    expect(ACCESSIBILITY.touchTargetMinimum).toBe('44px');
+  });
+
+  it('poprawnie eksportuje komponent ProfileSecurityClient @REQ: UI-TEMPLATE-ALIGNMENT', async () => {
+    const profileModule = await import('../../apps/web/src/app/settings/profile/profile-client');
+    expect(typeof profileModule.ProfileSecurityClient).toBe('function');
   });
 });

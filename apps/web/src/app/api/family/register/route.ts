@@ -132,7 +132,7 @@ export async function POST(request: Request) {
       message: 'Konto zostało pomyślnie utworzone i aktywowane.',
       role: userRole,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[REGISTER] Uncaught error:', error);
     return NextResponse.json({ error: 'Wystąpił nieoczekiwany błąd serwera' }, { status: 500 });
   }

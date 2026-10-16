@@ -1,4 +1,4 @@
-import { Dumbbell, Utensils, Sparkles, Pill, ChevronRight, Calendar } from "lucide-react";
+import { Dumbbell, Utensils, Sparkles, Pill, ChevronRight, Calendar, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 
 type Status = "completed" | "upcoming" | "menu";
@@ -38,7 +38,7 @@ export function ServiceActivityFeed({
 }) {
   let activities: Array<{
     id: string | number;
-    icon: any;
+    icon: LucideIcon;
     title: string;
     time: string;
     detail: string;
@@ -91,7 +91,7 @@ export function ServiceActivityFeed({
             <Calendar className="h-6 w-6 text-primary" />
           </div>
           <p className="text-sm font-semibold text-foreground">Brak zaplanowanych wydarzeń na dziś</p>
-          <p className="text-xs text-muted-foreground mt-1 max-w-[280px] leading-relaxed">
+          <p className="text-sm text-muted-foreground mt-1 max-w-[280px] leading-relaxed">
             Harmonogram zajęć, posiłków i spacerów jest aktualizowany na bieżąco przez personel placówki.
           </p>
         </div>
@@ -114,11 +114,11 @@ export function ServiceActivityFeed({
                   <div>
                     <div className="flex items-center gap-2">
                       <p className="text-[1.05rem] text-foreground font-medium">{a.title}</p>
-                      <span className="text-[0.82rem] text-muted-foreground">· {a.time}</span>
+                      <span className="text-sm text-muted-foreground">· {a.time}</span>
                     </div>
                     <p className="mt-0.5 text-[0.9rem] leading-relaxed text-muted-foreground">{a.detail}</p>
                   </div>
-                  <span className={`shrink-0 rounded-full px-3 py-1 text-[0.78rem] font-medium ${s.cls}`}>
+                  <span className={`shrink-0 rounded-full px-3 py-1 text-sm font-medium ${s.cls}`}>
                     {s.label}
                   </span>
                 </div>

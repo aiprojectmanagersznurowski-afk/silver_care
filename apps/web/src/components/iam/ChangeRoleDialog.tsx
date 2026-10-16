@@ -76,7 +76,7 @@ export function ChangeRoleDialog({
             <ShieldAlert className="h-5 w-5 text-primary shrink-0 mt-0.5" />
             <div>
               <p className="font-medium text-foreground">Potwierdzenie zmiany uprawnień</p>
-              <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+              <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
                 Czy na pewno chcesz zmienić uprawnienia użytkownika <strong>{user.email}</strong> z <strong>{currentRoleLabel}</strong> na <strong>{newRoleLabel}</strong>?
               </p>
             </div>
