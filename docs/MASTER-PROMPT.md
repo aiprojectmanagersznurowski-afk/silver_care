@@ -5,6 +5,16 @@
 > **Środowisko**: Antigravity / Cursor / Claude Code (Narzędziowo Agnostyczny)  
 > **Podział modeli**: Kodowanie w **Gemini**, weryfikacja i audyt w **Claude Opus** („praca na cztery ręce”)
 
+## ŹRÓDŁA PRAWDY I HIERARCHIA DOKUMENTACJI
+
+| Dokument | Rola i Zakres Odpowiedzialności | Prymat przy Sprzeczności |
+|---|---|---|
+| `contracts/*.contract.mjs` | **Jedyne źródło prawdy w systemie**: wymagania (`@REQ`), schematy danych, uprawnienia RLS, tokeny projektowe (`tokens.css`), reguły walidacji, słowniki i integracje. | **Nadrzędny (P0)** — kod i inne dokumenty importują z kontraktu lub są z niego generowane. |
+| `.claude/CLAUDE.md` & `AGENTS.md` | **Reguły inżynierskie i zasady pracy agenta**: cykl RED-GREEN-VERIFY, limity plików (≤250 LOC), standardy UI Mobile-First, bramka jakości CI, procedury handoffu. | **Nadrzędny dla procesu wykonawczego**. |
+| `docs/01-ADR-decisions.md` | **Decyzje architektoniczne (ADR-001 do ADR-016)**: kontekst, uzasadnienia i granice prawne (MDR, RODO, wybór dostawców, architektura potoku głosu, standardy UI). | **Wiążący architektonicznie**. |
+| `docs/KANONICZNA_SPECYFIKACJA_USER_STORIES.md` | **Narracyjna warstwa dokumentacji**: opisy ról, persony, przepływy użytkownika, scenariusze biznesowe. | **Podrzędny** — przy jakiejkolwiek sprzeczności z kontraktem lub ADR wygrywa kontrakt i ADR. |
+| `docs/workorders/archive/` | **Archiwum historyczne**: zrealizowane karty pracy i dawne notatki implementacyjne. | **Tylko referencja historyczna**. |
+
 ---
 
 ## 0. INSTRUKCJA OPERACYJNA DLA AGENTA

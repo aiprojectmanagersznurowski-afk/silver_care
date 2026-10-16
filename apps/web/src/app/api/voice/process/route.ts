@@ -5,6 +5,7 @@ import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
 import { callEuLlmCompletion } from '@/lib/eu-llm-client'
 import { extractJson } from '@/lib/voice-helpers'
 import { AI_DISCLOSURE_LABEL } from '@silvercare/contracts/src/generated/presentation'
+import { VOICE_PROMPT_VERSION } from '@silvercare/contracts/src/prompts'
 import { 
   redactVoiceTranscript, 
   validateVoiceDraftInput, 
@@ -195,7 +196,7 @@ export async function POST(req: Request) {
       dailyLogData: logPayload,
       reportContent,
       aiModel: REPORT_LLM_MODEL,
-      aiPromptVersion: 'v2.0.0-mdr-compliant',
+      aiPromptVersion: VOICE_PROMPT_VERSION,
       aiGeneratedAt: new Date().toISOString(),
     })
 

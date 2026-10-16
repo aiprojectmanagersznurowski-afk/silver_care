@@ -36,6 +36,7 @@ run_step "wszystkie reguły blokują swoje mutacje" node tools/sc-selftest.mjs
 
 step "3/10 Dryf artefaktów generowanych"
 node tools/sc-codegen.mjs --check && ok "artefakty zgodne z kontraktem" || bad "dryf codegenu"
+node tools/sc-port-antigravity.mjs --check && ok "konfiguracja Antigravity zgodna z Claude Code" || bad "dryf konfiguracji Antigravity"
 
 step "4/10 Nazewnictwo rdzenia"
 run_step "brak porzuconych nazw" node tools/sc-naming.mjs

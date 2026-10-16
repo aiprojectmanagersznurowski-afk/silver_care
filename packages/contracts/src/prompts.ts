@@ -1,4 +1,8 @@
 import { AI_DISCLOSURE_LABEL } from './generated/presentation';
+import { PROMPT_VERSION } from './generated/voice';
+
+/** Wersja promptu potoku notatek głosowych zdefiniowana w kontrakcie (Etap 6D). */
+export const VOICE_PROMPT_VERSION = PROMPT_VERSION;
 
 export const ZERO_GUESSING_DIRECTIVE = `STRICT ZERO-GUESSING: The model must never guess identity, resident name, or infer facts not explicitly stated in the transcript. Frontend provides UUID; transcript is anonymous.`;
 

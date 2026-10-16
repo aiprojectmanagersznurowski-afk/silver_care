@@ -5,6 +5,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database, Json } from '@/types/database.types'
+import { VOICE_PROMPT_VERSION } from '@silvercare/contracts/src/prompts'
 
 export interface ProcessedVoiceDraftPayload {
   draftId: string
@@ -149,7 +150,7 @@ export async function saveProcessedVoiceDraft(
           status: 'DRAFT',
           ai_generated: true,
           ai_model: payload.aiModel || null,
-          ai_prompt_version: payload.aiPromptVersion || 'v2.0.0-mdr-compliant',
+          ai_prompt_version: payload.aiPromptVersion || VOICE_PROMPT_VERSION,
           ai_generated_at: payload.aiGeneratedAt || new Date().toISOString(),
         })
 

@@ -53,7 +53,8 @@ files['packages/contracts/src/generated/presentation.ts'] = BANNER
 files['packages/contracts/src/generated/voice.ts'] = BANNER
   + emit('TRANSCRIPT_STREAMS', voice.TRANSCRIPT_STREAMS) + emit('MEDICAL_CATEGORIES', voice.MEDICAL_CATEGORIES)
   + emit('PIPELINE_STAGES', voice.PIPELINE_STAGES) + emit('VOICE_RETENTION', voice.VOICE_RETENTION)
-  + emit('AI_PROVENANCE_FIELDS', voice.AI_PROVENANCE_FIELDS) + emit('AI_FEEDBACK_CATEGORIES', voice.AI_FEEDBACK_CATEGORIES);
+  + emit('AI_PROVENANCE_FIELDS', voice.AI_PROVENANCE_FIELDS) + emit('AI_FEEDBACK_CATEGORIES', voice.AI_FEEDBACK_CATEGORIES)
+  + emit('PROMPT_VERSION', voice.PROMPT_VERSION);
 
 files['packages/contracts/src/generated/integration.ts'] = BANNER
   + emit('PROVIDERS', integ.PROVIDERS) + emit('WEARABLE_LINK', integ.WEARABLE_LINK)

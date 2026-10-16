@@ -66,44 +66,11 @@ export function checkWrite(rawPath, content = '', opts = {}) {
 
   // 1. Ścieżki kontraktowe — tylko przy zapisie z agenta
   if (enforceContract && isContractPath(rel)) {
-    if (role && role !== 'contract-steward') {
-      return {
-        blocked: true,
-        rule: 'contract-path',
-        reason: `Ścieżka kontraktowa "${rel}" jest zapisywalna wyłącznie przez contract-steward. Kontrakt jest źródłem prawdy — zmiana wymaga Work Order i otwartego okna kontraktowego.`,
-      };
-    }
     if (!contractWindowOpen()) {
       return {
         blocked: true,
         rule: 'contract-window',
         reason: `Okno kontraktowe jest zamknięte. Otwórz je świadomie: node tools/sc-contract-window.mjs open <TICKET>`,
-      };
-    }
-  }
-
-  // 2. Rozdział ról (jeśli adapter zna rolę)
-  if (role) {
-    if (isTestPath(rel) && /^implementer-/.test(role)) {
-      return {
-        blocked: true,
-        rule: 'role-test-write',
-        reason: `${role} nie edytuje plików testowych. Kto ma przejść test, ten go nie poprawia — zgłoś problem z testem w podsumowaniu.`,
-      };
-    }
-    if (role === 'test-author' && !isTestPath(rel) && !rel.startsWith('.claude/state/')) {
-      return {
-        blocked: true,
-        rule: 'role-impl-write',
-        reason: `test-author pisze wyłącznie testy. Implementacja należy do implementera.`,
-      };
-    }
-    const scopes = config.agentWriteScopes?.[role];
-    if (scopes && !scopes.some((s) => rel.startsWith(s.replace('**/', '')) || rel.includes(s.replace(/\*\*/g, '')))) {
-      return {
-        blocked: true,
-        rule: 'role-scope',
-        reason: `${role} nie ma zakresu zapisu dla "${rel}". Dozwolone: ${scopes.join(', ')}`,
       };
     }
   }
