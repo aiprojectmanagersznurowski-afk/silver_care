@@ -26,7 +26,8 @@ function VoiceNoteContent() {
   const [finalReport, setFinalReport] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [followupQuestion, setFollowupQuestion] = useState<string | null>(null)
-
+  const [medicationEvent, setMedicationEvent] = useState<string | null>(null)
+  const [requiresMedConfirm, setRequiresMedConfirm] = useState(false)
   const supabase = createClient()
 
   const updateDraftId = (id: string | null) => {
@@ -36,7 +37,7 @@ function VoiceNoteContent() {
 
   const resetNote = () => {
     updateDraftId(null); setTranscription(null); setFollowupQuestion(null)
-    setFinalReport(null); setError(null); recorder.reset()
+    setFinalReport(null); setError(null); setMedicationEvent(null); setRequiresMedConfirm(false); recorder.reset()
   }
 
   useEffect(() => {
@@ -76,11 +77,7 @@ function VoiceNoteContent() {
   })
 
   const handleStartRecord = async () => {
-    if (!draftIdRef.current) {
-      setTranscription(null)
-      setFinalReport(null)
-      setFollowupQuestion(null)
-    }
+    if (!draftIdRef.current) { setTranscription(null); setFinalReport(null); setFollowupQuestion(null) }
     setError(null)
     await recorder.startRecording()
   }
@@ -88,9 +85,7 @@ function VoiceNoteContent() {
   const generateAIReport = async () => {
     const currentDraftId = draftIdRef.current || draftId
     if (!currentDraftId) return
-    setIsGenerating(true)
-    setError(null)
-    setFollowupQuestion(null)
+    setIsGenerating(true); setError(null); setFollowupQuestion(null)
     try {
       const { data: { session } } = await supabase.auth.getSession()
       const headers: Record<string, string> = { 'Content-Type': 'application/json' }
@@ -109,7 +104,12 @@ function VoiceNoteContent() {
       const data = await res.json()
       if (res.ok && data.success) {
         if (data.needsFollowup) setFollowupQuestion(data.question)
-        else { setFinalReport(data.report); setFollowupQuestion(null) }
+        else {
+          setFinalReport(data.report)
+          setMedicationEvent(data.medication_event || null)
+          setRequiresMedConfirm(Boolean(data.medication_alert_requires_confirmation))
+          setFollowupQuestion(null)
+        }
       } else {
         setError(data.error || 'Wystąpił błąd podczas generowania raportu.')
       }
@@ -172,11 +172,7 @@ function VoiceNoteContent() {
           {!finalReport && (
             <div className="flex flex-col items-center justify-center w-full mt-4 space-y-3">
               {!recorder.isRecording ? (
-                <button
-                  onClick={handleStartRecord}
-                  disabled={recorder.isTranscribing || isGenerating}
-                  className="group relative flex h-24 w-24 items-center justify-center rounded-full bg-destructive/10 text-destructive transition-all hover:scale-105 disabled:opacity-50"
-                >
+                <button onClick={handleStartRecord} disabled={recorder.isTranscribing || isGenerating} className="group relative flex h-24 w-24 items-center justify-center rounded-full bg-destructive/10 text-destructive transition-all hover:scale-105 disabled:opacity-50">
                   <div className="absolute inset-0 rounded-full ring-4 ring-primary/20 group-hover:animate-ping" />
                   <Mic className="h-10 w-10 relative z-10" />
                 </button>
@@ -197,14 +193,12 @@ function VoiceNoteContent() {
               <p className="text-sm font-medium">Przetwarzanie i transkrypcja audio...</p>
             </div>
           )}
-
           {isGenerating && (
             <div className="flex items-center gap-3 text-muted-foreground">
               <Sparkles className="h-5 w-5 animate-pulse text-primary" />
               <p className="text-sm font-medium">AI analizuje notatkę i buduje raport...</p>
             </div>
           )}
-
           {(error || recorder.error) && (
             <div className="w-full rounded-xl bg-destructive/10 p-4 border border-destructive/20 text-center">
               <p className="text-sm font-medium text-destructive">{error || recorder.error}</p>
@@ -229,7 +223,14 @@ function VoiceNoteContent() {
             />
           )}
 
-          {finalReport && <VoiceReportReview finalReport={finalReport} onResetNote={resetNote} />}
+          {finalReport && (
+            <VoiceReportReview
+              finalReport={finalReport}
+              onResetNote={resetNote}
+              medicationEvent={medicationEvent}
+              requiresMedicationConfirmation={requiresMedConfirm}
+            />
+          )}
         </CardContent>
       </Card>
     </div>

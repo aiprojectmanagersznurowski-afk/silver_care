@@ -183,6 +183,8 @@ export async function POST(req: Request) {
       text: finalText,
       draft_id: draft.id,
       requires_staff_review: requiresStaffReview,
+      medication_event: medEvent,
+      medication_alert_requires_confirmation: requiresMedConfirmation,
     }
 
     // 4. ATOMIC PERSISTENCE (RPC PostgreSQL + rollback kompensacyjny)
@@ -204,7 +206,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ 
       success: true, 
       report: finalText, 
-      requires_staff_review: requiresStaffReview 
+      requires_staff_review: requiresStaffReview,
+      medication_event: medEvent,
+      medication_alert_requires_confirmation: requiresMedConfirmation,
     })
   } catch (error: unknown) {
     const errMsg = error instanceof Error ? error.message : 'Wystąpił nieoczekiwany błąd'

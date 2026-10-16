@@ -43,13 +43,21 @@ run_step "brak porzuconych nazw" node tools/sc-naming.mjs
 step "5/10 Spójność typów TypeScript (apps/web)"
 run_step "typy TypeScript poprawne" pnpm --filter web exec tsc --noEmit
 
-step "6/10 Kontrakt typograficzny UI (zakaz mikro-fontów <14px)"
+step "6/10 Norma UI: typografia (zakaz <14px) oraz cele dotykowe (min-h ≥ 44px)"
 TYPO_VIOLATIONS=$(git grep -n -E "text-xs|text-\[(8|9|10|11|12|13)px\]" apps/web/src/ 2>/dev/null || true)
 if [ -n "$TYPO_VIOLATIONS" ]; then
   printf "%s\n" "$TYPO_VIOLATIONS"
   bad "znaleziono zakazane mikro-fonty (<14px) w apps/web/src/"
 else
   ok "brak zakazanych mikro-fontów (<14px) w apps/web/src/"
+fi
+
+TOUCH_VIOLATIONS=$(git grep -n -E "min-h-\[(28|30|32|34|36|38|40|42)px\]" apps/web/src/ 2>/dev/null || true)
+if [ -n "$TOUCH_VIOLATIONS" ]; then
+  printf "%s\n" "$TOUCH_VIOLATIONS"
+  bad "znaleziono cele dotykowe poniżej normy 44px (min-h < 44px) w apps/web/src/"
+else
+  ok "brak celów dotykowych poniżej normy 44px w apps/web/src/"
 fi
 
 step "7/10 Limit rozmiaru plików aplikacyjnych (max 250 LOC)"

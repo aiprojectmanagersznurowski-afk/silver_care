@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { CheckCircle2, Clock, Edit3, Send, Save, X, Sparkles, AlertCircle, Check } from 'lucide-react'
 import { analyzeReportCompleteness } from '@/lib/completeness-gate'
 import { Textarea } from '@/components/ui/textarea'
+import { MedicationAlertBanner } from '@/components/MedicationAlertBanner'
 
 import type { Json } from '@/types/database.types'
 
@@ -26,34 +27,35 @@ export interface ReportItem {
 export function ReportCard({ report }: { report: ReportItem }) {
   const [isEditing, setIsEditing] = useState(false)
   const rawContent: unknown = report.content
-  const parsedText = typeof rawContent === 'string'
-    ? (rawContent.startsWith('{')
-        ? (() => {
-            try {
-              const parsed = JSON.parse(rawContent) as Record<string, unknown>
-              return typeof parsed.text === 'string' ? parsed.text : rawContent
-            } catch {
-              return rawContent
-            }
-          })()
-        : rawContent)
-    : typeof (rawContent as Record<string, unknown>)?.text === 'string'
-      ? (rawContent as { text: string }).text
-      : ''
+  const contentObj = typeof rawContent === 'object' && rawContent !== null
+    ? (rawContent as Record<string, unknown>)
+    : (() => {
+        try {
+          return typeof rawContent === 'string' && rawContent.startsWith('{')
+            ? (JSON.parse(rawContent) as Record<string, unknown>)
+            : null
+        } catch { return null }
+      })()
+  const parsedText = typeof contentObj?.text === 'string' ? contentObj.text : (typeof rawContent === 'string' ? rawContent : '')
   const [content, setContent] = useState(parsedText)
   const [loading, setLoading] = useState(false)
+  const [medConfirmed, setMedConfirmed] = useState(false)
   const router = useRouter()
   const supabase = createClient()
+
+  const medEvent = contentObj?.medication_event as string | undefined
+  const requiresMedConfirm = contentObj?.medication_alert_requires_confirmation === true ||
+    contentObj?.requires_medication_confirmation === true ||
+    medEvent === 'refused' || medEvent === 'missed'
 
   const isPublished = report.status === 'PUBLISHED'
   const completeness = analyzeReportCompleteness(content)
 
   const handlePublish = async () => {
+    if (requiresMedConfirm && !medConfirmed) return
     setLoading(true)
-    await supabase
-      .from('daily_reports')
-      .update({ status: 'PUBLISHED', content: { text: content } })
-      .eq('id', report.id)
+    const updatedContent = { ...(contentObj || {}), text: content, medication_confirmed_by_staff: true }
+    await supabase.from('daily_reports').update({ status: 'PUBLISHED', content: updatedContent }).eq('id', report.id)
     setLoading(false)
     router.refresh()
   }
@@ -119,6 +121,15 @@ export function ReportCard({ report }: { report: ReportItem }) {
           <div className="p-4 bg-muted/30 rounded-xl text-sm leading-relaxed text-foreground whitespace-pre-wrap border border-border" data-testid="report-content-text">
             {content || 'Brak treści raportu.'}
           </div>
+        )}
+
+        {requiresMedConfirm && !isPublished && (
+          <MedicationAlertBanner
+            event={medEvent}
+            requiresConfirmation={requiresMedConfirm}
+            confirmed={medConfirmed}
+            onConfirmChange={setMedConfirmed}
+          />
         )}
 
         {/* Strażnik kompletności raportu opiekuńczego (AI Quality Gate) */}
@@ -198,9 +209,10 @@ export function ReportCard({ report }: { report: ReportItem }) {
             <>
               {!isPublished && (
                 <Button 
-                  disabled={loading} 
+                  disabled={loading || (requiresMedConfirm && !medConfirmed)} 
                   onClick={handlePublish} 
-                  className="rounded-xl min-h-11 px-4 bg-primary hover:bg-primary/90 text-white text-sm font-semibold gap-1.5"
+                  title={requiresMedConfirm && !medConfirmed ? 'Potwierdź odnotowanie zdarzenia lekowego' : undefined}
+                  className="rounded-xl min-h-11 px-4 bg-primary hover:bg-primary/90 text-white text-sm font-semibold gap-1.5 disabled:opacity-50"
                   data-testid="publish-report-button"
                 >
                   <Send className="h-3.5 w-3.5" />

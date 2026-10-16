@@ -195,7 +195,7 @@ export function StaffCommandPalette({ residents = [] }: StaffCommandPaletteProps
                         <button
                           type="button"
                           onClick={() => handleSelectVoice(resident.id)}
-                          className="px-2.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white text-sm font-semibold inline-flex items-center gap-1 transition-colors min-h-[40px]"
+                          className="px-2.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white text-sm font-semibold inline-flex items-center gap-1 transition-colors min-h-11"
                           title="Dyktuj nową notatkę"
                         >
                           <Mic className="h-3.5 w-3.5" />
@@ -204,7 +204,7 @@ export function StaffCommandPalette({ residents = [] }: StaffCommandPaletteProps
                         <button
                           type="button"
                           onClick={() => handleSelectReports(resident.id)}
-                          className="px-2.5 py-1.5 rounded-lg border border-border hover:bg-muted text-foreground text-sm font-medium inline-flex items-center gap-1 transition-colors min-h-[40px]"
+                          className="px-2.5 py-1.5 rounded-lg border border-border hover:bg-muted text-foreground text-sm font-medium inline-flex items-center gap-1 transition-colors min-h-11"
                           title="Przejdź do raportów"
                         >
                           <FileText className="h-3.5 w-3.5 text-muted-foreground" />

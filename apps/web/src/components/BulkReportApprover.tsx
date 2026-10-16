@@ -162,7 +162,7 @@ export function BulkReportApprover({ draftReports }: BulkReportApproverProps) {
               type="button"
               onClick={() => toggleSelectOne(report.id)}
               disabled={isPending}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors min-h-[40px] ${
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors min-h-11 ${
                 isSelected
                   ? 'bg-primary text-white border-primary'
                   : 'bg-card text-foreground border-border hover:border-border'
