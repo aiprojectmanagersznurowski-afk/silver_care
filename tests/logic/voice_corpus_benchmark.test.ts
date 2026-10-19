@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { redactVoiceTranscript } from '../../apps/web/src/lib/voice-redactor'
 import {
-  resolveMedicationTemplate,
   validateReportText,
   validateNoMedicalDataInReport,
   MedicationEvent,
@@ -13,7 +12,7 @@ import {
  * @REQ: VOICE-ZERO-GUESSING
  *
  * Korpus Walidacyjny Notatek Głosowych (Benchmark CI).
- * Weryfikuje 100% zachowania faktów opiekuńczych oraz 0% wycieków medycznych na 30 trudnych notatkach z dyżuru.
+ * Weryfikuje 100% zachowania faktów opiekuńczych oraz 0% wycieków medycznych (w tym brak szablonów lekowych w daily_reports) na 30 trudnych notatkach z dyżuru.
  */
 
 interface CorpusItem {
@@ -25,7 +24,7 @@ interface CorpusItem {
 }
 
 const BENCHMARK_CORPUS: CorpusItem[] = [
-  // 1. Zdarzenia lekowe (refused, missed, taken)
+  // 1. Zdarzenia lekowe (refused, missed, taken) — zostają wyłącznie w daily_logs, nigdy w daily_reports
   { id: 'MED-1', category: 'med_events', event: 'refused', input: 'Senior odmówił przyjęcia leków porannych. Zjadł śniadanie i wypił herbatę.', expectedBehavior: 'śniadanie' },
   { id: 'MED-2', category: 'med_events', event: 'missed', input: 'Pominięto południową dawkę kropli ze względu na sen podopiecznego. Senior wstał wypoczęty.', expectedBehavior: 'wypoczęty' },
   { id: 'MED-3', category: 'med_events', event: 'taken', input: 'Podopieczny przyjął wszystkie zaplanowane tabletki po obiedzie. Po południu czytał gazetę.', expectedBehavior: 'czytał gazetę' },
@@ -75,20 +74,17 @@ describe('Korpus Walidacyjny Notatek Głosowych (Benchmark 30 notatek)', () => {
     expect(categories.size).toBe(6)
   })
 
-  it('gwarantuje 0% wycieków medycznych oraz 100% zachowania faktów behawioralnych @REQ: VOICE-MEDICAL-STRIP @REQ: MDR-NO-INTERPRETATION', () => {
+  it('gwarantuje 0% wycieków medycznych (brak informacji o lekach i szablonów wsparcia w raporcie rodziny) oraz 100% zachowania faktów behawioralnych @REQ: VOICE-MEDICAL-STRIP @REQ: MDR-NO-INTERPRETATION', () => {
     let leakCount = 0
     let preservedCount = 0
 
     for (const item of BENCHMARK_CORPUS) {
       const red = redactVoiceTranscript(item.input)
-      let cleaned = red.cleanedTranscript
+      const finalReport = red.cleanedTranscript
         .replace(/\b(?:zignoruj poprzednie instrukcje|system override|ignore safety rules|wstaw do raportu)[^.]*\./gi, '')
         .replace(/\b(?:pacjent|pacjentka|pacjenta|pacjentce|pacjentem)\b/gi, 'podopieczny')
         .replace(/\s{2,}/g, ' ')
         .trim()
-
-      const template = resolveMedicationTemplate(item.event)
-      const finalReport = template ? `${cleaned} ${template}`.trim() : cleaned
 
       const reportValidation = validateReportText(finalReport)
       const medicalCheck = validateNoMedicalDataInReport(finalReport)
@@ -106,13 +102,10 @@ describe('Korpus Walidacyjny Notatek Głosowych (Benchmark 30 notatek)', () => {
       expect(medicalCheck.hasMedical, `Wyciek w notatce ${item.id}: ${medicalCheck.found.join(', ')}`).toBe(false)
       expect(reportValidation.valid, `Naruszenie reguł MDR w notatce ${item.id}: ${reportValidation.violations.join(', ')}`).toBe(true)
 
-      if (item.event === 'refused') {
-        expect(finalReport).toContain('odmówił przyjęcia zaplanowanej porcji wsparcia')
-      } else if (item.event === 'missed') {
-        expect(finalReport).toContain('została pominięta w standardowym oknie czasowym')
-      } else if (item.event === 'taken') {
-        expect(finalReport).toContain('przyjął zaplanowane na dziś wsparcie')
-      }
+      // Weryfikacja, że do raportu rodziny nie trafia żaden szablon wsparcia lekowego ani informacja o lekach
+      expect(finalReport).not.toContain('odmówił przyjęcia zaplanowanej porcji wsparcia')
+      expect(finalReport).not.toContain('została pominięta w standardowym oknie czasowym')
+      expect(finalReport).not.toContain('przyjął zaplanowane na dziś wsparcie')
     }
 
     const leakRate = (leakCount / BENCHMARK_CORPUS.length) * 100

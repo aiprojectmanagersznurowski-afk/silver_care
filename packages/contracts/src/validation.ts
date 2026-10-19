@@ -6,24 +6,10 @@
  * - VOICE-MEDICAL-STRIP (ensuring clinical data never enters family presentation)
  */
 
-export type MedicationEvent = 'taken' | 'refused' | 'missed' | 'none';
-
 /**
- * Zwraca zatwierdzony, deterministyczny szablon zdarzenia lekowego dla bliskich (bez nazw leków, dawek i liczb).
+ * Zdarzenie lekowe (strumień MEDICAL — wyłącznie dla personelu w daily_logs oraz MedicationAlertBanner, nigdy w daily_reports).
  */
-export function resolveMedicationTemplate(event: MedicationEvent | string | null | undefined): string | null {
-  switch (event) {
-    case 'taken':
-      return 'Podopieczny przyjął zaplanowane na dziś wsparcie zgodnie z harmonogramem dnia.';
-    case 'refused':
-      return 'Podopieczny odmówił przyjęcia zaplanowanej porcji wsparcia — personel odnotował ten fakt i otacza podopiecznego uważną opieką.';
-    case 'missed':
-      return 'Zaplanowana porcja wsparcia została pominięta w standardowym oknie czasowym — personel monitoruje harmonogram.';
-    case 'none':
-    default:
-      return null;
-  }
-}
+export type MedicationEvent = 'taken' | 'refused' | 'missed' | 'none';
 
 // Patterns derived from MDR_GUARDRAILS and forbidden clinical language
 const CLINICAL_PATTERNS: Array<{ regex: RegExp; desc: string }> = [

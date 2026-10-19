@@ -5,7 +5,7 @@
  * - ADR-007 (separacja przed LLM): dane medyczne są usuwane z transkryptu ZANIM trafi do modelu.
  * - VOICE-MEDICAL-STRIP: wycięcie ciśnienia, dawek leków, saturacji, temperatury, nazw leków.
  * - VOICE-ZERO-GUESSING: walidacja tożsamości z frontendu, brak fabrykacji w fallbacku.
- * - MDR-NO-INTERPRETATION: blokada ocen klinicznych i deterministyczne szablony leków.
+ * - MDR-NO-INTERPRETATION: blokada ocen klinicznych; medication_event wyłącznie w daily_logs i MedicationAlertBanner (nigdy w daily_reports).
  */
 
 import {
@@ -13,7 +13,6 @@ import {
   stripClinicalData,
   validateReportText,
   validateNoMedicalDataInReport,
-  resolveMedicationTemplate,
   MedicationEvent,
   STAFF_REVIEW_FALLBACK_NOTICE,
 } from '@silvercare/contracts/src/validation'
@@ -24,7 +23,7 @@ import {
 } from '@silvercare/contracts/src/prompts'
 import { AI_DISCLOSURE_LABEL } from '@silvercare/contracts/src/generated/presentation'
 
-export { STAFF_REVIEW_FALLBACK_NOTICE, resolveMedicationTemplate }
+export { STAFF_REVIEW_FALLBACK_NOTICE }
 export type { MedicationEvent }
 
 export interface RedactionResult {

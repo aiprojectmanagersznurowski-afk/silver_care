@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { redactVoiceTranscript, resolveMedicationTemplate } from '../../apps/web/src/lib/voice-redactor'
+import { redactVoiceTranscript } from '../../apps/web/src/lib/voice-redactor'
 import { validateNoMedicalDataInReport } from '../../packages/contracts/src/validation'
 import { MEDICAL_CATEGORIES } from '../../packages/contracts/src/generated/voice'
 import { VOICE_PROCESSING_PROMPT } from '../../packages/contracts/src/prompts'
@@ -81,26 +81,70 @@ describe('VOICE-MEDICAL-STRIP Logic', () => {
     }
   })
 
-  it('deterministyczny szablon resolveMedicationTemplate generuje bezpieczne komunikaty bez dawek i leków @REQ: VOICE-MEDICAL-STRIP', () => {
-    expect(resolveMedicationTemplate('taken')).toBe(
-      'Podopieczny przyjął zaplanowane na dziś wsparcie zgodnie z harmonogramem dnia.'
-    )
-    expect(resolveMedicationTemplate('refused')).toBe(
-      'Podopieczny odmówił przyjęcia zaplanowanej porcji wsparcia — personel odnotował ten fakt i otacza podopiecznego uważną opieką.'
-    )
-    expect(resolveMedicationTemplate('missed')).toBe(
-      'Zaplanowana porcja wsparcia została pominięta w standardowym oknie czasowym — personel monitoruje harmonogram.'
-    )
-    expect(resolveMedicationTemplate('none')).toBeNull()
-    expect(resolveMedicationTemplate(null)).toBeNull()
+  it('gwarantuje, że medication_event trafia wyłącznie do daily_logs, a nigdy do daily_reports.content, oraz działa w trybie fail-closed przy błędzie RPC @REQ: VOICE-MEDICAL-STRIP', async () => {
+    let capturedRpcArgs: Record<string, unknown> | null = null
+    const mockFrom = vi.fn()
+
+    const mockSupabaseOk = {
+      rpc: vi.fn(async (_fn: string, args: Record<string, unknown>) => {
+        capturedRpcArgs = args
+        return { data: { success: true, idempotent: false, log_id: 'log-1', report_id: 'rep-1' }, error: null }
+      }),
+      from: mockFrom,
+    }
+
+    const payloadWithMedLeakAttempt = {
+      draftId: '550e8400-e29b-41d4-a716-446655440001',
+      residentId: '550e8400-e29b-41d4-a716-446655440002',
+      nurseId: '550e8400-e29b-41d4-a716-446655440003',
+      dailyLogData: { medical: 'Metformax 500mg', medication_event: 'refused', medication_alert_requires_confirmation: true },
+      reportContent: {
+        text: 'Senior zjadł śniadanie.',
+        draft_id: '550e8400-e29b-41d4-a716-446655440001',
+        requires_staff_review: false,
+        medication_event: 'refused',
+        medication_alert_requires_confirmation: true,
+      } as unknown as { text: string; draft_id: string; requires_staff_review: boolean },
+    }
+
+    // @ts-expect-error Mocked Supabase client
+    const okResult = await saveProcessedVoiceDraft(mockSupabaseOk, payloadWithMedLeakAttempt)
+    expect(okResult.success).toBe(true)
+    expect(capturedRpcArgs).not.toBeNull()
+
+    const savedReportContent = capturedRpcArgs!['p_report_content'] as Record<string, unknown>
+    const savedLogData = capturedRpcArgs!['p_daily_log_data'] as Record<string, unknown>
+
+    // W daily_reports.content NIE MA prawa znaleźć się medication_event ani szablon lekowy
+    expect(savedReportContent).not.toHaveProperty('medication_event')
+    expect(savedReportContent).not.toHaveProperty('medication_alert_requires_confirmation')
+    expect(String(savedReportContent.text)).not.toContain('wsparcie')
+
+    // W daily_logs.data medication_event jest zachowane dla personelu
+    expect(savedLogData.medication_event).toBe('refused')
+    expect(savedLogData.medication_alert_requires_confirmation).toBe(true)
+
+    // Test Fail-Closed: błąd RPC rzuca wyjątek i NIE przechodzi po cichu na nieatomowy zapis (from() nie jest wołane)
+    const mockSupabaseRpcErr = {
+      rpc: vi.fn(async () => ({
+        data: null,
+        error: { code: '42501', message: 'Forbidden role for voice processing' },
+      })),
+      from: mockFrom,
+    }
+
+    await expect(
+      // @ts-expect-error Mocked Supabase client
+      saveProcessedVoiceDraft(mockSupabaseRpcErr, payloadWithMedLeakAttempt)
+    ).rejects.toThrow(/42501/)
+    expect(mockFrom).not.toHaveBeenCalled()
   })
 
-  it('wykonuje kompensacyjny rollback daily_logs przy błędzie zapisu daily_reports @REQ: VOICE-MEDICAL-STRIP', async () => {
+  it('wykonuje kompensacyjny rollback daily_logs przy błędzie zapisu daily_reports (gdy mock bez rpc) @REQ: VOICE-MEDICAL-STRIP', async () => {
     let deletedLogId: string | null = null
 
-    // Mock supabase klienta symulujący błąd zapisu daily_reports
+    // Mock supabase klienta bez funkcji rpc (typeof supabase.rpc !== 'function') symulujący błąd zapisu daily_reports
     const mockSupabase = {
-      rpc: vi.fn().mockRejectedValue(new Error('RPC function not found in mock')),
       from: vi.fn((table: string) => {
         if (table === 'voice_draft_notes') {
           return {
@@ -117,7 +161,7 @@ describe('VOICE-MEDICAL-STRIP Logic', () => {
               select: () => ({ single: async () => ({ data: { id: 'mock-log-123' }, error: null }) }),
             }),
             delete: () => ({
-              eq: (col: string, val: string) => {
+              eq: (_col: string, val: string) => {
                 deletedLogId = val
                 return Promise.resolve({ error: null })
               },

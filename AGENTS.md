@@ -45,8 +45,8 @@ W całym systemie obowiązuje jedna, niesprzeczna norma UI:
 
 ## Potok głosowy
 
-Architektura potoku: maskowanie PII (PESEL/tel/email) przed modelem → klasyfikacja w modelu UE (DPA, zero retencji) ze strukturą `medication_event` → deterministyczne szablony i post-filtr MDR przed zapisem.
-Trzy strumienie **przed** wejściem do modelu: `MEDICAL` (usuwany, zostaje w brudnopisie personelu), `DISCOMFORT` (ogólny opis w raporcie), `BEHAVIORAL` (podstawa raportu). Model nigdy nie ustala tożsamości z nagrania — `resident_id` przychodzi z frontendu jako UUID.
+Architektura potoku: maskowanie PII (PESEL/tel/email) przed modelem → klasyfikacja w modelu UE (DPA, zero retencji) ze strukturą `medication_event` (trafia wyłącznie do `daily_logs` i alertu dla personelu `MedicationAlertBanner`, nigdy do `daily_reports`) → post-filtr MDR przed zapisem.
+Trzy strumienie **przed** wejściem do modelu: `MEDICAL` (usuwany, zostaje wyłącznie w brudnopisie personelu `daily_logs`), `DISCOMFORT` (ogólny opis w raporcie), `BEHAVIORAL` (podstawa raportu `daily_reports`). Model nigdy nie ustala tożsamości z nagrania — `resident_id` przychodzi z frontendu jako UUID.
 
 ## Rdzeń i integracja
 

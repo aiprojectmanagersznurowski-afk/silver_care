@@ -7,7 +7,7 @@ description: "Zmień kontrakt w otwartym oknie kontraktowym"
 Zmiana kontraktu dla: {{args}}
 
 1. `node tools/sc-contract-window.mjs` — sprawdź, czy okno jest otwarte. Jeśli nie, zatrzymaj się i powiedz, czego potrzebujesz i dlaczego.
-2. subagent (invoke_subagent) `contract-steward` wprowadza zmianę.
+2. Wprowadź zmianę w odpowiednim pliku `contracts/*.contract.mjs`.
 3. `node tools/sc-codegen.mjs` — przegeneruj artefakty.
 4. `node tools/sc-validate.mjs` i `node tools/sc-selftest.mjs`.
 5. `node tools/sc-phase.mjs contract` — sprawdź, czy nie ruszono implementacji.

@@ -4,7 +4,6 @@ import { createClient } from '@/lib/supabase/server'
 import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
 import { callEuLlmCompletion } from '@/lib/eu-llm-client'
 import { extractJson } from '@/lib/voice-helpers'
-import { AI_DISCLOSURE_LABEL } from '@silvercare/contracts/src/generated/presentation'
 import { VOICE_PROMPT_VERSION } from '@silvercare/contracts/src/prompts'
 import { 
   redactVoiceTranscript, 
@@ -12,7 +11,6 @@ import {
   buildClassifierSystemPrompt,
   buildFamilyReportSystemPrompt,
   sanitizeReportAndVerifySafety,
-  resolveMedicationTemplate,
   MedicationEvent,
 } from '@/lib/voice-redactor'
 import { saveProcessedVoiceDraft } from '@/lib/voice-process-persistence'
@@ -169,23 +167,13 @@ export async function POST(req: Request) {
       { role: 'user', content: userPrompt2 }
     ], 0.4, 600)
 
-    // Weryfikacja bezpieczeństwa (MDR-NO-INTERPRETATION, AI Act)
-    const { reportText: safeBaseText, requiresStaffReview } = sanitizeReportAndVerifySafety(raw2)
-
-    // Dołączenie deterministycznego szablonu lekowego (bez nazw leków, dawek i liczb)
-    const medTemplate = resolveMedicationTemplate(medEvent)
-    let finalText = safeBaseText
-    if (medTemplate && !requiresStaffReview) {
-      const parts = finalText.split(AI_DISCLOSURE_LABEL)
-      finalText = `${parts[0].trim()}\n\n${medTemplate}\n\n${AI_DISCLOSURE_LABEL}`
-    }
+    // Weryfikacja bezpieczeństwa (MDR-NO-INTERPRETATION, AI Act) — dane o lekach należą do strumienia MEDICAL (wyłącznie daily_logs)
+    const { reportText: finalText, requiresStaffReview } = sanitizeReportAndVerifySafety(raw2)
 
     const reportContent = {
       text: finalText,
       draft_id: draft.id,
       requires_staff_review: requiresStaffReview,
-      medication_event: medEvent,
-      medication_alert_requires_confirmation: requiresMedConfirmation,
     }
 
     // 4. ATOMIC PERSISTENCE (RPC PostgreSQL + rollback kompensacyjny)

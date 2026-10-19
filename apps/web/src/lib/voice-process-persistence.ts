@@ -35,8 +35,15 @@ export async function saveProcessedVoiceDraft(
   supabase: SupabaseClient<Database>,
   payload: ProcessedVoiceDraftPayload
 ): Promise<PersistenceResult> {
-  // 1. Próba wykonania atomowego RPC PostgreSQL
-  try {
+  // Dane o lekach (medication_event) należą wyłącznie do strumienia MEDICAL (daily_logs), nigdy do daily_reports.content
+  const cleanReportContent = {
+    text: payload.reportContent.text,
+    draft_id: payload.reportContent.draft_id,
+    requires_staff_review: payload.reportContent.requires_staff_review,
+  }
+
+  // 1. Wykonanie atomowego RPC PostgreSQL (Fail-Closed przy błędzie bazy danych)
+  if (typeof supabase.rpc === 'function') {
     const { data: rpcData, error: rpcError } = await supabase.rpc(
       'process_voice_draft_atomic',
       {
@@ -44,30 +51,34 @@ export async function saveProcessedVoiceDraft(
         p_resident_id: payload.residentId,
         p_nurse_id: payload.nurseId,
         p_daily_log_data: payload.dailyLogData as unknown as Json,
-        p_report_content: payload.reportContent as unknown as Json,
+        p_report_content: cleanReportContent as unknown as Json,
         p_ai_model: payload.aiModel || null,
         p_ai_prompt_version: payload.aiPromptVersion || null,
         p_ai_generated_at: payload.aiGeneratedAt || new Date().toISOString(),
       }
     )
 
-    if (!rpcError && rpcData) {
-      const parsed = typeof rpcData === 'string' ? JSON.parse(rpcData) : rpcData
-      if (parsed.success) {
-        return {
-          success: true,
-          idempotent: Boolean(parsed.idempotent),
-          logId: parsed.log_id,
-          reportId: parsed.report_id,
-          reportContent: parsed.report_content,
-        }
+    if (rpcError) {
+      console.error('[VOICE-RPC-FAIL-CLOSED]', { code: rpcError.code ?? 'UNKNOWN_RPC_ERROR' })
+      throw new Error(`RPC process_voice_draft_atomic failed [${rpcError.code ?? 'UNKNOWN'}]`)
+    }
+
+    const parsed = typeof rpcData === 'string' ? JSON.parse(rpcData) : rpcData
+    if (parsed && parsed.success) {
+      return {
+        success: true,
+        idempotent: Boolean(parsed.idempotent),
+        logId: parsed.log_id,
+        reportId: parsed.report_id,
+        reportContent: parsed.report_content,
       }
     }
-  } catch {
-    // Przejdź do zapisu kompensowanego (fallback dla środowisk testowych / mocków)
+
+    console.error('[VOICE-RPC-FAIL-CLOSED]', { code: 'INVALID_RPC_PAYLOAD' })
+    throw new Error('RPC process_voice_draft_atomic returned invalid payload')
   }
 
-  // 2. Fallback z transakcyjnym rollbackiem kompensacyjnym (np. testy jednostkowe / Vitest)
+  // 2. Ścieżka bez RPC wyłącznie dla testów jednostkowych, gdy mock supabase.rpc nie jest funkcją (typeof supabase.rpc !== 'function')
   let insertedLogId: string | null = null
 
   try {
@@ -121,7 +132,7 @@ export async function saveProcessedVoiceDraft(
       insertedLogId = newLog?.id || null
     }
 
-    // B. Zapis daily_reports (szkic dla bliskich)
+    // B. Zapis daily_reports (szkic dla bliskich — bez medication_event)
     const { data: existingReport } = await supabase
       .from('daily_reports')
       .select('id')
@@ -133,7 +144,7 @@ export async function saveProcessedVoiceDraft(
       const { error: repUpdateError } = await supabase
         .from('daily_reports')
         .update({
-          content: payload.reportContent as unknown as Json,
+          content: cleanReportContent as unknown as Json,
           status: 'DRAFT',
           updated_at: new Date().toISOString(),
         })
@@ -146,7 +157,7 @@ export async function saveProcessedVoiceDraft(
         .insert({
           resident_id: payload.residentId,
           author_id: payload.nurseId,
-          content: payload.reportContent as unknown as Json,
+          content: cleanReportContent as unknown as Json,
           status: 'DRAFT',
           ai_generated: true,
           ai_model: payload.aiModel || null,

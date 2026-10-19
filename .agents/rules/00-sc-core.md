@@ -55,12 +55,12 @@ W całym systemie obowiązuje jedna, niesprzeczna norma UI:
 
 ## Potok głosowy
 
-Architektura potoku: maskowanie PII (PESEL/tel/email) przed modelem → klasyfikacja w modelu UE (DPA, zero retencji) ze strukturą `medication_event` → deterministyczne szablony i post-filtr MDR przed zapisem.
+Architektura potoku: maskowanie PII (PESEL/tel/email) przed modelem → klasyfikacja w modelu UE (DPA, zero retencji) ze strukturą `medication_event` (wyłącznie do `daily_logs` i alertu dla personelu `MedicationAlertBanner`, nigdy do `daily_reports`) → post-filtr MDR przed zapisem.
 Transkrypt dzieli się na trzy strumienie **zanim** trafi do modelu:
 
-1. `MEDICAL` — leki, diagnozy, wyniki badań, parametry życiowe. Usuwane z transkryptu przed wysłaniem do LLM. Zapisywane wyłącznie w brudnopisie personelu.
+1. `MEDICAL` — leki, diagnozy, wyniki badań, parametry życiowe oraz `medication_event`. Usuwane z transkryptu przed wysłaniem do LLM generującego raport. Zapisywane wyłącznie w brudnopisie personelu (`daily_logs`).
 2. `DISCOMFORT` — zdarzenia naruszające godność. Oryginał w brudnopisie, do raportu trafia ogólny opis.
-3. `BEHAVIORAL` — podstawa raportu dla bliskich.
+3. `BEHAVIORAL` — podstawa raportu dla bliskich (`daily_reports`).
 
 Model **nigdy** nie ustala tożsamości pensjonariusza z nagrania. Frontend przekazuje `resident_id` jako UUID, transkrypt idzie do modelu anonimowy, złączenie następuje w pamięci funkcji brzegowej przed zapisem. Brak identyfikatora w żądaniu kończy się odmową, nie próbą rozpoznania.
 
