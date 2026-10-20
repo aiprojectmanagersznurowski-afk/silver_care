@@ -11,6 +11,7 @@ import {
   generateCsvWithBom,
   ExportRowFormatted,
 } from '@/lib/export-helpers'
+import type { Json } from '@/types/database.types'
 
 interface RawBedAssignment {
   id: string
@@ -125,7 +126,7 @@ export async function exportResidentsDataAction(options: ExportFilterOptions): P
     performed_by: user.id,
     payload: {
       exported_count: formattedRows.length,
-      filters: options,
+      filters: options as unknown as Json,
     },
   })
 

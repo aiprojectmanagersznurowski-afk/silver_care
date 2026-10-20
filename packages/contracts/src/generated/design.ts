@@ -12,7 +12,7 @@ export const TYPOGRAPHY = {
     "subset": "latin-ext",
     "note": "latin-ext jest wymagany — polskie znaki diakrytyczne."
   },
-  "baseSize": "14px",
+  "baseSize": "16px",
   "scale": [
     {
       "id": "display",
@@ -32,40 +32,40 @@ export const TYPOGRAPHY = {
     },
     {
       "id": "heading",
-      "size": "16px",
+      "size": "20px",
       "weight": 600,
-      "lineHeight": 1.5,
+      "lineHeight": 1.4,
       "tracking": "0",
-      "use": "Nagłówek karty. (text-base)"
+      "use": "Nagłówek karty. (text-xl)"
     },
     {
       "id": "body",
-      "size": "14px",
+      "size": "16px",
       "weight": 400,
-      "lineHeight": 1.43,
+      "lineHeight": 1.5,
       "tracking": "0",
-      "use": "Treść interfejsu i raportu, opisy. Domyślny rozmiar. (text-sm)"
+      "use": "Treść interfejsu i raportu, opisy. Domyślny rozmiar bazowy. (text-base)"
     },
     {
       "id": "callout",
-      "size": "13px",
-      "weight": 400,
-      "lineHeight": 1.4,
+      "size": "14px",
+      "weight": 500,
+      "lineHeight": 1.43,
       "tracking": "0",
-      "use": "Etykiety pomocnicze, wartości metryk w tabelach."
+      "use": "Etykiety pomocnicze, wartości metryk w tabelach. (text-sm)"
     },
     {
       "id": "caption",
-      "size": "12px",
+      "size": "14px",
       "weight": 400,
-      "lineHeight": 1.33,
+      "lineHeight": 1.43,
       "tracking": "0.01em",
-      "use": "Znaczniki czasu, etykieta AI. Nigdy dla treści istotnej. (text-xs)"
+      "use": "Znaczniki czasu, etykieta AI. Minimalny dopuszczalny tekst pomocniczy. (text-sm)"
     }
   ],
   "rules": [
     "Waga 600 zamiast 700 — cięższy krój psuje spokojny ton.",
-    "Nigdy poniżej 12px. Etykieta wymagana przez EU AI Act musi być czytelna, nie ukryta.",
+    "Nigdy poniżej 14px (text-sm). Klasy text-xs, text-[11px], text-[10px] są surowo zabronione.",
     "Długość wiersza w raporcie maksymalnie 68 znaków.",
     "Bez wersalików w treści — pogarszają czytelność przy zmęczonym wzroku."
   ]
@@ -287,10 +287,11 @@ export const MOTION = {
 
 export const ACCESSIBILITY = {
   "contrastMinimum": 4.5,
-  "touchTargetMinimum": "32px",
+  "touchTargetMinimum": "44px",
   "focusVisible": "Zawsze widoczny pierścień 2px w kolorze akcentu z odsunięciem 2px.",
   "textZoom": "Układ nie psuje się przy powiększeniu do 200%.",
   "rules": [
+    "Minimalny cel dotykowy dla przycisków i interakcji: 44x44px (min-h-11 min-w-11).",
     "Każda ikona niosąca znaczenie ma etykietę tekstową.",
     "Formularz opisany etykietą, nigdy samym placeholderem.",
     "Nawigacja klawiaturą obejmuje wszystkie akcje."

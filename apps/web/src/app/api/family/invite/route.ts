@@ -1,28 +1,26 @@
+import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { checkRateLimit } from '@/lib/rate-limiter'
-import { renderFamilyInviteEmail } from '@/lib/notification-templates'
 import { authorizeInviteTarget, formatInviteResponse } from '@/lib/invite-authorization'
 import { resolveRelativeRole } from '@/lib/onboarding'
+import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
+import {
+  getAuthUserFromRequest,
+  getBaseUrlFromRequest,
+  sendFamilyInviteEmail
+} from '@/lib/family-invite-helpers'
 
 export async function POST(request: Request) {
   try {
-    const authHeader = request.headers.get('authorization')
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7).trim() : undefined
-    const supabase = await createClient(token)
-    let user = null
-    if (token) {
-      const { data: authData } = await supabase.auth.getUser(token)
-      user = authData?.user || null
-    }
-    if (!user) {
-      const { data: cookieAuthData } = await supabase.auth.getUser()
-      user = cookieAuthData?.user || null
-    }
-    
+    const { user } = await getAuthUserFromRequest(request)
     if (!user) {
       return NextResponse.json({ error: 'Brak autoryzacji' }, { status: 401 })
+    }
+
+    const cookieStore = await cookies()
+    if (isImpersonationSessionActive(cookieStore, user)) {
+      return NextResponse.json({ error: 'Operacja niedozwolona w trybie podglądu' }, { status: 403 })
     }
 
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1'
@@ -35,7 +33,6 @@ export async function POST(request: Request) {
     }
 
     const appRole = user.app_metadata?.role
-
     if (appRole !== 'org_admin' && appRole !== 'admin' && appRole !== 'super_admin') {
       return NextResponse.json({ error: 'Brak uprawnień administratora' }, { status: 403 })
     }
@@ -69,7 +66,7 @@ export async function POST(request: Request) {
     const orgId = target.organizationId
     const assignedRole = resolveRelativeRole(role)
 
-    // Create invitation record (bypassing RLS for simplicity, but we still inject orgId)
+    // Create invitation record
     const { data, error } = await adminClient
       .from('resident_invitations')
       .insert({
@@ -87,52 +84,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // Send invitation email via Mailtrap
-    const host = request.headers.get('host') || 'localhost:3000'
-    const protocol = request.headers.get('x-forwarded-proto') || 'http'
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || `${protocol}://${host}`
+    const baseUrl = getBaseUrlFromRequest(request)
     const registerUrl = `${baseUrl}/register?token=${data.id}`
-    
-    let emailSent = false
-    if (process.env.EMAIL_PROVIDER_KEY) {
-      console.log(`[EMAIL] Wysyłanie zaproszenia...`)
-
-      // Pobierz nazwę placówki
-      let orgName: string | undefined
-      const { data: org } = await adminClient
-        .from('organizations')
-        .select('name')
-        .eq('id', orgId)
-        .maybeSingle()
-      if (org?.name) orgName = org.name
-
-      const emailTemplate = renderFamilyInviteEmail({ inviteUrl: registerUrl, organizationName: orgName })
-      
-      const emailRes = await fetch('https://send.api.mailtrap.io/api/send', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.EMAIL_PROVIDER_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          to: [{ email: email.trim() }],
-          from: { email: 'noreply@silvercare.space', name: 'Silver Care' },
-          subject: emailTemplate.subject,
-          text: emailTemplate.text,
-          html: emailTemplate.html,
-        })
-      })
-
-      if (!emailRes.ok) {
-        const errorData = await emailRes.text()
-        console.error('Błąd Mailtrap API:', errorData)
-      } else {
-        console.log(`[EMAIL] Zaproszenie wysłane pomyślnie.`)
-        emailSent = true
-      }
-    } else {
-      console.log(`[EMAIL] Brak EMAIL_PROVIDER_KEY. Zaproszenie wygenerowane pomyślnie.`)
-    }
+    const emailSent = await sendFamilyInviteEmail({
+      email,
+      orgId,
+      registerUrl,
+      adminClient
+    })
 
     const isProduction = process.env.NODE_ENV === 'production'
     return NextResponse.json(
@@ -143,29 +102,22 @@ export async function POST(request: Request) {
         emailSent,
       })
     )
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Wystąpił błąd serwera' }, { status: 500 })
   }
 }
 
 export async function PATCH(request: Request) {
   try {
-    const authHeader = request.headers.get('authorization')
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7).trim() : undefined
-    const supabase = await createClient(token)
-    let user = null
-    if (token) {
-      const { data: authData } = await supabase.auth.getUser(token)
-      user = authData?.user || null
-    }
-    if (!user) {
-      const { data: cookieAuthData } = await supabase.auth.getUser()
-      user = cookieAuthData?.user || null
-    }
-
+    const { user } = await getAuthUserFromRequest(request)
     if (!user) {
       return NextResponse.json({ error: 'Brak autoryzacji' }, { status: 401 })
+    }
+
+    const cookieStore = await cookies()
+    if (isImpersonationSessionActive(cookieStore, user)) {
+      return NextResponse.json({ error: 'Operacja niedozwolona w trybie podglądu' }, { status: 403 })
     }
 
     const appRole = user.app_metadata?.role
@@ -183,7 +135,6 @@ export async function PATCH(request: Request) {
     const adminClient = createAdminClient()
     const userOrgId = user.app_metadata?.organization_id
 
-    // Pobierz zaproszenie
     const { data: invitation, error: fetchErr } = await adminClient
       .from('resident_invitations')
       .select('*, residents(first_name, last_name, organization_id)')
@@ -194,7 +145,6 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'Nie znaleziono zaproszenia' }, { status: 404 })
     }
 
-    // Sprawdzenie uprawnień do placówki
     if (appRole !== 'super_admin' && userOrgId && invitation.organization_id !== userOrgId) {
       return NextResponse.json({ error: 'Brak dostępu do zaproszenia z innej placówki' }, { status: 403 })
     }
@@ -216,44 +166,14 @@ export async function PATCH(request: Request) {
     }
 
     if (action === 'resend') {
-      const host = request.headers.get('host') || 'localhost:3000'
-      const protocol = request.headers.get('x-forwarded-proto') || 'http'
-      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || `${protocol}://${host}`
+      const baseUrl = getBaseUrlFromRequest(request)
       const registerUrl = `${baseUrl}/register?token=${invitation.id}`
-
-      let emailSent = false
-      if (process.env.EMAIL_PROVIDER_KEY && invitation.email) {
-        let orgName: string | undefined
-        const { data: org } = await adminClient
-          .from('organizations')
-          .select('name')
-          .eq('id', invitation.organization_id)
-          .maybeSingle()
-        if (org?.name) orgName = org.name
-
-        const emailTemplate = renderFamilyInviteEmail({ inviteUrl: registerUrl, organizationName: orgName })
-        const emailRes = await fetch('https://send.api.mailtrap.io/api/send', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${process.env.EMAIL_PROVIDER_KEY}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            to: [{ email: invitation.email.trim() }],
-            from: { email: 'noreply@silvercare.space', name: 'Silver Care' },
-            subject: emailTemplate.subject,
-            text: emailTemplate.text,
-            html: emailTemplate.html,
-          })
-        })
-
-        if (!emailRes.ok) {
-          const errorData = await emailRes.text()
-          console.error('Błąd Mailtrap API:', errorData)
-        } else {
-          emailSent = true
-        }
-      }
+      const emailSent = await sendFamilyInviteEmail({
+        email: invitation.email || '',
+        orgId: invitation.organization_id,
+        registerUrl,
+        adminClient
+      })
 
       const isProduction = process.env.NODE_ENV === 'production'
       const formatted = formatInviteResponse({
@@ -267,8 +187,8 @@ export async function PATCH(request: Request) {
     }
 
     return NextResponse.json({ error: 'Nieznana akcja' }, { status: 400 })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Wystąpił błąd serwera' }, { status: 500 })
   }
 }

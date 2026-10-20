@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run",
     "test:db": "TEST_DB=true vitest run --passWithNoTests tests/db/",
     "db:types": "node tools/sc-generate-types.mjs",
     "test:e2e": "playwright test",

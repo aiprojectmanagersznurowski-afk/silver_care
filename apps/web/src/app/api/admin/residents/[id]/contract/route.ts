@@ -1,5 +1,7 @@
+import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
 
 /**
  * @REQ: ADM-RESIDENT-ADD
@@ -16,6 +18,11 @@ export async function POST(
 
     if (!user) {
       return NextResponse.json({ error: 'Brak autoryzacji' }, { status: 401 })
+    }
+
+    const cookieStore = await cookies()
+    if (isImpersonationSessionActive(cookieStore, user)) {
+      return NextResponse.json({ error: 'Operacja niedozwolona w trybie podglądu' }, { status: 403 })
     }
 
     const role = user.app_metadata?.role
@@ -91,6 +98,11 @@ export async function DELETE(
 
     if (!user) {
       return NextResponse.json({ error: 'Brak autoryzacji' }, { status: 401 })
+    }
+
+    const cookieStore = await cookies()
+    if (isImpersonationSessionActive(cookieStore, user)) {
+      return NextResponse.json({ error: 'Operacja niedozwolona w trybie podglądu' }, { status: 403 })
     }
 
     const role = user.app_metadata?.role

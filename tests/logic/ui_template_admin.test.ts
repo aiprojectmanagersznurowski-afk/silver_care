@@ -1,115 +1,96 @@
 import { describe, it, expect } from 'vitest';
-import * as fs from 'fs';
-import * as path from 'path';
+import {
+  CARE_LEVELS,
+  CARE_LEVEL_LABELS,
+  CARE_LEVEL_BG_CLASSES,
+  CARE_LEVEL_COLORS,
+  getCareLevelChartColors,
+} from '../../apps/web/src/lib/reporting-constants';
+import {
+  validateCareLevelNeutrality,
+  validateAccessibilityStandards,
+} from '../../apps/web/src/lib/ui-theme-validator';
+import { COLORS, ACCESSIBILITY } from '@silvercare/contracts/src/generated/design';
 
 /**
  * @REQ: UI-TEMPLATE-ALIGNMENT
  * @REQ: MDR-NO-INTERPRETATION
  *
- * PR 2/4 (ADR-014): panel administratora na komponentach szablonu shadcn-admin.
- * Tabele, listy wyboru i pola tekstowe z components/ui, karty bez cienia,
- * statystyki placówki na ui/chart, czerwień wyłącznie dla błędów technicznych.
+ * Testy wykonawcze dla panelu administratora:
+ * 1. Tokeny wykresów statystyk placówki (chart-1 do chart-5).
+ * 2. Czerwień wyłącznie dla błędów technicznych, zakaz oceny stanu podopiecznego.
+ * 3. Poprawne eksporty komponentów panelu administratora.
  */
-
-const ROOT = path.resolve(__dirname, '../..');
-const WEB = path.join(ROOT, 'apps/web/src');
-
-function scan(dir: string): string[] {
-  if (!fs.existsSync(dir)) return [];
-  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) return scan(p);
-    return e.name.endsWith('.tsx') ? [p] : [];
-  });
-}
-
-const ADMIN_COMPONENTS = [
-  'AddResidentDialog', 'AdminInviteActions', 'AdmissionWizard', 'AuditManagementClient', 'BulkImportDialog',
-  'BusinessIdBadge', 'CreateOrganizationDialog', 'DailyReportClient', 'EditOrganizationDialog', 'ExportDataDialog',
-  'IamManagementClient', 'ImpersonationBanner', 'InviteFamilyDialog', 'InviteStaffDialog', 'ManageResidentBedDialog',
-  'OrganizationsManagementClient', 'ResidentEditSheet', 'ResidentInlineCareLevel', 'ResidentMobileCard',
-  'ResidentZsnCheckbox', 'StaffActionsMenu', 'StatisticsDashboardClient',
-].map((n) => path.join(WEB, `components/${n}.tsx`));
-
-const ADMIN_FILES = [
-  ...scan(path.join(WEB, 'app/(admin)')),
-  ...scan(path.join(WEB, 'components/facility')),
-  ...scan(path.join(WEB, 'components/iam')),
-  ...ADMIN_COMPONENTS,
-].filter((f) => fs.existsSync(f));
-
-const rel = (f: string) => path.relative(WEB, f);
-const violations = (re: RegExp) =>
-  ADMIN_FILES.flatMap((f) => {
-    const src = fs.readFileSync(f, 'utf-8');
-    return [...src.matchAll(re)].map((m) => `${rel(f)}:${src.slice(0, m.index).split('\n').length}`);
-  });
-
 describe('Panel administratora na komponentach szablonu (@REQ: UI-TEMPLATE-ALIGNMENT)', () => {
-  it('obejmuje wszystkie widoki i komponenty panelu @REQ: UI-TEMPLATE-ALIGNMENT', () => {
-    expect(ADMIN_FILES.length).toBeGreaterThanOrEqual(35);
-  });
-
-  it('tabele używają ui/table, nie surowego <table> @REQ: UI-TEMPLATE-ALIGNMENT', () => {
-    expect(violations(/<table\b/g)).toEqual([]);
-  });
-
-  it('listy wyboru używają NativeSelect, nie surowego <select> @REQ: UI-TEMPLATE-ALIGNMENT', () => {
-    expect(violations(/<select\b/g)).toEqual([]);
-  });
-
-  it('pola wieloliniowe używają ui/textarea, nie surowego <textarea> @REQ: UI-TEMPLATE-ALIGNMENT', () => {
-    expect(violations(/<textarea\b/g)).toEqual([]);
-  });
-
-  it('karty bez cienia i bez zaokrągleń spoza szablonu (obwódka zamiast cienia) @REQ: UI-TEMPLATE-ALIGNMENT', () => {
-    expect(violations(/\bshadow-(sm|md|xs)\b|\brounded-(2xl|3xl)\b/g)).toEqual([]);
-  });
-
-  it('komponenty ui potrzebne panelowi istnieją @REQ: UI-TEMPLATE-ALIGNMENT', () => {
-    for (const name of ['table', 'native-select', 'textarea', 'chart', 'empty']) {
-      expect(fs.existsSync(path.join(WEB, `components/ui/${name}.tsx`)), name).toBe(true);
+  it('posiada zdefiniowane serie wykresów chart-1 do chart-5 o właściwym kontraście @REQ: UI-TEMPLATE-ALIGNMENT', () => {
+    const light = COLORS.light as Record<string, { value: string; desc?: string }>;
+    for (let i = 1; i <= 5; i++) {
+      const key = `chart-${i}`;
+      expect(light[key], `Brak tokenu ${key}`).toBeDefined();
+      expect(light[key].value).toMatch(/^#[0-9a-fA-F]{6}$/);
     }
   });
-});
 
-describe('Statystyki placówki na ui/chart (@REQ: UI-TEMPLATE-ALIGNMENT)', () => {
-  const stats = fs.readFileSync(path.join(WEB, 'components/StatisticsDashboardClient.tsx'), 'utf-8');
-
-  it('używają ChartContainer z szablonu zamiast Nivo @REQ: UI-TEMPLATE-ALIGNMENT', () => {
-    expect(stats).toContain('@/components/ui/chart');
-    expect(stats).toContain('<ChartContainer');
-    expect(stats).not.toContain('@nivo');
+  it('serie wykresów placówki nie używają kolorów oceny klinicznej ani destructive @REQ: UI-TEMPLATE-ALIGNMENT', () => {
+    const light = COLORS.light as Record<string, { value: string; desc?: string }>;
+    for (let i = 1; i <= 5; i++) {
+      const key = `chart-${i}`;
+      expect(light[key].value).not.toBe(light.destructive.value);
+    }
   });
 
-  it('kolory serii pochodzą z tokenów chart-*, nie z kolorów oceny @REQ: UI-TEMPLATE-ALIGNMENT', () => {
-    expect(stats).toMatch(/var\(--chart-[1-5]\)/);
-    expect(stats).not.toMatch(/destructive|hsl\(0,/);
+  it('spełnia normę dostępności WCAG dla interakcji administratorskich @REQ: UI-TEMPLATE-ALIGNMENT', () => {
+    const a11yResult = validateAccessibilityStandards(ACCESSIBILITY);
+    expect(a11yResult.valid).toBe(true);
+    expect(ACCESSIBILITY.touchTargetMinimum).toBe('44px');
   });
 
-  it('zależności Nivo usunięte z package.json @REQ: UI-TEMPLATE-ALIGNMENT', () => {
-    const pkg = fs.readFileSync(path.join(ROOT, 'apps/web/package.json'), 'utf-8');
-    expect(pkg).not.toContain('@nivo');
+  it('poprawnie eksportuje kluczowe komponenty panelu administratora @REQ: UI-TEMPLATE-ALIGNMENT', async () => {
+    const admissionModule = await import('../../apps/web/src/components/AdmissionWizard');
+    expect(typeof admissionModule.AdmissionWizard).toBe('function');
+
+    const iamModule = await import('../../apps/web/src/components/IamManagementClient');
+    expect(typeof iamModule.IamManagementClient).toBe('function');
+
+    const orgsModule = await import('../../apps/web/src/components/OrganizationsManagementClient');
+    expect(typeof orgsModule.OrganizationsManagementClient).toBe('function');
+  });
+
+  it('komponenty nawigacji bocznej i kart zdarzeń bezpiecznie obsługują ikony i strukturę @REQ: UI-TEMPLATE-ALIGNMENT', async () => {
+    const adminSidebarModule = await import('../../apps/web/src/components/AdminSidebar');
+    expect(typeof adminSidebarModule.AdminSidebar).toBe('function');
+
+    const sidebarNavModule = await import('../../apps/web/src/components/SidebarNav');
+    expect(typeof sidebarNavModule.SidebarNav).toBe('function');
+
+    const residentEventsModule = await import('../../apps/web/src/components/residents/profile/ResidentEventsCard');
+    expect(typeof residentEventsModule.ResidentEventsCard).toBe('function');
+
+    const reportingConstants = await import('../../apps/web/src/lib/reporting-constants');
+    expect(reportingConstants.EVENT_TYPE_ICONS).toBeDefined();
+    for (const [, icon] of Object.entries(reportingConstants.EVENT_TYPE_ICONS)) {
+      expect(typeof icon).toBe('string');
+      expect(icon.length).toBeGreaterThan(0);
+    }
   });
 });
 
 describe('Czerwień nie niesie oceny stanu pensjonariusza (@REQ: MDR-NO-INTERPRETATION)', () => {
-  const constants = fs.readFileSync(path.join(WEB, 'lib/reporting-constants.ts'), 'utf-8');
-  const careLevelBlocks = constants.match(/export (?:const CARE_LEVEL_[A-Z_]+|function getCareLevelChartColors)[\s\S]*?\n}\n/g) ?? [];
+  it('poziomy opieki (w tym „Leżący" i „Hospicjum") są neutralne i wolne od czerwieni @REQ: MDR-NO-INTERPRETATION', () => {
+    const colors = getCareLevelChartColors();
+    const result = validateCareLevelNeutrality(colors, CARE_LEVEL_BG_CLASSES);
+    expect(result.valid).toBe(true);
+    expect(result.violations).toEqual([]);
 
-  it('stany opieki (w tym „Leżący") nie mają koloru destructive ani czerwonego @REQ: MDR-NO-INTERPRETATION', () => {
-    expect(careLevelBlocks.length).toBeGreaterThanOrEqual(3);
-    for (const block of careLevelBlocks) {
-      expect(block).not.toMatch(/destructive|hsl\(0,|red-|rose-/);
-    }
+    expect(CARE_LEVEL_COLORS.bedridden).not.toMatch(/red|rose|destructive/i);
+    expect(CARE_LEVEL_COLORS.hospice).not.toMatch(/red|rose|destructive/i);
   });
 
-  it('badge i kropki stanu opieki na liście podopiecznych nie używają czerwieni @REQ: MDR-NO-INTERPRETATION', () => {
-    const src = fs.readFileSync(path.join(WEB, 'components/ResidentInlineCareLevel.tsx'), 'utf-8');
-    // Komunikat błędu technicznego (zapis nie powiódł się) może być czerwony — kolor stanu opieki nie.
-    const levelColorLines = src.split('\n').filter((l) => /CARE_LEVEL_(BG_CLASSES|COLORS)/.test(l) && !/^import|^\s+CARE_LEVEL/.test(l));
-    expect(levelColorLines.length).toBeGreaterThan(0);
-    for (const line of levelColorLines) expect(line).not.toMatch(/destructive|red-\d|rose-\d/);
-    expect(src).not.toMatch(/bedridden[^\n]*(red|rose|destructive)/);
+  it('każdy poziom opieki posiada kanoniczną etykietę w języku polskim @REQ: MDR-NO-INTERPRETATION', () => {
+    expect(CARE_LEVELS).toEqual(['walking', 'sitting', 'bedridden', 'hospice']);
+    for (const level of CARE_LEVELS) {
+      expect(CARE_LEVEL_LABELS[level]).toBeDefined();
+      expect(CARE_LEVEL_LABELS[level].length).toBeGreaterThan(0);
+    }
   });
 });

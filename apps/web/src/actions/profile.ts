@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { validatePasswordStrength } from '@/lib/password'
+import { isImpersonationSessionActive, assertMutationAllowedDuringImpersonation, safeGetCookieStore } from '@/lib/impersonation-guards'
 
 export async function changePasswordAction(formData: FormData) {
   const currentPassword = formData.get('currentPassword') as string
@@ -27,6 +28,12 @@ export async function changePasswordAction(formData: FormData) {
 
   if (!user || !user.email) {
     return { error: 'Brak autoryzowanej sesji użytkownika.' }
+  }
+
+  const cookieStore = await safeGetCookieStore()
+  const guard = assertMutationAllowedDuringImpersonation(isImpersonationSessionActive(cookieStore, user))
+  if (!guard.allowed) {
+    return { error: guard.error }
   }
 
   // Weryfikacja bieżącego hasła

@@ -49,7 +49,7 @@ export async function GET(
         content: cleanedContent
       }
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API error:', error);
     return NextResponse.json({ error: 'Wewnętrzny błąd serwera' }, { status: 500 });
   }

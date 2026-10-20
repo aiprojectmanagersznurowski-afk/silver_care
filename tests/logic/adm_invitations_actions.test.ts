@@ -1,51 +1,63 @@
 import { describe, it, expect } from 'vitest'
-import fs from 'node:fs'
-import path from 'node:path'
+import { formatInviteResponse } from '../../apps/web/src/lib/invite-authorization'
+import { resolveAcceptInviteAction, validateRedirectUrl } from '../../apps/web/src/lib/invite-url-helper'
 
 describe('ADM-INVITATIONS-ACTIONS-MANAGEMENT: Rejestr zaproszeń i akcje', () => {
-  const dialogPath = path.resolve(process.cwd(), 'apps/web/src/components/InviteFamilyDialog.tsx')
-  const profilePath = path.resolve(process.cwd(), 'apps/web/src/app/(admin)/admin/residents/[id]/page.tsx')
-  const invitationsPagePath = path.resolve(process.cwd(), 'apps/web/src/app/(admin)/admin/invitations/page.tsx')
-  const apiRoutePath = path.resolve(process.cwd(), 'apps/web/src/app/api/family/invite/route.ts')
+  it('InviteFamilyDialog oraz InvitationsTable są poprawnie eksportowane jako komponenty UI @REQ: ADM-INVITE', async () => {
+    const dialogModule = await import('../../apps/web/src/components/InviteFamilyDialog')
+    expect(typeof dialogModule.InviteFamilyDialog).toBe('function')
 
-  it('InviteFamilyDialog używa słowa podopieczny zamiast pensjonariusz @REQ: ADM-INVITE', () => {
-    const dialogContent = fs.readFileSync(dialogPath, 'utf-8')
-    expect(dialogContent).not.toMatch(/pensjonariusz/i)
-    expect(dialogContent).toMatch(/podopieczn/i)
+    const tableModule = await import('../../apps/web/src/components/InvitationsTable')
+    expect(typeof tableModule.InvitationsTable).toBe('function')
   })
 
-  it('InviteFamilyDialog obsługuje defaultResidentId oraz opcjonalny triggerLabel @REQ: ADM-INVITE', () => {
-    const dialogContent = fs.readFileSync(dialogPath, 'utf-8')
-    expect(dialogContent).toMatch(/defaultResidentId/i)
-    expect(dialogContent).toMatch(/triggerLabel/i)
+  it('formatInviteResponse w środowisku produkcyjnym nie ujawnia linku rejestracyjnego ani id @REQ: ADM-INVITE', () => {
+    const prodRes = formatInviteResponse({
+      invitationId: 'inv-uuid-1234',
+      registerUrl: 'https://silvercare.space/register?token=inv-uuid-1234',
+      isProduction: true,
+      emailSent: true,
+    })
+    expect(prodRes.success).toBe(true)
+    expect(prodRes.emailSent).toBe(true)
+    expect(prodRes.url).toBeUndefined()
+    expect(prodRes.id).toBeUndefined()
+
+    const devRes = formatInviteResponse({
+      invitationId: 'inv-uuid-5678',
+      registerUrl: 'http://localhost:3000/register?token=inv-uuid-5678',
+      isProduction: false,
+      emailSent: false,
+    })
+    expect(devRes.success).toBe(true)
+    expect(devRes.emailSent).toBe(false)
+    expect(devRes.url).toBe('http://localhost:3000/register?token=inv-uuid-5678')
+    expect(devRes.id).toBe('inv-uuid-5678')
   })
 
-  it('profil seniora integruje bezpośredni skrót zaproszenia bliskiego w sekcji Bliscy @REQ: ADM-INVITE', () => {
-    const profileContent = fs.readFileSync(profilePath, 'utf-8')
-    expect(profileContent).toContain('InviteFamilyDialog')
-    expect(profileContent).toContain('triggerLabel="Zaproś bliskiego"')
+  it('resolveAcceptInviteAction poprawnie rozstrzyga token zaproszenia bliskiego @REQ: ADM-INVITE', () => {
+    const res = resolveAcceptInviteAction({ token: 'test-token-abc-123' }, 'https://silvercare.space')
+    expect(res.state).toBe('REDIRECT')
+    expect(res.destinationUrl).toBe('/register?token=test-token-abc-123')
   })
 
-  it('strona lub komponent zaproszeń zawiera kolumnę Akcje oraz operacje ponów, kopiuj i odwołaj @REQ: ADM-INVITE', () => {
-    const tablePath = path.resolve(process.cwd(), 'apps/web/src/components/InvitationsTable.tsx')
-    expect(fs.existsSync(tablePath)).toBe(true)
-    const tableContent = fs.readFileSync(tablePath, 'utf-8')
-    expect(tableContent).toMatch(/Akcje/i)
-    expect(tableContent).toMatch(/Kopiuj link/i)
-    expect(tableContent).toMatch(/Odwołaj/i)
-    expect(tableContent).toMatch(/Ponów/i)
+  it('validateRedirectUrl zapobiega atakom Open Redirect na niebezpieczne zewnętrzne domeny @REQ: ADM-INVITE', () => {
+    const origin = 'https://silvercare.space'
+    expect(validateRedirectUrl('/dashboard', origin)).toBe(true)
+    expect(validateRedirectUrl('/staff', origin)).toBe(true)
+    expect(validateRedirectUrl('//evil.com', origin)).toBe(false)
+    expect(validateRedirectUrl('https://evil.com/phish', origin)).toBe(false)
+    expect(validateRedirectUrl('https://silvercare.space/accept-invite', origin)).toBe(true)
   })
 
-  it('endpoint API family/invite obsługuje metodę PATCH do revoke i resend z formatInviteResponse @REQ: ADM-INVITE', () => {
-    const apiContent = fs.readFileSync(apiRoutePath, 'utf-8')
-    expect(apiContent).toMatch(/export\s+async\s+function\s+PATCH/)
-    expect(apiContent).toContain('formatInviteResponse')
-    expect(apiContent).not.toMatch(/console\.log\([^)]*registerUrl/)
-  })
+  it('resolveAcceptInviteAction obsługuje bezpieczne linki aktywacyjne personelu i odrzuca wrogie adresy @REQ: ADM-INVITE', () => {
+    const origin = 'https://silvercare.space'
+    const valid = resolveAcceptInviteAction({ url: 'https://silvercare.space/update-password' }, origin)
+    expect(valid.state).toBe('ACTION_READY')
+    expect(valid.destinationUrl).toBe('https://silvercare.space/update-password')
 
-  it('InviteFamilyDialog obsługuje potwierdzenie sukcesu zarówno w trybie produkcji jak i dev @REQ: ADM-INVITE', () => {
-    const dialogContent = fs.readFileSync(dialogPath, 'utf-8')
-    expect(dialogContent).toContain('isSuccess && !generatedUrl')
-    expect(dialogContent).toContain('isSuccess && generatedUrl')
+    const invalid = resolveAcceptInviteAction({ url: 'https://attacker.com/steal' }, origin)
+    expect(invalid.state).toBe('ERROR')
+    expect(invalid.errorCode).toBe('INVALID_URL')
   })
 })

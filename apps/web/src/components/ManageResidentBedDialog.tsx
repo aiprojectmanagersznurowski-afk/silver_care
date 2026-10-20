@@ -21,10 +21,31 @@ interface ManageResidentBedDialogProps {
   currentRoomNumber?: string
 }
 
+interface BedAssignmentInfo {
+  resident?: {
+    id: string
+    first_name?: string
+    last_name?: string
+  } | null
+}
+
+interface FacilityBedItem {
+  id: string
+  room_id: string
+  label: string
+  is_active: boolean
+  active_assignment?: BedAssignmentInfo | null
+}
+
+interface FacilityRoomItem {
+  id: string
+  number: string
+}
+
 export function ManageResidentBedDialog({ residentId, currentBedLabel, currentRoomNumber }: ManageResidentBedDialogProps) {
   const [open, setOpen] = useState(false)
   const [bedId, setBedId] = useState('')
-  const [beds, setBeds] = useState<any[]>([])
+  const [beds, setBeds] = useState<FacilityBedItem[]>([])
   const [rooms, setRooms] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
   const [isFetching, setIsFetching] = useState(false)
@@ -46,7 +67,7 @@ export function ManageResidentBedDialog({ residentId, currentBedLabel, currentRo
             const roomsData = await roomsRes.json()
             
             const roomsMap: Record<string, string> = {}
-            roomsData.rooms?.forEach((r: any) => {
+            roomsData.rooms?.forEach((r: FacilityRoomItem) => {
               roomsMap[r.id] = r.number
             })
             
@@ -94,8 +115,8 @@ export function ManageResidentBedDialog({ residentId, currentBedLabel, currentRo
         setOpen(false)
         window.location.reload()
       }, 1500)
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Wystąpił błąd')
     } finally {
       setIsLoading(false)
     }
@@ -103,8 +124,8 @@ export function ManageResidentBedDialog({ residentId, currentBedLabel, currentRo
 
   // Get available beds
   const availableBeds = beds
-    .filter((b: any) => b.is_active && (!b.active_assignment || b.active_assignment.resident?.id === residentId))
-    .map((b: any) => ({
+    .filter((b) => b.is_active && (!b.active_assignment || b.active_assignment.resident?.id === residentId))
+    .map((b) => ({
       ...b,
       roomNumber: rooms[b.room_id] || 'Nieznana',
     }))

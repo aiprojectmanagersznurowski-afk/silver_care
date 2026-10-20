@@ -41,7 +41,7 @@ export function CommunicationWidget({ residentId }: { residentId?: string }) {
 
   useEffect(() => {
     if (open) {
-      loadMessages();
+      void Promise.resolve().then(() => loadMessages());
       const interval = setInterval(loadMessages, 30000);
       return () => clearInterval(interval);
     }
@@ -71,7 +71,7 @@ export function CommunicationWidget({ residentId }: { residentId?: string }) {
           <div className="flex items-center justify-between bg-primary px-5 py-4 text-primary-foreground">
             <div className="leading-tight">
               <p className="text-[1.1rem] font-medium">Zespół opieki</p>
-              <p className="flex items-center gap-1.5 text-[0.78rem] opacity-90">
+              <p className="flex items-center gap-1.5 text-sm opacity-90">
                 <span className="h-2 w-2 rounded-full bg-primary" /> Silver Care · kontakt z placówką
               </p>
             </div>
@@ -94,7 +94,7 @@ export function CommunicationWidget({ residentId }: { residentId?: string }) {
 
           {/* status bar */}
           {messages.length > 0 && (
-            <div className="px-4 py-2 bg-muted/50 border-b border-border flex items-center justify-between text-[11px] text-muted-foreground">
+            <div className="px-4 py-2 bg-muted/50 border-b border-border flex items-center justify-between text-sm text-muted-foreground">
               {messages[messages.length - 1]?.is_from_family ? (
                 <div className="flex items-center gap-1.5">
                   <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
@@ -119,7 +119,7 @@ export function CommunicationWidget({ residentId }: { residentId?: string }) {
                 <p className="text-sm font-medium text-foreground">
                   Napisz wiadomość do personelu opiekuńczego.
                 </p>
-                <p className="text-xs text-muted-foreground mt-1 max-w-[220px]">
+                <p className="text-sm text-muted-foreground mt-1 max-w-[220px]">
                   Odpowiedź pojawi się bezpośrednio w tym oknie oraz w zakładce Wiadomości.
                 </p>
               </div>
@@ -134,7 +134,7 @@ export function CommunicationWidget({ residentId }: { residentId?: string }) {
                     <div key={m.id} className="flex flex-col">
                       {showTime && (
                         <div className="flex justify-center my-4">
-                          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider bg-card px-2 py-0.5 rounded-full border border-border">
+                          <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider bg-card px-2 py-0.5 rounded-full border border-border">
                             {format(new Date(m.created_at), "EEEE, d MMMM, HH:mm", { locale: pl })}
                           </span>
                         </div>
@@ -145,20 +145,20 @@ export function CommunicationWidget({ residentId }: { residentId?: string }) {
                           <div className="max-w-[80%] rounded-xl rounded-br-md bg-primary px-4 py-2.5 text-primary-foreground">
                             <p className="text-[0.92rem] leading-relaxed whitespace-pre-wrap">{m.content}</p>
                           </div>
-                          <span className="mt-1 text-[0.7rem] text-muted-foreground flex items-center gap-1">
+                          <span className="mt-1 text-sm text-muted-foreground flex items-center gap-1">
                             {format(new Date(m.created_at), "HH:mm")} • <span className="text-primary font-medium">✓ Doręczono</span>
                           </span>
                         </div>
                       ) : (
                         <div className="flex gap-2.5">
                           <Avatar className="mt-0.5 h-8 w-8">
-                            <AvatarFallback className="bg-accent text-primary font-medium text-xs">SC</AvatarFallback>
+                            <AvatarFallback className="bg-accent text-primary font-medium text-sm">SC</AvatarFallback>
                           </Avatar>
                           <div>
                             <div className="max-w-[85%] rounded-xl rounded-tl-md bg-card px-4 py-2.5 border border-border">
                               <p className="text-[0.92rem] leading-relaxed text-foreground whitespace-pre-wrap">{m.content}</p>
                             </div>
-                            <span className="ml-1 mt-1 block text-[0.7rem] text-muted-foreground">
+                            <span className="ml-1 mt-1 block text-sm text-muted-foreground">
                               Personel dyżurny · {format(new Date(m.created_at), "HH:mm")}
                             </span>
                           </div>
@@ -201,7 +201,7 @@ export function CommunicationWidget({ residentId }: { residentId?: string }) {
                 </button>
               </div>
               {sendError && (
-                <p className="px-2 pt-1 text-xs text-destructive font-medium animate-in fade-in">
+                <p className="px-2 pt-1 text-sm text-destructive font-medium animate-in fade-in">
                   {sendError}
                 </p>
               )}

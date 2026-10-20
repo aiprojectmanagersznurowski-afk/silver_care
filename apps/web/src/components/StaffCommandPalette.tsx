@@ -26,7 +26,7 @@ export function StaffCommandPalette({ residents = [] }: StaffCommandPaletteProps
   // Pobierz listę podopiecznych jeśli nie przekazano w propsach
   useEffect(() => {
     if (residents.length > 0) {
-      setCachedResidents(residents)
+      void Promise.resolve().then(() => setCachedResidents(residents))
       return
     }
     async function load() {
@@ -68,8 +68,10 @@ export function StaffCommandPalette({ residents = [] }: StaffCommandPaletteProps
 
   useEffect(() => {
     if (isOpen) {
-      setQuery('')
-      setSelectedIndex(0)
+      void Promise.resolve().then(() => {
+        setQuery('')
+        setSelectedIndex(0)
+      })
       setTimeout(() => inputRef.current?.focus(), 50)
     }
   }, [isOpen])
@@ -113,13 +115,13 @@ export function StaffCommandPalette({ residents = [] }: StaffCommandPaletteProps
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-border bg-card/80 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-colors min-h-[44px]"
+        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-border bg-card/80 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-colors min-h-[44px]"
         title="Otwórz paletę poleceń (Cmd+K)"
         aria-label="Otwórz szybkie polecenia i wyszukiwanie pensjonariuszy"
       >
         <Search className="h-4 w-4 text-muted-foreground" />
         <span className="hidden sm:inline">Szybkie polecenia</span>
-        <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground">
+        <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded bg-muted px-1.5 py-0.5 text-sm font-mono text-muted-foreground">
           <Command className="h-2.5 w-2.5" />K
         </kbd>
       </button>
@@ -183,7 +185,7 @@ export function StaffCommandPalette({ residents = [] }: StaffCommandPaletteProps
                           <div className="text-sm font-semibold">
                             {resident.first_name} {resident.last_name}
                           </div>
-                          <div className="text-[11px] text-muted-foreground">
+                          <div className="text-sm text-muted-foreground">
                             Enter: Dyktuj notatkę głosową
                           </div>
                         </div>
@@ -193,7 +195,7 @@ export function StaffCommandPalette({ residents = [] }: StaffCommandPaletteProps
                         <button
                           type="button"
                           onClick={() => handleSelectVoice(resident.id)}
-                          className="px-2.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white text-xs font-semibold inline-flex items-center gap-1 transition-colors min-h-[40px]"
+                          className="px-2.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white text-sm font-semibold inline-flex items-center gap-1 transition-colors min-h-11"
                           title="Dyktuj nową notatkę"
                         >
                           <Mic className="h-3.5 w-3.5" />
@@ -202,7 +204,7 @@ export function StaffCommandPalette({ residents = [] }: StaffCommandPaletteProps
                         <button
                           type="button"
                           onClick={() => handleSelectReports(resident.id)}
-                          className="px-2.5 py-1.5 rounded-lg border border-border hover:bg-muted text-foreground text-xs font-medium inline-flex items-center gap-1 transition-colors min-h-[40px]"
+                          className="px-2.5 py-1.5 rounded-lg border border-border hover:bg-muted text-foreground text-sm font-medium inline-flex items-center gap-1 transition-colors min-h-11"
                           title="Przejdź do raportów"
                         >
                           <FileText className="h-3.5 w-3.5 text-muted-foreground" />
@@ -220,7 +222,7 @@ export function StaffCommandPalette({ residents = [] }: StaffCommandPaletteProps
             </div>
 
             {/* Stopka z instrukcją klawiszy */}
-            <div className="border-t border-border px-4 py-2.5 bg-muted/50 flex items-center justify-between text-[11px] text-muted-foreground">
+            <div className="border-t border-border px-4 py-2.5 bg-muted/50 flex items-center justify-between text-sm text-muted-foreground">
               <span>Nawigacja: ↑ ↓ strzałki | Wybierz: Enter</span>
               <span>Zamknij: Esc</span>
             </div>

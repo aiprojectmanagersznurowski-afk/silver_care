@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
+import { isImpersonationSessionActive, assertMutationAllowedDuringImpersonation, safeGetCookieStore } from '@/lib/impersonation-guards'
 
 /**
  * Server action do przełączania kontaktu głównego podopiecznego.
@@ -16,12 +17,30 @@ export async function setPrimaryRelativeAction(linkId: string, residentId: strin
     return { error: 'Brak autoryzacji sesji.' }
   }
 
+  const cookieStore = await safeGetCookieStore()
+  const guard = assertMutationAllowedDuringImpersonation(isImpersonationSessionActive(cookieStore, user))
+  if (!guard.allowed) {
+    return { error: guard.error }
+  }
+
   const role = user.app_metadata?.role
   if (role !== 'org_admin' && role !== 'super_admin' && role !== 'admin') {
     return { error: 'Tylko administrator placówki może zarządzać kontaktami głównymi.' }
   }
 
   const adminClient = createAdminClient()
+
+  const orgId = user.app_metadata?.organization_id
+  if (orgId && role !== 'super_admin') {
+    const { data: resData } = await adminClient
+      .from('residents')
+      .select('organization_id')
+      .eq('id', residentId)
+      .single()
+    if (!resData || resData.organization_id !== orgId) {
+      return { error: 'Podopieczny nie należy do Twojej placówki' }
+    }
+  }
 
   const { error } = await adminClient
     .from('resident_relative_links')

@@ -76,15 +76,17 @@ Osiem sprzeczności znalezionych w dokumentach źródłowych, rozstrzygniętych 
 
 ---
 
-## ADR-007 — Dane medyczne usuwane przed modelem ✅
+## ADR-007 — Dane medyczne usuwane przed modelem i potok klasyfikacji leków ✅
 
 **Zaostrzenie wobec dokumentów.** User stories mówiły, że lek „ląduje w brudnopisie", ale nie precyzowały, że model generujący raport ma go nie widzieć. Wytyczne Michała to zaostrzają: separacja następuje przed wejściem do modelu, nie po.
 
-**Decyzja.** Transkrypt dzieli się na trzy strumienie. `MEDICAL` nie dociera do modelu i nie dociera do bliskich. `DISCOMFORT` dociera do modelu, ale do raportu trafia ogólny opis. `BEHAVIORAL` jest podstawą raportu.
+**Decyzja (architektura potoku głosowego).** Potok realizuje ścisłą separację: maskowanie PII (PESEL/tel/email) przed modelem → klasyfikacja w modelu UE (DPA, zero retencji) ze strukturą `medication_event` (`'taken' | 'refused' | 'missed' | 'none'`) → post-filtr MDR przed zapisem. Transkrypt dzieli się na trzy strumienie przed modelem: `MEDICAL` (usuwany z promptu generującego, zostaje wyłącznie w brudnopisie personelu `daily_logs`), `DISCOMFORT` (ogólny opis w raporcie), `BEHAVIORAL` (podstawa raportu rodziny `daily_reports`).
 
-**Wykonane.** Kolejność etapów wymusza redakcję przed generowaniem. Pięć kategorii medycznych z definicji artykułu 4 punkt 15 RODO: leki, diagnozy, wyniki badań, parametry życiowe, zalecenia kliniczne.
+**Leki i alerty wyłącznie dla personelu (Non-MDR).** Zgodnie z `MEDICAL_CATEGORIES.medication` dane o lekach należą do strumienia `MEDICAL`. Do `daily_reports` (raportu dla bliskich) nigdy nie trafiają nazwy leków, dawki, szablony lekowe ani pole `medication_event`. Pole `medication_event` oraz flaga `medication_alert_requires_confirmation` trafiają wyłącznie do `daily_logs` (tabela personelu) oraz do widoku weryfikacji personelu (`MedicationAlertBanner` w `/voice`), gdzie dla odmów (`refused`) i pominięć (`missed`) wymagane jest świadome potwierdzenie przez personel.
 
-**Reguły bramki.** `R07-redact-before-llm` sprawdza kolejność etapów, oznaczenie strumienia medycznego jako niedocierającego do modelu i brak ról bliskich wśród jego odbiorców. `R13-draft-isolation` blokuje przyznanie bliskim odczytu brudnopisu. Hook `adr007-raw-transcript-to-llm` blokuje wysłanie surowego transkryptu do modelu.
+**Blokada ocen klinicznych (Non-MDR) i Fail-Closed RPC.** Post-filtr `validateReportText` blokuje zwroty wartościujące parametry fizjologiczne (`w normie`, `poza normą`, `podwyższone`, `obniżone`). Zapis `daily_logs`, `daily_reports` i statusu szkicu jest atomowy (RPC `process_voice_draft_atomic` w trybie `SECURITY INVOKER` z kontrolą `auth.uid()`, roli JWT oraz RLS, działający w trybie fail-closed bez cichego przechodzenia na nieatomowy zapis).
+
+**Reguły bramki.** `R07-redact-before-llm` sprawdza kolejność etapów i izolację strumienia medycznego. `R13-draft-isolation` blokuje dostęp rodziny do brudnopisów personelu. Hook `adr007-raw-transcript-to-llm` blokuje wysłanie surowego transkryptu do modelu.
 
 ---
 
@@ -138,7 +140,7 @@ Osiem sprzeczności znalezionych w dokumentach źródłowych, rozstrzygniętych 
 
 ---
 
-## ADR-011 — System projektowy ✅
+## ADR-011 — System projektowy (Status: ZASTĄPIONE PRZEZ ADR-016 (Historyczne)) ⚠️
 
 **Decyzja (Michał, 2026-08-27).** Styl Apple: czysty, minimalistyczny, oparty na typografii i przestrzeni.
 
@@ -207,7 +209,7 @@ Obniżenie priorytetu obu naraz cicho pozbawiłoby impersonację super administr
 
 ---
 
-## ADR-014 — Skala szablonu shadcn-admin zamiast skali 17px/48px ✅
+## ADR-014 — Skala szablonu shadcn-admin zamiast skali 17px/48px (Status: ZASTĄPIONE PRZEZ ADR-016 (Historyczne)) ⚠️
 
 **Kontekst.** Interfejs ma wyglądać jak szablon `next-shadcn-admin-dashboard` (styl shadcn „nova"): tekst interfejsu 14px, przycisk 32px, tabela z wierszem 40px, zwijany pasek boczny. ADR-011 ustalał tekst bazowy 17px i cel dotykowy 48px, a reguła `R24-design-a11y` blokowała wszystko poniżej 16px i 44px. Dopasowanie do szablonu było niemożliwe bez zmiany progu bramki.
 
@@ -247,3 +249,21 @@ Przed prezentacjami i demo dla potencjalnych klientów (Marconi, KIDO) potrzebny
 **Wykonane.** Nowy wpis `GROQ_DEMO_LLM` w `PROVIDERS` (`integration.contract.mjs`), `status: 'ACTIVE'`, `region: 'US'`, z `transferMechanism` jawnie stwierdzającym brak DPA, `exceptionApprovedBy: 'Michal, 2026-10-06'` i `exceptionReason` opisującym ograniczenie do danych syntetycznych. Nowe wymaganie `INFRA-GROQ-DEMO-INTERIM`. Reguła `R22-transfer-exception` wymusza te same trzy pola co dla `TRANSCRIBE` — nawet wyjątek bez DPA musi być udokumentowany, nie cichy.
 
 **Co pozostaje otwarte.** Brak technicznego mechanizmu, który uniemożliwiłby włączenie tej flagi na organizacji z prawdziwymi pensjonariuszami — to zależy od dyscypliny operacyjnej (kto ustawia zmienną na Vercelu i kiedy ją wyłącza). Gdy DPA zostanie podpisane, ten ADR traci status wyjątku: wpis w rejestrze podmiotów przetwarzających zmienia się z `PENDING` na realną referencję, a `GROQ_DEMO_LLM` w kontrakcie można scalić z istniejącym wpisem `GROQ` albo zastąpić stałym wpisem bez słowa „demo".
+
+---
+
+## ADR-016 — Zunifikowana Norma Typografii i Dotyku Mobile-First (16px / min. 14px / 44px) ✅
+
+**Kontekst.** W systemie występował rozjazd między historycznymi standardami typografii i dotyku (ADR-011 narzucał bazowy tekst 17px i cel dotykowy 48px, z kolei ADR-014 obniżał skalę do 14px tekstu i 32px przycisków na wzór szablonu shadcn-admin). Skutkowało to niespójnością interfejsów portalu bliskich oraz panelu personelu na urządzeniach mobilnych oraz ryzykiem niedostępności dla personelu w biegu i osób starszych.
+
+**Decyzja (Michał & Darek, 2026-10-16).** Wprowadzenie jednej, spójnej i obowiązującej w całym systemie normy UI Mobile-First zdefiniowanej w `contracts/design.contract.mjs` i egzekwowanej automatyczną bramką jakości w CI (`scripts/verify.sh` Krok 6/10):
+1. **Tekst bazowy (body):** 16px (`text-base`).
+2. **Minimalny dopuszczalny tekst pomocniczy (secondary/caption):** 14px (`text-sm`).
+3. **Bezwzględny zakaz mikro-fontów:** Klasy `text-xs`, `text-[11px]`, `text-[10px]` i mniejsze są surowo zabronione w całym kodzie aplikacji `apps/web`.
+4. **Minimalny cel dotykowy (touch target):** 44x44px (`min-h-11 min-w-11` lub `min-h-[44px] min-w-[44px]`) dla wszystkich interaktywnych elementów (przyciski, linki, inputy, pola wyboru). Użycia `min-h-[40px]`, `min-h-[32px]`, `h-8` itp. w elementach interaktywnych są zakazane.
+5. **Tokeny generowane:** Źródłem prawdy parametrów są tokeny z kontraktu (`packages/contracts/src/generated/tokens.css`).
+
+**Zgodność:**
+- WCAG 2.1 / 2.2 AA (kontrast min. 4.5:1, target size 2.5.8 i 2.5.5).
+- Norma Mobile-First eliminuje pomyłkowe stuknięcia u personelu w rękawiczkach lub w biegu oraz zapewnia pełną czytelność dla opiekunów prawnych i bliskich.
+

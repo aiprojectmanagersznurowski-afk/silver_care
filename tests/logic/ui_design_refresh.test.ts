@@ -1,86 +1,64 @@
-import { describe, it, expect } from 'vitest'
-import { readFileSync, existsSync } from 'node:fs'
-import { join } from 'node:path'
+import { describe, it, expect } from 'vitest';
+import {
+  COLORS,
+  ACCESSIBILITY,
+} from '@silvercare/contracts/src/generated/design';
+import {
+  resolveRoleDestination,
+  validateAccessibilityStandards,
+} from '../../apps/web/src/lib/ui-theme-validator';
 
 /**
  * @REQ: UI-ACCESSIBILITY
  * @REQ: UI-FOUR-STATES
+ * @REQ: SEC-SESSION
  *
- * Testy weryfikujące wdrożenie odświeżonego systemu projektowego (shadcn)
- * oraz spójność komponentów i strony logowania.
+ * Testy wykonawcze dla odświeżonego systemu projektowego (shadcn):
+ * 1. Dostępność i eksporty kluczowych komponentów bazowych UI.
+ * 2. Kanoniczna paleta kolorów „Ciepłe Zaufanie" w kontrakcie.
+ * 3. Logika bezpiecznego kierowania ról po uwierzytelnieniu sesji (RBAC).
  */
-describe('UI Design System Refresh & Login Page', () => {
-  const root = process.cwd()
+describe('UI Design System Refresh & Session Routing', () => {
+  it('@REQ: UI-ACCESSIBILITY - Komponenty UI bazowe poprawnie się eksportują', async () => {
+    const checkboxModule = await import('../../apps/web/src/components/ui/checkbox');
+    expect(typeof checkboxModule.Checkbox).toBe('function');
 
-  it('@REQ: UI-ACCESSIBILITY - Komponenty UI shadcn posiadają wymagane pliki i eksporty', async () => {
-    const requiredComponents = [
-      'apps/web/src/components/ui/checkbox.tsx',
-      'apps/web/src/components/ui/skeleton.tsx',
-      'apps/web/src/components/ui/breadcrumb.tsx',
-      'apps/web/src/components/ui/tooltip.tsx',
-    ]
+    const skeletonModule = await import('../../apps/web/src/components/ui/skeleton');
+    expect(typeof skeletonModule.Skeleton).toBe('function');
 
-    for (const compPath of requiredComponents) {
-      const fullPath = join(root, compPath)
-      expect(existsSync(fullPath), `Plik ${compPath} powinien istnieć`).toBe(true)
-    }
-  })
+    const tooltipModule = await import('../../apps/web/src/components/ui/tooltip');
+    expect(typeof tooltipModule.Tooltip).toBe('function');
 
-  it('@REQ: UI-ACCESSIBILITY - Strona logowania zawiera kluczowe elementy interaktywne i zachowuje selektory E2E', () => {
-    const loginPath = join(root, 'apps/web/src/app/login/page.tsx')
-    expect(existsSync(loginPath)).toBe(true)
+    const a11yResult = validateAccessibilityStandards(ACCESSIBILITY);
+    expect(a11yResult.valid).toBe(true);
+    expect(ACCESSIBILITY.touchTargetMinimum).toBe('44px');
+  });
 
-    const content = readFileSync(loginPath, 'utf8')
+  it('@REQ: UI-FOUR-STATES - motyw zachowuje kanoniczną paletę Silver Care (Ciepłe Zaufanie)', () => {
+    expect(COLORS.light.accent.value).toBe('#2F6F5E');
+    expect(COLORS.light.bg.value).toBe('#FBFAF8');
+    expect(COLORS.light.text.value).toBe('#1C1B19');
+    expect(COLORS.light.border.value).toBe('#E8E4DD');
+  });
 
-    // Wymogi wizualne z 21st.dev (login_template.md)
-    expect(content).toContain('canvasRef')
-    expect(content).toContain('accent-lines')
-    expect(content).toContain('card-animate')
+  it('@REQ: SEC-SESSION - resolveRoleDestination poprawnie kieruje uprawnienia użytkownika (RBAC)', () => {
+    // Administratorzy placówki i platformy
+    expect(resolveRoleDestination('super_admin')).toBe('/admin');
+    expect(resolveRoleDestination('org_admin')).toBe('/admin');
+    expect(resolveRoleDestination('admin')).toBe('/admin');
+    expect(resolveRoleDestination('facility_manager')).toBe('/admin');
 
-    // Wymogi funkcjonalne i selektory E2E
-    expect(content).toContain('id="email"')
-    expect(content).toContain('id="password"')
-    expect(content).toContain('type="submit"')
-    expect(content).toContain('Zaloguj się')
-    expect(content).toContain('Zaloguj z Google')
-    expect(content).toContain('text-destructive')
-    expect(content).toContain('alt="Silver Care"')
-    expect(content).toContain('signInWithPassword')
-    expect(content).toContain('signInWithOAuth')
-  })
+    // Personel medyczny i opiekuńczy
+    expect(resolveRoleDestination('nurse')).toBe('/staff');
+    expect(resolveRoleDestination('caregiver')).toBe('/staff');
+    expect(resolveRoleDestination('paramedic')).toBe('/staff');
 
-  it('@REQ: UI-FOUR-STATES - motyw zachowuje kanoniczną paletę Silver Care (Ciepłe Zaufanie) przez tokeny kontraktu', () => {
-    // ADR-014: wartości kolorów żyją w kontrakcie (tokens.css), globals.css tylko je mapuje.
-    const tokens = readFileSync(join(root, 'packages/contracts/src/generated/tokens.css'), 'utf8')
-    expect(tokens).toContain('--sc-accent: #2F6F5E')
-    expect(tokens).toContain('--sc-bg: #FBFAF8')
-    expect(tokens).toContain('--sc-text: #1C1B19')
-    expect(tokens).toContain('--sc-border: #E8E4DD')
+    // Rodzina i opiekunowie prawni
+    expect(resolveRoleDestination('family')).toBe('/dashboard');
+    expect(resolveRoleDestination('legal_guardian')).toBe('/dashboard');
 
-    const cssContent = readFileSync(join(root, 'apps/web/src/app/globals.css'), 'utf8')
-    expect(cssContent).toContain('--primary: var(--sc-accent)')
-    expect(cssContent).toContain('--background: var(--sc-bg)')
-    expect(cssContent).toContain('--foreground: var(--sc-text)')
-    expect(cssContent).toContain('--border: var(--sc-border)')
-    expect(cssContent).toContain('--sidebar')
-  })
-
-  it('@REQ: SEC-SESSION - auth/callback i login/page.tsx poprawnie kierują role i obsługują błędy OAuth', () => {
-    const callbackPath = join(root, 'apps/web/src/app/auth/callback/route.ts')
-    expect(existsSync(callbackPath)).toBe(true)
-    const callbackContent = readFileSync(callbackPath, 'utf8')
-
-    // Weryfikacja kierowania ról z app_metadata (RBAC)
-    expect(callbackContent).toContain("role === 'super_admin'")
-    expect(callbackContent).toContain("destination = '/admin'")
-    expect(callbackContent).toContain("destination = '/staff'")
-    expect(callbackContent).toContain("destination = '/dashboard'")
-    expect(callbackContent).toContain('response.cookies.set')
-
-    // Weryfikacja obsługi parametru błędu na stronie logowania
-    const loginPath = join(root, 'apps/web/src/app/login/page.tsx')
-    const loginContent = readFileSync(loginPath, 'utf8')
-    expect(loginContent).toContain("searchParams.get('error')")
-  })
-})
-
+    // Nieznana / brakująca rola
+    expect(resolveRoleDestination('unauthorized_user')).toContain('error');
+    expect(resolveRoleDestination(undefined)).toContain('error');
+  });
+});

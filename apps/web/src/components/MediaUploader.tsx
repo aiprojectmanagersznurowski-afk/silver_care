@@ -24,7 +24,7 @@ export function MediaUploader({ residentId }: { residentId: string }) {
 
     try {
       // 1. Kompresja i czyszczenie metadanych w przeglądarce
-      const { file: optimizedFile, originalSize, optimizedSize, savedPercent } = await optimizeImageForUpload(
+      const { file: optimizedFile, optimizedSize, savedPercent } = await optimizeImageForUpload(
         originalFile,
         { maxWidth: 1600, maxHeight: 1600, quality: 0.85, prefix: 'res_media' }
       )
@@ -64,10 +64,10 @@ export function MediaUploader({ residentId }: { residentId: string }) {
         setStatus('idle')
         setStatusMessage(null)
       }, 4000)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Błąd wgrywania zdjęcia:', error)
       setStatus('error')
-      const err = error.message || 'Nie udało się wgrać zdjęcia. Spróbuj ponownie.'
+      const err = error instanceof Error ? error.message : 'Nie udało się wgrać zdjęcia. Spróbuj ponownie.'
       setErrorMessage(err)
       toast.error(err)
     } finally {
@@ -91,7 +91,7 @@ export function MediaUploader({ residentId }: { residentId: string }) {
       />
       <Button 
         variant="outline" 
-        className="w-full text-xs font-semibold h-10 border-border hover:bg-muted/50" 
+        className="w-full text-sm font-semibold h-10 border-border hover:bg-muted/50" 
         onClick={() => fileInputRef.current?.click()}
         disabled={isBusy}
       >
@@ -114,14 +114,14 @@ export function MediaUploader({ residentId }: { residentId: string }) {
       </Button>
 
       {statusMessage && status !== 'error' && (
-        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground px-1">
+        <div className="flex items-center gap-1.5 text-sm text-muted-foreground px-1">
           <Sparkles className="h-3 w-3 text-primary shrink-0" />
           <span className="truncate">{statusMessage}</span>
         </div>
       )}
 
       {errorMessage && (
-        <div className="flex items-center gap-1.5 text-[11px] text-destructive px-1">
+        <div className="flex items-center gap-1.5 text-sm text-destructive px-1">
           <AlertCircle className="h-3 w-3 shrink-0" />
           <span className="truncate">{errorMessage}</span>
         </div>

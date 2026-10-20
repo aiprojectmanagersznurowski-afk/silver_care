@@ -25,8 +25,8 @@ export function useSendFamilyMessage(residentId: string) {
 
       setState('success');
       return true;
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Wystąpił nieoczekiwany błąd.');
       setState('error');
       return false;
     }

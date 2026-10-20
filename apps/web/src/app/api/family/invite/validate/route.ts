@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
       success: true,
       ...validation,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[INVITE_VALIDATE] Error:', error);
     return NextResponse.json(
       {

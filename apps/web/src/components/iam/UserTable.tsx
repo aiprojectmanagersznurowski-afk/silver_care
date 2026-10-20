@@ -77,16 +77,16 @@ export function UserTable({
                       {user.organizationId ? (
                         <BusinessIdBadge type="organization" id={user.organizationId} />
                       ) : (
-                        <span className="text-xs text-muted-foreground italic">Globalna / Brak</span>
+                        <span className="text-sm text-muted-foreground italic">Globalna / Brak</span>
                       )}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="inline-flex items-center rounded-lg bg-muted px-2.5 py-1 text-xs font-medium text-foreground">
+                        <span className="inline-flex items-center rounded-lg bg-muted px-2.5 py-1 text-sm font-medium text-foreground">
                           {displayRole}
                         </span>
                         {isDeactivated && (
-                          <span className="inline-flex items-center gap-1 rounded-lg bg-destructive/10 text-destructive border border-destructive/20 px-2 py-0.5 text-[11px] font-semibold">
+                          <span className="inline-flex items-center gap-1 rounded-lg bg-destructive/10 text-destructive border border-destructive/20 px-2 py-0.5 text-sm font-semibold">
                             <ShieldBan className="h-3 w-3" />
                             Zablokowany
                           </span>
@@ -102,7 +102,7 @@ export function UserTable({
                               variant="outline"
                               size="sm"
                               onClick={() => onChangeRoleClick(user)}
-                              className="min-h-[40px] rounded-xl border-border text-foreground hover:bg-muted/50"
+                              className="min-h-11 rounded-xl border-border text-foreground hover:bg-muted/50"
                             >
                               <ShieldAlert className="h-4 w-4 mr-1.5 text-muted-foreground" />
                               Zmień rolę
@@ -120,7 +120,7 @@ export function UserTable({
                               variant="outline"
                               size="sm"
                               onClick={() => onResetPasswordClick(user)}
-                              className="min-h-[40px] rounded-xl border-border text-foreground hover:bg-muted/50"
+                              className="min-h-11 rounded-xl border-border text-foreground hover:bg-muted/50"
                             >
                               <Key className="h-4 w-4 mr-1.5 text-muted-foreground" />
                               Hasło
@@ -140,7 +140,7 @@ export function UserTable({
                               disabled={isSelf}
                               onClick={() => onDeleteUserClick(user)}
                               className={cn(
-                                'min-h-[40px] rounded-xl border-border',
+                                'min-h-11 rounded-xl border-border',
                                 isSelf
                                   ? 'opacity-50 cursor-not-allowed text-muted-foreground'
                                   : isDeactivated

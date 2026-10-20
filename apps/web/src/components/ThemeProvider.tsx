@@ -23,13 +23,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
-      if (stored === 'light' || stored === 'dark' || stored === 'system') {
-        setThemeState(stored);
-      }
-    } catch {}
-    setMounted(true);
+    void Promise.resolve().then(() => {
+      try {
+        const stored = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
+        if (stored === 'light' || stored === 'dark' || stored === 'system') {
+          setThemeState(stored);
+        }
+      } catch {}
+      setMounted(true);
+    });
   }, []);
 
   useEffect(() => {

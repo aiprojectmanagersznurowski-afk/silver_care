@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
-import { validateResidentRows, RawResidentRow } from '../../apps/web/src/lib/bulk-import-helpers'
+import { validateResidentRows, RawResidentRow, evaluateCapacityExceeded } from '../../apps/web/src/lib/bulk-import-helpers'
 
 /**
  * @REQ: ADM-RESIDENT-ADD
@@ -85,9 +85,7 @@ describe('Bulk Import Logic & Validation (@REQ: ADM-RESIDENT-ADD)', () => {
     expect(result.rows[3].errors).toContain('Duplikat numeru PESEL wewnątrz pliku.')
   })
 
-  it('correctly evaluates capacity limit overflow and computes excess count @REQ: ADM-RESIDENT-ADD', async () => {
-    const { evaluateCapacityExceeded } = await import('../../apps/web/src/lib/bulk-import-helpers')
-
+  it('correctly evaluates capacity limit overflow and computes excess count @REQ: ADM-RESIDENT-ADD', () => {
     // Przypadek 1: Import mieści się w limicie (10 obecnych + 15 nowych <= 30)
     const withinLimit = evaluateCapacityExceeded(15, 10, 30)
     expect(withinLimit.willExceedLimit).toBe(false)
@@ -105,29 +103,29 @@ describe('Bulk Import Logic & Validation (@REQ: ADM-RESIDENT-ADD)', () => {
     expect(exceeded.residentLimit).toBe(50)
   })
 
-  it('contains capacity warning in BulkImportDialog and updates limit in actions @REQ: ADM-RESIDENT-ADD', async () => {
-    const fs = await import('node:fs')
-    const path = await import('node:path')
+  it('evaluates capacity limits and projections accurately without negative excess @REQ: ADM-RESIDENT-ADD', () => {
+    // Dokładnie równy limit (20 + 10 = 30, limit 30)
+    const exact = evaluateCapacityExceeded(10, 20, 30)
+    expect(exact.willExceedLimit).toBe(false)
+    expect(exact.projectedTotal).toBe(30)
+    expect(exact.excessCount).toBe(0)
 
-    const dialogSrc = fs.readFileSync(
-      path.resolve(__dirname, '../../apps/web/src/components/BulkImportDialog.tsx'),
-      'utf8'
-    )
-    expect(dialogSrc).toContain('data-testid="capacity-warning-banner"')
-    expect(dialogSrc).toContain('willExceedLimit')
-    expect(dialogSrc).toContain('projectedTotal')
-    expect(dialogSrc).toContain('excessCount')
+    // Przekroczenie o 1
+    const overByOne = evaluateCapacityExceeded(11, 20, 30)
+    expect(overByOne.willExceedLimit).toBe(true)
+    expect(overByOne.projectedTotal).toBe(31)
+    expect(overByOne.excessCount).toBe(1)
 
-    const actionSrc = fs.readFileSync(
-      path.resolve(__dirname, '../../apps/web/src/actions/bulk-import.ts'),
-      'utf8'
-    )
-    expect(actionSrc).toContain('ORGANIZATION_CAPACITY_UPDATED')
-    expect(actionSrc).toContain('resident_limit: newCapacity')
-    expect(actionSrc).toContain('evaluateCapacityExceeded')
+    // Zero nowych wierszy
+    const zeroNew = evaluateCapacityExceeded(0, 25, 30)
+    expect(zeroNew.willExceedLimit).toBe(false)
+    expect(zeroNew.projectedTotal).toBe(25)
+    expect(zeroNew.excessCount).toBe(0)
 
-    // Weryfikacja: brak słowa pacjent
-    expect(dialogSrc.toLowerCase()).not.toContain('pacjent')
-    expect(actionSrc.toLowerCase()).not.toContain('pacjent')
+    // Placówka już przepełniona przed importem
+    const alreadyOver = evaluateCapacityExceeded(5, 35, 30)
+    expect(alreadyOver.willExceedLimit).toBe(true)
+    expect(alreadyOver.projectedTotal).toBe(40)
+    expect(alreadyOver.excessCount).toBe(10)
   })
 })

@@ -67,11 +67,12 @@ const files = {};
 
 // ── agenci ────────────────────────────────────────────────────────────────
 const agentsDir = join(ROOT, '.claude/agents');
-for (const f of readdirSync(agentsDir).filter((x) => x.endsWith('.md')).sort()) {
-  const { fm, body } = parse(readFileSync(join(agentsDir, f), 'utf8'));
-  const src = Array.isArray(fm.tools) ? fm.tools : String(fm.tools || '').split(',').map((s) => s.trim()).filter(Boolean);
-  const tools = [...new Set(src.map((t) => TOOLS[t]).filter(Boolean))];
-  const readOnly = !tools.includes('write_to_file') && !tools.includes('replace_file_content');
+if (existsSync(agentsDir)) {
+  for (const f of readdirSync(agentsDir).filter((x) => x.endsWith('.md')).sort()) {
+    const { fm, body } = parse(readFileSync(join(agentsDir, f), 'utf8'));
+    const src = Array.isArray(fm.tools) ? fm.tools : String(fm.tools || '').split(',').map((s) => s.trim()).filter(Boolean);
+    const tools = [...new Set(src.map((t) => TOOLS[t]).filter(Boolean))];
+    const readOnly = !tools.includes('write_to_file') && !tools.includes('replace_file_content');
 
   const front = [
     '---',
@@ -100,7 +101,8 @@ for (const f of readdirSync(agentsDir).filter((x) => x.endsWith('.md')).sort()) 
     ? '\n> **Ten agent jest tylko do odczytu.** Nie ma narzędzi zapisu ani wykonywania komend — jeżeli uznasz, że trzeba coś zmienić, opisz to w podsumowaniu zamiast próbować zapisać.\n'
     : '\n> **Rozdział ról w Antigravity jest słabszy niż w Claude Code.** Hook nie zna Twojej nazwy, więc granice zapisu per rola nie są egzekwowane przy zapisie pliku. Po zakończeniu pracy uruchom `node tools/sc-phase.mjs <red|green>` — sprawdzi, czy zmienione pliki mieszczą się w Twojej fazie.\n';
 
-  files[`.agents/agents/${f}`] = front + BANNER(`.claude/agents/${f}`) + body.trimEnd() + '\n' + note;
+    files[`.agents/agents/${f}`] = front + BANNER(`.claude/agents/${f}`) + body.trimEnd() + '\n' + note;
+  }
 }
 
 // ── workflowy (z komend slash) ────────────────────────────────────────────

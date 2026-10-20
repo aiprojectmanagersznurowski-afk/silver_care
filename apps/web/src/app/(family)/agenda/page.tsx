@@ -86,7 +86,7 @@ export default async function FamilyAgendaPage(props: { searchParams: Promise<{ 
         </Link>
         <div className="text-center font-medium">
           {new Date(viewDateStr).toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' })}
-          {viewDateStr === todayStr && <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">Dziś</span>}
+          {viewDateStr === todayStr && <span className="ml-2 text-sm bg-primary/10 text-primary px-2 py-0.5 rounded-full">Dziś</span>}
         </div>
         <Link href={`/agenda?date=${nextDateStr}`}>
           <Button variant="ghost" size="icon"><ChevronRight className="h-5 w-5" /></Button>

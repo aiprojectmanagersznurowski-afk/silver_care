@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useSyncExternalStore } from 'react';
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from './ThemeProvider';
+
+const emptySubscribe = () => () => {};
 
 interface ThemeToggleProps {
   className?: string;
@@ -19,11 +21,7 @@ export function ThemeToggle({
   variant = 'icon',
 }: ThemeToggleProps) {
   const { resolvedTheme, toggleTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
 
   if (!mounted) {
     // Zapobiega mismatchowi SSR vs Client

@@ -85,5 +85,5 @@ export const POST = withAuth(
 
     return NextResponse.json({ bed })
   },
-  { roles: ['org_admin', 'super_admin'] }
+  { roles: ['org_admin', 'super_admin'], blockImpersonation: true }
 )

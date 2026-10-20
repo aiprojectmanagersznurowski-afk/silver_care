@@ -86,7 +86,7 @@ export function EditOrganizationDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger render={trigger ? (trigger as React.ReactElement) : (
-        <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
+        <Button variant="outline" size="sm" className="h-8 gap-1.5 text-sm">
           <Pencil className="h-3.5 w-3.5" />
           Edytuj
         </Button>
@@ -139,7 +139,7 @@ export function EditOrganizationDialog({
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 text-destructive text-xs font-medium">
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 text-destructive text-sm font-medium">
               <AlertCircle className="h-4 w-4 shrink-0" />
               <span>{error}</span>
             </div>

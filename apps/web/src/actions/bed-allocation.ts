@@ -1,7 +1,5 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import {
   OptimizerRoom,
@@ -9,44 +7,13 @@ import {
   OptimizerOccupant,
   FacilityAllocationMetrics,
   RelocationSuggestion,
+  RawResidentAssignment,
+  RawBedWithRoom,
   pseudonymizeResident,
   analyzeCurrentAllocation,
   generateRelocationSuggestions,
 } from '@/lib/bed-allocation-optimizer'
-
-interface RawResidentAssignment {
-  bed_id: string
-  resident_id: string
-  residents: {
-    id: string
-    first_name: string
-    last_name: string
-    gender: string
-    care_level: string
-    is_zsn: boolean
-    archived_at: string | null
-  } | null
-}
-
-interface RawBedWithRoom {
-  id: string
-  rooms: {
-    organization_id: string
-  } | null
-}
-
-async function requireOrgAdmin() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Brak autoryzacji')
-  const orgId = user.app_metadata?.organization_id as string | undefined
-  if (!orgId) throw new Error('Brak przypisanej placówki')
-  const role = user.app_metadata?.role as string | undefined
-  if (!['org_admin', 'super_admin', 'admin'].includes(role || '')) {
-    throw new Error('Brak uprawnień administratora placówki')
-  }
-  return { user, orgId, supabase, adminClient: createAdminClient() }
-}
+import { requireOrgAdmin } from '@/lib/facility-auth'
 
 export async function analyzeBedAllocationAction(): Promise<{
   error?: string
@@ -132,7 +99,7 @@ export async function analyzeBedAllocationAction(): Promise<{
 
     for (const a of typedAssignments) {
       const res = a.residents
-      if (!res || res.archived_at) continue // Pomiń zarchiwizowanych
+      if (!res || res.archived_at) continue
 
       const roomId = bedToRoomMap.get(a.bed_id)
       if (!roomId) continue

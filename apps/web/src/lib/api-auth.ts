@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { handleApiError } from '@/lib/api-errors'
+import { isImpersonationSessionActive, safeGetCookieStore } from '@/lib/impersonation-guards'
 
 export interface AuthenticatedUser {
   id: string
@@ -21,6 +22,7 @@ export interface ApiAuthContext {
 export interface WithAuthOptions {
   roles?: string[]
   requireOrganization?: boolean
+  blockImpersonation?: boolean
 }
 
 type ApiRouteHandler = (
@@ -115,6 +117,20 @@ export function withAuth(handler: ApiRouteHandler, options: WithAuthOptions = {}
           },
           { status: 403 }
         )
+      }
+
+      // 4. Blokada mutacji w trybie impersonacji (@REQ: SUP-IMPERSONATION)
+      if (options.blockImpersonation) {
+        const cookieStore = await safeGetCookieStore()
+        if (isImpersonationSessionActive(cookieStore, rawUser as { id: string; app_metadata?: Record<string, unknown> })) {
+          return NextResponse.json(
+            {
+              error: 'Operacja niedozwolona w trybie podglądu (impersonacji). Tryb jest ściśle Read-Only.',
+              code: 'IMPERSONATION_READ_ONLY',
+            },
+            { status: 403 }
+          )
+        }
       }
 
       // Rozwiń params jeśli są promisem (Next.js 15+)

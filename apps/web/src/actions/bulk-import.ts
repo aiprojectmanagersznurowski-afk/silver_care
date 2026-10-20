@@ -46,7 +46,9 @@ export async function analyzeBulkImportAction(rows: RawResidentRow[]): Promise<{
 
   const residentLimit = Number(orgData?.resident_limit || 50)
   const currentActiveCount = (existing || []).filter((r) => !r.archived_at).length
-  const existingHashes = new Set<string>((existing || []).map((r) => r.pesel_hash).filter(Boolean))
+  const existingHashes = new Set<string>(
+    (existing || []).map((r) => r.pesel_hash).filter((h): h is string => Boolean(h))
+  )
 
   const dryRun = validateResidentRows(rows, existingHashes)
   const capacityInfo = evaluateCapacityExceeded(dryRun.validRowsCount, currentActiveCount, residentLimit)
