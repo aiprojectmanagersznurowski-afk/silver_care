@@ -154,9 +154,9 @@ export async function GET(request: Request) {
             }
           }
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         success = false
-        errorMessage = err?.message || 'Unknown processing error'
+        errorMessage = err instanceof Error ? err.message : 'Unknown processing error'
         console.error(`Błąd przetwarzania powiadomienia ${notification.id}:`, errorMessage)
       }
 
@@ -169,8 +169,9 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json({ success: true, processed: records.length })
-  } catch (error: any) {
-    console.error('Błąd procesu outbox:', error?.message || error)
-    return NextResponse.json({ error: error?.message || 'Server error' }, { status: 500 })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Server error'
+    console.error('Błąd procesu outbox:', message)
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

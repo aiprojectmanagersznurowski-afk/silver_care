@@ -18,10 +18,8 @@ import { SidebarNav, type SidebarNavGroup } from '@/components/SidebarNav'
 import { SidebarAccount } from '@/components/SidebarAccount'
 import { useStaffUnansweredMessages } from '@/hooks/useStaffUnansweredMessages'
 
-export function StaffSidebar({ userEmail }: { userEmail: string | undefined }) {
-  const { unansweredCount } = useStaffUnansweredMessages()
-
-  const groups: SidebarNavGroup[] = [
+export function getStaffNavGroups(unansweredCount = 0): SidebarNavGroup[] {
+  return [
     {
       label: 'Dyżur',
       items: [
@@ -38,6 +36,11 @@ export function StaffSidebar({ userEmail }: { userEmail: string | undefined }) {
       ],
     },
   ]
+}
+
+export function StaffSidebar({ userEmail }: { userEmail: string | undefined }) {
+  const { unansweredCount } = useStaffUnansweredMessages()
+  const groups = getStaffNavGroups(unansweredCount)
 
   return (
     <Sidebar collapsible="icon">

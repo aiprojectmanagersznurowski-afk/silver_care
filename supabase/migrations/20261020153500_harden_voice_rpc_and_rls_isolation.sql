@@ -1,0 +1,393 @@
+-- Migration: 20261020153500_harden_voice_rpc_and_rls_isolation.sql
+-- Hardening:
+-- 1. Przywrócenie i uszczelnienie polityk RLS na daily_logs, daily_reports oraz voice_draft_notes
+--    ściśle według contracts/roles.contract.mjs (MATRIX, ORG-ISOLATION, VOICE-DRAFT-ISOLATION):
+--    - brak ról spoza kontraktu (admin, paramedic, caregiver),
+--    - super_admin nie czyta treści opieki (daily_logs, daily_reports, voice_draft_notes),
+--    - org_admin ma dostęp wyłącznie w obrębie własnej placówki (r.organization_id = public.get_jwt_organization_id()),
+--      tylko odczyt na daily_logs oraz odczyt/aktualizację na daily_reports.
+-- 2. Przełączenie process_voice_draft_atomic na SECURITY INVOKER + SET search_path = public + REVOKE PUBLIC/anon.
+
+-- ============================================================================
+-- A. Polityki RLS dla daily_logs (MATRIX: read: [nurse:own, org_admin:own], create: [nurse], update: [nurse:own])
+-- ============================================================================
+DROP POLICY IF EXISTS "Staff can read own daily logs" ON public.daily_logs;
+DROP POLICY IF EXISTS "Staff can update own daily logs" ON public.daily_logs;
+DROP POLICY IF EXISTS "Nurse can read own daily logs" ON public.daily_logs;
+DROP POLICY IF EXISTS "Nurse can update own daily logs" ON public.daily_logs;
+DROP POLICY IF EXISTS "Staff can create daily logs" ON public.daily_logs;
+DROP POLICY IF EXISTS "Nurse can create daily logs" ON public.daily_logs;
+DROP POLICY IF EXISTS "Org Admin can read daily logs" ON public.daily_logs;
+
+CREATE POLICY "Nurse can create daily logs"
+    ON public.daily_logs FOR INSERT TO authenticated
+    WITH CHECK (
+        (current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' ->> 'role') = 'nurse'
+        AND nurse_id = auth.uid()
+        AND EXISTS (
+            SELECT 1 FROM public.residents r
+            WHERE r.id = daily_logs.resident_id
+              AND r.organization_id = public.get_jwt_organization_id()
+        )
+    );
+
+CREATE POLICY "Nurse can read own daily logs"
+    ON public.daily_logs FOR SELECT TO authenticated
+    USING (
+        (current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' ->> 'role') = 'nurse'
+        AND nurse_id = auth.uid()
+        AND EXISTS (
+            SELECT 1 FROM public.residents r
+            WHERE r.id = daily_logs.resident_id
+              AND r.organization_id = public.get_jwt_organization_id()
+        )
+    );
+
+CREATE POLICY "Nurse can update own daily logs"
+    ON public.daily_logs FOR UPDATE TO authenticated
+    USING (
+        (current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' ->> 'role') = 'nurse'
+        AND nurse_id = auth.uid()
+        AND EXISTS (
+            SELECT 1 FROM public.residents r
+            WHERE r.id = daily_logs.resident_id
+              AND r.organization_id = public.get_jwt_organization_id()
+        )
+    )
+    WITH CHECK (
+        (current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' ->> 'role') = 'nurse'
+        AND nurse_id = auth.uid()
+        AND EXISTS (
+            SELECT 1 FROM public.residents r
+            WHERE r.id = daily_logs.resident_id
+              AND r.organization_id = public.get_jwt_organization_id()
+        )
+    );
+
+CREATE POLICY "Org Admin can read daily logs"
+    ON public.daily_logs FOR SELECT TO authenticated
+    USING (
+        (current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' ->> 'role') = 'org_admin'
+        AND EXISTS (
+            SELECT 1 FROM public.residents r
+            WHERE r.id = daily_logs.resident_id
+              AND r.organization_id = public.get_jwt_organization_id()
+        )
+    );
+
+-- ============================================================================
+-- B. Polityki RLS dla daily_reports (MATRIX: read: [nurse:own, org_admin:own, legal_guardian:own, family:own], create: [nurse], update: [nurse:own, org_admin:own])
+-- ============================================================================
+DROP POLICY IF EXISTS "Staff can read own daily reports" ON public.daily_reports;
+DROP POLICY IF EXISTS "Staff can update own daily reports" ON public.daily_reports;
+DROP POLICY IF EXISTS "Nurse can read own daily reports" ON public.daily_reports;
+DROP POLICY IF EXISTS "Nurse can update own daily reports" ON public.daily_reports;
+DROP POLICY IF EXISTS "Staff can create daily reports" ON public.daily_reports;
+DROP POLICY IF EXISTS "Nurse can create daily reports" ON public.daily_reports;
+DROP POLICY IF EXISTS "Org Admin can read daily reports" ON public.daily_reports;
+DROP POLICY IF EXISTS "Org Admin can update daily reports" ON public.daily_reports;
+
+CREATE POLICY "Nurse can create daily reports"
+    ON public.daily_reports FOR INSERT TO authenticated
+    WITH CHECK (
+        (current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' ->> 'role') = 'nurse'
+        AND author_id = auth.uid()
+        AND EXISTS (
+            SELECT 1 FROM public.residents r
+            WHERE r.id = daily_reports.resident_id
+              AND r.organization_id = public.get_jwt_organization_id()
+        )
+    );
+
+CREATE POLICY "Nurse can read own daily reports"
+    ON public.daily_reports FOR SELECT TO authenticated
+    USING (
+        (current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' ->> 'role') = 'nurse'
+        AND author_id = auth.uid()
+        AND EXISTS (
+            SELECT 1 FROM public.residents r
+            WHERE r.id = daily_reports.resident_id
+              AND r.organization_id = public.get_jwt_organization_id()
+        )
+    );
+
+CREATE POLICY "Nurse can update own daily reports"
+    ON public.daily_reports FOR UPDATE TO authenticated
+    USING (
+        (current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' ->> 'role') = 'nurse'
+        AND author_id = auth.uid()
+        AND EXISTS (
+            SELECT 1 FROM public.residents r
+            WHERE r.id = daily_reports.resident_id
+              AND r.organization_id = public.get_jwt_organization_id()
+        )
+    )
+    WITH CHECK (
+        (current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' ->> 'role') = 'nurse'
+        AND author_id = auth.uid()
+        AND EXISTS (
+            SELECT 1 FROM public.residents r
+            WHERE r.id = daily_reports.resident_id
+              AND r.organization_id = public.get_jwt_organization_id()
+        )
+    );
+
+CREATE POLICY "Org Admin can read daily reports"
+    ON public.daily_reports FOR SELECT TO authenticated
+    USING (
+        (current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' ->> 'role') = 'org_admin'
+        AND EXISTS (
+            SELECT 1 FROM public.residents r
+            WHERE r.id = daily_reports.resident_id
+              AND r.organization_id = public.get_jwt_organization_id()
+        )
+    );
+
+CREATE POLICY "Org Admin can update daily reports"
+    ON public.daily_reports FOR UPDATE TO authenticated
+    USING (
+        (current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' ->> 'role') = 'org_admin'
+        AND EXISTS (
+            SELECT 1 FROM public.residents r
+            WHERE r.id = daily_reports.resident_id
+              AND r.organization_id = public.get_jwt_organization_id()
+        )
+    )
+    WITH CHECK (
+        (current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' ->> 'role') = 'org_admin'
+        AND EXISTS (
+            SELECT 1 FROM public.residents r
+            WHERE r.id = daily_reports.resident_id
+              AND r.organization_id = public.get_jwt_organization_id()
+        )
+    );
+
+-- ============================================================================
+-- C. Polityki RLS dla voice_draft_notes (MATRIX: read: [nurse:own], create: [nurse], delete: [nurse:own], VOICE-DRAFT-ISOLATION)
+-- ============================================================================
+DROP POLICY IF EXISTS "Staff can create voice draft note" ON public.voice_draft_notes;
+DROP POLICY IF EXISTS "Staff can read own voice draft note" ON public.voice_draft_notes;
+DROP POLICY IF EXISTS "Staff can update own voice draft note" ON public.voice_draft_notes;
+DROP POLICY IF EXISTS "Nurse can create voice draft note" ON public.voice_draft_notes;
+DROP POLICY IF EXISTS "Nurse can read own voice draft note" ON public.voice_draft_notes;
+DROP POLICY IF EXISTS "Nurse can update own voice draft note" ON public.voice_draft_notes;
+DROP POLICY IF EXISTS "Nurse can delete own voice draft note" ON public.voice_draft_notes;
+
+CREATE POLICY "Nurse can create voice draft note"
+    ON public.voice_draft_notes FOR INSERT TO authenticated
+    WITH CHECK (
+        (current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' ->> 'role') = 'nurse'
+        AND nurse_id = auth.uid()
+        AND EXISTS (
+            SELECT 1 FROM public.residents r
+            WHERE r.id = voice_draft_notes.resident_id
+              AND r.organization_id = public.get_jwt_organization_id()
+        )
+    );
+
+CREATE POLICY "Nurse can read own voice draft note"
+    ON public.voice_draft_notes FOR SELECT TO authenticated
+    USING (
+        (current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' ->> 'role') = 'nurse'
+        AND nurse_id = auth.uid()
+        AND EXISTS (
+            SELECT 1 FROM public.residents r
+            WHERE r.id = voice_draft_notes.resident_id
+              AND r.organization_id = public.get_jwt_organization_id()
+        )
+    );
+
+CREATE POLICY "Nurse can update own voice draft note"
+    ON public.voice_draft_notes FOR UPDATE TO authenticated
+    USING (
+        (current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' ->> 'role') = 'nurse'
+        AND nurse_id = auth.uid()
+        AND EXISTS (
+            SELECT 1 FROM public.residents r
+            WHERE r.id = voice_draft_notes.resident_id
+              AND r.organization_id = public.get_jwt_organization_id()
+        )
+    )
+    WITH CHECK (
+        (current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' ->> 'role') = 'nurse'
+        AND nurse_id = auth.uid()
+        AND EXISTS (
+            SELECT 1 FROM public.residents r
+            WHERE r.id = voice_draft_notes.resident_id
+              AND r.organization_id = public.get_jwt_organization_id()
+        )
+    );
+
+CREATE POLICY "Nurse can delete own voice draft note"
+    ON public.voice_draft_notes FOR DELETE TO authenticated
+    USING (
+        (current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' ->> 'role') = 'nurse'
+        AND nurse_id = auth.uid()
+        AND EXISTS (
+            SELECT 1 FROM public.residents r
+            WHERE r.id = voice_draft_notes.resident_id
+              AND r.organization_id = public.get_jwt_organization_id()
+        )
+    );
+
+-- ============================================================================
+-- D. Hardening funkcji RPC process_voice_draft_atomic (SECURITY INVOKER + RLS)
+-- ============================================================================
+DROP FUNCTION IF EXISTS public.process_voice_draft_atomic(UUID, UUID, UUID, JSONB, JSONB, TEXT, TEXT, TIMESTAMP WITH TIME ZONE);
+DROP FUNCTION IF EXISTS public.process_voice_draft_atomic(UUID, UUID, UUID, JSONB, JSONB, TEXT, TEXT, TIMESTAMP WITH TIME ZONE, UUID);
+
+CREATE OR REPLACE FUNCTION public.process_voice_draft_atomic(
+    p_draft_id UUID,
+    p_resident_id UUID,
+    p_nurse_id UUID,
+    p_daily_log_data JSONB,
+    p_report_content JSONB,
+    p_ai_model TEXT DEFAULT NULL,
+    p_ai_prompt_version TEXT DEFAULT NULL,
+    p_ai_generated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    p_organization_id UUID DEFAULT NULL
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = public
+AS $$
+DECLARE
+    v_caller_uid UUID;
+    v_caller_role TEXT;
+    v_jwt_org_id UUID;
+    v_effective_org_id UUID;
+    v_draft_status TEXT;
+    v_draft_resident_id UUID;
+    v_draft_org_id UUID;
+    v_existing_report_id UUID;
+    v_existing_report_status TEXT;
+    v_log_id UUID;
+    v_report_id UUID;
+    v_existing_report_content JSONB;
+BEGIN
+    -- 0A. Weryfikacja tożsamości wywołującego (auth.uid())
+    v_caller_uid := auth.uid();
+    IF v_caller_uid IS NULL THEN
+        RAISE EXCEPTION 'Unauthorized caller: nurse_id must match auth.uid()' USING ERRCODE = '42501';
+    END IF;
+
+    -- 0B. Weryfikacja roli z JWT ściśle według contracts/roles.contract.mjs (MATRIX: create na daily_logs i daily_reports ma wyłącznie nurse)
+    v_caller_role := COALESCE(
+        NULLIF(current_setting('request.jwt.claims', true), '')::jsonb -> 'app_metadata' ->> 'role',
+        ''
+    );
+    IF v_caller_role <> 'nurse' THEN
+        RAISE EXCEPTION 'Forbidden role for voice processing' USING ERRCODE = '42501';
+    END IF;
+
+    -- 0C. Weryfikacja zgodności p_nurse_id z auth.uid()
+    IF p_nurse_id IS DISTINCT FROM v_caller_uid THEN
+        RAISE EXCEPTION 'Unauthorized caller: nurse_id must match auth.uid()' USING ERRCODE = '42501';
+    END IF;
+
+    -- 0D. Weryfikacja izolacji organizacji
+    v_jwt_org_id := public.get_jwt_organization_id();
+    v_effective_org_id := COALESCE(p_organization_id, v_jwt_org_id);
+    IF v_jwt_org_id IS NULL OR v_effective_org_id IS DISTINCT FROM v_jwt_org_id THEN
+        RAISE EXCEPTION 'Draft resident/organization mismatch' USING ERRCODE = '42501';
+    END IF;
+
+    -- 1. Sprawdź istnienie szkicu, zgodność resident_id oraz organization_id
+    SELECT vdn.status, vdn.resident_id, r.organization_id
+    INTO v_draft_status, v_draft_resident_id, v_draft_org_id
+    FROM public.voice_draft_notes vdn
+    JOIN public.residents r ON r.id = vdn.resident_id
+    WHERE vdn.id = p_draft_id;
+
+    IF v_draft_status IS NULL
+       OR v_draft_resident_id IS DISTINCT FROM p_resident_id
+       OR v_draft_org_id IS DISTINCT FROM v_effective_org_id THEN
+        RAISE EXCEPTION 'Draft resident/organization mismatch' USING ERRCODE = '42501';
+    END IF;
+
+    -- Jeśli już przetworzone, pobierz istniejący raport (idempotencja)
+    IF v_draft_status = 'PROCESSED' THEN
+        SELECT id, content INTO v_existing_report_id, v_existing_report_content
+        FROM public.daily_reports
+        WHERE resident_id = p_resident_id
+          AND content @> jsonb_build_object('draft_id', p_draft_id::text)
+        ORDER BY created_at DESC
+        LIMIT 1;
+
+        RETURN jsonb_build_object(
+            'success', true,
+            'idempotent', true,
+            'report_id', v_existing_report_id,
+            'report_content', v_existing_report_content
+        );
+    END IF;
+
+    -- 2. Zapis / aktualizacja daily_logs (dane medyczne dla personelu)
+    SELECT id INTO v_log_id
+    FROM public.daily_logs
+    WHERE resident_id = p_resident_id
+      AND data @> jsonb_build_object('draft_id', p_draft_id::text)
+    LIMIT 1;
+
+    IF v_log_id IS NOT NULL THEN
+        UPDATE public.daily_logs
+        SET data = p_daily_log_data,
+            updated_at = NOW()
+        WHERE id = v_log_id;
+    ELSE
+        INSERT INTO public.daily_logs (resident_id, nurse_id, data, created_at, updated_at)
+        VALUES (p_resident_id, p_nurse_id, p_daily_log_data, NOW(), NOW())
+        RETURNING id INTO v_log_id;
+    END IF;
+
+    -- 3. Zapis / aktualizacja daily_reports (szkic dla bliskich — bez możliwości nadpisania PUBLISHED)
+    SELECT id, status INTO v_report_id, v_existing_report_status
+    FROM public.daily_reports
+    WHERE resident_id = p_resident_id
+      AND content @> jsonb_build_object('draft_id', p_draft_id::text)
+    LIMIT 1;
+
+    IF v_report_id IS NOT NULL THEN
+        IF v_existing_report_status = 'PUBLISHED' THEN
+            RAISE EXCEPTION 'Cannot overwrite published daily report' USING ERRCODE = '42501';
+        END IF;
+
+        UPDATE public.daily_reports
+        SET content = p_report_content,
+            status = 'DRAFT',
+            updated_at = NOW()
+        WHERE id = v_report_id
+          AND status <> 'PUBLISHED';
+    ELSE
+        INSERT INTO public.daily_reports (
+            resident_id, author_id, content, status, ai_generated,
+            ai_model, ai_prompt_version, ai_generated_at, created_at, updated_at
+        ) VALUES (
+            p_resident_id, p_nurse_id, p_report_content, 'DRAFT', true,
+            p_ai_model, p_ai_prompt_version, p_ai_generated_at, NOW(), NOW()
+        )
+        RETURNING id INTO v_report_id;
+    END IF;
+
+    -- 4. Aktualizacja voice_draft_notes do PROCESSED
+    UPDATE public.voice_draft_notes
+    SET status = 'PROCESSED',
+        followup_question = NULL,
+        updated_at = NOW()
+    WHERE id = p_draft_id;
+
+    RETURN jsonb_build_object(
+        'success', true,
+        'idempotent', false,
+        'log_id', v_log_id,
+        'report_id', v_report_id
+    );
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.process_voice_draft_atomic FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.process_voice_draft_atomic FROM anon;
+GRANT EXECUTE ON FUNCTION public.process_voice_draft_atomic TO authenticated;
+
+COMMENT ON FUNCTION public.process_voice_draft_atomic IS 'Atomowa transakcja zapisu logów personelu, raportu dla rodziny oraz finalizacji statusu szkicu głosu (SECURITY INVOKER + RLS).';

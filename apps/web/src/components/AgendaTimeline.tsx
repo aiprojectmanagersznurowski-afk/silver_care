@@ -51,7 +51,7 @@ export function AgendaTimeline({ residentId }: AgendaTimelineProps) {
             <div className="flex flex-col">
               <span className="text-sm font-semibold text-foreground">{item.time}</span>
               <h4 className="text-md font-medium text-foreground">{item.title}</h4>
-              <span className="text-xs text-muted-foreground">{item.type}</span>
+              <span className="text-sm text-muted-foreground">{item.type}</span>
             </div>
           </div>
         ))}

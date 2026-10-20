@@ -17,7 +17,7 @@ try {
     out.push(`AKTYWNY WORK ORDER: ${j.ticket} — ${j.title} | faza: ${j.phase} | iteracja: ${j.iteration}/${j.maxIterations}`);
     out.push(`Wymagania: ${(j.requirements || []).join(', ')}`);
   } else {
-    out.push('Brak aktywnego Work Order. Zacznij od /kk-plan.');
+    out.push('Brak aktywnego Work Order. Zacznij od /sc-plan.');
   }
 } catch { /* ignoruj */ }
 

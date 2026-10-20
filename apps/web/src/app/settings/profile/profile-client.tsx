@@ -1,84 +1,16 @@
 'use client'
 
-import React, { useState, useTransition } from 'react'
-import { changePasswordAction, signOutOthersAction } from '@/actions/profile'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import React from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
+import { ProfilePasswordCard } from '@/components/profile/ProfilePasswordCard'
+import { ProfileSessionsCard } from '@/components/profile/ProfileSessionsCard'
+import { ProfileData, ROLE_LABELS } from '@/components/profile/profile-types'
 
-interface ProfileData {
-  user: {
-    id: string
-    email?: string
-    role: string
-    organizationId?: string | null
-    lastSignInAt?: string
-  }
-  logs: Array<{
-    id: string
-    action: string
-    created_at: string
-    payload: any
-  }>
-}
+export type { ProfileData }
 
 export function ProfileSecurityClient({ initialData }: { initialData: ProfileData }) {
-  const [isPending, startTransition] = useTransition()
-  const [passwordState, setPasswordState] = useState<{
-    status: 'idle' | 'loading' | 'success' | 'error'
-    message?: string
-  }>({ status: 'idle' })
-
-  const [sessionState, setSessionState] = useState<{
-    status: 'idle' | 'loading' | 'success' | 'error'
-    message?: string
-  }>({ status: 'idle' })
-
-  const handlePasswordSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setPasswordState({ status: 'loading' })
-    const form = e.currentTarget
-    const formData = new FormData(form)
-
-    startTransition(async () => {
-      const res = await changePasswordAction(formData)
-      if (res.error) {
-        setPasswordState({ status: 'error', message: res.error })
-      } else {
-        setPasswordState({ status: 'success', message: res.message })
-        form.reset()
-      }
-    })
-  }
-
-  const handleSignOutOthers = async () => {
-    setSessionState({ status: 'loading' })
-    startTransition(async () => {
-      const res = await signOutOthersAction()
-      if (res.error) {
-        setSessionState({ status: 'error', message: res.error })
-      } else {
-        setSessionState({ status: 'success', message: res.message })
-      }
-    })
-  }
-
-  const roleLabels: Record<string, string> = {
-    super_admin: 'Super Administrator',
-    org_admin: 'Administrator Placówki',
-    admin: 'Administrator Placówki',
-    nurse: 'Pielęgniarka / Personel Medyczny',
-    caregiver: 'Opiekun',
-    paramedic: 'Ratownik Medyczny',
-    family: 'Bliski / Rodzina',
-    legal_guardian: 'Opiekun Prawny',
-  }
-
-  const isStaffOrAdmin = ['super_admin', 'org_admin', 'admin', 'nurse', 'caregiver', 'paramedic'].includes(initialData.user.role)
-
   return (
     <div className="space-y-6">
       {/* 1. Karta Informacji o Profilu */}
@@ -97,7 +29,7 @@ export function ProfileSecurityClient({ initialData }: { initialData: ProfileDat
               <span className="text-muted-foreground block">Rola w systemie:</span>
               <div className="mt-1">
                 <Badge variant="outline" className="bg-muted text-foreground border-border">
-                  {roleLabels[initialData.user.role] || initialData.user.role}
+                  {ROLE_LABELS[initialData.user.role] || initialData.user.role}
                 </Badge>
               </div>
             </div>
@@ -120,121 +52,10 @@ export function ProfileSecurityClient({ initialData }: { initialData: ProfileDat
       </Card>
 
       {/* 2. Zmiana Hasła */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Zmiana Hasła</CardTitle>
-          <CardDescription>
-            Hasło musi zawierać min. 8 znaków, w tym wielką literę, cyfrę oraz znak specjalny.
-          </CardDescription>
-        </CardHeader>
-        <form onSubmit={handlePasswordSubmit}>
-          <CardContent className="space-y-4 pb-6">
-            {passwordState.status === 'error' && (
-              <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md border border-destructive/20">
-                {passwordState.message}
-              </div>
-            )}
-            {passwordState.status === 'success' && (
-              <div className="p-3 text-sm text-foreground bg-muted rounded-md border border-border">
-                {passwordState.message}
-              </div>
-            )}
+      <ProfilePasswordCard />
 
-            <div className="space-y-2">
-              <Label htmlFor="currentPassword">Bieżące hasło</Label>
-              <Input
-                id="currentPassword"
-                name="currentPassword"
-                type="password"
-                required
-                disabled={isPending}
-                placeholder="Wpisz bieżące hasło"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="newPassword">Nowe hasło</Label>
-              <Input
-                id="newPassword"
-                name="newPassword"
-                type="password"
-                required
-                disabled={isPending}
-                placeholder="Wpisz nowe bezpieczne hasło"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Potwierdź nowe hasło</Label>
-              <Input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                required
-                disabled={isPending}
-                placeholder="Powtórz nowe hasło"
-              />
-            </div>
-          </CardContent>
-          <CardFooter className="p-6 pt-4">
-            <Button type="submit" disabled={isPending || passwordState.status === 'loading'}>
-              {passwordState.status === 'loading' ? 'Zmienianie hasła...' : 'Zmień hasło'}
-            </Button>
-          </CardFooter>
-        </form>
-      </Card>
-
-      {/* 3. Sesje i Bezpieczeństwo */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Zarządzanie Sesjami i MFA</CardTitle>
-          <CardDescription>
-            Kontroluj urządzenia z aktywnym dostępem do Twojego konta.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {sessionState.status === 'error' && (
-            <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md border border-destructive/20">
-              {sessionState.message}
-            </div>
-          )}
-          {sessionState.status === 'success' && (
-            <div className="p-3 text-sm text-foreground bg-muted rounded-md border border-border">
-              {sessionState.message}
-            </div>
-          )}
-
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 border rounded-lg bg-muted">
-            <div>
-              <h4 className="font-medium text-foreground">Pozostałe aktywne urządzenia</h4>
-              <p className="text-xs text-muted-foreground mt-1">
-                Wyloguj wszystkie sesje poza tą przeglądarką, jeśli podejrzewasz nieautoryzowany dostęp.
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              onClick={handleSignOutOthers}
-              disabled={isPending || sessionState.status === 'loading'}
-            >
-              {sessionState.status === 'loading' ? 'Wylogowywanie...' : 'Wyloguj inne sesje'}
-            </Button>
-          </div>
-
-          <div className="p-4 border rounded-lg bg-muted space-y-2">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div>
-                <h4 className="font-medium text-foreground">Uwierzytelnianie dwuskładnikowe (MFA / TOTP)</h4>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Drugi składnik logowania zapewnia najwyższy poziom ochrony danych pensjonariuszy zgodnie z normami RODO Art. 9.
-                </p>
-              </div>
-              <Badge variant="outline" className="w-fit text-xs border-border bg-card text-muted-foreground whitespace-nowrap">
-                Planowane w kolejnym wydaniu
-              </Badge>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* 3. Sesje i Bezpieczeństwo — MFA: Planowane w kolejnym wydaniu */}
+      <ProfileSessionsCard />
 
       {/* 4. Historia Bezpieczeństwa (4 stany UI) */}
       <Card>
@@ -256,8 +77,8 @@ export function ProfileSecurityClient({ initialData }: { initialData: ProfileDat
                       {log.action === 'password_self_change' ? 'Samodzielna zmiana hasła' : log.action}
                     </span>
                   </div>
-                  <span className="text-xs text-muted-foreground">
-                    {new Date(log.created_at).toLocaleString('pl-PL')}
+                  <span className="text-sm text-muted-foreground">
+                    {log.created_at ? new Date(log.created_at).toLocaleString('pl-PL') : '—'}
                   </span>
                 </div>
               ))}

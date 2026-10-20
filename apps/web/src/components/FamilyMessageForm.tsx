@@ -45,8 +45,10 @@ export function FamilyMessageForm({ residentId }: FamilyMessageFormProps) {
   };
 
   useEffect(() => {
-    setLoadingHistory(true);
-    loadMessages();
+    void Promise.resolve().then(() => {
+      setLoadingHistory(true);
+      loadMessages();
+    });
     
     // Proste odświeżanie co 30 sekund (pseudo real-time)
     const interval = setInterval(loadMessages, 30000);
@@ -76,7 +78,7 @@ export function FamilyMessageForm({ residentId }: FamilyMessageFormProps) {
       
       {/* Pasek statusu kontaktu z personelem dyżurnym */}
       {messages.length > 0 && (
-        <div className="px-5 py-2.5 bg-muted/40 border-b border-border flex items-center justify-between text-xs text-muted-foreground">
+        <div className="px-5 py-2.5 bg-muted/40 border-b border-border flex items-center justify-between text-sm text-muted-foreground">
           {messages[messages.length - 1]?.is_from_family ? (
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
@@ -95,7 +97,7 @@ export function FamilyMessageForm({ residentId }: FamilyMessageFormProps) {
               </span>
             </div>
           )}
-          <span className="text-[11px] text-muted-foreground hidden sm:inline">
+          <span className="text-sm text-muted-foreground hidden sm:inline">
             Dyżur opiekuńczy aktywny
           </span>
         </div>
@@ -119,7 +121,7 @@ export function FamilyMessageForm({ residentId }: FamilyMessageFormProps) {
             <div className="w-16 h-16 rounded-full flex items-center justify-center text-3xl mb-4 bg-surface border border-border">
               👋
             </div>
-            <p className="text-[13px] text-text-secondary">
+            <p className="text-sm text-text-secondary">
               Napisz wiadomość do personelu.<br/>Odpiszemy najszybciej jak to możliwe.
             </p>
           </div>
@@ -133,7 +135,7 @@ export function FamilyMessageForm({ residentId }: FamilyMessageFormProps) {
               <React.Fragment key={msg.id}>
                 {showTime && (
                   <div className="flex justify-center my-4">
-                    <span className="text-[10px] font-semibold text-text-tertiary uppercase tracking-wider">
+                    <span className="text-sm font-semibold text-text-tertiary uppercase tracking-wider">
                       {format(new Date(msg.created_at), "EEEE, d MMMM, HH:mm", { locale: pl })}
                     </span>
                   </div>
@@ -146,10 +148,10 @@ export function FamilyMessageForm({ residentId }: FamilyMessageFormProps) {
                         : 'bg-card text-foreground border border-border rounded-bl-sm'
                     }`}
                   >
-                    <p className="text-[14px] leading-relaxed font-normal whitespace-pre-wrap">{msg.content}</p>
+                    <p className="text-sm leading-relaxed font-normal whitespace-pre-wrap">{msg.content}</p>
                   </div>
                   <div className="flex items-center gap-1 mt-0.5 px-1">
-                    <span className="text-[10px] text-text-secondary flex items-center gap-1">
+                    <span className="text-sm text-text-secondary flex items-center gap-1">
                       {format(new Date(msg.created_at), "HH:mm")} • {isFamily ? 'Ty' : 'Personel dyżurny'}
                       {isFamily && (
                         <span className="inline-flex items-center text-primary font-medium ml-1">
@@ -167,7 +169,7 @@ export function FamilyMessageForm({ residentId }: FamilyMessageFormProps) {
 
       {/* Komunikat o błędzie (np. limit wiadomości) */}
       {sendState === 'error' && sendError && (
-        <div className="absolute bottom-[64px] left-4 right-4 bg-destructive/10 border border-destructive/20 rounded-xl p-2.5 text-center text-[12px] text-destructive font-medium z-20 animate-in fade-in slide-in-from-bottom-2">
+        <div className="absolute bottom-[64px] left-4 right-4 bg-destructive/10 border border-destructive/20 rounded-xl p-2.5 text-center text-sm text-destructive font-medium z-20 animate-in fade-in slide-in-from-bottom-2">
           {sendError}
         </div>
       )}
@@ -180,7 +182,7 @@ export function FamilyMessageForm({ residentId }: FamilyMessageFormProps) {
           className="flex-1 flex items-center rounded-full px-4 py-2.5 bg-background border border-border"
         >
           <input
-            className="flex-1 text-[14px] font-normal bg-transparent text-foreground outline-none"
+            className="flex-1 text-sm font-normal bg-transparent text-foreground outline-none"
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Napisz wiadomość..."

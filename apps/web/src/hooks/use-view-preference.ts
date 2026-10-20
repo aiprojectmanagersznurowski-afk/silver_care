@@ -68,9 +68,11 @@ export function useViewPreference<T extends string>(
 
   // Inicjalizacja po montowaniu w przeglądarce (SSR safe)
   useEffect(() => {
-    const initial = getViewPreferenceInitial(key, defaultMode, allowedModes)
-    setMode(initial)
-    setIsLoaded(true)
+    void Promise.resolve().then(() => {
+      const initial = getViewPreferenceInitial(key, defaultMode, allowedModes)
+      setMode(initial)
+      setIsLoaded(true)
+    })
   }, [key, defaultMode, allowedModes])
 
   const setViewMode = useCallback(

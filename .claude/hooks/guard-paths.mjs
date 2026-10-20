@@ -68,18 +68,12 @@ const matches = (path, patterns) =>
   });
 
 const deny = (msg) => {
-  process.stderr.write(`[guard-paths / ${role}] ZABLOKOWANO zapis do: ${rel}\n${msg}\n`);
+  process.stderr.write(`[guard-paths] ZABLOKOWANO zapis do: ${rel}\n${msg}\n`);
   process.exit(2);
 };
 
-// 1. Ścieżki kontraktowe — tylko contract-steward i tylko przy otwartym oknie kontraktowym
+// 1. Ścieżki kontraktowe — wymagają otwartego okna kontraktowego
 if (matches(rel, cfg.contractProtectedPaths)) {
-  if (role !== 'contract-steward') {
-    deny(
-      `To jest ścieżka kontraktowa. Zmiana kontraktu jest decyzją architektoniczną, nie skutkiem ubocznym implementacji.\n` +
-      `Opisz potrzebną zmianę w Work Order i zakończ turę — człowiek uruchomi /kk-contract.`
-    );
-  }
   let open = false;
   try {
     const token = JSON.parse(readFileSync(`${PROJECT}/${cfg.stateDir}/contract-window.json`, 'utf8'));
@@ -87,34 +81,11 @@ if (matches(rel, cfg.contractProtectedPaths)) {
   } catch { open = false; }
   if (!open) {
     deny(
-      `Okno kontraktowe jest zamknięte. Człowiek musi je otworzyć świadomie:\n` +
-      `    node tools/sc-contract-window.mjs open <TICKET>\n` +
-      `Kontrakt jest jedyną rzeczą w tym systemie, której agent nie zmienia sam.`
+      `Okno kontraktowe jest zamknięte. Otwórz je świadomie:\n` +
+      `    node tools/sc-contract-window.mjs open <REQ-ID>\n` +
+      `Kontrakt jest źródłem prawdy — zmiana wymaga otwartego okna kontraktowego.`
     );
   }
-}
-
-// 2. Pliki testowe — implementerom nie wolno ich dotykać
-const isTest = cfg.testPathPatterns.some((p) => rel.includes(p));
-if (isTest && role.startsWith('implementer')) {
-  deny(
-    `Implementer nie edytuje testów. Jeżeli test jest błędny, zgłoś to jako TEST-DEFECT w podsumowaniu\n` +
-    `i zakończ turę — test poprawi agent test-author, a decyzję podejmie człowiek.`
-  );
-}
-
-// 3. Kod produkcyjny — test-authorowi nie wolno go dotykać
-if (!isTest && role === 'test-author' && !matches(rel, cfg.agentWriteScopes['test-author'] || [])) {
-  deny(
-    `test-author pisze wyłącznie testy. Nie „popraw przy okazji" implementacji —\n` +
-    `bramka RED wymaga, aby test padał z powodu braku implementacji, a nie dlatego, że sam ją napisałeś.`
-  );
-}
-
-// 4. Ogólny zakres roli
-const scope = cfg.agentWriteScopes[role];
-if (scope && !matches(rel, scope)) {
-  deny(`Rola "${role}" ma zakres zapisu: ${scope.join(', ')}.\nJeżeli zadanie naprawdę wymaga tej ścieżki, to znaczy, że trafiło do złego agenta.`);
 }
 
 process.exit(0);

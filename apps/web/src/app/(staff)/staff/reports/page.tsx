@@ -56,7 +56,7 @@ export default async function StaffReportsPage({ searchParams }: StaffReportsPag
           <div className="flex items-center gap-2 mb-2">
             <Link 
               href="/staff" 
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
               Wróć do listy podopiecznych

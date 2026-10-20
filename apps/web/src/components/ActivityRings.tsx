@@ -1,6 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useSyncExternalStore } from 'react'
+
+const emptySubscribe = () => () => {}
 
 interface ActivityRingsProps {
   stepsProgress: number;
@@ -9,11 +11,7 @@ interface ActivityRingsProps {
 }
 
 export function ActivityRings({ stepsProgress, activityProgress, sleepProgress }: ActivityRingsProps) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
 
   const r1 = 80, r2 = 62, r3 = 44;
   const sw = 13;

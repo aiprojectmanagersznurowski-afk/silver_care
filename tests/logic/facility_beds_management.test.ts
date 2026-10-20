@@ -3,10 +3,12 @@ import {
   isGroundFloor,
   pseudonymizeResident,
   analyzeCurrentAllocation,
+  generateRelocationSuggestions,
   OptimizerRoom,
   OptimizerBed,
   OptimizerOccupant,
 } from '../../apps/web/src/lib/bed-allocation-optimizer';
+import { formatSectorName } from '../../apps/web/src/components/facility/RoomList';
 
 /**
  * @REQ: ADM-FACILITY-MANAGE
@@ -40,7 +42,6 @@ describe('Facility & Bed Management Logic (@REQ: ADM-FACILITY-MANAGE, @REQ: ADM-
       { id: 'b-4', roomId: 'r-2', label: '2', isActive: true },
     ];
 
-    // Pokój r-1: konflikt (M + F), Pokój r-2: zgodny (F + F)
     const occupants: OptimizerOccupant[] = [
       {
         residentId: 'res-1',
@@ -84,7 +85,7 @@ describe('Facility & Bed Management Logic (@REQ: ADM-FACILITY-MANAGE, @REQ: ADM-
 
     const room2Analysis = metrics.roomAnalyses.find((r) => r.roomId === 'r-2');
     expect(room2Analysis?.hasGenderConflict).toBe(false);
-    expect(room2Analysis?.hasMobilityMismatch).toBe(true); // E. S. ma ZSN na 1. piętrze zamiast na parterze
+    expect(room2Analysis?.hasMobilityMismatch).toBe(true);
   });
 
   it('filters facility rooms accurately by floor, sector, and occupancy state @REQ: ADM-FACILITY-OCCUPANCY', () => {
@@ -105,7 +106,6 @@ describe('Facility & Bed Management Logic (@REQ: ADM-FACILITY-MANAGE, @REQ: ADM-
       { id: 'r-4', number: '102', floor: '1. piętro', sector: 'B', beds: 1, occupied: 1, free: 0 },
     ];
 
-    // Funkcja filtrująca zgodna z logiką komponentu RoomList
     function filterRooms(
       list: TestRoom[],
       filters: { floor?: string; sector?: string; occupancy?: 'all' | 'free' | 'full'; query?: string }
@@ -123,27 +123,22 @@ describe('Facility & Bed Management Logic (@REQ: ADM-FACILITY-MANAGE, @REQ: ADM-
       });
     }
 
-    // 1. Filtr: Parter + Tylko wolne
     const groundFree = filterRooms(rooms, { floor: 'Parter', occupancy: 'free' });
     expect(groundFree).toHaveLength(1);
     expect(groundFree[0].number).toBe('02');
 
-    // 2. Filtr: Sektor A
     const sectorA = filterRooms(rooms, { sector: 'A' });
     expect(sectorA).toHaveLength(2);
 
-    // 3. Filtr: W pełni zajęte
     const fullRooms = filterRooms(rooms, { occupancy: 'full' });
     expect(fullRooms).toHaveLength(2);
     expect(fullRooms.map((r) => r.number)).toEqual(['01', '102']);
 
-    // 4. Szukaj po numerze "10"
     const search10 = filterRooms(rooms, { query: '10' });
     expect(search10).toHaveLength(2);
   });
 
   it('validates atomic bed transfer invariants @REQ: ADM-BED-ASSIGNMENT', () => {
-    // Weryfikacja reguły: jedno łóżko, jeden aktywny pensjonariusz
     interface Assignment {
       id: string;
       bed_id: string;
@@ -164,7 +159,6 @@ describe('Facility & Bed Management Logic (@REQ: ADM-FACILITY-MANAGE, @REQ: ADM-
       },
     ];
 
-    // Symulacja procedury transfer_resident_bed
     function simulateTransfer(
       list: Assignment[],
       residentId: string,
@@ -172,14 +166,12 @@ describe('Facility & Bed Management Logic (@REQ: ADM-FACILITY-MANAGE, @REQ: ADM-
       reason: string
     ): Assignment[] {
       const now = new Date().toISOString();
-      // 1. Zamknij stare przypisanie
       const updated = list.map((a) => {
         if (a.resident_id === residentId && a.unassigned_at === null) {
           return { ...a, unassigned_at: now, reason: a.reason || 'relocated' };
         }
         return a;
       });
-      // 2. Otwórz nowe przypisanie
       updated.push({
         id: `as-${Date.now()}`,
         bed_id: newBedId,
@@ -204,63 +196,64 @@ describe('Facility & Bed Management Logic (@REQ: ADM-FACILITY-MANAGE, @REQ: ADM-
     expect(oldForRes1[0].unassigned_at).not.toBeNull();
   });
 
-  it('renders beds in table view when expanded and uses persistent view preference @REQ: ADM-FACILITY-OCCUPANCY', async () => {
-    const fs = await import('node:fs');
-    const path = await import('node:path');
-    const roomListSrc = fs.readFileSync(
-      path.resolve(__dirname, '../../apps/web/src/components/facility/RoomList.tsx'),
-      'utf8'
-    );
+  it('generates relocation suggestions to resolve gender conflicts and floor mobility barriers @REQ: ADM-BED-ASSIGNMENT', () => {
+    const rooms: OptimizerRoom[] = [
+      { id: 'r-1', number: '101', floor: '1. piętro', sector: 'A', isActive: true },
+      { id: 'r-2', number: '01', floor: 'Parter', sector: 'A', isActive: true },
+    ];
 
-    // Weryfikacja: widok tabeli renderuje wiersz z łóżkami po rozwinięciu
-    expect(roomListSrc).toContain('data-testid="room-expanded-beds"');
-    expect(roomListSrc).toContain('<BedList');
-    expect(roomListSrc).toMatch(/isExpanded\s*\?\s*\(?[\s\S]*?Zwiń[\s\S]*?Łóżka/);
+    const beds: OptimizerBed[] = [
+      { id: 'b-1', roomId: 'r-1', label: '1', isActive: true },
+      { id: 'b-2', roomId: 'r-1', label: '2', isActive: true },
+      { id: 'b-3', roomId: 'r-2', label: '1', isActive: true },
+      { id: 'b-4', roomId: 'r-2', label: '2', isActive: true },
+    ];
 
-    // Weryfikacja: preferencja widoku jest zapamiętywana w localStorage
-    expect(roomListSrc).toContain('silver_care_facility_room_view_mode');
-    expect(roomListSrc).toContain('handleModeChange');
+    // r-1 ma konflikt (M + F). b-3 i b-4 są wolne na parterze.
+    const occupants: OptimizerOccupant[] = [
+      {
+        residentId: 'res-m',
+        pseudonym: 'J. K.',
+        gender: 'M',
+        careLevel: 'walking',
+        isZsn: false,
+        currentBedId: 'b-1',
+        currentRoomId: 'r-1',
+      },
+      {
+        residentId: 'res-f',
+        pseudonym: 'A. N.',
+        gender: 'F',
+        careLevel: 'walking',
+        isZsn: false,
+        currentBedId: 'b-2',
+        currentRoomId: 'r-1',
+      },
+    ];
+
+    const suggestions = generateRelocationSuggestions(rooms, beds, occupants);
+    expect(suggestions.length).toBeGreaterThanOrEqual(1);
+
+    const topSuggestion = suggestions[0];
+    expect(topSuggestion.priority).toBe('high');
+    expect(topSuggestion.reason).toContain('konfliktu płci');
+    expect(topSuggestion.toRoomNumber).toBe('01');
   });
 
-  it('renders beds tabularly in rows instead of card grid in BedList @REQ: ADM-FACILITY-MANAGE', async () => {
-    const fs = await import('node:fs');
-    const path = await import('node:path');
-    const bedListSrc = fs.readFileSync(
-      path.resolve(__dirname, '../../apps/web/src/components/facility/BedList.tsx'),
-      'utf8'
-    );
-
-    // Weryfikacja: BedList używa komponentu Table z @/components/ui/table
-    expect(bedListSrc).toContain('@/components/ui/table');
-    expect(bedListSrc).toContain('data-testid="beds-table"');
-    expect(bedListSrc).toContain('<Table>');
-    expect(bedListSrc).toContain('<TableRow');
-    expect(bedListSrc).toContain('<TableCell');
-
-    // Weryfikacja: brak nieczytelnego gridu miniaturowych kafelków
-    expect(bedListSrc).not.toContain('sm:grid-cols-2');
-    expect(bedListSrc).not.toContain('lg:grid-cols-3');
-
-    // Weryfikacja: zakaz słowa pacjent
-    expect(bedListSrc.toLowerCase()).not.toContain('pacjent');
+  it('normalizes sector labels correctly via formatSectorName @REQ: ADM-FACILITY-MANAGE', () => {
+    expect(formatSectorName('A')).toBe('Sektor A');
+    expect(formatSectorName('sektor B')).toBe('sektor B');
+    expect(formatSectorName('Sektor Północ')).toBe('Sektor Północ');
+    expect(formatSectorName(null)).toBe('—');
+    expect(formatSectorName(undefined)).toBe('—');
+    expect(formatSectorName('')).toBe('—');
+    expect(formatSectorName('   ')).toBe('—');
   });
 
-  it('ensures beds/assign endpoint inserts only valid schema columns into bed_assignments @REQ: ADM-BED-ASSIGNMENT', async () => {
-    const fs = await import('node:fs');
-    const path = await import('node:path');
-    const routeSrc = fs.readFileSync(
-      path.resolve(__dirname, '../../apps/web/src/app/api/facility/beds/assign/route.ts'),
-      'utf8'
-    );
-
-    // Weryfikacja: bed_assignments.insert NIE przekazuje kolumny 'reason', która nie istnieje w schemacie tabeli
-    const insertStartIndex = routeSrc.indexOf(".from('bed_assignments')")
-    const insertEndIndex = routeSrc.indexOf('if (assignError)', insertStartIndex)
-    const insertSnippet = routeSrc.slice(insertStartIndex, insertEndIndex)
-
-    expect(insertSnippet).not.toContain('reason')
-    expect(insertSnippet).toContain('bed_id')
-    expect(insertSnippet).toContain('resident_id')
-    expect(routeSrc).toContain('transfer_resident_bed')
+  it('protects privacy by pseudonymizing resident names @REQ: ADM-FACILITY-OCCUPANCY', () => {
+    expect(pseudonymizeResident('Jan', 'Kowalski')).toBe('J. K.');
+    expect(pseudonymizeResident('Anna', 'Nowak-Zielińska')).toBe('A. N.');
+    expect(pseudonymizeResident('', '')).toBe('? ?');
+    expect(pseudonymizeResident(null, null)).toBe('? ?');
   });
 });

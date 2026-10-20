@@ -16,7 +16,7 @@ export default async function StaffMessagesPage({
           <h1 className="text-xl md:text-2xl font-display font-semibold tracking-tight text-foreground">
             Wiadomości
           </h1>
-          <p className="text-xs text-muted-foreground hidden sm:block">
+          <p className="text-sm text-muted-foreground hidden sm:block">
             Bezpośredni kontakt z rodzinami i opiekunami prawnymi podopiecznych.
           </p>
         </div>

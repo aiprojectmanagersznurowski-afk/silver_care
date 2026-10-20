@@ -3,182 +3,16 @@
  * Zgodność z @REQ: ADM-BED-ASSIGNMENT.
  */
 
-export interface OptimizerRoom {
-  id: string
-  number: string
-  floor: string
-  sector?: string | null
-  isActive: boolean
-}
+import {
+  OptimizerRoom,
+  OptimizerBed,
+  OptimizerOccupant,
+  RelocationSuggestion,
+  isGroundFloor,
+} from './bed-allocation-types'
 
-export interface OptimizerBed {
-  id: string
-  roomId: string
-  label: string
-  isActive: boolean
-}
-
-export interface OptimizerOccupant {
-  residentId: string
-  pseudonym: string
-  gender: 'M' | 'F'
-  careLevel: 'walking' | 'sitting' | 'bedridden' | 'hospice'
-  isZsn: boolean
-  currentBedId: string
-  currentRoomId: string
-}
-
-export interface RoomOccupancyAnalysis {
-  roomId: string
-  roomNumber: string
-  floor: string
-  sector: string | null
-  totalBeds: number
-  occupiedBeds: number
-  genders: Array<'M' | 'F'>
-  hasGenderConflict: boolean
-  hasMobilityMismatch: boolean
-  conflicts: string[]
-}
-
-export interface FacilityAllocationMetrics {
-  totalRooms: number
-  totalBeds: number
-  occupiedBeds: number
-  freeBeds: number
-  genderConflictsCount: number
-  mobilityMismatchCount: number
-  overallScore: number // 0 to 100%
-  roomAnalyses: RoomOccupancyAnalysis[]
-}
-
-export interface RelocationSuggestion {
-  id: string
-  residentId: string
-  residentPseudonym: string
-  gender: 'M' | 'F'
-  careLevel: string
-  fromBedId: string
-  fromBedLabel: string
-  fromRoomId: string
-  fromRoomNumber: string
-  fromFloor: string
-  toBedId: string
-  toBedLabel: string
-  toRoomId: string
-  toRoomNumber: string
-  toFloor: string
-  reason: string
-  priority: 'high' | 'medium' | 'low'
-  scoreImprovement: number
-}
-
-export function isGroundFloor(floor: string | number | null | undefined): boolean {
-  if (floor === null || floor === undefined) return false
-  const f = floor.toString().trim().toLowerCase()
-  return f === '0' || f === 'parter' || f === 'p' || f === 'ground'
-}
-
-export function pseudonymizeResident(firstName?: string | null, lastName?: string | null): string {
-  const f = (firstName || '').trim()
-  const l = (lastName || '').trim()
-  const fInitial = f.length > 0 ? `${f[0].toUpperCase()}.` : '?'
-  const lInitial = l.length > 0 ? `${l[0].toUpperCase()}.` : '?'
-  return `${fInitial} ${lInitial}`
-}
-
-/**
- * Analiza stanu alokacji placówki — identyfikacja konfliktów płciowych i barier mobilności.
- */
-export function analyzeCurrentAllocation(
-  rooms: OptimizerRoom[],
-  beds: OptimizerBed[],
-  occupants: OptimizerOccupant[]
-): FacilityAllocationMetrics {
-  const activeRooms = rooms.filter((r) => r.isActive)
-  const activeBeds = beds.filter((b) => b.isActive)
-
-  const occupantsByRoom = new Map<string, OptimizerOccupant[]>()
-  for (const occ of occupants) {
-    const list = occupantsByRoom.get(occ.currentRoomId) || []
-    list.push(occ)
-    occupantsByRoom.set(occ.currentRoomId, list)
-  }
-
-  const bedsByRoom = new Map<string, OptimizerBed[]>()
-  for (const b of activeBeds) {
-    const list = bedsByRoom.get(b.roomId) || []
-    list.push(b)
-    bedsByRoom.set(b.roomId, list)
-  }
-
-  let genderConflictsCount = 0
-  let mobilityMismatchCount = 0
-  const roomAnalyses: RoomOccupancyAnalysis[] = []
-
-  for (const room of activeRooms) {
-    const roomOccupants = occupantsByRoom.get(room.id) || []
-    const roomBeds = bedsByRoom.get(room.id) || []
-    const genders = roomOccupants.map((o) => o.gender)
-    const conflicts: string[] = []
-
-    // 1. Konflikt płci w pokoju wieloosobowym
-    const hasM = genders.includes('M')
-    const hasF = genders.includes('F')
-    const hasGenderConflict = hasM && hasF
-    if (hasGenderConflict) {
-      genderConflictsCount++
-      conflicts.push(`Konflikt płci w pokoju ${room.number}: ${genders.filter((g) => g === 'M').length}M / ${genders.filter((g) => g === 'F').length}K.`)
-    }
-
-    // 2. Mismatch mobilności (leżący/hospicyjny na wyższym piętrze)
-    let roomMobilityMismatch = false
-    if (!isGroundFloor(room.floor)) {
-      const immobileOccupants = roomOccupants.filter(
-        (o) => o.careLevel === 'bedridden' || o.careLevel === 'hospice'
-      )
-      if (immobileOccupants.length > 0) {
-        roomMobilityMismatch = true
-        mobilityMismatchCount += immobileOccupants.length
-        conflicts.push(
-          `${immobileOccupants.length} pensjonariusz(y) leżący/hospicyjny na piętrze ${room.floor}. Wymagany parter.`
-        )
-      }
-    }
-
-    roomAnalyses.push({
-      roomId: room.id,
-      roomNumber: room.number,
-      floor: room.floor,
-      sector: room.sector || null,
-      totalBeds: roomBeds.length,
-      occupiedBeds: roomOccupants.length,
-      genders,
-      hasGenderConflict,
-      hasMobilityMismatch: roomMobilityMismatch,
-      conflicts,
-    })
-  }
-
-  const totalOccupants = occupants.length
-  let score = 100
-  if (totalOccupants > 0) {
-    const genderPenalty = (genderConflictsCount * 40)
-    const mobilityPenalty = (mobilityMismatchCount * 25)
-    score = Math.max(0, Math.min(100, Math.round(100 - genderPenalty - mobilityPenalty)))
-  }
-
-  return {
-    totalRooms: activeRooms.length,
-    totalBeds: activeBeds.length,
-    occupiedBeds: totalOccupants,
-    freeBeds: Math.max(0, activeBeds.length - totalOccupants),
-    genderConflictsCount,
-    mobilityMismatchCount,
-    overallScore: score,
-    roomAnalyses,
-  }
-}
+export * from './bed-allocation-types'
+export { analyzeCurrentAllocation } from './bed-allocation-analyzer'
 
 /**
  * Generowanie inteligentnych propozycji relokacji rozwiązujących konflikty
@@ -217,24 +51,20 @@ export function generateRelocationSuggestions(
     const fList = roomOccs.filter((o) => o.gender === 'F')
 
     if (mList.length > 0 && fList.length > 0) {
-      // Wybierz mniejszość do przeniesienia
       const toMove = mList.length <= fList.length ? mList : fList
       const targetGender = toMove[0].gender
 
       for (const occ of toMove) {
-        // Znajdź wolne łóżko w pokoju zgodnym płciowo lub pustym
         const candidateBed = freeBeds.find((b) => {
           if (claimedTargetBedIds.has(b.id)) return false
           const targetRoom = roomMap.get(b.roomId)
           if (!targetRoom || targetRoom.id === room.id) return false
 
           const targetOccupants = occupantsByRoom.get(targetRoom.id) || []
-          // Pokój pusty LUB zawiera wyłącznie osoby tej samej płci
           const targetGenders = targetOccupants.map((o) => o.gender)
           const isGenderSafe = targetGenders.length === 0 || targetGenders.every((g) => g === targetGender)
           if (!isGenderSafe) return false
 
-          // Jeśli osoba leżąca, musi być parter
           if ((occ.careLevel === 'bedridden' || occ.careLevel === 'hospice') && !isGroundFloor(targetRoom.floor)) {
             return false
           }
@@ -276,11 +106,8 @@ export function generateRelocationSuggestions(
     if (occ.careLevel !== 'bedridden' && occ.careLevel !== 'hospice') continue
     const currentRoom = roomMap.get(occ.currentRoomId)
     if (!currentRoom || isGroundFloor(currentRoom.floor)) continue
-
-    // Jeśli już ma propozycję przeniesienia z kroku 1, pomijamy
     if (suggestions.some((s) => s.residentId === occ.residentId)) continue
 
-    // Szukamy wolnego łóżka na parterze zgodnego płciowo
     const groundCandidateBed = freeBeds.find((b) => {
       if (claimedTargetBedIds.has(b.id)) return false
       const targetRoom = roomMap.get(b.roomId)

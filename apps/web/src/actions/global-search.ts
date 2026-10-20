@@ -1,106 +1,15 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
 import {
   SearchCategoryKey,
-  SearchResultItem,
   sanitizeSearchQuery,
-  formatResidentSearchResult,
-  formatFacilitySearchResult,
-  formatAgendaSearchResult,
-  formatReportSearchResult,
   filterSearchResultsByCategory,
 } from '@/lib/global-search-helpers'
-
-export interface GlobalSearchResponse {
-  success: boolean
-  query: string
-  items: SearchResultItem[]
-  totalCount: number
-  error?: string
-}
-
-interface RawRoomWithBeds {
-  id: string
-  number: string
-  floor: number | null
-  sector: string | null
-  organization_id: string
-  beds: Array<{
-    id: string
-    label: string
-    bed_assignments: Array<{
-      unassigned_at: string | null
-      residents: {
-        first_name: string
-        last_name: string
-      } | null
-    }> | null
-  }> | null
-}
-
-interface RawBedWithRoom {
-  id: string
-  label: string
-  rooms: {
-    id: string
-    number: string
-    floor: number | null
-    sector: string | null
-    organization_id: string
-  } | null
-  bed_assignments: Array<{
-    unassigned_at: string | null
-    residents: {
-      first_name: string
-      last_name: string
-    } | null
-  }> | null
-}
-
-interface RawResidentRow {
-  id: string
-  first_name: string
-  last_name: string
-  care_level: string | null
-  is_zsn: boolean | null
-  bed_assignments: Array<{
-    unassigned_at: string | null
-    beds: {
-      label: string
-      rooms: {
-        number: string
-      } | null
-    } | null
-  }> | null
-}
-
-interface RawAgendaRow {
-  id: string
-  title: string
-  time: string
-  residents: {
-    first_name: string
-    last_name: string
-  } | null
-}
-
-interface RawReportRow {
-  id: string
-  created_at: string | null
-  status: string
-  residents: {
-    first_name: string
-    last_name: string
-  } | null
-}
-
-interface RawOrgRow {
-  id: string
-  name: string
-  city: string | null
-}
+import {
+  mapSearchQueryResults,
+  type GlobalSearchResponse,
+} from '@/lib/global-search-mappers'
 
 export async function searchGlobalAction(
   rawQuery: string,
@@ -134,8 +43,6 @@ export async function searchGlobalAction(
   const role = user.app_metadata?.role as string | undefined
   const orgId = user.app_metadata?.organization_id as string | undefined
   const isSuperAdmin = role === 'super_admin'
-
-  const results: SearchResultItem[] = []
 
   try {
     // 1. Wyszukiwanie pensjonariuszy (residents)
@@ -218,166 +125,17 @@ export async function searchGlobalAction(
         orgsPromise,
       ])
 
-    // Formatowanie: Podopieczni
-    if (resResult.status === 'fulfilled' && resResult.value.data) {
-      const rows = resResult.value.data as unknown as RawResidentRow[]
-      for (const r of rows) {
-        const activeAssignment = Array.isArray(r.bed_assignments)
-          ? r.bed_assignments.find((a) => a.unassigned_at === null)
-          : null
-
-        results.push(
-          formatResidentSearchResult({
-            id: r.id,
-            first_name: r.first_name,
-            last_name: r.last_name,
-            care_level: r.care_level,
-            is_zsn: r.is_zsn,
-            room_number: activeAssignment?.beds?.rooms?.number || null,
-            bed_label: activeAssignment?.beds?.label || null,
-          })
-        )
-      }
-    }
-
-    // Formatowanie: Pokoje i łóżka
-    const seenFacilityIds = new Set<string>()
-
-    if (roomsResult.status === 'fulfilled' && roomsResult.value.data) {
-      const rows = roomsResult.value.data as unknown as RawRoomWithBeds[]
-      for (const r of rows) {
-        const bedsList = Array.isArray(r.beds) ? r.beds : []
-        if (bedsList.length === 0) {
-          if (!seenFacilityIds.has(r.id)) {
-            seenFacilityIds.add(r.id)
-            results.push(
-              formatFacilitySearchResult({
-                id: r.id,
-                room_id: r.id,
-                room_number: r.number,
-                floor: r.floor,
-                sector: r.sector,
-                bed_label: null,
-                resident_name: null,
-              })
-            )
-          }
-        } else {
-          for (const b of bedsList) {
-            if (seenFacilityIds.has(b.id)) continue
-            seenFacilityIds.add(b.id)
-
-            const activeAssignment = Array.isArray(b.bed_assignments)
-              ? b.bed_assignments.find((a) => a.unassigned_at === null)
-              : null
-
-            const residentName = activeAssignment?.residents
-              ? `${activeAssignment.residents.first_name} ${activeAssignment.residents.last_name}`
-              : null
-
-            results.push(
-              formatFacilitySearchResult({
-                id: b.id,
-                room_id: r.id,
-                room_number: r.number,
-                floor: r.floor,
-                sector: r.sector,
-                bed_label: b.label,
-                resident_name: residentName,
-              })
-            )
-          }
-        }
-      }
-    }
-
-    if (bedsResult.status === 'fulfilled' && bedsResult.value.data) {
-      const rows = bedsResult.value.data as unknown as RawBedWithRoom[]
-      for (const b of rows) {
-        if (!b.rooms || seenFacilityIds.has(b.id)) continue
-        seenFacilityIds.add(b.id)
-
-        const activeAssignment = Array.isArray(b.bed_assignments)
-          ? b.bed_assignments.find((a) => a.unassigned_at === null)
-          : null
-
-        const residentName = activeAssignment?.residents
-          ? `${activeAssignment.residents.first_name} ${activeAssignment.residents.last_name}`
-          : null
-
-        results.push(
-          formatFacilitySearchResult({
-            id: b.id,
-            room_id: b.rooms.id,
-            room_number: b.rooms.number,
-            floor: b.rooms.floor,
-            sector: b.rooms.sector,
-            bed_label: b.label,
-            resident_name: residentName,
-          })
-        )
-      }
-    }
-
-    // Formatowanie: Plan dnia
-    if (agendaResult.status === 'fulfilled' && agendaResult.value.data) {
-      const rows = agendaResult.value.data as unknown as RawAgendaRow[]
-      for (const a of rows) {
-        const residentName = a.residents
-          ? `${a.residents.first_name} ${a.residents.last_name}`
-          : null
-
-        results.push(
-          formatAgendaSearchResult({
-            id: a.id,
-            title: a.title,
-            scheduled_time: a.time,
-            resident_name: residentName,
-          })
-        )
-      }
-    }
-
-    // Formatowanie: Raporty dobowe
-    if (reportsResult.status === 'fulfilled' && reportsResult.value.data) {
-      const rows = reportsResult.value.data as unknown as RawReportRow[]
-      for (const rep of rows) {
-        const dateStr = rep.created_at ? rep.created_at.slice(0, 10) : ''
-        const residentName = rep.residents
-          ? `${rep.residents.first_name} ${rep.residents.last_name}`
-          : null
-
-        // Weryfikacja dopasowania w wynikach
-        const nameMatches = residentName?.toLowerCase().includes(cleanQ.toLowerCase())
-        const dateMatches = dateStr.includes(cleanQ)
-        if (!nameMatches && !dateMatches) continue
-
-        results.push(
-          formatReportSearchResult({
-            id: rep.id,
-            report_date: dateStr,
-            resident_name: residentName,
-            status: rep.status,
-          })
-        )
-      }
-    }
-
-    // Formatowanie: Placówki (super_admin)
-    if (orgsResult.status === 'fulfilled' && orgsResult.value?.data) {
-      const rows = orgsResult.value.data as unknown as RawOrgRow[]
-      for (const org of rows) {
-        results.push({
-          id: org.id,
-          title: org.name,
-          subtitle: org.city ? `Miasto: ${org.city}` : 'Placówka opiekuńcza',
-          href: `/admin/organizations/${org.id}`,
-          category: 'organizations',
-          badge: 'Placówka',
-          badgeVariant: 'outline',
-        })
-      }
-    }
+    const results = mapSearchQueryResults(
+      {
+        resData: resResult.status === 'fulfilled' ? resResult.value.data : undefined,
+        roomsData: roomsResult.status === 'fulfilled' ? roomsResult.value.data : undefined,
+        bedsData: bedsResult.status === 'fulfilled' ? bedsResult.value.data : undefined,
+        agendaData: agendaResult.status === 'fulfilled' ? agendaResult.value.data : undefined,
+        reportsData: reportsResult.status === 'fulfilled' ? reportsResult.value.data : undefined,
+        orgsData: orgsResult.status === 'fulfilled' ? (orgsResult.value as { data: unknown })?.data : undefined,
+      },
+      cleanQ
+    )
 
     const filtered = filterSearchResultsByCategory(results, selectedCategory)
 

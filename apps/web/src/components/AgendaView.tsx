@@ -63,16 +63,16 @@ export function AgendaView({ residents }: AgendaViewProps) {
                       <span className="font-medium text-foreground">{item.title}</span>
                     </div>
                     {resident ? (
-                      <div className="text-xs text-text-tertiary mt-1 font-medium">
+                      <div className="text-sm text-text-tertiary mt-1 font-medium">
                         Pensjonariusz: {resident.first_name as string} {resident.last_name as string}
                       </div>
                     ) : (
-                      <div className="text-xs text-text-tertiary mt-1">
+                      <div className="text-sm text-text-tertiary mt-1">
                         Zadanie wspólne
                       </div>
                     )}
                   </div>
-                  <span className="text-xs font-bold px-2 py-1 bg-primary/10 text-primary rounded-full uppercase tracking-wider">
+                  <span className="text-sm font-bold px-2 py-1 bg-primary/10 text-primary rounded-full uppercase tracking-wider">
                     {item.type}
                   </span>
                 </li>

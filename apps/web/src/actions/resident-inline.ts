@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { isImpersonationSessionActive, assertMutationAllowedDuringImpersonation } from '@/lib/impersonation-guards'
+import type { TablesUpdate } from '@/types/database.types'
 
 export interface UpdateResidentPayload {
   residentId: string
@@ -80,7 +81,7 @@ export async function updateResidentInlineAction(
   }
 
   // Przygotowanie bezpiecznego payloadu (tylko dozwolone kolumny)
-  const updateData: Record<string, string | boolean | null> = {}
+  const updateData: TablesUpdate<'residents'> = {}
 
   if (payload.first_name !== undefined) {
     const trimmed = payload.first_name.trim()
@@ -145,11 +146,11 @@ export async function updateResidentInlineAction(
   // Rejestracja w audit_logs
   await adminClient.from('audit_logs').insert({
     organization_id: resident.organization_id,
-    user_id: user.id,
+    performed_by: user.id,
     action: 'RESIDENT_INLINE_UPDATE',
-    target_table: 'residents',
-    target_id: payload.residentId,
-    details: {
+    payload: {
+      target_table: 'residents',
+      target_id: payload.residentId,
       updated_fields: Object.keys(updateData),
       changes: updateData,
     },

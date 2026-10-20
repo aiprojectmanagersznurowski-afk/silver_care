@@ -1,78 +1,83 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import {
+  validateLoginCredentials,
+} from '../../apps/web/src/lib/ui-theme-validator';
+import { validatePasswordStrength } from '../../apps/web/src/lib/password';
+import { formatSectorName } from '../../apps/web/src/components/facility/RoomList';
+import { ROLE_LABELS, AVAILABLE_ROLES } from '../../apps/web/src/components/iam/iam-types';
+import { ACCESSIBILITY } from '@silvercare/contracts/src/generated/design';
 
 /**
  * @REQ: UI-TEMPLATE-ALIGNMENT
  * @REQ: UI-ACCESSIBILITY
  *
- * Testy weryfikujące wdrożenie ustaleń z audytów UI/UX (UI/Audyt):
- * 1. Ekran logowania (silvercare-login-audit.md): semantyka, autocomplete, brak mylących placeholderów, cel dotykowy, ikona Google, odzyskiwanie hasła.
- * 2. Portal rodziny (silver-care-audyt-portal-rodziny.md): responsywność nagłówka 768px-935px, przestrzeń composera wiadomości.
- * 3. Panel placówki (silver-care-audyt-panel-admina.md): flex-wrap paska akcji w strukturze, deduplikacja prefiksu sektora.
- * 4. Super Admin / IAM (audyt-ui-silver-care-super-admin.md): responsywne kafelki placówek, polskie etykiety ról i BusinessId w IAM.
+ * Testy wykonawcze dla ustaleń z audytów UI/UX:
+ * 1. Ekran logowania: walidacja danych uwierzytelniających i siły hasła.
+ * 2. Panel placówki: formatowanie nazw sektorów i deduplikacja prefiksu.
+ * 3. Super Admin i IAM: polskie etykiety ról i blokada super_admin w kreatorze.
+ * 4. Dostępność Mobile-First i cele dotykowe.
  */
-
-const ROOT = resolve(__dirname, '../..');
-const read = (p: string) => readFileSync(resolve(ROOT, p), 'utf8');
-
 describe('Wdrożenie audytów UI/UX (@REQ: UI-TEMPLATE-ALIGNMENT, @REQ: UI-ACCESSIBILITY)', () => {
   describe('1. Ekran logowania (/login)', () => {
-    it('posiada semantyczny kontener <main> i nagłówek h1 @REQ: UI-ACCESSIBILITY', () => {
-      const src = read('apps/web/src/app/login/page.tsx');
-      expect(src).toMatch(/<main\b/);
-      expect(src).toMatch(/<h1\b/);
+    it('waliduje format adresu e-mail i obecność hasła @REQ: UI-ACCESSIBILITY', () => {
+      expect(validateLoginCredentials('', '')).toEqual({
+        valid: false,
+        error: 'Podaj poprawny adres e-mail',
+      });
+      expect(validateLoginCredentials('invalid-email', 'pass')).toEqual({
+        valid: false,
+        error: 'Podaj poprawny adres e-mail',
+      });
+      expect(validateLoginCredentials('nurse@silvercare.pl', '')).toEqual({
+        valid: false,
+        error: 'Wprowadź hasło',
+      });
+      expect(validateLoginCredentials('nurse@silvercare.pl', 'Secret123!')).toEqual({
+        valid: true,
+      });
     });
 
-    it('inputy posiadają atrybuty autocomplete i name oraz usunięty mylący placeholder hasła @REQ: UI-ACCESSIBILITY', () => {
-      const src = read('apps/web/src/app/login/page.tsx');
-      expect(src).toContain('autoComplete="username"');
-      expect(src).toContain('autoComplete="current-password"');
-      expect(src).toContain('name="email"');
-      expect(src).toContain('name="password"');
-      expect(src).not.toContain('placeholder="••••••••"');
-    });
+    it('weryfikuje siłę hasła wg polityki bezpieczeństwa @REQ: UI-TEMPLATE-ALIGNMENT', () => {
+      const weak = validatePasswordStrength('krotkie');
+      expect(weak.valid).toBe(false);
 
-    it('zawiera link odzyskiwania hasła oraz ikonę Google @REQ: UI-TEMPLATE-ALIGNMENT', () => {
-      const src = read('apps/web/src/app/login/page.tsx');
-      expect(src).toMatch(/Nie pamiętasz hasła\?/);
-      expect(src).toMatch(/<a\s+[^>]*href=/);
-      expect(src).toMatch(/GoogleIcon|svg.*viewBox/i);
-    });
-  });
-
-  describe('2. Portal rodziny', () => {
-    it('FamilyHeader włącza nawigację desktopową od lg i zabezpiecza linki przed zawijaniem @REQ: UI-TEMPLATE-ALIGNMENT', () => {
-      const src = read('apps/web/src/components/FamilyHeader.tsx');
-      expect(src).toContain('lg:flex');
-      expect(src).toContain('whitespace-nowrap');
+      const strong = validatePasswordStrength('TrudneHaslo123!');
+      expect(strong.valid).toBe(true);
     });
   });
 
-  describe('3. Panel placówki', () => {
-    it('nagłówek struktury w /admin/facility używa flex-wrap dla przycisków akcji @REQ: UI-ACCESSIBILITY', () => {
-      const src = read('apps/web/src/app/(admin)/admin/facility/page.tsx');
-      expect(src).toMatch(/flex\s+flex-wrap\s+items-center\s+gap-2/);
-    });
-
-    it('RoomList deduplikuje prefiks Sektor w nazwach @REQ: UI-TEMPLATE-ALIGNMENT', () => {
-      const src = read('apps/web/src/components/facility/RoomList.tsx');
-      expect(src).toMatch(/formatSectorName|startsWith\(['"]sektor/i);
+  describe('2. Panel placówki i struktura pokoi', () => {
+    it('formatSectorName deduplikuje prefiks Sektor w nazwach @REQ: UI-TEMPLATE-ALIGNMENT', () => {
+      // Jeśli nazwa nie posiada prefiksu, dodaje "Sektor "
+      expect(formatSectorName('A')).toBe('Sektor A');
+      // Jeśli nazwa już posiada prefiks "Sektor", nie duplikuje go (brak "Sektor Sektor B")
+      expect(formatSectorName('Sektor B-Północ')).toBe('Sektor B-Północ');
+      expect(formatSectorName('sektor C')).toBe('sektor C');
+      expect(formatSectorName(null)).toBe('—');
+      expect(formatSectorName(undefined)).toBe('—');
+      expect(formatSectorName('')).toBe('—');
     });
   });
 
-  describe('4. Super Admin i IAM', () => {
-    it('kafelki placówek w OrganizationsManagementClient posiadają responsywny nagłówek @REQ: UI-TEMPLATE-ALIGNMENT', () => {
-      const src = read('apps/web/src/components/OrganizationsManagementClient.tsx');
-      expect(src).toContain('min-w-0 flex-1');
-      expect(src).toContain('shrink-0');
+  describe('3. Super Admin i IAM', () => {
+    it('IAM posiada czytelne polskie etykiety ról @REQ: UI-TEMPLATE-ALIGNMENT', () => {
+      expect(ROLE_LABELS.org_admin).toContain('Administrator Placówki');
+      expect(ROLE_LABELS.nurse).toContain('Personel Opiekuńczy');
+      expect(ROLE_LABELS.family).toContain('Członek Rodziny');
+      expect(ROLE_LABELS.legal_guardian).toContain('Opiekun Prawny');
     });
 
-    it('tabela IAM wyświetla czytelne polskie etykiety ról i współpracuje z ChangeRoleDialog @REQ: UI-TEMPLATE-ALIGNMENT', () => {
-      const src = read('apps/web/src/components/iam/UserTable.tsx');
-      expect(src).toMatch(/displayRole|roleLabels/);
-      const dialogSrc = read('apps/web/src/components/iam/ChangeRoleDialog.tsx');
-      expect(dialogSrc).toMatch(/currentRoleLabel|roleLabels/);
+    it('AVAILABLE_ROLES blokuje wybór roli super_admin w UI @REQ: UI-TEMPLATE-ALIGNMENT', () => {
+      const roleIds = AVAILABLE_ROLES.map((r) => r.id);
+      expect(roleIds).not.toContain('super_admin');
+      expect(roleIds).toContain('org_admin');
+      expect(roleIds).toContain('nurse');
+    });
+  });
+
+  describe('4. Standardy dostępności', () => {
+    it('zapewnia minimalny cel dotykowy 44px @REQ: UI-ACCESSIBILITY', () => {
+      expect(ACCESSIBILITY.touchTargetMinimum).toBe('44px');
     });
   });
 });

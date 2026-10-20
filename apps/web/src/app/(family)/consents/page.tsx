@@ -73,11 +73,11 @@ export default async function FamilyConsentsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Badge variant="outline" className="text-xs bg-primary/10 border-primary/20 text-primary gap-1">
+            <Badge variant="outline" className="text-sm bg-primary/10 border-primary/20 text-primary gap-1">
               <ShieldCheck className="w-3.5 h-3.5" />
               Art. 9 RODO & Rejestr Zgód
             </Badge>
-            <Badge variant="outline" className="text-xs text-muted-foreground">
+            <Badge variant="outline" className="text-sm text-muted-foreground">
               Append-Only
             </Badge>
           </div>
@@ -89,7 +89,7 @@ export default async function FamilyConsentsPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 bg-muted/60 px-4 py-2 rounded-xl border border-border text-xs text-muted-foreground">
+        <div className="flex items-center gap-2 bg-muted/60 px-4 py-2 rounded-xl border border-border text-sm text-muted-foreground">
           <span>Rola konta:</span>
           <span className="font-semibold text-foreground">
             {isLegalGuardian ? 'Opiekun prawny (pełne uprawnienia)' : 'Członek rodziny (obserwator)'}
@@ -105,11 +105,11 @@ export default async function FamilyConsentsPage() {
               <ShieldAlert className="w-5 h-5 text-primary shrink-0" />
               Uprawnienia roli: Członek rodziny
             </CardTitle>
-            <CardDescription className="text-xs sm:text-sm text-muted-foreground">
-              Zgodnie z Art. 9 RODO oraz procedurami placówki, zgody na przetwarzanie danych szczególnych kategorii z urządzeń opiekuńczych może wyrażać wyłącznie Pensjonariusz lub ustanowiony Opiekun Prawny (<code className="font-mono text-xs">legal_guardian</code>).
+            <CardDescription className="text-sm sm:text-sm text-muted-foreground">
+              Zgodnie z Art. 9 RODO oraz procedurami placówki, zgody na przetwarzanie danych szczególnych kategorii z urządzeń opiekuńczych może wyrażać wyłącznie Pensjonariusz lub ustanowiony Opiekun Prawny (<code className="font-mono text-sm">legal_guardian</code>).
             </CardDescription>
           </CardHeader>
-          <CardContent className="text-xs sm:text-sm text-muted-foreground space-y-2">
+          <CardContent className="text-sm sm:text-sm text-muted-foreground space-y-2">
             <p>
               Twoje konto posiada bezpieczny dostęp wglądu do publikowanych przez personel raportów dobowych oraz planu dnia.
               Jeśli jesteś formalnym opiekunem prawnym, skontaktuj się z administratorem placówki w celu aktualizacji statusu konta.
@@ -125,7 +125,7 @@ export default async function FamilyConsentsPage() {
             <History className="w-5 h-5 text-primary shrink-0" />
             Rejestr zdarzeń zgód (Consent Ledger)
           </CardTitle>
-          <CardDescription className="text-xs sm:text-sm text-muted-foreground">
+          <CardDescription className="text-sm sm:text-sm text-muted-foreground">
             Niezmienialny rejestr oświadczeń woli i celów przetwarzania danych w systemie Silver Care.
           </CardDescription>
         </CardHeader>
@@ -134,7 +134,7 @@ export default async function FamilyConsentsPage() {
             <div className="text-center py-10 space-y-2">
               <CheckCircle2 className="w-10 h-10 text-muted-foreground mx-auto" />
               <p className="text-sm font-medium text-foreground">Brak wpisów w rejestrze zgód dla wybranego podopiecznego.</p>
-              <p className="text-xs text-muted-foreground">Wszelkie oświadczenia woli rejestrowane są w momencie przyjęcia do placówki.</p>
+              <p className="text-sm text-muted-foreground">Wszelkie oświadczenia woli rejestrowane są w momencie przyjęcia do placówki.</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -155,17 +155,17 @@ export default async function FamilyConsentsPage() {
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-sm text-foreground">{purposeInfo.title}</span>
                         {isActive ? (
-                          <Badge variant="outline" className="text-[10px] bg-primary/10 border-primary/20 text-primary font-semibold">
+                          <Badge variant="outline" className="text-sm bg-primary/10 border-primary/20 text-primary font-semibold">
                             Aktywna
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="text-[10px] bg-muted border-border text-muted-foreground">
+                          <Badge variant="outline" className="text-sm bg-muted border-border text-muted-foreground">
                             Wycofana
                           </Badge>
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground max-w-xl">{purposeInfo.desc}</p>
-                      <div className="flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground pt-1">
+                      <p className="text-sm text-muted-foreground max-w-xl">{purposeInfo.desc}</p>
+                      <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground pt-1">
                         <span>
                           Udzielono: <strong className="text-foreground">{format(new Date(c.granted_at), 'd MMMM yyyy, HH:mm', { locale: pl })}</strong>
                         </span>
@@ -184,7 +184,7 @@ export default async function FamilyConsentsPage() {
                       </div>
                     </div>
 
-                    <div className="text-xs text-muted-foreground font-mono shrink-0">
+                    <div className="text-sm text-muted-foreground font-mono shrink-0">
                       ID: {c.id.slice(0, 8)}…
                     </div>
                   </div>
@@ -196,7 +196,7 @@ export default async function FamilyConsentsPage() {
       </Card>
 
       {/* Nota prawna / MDR */}
-      <div className="p-4 rounded-xl border border-border bg-muted/40 text-xs text-muted-foreground space-y-1.5">
+      <div className="p-4 rounded-xl border border-border bg-muted/40 text-sm text-muted-foreground space-y-1.5">
         <p className="font-semibold text-foreground flex items-center gap-1.5">
           <AlertCircle className="w-4 h-4 text-primary shrink-0" />
           Zasady rozliczalności i granica wyrobu medycznego (MDR)

@@ -36,7 +36,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         <header className="flex h-12 shrink-0 items-center gap-2 border-b">
           <div className="flex w-full items-center justify-between px-4 lg:px-6">
             <div className="flex items-center gap-1 lg:gap-2">
-              <SidebarTrigger className="-ml-1" aria-label="Zwiń lub rozwiń menu" />
+              <SidebarTrigger className="-ml-1 min-h-11 min-w-11" aria-label="Zwiń lub rozwiń menu" />
               <Separator orientation="vertical" className="mx-2 data-[orientation=vertical]:h-4 data-[orientation=vertical]:self-center" />
               <span className="text-sm font-medium">{role === 'super_admin' && !impersonationSession ? 'Panel platformy' : 'Panel placówki'}</span>
             </div>

@@ -9,5 +9,5 @@ export function createClient() {
     throw new Error('Brak wymaganych zmiennych środowiskowych NEXT_PUBLIC_SUPABASE_URL lub NEXT_PUBLIC_SUPABASE_ANON_KEY')
   }
 
-  return createBrowserClient(url, anonKey)
+  return createBrowserClient<Database>(url, anonKey)
 }

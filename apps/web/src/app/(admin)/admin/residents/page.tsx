@@ -8,9 +8,6 @@ import { ShieldAlert } from 'lucide-react'
 import { isImpersonationSessionActive, maskResidentListForImpersonation } from '@/lib/impersonation-guards'
 import { AdminResidentsClient, type ResidentWithAssignments } from '@/components/AdminResidentsClient'
 import { ADMIN_RESIDENT_LIST_SELECT } from '@/lib/admin-resident-columns'
-// Komponenty edycji inline i arkusza zintegrowane w tabeli podopiecznych (AdminResidentsClient)
-import { ResidentInlineCareLevel } from '@/components/ResidentInlineCareLevel'
-import { ResidentEditSheet } from '@/components/ResidentEditSheet'
 
 export default async function AdminResidentsPage() {
   const supabase = await createClient()
@@ -30,24 +27,22 @@ export default async function AdminResidentsPage() {
   )
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="space-y-6 sm:space-y-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-display font-semibold tracking-tight text-foreground">
-            Baza Podopiecznych
+            Podopieczni
           </h2>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Zarządzanie pensjonariuszami, przypisaniem do łóżek i poziomami opieki.
-          </p>
+          <p className="mt-2 text-muted-foreground">Zarządzaj bazą podopiecznych w swojej placówce.</p>
         </div>
-        {!masked ? (
-          <div className="flex items-center gap-3">
+        {!isImpersonating ? (
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <ExportDataDialog />
             <BulkImportDialog />
             <AdmissionWizard />
           </div>
         ) : (
-          <div className="flex items-center gap-2 rounded-xl bg-muted px-4 py-2 text-xs font-medium text-foreground border border-border">
+          <div className="flex items-center gap-2 rounded-xl bg-muted px-4 py-2 text-sm font-medium text-foreground border border-border">
             <span>Tryb podglądu (impersonacja) — formularze i eksport wyłączone</span>
           </div>
         )}
@@ -66,7 +61,7 @@ export default async function AdminResidentsPage() {
             Wyświetlane jest wyłącznie podsumowanie statystyczne placówki.
           </p>
           <div className="inline-flex items-center gap-3 bg-card px-5 py-3 rounded-xl border border-border">
-            <span className="text-xs text-muted-foreground">Liczba zarejestrowanych podopiecznych:</span>
+            <span className="text-sm text-muted-foreground">Liczba zarejestrowanych podopiecznych:</span>
             <span className="text-xl font-bold text-foreground">{count}</span>
           </div>
         </Card>

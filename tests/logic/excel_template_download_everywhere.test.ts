@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import fs from 'node:fs';
-import path from 'node:path';
+import { generateResidentTemplate } from '../../apps/web/src/lib/bulk-import-template';
+import { generateFacilityStructureTemplate } from '../../apps/web/src/lib/facility-import-template';
 
 /**
  * @REQ: ADM-RESIDENT-ADD
@@ -14,45 +14,47 @@ import path from 'node:path';
  * AC4: Wszystkie przyciski spełniają wymogi dostępności i posiadają czytelne etykiety.
  */
 describe('Universal Excel Template Download in All Import Dialogs (@REQ: ADM-RESIDENT-ADD, @REQ: ADM-FACILITY-MANAGE, @REQ: UI-ACCESSIBILITY)', () => {
-  const bulkImportPath = path.resolve(process.cwd(), 'apps/web/src/components/BulkImportDialog.tsx');
-  const facilityIoPath = path.resolve(process.cwd(), 'apps/web/src/components/facility/FacilityImportExportDialog.tsx');
-
   describe('Bulk Resident Import Dialog (@REQ: ADM-RESIDENT-ADD)', () => {
-    it('provides template download in upload and preview steps with instruction sheet', () => {
-      const content = fs.readFileSync(bulkImportPath, 'utf8');
+    it('generates valid resident excel template with data and instruction sheets @REQ: ADM-RESIDENT-ADD', () => {
+      const wb = generateResidentTemplate('formatka_importu_podopiecznych.xlsx', 'Instrukcja', false);
 
-      // Nazwa pliku wzorca podopiecznych
-      expect(content).toContain('formatka_importu_podopiecznych.xlsx');
+      expect(wb).toBeDefined();
+      expect(wb.SheetNames).toContain('Podopieczni');
+      expect(wb.SheetNames).toContain('Instrukcja');
 
-      // Arkusz z instrukcją dopuszczalnych wartości
-      expect(content).toContain('Instrukcja');
+      // Weryfikacja arkusza z instrukcją formatów
+      const instructionSheet = wb.Sheets['Instrukcja'];
+      expect(instructionSheet).toBeDefined();
+      expect(instructionSheet['A1']?.v).toBe('Kolumna');
+      expect(instructionSheet['B1']?.v).toBe('Wymagana?');
+      expect(instructionSheet['C1']?.v).toBe('Opis i dozwolone formaty');
 
-      // Przycisk pobrania wzorca na etapie podglądu wierszy (step === preview)
-      expect(content).toMatch(/step === 'preview'[\s\S]*?handleDownloadTemplate/);
-
-      // Etykieta pobierania formatki
-      expect(content).toContain('Pobierz formatkę Excel');
+      // Kolumna PESEL
+      expect(instructionSheet['A4']?.v).toBe('PESEL');
+      expect(instructionSheet['B4']?.v).toBe('TAK');
     });
   });
 
   describe('Facility Structure Import Dialog (@REQ: ADM-FACILITY-MANAGE)', () => {
-    it('provides template download directly within the import tab and preview view', () => {
-      const content = fs.readFileSync(facilityIoPath, 'utf8');
+    it('generates valid facility structure excel template with rooms and instruction sheets @REQ: ADM-FACILITY-MANAGE', () => {
+      const wb = generateFacilityStructureTemplate('formatka_struktury_placowki.xlsx', 'Instrukcja', false);
 
-      // Nazwa pliku wzorca struktury
-      expect(content).toContain('formatka_struktury_placowki.xlsx');
+      expect(wb).toBeDefined();
+      expect(wb.SheetNames).toContain('Pokoje i Łóżka');
+      expect(wb.SheetNames).toContain('Instrukcja');
 
-      // Arkusz z instrukcją dopuszczalnych wartości w pliku Excel
-      expect(content).toContain('Instrukcja');
+      // Weryfikacja arkusza z danymi
+      const dataSheet = wb.Sheets['Pokoje i Łóżka'];
+      expect(dataSheet).toBeDefined();
+      expect(dataSheet['A1']?.v).toBe('Piętro');
+      expect(dataSheet['B1']?.v).toBe('Numer pokoju');
+      expect(dataSheet['C1']?.v).toBe('Sektor');
 
-      // Pobieranie formatki bezpośrednio wewnątrz zakładki import (activeTab === 'import')
-      expect(content).toMatch(/activeTab === 'import'[\s\S]*?handleDownloadTemplate/);
-
-      // Przycisk pobierania formatki przy podglądzie dryRunResult
-      expect(content).toMatch(/dryRunResult[\s\S]*?handleDownloadTemplate/);
-
-      // Czytelna etykieta formatki
-      expect(content).toContain('Pobierz formatkę Excel');
+      // Weryfikacja arkusza z instrukcją
+      const instructionSheet = wb.Sheets['Instrukcja'];
+      expect(instructionSheet).toBeDefined();
+      expect(instructionSheet['A1']?.v).toBe('Kolumna');
+      expect(instructionSheet['B1']?.v).toBe('Wymagana?');
     });
   });
 });

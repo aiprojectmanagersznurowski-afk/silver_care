@@ -7,11 +7,9 @@
  *   wyjście : { decision: "allow" | "deny" | "ask", reason: "..." }
  *
  * Claude Code używa innego kontraktu (exit 2 = blokada), dlatego logika reguł
- * mieszka w tools/guard-core.mjs, a ten plik tłumaczy wyłącznie format.
- *
- * Uwaga o rolach: payload Antigravity NIE zawiera nazwy subagenta, więc reguły
- * zależne od roli (implementer nie edytuje testów) nie mogą być tu egzekwowane.
- * Zastępuje je kontrola fazowa — patrz tools/kk-phase.mjs.
+ * Logika reguł mieszka w tools/guard-core.mjs, a ten plik tłumaczy wyłącznie format.
+ * Ścieżki kontraktowe wymagają otwartego okna (tools/sc-contract-window.mjs),
+ * a cykl wykonania pilnowany jest przez narzędzia fazowe (tools/sc-phase.mjs).
  */
 import { readFileSync } from 'node:fs';
 import { checkWrite, checkBash, projectRoot } from '../../tools/guard-core.mjs';
@@ -44,11 +42,9 @@ if (name === 'write_to_file' || name === 'replace_file_content' || name === 'mul
     : '';
   const content = [args.CodeContent, args.ReplacementContent, chunks].filter(Boolean).join('\n');
 
-  const role = process.env.SC_AGENT_ROLE || null;
-  // enforceContract: true — zapis idzie od agenta. Bez znajomości roli reguła
-  // sprowadza się do „ścieżki kontraktowe wymagają otwartego okna", co nadal
-  // zatrzymuje przypadkową edycję kontraktu w trakcie implementacji.
-  const verdict = checkWrite(path, content, { role, enforceContract: true });
+  // enforceContract: true — zapis idzie od agenta. Ścieżki kontraktowe wymagają otwartego okna,
+  // co zapobiega przypadkowej modyfikacji kontraktu bez procedury contract-window.
+  const verdict = checkWrite(path, content, { enforceContract: true });
   if (verdict.blocked) out('deny', `BRAMKA SILVER CARE — ${verdict.reason}`);
   out('allow');
 }

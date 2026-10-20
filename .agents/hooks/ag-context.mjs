@@ -25,10 +25,10 @@ const wo = read('.claude/state/current-workorder.json');
 const win = read('.claude/state/contract-window.json');
 
 const lines = ['STAN BRAMKI SILVER CARE'];
-lines.push(wo?.active ? `Aktywny Work Order: ${wo.active}` : 'Brak aktywnego Work Order — zacznij od /kk-plan.');
-lines.push(win?.open ? `Okno kontraktowe OTWARTE (${win.ticket || 'bez ticketu'}) — contract-steward może pisać w contracts/.`
-                     : 'Okno kontraktowe zamknięte — contracts/ jest tylko do odczytu.');
-lines.push('Kontrakt jest źródłem prawdy. Progi SLA importuj z @silvercare/contracts/sla, ID powiadomień z .../notifications.');
+lines.push(wo?.active ? `Aktywne zadanie / Work Order: ${wo.active}` : 'Brak aktywnego Work Order.');
+lines.push(win?.open ? `Okno kontraktowe OTWARTE (${win.ticket || 'bez ticketu'}) — dozwolona edycja contracts/.`
+                     : 'Okno kontraktowe zamknięte — contracts/ jest tylko do odczytu (otwarcie: node tools/sc-contract-window.mjs open <REQ-ID>).');
+lines.push('Kontrakt jest źródłem prawdy. Wymagania i typy importuj z @silvercare/contracts.');
 lines.push('Przed zamknięciem zadania: bash scripts/verify.sh --full');
 
 done({ injectSteps: [{ ephemeralMessage: lines.join('\n') }] });

@@ -10,6 +10,7 @@ export class AcceptInvitePage {
   readonly acceptButton: Locator;
   readonly emptyTitle: Locator;
   readonly errorTitle: Locator;
+  readonly logoImage: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -18,6 +19,7 @@ export class AcceptInvitePage {
     this.acceptButton = page.locator('button:has-text("Akceptuj zaproszenie")');
     this.emptyTitle = page.locator('text=Brak aktywnego zaproszenia');
     this.errorTitle = page.locator('text=Nieprawidłowe zaproszenie');
+    this.logoImage = page.locator('img[alt="Silver Care"]');
   }
 
   async goto(urlParam?: string) {

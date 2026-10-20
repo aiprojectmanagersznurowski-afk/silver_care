@@ -1,9 +1,19 @@
 # Silver Care — Uniwersalny Master Prompt (End-to-End Autonomous Execution)
 
-> **Wersja**: 3.0 (Trello Integration · Figma Alignment · Auto Storybook & CI) · **Data**: 2026-09-11  
+> **Wersja**: 3.1 (Trello Integration · UI/Mobile-First Alignment · Auto Storybook & CI) · **Data**: 2026-10-14  
 > **Właściciele**: Darek Rink, Michał Sznurowski  
 > **Środowisko**: Antigravity / Cursor / Claude Code (Narzędziowo Agnostyczny)  
 > **Podział modeli**: Kodowanie w **Gemini**, weryfikacja i audyt w **Claude Opus** („praca na cztery ręce”)
+
+## ŹRÓDŁA PRAWDY I HIERARCHIA DOKUMENTACJI
+
+| Dokument | Rola i Zakres Odpowiedzialności | Prymat przy Sprzeczności |
+|---|---|---|
+| `contracts/*.contract.mjs` | **Jedyne źródło prawdy w systemie**: wymagania (`@REQ`), schematy danych, uprawnienia RLS, tokeny projektowe (`tokens.css`), reguły walidacji, słowniki i integracje. | **Nadrzędny (P0)** — kod i inne dokumenty importują z kontraktu lub są z niego generowane. |
+| `.claude/CLAUDE.md` & `AGENTS.md` | **Reguły inżynierskie i zasady pracy agenta**: cykl RED-GREEN-VERIFY, limity plików (≤250 LOC), standardy UI Mobile-First, bramka jakości CI, procedury handoffu. | **Nadrzędny dla procesu wykonawczego**. |
+| `docs/01-ADR-decisions.md` | **Decyzje architektoniczne (ADR-001 do ADR-016)**: kontekst, uzasadnienia i granice prawne (MDR, RODO, wybór dostawców, architektura potoku głosu, standardy UI). | **Wiążący architektonicznie**. |
+| `docs/KANONICZNA_SPECYFIKACJA_USER_STORIES.md` | **Narracyjna warstwa dokumentacji**: opisy ról, persony, przepływy użytkownika, scenariusze biznesowe. | **Podrzędny** — przy jakiejkolwiek sprzeczności z kontraktem lub ADR wygrywa kontrakt i ADR. |
+| `docs/workorders/archive/` | **Archiwum historyczne**: zrealizowane karty pracy i dawne notatki implementacyjne. | **Tylko referencja historyczna**. |
 
 ---
 
@@ -21,7 +31,7 @@ Zadania pobierasz z tablicy **Trello Backlog**. Obowiązuje **twarde filtrowanie
 
 ### 0.2. Autonomia i Granice Człowieka
 - **Start**: Automatyczny `git pull` w celu synchronizacji kodu i migracji bazy.
-- **W trakcie**: Zero pytań o wybory techniczne, zależności, nazewnictwo czy okna kontraktowe.
+- **W trakcie**: W przypadku wykrycia sprzeczności między kontraktem, istniejącym kodem a poleceniem użytkownika — **ZATRZYMAJ SIĘ i zadaj 1 precyzyjne pytanie weryfikujące przed zapisaniem plików**. Decyzje techniczne mieszczące się w kontrakcie (odwracalne, bez wpływu na dane osobowe i granice prawne) rozstrzygaj zgodnie z tabelą `DEFAULTS`.
 - **Koniec**: Automatyczny commit, push do feature brancha oraz **automatyczna aktualizacja karty Trello**.
 - **Jedyny punkt wejścia człowieka (Human-in-the-loop)**: **Ostateczny merge Pull Requesta do gałęzi głównej (`main`)** oraz wdrożenie produkcyjne.
 
@@ -71,16 +81,18 @@ Gdy zadanie wymaga dodania lub zmiany ról, uprawnień, tabel, widoków, powiado
 
 ---
 
-## 3. UI AGENT: FIGMA & STORYBOOK INTEGRATION
+## 3. UI: STANDARDY PROJEKTOWE & STORYBOOK INTEGRATION
 
 Przy każdym zadaniu obejmującym warstwę wizualną (frontend / UI) oraz podczas pisania testów UI:
-1. **Automatyczna inspekcja makiet Figma**:
-   - Sprawdź katalogi makiet: `Figma-personel-portal/` (portal personelu) oraz `figma-family-portal/` (portal rodziny).
-   - Dopasuj implementowane widoki do układu, siatki, proporcji i hierarchy z Figma.
-2. **System Projektowy Apple Minimalist (ADR-011)**:
+1. **Zgodność z User Stories i kontraktami**:
+   - Dopasuj implementowane widoki do układu, siatki, proporcji i hierarchii z `docs/KANONICZNA_SPECYFIKACJA_USER_STORIES.md` oraz kontraktów.
+2. **Norma UI / Mobile-First**:
    - Używaj zmiennych CSS wygenerowanych z kontraktu do `packages/contracts/src/generated/tokens.css`.
-   - Tekst bazowy: **17px**, min. kontrast: **4.5:1**, target dotykowy: **48px**, kolumna raportu: max **680px**.
-   - Zakaz używania kolorów (zielony/czerwony) jako oceny stanu zdrowia seniora.
+   - Tekst bazowy (body): **16px** (`text-base`).
+   - Minimalny dopuszczalny tekst pomocniczy: **14px** (`text-sm`). Klasy `text-xs`, `text-[11px]`, `text-[10px]` są **surowo zabronione**.
+   - Minimalny cel dotykowy (touch target): dla przycisków/interakcji wynosi **44x44px** (`min-h-11 min-w-11`).
+   - Kolumna treści raportu: max **680px**, min. kontrast: **4.5:1** (WCAG AA).
+   - Zakaz używania kolorów (zielony/czerwony) jako oceny stanu zdrowia pensjonariusza.
 3. **Wymóg 4 Stanów Komponentu (`UI-FOUR-STATES`) w Storybooku**:
    - Każdy komponent prezentujący dane musi posiadać stories w `.storybook/` demonstrujące 4 stany:
      1. **Loading** (szkielet UI / animacja pulsowania, nie spinner),
@@ -110,7 +122,7 @@ Jeśli do implementacji brakuje biblioteki pomocniczej:
 
 W środowisku Antigravity stosujemy rygorystyczny podział odpowiedzialności:
 - **Generowanie kodu, refaktoryzacja, testy jednostkowe, UI**: Model **Gemini** (szybka, precyzyjna, kontekstowa implementacja).
-- **Weryfikacja, Audyt Bezpieczeństwa, Granice MDR i RLS**: Model **Claude Opus** (niezależny audytor w fazie REVIEW — subagenci `reviewer`, `rls-security-auditor`, `privacy-auditor`).
+- **Weryfikacja, Audyt Bezpieczeństwa, Granice MDR i RLS**: Model **Claude Opus** (niezależny audyt w fazie REVIEW: zgodność z kontraktem, uprawnienia RLS, audyt prywatności i granicy MDR).
 - Żaden kod nie trafia do feature brancha bez weryfikacji modelu audytującego.
 
 ---
@@ -127,7 +139,7 @@ Pracujemy na **wspólnej instancji bazy danych Supabase**:
 
 ---
 
-## 7. AUTONOMICZNY SILNIK DECYZJI (SELF-ANSWERING ENGINE)
+## 7. SILNIK DECYZJI
 
 Wszystkie dylematy techniczne rozstrzygaj według tabeli **DEFAULTS** (`contracts/autonomy.contract.mjs`):
 
@@ -147,7 +159,7 @@ Wszystkie dylematy techniczne rozstrzygaj według tabeli **DEFAULTS** (`contract
 ### Klasyfikacja decyzji:
 - **`[AUTO]`**: Odwracalna, techniczna → *Wybierz rekomendację, odnotuj w podsumowaniu, pracuj dalej.*
 - **`[AUTO_LOGGED]`**: Trwała projektowa w granicach kontraktu → *Wybierz, zapisz w `docs/decisions/AUTO-<data>.md`, pracuj dalej.*
-- **`[ESCALATE]`**: Krytyczne sytuacje prawne/zniszczenie danych → *Zatrzymaj się, przedstaw opcje w raporcie końcowym.*
+- **`[ESCALATE]`**: Krytyczne sytuacje prawne/zniszczenie danych lub wykrycie sprzeczności między kontraktem, kodem a poleceniem → *ZATRZYMAJ SIĘ i zadaj 1 precyzyjne pytanie weryfikujące przed zapisaniem plików.*
 
 ---
 
@@ -163,47 +175,47 @@ TRELLO SYNC ➔ PULL & PLAN ➔ CONTRACT ➔ RED ➔ GREEN ➔ VERIFY ➔ REVIEW
 - Pobierz zadanie z Backlogu Trello.
 - **Sprawdź przypisanie**: Tylko Twoje zadania (Darek: przypisane do Darka, Michał: przypisane do Michała). Jeśli nieprzypisane — pomiń!
 
-### Krok 1: PULL & PLAN (Spec-Analyst)
+### Krok 1: PULL & PLAN
 - Wykonaj automatycznie `git pull`, by zsynchronizować kod i migracje bazy.
 - Zbadaj architekturę repozytorium i stan `supabase/migrations/`.
 - Zdefiniuj REQ-ID i utwórz Work Order: `docs/workorders/WO-<REQ-ID>.md`.
-- W przypadku zadań UI: zbadaj powiązane makiety w `Figma-personel-portal/` i `figma-family-portal/`.
+- W przypadku zadań UI: zweryfikuj specyfikację w `docs/KANONICZNA_SPECYFIKACJA_USER_STORIES.md` oraz `contracts/design.contract.mjs`.
 
-### Krok 2: CONTRACT (Contract-Steward)
+### Krok 2: CONTRACT
 - Jeśli wymagane są zmiany struktur/uprawnień:
   - `node tools/sc-contract-window.mjs open <REQ-ID>`
   - Edycja kontraktów w `contracts/*.contract.mjs`
   - `node tools/sc-codegen.mjs && node tools/sc-validate.mjs && node tools/sc-selftest.mjs`
   - `node tools/sc-contract-window.mjs close`
 
-### Krok 3: RED (Test-Author — Gemini)
-- Napisz testy behawioralne w `tests/`.
+### Krok 3: RED (Testy)
+- Napisz testy behawioralne w `tests/` (dla frontendu: testy Playwright E2E w `e2e/`).
 - Oznacz każdy test znacznikiem: `// @REQ: <REQ-ID>`.
 - Uruchom testy i udowodnij, że padają z oczekiwanego powodu (RED).
 - Zweryfikuj fazę: `node tools/sc-phase.mjs red`.
 
-### Krok 4: GREEN (Implementer — Gemini)
+### Krok 4: GREEN (Implementacja)
 - Zaimplementuj kod spełniający testy. W razie potrzeby zainstaluj sprawdzoną zależność (`pnpm add ... && pnpm audit --prod`).
 - W przypadku komponentów UI: utwórz stories w Storybooku pokrywające 4 stany (`UI-FOUR-STATES`).
 - Doprowadź testy do stanu zielonego (PASS).
 - Zweryfikuj fazę: `node tools/sc-phase.mjs green`.
 
-### Krok 5: VERIFY (Gatekeeper)
+### Krok 5: VERIFY
 - Uruchom pełną bramkę jakościową projektu:
   ```bash
   bash scripts/verify.sh --full
   ```
-- **Reguła Zero-Skip**: Status `POMINIĘTY` to błąd!
+- **Reguła Zero-Skip**: Status `POMINIĘTY` to błąd blokujący bramkę!
 - **Self-Healing Loop**: W razie błędu podejmij autonomiczną próbę naprawy (max 3 iteracje).
 
-### Krok 6: REVIEW & VIRTUAL ACCEPTANCE (Auditor-Trio — Claude Opus)
+### Krok 6: REVIEW & VIRTUAL ACCEPTANCE
 Niezależny audyt kodu pod kątem:
 - Kryteriów Work Order i Storybooka (4 stany).
 - Izolacji placówek (`organization_id` w RLS).
 - Art. 9 RODO i PII (`pesel_hash`, brak danych w logach).
 - Granicy MDR (brak „pacjent”, brak tętna/HRV bliskim, brak oceniania zdrowia).
 
-### Krok 7: INTEGRATE & DEPLOY TO FEATURE BRANCH (Release-Engineer)
+### Krok 7: INTEGRATE & DEPLOY TO FEATURE BRANCH
 - Utwórz dedykowany feature branch: `feature/<nazwa-modułu>`.
 - Wykonaj atomowe commity: `feat(<domena>): [<REQ-ID>] <opis>`.
 - Wypchnij branch:

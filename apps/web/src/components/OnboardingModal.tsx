@@ -16,10 +16,12 @@ export function OnboardingModal() {
 
   useEffect(() => {
     // FAM-ONBOARDING - pokazujemy tylko za pierwszym razem dla rodziny
-    const hasSeen = localStorage.getItem('silvercare_onboarding_seen')
-    if (!hasSeen) {
-      setOpen(true)
-    }
+    void Promise.resolve().then(() => {
+      const hasSeen = localStorage.getItem('silvercare_onboarding_seen')
+      if (!hasSeen) {
+        setOpen(true)
+      }
+    })
   }, [])
 
   const handleClose = () => {

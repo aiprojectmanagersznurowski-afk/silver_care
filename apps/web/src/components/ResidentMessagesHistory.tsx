@@ -41,7 +41,7 @@ export function ResidentMessagesHistory({ residentId }: ResidentMessagesHistoryP
         {messages.map(msg => (
           <li key={msg.id} className="p-4 hover:bg-muted">
             <div className="flex justify-between items-baseline mb-2">
-              <span className="text-xs font-semibold text-muted-foreground uppercase">Wiadomość z zewnątrz</span>
+              <span className="text-sm font-semibold text-muted-foreground uppercase">Wiadomość z zewnątrz</span>
               <span className="text-sm text-muted-foreground">{new Date(msg.created_at).toLocaleString()}</span>
             </div>
             <p className="text-sm text-foreground">{msg.content}</p>

@@ -2,9 +2,6 @@
 
 import React, { useState, useTransition } from 'react'
 import { resetStaffPasswordAction, suspendStaffAction, restoreStaffAction } from '@/actions/staff-management'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { KeyRound, Ban, CheckCircle, MoreHorizontal } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -15,14 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { StaffAccountModals, StaffDialogType } from './StaffAccountModals'
 
 interface StaffActionsMenuProps {
   staffId: string
@@ -33,11 +23,11 @@ interface StaffActionsMenuProps {
 export function StaffActionsMenu({ staffId, email, isActive }: StaffActionsMenuProps) {
   const [isPending, startTransition] = useTransition()
   const [dropdownOpen, setDropdownOpen] = useState(false)
-  const [dialogType, setDialogType] = useState<'none' | 'reset' | 'suspend' | 'restore'>('none')
+  const [dialogType, setDialogType] = useState<StaffDialogType>('none')
   const [confirmationInput, setConfirmationInput] = useState('')
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
-  const openDialog = (type: 'reset' | 'suspend' | 'restore') => {
+  const openDialog = (type: StaffDialogType) => {
     setDropdownOpen(false)
     setStatusMsg(null)
     setConfirmationInput('')
@@ -122,7 +112,7 @@ export function StaffActionsMenu({ staffId, email, isActive }: StaffActionsMenuP
   return (
     <>
       <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
-        <DropdownMenuTrigger className="inline-flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
+        <DropdownMenuTrigger className="inline-flex items-center justify-center h-11 w-11 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
           <span className="sr-only">Otwórz menu</span>
           <MoreHorizontal className="h-4 w-4" />
         </DropdownMenuTrigger>
@@ -130,18 +120,18 @@ export function StaffActionsMenu({ staffId, email, isActive }: StaffActionsMenuP
           <DropdownMenuLabel>Zarządzaj kontem</DropdownMenuLabel>
           <DropdownMenuSeparator />
 
-          <DropdownMenuItem onClick={() => openDialog('reset')}>
+          <DropdownMenuItem onClick={() => openDialog('reset')} className="min-h-11 cursor-pointer">
             <KeyRound className="mr-2 h-4 w-4 text-foreground" />
             Zresetuj hasło
           </DropdownMenuItem>
 
           {isActive ? (
-            <DropdownMenuItem onClick={() => openDialog('suspend')} className="text-destructive focus:text-destructive">
+            <DropdownMenuItem onClick={() => openDialog('suspend')} className="text-destructive focus:text-destructive min-h-11 cursor-pointer">
               <Ban className="mr-2 h-4 w-4" />
               Zawieś konto
             </DropdownMenuItem>
           ) : (
-            <DropdownMenuItem onClick={() => openDialog('restore')} className="text-foreground focus:text-foreground">
+            <DropdownMenuItem onClick={() => openDialog('restore')} className="text-foreground focus:text-foreground min-h-11 cursor-pointer">
               <CheckCircle className="mr-2 h-4 w-4" />
               Przywróć konto
             </DropdownMenuItem>
@@ -149,121 +139,18 @@ export function StaffActionsMenu({ staffId, email, isActive }: StaffActionsMenuP
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Modal Resetu Hasła */}
-      <Dialog open={dialogType === 'reset'} onOpenChange={(open) => !open && setDialogType('none')}>
-        <DialogContent className="sm:max-w-lg md:max-w-xl p-6">
-          <DialogHeader>
-            <DialogTitle>Reset Hasła Pracownika</DialogTitle>
-            <DialogDescription>
-              Wybierz metodę resetu hasła dla konta <span className="font-semibold text-foreground">{email}</span>.
-            </DialogDescription>
-          </DialogHeader>
-
-          {statusMsg && (
-            <div className={`p-3 text-sm rounded-md ${statusMsg.type === 'error' ? 'bg-destructive/10 text-destructive' : 'bg-muted text-foreground'}`}>
-              {statusMsg.text}
-            </div>
-          )}
-
-          <div className="space-y-3 py-2">
-            <Button
-              className="w-full justify-start"
-              variant="outline"
-              disabled={isPending}
-              onClick={() => handleResetPassword('email')}
-            >
-              Wyślij e-mail z linkiem do resetu hasła
-            </Button>
-            <Button
-              className="w-full justify-start"
-              variant="outline"
-              disabled={isPending}
-              onClick={() => handleResetPassword('temp')}
-            >
-              Wygeneruj bezpieczne hasło tymczasowe
-            </Button>
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setDialogType('none')}>
-              Zamknij
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Modal Zawieszenia Konta (Wpisanie DEZAKTYWUJ) */}
-      <Dialog open={dialogType === 'suspend'} onOpenChange={(open) => !open && setDialogType('none')}>
-        <DialogContent className="sm:max-w-lg md:max-w-xl p-6">
-          <DialogHeader>
-            <DialogTitle>Zawieszenie Konta Pracownika</DialogTitle>
-            <DialogDescription>
-              Operacja natychmiast zablokuje możliwość logowania pracownika <span className="font-semibold text-foreground">{email}</span> i unieważni wszystkie aktywne sesje.
-            </DialogDescription>
-          </DialogHeader>
-
-          {statusMsg && (
-            <div className="p-3 text-sm rounded-md bg-destructive/10 text-destructive">
-              {statusMsg.text}
-            </div>
-          )}
-
-          <div className="space-y-3 py-2">
-            <Label htmlFor="confirmation">
-              Aby potwierdzić, wpisz słowo <span className="font-bold text-destructive">DEZAKTYWUJ</span>:
-            </Label>
-            <Input
-              id="confirmation"
-              value={confirmationInput}
-              onChange={(e) => setConfirmationInput(e.target.value)}
-              placeholder="DEZAKTYWUJ"
-              disabled={isPending}
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setDialogType('none')} disabled={isPending}>
-              Anuluj
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleSuspend}
-              disabled={isPending || confirmationInput !== 'DEZAKTYWUJ'}
-            >
-              {isPending ? 'Zawieszanie...' : 'Zawieś konto'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Modal Przywrócenia Konta */}
-      <Dialog open={dialogType === 'restore'} onOpenChange={(open) => !open && setDialogType('none')}>
-        <DialogContent className="sm:max-w-lg md:max-w-xl p-6">
-          <DialogHeader>
-            <DialogTitle>Przywrócenie Konta Pracownika</DialogTitle>
-            <DialogDescription>
-              Czy na pewno chcesz przywrócić dostęp do konta dla pracownika <span className="font-semibold text-foreground">{email}</span>?
-            </DialogDescription>
-          </DialogHeader>
-
-          {statusMsg && (
-            <div className={`p-3 text-sm rounded-md ${statusMsg.type === 'error' ? 'bg-destructive/10 text-destructive' : 'bg-muted text-foreground'}`}>
-              {statusMsg.text}
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setDialogType('none')} disabled={isPending}>
-              Anuluj
-            </Button>
-            <Button
-              onClick={handleRestore}
-              disabled={isPending}
-              className="bg-primary hover:bg-primary text-white"
-            >
-              {isPending ? 'Przywracanie...' : 'Przywróć konto'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <StaffAccountModals
+        dialogType={dialogType}
+        onClose={() => setDialogType('none')}
+        email={email}
+        statusMsg={statusMsg}
+        isPending={isPending}
+        confirmationInput={confirmationInput}
+        onConfirmationInputChange={setConfirmationInput}
+        onResetPassword={handleResetPassword}
+        onSuspend={handleSuspend}
+        onRestore={handleRestore}
+      />
     </>
   )
 }

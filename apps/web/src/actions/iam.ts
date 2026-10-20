@@ -1,25 +1,14 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { generateSecureTemporaryPassword } from '@/lib/staff-helpers'
-import { revalidatePath } from 'next/cache'
-
-import { ROLES } from '@silvercare/contracts/src/generated/roles'
-
-type ValidRole = typeof ROLES[number]['id']
-
-function isValidRole(role: string): role is ValidRole {
-  return ROLES.some(r => r.id === role)
-}
-
-function safeRevalidateIam() {
-  try {
-    revalidatePath('/admin/iam')
-  } catch {
-    // Bezpieczne wyciszenie poza kontekstem serwera Next.js (np. w testach)
-  }
-}
+import {
+  isValidRole,
+  safeRevalidateIam,
+  verifySuperAdminCaller,
+  executeUserCreation,
+  executeUserStatusChange,
+  UserStatusMode
+} from '@/lib/iam-actions-helpers'
 
 export async function updateUserRoleAction(formData: FormData) {
   const targetUserId = formData.get('userId') as string
@@ -38,12 +27,9 @@ export async function updateUserRoleAction(formData: FormData) {
     return { error: 'Nieprawidłowa rola' }
   }
 
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  const callerRole = user?.app_metadata?.role || user?.user_metadata?.role
-  if (!user || callerRole !== 'super_admin') {
-    return { error: 'Brak uprawnień. Wymagana rola super_admin.', status: 403, code: 403 }
+  const { error: authErr, supabase } = await verifySuperAdminCaller()
+  if (authErr) {
+    return { error: authErr, status: 403, code: 403 }
   }
 
   const adminClient = createAdminClient()
@@ -56,7 +42,6 @@ export async function updateUserRoleAction(formData: FormData) {
   const prevRole = targetUser.user.app_metadata?.role || 'brak'
   const orgId = targetUser.user.app_metadata?.organization_id || null
 
-  // 1. Rejestracja w audit_logs przez RPC log_role_change
   const { error: rpcErr } = await supabase.rpc('log_role_change', {
     p_target_user_id: targetUserId,
     p_new_role: newRole,
@@ -69,7 +54,6 @@ export async function updateUserRoleAction(formData: FormData) {
     return { error: 'Błąd audytu: ' + rpcErr.message }
   }
 
-  // 2. Aktualizacja roli w Supabase Auth app_metadata oraz user_metadata
   const { error: updateErr } = await adminClient.auth.admin.updateUserById(targetUserId, {
     app_metadata: {
       ...targetUser.user.app_metadata,
@@ -100,7 +84,6 @@ export async function createUserWithRoleAction(formData: FormData) {
     return { error: 'E-mail oraz rola są polami wymaganymi.' }
   }
 
-  // AC3: Serwerowa blokada tworzenia konta z rolą super_admin
   if (role === 'super_admin') {
     return { error: 'Brak uprawnień: tworzenie konta z rolą super_admin jest zablokowane.', status: 403, code: 403 }
   }
@@ -118,71 +101,25 @@ export async function createUserWithRoleAction(formData: FormData) {
     return { error: 'Podane hasło jest za krótkie (wymagane minimum 6 znaków).' }
   }
 
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  const callerRole = user?.app_metadata?.role || user?.user_metadata?.role
-  if (!user || callerRole !== 'super_admin') {
-    return { error: 'Brak uprawnień. Wymagana rola super_admin.', status: 403, code: 403 }
+  const { error: authErr, supabase } = await verifySuperAdminCaller()
+  if (authErr) {
+    return { error: authErr, status: 403, code: 403 }
   }
-
-  // Użyj podanego hasła (min 6 znaków) lub wygeneruj bezpieczne losowe
-  const password = passwordInput && passwordInput.length >= 6
-    ? passwordInput
-    : generateSecureTemporaryPassword(16)
-
-  const organizationId = organizationIdInput && organizationIdInput.length > 0
-    ? organizationIdInput
-    : null
 
   const adminClient = createAdminClient()
-  const { data: createdData, error: createErr } = await adminClient.auth.admin.createUser({
+  const res = await executeUserCreation(supabase, adminClient, {
     email,
-    password,
-    email_confirm: true,
-    user_metadata: {
-      email_verified: true
-    },
-    app_metadata: {
-      provider: 'email',
-      providers: ['email'],
-      role,
-      ...(organizationId ? { organization_id: organizationId } : {})
-    }
+    role,
+    passwordInput,
+    organizationIdInput
   })
 
-  if (createErr || !createdData?.user) {
-    console.error('Błąd tworzenia użytkownika:', createErr)
-    return { error: 'Błąd tworzenia użytkownika: ' + (createErr?.message || 'Nieznany błąd') }
-  }
-
-  const newUser = createdData.user
-
-  // Rejestracja w audit_logs przez RPC log_role_change (previous_role = null)
-  const { error: rpcErr } = await supabase.rpc('log_role_change', {
-    p_target_user_id: newUser.id,
-    p_new_role: role,
-    p_previous_role: null,
-    p_organization_id: organizationId
-  })
-
-  if (rpcErr) {
-    console.error('Błąd audytu przy tworzeniu użytkownika:', rpcErr)
+  if (res.error) {
+    return { error: res.error }
   }
 
   safeRevalidateIam()
-
-  return {
-    success: true,
-    user: {
-      id: newUser.id,
-      email: newUser.email || email,
-      role,
-      organizationId,
-      lastSignInAt: null,
-      temporaryPassword: password
-    }
-  }
+  return { success: true, user: res.user }
 }
 
 export async function resetUserPasswordAction(formData: FormData) {
@@ -192,12 +129,9 @@ export async function resetUserPasswordAction(formData: FormData) {
     return { error: 'Brak identyfikatora użytkownika.' }
   }
 
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  const callerRole = user?.app_metadata?.role || user?.user_metadata?.role
-  if (!user || callerRole !== 'super_admin') {
-    return { error: 'Brak uprawnień. Wymagana rola super_admin.', status: 403, code: 403 }
+  const { error: authErr, supabase } = await verifySuperAdminCaller()
+  if (authErr) {
+    return { error: authErr, status: 403, code: 403 }
   }
 
   const adminClient = createAdminClient()
@@ -210,7 +144,6 @@ export async function resetUserPasswordAction(formData: FormData) {
   const targetEmail = targetUserData.user.email
   const orgId = targetUserData.user.app_metadata?.organization_id || null
 
-  // 1. Rejestracja w audit_logs przez RPC log_password_reset (brak haseł ani PII w audycie)
   const { error: rpcErr } = await supabase.rpc('log_password_reset', {
     p_target_user_id: targetUserId,
     p_organization_id: orgId
@@ -220,7 +153,6 @@ export async function resetUserPasswordAction(formData: FormData) {
     console.error('Błąd audytu przy resecie hasła:', rpcErr)
   }
 
-  // 2. AC1: Wysłanie bezpiecznego linku resetującego (recovery) przez Supabase Auth
   const { error: resetErr } = await supabase.auth.resetPasswordForEmail(targetEmail)
 
   if (resetErr) {
@@ -238,8 +170,6 @@ export async function resetUserPasswordAction(formData: FormData) {
   }
 }
 
-export type UserStatusMode = 'deactivate' | 'activate' | 'hard_delete'
-
 export async function manageUserStatusAction(formData: FormData) {
   const targetUserId = (formData.get('userId') as string)?.trim()
   const mode = (formData.get('mode') as string)?.trim() as UserStatusMode
@@ -252,15 +182,11 @@ export async function manageUserStatusAction(formData: FormData) {
     return { error: 'Nieprawidłowy tryb operacji.' }
   }
 
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  const callerRole = user?.app_metadata?.role || user?.user_metadata?.role
-  if (!user || callerRole !== 'super_admin') {
-    return { error: 'Brak uprawnień. Wymagana rola super_admin.', status: 403, code: 403 }
+  const { error: authErr, user } = await verifySuperAdminCaller()
+  if (authErr || !user) {
+    return { error: authErr || 'Brak uprawnień.', status: 403, code: 403 }
   }
 
-  // AC1: Blokada modyfikacji/usunięcia własnego konta przez superadmina
   if (targetUserId === user.id) {
     return {
       error: 'Nie możesz usunąć ani zablokować własnego konta administratora.',
@@ -276,94 +202,9 @@ export async function manageUserStatusAction(formData: FormData) {
     return { error: 'Nie znaleziono wskazanego użytkownika.' }
   }
 
-  const targetUser = targetUserData.user
-  const targetOrgId = targetUser.app_metadata?.organization_id || null
-  const targetRole = targetUser.app_metadata?.role || 'brak'
-
-  if (mode === 'deactivate') {
-    // 1. Zablokuj użytkownika (ban 10 lat) i zaktualizuj app_metadata
-    const { error: updateErr } = await adminClient.auth.admin.updateUserById(targetUserId, {
-      ban_duration: '87600h',
-      app_metadata: {
-        ...targetUser.app_metadata,
-        is_active: false
-      }
-    })
-
-    if (updateErr) {
-      console.error('Błąd blokady użytkownika:', updateErr)
-      return { error: 'Błąd deaktywacji konta: ' + updateErr.message }
-    }
-
-    // 2. Rejestracja w audit_logs (bez PII)
-    const { error: auditErr } = await adminClient.from('audit_logs').insert({
-      organization_id: targetOrgId,
-      action: 'USER_DEACTIVATED',
-      performed_by: user.id,
-      payload: {
-        target_user_id: targetUserId,
-        previous_role: targetRole,
-        mode: 'deactivate'
-      }
-    })
-
-    if (auditErr) {
-      console.error('Błąd audytu deaktywacji użytkownika:', auditErr)
-    }
-  } else if (mode === 'activate') {
-    // 1. Zdejmij blokadę konta
-    const { error: updateErr } = await adminClient.auth.admin.updateUserById(targetUserId, {
-      ban_duration: 'none',
-      app_metadata: {
-        ...targetUser.app_metadata,
-        is_active: true
-      }
-    })
-
-    if (updateErr) {
-      console.error('Błąd odblokowania użytkownika:', updateErr)
-      return { error: 'Błąd aktywacji konta: ' + updateErr.message }
-    }
-
-    // 2. Rejestracja w audit_logs (bez PII)
-    const { error: auditErr } = await adminClient.from('audit_logs').insert({
-      organization_id: targetOrgId,
-      action: 'USER_ACTIVATED',
-      performed_by: user.id,
-      payload: {
-        target_user_id: targetUserId,
-        role: targetRole,
-        mode: 'activate'
-      }
-    })
-
-    if (auditErr) {
-      console.error('Błąd audytu aktywacji użytkownika:', auditErr)
-    }
-  } else if (mode === 'hard_delete') {
-    // 1. Rejestracja w audit_logs przed usunięciem konta
-    const { error: auditErr } = await adminClient.from('audit_logs').insert({
-      organization_id: targetOrgId,
-      action: 'USER_HARD_DELETED',
-      performed_by: user.id,
-      payload: {
-        target_user_id: targetUserId,
-        previous_role: targetRole,
-        mode: 'hard_delete'
-      }
-    })
-
-    if (auditErr) {
-      console.error('Błąd audytu usunięcia użytkownika:', auditErr)
-    }
-
-    // 2. Trwałe usunięcie z auth.users
-    const { error: deleteErr } = await adminClient.auth.admin.deleteUser(targetUserId)
-
-    if (deleteErr) {
-      console.error('Błąd trwałego usunięcia użytkownika:', deleteErr)
-      return { error: 'Błąd usuwania użytkownika: ' + deleteErr.message }
-    }
+  const res = await executeUserStatusChange(adminClient, targetUserData.user, targetUserId, user.id, mode)
+  if (res.error) {
+    return { error: res.error }
   }
 
   safeRevalidateIam()
@@ -374,6 +215,3 @@ export async function manageUserStatusAction(formData: FormData) {
     mode
   }
 }
-
-
-

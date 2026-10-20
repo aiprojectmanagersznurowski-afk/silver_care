@@ -4,98 +4,8 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { validateOrganizationUpdate } from '@/lib/org-helpers'
-import { renderAdminInviteEmail } from '@/lib/notification-templates'
+import { sendAdminInviteEmail, executeAdminAssignment } from '@/lib/org-admin-invite'
 import { findUserByEmail, evaluateAdminAssignment } from '@/lib/admin-assign-safety'
-
-async function sendAdminInviteEmail(adminEmail: string, orgName: string): Promise<{ inviteUrl: string | null; emailSent: boolean; error?: string }> {
-  try {
-    const adminClient = createAdminClient()
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://silvercare.space'
-
-    let { data: linkData, error: linkErr } = await adminClient.auth.admin.generateLink({
-      type: 'invite',
-      email: adminEmail,
-      options: {
-        redirectTo: `${siteUrl}/login`
-      }
-    })
-
-    if (linkErr) {
-      // Jeśli użytkownik jest już zarejestrowany w auth.users (np. utworzony w procedurze SQL), generujemy magiclink / recovery
-      const fallback = await adminClient.auth.admin.generateLink({
-        type: 'magiclink',
-        email: adminEmail,
-        options: {
-          redirectTo: `${siteUrl}/login`
-        }
-      })
-
-      if (!fallback.error && fallback.data?.properties?.action_link) {
-        linkData = fallback.data
-        linkErr = null
-      } else {
-        const recoveryFallback = await adminClient.auth.admin.generateLink({
-          type: 'recovery',
-          email: adminEmail,
-          options: {
-            redirectTo: `${siteUrl}/login`
-          }
-        })
-        if (!recoveryFallback.error && recoveryFallback.data?.properties?.action_link) {
-          linkData = recoveryFallback.data
-          linkErr = null
-        }
-      }
-    }
-
-    if (linkErr || !linkData?.properties?.action_link) {
-      console.error('[ADMIN_INVITE] Błąd generowania linku:', linkErr)
-      return { inviteUrl: null, emailSent: false, error: linkErr?.message || 'Nie udało się wygenerować linku zaproszenia.' }
-    }
-
-    const actionLink = linkData.properties.action_link
-    const inviteUrl = `${siteUrl}/accept-invite?url=${encodeURIComponent(actionLink)}`
-
-    let emailSent = false
-    const emailProviderKey = process.env.EMAIL_PROVIDER_KEY
-    if (emailProviderKey) {
-      try {
-        const emailTemplate = renderAdminInviteEmail({ inviteUrl, organizationName: orgName })
-        const emailRes = await fetch('https://send.api.mailtrap.io/api/send', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${emailProviderKey}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            to: [{ email: adminEmail }],
-            from: { email: 'noreply@silvercare.space', name: 'Silver Care' },
-            subject: emailTemplate.subject,
-            text: emailTemplate.text,
-            html: emailTemplate.html,
-          })
-        })
-
-        if (emailRes.ok) {
-          emailSent = true
-          console.log(`[ADMIN_INVITE] E-mail z zaproszeniem wysłany pomyślnie do ${adminEmail}`)
-        } else {
-          const errBody = await emailRes.text()
-          console.error(`[ADMIN_INVITE] Błąd wysyłki e-maila:`, errBody)
-        }
-      } catch (mailErr) {
-        console.error('[ADMIN_INVITE] Wyjątek podczas wysyłki e-maila:', mailErr)
-      }
-    } else {
-      console.log(`[MOCK EMAIL] Brak EMAIL_PROVIDER_KEY. Link zaproszenia administratora: ${inviteUrl}`)
-    }
-
-    return { inviteUrl, emailSent }
-  } catch (err: any) {
-    console.error('[ADMIN_INVITE] Nieoczekiwany błąd zaproszenia:', err)
-    return { inviteUrl: null, emailSent: false, error: err?.message || 'Błąd zaproszenia.' }
-  }
-}
 
 export async function createOrganizationAction(formData: FormData) {
   const orgName = (formData.get('orgName') as string)?.trim()
@@ -143,7 +53,6 @@ export async function createOrganizationAction(formData: FormData) {
       return { error: 'Błąd tworzenia placówki: ' + rpcErr.message }
     }
 
-    // Generujemy link aktywacyjny i wysyłamy e-mail z zaproszeniem
     const inviteResult = await sendAdminInviteEmail(adminEmail, orgName)
 
     revalidatePath('/admin/organizations')
@@ -227,8 +136,6 @@ export async function addAdminToOrganizationAction(formData: FormData) {
 
   try {
     const adminClient = createAdminClient()
-
-    // Bezpieczne, paginowane wyszukiwanie i walidacja przypisania roli (ORG-ASSIGN-ADMIN-SAFETY)
     const existingUser = await findUserByEmail(adminClient, adminEmail)
     const assignmentDecision = evaluateAdminAssignment({
       existingUser,
@@ -239,72 +146,28 @@ export async function addAdminToOrganizationAction(formData: FormData) {
       return { error: assignmentDecision.error }
     }
 
-    let targetUserId = existingUser?.id
+    const result = await executeAdminAssignment(
+      supabase,
+      adminClient,
+      existingUser,
+      orgId,
+      orgName,
+      adminEmail,
+      adminFullName,
+      user.id
+    )
 
-    if (existingUser) {
-      // Aktualizujemy metadane istniejącego użytkownika po pomyślnej walidacji
-      const { error: updateErr } = await adminClient.auth.admin.updateUserById(existingUser.id, {
-        app_metadata: {
-          ...existingUser.app_metadata,
-          role: 'org_admin',
-          organization_id: orgId
-        },
-        user_metadata: {
-          ...existingUser.user_metadata,
-          role: 'org_admin',
-          organization_id: orgId,
-          ...(adminFullName ? { full_name: adminFullName } : {})
-        }
-      })
-      if (updateErr) {
-        return { error: 'Błąd przypisywania roli: ' + updateErr.message }
-      }
-    } else {
-      // Tworzymy nowe konto z rolą org_admin
-      const { data: createdData, error: createErr } = await adminClient.auth.admin.createUser({
-        email: adminEmail,
-        email_confirm: false,
-        app_metadata: {
-          provider: 'email',
-          providers: ['email'],
-          role: 'org_admin',
-          organization_id: orgId
-        },
-        user_metadata: {
-          role: 'org_admin',
-          organization_id: orgId,
-          full_name: adminFullName || null
-        }
-      })
-
-      if (createErr || !createdData?.user) {
-        return { error: 'Błąd tworzenia konta administratora: ' + (createErr?.message || 'Nieznany błąd') }
-      }
-      targetUserId = createdData.user.id
+    if (result.error) {
+      return { error: result.error }
     }
-
-    // Zapis do audit_logs
-    await supabase.from('audit_logs').insert({
-      organization_id: orgId,
-      action: 'ADMIN_INVITED',
-      performed_by: user.id,
-      payload: {
-        admin_email: adminEmail,
-        target_user_id: targetUserId,
-        organization_name: orgName
-      }
-    })
-
-    // Wysyłka zaproszenia
-    const inviteResult = await sendAdminInviteEmail(adminEmail, orgName)
 
     revalidatePath(`/admin/organizations/${orgId}`)
 
     return {
       success: true,
       adminEmail,
-      inviteUrl: inviteResult.inviteUrl,
-      emailSent: inviteResult.emailSent
+      inviteUrl: result.inviteUrl,
+      emailSent: result.emailSent
     }
   } catch (err: unknown) {
     console.error('Błąd dodawania administratora do placówki:', err)
@@ -357,7 +220,6 @@ export async function updateOrganizationAction(formData: FormData) {
       return { error: 'Błąd aktualizacji placówki: ' + updateErr.message }
     }
 
-    // Rejestracja w audit_logs
     await supabase.from('audit_logs').insert({
       organization_id: orgId,
       action: 'ORGANIZATION_UPDATED',

@@ -1,11 +1,11 @@
 import { PHYSIOLOGICAL_FIELDS } from '@silvercare/contracts/src/generated/presentation';
 
-export function maskPhysiologicalData(content: any): any {
+export function maskPhysiologicalData<T>(content: T): T {
   if (!content || typeof content !== 'object') {
     return content;
   }
 
-  const cleanedContent = { ...content };
+  const cleanedContent = { ...(content as Record<string, unknown>) };
 
   for (const field of PHYSIOLOGICAL_FIELDS) {
     if (field in cleanedContent) {
@@ -13,5 +13,5 @@ export function maskPhysiologicalData(content: any): any {
     }
   }
 
-  return cleanedContent;
+  return cleanedContent as T;
 }

@@ -43,10 +43,10 @@ export function ResidentMobileCard({ resident }: ResidentMobileCardProps) {
   const activeBed = activeAssignments[0]?.beds ?? null
 
   const statusBadge = resident.archived_at
-    ? { label: 'Zarchiwizowany', className: 'bg-muted text-muted-foreground border-none text-xs' }
+    ? { label: 'Zarchiwizowany', className: 'bg-muted text-muted-foreground border-none text-sm' }
     : resident.death_date
-    ? { label: 'Zgon', className: 'bg-muted text-muted-foreground border-none text-xs' }
-    : { label: 'Aktywny', className: 'bg-muted text-foreground border-none text-xs' }
+    ? { label: 'Zgon', className: 'bg-muted text-muted-foreground border-none text-sm' }
+    : { label: 'Aktywny', className: 'bg-muted text-foreground border-none text-sm' }
 
   const admissionDate = resident.admission_date
     ? format(new Date(resident.admission_date), 'd MMM yyyy', { locale: pl })
@@ -86,11 +86,11 @@ export function ResidentMobileCard({ resident }: ResidentMobileCardProps) {
           <div className="flex flex-wrap items-center gap-2 mt-1">
             <Badge className={statusBadge.className}>{statusBadge.label}</Badge>
             {activeBed ? (
-              <span className="text-xs text-muted-foreground">
+              <span className="text-sm text-muted-foreground">
                 Pok. {activeBed.rooms?.number}, ł. {activeBed.label}
               </span>
             ) : (
-              <span className="text-xs text-muted-foreground/50">Brak pokoju</span>
+              <span className="text-sm text-muted-foreground/50">Brak pokoju</span>
             )}
           </div>
         </div>
@@ -120,7 +120,7 @@ export function ResidentMobileCard({ resident }: ResidentMobileCardProps) {
 
       {/* Dolny pasek karty mobilnej: data przyjęcia + kontrole inline */}
       <div className="flex items-center justify-between border-t border-border pt-2 mt-1">
-        <div className="text-xs text-muted-foreground">
+        <div className="text-sm text-muted-foreground">
           Przyjęcie: <span className="font-medium text-foreground">{admissionDate}</span>
         </div>
         <div className="flex items-center gap-2">

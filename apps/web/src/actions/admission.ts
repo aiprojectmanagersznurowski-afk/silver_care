@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { parseNationalId, suggestBeds, BedCandidate, BedSuggestion } from '@/lib/admission-helpers'
 import { hashNationalId } from '@/lib/national-id-hash'
+import { isImpersonationSessionActive, assertMutationAllowedDuringImpersonation, safeGetCookieStore } from '@/lib/impersonation-guards'
 
 interface ActiveAssignmentRecord {
   bed_id: string
@@ -110,6 +111,12 @@ export async function admitResidentAction(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) return { error: 'Brak autoryzowanej sesji.' }
+
+  const cookieStore = await safeGetCookieStore()
+  const guard = assertMutationAllowedDuringImpersonation(isImpersonationSessionActive(cookieStore, user))
+  if (!guard.allowed) {
+    return { error: guard.error }
+  }
 
   const role = user.app_metadata?.role
   if (role !== 'org_admin' && role !== 'super_admin' && role !== 'admin') {

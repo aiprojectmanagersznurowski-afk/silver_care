@@ -1,0 +1,160 @@
+'use client'
+
+import React from 'react'
+import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Search, Loader2, Mic, LayoutGrid, Table as TableIcon } from 'lucide-react'
+import { useViewPreference, VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-preference'
+
+interface ResidentItem {
+  id: string
+  first_name: string
+  last_name: string
+}
+
+interface VoiceResidentSelectProps {
+  searchQuery: string
+  setSearchQuery: (val: string) => void
+  residentsList: ResidentItem[]
+  loadingResidents: boolean
+  onSelectResident: (resident: ResidentItem) => void
+}
+
+export function VoiceResidentSelect({
+  searchQuery,
+  setSearchQuery,
+  residentsList,
+  loadingResidents,
+  onSelectResident,
+}: VoiceResidentSelectProps) {
+  const [viewMode, setViewMode] = useViewPreference(
+    VIEW_PREFERENCE_KEYS.voiceResidents,
+    'grid',
+    ['grid', 'table'] as const
+  )
+  const filteredResidents = residentsList.filter((r) =>
+    `${r.first_name} ${r.last_name}`.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  return (
+    <Card className="rounded-xl border border-border bg-card p-6 space-y-4">
+      <div className="space-y-2">
+        <label htmlFor="search-resident" className="text-sm font-medium text-foreground">
+          Szukaj podopiecznego
+        </label>
+        <div className="relative">
+          <Search className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
+          <input
+            id="search-resident"
+            type="text"
+            placeholder="Wpisz imię lub nazwisko podopiecznego..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full min-h-11 rounded-xl border border-border bg-background pl-9 pr-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
+      </div>
+
+      <div className="space-y-3 pt-2">
+        <div className="flex items-center justify-between gap-3">
+          <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            Wybierz podopiecznego ({filteredResidents.length})
+          </h4>
+          <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-xl border border-border">
+            <Button
+              type="button"
+              variant={viewMode === 'grid' ? 'default' : 'ghost'}
+              onClick={() => setViewMode('grid')}
+              className={`min-h-11 px-3 rounded-lg text-sm font-medium transition-all ${
+                viewMode === 'grid' ? 'bg-primary text-white hover:bg-primary/90' : 'text-foreground'
+              }`}
+            >
+              <LayoutGrid className="w-4 h-4 mr-1" />
+              Kafelki
+            </Button>
+            <Button
+              type="button"
+              variant={viewMode === 'table' ? 'default' : 'ghost'}
+              onClick={() => setViewMode('table')}
+              className={`min-h-11 px-3 rounded-lg text-sm font-medium transition-all ${
+                viewMode === 'table' ? 'bg-primary text-white hover:bg-primary/90' : 'text-foreground'
+              }`}
+            >
+              <TableIcon className="w-4 h-4 mr-1" />
+              Tabela
+            </Button>
+          </div>
+        </div>
+
+        {loadingResidents ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          </div>
+        ) : filteredResidents.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-6 text-center">
+            Nie znaleziono podopiecznych pasujących do wyszukiwania.
+          </p>
+        ) : viewMode === 'grid' ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[420px] overflow-y-auto pr-1">
+            {filteredResidents.map((r) => (
+              <button
+                key={r.id}
+                type="button"
+                onClick={() => onSelectResident(r)}
+                className="flex items-center gap-3 p-3 min-h-11 rounded-xl border border-border bg-background hover:bg-muted/50 hover:border-primary/50 text-left transition-all"
+              >
+                <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm shrink-0">
+                  {r.first_name?.[0]}{r.last_name?.[0]}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-foreground truncate">
+                    {r.first_name} {r.last_name}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Kliknij, aby nagrać</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="border border-border rounded-xl overflow-hidden max-h-[420px] overflow-y-auto">
+            <Table>
+              <TableHeader className="bg-muted/30">
+                <TableRow>
+                  <TableHead>Podopieczny</TableHead>
+                  <TableHead className="w-40 text-right">Akcja</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredResidents.map((r) => (
+                  <TableRow
+                    key={r.id}
+                    onClick={() => onSelectResident(r)}
+                    className="cursor-pointer hover:bg-muted/40 transition-colors"
+                  >
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm shrink-0">
+                          {r.first_name?.[0]}{r.last_name?.[0]}
+                        </div>
+                        <span className="font-semibold text-sm text-foreground">
+                          {r.first_name} {r.last_name}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <span className="inline-flex items-center justify-center gap-1.5 min-h-11 px-3 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white transition-colors text-sm font-medium">
+                        <Mic className="w-4 h-4" />
+                        Nagraj
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </div>
+    </Card>
+  )
+}

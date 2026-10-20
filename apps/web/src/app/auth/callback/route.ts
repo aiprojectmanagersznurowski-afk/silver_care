@@ -174,9 +174,10 @@ export async function GET(request: Request) {
       })
       return response
 
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Error during family oauth flow:', e)
-      const errResponse = NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(e.message)}`)
+      const message = e instanceof Error ? e.message : 'Błąd rejestracji'
+      const errResponse = NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(message)}`)
       errResponse.cookies.delete('invite_token')
       errResponse.cookies.delete('invite_consents_accepted')
       return errResponse

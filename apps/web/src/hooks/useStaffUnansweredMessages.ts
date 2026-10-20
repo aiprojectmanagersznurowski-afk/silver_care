@@ -39,7 +39,7 @@ export function useStaffUnansweredMessages() {
   }, []);
 
   useEffect(() => {
-    fetchUnanswered();
+    void Promise.resolve().then(() => fetchUnanswered());
 
     const interval = setInterval(fetchUnanswered, 30000);
 

@@ -153,7 +153,7 @@ export function AddResidentDialog() {
               required
               maxLength={11}
             />
-            <p className="text-xs text-text-tertiary">
+            <p className="text-sm text-text-tertiary">
               Numer identyfikacyjny jest haszowany i chroniony zgodnie z SEC-PESEL-HASH.
             </p>
           </div>

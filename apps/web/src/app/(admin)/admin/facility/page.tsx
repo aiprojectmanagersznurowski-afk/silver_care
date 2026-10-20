@@ -1,15 +1,15 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Users, Bed, DoorClosed, Building2 } from 'lucide-react'
+import { Users, Bed, DoorClosed } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import AddRoomDialog from '@/components/facility/AddRoomDialog'
 import { FacilityImportExportDialog } from '@/components/facility/FacilityImportExportDialog'
 import { BedAllocationOptimizerDialog } from '@/components/facility/BedAllocationOptimizerDialog'
-import RoomList from '@/components/facility/RoomList'
+import RoomList, { RoomItem } from '@/components/facility/RoomList'
 
 export default function FacilityManagementPage() {
-  const [rooms, setRooms] = useState<any[]>([])
+  const [rooms, setRooms] = useState<RoomItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   const fetchRooms = async () => {
@@ -28,7 +28,7 @@ export default function FacilityManagementPage() {
   }
 
   useEffect(() => {
-    fetchRooms()
+    void Promise.resolve().then(() => fetchRooms())
   }, [])
 
   const totalBeds = rooms.reduce((acc, room) => acc + (room.beds || 0), 0)

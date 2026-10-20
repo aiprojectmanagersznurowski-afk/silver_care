@@ -5,6 +5,9 @@
  * Brak klucza lub endpoint spoza EOG kończy się odmową — bez zapasowego dostawcy.
  */
 
+import { existsSync, readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+
 export interface EuLlmMessage {
   role: 'system' | 'user' | 'assistant'
   content: string
@@ -66,17 +69,14 @@ function ensureEnvLoaded() {
   if (process.env.ALLOW_DEMO_GROQ_FALLBACK && process.env.GROQ_API_KEY) return
 
   try {
-    // Dynamiczny import fs i path tylko w środowisku Node
-    const fs = require('fs')
-    const path = require('path')
     const candidates = [
-      path.resolve(process.cwd(), '.env.local'),
-      path.resolve(process.cwd(), '../../.env.local'),
-      path.resolve(process.cwd(), '../.env.local'),
+      resolve(process.cwd(), '.env.local'),
+      resolve(process.cwd(), '../../.env.local'),
+      resolve(process.cwd(), '../.env.local'),
     ]
     for (const p of candidates) {
-      if (fs.existsSync(p)) {
-        const content = fs.readFileSync(p, 'utf8')
+      if (existsSync(p)) {
+        const content = readFileSync(p, 'utf8')
         for (const line of content.split('\n')) {
           const trimmed = line.trim()
           if (trimmed && !trimmed.startsWith('#')) {

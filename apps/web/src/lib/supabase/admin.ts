@@ -10,7 +10,7 @@ export function createAdminClient() {
     throw new Error('Brak wymaganych zmiennych środowiskowych SUPABASE_URL lub SUPABASE_SERVICE_ROLE_KEY')
   }
 
-  return createClient(
+  return createClient<Database>(
     url,
     serviceRoleKey,
     {

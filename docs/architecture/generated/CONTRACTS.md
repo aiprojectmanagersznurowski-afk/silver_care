@@ -84,7 +84,7 @@ W danym momencie co najwyżej jedno przypisanie z unassigned_at = NULL na dane b
 
 Krój: `-apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui, sans-serif`
 
-Bazowy rozmiar 14px · minimalny kontrast 4.5:1 · cel dotykowy 32px
+Bazowy rozmiar 16px · minimalny kontrast 4.5:1 · cel dotykowy 44px
 
 ## Wymagania (52)
 

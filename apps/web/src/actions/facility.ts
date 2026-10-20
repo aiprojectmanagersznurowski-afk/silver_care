@@ -1,7 +1,5 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { callEuLlmCompletion } from '@/lib/eu-llm-client'
 import {
@@ -9,180 +7,34 @@ import {
   ValidatedFacilityRoomRow,
   FacilityDryRunResult,
   FacilityExportRoom,
-  validateFacilityRows,
   parseFacilityVoiceJson,
   fallbackExtractFacilityVoiceParams,
 } from '@/lib/facility-helpers'
-
-async function requireOrgAdmin() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Brak autoryzacji')
-  const orgId = user.app_metadata?.organization_id as string | undefined
-  if (!orgId) throw new Error('Brak przypisanej placówki')
-  const role = user.app_metadata?.role as string | undefined
-  if (!['org_admin', 'super_admin', 'admin'].includes(role || '')) {
-    throw new Error('Brak uprawnień administratora placówki')
-  }
-  return { user, orgId, supabase, adminClient: createAdminClient() }
-}
+import { requireOrgAdmin } from '@/lib/facility-auth'
+import {
+  exportFacilityStructureAction as exportImpl,
+  analyzeFacilityImportAction as analyzeImpl,
+  commitFacilityImportAction as commitImpl,
+} from './facility-import-export'
 
 export async function exportFacilityStructureAction(): Promise<{
   error?: string
   rooms?: FacilityExportRoom[]
   json?: string
 }> {
-  try {
-    const { user, orgId, supabase, adminClient } = await requireOrgAdmin()
-
-    const { data: rawRooms, error: fetchErr } = await supabase
-      .from('rooms')
-      .select('id, number, floor, sector, is_active, beds(id, label, is_active, bed_assignments(unassigned_at, residents(first_name, last_name)))')
-      .eq('organization_id', orgId)
-      .order('number', { ascending: true })
-
-    if (fetchErr) {
-      return { error: `Błąd podczas pobierania pokoi: ${fetchErr.message}` }
-    }
-
-    const rooms: FacilityExportRoom[] = (rawRooms || []).map((r) => {
-      const beds = Array.isArray(r.beds) ? r.beds : []
-      return {
-        id: r.id,
-        number: r.number,
-        floor: r.floor,
-        sector: r.sector,
-        is_active: r.is_active,
-        beds: beds.map((b: any) => {
-          const assignments = Array.isArray(b.bed_assignments) ? b.bed_assignments : []
-          const active = assignments.find((a: any) => a.unassigned_at === null)
-          const residentName = active?.residents
-            ? `${active.residents.first_name} ${active.residents.last_name}`
-            : null
-          return {
-            id: b.id,
-            label: b.label,
-            is_active: b.is_active,
-            occupied: Boolean(active),
-            resident_name: residentName,
-          }
-        }),
-      }
-    })
-
-    // Zapis audytu
-    await adminClient.from('audit_logs').insert({
-      organization_id: orgId,
-      resident_id: null,
-      action: 'FACILITY_SCHEMA_EXPORTED',
-      performed_by: user.id,
-      payload: {
-        rooms_count: rooms.length,
-        total_beds: rooms.reduce((acc, rm) => acc + rm.beds.length, 0),
-      },
-    })
-
-    return {
-      rooms,
-      json: JSON.stringify({ organization_id: orgId, exported_at: new Date().toISOString(), rooms }, null, 2),
-    }
-  } catch (err: any) {
-    return { error: err.message || 'Wystąpił nieoczekiwany błąd' }
-  }
+  return exportImpl()
 }
 
 export async function analyzeFacilityImportAction(
   rawRows: RawFacilityRoomRow[]
 ): Promise<{ error?: string; result?: FacilityDryRunResult }> {
-  try {
-    const { orgId, supabase } = await requireOrgAdmin()
-
-    // Pobierz istniejące numery pokoi w tej placówce
-    const { data: existing, error: existErr } = await supabase
-      .from('rooms')
-      .select('number')
-      .eq('organization_id', orgId)
-
-    if (existErr) {
-      return { error: `Błąd pobierania istniejących pokoi: ${existErr.message}` }
-    }
-
-    const existingNumbers = new Set<string>((existing || []).map((r) => r.number))
-    const result = validateFacilityRows(rawRows, existingNumbers)
-
-    return { result }
-  } catch (err: any) {
-    return { error: err.message || 'Wystąpił błąd analizy pliku' }
-  }
+  return analyzeImpl(rawRows)
 }
 
 export async function commitFacilityImportAction(
   validRows: ValidatedFacilityRoomRow[]
 ): Promise<{ error?: string; importedRooms?: number; importedBeds?: number }> {
-  try {
-    const { user, orgId, adminClient } = await requireOrgAdmin()
-
-    let importedRooms = 0
-    let importedBeds = 0
-
-    for (const r of validRows) {
-      if (!r.isValid) continue
-
-      // Wstaw pokój
-      const { data: room, error: roomErr } = await adminClient
-        .from('rooms')
-        .insert({
-          organization_id: orgId,
-          number: r.number,
-          floor: r.floor,
-          sector: r.sector,
-          is_active: true,
-        })
-        .select('id')
-        .single()
-
-      if (roomErr) {
-        return { error: `Błąd podczas tworzenia pokoju ${r.number}: ${roomErr.message}` }
-      }
-      importedRooms++
-
-      // Wstaw łóżka dla tego pokoju
-      if (r.bedLabels && r.bedLabels.length > 0) {
-        const bedInserts = r.bedLabels.map((lbl) => ({
-          room_id: room.id,
-          label: lbl,
-          is_active: true,
-        }))
-
-        const { data: beds, error: bedErr } = await adminClient
-          .from('beds')
-          .insert(bedInserts)
-          .select('id')
-
-        if (bedErr) {
-          return { error: `Błąd podczas tworzenia łóżek w pokoju ${r.number}: ${bedErr.message}` }
-        }
-        importedBeds += (beds || []).length
-      }
-    }
-
-    // Zapis audytu
-    await adminClient.from('audit_logs').insert({
-      organization_id: orgId,
-      resident_id: null,
-      action: 'FACILITY_SCHEMA_IMPORTED',
-      performed_by: user.id,
-      payload: {
-        imported_rooms: importedRooms,
-        imported_beds: importedBeds,
-      },
-    })
-
-    revalidatePath('/admin/facility')
-    return { importedRooms, importedBeds }
-  } catch (err: any) {
-    return { error: err.message || 'Wystąpił błąd podczas importu' }
-  }
+  return commitImpl(validRows)
 }
 
 export async function parseFacilityVoiceNoteAction(
@@ -219,8 +71,7 @@ ZASADY:
       if (!parsed._parseError) {
         return { parsed }
       }
-    } catch (llmErr: any) {
-      // W razie błędu LLM (np. brak konfiguracji klucza lub brak sieci), użyj inteligentnego fallbacku heurystycznego
+    } catch (llmErr: unknown) {
       const fallback = fallbackExtractFacilityVoiceParams(transcription)
       if (fallback.number || fallback.floor || fallback.bedLabels) {
         return { parsed: fallback }
@@ -234,8 +85,8 @@ ZASADY:
     }
 
     return { error: 'Nie udało się wyodrębnić parametrów pokoju. Wprowadź dane ręcznie.' }
-  } catch (err: any) {
-    return { error: err.message || 'Błąd parsowania notatki głosowej' }
+  } catch (err: unknown) {
+    return { error: err instanceof Error ? err.message : 'Błąd parsowania notatki głosowej' }
   }
 }
 
@@ -257,7 +108,6 @@ export async function createRoomWithBedsAction(data: {
       return { error: 'Numer pokoju i piętro są wymagane.' }
     }
 
-    // Sprawdź czy pokój już istnieje
     const { data: existing } = await adminClient
       .from('rooms')
       .select('id')
@@ -314,8 +164,7 @@ export async function createRoomWithBedsAction(data: {
 
     revalidatePath('/admin/facility')
     return { success: true, roomId: room.id }
-  } catch (err: any) {
-    return { error: err.message || 'Wystąpił nieoczekiwany błąd' }
+  } catch (err: unknown) {
+    return { error: err instanceof Error ? err.message : 'Wystąpił nieoczekiwany błąd' }
   }
 }
-

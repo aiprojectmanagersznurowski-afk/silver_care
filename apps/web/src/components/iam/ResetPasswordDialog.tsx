@@ -42,7 +42,7 @@ export function ResetPasswordDialog({
             <MailCheck className="h-5 w-5 text-primary shrink-0 mt-0.5" />
             <div>
               <p className="font-medium text-foreground">Procedura bezpiecznego resetu hasła (IAM Hardening)</p>
-              <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+              <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
                 Zgodnie z zasadami bezpieczeństwa hasło nie jest ustalane ręcznie przez administratora. Po potwierdzeniu na adres <strong>{user?.email}</strong> zostanie wygenerowany i przesłany bezpieczny link do zresetowania hasła. Użytkownik samodzielnie zdefiniuje nowe hasło.
               </p>
             </div>

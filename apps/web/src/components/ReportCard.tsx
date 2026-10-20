@@ -8,16 +8,16 @@ import { useRouter } from 'next/navigation'
 import { CheckCircle2, Clock, Edit3, Send, Save, X, Sparkles, AlertCircle, Check } from 'lucide-react'
 import { analyzeReportCompleteness } from '@/lib/completeness-gate'
 import { Textarea } from '@/components/ui/textarea'
+import { MedicationAlertBanner } from '@/components/MedicationAlertBanner'
+
+import type { Json } from '@/types/database.types'
 
 export interface ReportItem {
   id: string
   resident_id: string
-  created_at: string
+  created_at: string | null
   status: 'DRAFT' | 'PUBLISHED' | string
-  content: {
-    text?: string
-    [key: string]: unknown
-  }
+  content: Json
   residents?: {
     first_name?: string
     last_name?: string
@@ -27,34 +27,35 @@ export interface ReportItem {
 export function ReportCard({ report }: { report: ReportItem }) {
   const [isEditing, setIsEditing] = useState(false)
   const rawContent: unknown = report.content
-  const parsedText = typeof rawContent === 'string'
-    ? (rawContent.startsWith('{')
-        ? (() => {
-            try {
-              const parsed = JSON.parse(rawContent) as Record<string, unknown>
-              return typeof parsed.text === 'string' ? parsed.text : rawContent
-            } catch {
-              return rawContent
-            }
-          })()
-        : rawContent)
-    : typeof (rawContent as Record<string, unknown>)?.text === 'string'
-      ? (rawContent as { text: string }).text
-      : ''
+  const contentObj = typeof rawContent === 'object' && rawContent !== null
+    ? (rawContent as Record<string, unknown>)
+    : (() => {
+        try {
+          return typeof rawContent === 'string' && rawContent.startsWith('{')
+            ? (JSON.parse(rawContent) as Record<string, unknown>)
+            : null
+        } catch { return null }
+      })()
+  const parsedText = typeof contentObj?.text === 'string' ? contentObj.text : (typeof rawContent === 'string' ? rawContent : '')
   const [content, setContent] = useState(parsedText)
   const [loading, setLoading] = useState(false)
+  const [medConfirmed, setMedConfirmed] = useState(false)
   const router = useRouter()
   const supabase = createClient()
+
+  const medEvent = contentObj?.medication_event as string | undefined
+  const requiresMedConfirm = contentObj?.medication_alert_requires_confirmation === true ||
+    contentObj?.requires_medication_confirmation === true ||
+    medEvent === 'refused' || medEvent === 'missed'
 
   const isPublished = report.status === 'PUBLISHED'
   const completeness = analyzeReportCompleteness(content)
 
   const handlePublish = async () => {
+    if (requiresMedConfirm && !medConfirmed) return
     setLoading(true)
-    await supabase
-      .from('daily_reports')
-      .update({ status: 'PUBLISHED', content: { text: content } })
-      .eq('id', report.id)
+    const updatedContent = { ...(contentObj || {}), text: content, medication_confirmed_by_staff: true }
+    await supabase.from('daily_reports').update({ status: 'PUBLISHED', content: updatedContent }).eq('id', report.id)
     setLoading(false)
     router.refresh()
   }
@@ -81,25 +82,25 @@ export function ReportCard({ report }: { report: ReportItem }) {
                 : 'Podopieczny'
               }
             </CardTitle>
-            <CardDescription className="text-xs text-muted-foreground mt-0.5">
-              Utworzono: {new Date(report.created_at).toLocaleDateString('pl-PL', {
+            <CardDescription className="text-sm text-muted-foreground mt-0.5">
+              Utworzono: {report.created_at ? new Date(report.created_at).toLocaleDateString('pl-PL', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit'
-              })}
+              }) : '—'}
             </CardDescription>
           </div>
 
           <div>
             {isPublished ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary border border-primary/20" data-testid="report-status-published">
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-sm font-medium text-primary border border-primary/20" data-testid="report-status-published">
                 <CheckCircle2 className="h-3 w-3" />
                 Opublikowany dla rodziny
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-foreground border border-border" data-testid="report-status-draft">
+              <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-sm font-medium text-foreground border border-border" data-testid="report-status-draft">
                 <Clock className="h-3 w-3" />
                 Szkic do weryfikacji
               </span>
@@ -122,9 +123,18 @@ export function ReportCard({ report }: { report: ReportItem }) {
           </div>
         )}
 
+        {requiresMedConfirm && !isPublished && (
+          <MedicationAlertBanner
+            event={medEvent}
+            requiresConfirmation={requiresMedConfirm}
+            confirmed={medConfirmed}
+            onConfirmChange={setMedConfirmed}
+          />
+        )}
+
         {/* Strażnik kompletności raportu opiekuńczego (AI Quality Gate) */}
         {!isPublished && (
-          <div className="rounded-xl border border-border bg-muted p-3 space-y-2.5 text-xs" data-testid="completeness-gate">
+          <div className="rounded-xl border border-border bg-muted p-3 space-y-2.5 text-sm" data-testid="completeness-gate">
             <div className="flex items-center justify-between">
               <span className="font-semibold text-foreground flex items-center gap-1.5" data-testid="completeness-score">
                 <Sparkles className="w-3.5 h-3.5 text-foreground" />
@@ -162,7 +172,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
             </div>
 
             {!completeness.isComplete && (
-              <p className="text-muted-foreground italic text-[11px] pt-0.5" data-testid="completeness-suggestion">
+              <p className="text-muted-foreground italic text-sm pt-0.5" data-testid="completeness-suggestion">
                 Podpowiedź asystenta: Bliscy najbardziej wyczekują informacji o apetycie, samopoczuciu i aktywności. Możesz uzupełnić treść lub opublikować raport w obecnym kształcie.
               </p>
             )}
@@ -175,7 +185,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
               <Button 
                 disabled={loading} 
                 onClick={handleSave} 
-                className="rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-semibold gap-1.5"
+                className="rounded-xl bg-primary hover:bg-primary/90 text-white text-sm font-semibold gap-1.5"
                 data-testid="save-report-button"
               >
                 <Save className="h-3.5 w-3.5" />
@@ -184,11 +194,11 @@ export function ReportCard({ report }: { report: ReportItem }) {
               <Button 
                 disabled={loading} 
                 onClick={() => {
-                  setContent(report.content?.text || '')
+                  setContent(parsedText)
                   setIsEditing(false)
                 }} 
                 variant="outline"
-                className="rounded-xl border-border text-foreground hover:bg-muted/50 text-xs font-medium gap-1.5"
+                className="rounded-xl border-border text-foreground hover:bg-muted/50 text-sm font-medium gap-1.5"
                 data-testid="cancel-edit-report-button"
               >
                 <X className="h-3.5 w-3.5" />
@@ -199,9 +209,10 @@ export function ReportCard({ report }: { report: ReportItem }) {
             <>
               {!isPublished && (
                 <Button 
-                  disabled={loading} 
+                  disabled={loading || (requiresMedConfirm && !medConfirmed)} 
                   onClick={handlePublish} 
-                  className="rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-semibold gap-1.5"
+                  title={requiresMedConfirm && !medConfirmed ? 'Potwierdź odnotowanie zdarzenia lekowego' : undefined}
+                  className="rounded-xl min-h-11 px-4 bg-primary hover:bg-primary/90 text-white text-sm font-semibold gap-1.5 disabled:opacity-50"
                   data-testid="publish-report-button"
                 >
                   <Send className="h-3.5 w-3.5" />
@@ -212,7 +223,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
                 disabled={loading} 
                 onClick={() => setIsEditing(true)} 
                 variant="outline"
-                className="rounded-xl border-border text-foreground hover:bg-muted/50 text-xs font-medium gap-1.5"
+                className="rounded-xl min-h-11 px-4 border-border text-foreground hover:bg-muted/50 text-sm font-medium gap-1.5"
                 data-testid="edit-report-button"
               >
                 <Edit3 className="h-3.5 w-3.5" />

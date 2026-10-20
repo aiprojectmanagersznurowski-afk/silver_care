@@ -9,6 +9,7 @@ import {
   validateDischargePayload,
   DischargePayloadInput,
 } from '@/lib/discharge-helpers'
+import type { TablesInsert } from '@/types/database.types'
 
 export interface DischargeResidentResult {
   success: boolean
@@ -167,17 +168,7 @@ export async function dischargeResidentAction(
   }
 
   // 8. Rejestracja w resident_events na potrzeby modułu BI i raportów (AC5)
-  interface ResidentEventInsert {
-    organization_id: string
-    resident_id: string
-    event_type: 'contract_ended' | 'death'
-    event_date: string
-    event_reason: string | null
-    metadata: Record<string, unknown>
-    performed_by: string
-  }
-
-  const eventsToInsert: ResidentEventInsert[] = [
+  const eventsToInsert: TablesInsert<'resident_events'>[] = [
     {
       organization_id: currentResident.organization_id,
       resident_id: residentId,
@@ -216,11 +207,11 @@ export async function dischargeResidentAction(
   // 9. Rejestracja w audit_logs (bez danych osobowych / PII)
   await adminClient.from('audit_logs').insert({
     organization_id: currentResident.organization_id,
-    user_id: user.id,
+    performed_by: user.id,
     action: 'RESIDENT_DISCHARGE',
-    target_table: 'residents',
-    target_id: residentId,
-    details: {
+    payload: {
+      target_table: 'residents',
+      target_id: residentId,
       contract_end_reason: contractEndReason,
       is_death: contractEndReason === 'death',
       unassigned_bed_id: activeAssignment?.bed_id || null,

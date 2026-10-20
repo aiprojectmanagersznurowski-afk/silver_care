@@ -14,10 +14,10 @@ export interface ExistingUserInfo {
   app_metadata?: {
     role?: string;
     organization_id?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
   user_metadata?: {
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 
@@ -38,12 +38,17 @@ export type AdminAssignmentDecision =
       error: string;
     };
 
+export interface ListUsersResult {
+  data?: { users?: ExistingUserInfo[] } | null;
+  error?: unknown;
+}
+
 /**
  * Paginowane wyszukiwanie użytkownika po e-mailu.
  * Przeszukuje kolejne strony Auth API do momentu znalezienia lub wyczerpania listy.
  */
 export async function findUserByEmail(
-  adminClient: { auth: { admin: { listUsers: (params: { page: number; perPage: number }) => Promise<any> } } },
+  adminClient: { auth: { admin: { listUsers: (params: { page: number; perPage: number }) => Promise<ListUsersResult> } } },
   email: string
 ): Promise<ExistingUserInfo | null> {
   const normalizedEmail = email.trim().toLowerCase();

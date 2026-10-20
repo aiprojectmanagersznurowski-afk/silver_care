@@ -3,10 +3,7 @@
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { Logo } from "./Logo";
-import { formatDistanceToNow } from "date-fns";
-import { pl } from "date-fns/locale";
 import { useFamilyUnreadMessages } from "@/hooks/useFamilyUnreadMessages";
 import { ChevronDown, Bell, Check, LayoutDashboard, Calendar, MessageSquare, User, ShieldCheck } from "lucide-react";
 import {
@@ -19,6 +16,7 @@ import {
 } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { ThemeToggle } from "./ThemeToggle";
+import { FamilyNotificationsDropdownContent } from "./family/FamilyNotificationsDropdownContent";
 
 const navItems = [
   { label: "Pulpit", href: "/dashboard", icon: LayoutDashboard },
@@ -32,6 +30,12 @@ interface Resident {
   first_name: string;
   last_name: string;
   avatar_url: string | null;
+}
+
+function setResidentCookie(id: string) {
+  if (typeof document !== 'undefined') {
+    document.cookie = `family_resident_id=${id}; path=/; max-age=31536000`;
+  }
 }
 
 export function FamilyHeader({ residents }: { residents: Resident[] }) {
@@ -52,9 +56,7 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
 
   const handleSelect = (s: Resident) => {
     setCurrent(s);
-    if (typeof document !== 'undefined') {
-      document.cookie = `family_resident_id=${s.id}; path=/; max-age=31536000`;
-    }
+    setResidentCookie(s.id);
     router.refresh();
   };
 
@@ -69,7 +71,7 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
               className="h-8 sm:h-9 w-auto object-contain"
               priority
             />
-            <span className="hidden text-[0.8rem] text-muted-foreground xl:inline-block border-l border-border pl-3">
+            <span className="hidden text-sm text-muted-foreground xl:inline-block border-l border-border pl-3">
               Portal rodzinnej opieki
             </span>
           </Link>
@@ -93,7 +95,7 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
                   {isMessages && unreadCount > 0 && (
                     <span
                       data-testid="family-nav-messages-badge"
-                      className="ml-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground animate-pulse"
+                      className="ml-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-sm font-bold text-destructive-foreground animate-pulse"
                     >
                       {unreadCount > 99 ? '99+' : unreadCount}
                     </span>
@@ -117,96 +119,17 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
                 {unreadCount > 0 && (
                   <span
                     data-testid="family-notifications-badge"
-                    className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground ring-2 ring-background animate-pulse"
+                    className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-sm font-bold text-destructive-foreground ring-2 ring-background animate-pulse"
                   >
                     {unreadCount > 99 ? '99+' : unreadCount}
                   </span>
                 )}
               </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                data-testid="family-notifications-dropdown"
-                className="w-80 rounded-xl p-2 border border-border"
-              >
-                <div className="flex items-center justify-between px-2 py-1.5">
-                  <DropdownMenuLabel className="p-0 text-sm font-semibold text-foreground">
-                    Powiadomienia
-                  </DropdownMenuLabel>
-                  {unreadCount > 0 && (
-                    <span
-                      data-testid="family-notifications-count"
-                      className="rounded-full bg-destructive/15 px-2 py-0.5 text-[11px] font-semibold text-destructive border border-destructive/25"
-                    >
-                      {unreadCount} nowe
-                    </span>
-                  )}
-                </div>
-                <DropdownMenuSeparator />
-
-                {unreadCount === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-6 px-4 text-center">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground mb-2">
-                      <Bell className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                    <p className="text-sm font-medium text-foreground">Brak nowych powiadomień</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Jesteś na bieżąco ze wszystkimi wiadomościami.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="max-h-72 overflow-y-auto space-y-1">
-                    {recentReplies.map((reply) => {
-                      const timeAgo = formatDistanceToNow(new Date(reply.created_at), {
-                        addSuffix: true,
-                        locale: pl,
-                      });
-                      const snippet = reply.content.length > 70
-                        ? `${reply.content.slice(0, 67)}...`
-                        : reply.content;
-
-                      return (
-                        <DropdownMenuItem
-                          key={reply.id}
-                          data-testid={`family-notification-item-${reply.id}`}
-                          render={
-                            <Link
-                              href="/messages"
-                              onClick={() => markAllAsRead()}
-                              className="flex flex-col items-start gap-1 p-2.5 rounded-lg cursor-pointer hover:bg-accent/60 transition-colors"
-                            />
-                          }
-                        >
-                          <div className="flex w-full items-center justify-between">
-                            <span className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
-                              <MessageSquare className="h-3.5 w-3.5 text-primary shrink-0" />
-                              <span>Wiadomość od personelu</span>
-                            </span>
-                            <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                              {timeAgo}
-                            </span>
-                          </div>
-                          <p className="text-xs text-muted-foreground line-clamp-2 pl-5">
-                            {snippet}
-                          </p>
-                        </DropdownMenuItem>
-                      );
-                    })}
-                  </div>
-                )}
-
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  render={
-                    <Link
-                      href="/messages"
-                      onClick={() => markAllAsRead()}
-                      className="flex w-full items-center justify-center py-2 text-center text-xs font-medium text-primary hover:text-primary/80 transition-colors cursor-pointer"
-                    />
-                  }
-                >
-                  Przejdź do wiadomości
-                </DropdownMenuItem>
-              </DropdownMenuContent>
+              <FamilyNotificationsDropdownContent
+                unreadCount={unreadCount}
+                recentReplies={recentReplies}
+                markAllAsRead={markAllAsRead}
+              />
             </DropdownMenu>
 
             {current ? (
@@ -218,7 +141,7 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
                   </Avatar>
                   <div className="hidden text-left leading-tight sm:block">
                     <p className="text-[0.95rem] text-foreground">{current.first_name} {current.last_name}</p>
-                    <p className="text-[0.72rem] text-muted-foreground">Wyświetlany profil</p>
+                    <p className="text-sm text-muted-foreground">Wyświetlany profil</p>
                   </div>
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </DropdownMenuTrigger>
@@ -302,7 +225,7 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
             <Link
               key={item.label}
               href={item.href}
-              className={`flex flex-col items-center gap-1 rounded-xl px-4 py-1.5 text-xs font-medium transition-colors ${
+              className={`flex flex-col items-center justify-center gap-1 rounded-xl px-4 py-1.5 text-sm font-medium min-h-11 min-w-11 transition-colors ${
                 isActive 
                   ? "text-primary font-bold bg-accent/60" 
                   : "text-muted-foreground hover:text-foreground"

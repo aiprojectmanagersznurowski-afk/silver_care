@@ -139,3 +139,5 @@ export const AI_FEEDBACK_CATEGORIES = [
   "mdr_violation"
 ] as const;
 
+export const PROMPT_VERSION = "v2.1.0-mdr-eu-dpa" as const;
+

@@ -193,3 +193,14 @@ export function formatResidentInitials(firstName?: string, lastName?: string): s
   return 'P.';
 }
 
+/**
+ * Wyznacza aktywny widok dla responsywnego układu wiadomości personelu (NUR-MESSAGES-MOBILE-RESPONSIVE).
+ */
+export function resolveMessagesPane(
+  activeThreadId: string | null,
+  isMobile: boolean
+): 'threads' | 'conversation' | 'both' {
+  if (!isMobile) return 'both';
+  return activeThreadId ? 'conversation' : 'threads';
+}
+

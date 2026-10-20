@@ -19,18 +19,20 @@ function AcceptInviteContent() {
   const [isNavigating, setIsNavigating] = useState(false)
 
   useEffect(() => {
-    const origin = typeof window !== 'undefined' ? window.location.origin : ''
-    const result = resolveAcceptInviteAction(
-      { url: urlParam, token: tokenParam },
-      origin
-    )
+    void Promise.resolve().then(() => {
+      const origin = typeof window !== 'undefined' ? window.location.origin : ''
+      const result = resolveAcceptInviteAction(
+        { url: urlParam, token: tokenParam },
+        origin
+      )
 
-    setResolution(result)
+      setResolution(result)
 
-    // Jeśli to token zaproszenia rodziny, automatycznie przekierowujemy do rejestracji
-    if (result.state === 'REDIRECT' && result.destinationUrl) {
-      router.replace(result.destinationUrl)
-    }
+      // Jeśli to token zaproszenia rodziny, automatycznie przekierowujemy do rejestracji
+      if (result.state === 'REDIRECT' && result.destinationUrl) {
+        router.replace(result.destinationUrl)
+      }
+    })
   }, [urlParam, tokenParam, router])
 
   // 1. Stan: LOADING / REDIRECT
@@ -70,7 +72,7 @@ function AcceptInviteContent() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground space-y-1">
+            <div className="rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground space-y-1">
               <p className="font-semibold text-foreground">Co możesz zrobić?</p>
               <p>• Otwórz wiadomość e-mail z zaproszeniem i kliknij bezpośrednio w przesłany przycisk.</p>
               <p>• Jeśli posiadasz już aktywne konto, zaloguj się podając swoje dane.</p>
