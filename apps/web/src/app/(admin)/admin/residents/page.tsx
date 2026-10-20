@@ -7,6 +7,7 @@ import { ExportDataDialog } from '@/components/ExportDataDialog'
 import { ShieldAlert } from 'lucide-react'
 import { isImpersonationSessionActive, maskResidentListForImpersonation } from '@/lib/impersonation-guards'
 import { AdminResidentsClient, type ResidentWithAssignments } from '@/components/AdminResidentsClient'
+import { ADMIN_RESIDENT_LIST_SELECT } from '@/lib/admin-resident-columns'
 // Komponenty edycji inline i arkusza zintegrowane w tabeli podopiecznych (AdminResidentsClient)
 import { ResidentInlineCareLevel } from '@/components/ResidentInlineCareLevel'
 import { ResidentEditSheet } from '@/components/ResidentEditSheet'
@@ -17,10 +18,10 @@ export default async function AdminResidentsPage() {
   const cookieStore = await cookies()
   const isImpersonating = isImpersonationSessionActive(cookieStore, user)
 
-  // Pobieramy wszystkich pensjonariuszy z organizacji tego admina
+  // Pobieramy pensjonariuszy z organizacji tego admina — tylko kolumny potrzebne widokowi
   const { data: rawResidents } = await supabase
     .from('residents')
-    .select('*, bed_assignments(id, unassigned_at, beds(id, label, rooms(number)))')
+    .select(ADMIN_RESIDENT_LIST_SELECT)
     .order('created_at', { ascending: false })
 
   const { residents, masked, count } = maskResidentListForImpersonation(
@@ -70,7 +71,8 @@ export default async function AdminResidentsPage() {
           </div>
         </Card>
       ) : (
-        <AdminResidentsClient residents={(residents || []) as ResidentWithAssignments[]} />
+        // Klient bez typów <Database> zgaduje relację beds jako tablicę; w danych to obiekt (many-to-one).
+        <AdminResidentsClient residents={(residents || []) as unknown as ResidentWithAssignments[]} />
       )}
     </div>
   )
