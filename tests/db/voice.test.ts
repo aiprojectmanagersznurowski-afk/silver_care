@@ -205,4 +205,96 @@ describe('Database Voice Drafts (VOICE-DRAFT-ISOLATION)', () => {
       if (e.message !== 'ROLLBACK') throw e;
     });
   });
+
+  it('enforces ORG-ISOLATION and roles.contract.mjs MATRIX on daily_logs, daily_reports, and voice_draft_notes @REQ: ORG-ISOLATION @REQ: VOICE-DRAFT-ISOLATION', async () => {
+    await sql.begin(async (tx) => {
+      await tx`SET LOCAL ROLE postgres`;
+
+      const orgA = await tx`INSERT INTO organizations (name) VALUES ('Org Isolation A') RETURNING id`;
+      const orgAId = orgA[0].id;
+      const orgB = await tx`INSERT INTO organizations (name) VALUES ('Org Isolation B') RETURNING id`;
+      const orgBId = orgB[0].id;
+
+      const resA = await tx`INSERT INTO residents (organization_id, first_name, last_name, pesel_hash) VALUES (${orgAId}, 'Jan', 'Alfa', 'hash_iso_a') RETURNING id`;
+      const resAId = resA[0].id;
+      const resB = await tx`INSERT INTO residents (organization_id, first_name, last_name, pesel_hash) VALUES (${orgBId}, 'Anna', 'Beta', 'hash_iso_b') RETURNING id`;
+      const resBId = resB[0].id;
+
+      const nurseA = '11111111-1111-1111-1111-111111111111';
+      const nurseB = '22222222-2222-2222-2222-222222222222';
+      const orgAdminA = '44444444-4444-4444-4444-444444444444';
+      const superAdmin = '55555555-5555-5555-5555-555555555555';
+
+      await tx`SET LOCAL ROLE authenticated`;
+
+      // Nurse A creates draft, log, report in Org A
+      await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "${nurseA}", "app_metadata": {"role": "nurse", "organization_id": "${orgAId}"}, "aal": "aal2"}`}, true)`;
+      const draftA = await tx`INSERT INTO voice_draft_notes (resident_id, nurse_id, audio_url, transcript) VALUES (${resAId}, ${nurseA}, 'http://a', 'Notatka A') RETURNING id`;
+      const rpcA = await tx`SELECT public.process_voice_draft_atomic(
+        ${draftA[0].id},
+        ${resAId},
+        ${nurseA},
+        ${tx.json({ draft_id: draftA[0].id, medical: 'Lek A' })},
+        ${tx.json({ draft_id: draftA[0].id, text: 'Raport A', requires_staff_review: false })}
+      ) AS res`;
+      const logAId = rpcA[0].res.log_id;
+      const reportAId = rpcA[0].res.report_id;
+
+      // Nurse B creates draft, log, report in Org B
+      await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "${nurseB}", "app_metadata": {"role": "nurse", "organization_id": "${orgBId}"}, "aal": "aal2"}`}, true)`;
+      const draftB = await tx`INSERT INTO voice_draft_notes (resident_id, nurse_id, audio_url, transcript) VALUES (${resBId}, ${nurseB}, 'http://b', 'Notatka B') RETURNING id`;
+      const rpcB = await tx`SELECT public.process_voice_draft_atomic(
+        ${draftB[0].id},
+        ${resBId},
+        ${nurseB},
+        ${tx.json({ draft_id: draftB[0].id, medical: 'Lek B' })},
+        ${tx.json({ draft_id: draftB[0].id, text: 'Raport B', requires_staff_review: false })}
+      ) AS res`;
+      const logBId = rpcB[0].res.log_id;
+      const reportBId = rpcB[0].res.report_id;
+
+      // 1. org_admin from Org A:
+      // - CAN read daily_logs and daily_reports in Org A
+      // - CANNOT read or update daily_logs or daily_reports in Org B
+      // - CANNOT update daily_logs even in Org A (MATRIX: daily_logs.update = [nurse:own])
+      // - CANNOT read voice_draft_notes (MATRIX: voice_draft_notes.read = [nurse:own])
+      await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "${orgAdminA}", "app_metadata": {"role": "org_admin", "organization_id": "${orgAId}"}, "aal": "aal2"}`}, true)`;
+
+      const logsSeenByOrgAdminA = await tx`SELECT id FROM daily_logs WHERE id IN (${logAId}, ${logBId})`;
+      expect(logsSeenByOrgAdminA.map((r) => r.id)).toEqual([logAId]);
+
+      const reportsSeenByOrgAdminA = await tx`SELECT id FROM daily_reports WHERE id IN (${reportAId}, ${reportBId})`;
+      expect(reportsSeenByOrgAdminA.map((r) => r.id)).toEqual([reportAId]);
+
+      const draftsSeenByOrgAdminA = await tx`SELECT id FROM voice_draft_notes WHERE id IN (${draftA[0].id}, ${draftB[0].id})`;
+      expect(draftsSeenByOrgAdminA.length).toBe(0);
+
+      const updateLogA = await tx`UPDATE daily_logs SET data = '{"tampered": true}'::jsonb WHERE id = ${logAId} RETURNING id`;
+      expect(updateLogA.length).toBe(0);
+
+      const updateReportB = await tx`UPDATE daily_reports SET status = 'PUBLISHED' WHERE id = ${reportBId} RETURNING id`;
+      expect(updateReportB.length).toBe(0);
+
+      const updateReportA = await tx`UPDATE daily_reports SET status = 'PUBLISHED' WHERE id = ${reportAId} RETURNING id`;
+      expect(updateReportA.length).toBe(1);
+
+      // 2. super_admin:
+      // - CANNOT read daily_logs, daily_reports, or voice_draft_notes (MATRIX: super_admin has no care content access)
+      await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "${superAdmin}", "app_metadata": {"role": "super_admin"}, "aal": "aal2"}`}, true)`;
+
+      const logsSeenBySuperAdmin = await tx`SELECT id FROM daily_logs WHERE id IN (${logAId}, ${logBId})`;
+      expect(logsSeenBySuperAdmin.length).toBe(0);
+
+      const reportsSeenBySuperAdmin = await tx`SELECT id FROM daily_reports WHERE id IN (${reportAId}, ${reportBId})`;
+      expect(reportsSeenBySuperAdmin.length).toBe(0);
+
+      const draftsSeenBySuperAdmin = await tx`SELECT id FROM voice_draft_notes WHERE id IN (${draftA[0].id}, ${draftB[0].id})`;
+      expect(draftsSeenBySuperAdmin.length).toBe(0);
+
+      throw new Error('ROLLBACK');
+    }).catch((e: Error) => {
+      if (e.message !== 'ROLLBACK') throw e;
+    });
+  });
 });
+

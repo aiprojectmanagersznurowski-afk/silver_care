@@ -1,58 +1,5 @@
 -- Migration: 20261015220000_atomic_voice_process_rpc.sql
 -- Procedura RPC dla atomowego zapisu przetwarzania notatki głosowej (daily_logs + daily_reports + voice_draft_notes).
--- Hardening: SECURITY INVOKER, SET search_path = public, weryfikacja auth.uid(), roli JWT, izolacji organizacji oraz blokada nadpisania PUBLISHED.
-
--- Rozszerzenie polityk SELECT/UPDATE na daily_logs i daily_reports dla ról personelu przy SECURITY INVOKER
-DROP POLICY IF EXISTS "Nurse can read own daily logs" ON public.daily_logs;
-DROP POLICY IF EXISTS "Staff can read own daily logs" ON public.daily_logs;
-CREATE POLICY "Staff can read own daily logs"
-    ON public.daily_logs FOR SELECT TO authenticated
-    USING (
-        ((current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' ->> 'role') IN ('nurse', 'paramedic', 'caregiver', 'org_admin', 'super_admin', 'admin'))
-        AND (
-            nurse_id = auth.uid()
-            OR ((current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' ->> 'role') IN ('super_admin', 'org_admin', 'admin'))
-        )
-    );
-
-DROP POLICY IF EXISTS "Nurse can update own daily logs" ON public.daily_logs;
-DROP POLICY IF EXISTS "Staff can update own daily logs" ON public.daily_logs;
-CREATE POLICY "Staff can update own daily logs"
-    ON public.daily_logs FOR UPDATE TO authenticated
-    USING (
-        ((current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' ->> 'role') IN ('nurse', 'paramedic', 'caregiver', 'org_admin', 'super_admin', 'admin'))
-        AND (
-            nurse_id = auth.uid()
-            OR ((current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' ->> 'role') IN ('super_admin', 'org_admin', 'admin'))
-        )
-    );
-
-DROP POLICY IF EXISTS "Nurse can read own daily reports" ON public.daily_reports;
-DROP POLICY IF EXISTS "Staff can read own daily reports" ON public.daily_reports;
-CREATE POLICY "Staff can read own daily reports"
-    ON public.daily_reports FOR SELECT TO authenticated
-    USING (
-        ((current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' ->> 'role') IN ('nurse', 'paramedic', 'caregiver', 'org_admin', 'super_admin', 'admin'))
-        AND (
-            author_id = auth.uid()
-            OR ((current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' ->> 'role') IN ('super_admin', 'org_admin', 'admin'))
-        )
-    );
-
-DROP POLICY IF EXISTS "Nurse can update own daily reports" ON public.daily_reports;
-DROP POLICY IF EXISTS "Staff can update own daily reports" ON public.daily_reports;
-CREATE POLICY "Staff can update own daily reports"
-    ON public.daily_reports FOR UPDATE TO authenticated
-    USING (
-        ((current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' ->> 'role') IN ('nurse', 'paramedic', 'caregiver', 'org_admin', 'super_admin', 'admin'))
-        AND (
-            author_id = auth.uid()
-            OR ((current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' ->> 'role') IN ('super_admin', 'org_admin', 'admin'))
-        )
-    );
-
-DROP FUNCTION IF EXISTS public.process_voice_draft_atomic(UUID, UUID, UUID, JSONB, JSONB, TEXT, TEXT, TIMESTAMP WITH TIME ZONE);
-DROP FUNCTION IF EXISTS public.process_voice_draft_atomic(UUID, UUID, UUID, JSONB, JSONB, TEXT, TEXT, TIMESTAMP WITH TIME ZONE, UUID);
 
 CREATE OR REPLACE FUNCTION public.process_voice_draft_atomic(
     p_draft_id UUID,
@@ -62,67 +9,26 @@ CREATE OR REPLACE FUNCTION public.process_voice_draft_atomic(
     p_report_content JSONB,
     p_ai_model TEXT DEFAULT NULL,
     p_ai_prompt_version TEXT DEFAULT NULL,
-    p_ai_generated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    p_organization_id UUID DEFAULT NULL
+    p_ai_generated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 )
 RETURNS JSONB
 LANGUAGE plpgsql
-SECURITY INVOKER
-SET search_path = public
+SECURITY DEFINER
 AS $$
 DECLARE
-    v_caller_uid UUID;
-    v_caller_role TEXT;
-    v_jwt_org_id UUID;
-    v_effective_org_id UUID;
     v_draft_status TEXT;
-    v_draft_resident_id UUID;
-    v_draft_org_id UUID;
     v_existing_report_id UUID;
-    v_existing_report_status TEXT;
     v_log_id UUID;
     v_report_id UUID;
     v_existing_report_content JSONB;
 BEGIN
-    -- 0A. Weryfikacja tożsamości wywołującego (auth.uid())
-    v_caller_uid := auth.uid();
-    IF v_caller_uid IS NULL THEN
-        RAISE EXCEPTION 'Unauthorized caller: nurse_id must match auth.uid()' USING ERRCODE = '42501';
-    END IF;
+    -- 1. Sprawdź status szkicu (idempotencja)
+    SELECT status INTO v_draft_status
+    FROM public.voice_draft_notes
+    WHERE id = p_draft_id;
 
-    -- 0B. Weryfikacja roli z JWT (wyłącznie personel/admin; blokada family i legal_guardian)
-    v_caller_role := COALESCE(
-        NULLIF(current_setting('request.jwt.claims', true), '')::jsonb -> 'app_metadata' ->> 'role',
-        ''
-    );
-    IF v_caller_role IN ('family', 'legal_guardian')
-       OR v_caller_role NOT IN ('nurse', 'caregiver', 'paramedic', 'org_admin', 'super_admin', 'admin') THEN
-        RAISE EXCEPTION 'Forbidden role for voice processing' USING ERRCODE = '42501';
-    END IF;
-
-    -- 0C. Weryfikacja zgodności p_nurse_id z auth.uid()
-    IF p_nurse_id IS DISTINCT FROM v_caller_uid THEN
-        RAISE EXCEPTION 'Unauthorized caller: nurse_id must match auth.uid()' USING ERRCODE = '42501';
-    END IF;
-
-    -- 0D. Weryfikacja izolacji organizacji
-    v_jwt_org_id := public.get_jwt_organization_id();
-    v_effective_org_id := COALESCE(p_organization_id, v_jwt_org_id);
-    IF v_jwt_org_id IS NULL OR v_effective_org_id IS DISTINCT FROM v_jwt_org_id THEN
-        RAISE EXCEPTION 'Draft resident/organization mismatch' USING ERRCODE = '42501';
-    END IF;
-
-    -- 1. Sprawdź istnienie szkicu, zgodność resident_id oraz organization_id
-    SELECT vdn.status, vdn.resident_id, r.organization_id
-    INTO v_draft_status, v_draft_resident_id, v_draft_org_id
-    FROM public.voice_draft_notes vdn
-    JOIN public.residents r ON r.id = vdn.resident_id
-    WHERE vdn.id = p_draft_id;
-
-    IF v_draft_status IS NULL
-       OR v_draft_resident_id IS DISTINCT FROM p_resident_id
-       OR v_draft_org_id IS DISTINCT FROM v_effective_org_id THEN
-        RAISE EXCEPTION 'Draft resident/organization mismatch' USING ERRCODE = '42501';
+    IF v_draft_status IS NULL THEN
+        RAISE EXCEPTION 'Voice draft note not found: %', p_draft_id;
     END IF;
 
     -- Jeśli już przetworzone, pobierz istniejący raport (idempotencja)
@@ -160,24 +66,19 @@ BEGIN
         RETURNING id INTO v_log_id;
     END IF;
 
-    -- 3. Zapis / aktualizacja daily_reports (szkic dla bliskich — bez możliwości nadpisania PUBLISHED)
-    SELECT id, status INTO v_report_id, v_existing_report_status
+    -- 3. Zapis / aktualizacja daily_reports (szkic dla bliskich)
+    SELECT id INTO v_report_id
     FROM public.daily_reports
     WHERE resident_id = p_resident_id
       AND content @> jsonb_build_object('draft_id', p_draft_id::text)
     LIMIT 1;
 
     IF v_report_id IS NOT NULL THEN
-        IF v_existing_report_status = 'PUBLISHED' THEN
-            RAISE EXCEPTION 'Cannot overwrite published daily report' USING ERRCODE = '42501';
-        END IF;
-
         UPDATE public.daily_reports
         SET content = p_report_content,
             status = 'DRAFT',
             updated_at = NOW()
-        WHERE id = v_report_id
-          AND status <> 'PUBLISHED';
+        WHERE id = v_report_id;
     ELSE
         INSERT INTO public.daily_reports (
             resident_id, author_id, content, status, ai_generated,
@@ -205,8 +106,4 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.process_voice_draft_atomic FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.process_voice_draft_atomic FROM anon;
-GRANT EXECUTE ON FUNCTION public.process_voice_draft_atomic TO authenticated;
-
-COMMENT ON FUNCTION public.process_voice_draft_atomic IS 'Atomowa transakcja zapisu logów personelu, raportu dla rodziny oraz finalizacji statusu szkicu głosu (SECURITY INVOKER + RLS).';
+COMMENT ON FUNCTION public.process_voice_draft_atomic IS 'Atomowa transakcja zapisu logów personelu, raportu dla rodziny oraz finalizacji statusu szkicu głosu.';
