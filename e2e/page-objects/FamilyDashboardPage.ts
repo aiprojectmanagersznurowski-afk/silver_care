@@ -40,10 +40,25 @@ export class FamilyDashboardPage {
 
   async dismissOnboardingModalIfExists() {
     const confirmButton = this.page.locator('button:has-text("Rozumiem, przejdź do panelu")');
+    const dialogOverlay = this.page.locator('[data-slot="dialog-overlay"]');
     try {
-      if (await confirmButton.isVisible({ timeout: 2000 })) {
+      await this.page.locator('text=Ładowanie zawartości...').waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {});
+      const hasSeen = await this.page.evaluate(() => {
+        try {
+          return window.localStorage.getItem('silvercare_onboarding_seen') === 'true';
+        } catch {
+          return false;
+        }
+      });
+      if (!hasSeen) {
+        await confirmButton.waitFor({ state: 'visible', timeout: 5000 });
         await confirmButton.click();
-        await expect(confirmButton).toBeHidden({ timeout: 3000 });
+        await expect(confirmButton).toBeHidden({ timeout: 5000 });
+        await expect(dialogOverlay).toBeHidden({ timeout: 5000 });
+      } else if (await confirmButton.isVisible()) {
+        await confirmButton.click();
+        await expect(confirmButton).toBeHidden({ timeout: 5000 });
+        await expect(dialogOverlay).toBeHidden({ timeout: 5000 });
       }
     } catch {
       // Jeśli modal się nie pojawił, ignorujemy

@@ -45,7 +45,7 @@ export async function POST(req: Request) {
     }
 
     const role = user.app_metadata?.role as string | undefined
-    if (role === 'family') {
+    if (role !== 'nurse') {
       return NextResponse.json({ error: 'Brak uprawnień personelu' }, { status: 403 })
     }
 
