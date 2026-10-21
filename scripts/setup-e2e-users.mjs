@@ -14,6 +14,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
 import postgres from 'postgres';
+import { buildExistingUserUpdate, buildNewUserCreate } from './lib/e2e-user-attributes.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
@@ -73,28 +74,13 @@ export async function setupE2EUsers() {
   for (const [key, config] of Object.entries(testUsers)) {
     const existing = existingMap.get(config.email.toLowerCase());
     if (existing) {
-      // Aktualizuj hasło i metadane roli
-      await supabase.auth.admin.updateUserById(existing.id, {
-        password: E2E_PASSWORD,
-        email_confirm: true,
-        app_metadata: {
-          role: config.role,
-          organization_id: config.organization_id,
-        },
-      });
+      // Aktualizuj hasło, metadane roli i zdejmij ewentualną blokadę konta
+      await supabase.auth.admin.updateUserById(existing.id, buildExistingUserUpdate(E2E_PASSWORD, config));
       createdIds[key] = existing.id;
       console.log(`  ✓ Zaktualizowano konto ${config.role} (${config.email})`);
     } else {
       // Utwórz nowe konto
-      const { data, error } = await supabase.auth.admin.createUser({
-        email: config.email,
-        password: E2E_PASSWORD,
-        email_confirm: true,
-        app_metadata: {
-          role: config.role,
-          organization_id: config.organization_id,
-        },
-      });
+      const { data, error } = await supabase.auth.admin.createUser(buildNewUserCreate(E2E_PASSWORD, config));
       if (error) throw error;
       createdIds[key] = data.user.id;
       console.log(`  ✓ Utworzono konto ${config.role} (${config.email})`);
