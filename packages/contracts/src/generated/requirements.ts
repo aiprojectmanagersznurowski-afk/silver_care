@@ -494,12 +494,13 @@ export const REQUIREMENTS = [
     "risk": "MEDIUM",
     "source": "SC-FAM-04",
     "domain": "family",
-    "statement": "Bliski zostawia wiadomość dla personelu bez dzwonienia na dyżurkę.",
+    "statement": "Bliski zostawia wiadomość dla kierownika / administratora placówki bez dzwonienia na dyżurkę.",
     "acceptance": [
       "Wiadomości są niezmienialne po wysłaniu",
       "Limit trzech wiadomości na godzinę na konto",
       "Przekroczenie limitu pokazuje czytelny komunikat, nie błąd techniczny",
-      "Wysyłka wymaga aktywnego powiązania"
+      "Wysyłka wymaga aktywnego powiązania",
+      "Dostęp do odczytu i odpowiedzi po stronie placówki posiada wyłącznie org_admin (brak dostępu dla roli nurse)"
     ]
   },
   {

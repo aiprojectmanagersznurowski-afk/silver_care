@@ -36,7 +36,7 @@ export default async function AdminStaffPage() {
 
   const staff = (users || []).filter(u => 
     (!orgId || u.app_metadata?.organization_id === orgId) &&
-    (u.app_metadata?.role === 'nurse' || u.app_metadata?.role === 'paramedic' || u.app_metadata?.role === 'caregiver')
+    u.app_metadata?.role === 'nurse'
   )
 
   const cookieStore = await cookies()
@@ -49,7 +49,7 @@ export default async function AdminStaffPage() {
           <h2 className="text-3xl font-display font-semibold tracking-tight text-foreground">
             Personel
           </h2>
-          <p className="mt-2 text-muted-foreground">Zarządzaj zespołem opiekunów i pielęgniarek.</p>
+          <p className="mt-2 text-muted-foreground">Zarządzaj zespołem wsparcia i personelu opiekuńczego.</p>
         </div>
         {!isImpersonating ? (
           <InviteStaffDialog />
@@ -96,11 +96,7 @@ export default async function AdminStaffPage() {
                       </div>
                     </TableCell>
                     <TableCell className="text-foreground">
-                      {staffUser.app_metadata?.role === 'nurse' 
-                        ? 'Pielęgniarka / Pielęgniarz' 
-                        : staffUser.app_metadata?.role === 'caregiver'
-                        ? 'Opiekun / Opiekunka'
-                        : 'Sanitariusz / Sanitariuszka'}
+                      Personel opiekuńczy / Wsparcie
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {staffUser.last_sign_in_at 

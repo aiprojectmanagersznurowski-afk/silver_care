@@ -225,12 +225,12 @@ export const MATRIX = [
   {
     "resource": "family_messages",
     "read": [
-      "nurse:own",
       "org_admin:own",
       "legal_guardian:own",
       "family:own"
     ],
     "create": [
+      "org_admin:own",
       "legal_guardian:own",
       "family:own"
     ],

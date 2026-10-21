@@ -15,8 +15,8 @@ import { StaffMessagesPage } from './page-objects/StaffMessagesPage.spec.helper'
  * - AC4: Zdjęcie wskaźnika po wysłaniu odpowiedzi.
  */
 
-test.describe('Wskaźnik nieodpowiedzianych wiadomości i odpowiedź głosowa (@REQ: NUR-BOARD, @REQ: FAM-MESSAGES, @REQ: INFRA-GROQ-TRANSCRIPTION)', () => {
-  test('@REQ: NUR-BOARD - Panel dyżuru personelu prezentuje filtr i wskaźniki oczekujących wiadomości od rodzin', async ({
+test.describe('Skrzynka wiadomości kierownika placówki i odpowiedź głosowa (@REQ: NUR-BOARD, @REQ: FAM-MESSAGES, @REQ: INFRA-GROQ-TRANSCRIPTION)', () => {
+  test('@REQ: NUR-BOARD - Panel dyżuru personelu (nurse) nie eksponuje wiadomości od rodzin, które są widoczne tylko dla org_admin', async ({
     loginPage,
     page,
   }) => {
@@ -25,45 +25,21 @@ test.describe('Wskaźnik nieodpowiedzianych wiadomości i odpowiedź głosowa (@
     await boardPage.goto();
     await boardPage.expectStaffBoardLoaded();
 
-    // Weryfikacja obecności dedykowanego filtra oczekujących wiadomości w pasku filtrów
-    const messagesFilterToken = page.locator('[data-testid="filter-unanswered-messages"]').first();
-    await expect(messagesFilterToken).toBeVisible();
-
-    // Weryfikacja obecności wskaźnika na kafelkach pensjonariuszy z wiadomością od rodziny
-    const unansweredBadges = page.locator('[data-testid="unanswered-message-badge"]');
-    // Jeżeli placówka posiada wiadomości, wskaźniki powinny być widoczne
-    const count = await unansweredBadges.count();
-    if (count > 0) {
-      await expect(unansweredBadges.first()).toBeVisible();
-      // Każdy wskaźnik powinien zawierać link lub prowadzić do wątku wiadomości
-      const messageLink = page.locator('a[href^="/staff/messages?residentId="]').first();
-      await expect(messageLink).toBeVisible();
-    }
+    await expect(page.locator('[data-testid="filter-unanswered-messages"]')).toHaveCount(0);
+    await expect(page.locator('[data-testid="unanswered-message-badge"]')).toHaveCount(0);
   });
 
-  test('@REQ: FAM-MESSAGES - Nawigacja z kafelka podopiecznego bezpośrednio do wątku w skrzynce wiadomości', async ({
+  test('@REQ: FAM-MESSAGES - Nawigacja do skrzynki wiadomości kierownika placówki (/admin/messages)', async ({
     loginPage,
     page,
   }) => {
-    await loginPage.loginAs('nurse');
-    const boardPage = new StaffBoardPage(page);
-    await boardPage.goto();
-    await boardPage.expectStaffBoardLoaded();
-
-    // Jeśli jest link do wiadomości na kafelku, klikamy w niego
-    const messageLink = page.locator('a[href^="/staff/messages?residentId="]').first();
-    if (await messageLink.isVisible()) {
-      const href = await messageLink.getAttribute('href');
-      await messageLink.click();
-      await page.waitForURL(`**${href}`);
-
-      const messagesPage = new StaffMessagesPage(page);
-      await messagesPage.expectPageLoaded();
-      await expect(messagesPage.conversationHeader).toBeVisible();
-    }
+    await loginPage.loginAs('org_admin');
+    const messagesPage = new StaffMessagesPage(page);
+    await messagesPage.goto();
+    await messagesPage.expectPageLoaded();
   });
 
-  test('@REQ: INFRA-GROQ-TRANSCRIPTION - Skrzynka wiadomości oferuje przycisk dyktowania odpowiedzi głosowej i transkrypcję', async ({
+  test('@REQ: INFRA-GROQ-TRANSCRIPTION - Skrzynka wiadomości kierownika (/admin/messages) oferuje przycisk dyktowania odpowiedzi głosowej i transkrypcję', async ({
     loginPage,
     page,
     context,
@@ -127,7 +103,7 @@ test.describe('Wskaźnik nieodpowiedzianych wiadomości i odpowiedź głosowa (@
       });
     });
 
-    await loginPage.loginAs('nurse');
+    await loginPage.loginAs('org_admin');
     const messagesPage = new StaffMessagesPage(page);
     await messagesPage.goto();
     await messagesPage.expectPageLoaded();

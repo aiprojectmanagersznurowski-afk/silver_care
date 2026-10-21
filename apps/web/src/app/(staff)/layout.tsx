@@ -4,7 +4,6 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { StaffSidebar } from '@/components/StaffSidebar'
 import { cookies } from 'next/headers'
-import { StaffNotificationBell } from '@/components/StaffNotificationBell'
 import { GlobalCommandPalette } from '@/components/GlobalCommandPalette'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
@@ -34,7 +33,6 @@ export default async function StaffLayout({ children }: { children: ReactNode })
               <span className="text-sm font-medium">Panel personelu</span>
             </div>
             <div className="flex items-center gap-2">
-              <StaffNotificationBell />
               <GlobalCommandPalette userRole={role} />
             </div>
           </div>

@@ -9,7 +9,12 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Admin policy in Supabase (family_messages_admin_select) will ensure 
+  const role = user.app_metadata?.role as string | undefined;
+  if (role !== 'org_admin' && role !== 'admin') {
+    return NextResponse.json({ error: 'Brak uprawnień administratora placówki' }, { status: 403 });
+  }
+
+  // Admin policy in Supabase (family_messages_select) ensures 
   // only org_admin can read these and only from their organization.
   const { data, error } = await supabase
     .from('family_messages')
@@ -41,6 +46,11 @@ export async function POST(request: Request) {
 
   if (authError || !user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const role = user.app_metadata?.role as string | undefined;
+  if (role !== 'org_admin' && role !== 'admin') {
+    return NextResponse.json({ error: 'Brak uprawnień administratora placówki' }, { status: 403 });
   }
 
   try {

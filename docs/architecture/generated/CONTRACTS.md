@@ -49,7 +49,7 @@ Dane są zbierane i dostępne personelowi. Zakaz dotyczy prezentacji bliskim, ni
 | F3 | `access_revoked` | FAMILY | EMAIL |
 | S1 | `missing_note_evening` | NURSE | IN_APP |
 | S2 | `voice_sync_completed` | NURSE | IN_APP |
-| S3 | `family_message_received` | NURSE | IN_APP |
+| S3 | `family_message_received` | ORG_ADMIN | IN_APP |
 | A1 | `device_sync_stale` | ORG_ADMIN | IN_APP, EMAIL |
 | A2 | `consent_expiring` | ORG_ADMIN | EMAIL |
 | A3 | `ingest_rejected_repeatedly` | ORG_ADMIN | EMAIL |
@@ -127,7 +127,7 @@ Bazowy rozmiar 16px · minimalny kontrast 4.5:1 · cel dotykowy 44px
 | FAM-ONBOARDING | family | MEDIUM | Bliski zakłada konto z zaproszenia i akceptuje zgody. |
 | FAM-DASHBOARD | family | MEDIUM | Bliski widzi najnowszy zatwierdzony raport dnia. |
 | FAM-MULTI-RESIDENT | family | MEDIUM | Bliski powiązany z kilkoma pensjonariuszami przełącza kontekst. |
-| FAM-MESSAGES | family | MEDIUM | Bliski zostawia wiadomość dla personelu bez dzwonienia na dyżurkę. |
+| FAM-MESSAGES | family | MEDIUM | Bliski zostawia wiadomość dla kierownika / administratora placówki bez dzwonienia na dyżurkę. |
 | FAM-AGENDA | family | MEDIUM | Bliski widzi plan dnia pensjonariusza. |
 | NUR-BOARD | staff | MEDIUM | Personel widzi tablicę pensjonariuszy ze statusem notatek. |
 | NUR-AGENDA | staff | MEDIUM | Personel zarządza planem dnia placówki. |

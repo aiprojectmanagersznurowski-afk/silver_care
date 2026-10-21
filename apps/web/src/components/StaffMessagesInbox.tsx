@@ -98,7 +98,7 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
             <MessageSquare className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-base font-semibold text-foreground font-display">Skrzynka wiadomości personelu</h3>
+            <h3 className="text-base font-semibold text-foreground font-display">Skrzynka wiadomości placówki</h3>
             <p className="text-sm text-muted-foreground">Bezpośrednia komunikacja z bliskimi pensjonariuszy placówki.</p>
           </div>
         </div>

@@ -98,7 +98,7 @@ export function StaffNotificationBell() {
                   data-testid={`notification-thread-${thread.residentId}`}
                   render={
                     <Link
-                      href={`/staff/messages?residentId=${thread.residentId}`}
+                      href={`/admin/messages?residentId=${thread.residentId}`}
                       className="flex flex-col items-start gap-1 p-2.5 rounded-lg cursor-pointer hover:bg-accent/60 transition-colors"
                     />
                   }
@@ -125,7 +125,7 @@ export function StaffNotificationBell() {
         <DropdownMenuItem
           render={
             <Link
-              href="/staff/messages"
+              href="/admin/messages"
               className="flex w-full items-center justify-center py-2 text-center text-sm font-medium text-primary hover:text-primary/80 transition-colors cursor-pointer"
             />
           }
