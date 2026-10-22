@@ -14,7 +14,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
 import postgres from 'postgres';
-import { buildExistingUserUpdate, buildNewUserCreate } from './lib/e2e-user-attributes.mjs';
+import { buildExistingUserUpdate, buildNewUserCreate, buildTestUsers } from './lib/e2e-user-attributes.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
@@ -43,28 +43,7 @@ export async function setupE2EUsers() {
   const orgs = await sql`SELECT id FROM public.organizations LIMIT 1`;
   const mainOrgId = orgs.length > 0 ? orgs[0].id : '9d9b1de9-8f38-48c8-8b5b-721901fed8ff';
 
-  const testUsers = {
-    super_admin: {
-      email: 'e2e.superadmin@silvercare.test',
-      role: 'super_admin',
-      organization_id: mainOrgId,
-    },
-    org_admin: {
-      email: 'e2e.admin@silvercare.test',
-      role: 'org_admin',
-      organization_id: mainOrgId,
-    },
-    nurse: {
-      email: 'e2e.nurse@silvercare.test',
-      role: 'nurse',
-      organization_id: mainOrgId,
-    },
-    family: {
-      email: 'e2e.family@silvercare.test',
-      role: 'family',
-      organization_id: mainOrgId,
-    },
-  };
+  const testUsers = buildTestUsers(mainOrgId);
   const { data: existingUsersData, error: listErr } = await supabase.auth.admin.listUsers({ page: 1, perPage: 100 });
   if (listErr) throw listErr;
 
