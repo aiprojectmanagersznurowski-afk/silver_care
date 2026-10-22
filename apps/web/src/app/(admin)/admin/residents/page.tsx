@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card'
 import { AdmissionWizard } from '@/components/AdmissionWizard'
 import { BulkImportDialog } from '@/components/BulkImportDialog'
 import { ExportDataDialog } from '@/components/ExportDataDialog'
+import { PageHeader, PageHeaderNotice } from '@/components/patterns/PageHeader'
 import { ShieldAlert } from 'lucide-react'
 import { isImpersonationSessionActive, maskResidentListForImpersonation } from '@/lib/impersonation-guards'
 import { AdminResidentsClient, type ResidentWithAssignments } from '@/components/AdminResidentsClient'
@@ -28,25 +29,19 @@ export default async function AdminResidentsPage() {
 
   return (
     <div className="space-y-6 sm:space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-display font-semibold tracking-tight text-foreground">
-            Podopieczni
-          </h2>
-          <p className="mt-2 text-muted-foreground">Zarządzaj bazą podopiecznych w swojej placówce.</p>
-        </div>
-        {!isImpersonating ? (
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+      <PageHeader
+        title="Podopieczni"
+        description="Zarządzaj bazą podopiecznych w swojej placówce."
+        actions={!isImpersonating ? (
+          <>
             <ExportDataDialog />
             <BulkImportDialog />
             <AdmissionWizard />
-          </div>
+          </>
         ) : (
-          <div className="flex items-center gap-2 rounded-xl bg-muted px-4 py-2 text-sm font-medium text-foreground border border-border">
-            <span>Tryb podglądu (impersonacja) — formularze i eksport wyłączone</span>
-          </div>
+          <PageHeaderNotice>Tryb podglądu (impersonacja) — formularze i eksport wyłączone</PageHeaderNotice>
         )}
-      </div>
+      />
 
       {masked ? (
         <Card className="rounded-xl border border-border bg-primary p-8 text-center">
