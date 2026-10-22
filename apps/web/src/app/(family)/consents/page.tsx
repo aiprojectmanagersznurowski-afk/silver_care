@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import { ShieldCheck, ShieldAlert, Lock, CheckCircle2, History, AlertCircle } from 'lucide-react'
 import { format } from 'date-fns'
 import { pl } from 'date-fns/locale'
+import { PageHeader } from '@/components/patterns/PageHeader'
 
 const PURPOSE_LABELS: Record<string, { title: string; desc: string }> = {
   wellness_data_ingest: {
@@ -70,9 +71,11 @@ export default async function FamilyConsentsPage() {
   return (
     <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8 pb-12">
       {/* Nagłówek sekcji */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
+      <PageHeader
+        title="Zgody i ochrona prywatności"
+        description={<>Podopieczny: <span className="font-semibold text-foreground">{activeResident.first_name} {activeResident.last_name}</span></>}
+        actions={
+          <>
             <Badge variant="outline" className="text-sm bg-primary/10 border-primary/20 text-primary gap-1">
               <ShieldCheck className="w-3.5 h-3.5" />
               Art. 9 RODO & Rejestr Zgód
@@ -80,22 +83,15 @@ export default async function FamilyConsentsPage() {
             <Badge variant="outline" className="text-sm text-muted-foreground">
               Append-Only
             </Badge>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-display font-bold tracking-tight text-foreground">
-            Zgody i ochrona prywatności
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Podopieczny: <span className="font-semibold text-foreground">{activeResident.first_name} {activeResident.last_name}</span>
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 bg-muted/60 px-4 py-2 rounded-xl border border-border text-sm text-muted-foreground">
-          <span>Rola konta:</span>
-          <span className="font-semibold text-foreground">
-            {isLegalGuardian ? 'Opiekun prawny (pełne uprawnienia)' : 'Członek rodziny (obserwator)'}
-          </span>
-        </div>
-      </div>
+            <div className="flex items-center gap-2 bg-muted/60 px-4 py-2 rounded-xl border border-border text-sm text-muted-foreground">
+              <span>Rola konta:</span>
+              <span className="font-semibold text-foreground">
+                {isLegalGuardian ? 'Opiekun prawny (pełne uprawnienia)' : 'Członek rodziny (obserwator)'}
+              </span>
+            </div>
+          </>
+        }
+      />
 
       {/* Rola 'family' - komunikat edukacyjny o rozgraniczeniu uprawnień */}
       {!isLegalGuardian && (
