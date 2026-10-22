@@ -17,7 +17,7 @@ export class IamPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.heading = page.locator('h2:has-text("Zarządzanie Dostępem i Tożsamością (IAM)")');
+    this.heading = page.locator(':is(h1, h2):has-text("Zarządzanie Dostępem i Tożsamością (IAM)")');
     this.usersTable = page.locator('table[aria-label="Tabela użytkowników i ról IAM"]');
     this.resetPasswordModal = page.locator('[role="dialog"]');
     this.resetPasswordTitle = page.locator('text=Resetuj hasło użytkownika');

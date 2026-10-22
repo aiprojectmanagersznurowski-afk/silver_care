@@ -15,7 +15,7 @@ export class OrganizationManagementPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.heading = page.locator('h2:has-text("Zarządzanie Placówkami")');
+    this.heading = page.locator(':is(h1, h2):has-text("Zarządzanie Placówkami")');
     this.tableViewBtn = page.locator('button[aria-label="Widok tabeli"], button:has-text("Tabela")');
     this.cardsViewBtn = page.locator('button[aria-label="Widok kafelków"], button:has-text("Kafelki")');
     this.table = page.locator('table');
