@@ -80,7 +80,21 @@ describe('Database FAM-MESSAGES (Family Messages RLS)', () => {
       } catch (e) { errGuardianRes1 = e; }
       expect(errGuardianRes1).not.toBeNull();
 
-      // 4. Switch to org_admin and verify admin can see both messages
+      // 4. Switch to nurse and verify nurse CANNOT read or insert messages
+      const nurseUid = '44444444-4444-4444-4444-444444444444';
+      await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "${nurseUid}", "app_metadata": {"role": "nurse", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
+      const nurseView = await tx`SELECT id, content FROM family_messages WHERE organization_id = ${orgId}`;
+      expect(nurseView).toHaveLength(0);
+
+      let errNurseInsert = null;
+      try {
+        await tx.savepoint(async (sp) => {
+          await sp`INSERT INTO family_messages (organization_id, resident_id, relative_user_id, content, is_from_family, staff_user_id) VALUES (${orgId}, ${res1[0].id}, ${familyUid}, 'Reply from Nurse', false, ${nurseUid})`;
+        });
+      } catch (e) { errNurseInsert = e; }
+      expect(errNurseInsert).not.toBeNull();
+
+      // 5. Switch to org_admin and verify admin can see both messages
       await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
       const adminView = await tx`SELECT id, content FROM family_messages WHERE organization_id = ${orgId} ORDER BY created_at ASC`;
       expect(adminView).toHaveLength(2);

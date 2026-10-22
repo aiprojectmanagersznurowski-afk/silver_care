@@ -61,7 +61,7 @@ export const MATRIX = [
   { resource: 'daily_reports',           read: ['nurse:own', 'org_admin:own', 'legal_guardian:own', 'family:own'], create: ['nurse'], update: ['nurse:own', 'org_admin:own'], delete: [] },
   { resource: 'daily_agenda',            read: ['nurse:own', 'org_admin:own', 'legal_guardian:own', 'family:own'], create: ['nurse'], update: ['nurse:own'], delete: ['org_admin:own'] },
   { resource: 'voice_draft_notes',       read: ['nurse:own'],                               create: ['nurse'],        update: [],                         delete: ['nurse:own'] },
-  { resource: 'family_messages',         read: ['nurse:own', 'org_admin:own', 'legal_guardian:own', 'family:own'], create: ['legal_guardian:own', 'family:own'], update: [], delete: [] },
+  { resource: 'family_messages',         read: ['org_admin:own', 'legal_guardian:own', 'family:own'], create: ['org_admin:own', 'legal_guardian:own', 'family:own'], update: [], delete: [] },
   { resource: 'invitations',             read: ['org_admin:own'],                           create: ['org_admin'],    update: ['org_admin:own'],          delete: [] },
   { resource: 'external_wearable_links', read: ['org_admin:own'],                           create: ['org_admin'],    update: ['org_admin:own'],          delete: [] },
   { resource: 'wellness_daily',          read: ['org_admin:own', 'nurse:own', 'legal_guardian:own', 'family:own'], create: [], update: [], delete: [] },

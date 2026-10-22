@@ -134,10 +134,8 @@ export function InviteStaffDialog() {
                 onChange={(e) => setRole(e.target.value)}
                 className="flex w-full items-center justify-between disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <NativeSelectOption value="nurse">Pielęgniarka / Pielęgniarz</NativeSelectOption>
-                <NativeSelectOption value="caregiver">Opiekun / Opiekunka (caregiver)</NativeSelectOption>
-                <NativeSelectOption value="paramedic">Sanitariusz / Sanitariuszka</NativeSelectOption>
-                <NativeSelectOption value="org_admin">Administrator Placówki (org_admin)</NativeSelectOption>
+                <NativeSelectOption value="nurse">Personel opiekuńczy / Wsparcie</NativeSelectOption>
+                <NativeSelectOption value="org_admin">Kierownik / Administrator Placówki</NativeSelectOption>
               </NativeSelect>
             </div>
           </div>

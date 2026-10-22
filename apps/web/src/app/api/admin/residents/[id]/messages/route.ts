@@ -13,14 +13,14 @@ export async function GET(
   }
 
   const role = user.app_metadata?.role as string | undefined;
-  if (!['org_admin', 'super_admin', 'nurse', 'paramedic', 'caregiver', 'admin'].includes(role || '')) {
+  if (!['org_admin', 'admin'].includes(role || '')) {
     return NextResponse.json({ error: 'Brak uprawnień do zasobów administracyjnych' }, { status: 403 });
   }
 
   const { id: resident_id } = await params;
 
   const orgId = user.app_metadata?.organization_id as string | undefined;
-  if (orgId && role !== 'super_admin') {
+  if (orgId) {
     const { data: resData } = await supabase
       .from('residents')
       .select('organization_id')

@@ -101,22 +101,22 @@ export const NOTIFICATIONS = [
   },
   {
     "id": "S3",
-    "domain": "STAFF",
+    "domain": "ADMIN",
     "trigger": "family_message_received",
     "channels": [
       "IN_APP"
     ],
-    "recipient": "NURSE",
+    "recipient": "ORG_ADMIN",
     "vars": [
       "resident_initials"
     ],
     "containsPersonalData": false,
-    "templateKey": "staff.family_message",
+    "templateKey": "admin.family_message",
     "req": [
       "FAM-MESSAGES"
     ],
     "status": "STABLE",
-    "note": "Inicjały zamiast pełnego nazwiska."
+    "note": "Inicjały zamiast pełnego nazwiska — powiadomienie wyłącznie dla administratora placówki."
   },
   {
     "id": "A1",

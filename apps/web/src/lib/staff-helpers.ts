@@ -51,6 +51,6 @@ export function generateTemporaryPassword(): string {
  * Generuje poprawny URL do wątku wiadomości podopiecznego (UI-ACCESSIBILITY, FAM-MESSAGES).
  */
 export function getResidentMessagesHref(residentId: string): string {
-  return `/staff/messages?residentId=${encodeURIComponent(residentId)}`
+  return `/admin/messages?residentId=${encodeURIComponent(residentId)}`
 }
 

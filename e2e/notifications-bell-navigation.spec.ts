@@ -8,20 +8,16 @@ import { test, expect } from './fixtures/base-test';
  * na Portalu Rodziny oraz Portalu Personelu.
  */
 test.describe('Dzwonek alertów i wyróżnienia zakładek nawigacji (@REQ: FAM-MESSAGES, @REQ: NUR-BOARD)', () => {
-  test('@REQ: NUR-BOARD - Personel widzi dzwonek alertów systemowych w nagłówku i link do wiadomości', async ({
+  test('@REQ: FAM-MESSAGES - Kierownik placówki (org_admin) widzi dzwonek alertów systemowych w nagłówku i link do wiadomości', async ({
     loginPage,
     page,
   }) => {
-    await loginPage.loginAs('nurse');
-    await expect(page).toHaveURL(/\/staff/);
+    await loginPage.loginAs('org_admin');
+    await expect(page).toHaveURL(/\/admin/);
 
-    // Dzwonek alertów systemowych w nagłówku panelu personelu
+    // Dzwonek alertów systemowych w nagłówku panelu administratora
     const bellButton = page.locator('[data-testid="staff-notifications-bell"]');
     await expect(bellButton).toBeVisible();
-
-    // Pozycja Wiadomości w menu bocznym personelu
-    const messagesSidebarLink = page.locator('a[href="/staff/messages"]').first();
-    await expect(messagesSidebarLink).toBeVisible();
 
     // Rozwinięcie menu dzwonka
     await bellButton.click();
@@ -30,12 +26,24 @@ test.describe('Dzwonek alertów i wyróżnienia zakładek nawigacji (@REQ: FAM-M
     await expect(dropdown).toContainText(/Alerty i wiadomości|Powiadomienia/i);
 
     // Link do skrzynki wiadomości w dropdownie
-    const goToMessagesLink = dropdown.locator('a[href="/staff/messages"]');
+    const goToMessagesLink = dropdown.locator('a[href="/admin/messages"]');
     await expect(goToMessagesLink).toBeVisible();
 
-    // Przejście do skrzynki wiadomości z poziomu powiadomień
-    await goToMessagesLink.click();
-    await page.waitForURL('**/staff/messages');
+    // Zamknięcie menu dzwonka
+    await page.keyboard.press('Escape');
+    await expect(dropdown).not.toBeVisible();
+
+    // Pozycja Wiadomości w menu bocznym administratora (otwieramy szufladę jeśli mobile)
+    const sidebarTrigger = page.locator('[data-slot="sidebar-trigger"]');
+    if (await sidebarTrigger.isVisible()) {
+      await sidebarTrigger.click();
+    }
+    const messagesSidebarLink = page.locator('a[href="/admin/messages"]').first();
+    await expect(messagesSidebarLink).toBeVisible();
+
+    // Przejście do skrzynki wiadomości z menu bocznego
+    await messagesSidebarLink.click();
+    await page.waitForURL('**/admin/messages');
     await expect(page.locator('h1')).toContainText('Wiadomości');
   });
 
@@ -52,8 +60,8 @@ test.describe('Dzwonek alertów i wyróżnienia zakładek nawigacji (@REQ: FAM-M
     const bellButton = page.locator('[data-testid="family-notifications-bell"]');
     await expect(bellButton).toBeVisible();
 
-    // Zakładka Wiadomości w menu nawigacyjnym rodziny
-    const messagesNavLink = page.locator('header a[href="/messages"]');
+    // Zakładka Wiadomości w menu nawigacyjnym rodziny (widoczna na desktopie lub mobile)
+    const messagesNavLink = page.locator('a[href="/messages"]:visible').first();
     await expect(messagesNavLink).toBeVisible();
     await expect(messagesNavLink).toContainText('Wiadomości');
 

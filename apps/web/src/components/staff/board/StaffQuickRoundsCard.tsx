@@ -79,7 +79,7 @@ export function StaffQuickRoundsCard({
                 Nowa wiadomość od rodziny
               </span>
               <Link
-                href={`/staff/messages?residentId=${resId}`}
+                href={`/admin/messages?residentId=${resId}`}
                 className="font-semibold text-primary hover:underline text-sm"
                 onClick={(e) => e.stopPropagation()}
               >

@@ -10,9 +10,9 @@ import { AppearancePage } from '../page-objects/AppearancePage';
  */
 
 const AUDIT: { role: 'org_admin' | 'super_admin' | 'nurse' | 'family'; paths: string[] }[] = [
-  { role: 'org_admin', paths: ['/admin', '/admin/residents', '/admin/facility', '/admin/staff', '/admin/invitations', '/admin/reports/statistics', '/admin/audit', '/settings/profile'] },
+  { role: 'org_admin', paths: ['/admin', '/admin/residents', '/admin/facility', '/admin/staff', '/admin/invitations', '/admin/messages', '/admin/reports/statistics', '/admin/audit', '/settings/profile'] },
   { role: 'super_admin', paths: ['/admin/organizations', '/admin/iam'] },
-  { role: 'nurse', paths: ['/staff', '/staff/agenda', '/staff/messages', '/staff/reports'] },
+  { role: 'nurse', paths: ['/staff', '/staff/agenda', '/staff/reports'] },
   { role: 'family', paths: ['/dashboard', '/agenda', '/messages'] },
 ];
 

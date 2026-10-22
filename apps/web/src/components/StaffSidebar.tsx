@@ -1,6 +1,6 @@
 'use client'
 
-import { Calendar, FileText, MessageSquare, Users, Mic } from 'lucide-react'
+import { Calendar, FileText, Users, Mic } from 'lucide-react'
 import Image from 'next/image'
 import { Logo } from '@/components/Logo'
 import Link from 'next/link'
@@ -16,9 +16,8 @@ import {
 } from '@/components/ui/sidebar'
 import { SidebarNav, type SidebarNavGroup } from '@/components/SidebarNav'
 import { SidebarAccount } from '@/components/SidebarAccount'
-import { useStaffUnansweredMessages } from '@/hooks/useStaffUnansweredMessages'
 
-export function getStaffNavGroups(unansweredCount = 0): SidebarNavGroup[] {
+export function getStaffNavGroups(): SidebarNavGroup[] {
   return [
     {
       label: 'Dyżur',
@@ -27,20 +26,13 @@ export function getStaffNavGroups(unansweredCount = 0): SidebarNavGroup[] {
         { href: '/staff/agenda', label: 'Agenda na dziś', icon: Calendar },
         { href: '/voice', label: 'Notatka głosowa', icon: Mic },
         { href: '/staff/reports', label: 'Raporty', icon: FileText },
-        {
-          href: '/staff/messages',
-          label: 'Wiadomości',
-          icon: MessageSquare,
-          badge: unansweredCount > 0 ? unansweredCount : undefined,
-        },
       ],
     },
   ]
 }
 
 export function StaffSidebar({ userEmail }: { userEmail: string | undefined }) {
-  const { unansweredCount } = useStaffUnansweredMessages()
-  const groups = getStaffNavGroups(unansweredCount)
+  const groups = getStaffNavGroups()
 
   return (
     <Sidebar collapsible="icon">
