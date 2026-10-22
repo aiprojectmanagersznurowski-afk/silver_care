@@ -52,6 +52,7 @@ W całym systemie obowiązuje jedna, niesprzeczna norma UI:
 - Tokeny są generowane z kontraktu do `packages/contracts/src/generated/tokens.css`. Nie wpisujesz wartości kolorów ani odstępów na sztywno — używasz zmiennych CSS.
 - **Kolor nie niesie oceny**: zakaz czerwieni/zieleni jako oceny stanu zdrowia. Czerwień wyłącznie dla błędów technicznych w panelu personelu.
 - **Metryki prezentujesz jako fakty**, bez wykresów sugerujących trend lub ocenę kondycji (ADR-005).
+- **Wspólne komponenty ekranu (ADR-017)**: nowy lub zmieniany ekran składa się z `apps/web/src/components/patterns/`: `PageHeader` (jedyny `h1` strony), `StatusBadge` (tony `neutral` i `brand`), `TableCard` z `TableStateRow` oraz `ListEmpty` / `ListLoading` / `ListError` (stany list). Nie pisz własnych nagłówków stron, plakietek statusu ani ramek tabel. Surową paletę Tailwind (np. `bg-amber-500`) blokuje reguła `ui-raw-palette`.
 
 ## Potok głosowy
 
