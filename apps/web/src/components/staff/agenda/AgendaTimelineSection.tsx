@@ -11,6 +11,7 @@ import {
   getItemSlot,
   isCurrentSlot,
 } from './agenda-types'
+import { StatusBadge } from '@/components/patterns/StatusBadge'
 
 interface AgendaTimelineSectionProps {
   items: AgendaItem[]
@@ -92,10 +93,10 @@ export function AgendaTimelineSection({
                         <div className="flex items-center gap-2">
                           <h4 className="font-semibold text-foreground text-base">{slot.label}</h4>
                           {isNow && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-primary/20 px-2 py-0.5 text-sm font-bold text-primary uppercase tracking-wide">
-                              <CheckCircle2 className="h-3 w-3" />
+                            <StatusBadge tone="brand">
+                              <CheckCircle2 />
                               Teraz
-                            </span>
+                            </StatusBadge>
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground">{slot.timeRange}</p>

@@ -9,6 +9,7 @@ import AddBedDialog from './AddBedDialog'
 import { isGroundFloor } from '@/lib/bed-allocation-optimizer'
 import type { RoomItem } from './room-helpers'
 import { getRoomGenderLabel } from './room-helpers'
+import { StatusBadge } from '@/components/patterns/StatusBadge'
 
 interface RoomGridViewProps {
   rooms: RoomItem[]
@@ -68,33 +69,21 @@ export function RoomGridView({
               {/* Transparentne reguły alokacji */}
               <div className="flex flex-wrap gap-1.5 text-sm">
                 {isGround ? (
-                  <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 font-medium text-foreground border border-border">
-                    <CheckCircle2 className="w-3 h-3 text-foreground" />
+                  <StatusBadge>
+                    <CheckCircle2 />
                     Parter (ZSN / leżący)
-                  </span>
+                  </StatusBadge>
                 ) : (
-                  <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-foreground border border-border">
-                    <Info className="w-3 h-3 text-muted-foreground" />
+                  <StatusBadge>
+                    <Info />
                     Wyższe piętro
-                  </span>
+                  </StatusBadge>
                 )}
 
-                <span
-                  className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 font-medium border ${
-                    genderInfo.variant === 'warning'
-                      ? 'bg-muted text-foreground border-border'
-                      : genderInfo.variant === 'male'
-                      ? 'bg-muted text-foreground border-border'
-                      : genderInfo.variant === 'female'
-                      ? 'bg-muted text-foreground border-border'
-                      : 'bg-muted text-foreground border-border'
-                  }`}
-                >
-                  {genderInfo.variant === 'warning' && (
-                    <AlertTriangle className="w-3 h-3 text-foreground" />
-                  )}
+                <StatusBadge>
+                  {genderInfo.variant === 'warning' && <AlertTriangle />}
                   {genderInfo.label}
-                </span>
+                </StatusBadge>
               </div>
 
               {/* Pasek postępu zajętości */}
