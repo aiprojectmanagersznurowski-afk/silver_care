@@ -48,6 +48,22 @@ export class PageConsistencyPage {
     });
   }
 
+  /** Widoczne tabele: ile leży poza wspólną ramką TableCard i jakie style mają ramki. */
+  async tableSnapshot(): Promise<{ tables: number; outsideCard: string[]; frames: string[] }> {
+    return this.page.evaluate(() => {
+      const tables = [...document.querySelectorAll('table')].filter((t) => (t as HTMLElement).offsetParent !== null);
+      const outsideCard = tables
+        .filter((t) => !t.closest('[data-slot="table-card"]'))
+        .map((t) => (t.querySelector('th')?.textContent ?? '').trim().slice(0, 30));
+      const frames = new Set<string>();
+      for (const card of document.querySelectorAll('[data-slot="table-card"]')) {
+        const cs = getComputedStyle(card);
+        frames.add([cs.borderTopLeftRadius, cs.borderTopWidth, cs.borderTopColor, cs.backgroundColor].join(' | '));
+      }
+      return { tables: tables.length, outsideCard, frames: [...frames] };
+    });
+  }
+
   async statusBadgeSnapshot(): Promise<BadgeSnapshot> {
     return this.page.evaluate(() => {
       const badges = [...document.querySelectorAll('[data-slot="status-badge"]')]
