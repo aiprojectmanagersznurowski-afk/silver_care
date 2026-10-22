@@ -59,6 +59,22 @@ describe('TableCard — jedna ramka tabeli', () => {
     expect(out).toContain('<table>');
   });
 
+  it('@REQ: UI-TEMPLATE-ALIGNMENT - nagłówek karty tabeli: h2, opis, ikona neutralna, akcje; bez tytułu brak nagłówka', () => {
+    const out = html(h(TableCard as never, {
+      title: 'Użytkownicy i Role',
+      description: 'Konta i uprawnienia.',
+      icon: h('svg', null),
+      actions: h('button', { type: 'button' }, 'Dodaj'),
+    }, h('table', null)));
+    expect(out).toContain('data-slot="table-card-header"');
+    expect(out).toMatch(/<h2 class="[^"]*text-lg[^"]*font-semibold[^"]*">Użytkownicy i Role<\/h2>/);
+    expect(out).toMatch(/<p class="[^"]*text-muted-foreground[^"]*">Konta i uprawnienia\.<\/p>/);
+    expect(out).toMatch(/data-slot="table-card-icon"[^>]*class="[^"]*bg-muted[^"]*"/);
+    expect(out).toContain('<button type="button">Dodaj</button>');
+    expect(out.indexOf('table-card-header')).toBeLessThan(out.indexOf('<table>'));
+    expect(html(h(TableCard as never, null, h('table', null)))).not.toContain('table-card-header');
+  });
+
   it('@REQ: UI-FOUR-STATES - TableStateRow rozciąga stan na wszystkie kolumny', () => {
     const empty = html(h('table', null, h('tbody', null, h(TableStateRow as never, { colSpan: 5, state: 'empty', title: 'Brak danych' }))));
     expect(empty).toMatch(/<td[^>]*colSpan="5"|<td[^>]*colspan="5"/);
