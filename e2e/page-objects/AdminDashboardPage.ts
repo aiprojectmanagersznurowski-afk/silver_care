@@ -20,7 +20,7 @@ export class AdminDashboardPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.mainHeading = page.locator('h2:has-text("Pulpit Główny"), h2:has-text("Pulpit Placówki"), h2:has-text("Placówki")').first();
+    this.mainHeading = page.locator(':is(h1, h2):has-text("Pulpit Główny"), :is(h1, h2):has-text("Pulpit Placówki"), :is(h1, h2):has-text("Placówki")').first();
     this.subHeading = page.locator('text=Szybki podgląd stanu placówki, text=Zarządzanie placówkami partnerskimi').first();
     this.logoutButton = page.locator('form[action="/auth/signout"] button[type="submit"]');
 
