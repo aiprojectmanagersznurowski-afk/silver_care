@@ -43,7 +43,7 @@ export default async function FamilyDashboard(props: { searchParams: Promise<{ d
           <form action="/auth/signout" method="post" className="w-full sm:w-auto">
             <button
               type="submit"
-              className="w-full rounded-full border border-border px-5 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
+              className="w-full min-h-11 rounded-full border border-border px-5 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors"
             >
               Wyloguj się
             </button>

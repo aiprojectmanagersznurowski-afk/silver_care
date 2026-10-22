@@ -8,6 +8,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from '../ui/dropdown-menu'
+import { StatusBadge } from '@/components/patterns/StatusBadge'
 
 interface ReplyItem {
   id: string
@@ -37,12 +38,9 @@ export function FamilyNotificationsDropdownContent({
           Powiadomienia
         </DropdownMenuLabel>
         {unreadCount > 0 && (
-          <span
-            data-testid="family-notifications-count"
-            className="rounded-full bg-destructive/15 px-2 py-0.5 text-sm font-semibold text-destructive border border-destructive/25"
-          >
+          <StatusBadge tone="brand" data-testid="family-notifications-count">
             {unreadCount} nowe
-          </span>
+          </StatusBadge>
         )}
       </div>
       <DropdownMenuSeparator />
