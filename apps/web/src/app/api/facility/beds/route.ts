@@ -1,18 +1,7 @@
 import { NextResponse } from 'next/server'
 import { withAuth } from '@/lib/api-auth'
 import { ApiError } from '@/lib/api-errors'
-
-interface BedAssignmentData {
-  id: string
-  assigned_at: string
-  unassigned_at: string | null
-  resident_id: string
-  residents: {
-    first_name: string
-    last_name: string
-    pesel_hash: string
-  } | null
-}
+import { BEDS_SELECT, mapBedsWithActiveAssignment } from '@/lib/facility-beds-mapper'
 
 /**
  * @REQ: ADM-FACILITY-OCCUPANCY
@@ -25,10 +14,7 @@ export const GET = withAuth(async (request, { supabase }) => {
 
   let query = supabase
     .from('beds')
-    .select(`
-      id, room_id, label, is_active, created_at,
-      assignments:bed_assignments(id, assigned_at, unassigned_at, resident_id, residents(first_name, last_name, pesel_hash))
-    `)
+    .select(BEDS_SELECT)
     .order('label', { ascending: true })
 
   if (roomId) {
@@ -38,26 +24,8 @@ export const GET = withAuth(async (request, { supabase }) => {
   const { data: beds, error } = await query
   if (error) throw error
 
-  // Filter out historical assignments (we only care about active ones)
-  const formattedBeds = (beds || []).map((bed) => {
-    const activeAssignment = bed.assignments?.find((a) => !a.unassigned_at)
-    return {
-      id: bed.id,
-      room_id: bed.room_id,
-      label: bed.label,
-      is_active: bed.is_active,
-      created_at: bed.created_at,
-      active_assignment: activeAssignment
-        ? {
-            id: activeAssignment.id,
-            assigned_at: activeAssignment.assigned_at,
-            resident: Array.isArray(activeAssignment.residents)
-              ? activeAssignment.residents[0]
-              : activeAssignment.residents,
-          }
-        : null,
-    }
-  })
+  // Tylko aktywne przypisania, z polami pensjonariusza potrzebnymi widokowi (bez pesel_hash)
+  const formattedBeds = mapBedsWithActiveAssignment(beds || [])
 
   return NextResponse.json({ beds: formattedBeds })
 })
