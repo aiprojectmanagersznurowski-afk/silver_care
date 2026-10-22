@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import { IamManagementClient, UserItem, AuditLogItem } from '@/components/IamManagementClient'
+import { PageHeader } from '@/components/patterns/PageHeader'
 
 export default async function IamPage() {
   const supabase = await createClient()
@@ -66,14 +67,10 @@ export default async function IamPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h2 className="text-3xl font-display font-semibold tracking-tight text-foreground">
-          Zarządzanie Dostępem i Tożsamością (IAM)
-        </h2>
-        <p className="mt-2 text-muted-foreground">
-          Kontrola ról systemowych, zarządzanie dostępami użytkowników oraz rejestr audytowy zmian uprawnień.
-        </p>
-      </div>
+      <PageHeader
+        title="Zarządzanie Dostępem i Tożsamością (IAM)"
+        description="Kontrola ról systemowych, zarządzanie dostępami użytkowników oraz rejestr audytowy zmian uprawnień."
+      />
 
       <IamManagementClient
         initialUsers={users}

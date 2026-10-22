@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { createClient } from '@/lib/supabase/server'
 import { AuditManagementClient } from '@/components/AuditManagementClient'
 import { AuditLogEntry } from '@/lib/audit-helpers'
+import { PageHeader } from '@/components/patterns/PageHeader'
 
 export default async function AdminAuditPage({
   searchParams,
@@ -44,14 +45,10 @@ export default async function AdminAuditPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-display font-semibold tracking-tight text-foreground">
-          Rejestr Audytowy
-        </h2>
-        <p className="mt-2 text-muted-foreground">
-          Wgląd w logi bezpieczeństwa i akcji systemowych z filtrowaniem wg dat, strefą czasową i eksportem RODO.
-        </p>
-      </div>
+      <PageHeader
+        title="Rejestr Audytowy"
+        description="Wgląd w logi bezpieczeństwa i akcji systemowych z filtrowaniem wg dat, strefą czasową i eksportem RODO."
+      />
 
       <AuditManagementClient initialLogs={initialLogs} />
     </div>
