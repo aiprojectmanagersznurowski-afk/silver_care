@@ -9,6 +9,7 @@ import { groupMessagesIntoThreads, filterThreadsBySearch, RawMessage } from '@/l
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 import { StaffMessageList } from './StaffMessageList'
 import { StaffMessageComposer } from './StaffMessageComposer'
+import { StatusBadge } from '@/components/patterns/StatusBadge'
 
 interface StaffMessagesInboxProps {
   initialResidentId?: string
@@ -175,7 +176,7 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
                           {thread.messages.length} {thread.messages.length === 1 ? 'wiadomość' : 'wiadomości'}
                         </span>
                         {lastMsg.is_from_family && (
-                          <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-sm font-semibold text-primary">Do odpowiedzi</span>
+                          <StatusBadge tone="brand">Do odpowiedzi</StatusBadge>
                         )}
                       </div>
                     </div>
