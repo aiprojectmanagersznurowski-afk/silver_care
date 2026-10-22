@@ -91,7 +91,7 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
   }
 
   return (
-    <div className="flex flex-col h-[750px] bg-card rounded-xl border border-border overflow-hidden">
+    <div className="flex flex-col flex-1 min-h-0 bg-card rounded-xl border border-border overflow-hidden">
       <div className="flex items-center justify-between border-b border-border bg-background/50 px-6 py-4">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
@@ -111,8 +111,8 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
         </button>
       </div>
 
-      <div className="flex flex-1 overflow-hidden relative">
-        <div className={`${activeThreadId ? 'hidden md:flex' : 'flex'} w-full md:w-96 border-r border-border flex-col bg-muted/50 shrink-0`}>
+      <div className="flex flex-1 min-h-0 overflow-hidden relative">
+        <div className={`${activeThreadId ? 'hidden md:flex' : 'flex'} w-full md:w-96 border-r border-border flex-col bg-muted/50 shrink-0 min-h-0`}>
           <div className="p-3 border-b border-border bg-card">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -126,7 +126,7 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto divide-y divide-border" data-testid="message-threads-list">
+          <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-border" data-testid="message-threads-list">
             {loading && threads.length === 0 ? (
               <div className="p-6 text-center text-sm text-muted-foreground space-y-2">
                 <RefreshCw className="h-5 w-5 animate-spin text-primary mx-auto" />
@@ -186,7 +186,7 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
           </div>
         </div>
 
-        <div className={`w-full flex md:flex-1 flex-col bg-card min-w-0 ${activeThreadId ? '' : 'hidden md:flex'}`}>
+        <div className={`w-full flex md:flex-1 flex-col bg-card min-w-0 min-h-0 ${activeThreadId ? '' : 'hidden md:flex'}`}>
           {activeThread ? (
             <>
               <div data-testid="conversation-header" className="px-4 md:px-6 py-4 border-b border-border flex items-center justify-between bg-card">

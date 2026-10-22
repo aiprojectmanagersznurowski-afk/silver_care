@@ -46,7 +46,7 @@ export function StaffMessageComposer({
   }
 
   return (
-    <div className="p-4 border-t border-border bg-card">
+    <div className="p-4 border-t border-border bg-card shrink-0">
       {isRecording && (
         <div
           data-testid="voice-recording-indicator"

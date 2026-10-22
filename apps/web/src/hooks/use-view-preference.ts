@@ -7,6 +7,7 @@ export const VIEW_PREFERENCE_KEYS = {
   staffBoard: 'silvercare_staff_board_view',
   organizations: 'silver_care_org_view_mode',
   residents: 'silvercare_residents_view',
+  voiceResidents: 'silvercare_voice_residents_view',
 } as const
 
 export function validateViewPreference<T extends string>(

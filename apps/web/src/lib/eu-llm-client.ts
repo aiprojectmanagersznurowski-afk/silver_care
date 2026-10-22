@@ -161,6 +161,8 @@ export async function callEuLlmCompletion(
     )
   }
 
+  const requestMaxTokens = config.region === 'US_DEMO_INTERIM' ? Math.max(maxTokens, 1500) : maxTokens
+
   let response = await fetch(config.endpoint, {
     method: 'POST',
     headers: {
@@ -171,14 +173,14 @@ export async function callEuLlmCompletion(
       model: config.model,
       messages,
       temperature,
-      max_tokens: maxTokens,
+      max_tokens: requestMaxTokens,
     }),
   })
 
   // Jeśli w trybie demo model zwróci 404 (np. llama-3.3-70b-versatile nie istnieje na danym koncie Groq),
-  // wykonaj automatyczny fallback na dostępne modele czatowe (openai/gpt-oss-120b, openai/gpt-oss-20b, qwen/qwen3.8-27b)
+  // wykonaj automatyczny fallback na dostępne modele czatowe (qwen/qwen3.8-27b najszybszy i bez ucinania tokenów na reasoning)
   if (!response.ok && config.region === 'US_DEMO_INTERIM' && response.status === 404) {
-    const fallbackModels = ['openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'qwen/qwen3.8-27b']
+    const fallbackModels = ['qwen/qwen3.8-27b', 'openai/gpt-oss-20b', 'openai/gpt-oss-120b']
     for (const altModel of fallbackModels) {
       if (altModel === config.model) continue
       const retryRes = await fetch(config.endpoint, {
@@ -191,7 +193,7 @@ export async function callEuLlmCompletion(
           model: altModel,
           messages,
           temperature,
-          max_tokens: maxTokens,
+          max_tokens: Math.max(maxTokens, 1500),
         }),
       })
       if (retryRes.ok) {

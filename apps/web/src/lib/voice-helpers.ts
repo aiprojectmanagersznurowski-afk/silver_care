@@ -9,7 +9,11 @@ export interface ClassifiedNote {
 
 export function extractJson(raw: string, _fallbackText?: string): ClassifiedNote {
   // Usun tagi myslenia
-  let cleaned = raw.replace(/<think>[\s\S]*?(<\/think>|$)/gi, '').trim()
+  let cleaned = raw
+    .replace(/<think>[\s\S]*?(<\/think>|$)/gi, '')
+    .replace(/<thought>[\s\S]*?(<\/thought>|$)/gi, '')
+    .replace(/<reasoning>[\s\S]*?(<\/reasoning>|$)/gi, '')
+    .trim()
   // Usun bloki markdown
   cleaned = cleaned.replace(/```(?:json)?\s*/gi, '').replace(/```\s*/g, '').trim()
 
