@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { StatisticsDashboardClient } from '@/components/StatisticsDashboardClient'
+import { PageHeader } from '@/components/patterns/PageHeader'
 
 export default async function StatisticsPage() {
   const supabase = await createClient()
@@ -33,14 +34,10 @@ export default async function StatisticsPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h2 className="text-3xl font-display font-semibold tracking-tight text-foreground">
-          Statystyka
-        </h2>
-        <p className="mt-2 text-muted-foreground">
-          Podsumowanie i agregaty placówki — stany, obłożenie, przyjęcia, źródła umów.
-        </p>
-      </div>
+      <PageHeader
+        title="Statystyka"
+        description="Podsumowanie i agregaty placówki — stany, obłożenie, przyjęcia, źródła umów."
+      />
 
       <StatisticsDashboardClient
         careLevelData={careLevelData || []}
