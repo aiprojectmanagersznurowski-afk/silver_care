@@ -11,6 +11,16 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 
+/**
+ * Wariant „destructive” oznacza akcję nieodwracalną, nie błąd: przycisk potwierdzenia
+ * ma kolor marki, bo czerwień jest zarezerwowana dla błędów technicznych (ADR-017 pkt 2).
+ */
+const CONFIRM_BUTTON_VARIANT = { destructive: "default", default: "default" } as const
+
+export function confirmButtonVariant(variant: "destructive" | "default" = "default") {
+  return CONFIRM_BUTTON_VARIANT[variant]
+}
+
 export interface ConfirmDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -57,7 +67,7 @@ export function ConfirmDialog({
           </Button>
           <Button
             type="button"
-            variant={variant === "destructive" ? "destructive" : "default"}
+            variant={confirmButtonVariant(variant)}
             onClick={handleConfirm}
             disabled={loading}
           >

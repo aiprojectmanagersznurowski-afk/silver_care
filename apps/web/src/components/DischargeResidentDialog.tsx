@@ -107,7 +107,7 @@ export function DischargeResidentDialog({
             <Button
               variant="outline"
               size="sm"
-              className="border-destructive/30 text-destructive hover:bg-destructive/10"
+              className="min-h-11"
             >
               <LogOut className="h-4 w-4 mr-1.5" />
               Zakończ pobyt
@@ -119,7 +119,7 @@ export function DischargeResidentDialog({
       <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-full bg-destructive/10 text-destructive">
+            <div className="p-2.5 rounded-full bg-muted text-foreground">
               <LogOut className="h-5 w-5" />
             </div>
             <div>
@@ -179,7 +179,7 @@ export function DischargeResidentDialog({
 
             {isDeath ? (
               <div className="space-y-1.5">
-                <Label htmlFor="death-date" className="text-sm font-semibold text-destructive">
+                <Label htmlFor="death-date" className="text-sm font-semibold text-foreground">
                   Data zgonu *
                 </Label>
                 <Input
@@ -189,7 +189,6 @@ export function DischargeResidentDialog({
                   onChange={(e) => setDeathDate(e.target.value)}
                   disabled={isPending}
                   required
-                  className="border-destructive/40"
                 />
               </div>
             ) : (
@@ -223,7 +222,7 @@ export function DischargeResidentDialog({
             </Button>
             <Button
               type="submit"
-              variant={isDeath ? 'destructive' : 'default'}
+              variant="default"
               disabled={isPending}
             >
               {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
