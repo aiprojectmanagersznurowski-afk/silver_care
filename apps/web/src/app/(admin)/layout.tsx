@@ -7,6 +7,7 @@ import { AdminSidebar } from '@/components/AdminSidebar'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { ImpersonationBanner } from '@/components/ImpersonationBanner'
+import { SystemAlertBanner } from '@/components/SystemAlertBanner'
 import { getActiveImpersonation } from '@/lib/impersonation-guards'
 import { GlobalCommandPalette } from '@/components/GlobalCommandPalette'
 import { StaffNotificationBell } from '@/components/StaffNotificationBell'
@@ -34,6 +35,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       />
       <SidebarInset className="min-w-0 overflow-x-clip">
         {impersonationSession && <ImpersonationBanner session={impersonationSession} />}
+        <SystemAlertBanner role={role} />
         <header className="flex h-12 shrink-0 items-center gap-2 border-b">
           <div className="flex w-full items-center justify-between px-4 lg:px-6">
             <div className="flex items-center gap-1 lg:gap-2">

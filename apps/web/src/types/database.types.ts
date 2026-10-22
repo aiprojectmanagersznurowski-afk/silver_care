@@ -14,6 +14,48 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      system_alerts: {
+        Row: {
+          id: string
+          title: string
+          message: string
+          severity: string
+          status: string
+          affected_services: string[]
+          is_active: boolean
+          created_by: string | null
+          created_at: string
+          updated_at: string
+          resolved_at: string | null
+        }
+        Insert: {
+          id?: string
+          title: string
+          message: string
+          severity?: string
+          status?: string
+          affected_services?: string[]
+          is_active?: boolean
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+          resolved_at?: string | null
+        }
+        Update: {
+          id?: string
+          title?: string
+          message?: string
+          severity?: string
+          status?: string
+          affected_services?: string[]
+          is_active?: boolean
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+          resolved_at?: string | null
+        }
+        Relationships: []
+      }
       agenda_items: {
         Row: {
           id: string

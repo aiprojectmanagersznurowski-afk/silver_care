@@ -8,6 +8,7 @@ import { GlobalCommandPalette } from '@/components/GlobalCommandPalette'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
 import { StaffVoiceSyncListener } from '@/components/staff/StaffVoiceSyncListener'
+import { SystemAlertBanner } from '@/components/SystemAlertBanner'
 
 export default async function StaffLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient()
@@ -25,6 +26,7 @@ export default async function StaffLayout({ children }: { children: ReactNode })
     <SidebarProvider defaultOpen={sidebarOpen}>
       <StaffSidebar userEmail={user?.email} />
       <SidebarInset className="min-w-0 overflow-x-clip">
+        <SystemAlertBanner role={role} />
         <header className="flex h-12 shrink-0 items-center gap-2 border-b">
           <div className="flex w-full items-center justify-between px-4 lg:px-6">
             <div className="flex items-center gap-1 lg:gap-2">
