@@ -19,17 +19,17 @@ test.describe('Rola: Org Admin (Administrator Placówki)', () => {
     // Przejście do struktury placówki (pokoje i łóżka)
     await adminDashboardPage.navigateToFacility();
     await expect(page).toHaveURL(/\/admin\/facility/);
-    await expect(page.locator('h2:has-text("Struktura Placówki")')).toBeVisible();
+    await expect(page.locator(':is(h1, h2):has-text("Struktura Placówki")')).toBeVisible();
 
     // Przejście do rejestru podopiecznych
     await adminDashboardPage.navigateToResidents();
     await expect(page).toHaveURL(/\/admin\/residents/);
-    await expect(page.locator('h2:has-text("Podopieczni")')).toBeVisible();
+    await expect(page.locator(':is(h1, h2):has-text("Podopieczni")')).toBeVisible();
 
     // Przejście do listy personelu
     await adminDashboardPage.navigateToStaff();
     await expect(page).toHaveURL(/\/admin\/staff/);
-    await expect(page.locator('h2:has-text("Personel")')).toBeVisible();
+    await expect(page.locator(':is(h1, h2):has-text("Personel")')).toBeVisible();
 
     // Wylogowanie
     await adminDashboardPage.logout();
@@ -45,7 +45,7 @@ test.describe('Rola: Org Admin (Administrator Placówki)', () => {
     // Próba wejścia na ścieżkę zarezerwowaną dla Super Admina przekierowuje na /admin
     await page.goto('/admin/iam');
     await expect(page).toHaveURL(/\/admin$/);
-    await expect(page.locator('h2:has-text("Zarządzanie Dostępem i Tożsamością (IAM)")')).toBeHidden();
+    await expect(page.locator(':is(h1, h2):has-text("Zarządzanie Dostępem i Tożsamością (IAM)")')).toBeHidden();
   });
 });
 
