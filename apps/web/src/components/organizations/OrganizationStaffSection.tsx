@@ -3,6 +3,7 @@ import { UserCheck } from 'lucide-react'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import type { User } from '@supabase/supabase-js'
+import { StatusBadge } from '@/components/patterns/StatusBadge'
 
 interface OrganizationStaffSectionProps {
   staff: User[]
@@ -41,9 +42,9 @@ export function OrganizationStaffSection({ staff }: OrganizationStaffSectionProp
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span className="inline-flex items-center rounded-lg bg-muted px-2.5 py-1 text-sm font-medium text-foreground">
+                    <StatusBadge>
                       {(person.app_metadata?.role as string) || (person.user_metadata?.role as string) || 'Personel'}
-                    </span>
+                    </StatusBadge>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {new Date(person.created_at).toLocaleDateString('pl-PL')}

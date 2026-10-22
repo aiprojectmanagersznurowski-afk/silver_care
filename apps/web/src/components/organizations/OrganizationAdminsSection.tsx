@@ -6,6 +6,7 @@ import { startImpersonationAction } from '@/actions/impersonation'
 import { ResendAdminInviteButton, AddAdminToOrgDialog } from '@/components/AdminInviteActions'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import type { User } from '@supabase/supabase-js'
+import { StatusBadge } from '@/components/patterns/StatusBadge'
 
 interface OrganizationAdminsSectionProps {
   organizationId: string
@@ -59,9 +60,7 @@ export function OrganizationAdminsSection({
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span className="inline-flex items-center rounded-lg bg-primary/10 px-2.5 py-1 text-sm font-semibold text-primary">
-                      Administrator Ośrodka
-                    </span>
+                    <StatusBadge tone="brand">Administrator Ośrodka</StatusBadge>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {new Date(admin.created_at).toLocaleDateString('pl-PL')}
