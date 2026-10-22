@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
 import { FamilyMessageForm } from '@/components/FamilyMessageForm'
 import { redirect } from 'next/navigation'
+import { PageHeader } from '@/components/patterns/PageHeader'
 
 export default async function FamilyMessagesPage() {
   const supabase = await createClient()
@@ -35,12 +36,10 @@ export default async function FamilyMessagesPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-          Wiadomości — {activeResident.first_name} {activeResident.last_name}
-        </h2>
-        <p className="text-text-secondary">Kontakt z personelem opiekuńczym.</p>
-      </div>
+      <PageHeader
+        title={`Wiadomości — ${activeResident.first_name} ${activeResident.last_name}`}
+        description="Kontakt z personelem opiekuńczym."
+      />
 
       <div className="max-w-3xl mx-auto w-full">
         <FamilyMessageForm residentId={activeResident.id} />
