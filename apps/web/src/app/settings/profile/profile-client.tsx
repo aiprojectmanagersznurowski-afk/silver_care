@@ -2,11 +2,11 @@
 
 import React from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 import { ProfilePasswordCard } from '@/components/profile/ProfilePasswordCard'
 import { ProfileSessionsCard } from '@/components/profile/ProfileSessionsCard'
 import { ProfileData, ROLE_LABELS } from '@/components/profile/profile-types'
+import { StatusBadge } from '@/components/patterns/StatusBadge'
 
 export type { ProfileData }
 
@@ -28,9 +28,7 @@ export function ProfileSecurityClient({ initialData }: { initialData: ProfileDat
             <div>
               <span className="text-muted-foreground block">Rola w systemie:</span>
               <div className="mt-1">
-                <Badge variant="outline" className="bg-muted text-foreground border-border">
-                  {ROLE_LABELS[initialData.user.role] || initialData.user.role}
-                </Badge>
+                <StatusBadge>{ROLE_LABELS[initialData.user.role] || initialData.user.role}</StatusBadge>
               </div>
             </div>
             <div>

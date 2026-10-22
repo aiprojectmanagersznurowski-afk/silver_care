@@ -14,6 +14,7 @@ import {
 } from '@/lib/audit-helpers'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
+import { StatusBadge } from '@/components/patterns/StatusBadge'
 
 interface AuditManagementClientProps {
   initialLogs: AuditLogEntry[]
@@ -201,9 +202,7 @@ export function AuditManagementClient({
                       {formatAuditTimestamp(log.created_at, browserTimeZone)}
                     </TableCell>
                     <TableCell>
-                      <span className="inline-flex items-center rounded-lg bg-muted px-2.5 py-1 text-sm font-medium text-foreground">
-                        {log.action}
-                      </span>
+                      <StatusBadge>{log.action}</StatusBadge>
                     </TableCell>
                     <TableCell>
                       {log.performed_by && log.performed_by.toLowerCase() !== 'system' ? (
