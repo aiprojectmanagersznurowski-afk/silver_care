@@ -1,4 +1,5 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { TableCard } from '@/components/patterns/TableCard'
 import { Check, AlertTriangle } from 'lucide-react'
 import type { ValidatedResidentRow } from '@/lib/bulk-import-helpers'
 
@@ -8,7 +9,8 @@ export function BulkImportPreviewTable({
   rows: ValidatedResidentRow[]
 }) {
   return (
-    <div className="flex-1 overflow-y-auto border border-border rounded-lg max-h-64">
+    <TableCard className="flex-1">
+    <div className="max-h-64 overflow-y-auto">
       <Table>
         <TableHeader className="bg-muted text-foreground sticky top-0">
           <TableRow>
@@ -49,5 +51,6 @@ export function BulkImportPreviewTable({
         </TableBody>
       </Table>
     </div>
+    </TableCard>
   )
 }
