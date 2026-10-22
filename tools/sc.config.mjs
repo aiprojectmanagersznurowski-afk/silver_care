@@ -129,6 +129,8 @@ export const config = {
     { id: 'service-role-in-client', re: 'SUPABASE_SERVICE_ROLE_KEY|service_role', appliesTo: 'apps/.*/(components|app)/.*\\.(ts|tsx)$', allowIn: ['supabase/functions/', '/lib/server/', 'route.ts'], msg: 'Klucz service_role omija RLS. W warstwie klienta oznacza wyciek dostępu do wszystkich placówek.' },
     { id: 'hardcoded-secret', re: '(api[_-]?key|secret|token)\\s*[:=]\\s*[\'"][A-Za-z0-9_\\-]{16,}[\'"]', appliesTo: '\\.(ts|tsx|js|mjs)$', allowIn: ['/tests/', '.test.', 'example'], msg: 'Sekret w kodzie. Używaj menedżera sekretów — to typowy błąd narzędzi agentowych.' },
     { id: 'hex-color', re: '#[0-9a-fA-F]{6}\\b', appliesTo: 'apps/.*/(components|app)/.*\\.(tsx)$', allowIn: ['tailwind.config', 'globals.css', 'tokens'], msg: 'NFR-UI-01: kolor zaszyty w komponencie. Używaj tokenów design systemu „Ciepłe Zaufanie".' },
+    // ADR-017 pkt 4: kolor wyłącznie z tokenów kontraktu; surowa paleta Tailwind omija kontrakt i może nieść ocenę
+    { id: 'ui-raw-palette', re: '\\b(?:bg|text|border|ring|fill|stroke|from|to|via|outline|decoration|divide|accent|caret|placeholder|shadow)-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)(?:-(?:50|[1-9]00|950))?(?:\\/\\d+)?\\b', appliesTo: 'apps/.*/(components|app|lib)/.*\\.(tsx|ts)$', allowIn: ['globals.css', 'tokens'], msg: 'ADR-017: surowa paleta Tailwind (np. bg-amber-500). Używaj tokenów kontraktu: primary, muted, foreground, destructive (wyłącznie błąd techniczny).' },
   ],
 
   forbiddenBashPatterns: [
