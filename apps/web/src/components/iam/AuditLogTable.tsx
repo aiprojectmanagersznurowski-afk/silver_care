@@ -1,10 +1,12 @@
 'use client'
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { History } from 'lucide-react'
 import type { AuditLogItem, UserItem } from '@/components/IamManagementClient'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
+import { StatusBadge } from '@/components/patterns/StatusBadge'
+import { TableCard } from '@/components/patterns/TableCard'
+import { ListEmpty } from '@/components/patterns/ListState'
 
 interface AuditLogTableProps {
   auditLogs: AuditLogItem[]
@@ -22,42 +24,18 @@ export function AuditLogTable({
   const getRoleBadge = (roleId?: string | null) => {
     if (!roleId) return null
     const roleDef = availableRoles.find(r => r.id === roleId)
-    const label = roleDef ? roleDef.label : roleId
-
-    let colorClass = 'bg-muted text-foreground'
-    if (roleId === 'super_admin') colorClass = 'bg-amber/10 text-amber'
-    if (roleId === 'org_admin') colorClass = 'bg-teal/10 text-teal'
-    if (roleId === 'nurse') colorClass = 'bg-primary/10 text-primary'
-
-    return (
-      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-sm font-medium ${colorClass}`}>
-        {label}
-      </span>
-    )
+    return <StatusBadge>{roleDef ? roleDef.label : roleId}</StatusBadge>
   }
 
   return (
-    <Card className="rounded-xl border-none ring-1 ring-border overflow-hidden">
-      <CardHeader className="border-b border-border bg-card px-6 py-5">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted/50 text-muted-foreground shrink-0">
-            <History className="h-5 w-5" />
-          </div>
-          <div>
-            <CardTitle className="text-lg font-semibold text-foreground">Dziennik Audytowy Zmian Uprawnień</CardTitle>
-            <CardDescription className="text-muted-foreground">
-              Historia wszystkich modyfikacji ról, uprawnień i kont personelu.
-            </CardDescription>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="p-0">
+    <TableCard
+      icon={<History />}
+      title="Dziennik Audytowy Zmian Uprawnień"
+      description="Historia wszystkich modyfikacji ról, uprawnień i kont personelu."
+    >
         {auditLogs.length === 0 ? (
-          <div className="p-8 text-center text-sm text-muted-foreground">
-            Brak zarejestrowanych wpisów audytowych w bieżącym widoku.
-          </div>
+          <ListEmpty framed={false} title="Brak wpisów audytowych" description="W bieżącym widoku nie zarejestrowano zmian uprawnień." />
         ) : (
-          <div className="overflow-x-auto">
             <Table>
               <TableHeader className="font-medium text-muted-foreground">
                 <TableRow>
@@ -144,9 +122,7 @@ export function AuditLogTable({
                 })}
               </TableBody>
             </Table>
-          </div>
         )}
-      </CardContent>
-    </Card>
+    </TableCard>
   )
 }

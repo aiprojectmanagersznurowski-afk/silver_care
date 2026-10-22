@@ -1,6 +1,5 @@
 'use client'
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Shield, Key, ShieldAlert, Trash2, ShieldBan } from 'lucide-react'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
@@ -11,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 import { cn } from '@/lib/utils'
 import { StatusBadge } from '@/components/patterns/StatusBadge'
+import { TableCard } from '@/components/patterns/TableCard'
 
 interface UserTableProps {
   users: UserItem[]
@@ -32,25 +32,12 @@ export function UserTable({
   addUserProps,
 }: UserTableProps) {
   return (
-    <Card className="rounded-xl border-none ring-1 ring-border overflow-hidden">
-      <CardHeader className="border-b border-border bg-card px-6 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
-            <Shield className="h-5 w-5" />
-          </div>
-          <div>
-            <CardTitle className="text-lg font-semibold text-foreground">Użytkownicy i Role</CardTitle>
-            <CardDescription className="text-muted-foreground">
-              Zarządzaj kontami użytkowników, przydziałem ról i uprawnień dostępowych.
-            </CardDescription>
-          </div>
-        </div>
-
-        <AddUserDialog {...addUserProps} />
-      </CardHeader>
-
-      <CardContent className="p-0">
-        <div className="overflow-x-auto">
+    <TableCard
+      icon={<Shield />}
+      title="Użytkownicy i Role"
+      description="Zarządzaj kontami użytkowników, przydziałem ról i uprawnień dostępowych."
+      actions={<AddUserDialog {...addUserProps} />}
+    >
           <Table aria-label="Tabela użytkowników i ról IAM">
             <TableHeader className="text-muted-foreground">
               <TableRow>
@@ -170,8 +157,6 @@ export function UserTable({
               })}
             </TableBody>
           </Table>
-        </div>
-      </CardContent>
-    </Card>
+    </TableCard>
   )
 }
