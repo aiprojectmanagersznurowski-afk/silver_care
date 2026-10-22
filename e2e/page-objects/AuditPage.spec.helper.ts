@@ -17,7 +17,7 @@ export class AuditPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.heading = page.locator('h2:has-text("Rejestr Audytowy")');
+    this.heading = page.locator(':is(h1, h2):has-text("Rejestr Audytowy")');
     this.table = page.locator('table');
     this.startDateInput = page.locator('input#audit-date-from, input[name="startDate"]');
     this.endDateInput = page.locator('input#audit-date-to, input[name="endDate"]');

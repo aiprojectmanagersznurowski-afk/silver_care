@@ -18,7 +18,7 @@ export class VoiceNotePage {
 
   constructor(page: Page) {
     this.page = page;
-    this.heading = page.locator('h2:has-text("Notatka Głosowa")');
+    this.heading = page.locator(':is(h1, h2):has-text("Notatka Głosowa")');
     this.searchInput = page.locator('input#search-resident');
     this.residentButtons = page.locator('button:has-text("Kliknij, aby nagrać")');
     this.backToStaffLink = page.locator('a:has-text("Wróć do tablicy dyżuru")');

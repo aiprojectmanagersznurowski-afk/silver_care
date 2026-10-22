@@ -41,7 +41,7 @@ test.describe('Panel personelu i Agenda na dziś (@REQ: NUR-BOARD, @REQ: NUR-AGE
     // Kliknięcie i przejście do agendy
     await agendaMenuItem.click();
     await page.waitForURL('**/staff/agenda');
-    await expect(page.locator('h2')).toContainText('Agenda');
+    await expect(page.locator(':is(h1, h2)').first()).toContainText('Agenda');
   });
 
   test('@REQ: NUR-AGENDA - Planer dnia zawiera sekcje pór dnia oraz wybór podopiecznego w formularzu', async ({ loginPage, page }) => {
