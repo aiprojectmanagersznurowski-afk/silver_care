@@ -14,7 +14,7 @@ test.describe('Rola: Super Admin (Operator Platformy)', () => {
 
     // Super Admin jest automatycznie kierowany do modułu placówek
     await expect(page).toHaveURL(/\/admin\/organizations/);
-    await expect(page.locator('h2:has-text("Zarządzanie Placówkami")')).toBeVisible();
+    await expect(page.locator(':is(h1, h2):has-text("Zarządzanie Placówkami")')).toBeVisible();
 
     // Sprawdzenie obecności tabeli lub listy placówek
     await expect(page.locator('[data-slot="business-id-badge"]').first()).toBeVisible();
@@ -26,12 +26,12 @@ test.describe('Rola: Super Admin (Operator Platformy)', () => {
     // Przejście do panelu uprawnień IAM
     await adminDashboardPage.navigateToIam();
     await expect(page).toHaveURL(/\/admin\/iam/);
-    await expect(page.locator('h2:has-text("Zarządzanie Dostępem i Tożsamością (IAM)")')).toBeVisible();
+    await expect(page.locator(':is(h1, h2):has-text("Zarządzanie Dostępem i Tożsamością (IAM)")')).toBeVisible();
 
     // Przejście do rejestru audytowego
     await adminDashboardPage.navigateToAudit();
     await expect(page).toHaveURL(/\/admin\/audit/);
-    await expect(page.locator('h2:has-text("Rejestr Audytowy")')).toBeVisible();
+    await expect(page.locator(':is(h1, h2):has-text("Rejestr Audytowy")')).toBeVisible();
 
     // Wylogowanie
     await adminDashboardPage.logout();
