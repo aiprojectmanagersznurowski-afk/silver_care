@@ -1,9 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { InviteFamilyDialog } from '@/components/InviteFamilyDialog'
 import { InvitationsTable, type InvitationRecord } from '@/components/InvitationsTable'
 import { redirect } from 'next/navigation'
 import { PageHeader } from '@/components/patterns/PageHeader'
+import { TableCard } from '@/components/patterns/TableCard'
 
 export default async function AdminInvitationsPage() {
   const supabase = await createClient()
@@ -54,15 +54,12 @@ export default async function AdminInvitationsPage() {
         actions={<InviteFamilyDialog residents={residents || []} />}
       />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Oczekujące i zrealizowane zaproszenia</CardTitle>
-          <CardDescription>Rejestr zaproszeń, statusy oraz akcje zarządzania.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <InvitationsTable initialInvitations={(invitations as unknown as InvitationRecord[]) || []} />
-        </CardContent>
-      </Card>
+      <TableCard
+        title="Oczekujące i zrealizowane zaproszenia"
+        description="Rejestr zaproszeń, statusy oraz akcje zarządzania."
+      >
+        <InvitationsTable initialInvitations={(invitations as unknown as InvitationRecord[]) || []} />
+      </TableCard>
     </div>
   )
 }

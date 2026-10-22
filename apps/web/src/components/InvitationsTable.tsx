@@ -7,6 +7,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Copy, RotateCw, Ban } from 'lucide-react'
 import { toast } from 'sonner'
 import { StatusBadge } from '@/components/patterns/StatusBadge'
+import { TableStateRow } from '@/components/patterns/TableCard'
 
 export interface InvitationRecord {
   id: string
@@ -99,7 +100,7 @@ export function InvitationsTable({ initialInvitations }: { initialInvitations: I
   }
 
   return (
-    <div className="relative w-full overflow-auto">
+    <>
       <Table>
         <TableHeader className="[&_tr]:border-b">
           <TableRow className="hover:bg-muted/50 data-[state=selected]:bg-muted">
@@ -178,11 +179,7 @@ export function InvitationsTable({ initialInvitations }: { initialInvitations: I
             )
           })}
           {invitations.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={5} className="text-center text-muted-foreground py-6">
-                Brak zaproszeń w bazie.
-              </TableCell>
-            </TableRow>
+            <TableStateRow colSpan={5} state="empty" title="Brak zaproszeń" description="Zaproś bliskich podopiecznego przyciskiem u góry strony." />
           )}
         </TableBody>
       </Table>
@@ -198,6 +195,6 @@ export function InvitationsTable({ initialInvitations }: { initialInvitations: I
         loading={isRevoking}
         onConfirm={handleConfirmRevoke}
       />
-    </div>
+    </>
   )
 }
