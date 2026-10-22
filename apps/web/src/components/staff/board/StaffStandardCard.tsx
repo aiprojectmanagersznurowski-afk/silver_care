@@ -86,7 +86,7 @@ export function StaffStandardCard({ resident, unansweredInfo }: StaffStandardCar
                     Nowa wiadomość od rodziny
                   </span>
                   <Link
-                    href={`/staff/messages?residentId=${resId}`}
+                    href={`/admin/messages?residentId=${resId}`}
                     className="font-semibold text-primary hover:underline text-sm"
                     onClick={(e) => e.stopPropagation()}
                   >
@@ -147,23 +147,6 @@ export function StaffStandardCard({ resident, unansweredInfo }: StaffStandardCar
               </TooltipContent>
             </Tooltip>
           )}
-
-          <Link
-            href={`/staff/messages?residentId=${resId}`}
-            className={`w-full inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors min-h-[44px] ${
-              hasUnanswered
-                ? 'bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 font-semibold'
-                : 'bg-card text-foreground ring-1 ring-inset ring-border hover:bg-muted/50'
-            }`}
-          >
-            <MessageSquare className="h-4 w-4 text-primary" />
-            <span>Wiadomości od rodziny</span>
-            {hasUnanswered && (
-              <span className="ml-1 rounded-full bg-primary text-primary-foreground px-1.5 py-0.5 text-sm font-bold">
-                !
-              </span>
-            )}
-          </Link>
 
           <div className="mt-1">
             <MediaUploader residentId={resId} />

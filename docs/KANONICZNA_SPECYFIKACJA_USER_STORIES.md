@@ -1,6 +1,6 @@
 # 📖 Kanoniczna specyfikacja user stories — Silver Care
 
-> **Wersja:** 2.7 (bazuje na v2.6 + naprawa Admission Wizard, Quick-Rounds i NFR-UI-05) · **Ostatnia aktualizacja:** 2026-10-10
+> **Wersja:** 2.10 (uproszczenie ról personelu do `org_admin` i `nurse` oraz wyłączny dostęp `org_admin` do `family_messages`) · **Ostatnia aktualizacja:** 2026-10-20
 > **Właściciele:** Darek Rink, Michał Sznurowski
 
 ## Jak czytać i utrzymywać ten dokument
@@ -301,7 +301,7 @@
 - **AC1 (Dane asynchroniczne):** Wiadomość trafia do tabeli `family_messages`. Są one niemutowalne i chronione przez RLS (wymagany status `active` w powiązaniu rodziny).
 - **AC2 (Rate limiting):** Reguła Cloudflare WAF ogranicza wysyłkę do 3 wiadomości na godzinę per rodzina.
 
-> ⚖️ **Rozstrzygnięcie:** kontrakt wymaga limitu 3/h na konto i czytelnego komunikatu po przekroczeniu — nie narzuca Cloudflare WAF jako mechanizmu. Odpowiedź personelu: `SC-NUR-07`.
+> ⚖️ **Rozstrzygnięcie:** kontrakt wymaga limitu 3/h na konto i czytelnego komunikatu po przekroczeniu — nie narzuca Cloudflare WAF jako mechanizmu. Odczyt i odpowiedź po stronie placówki przysługują wyłącznie roli `org_admin` (Kierownik / Administrator Placówki) w widoku `/admin/messages` (`SC-NUR-07`); rola `nurse` (Personel opiekuńczy / Wsparcie) nie ma dostępu do wiadomości od rodzin.
 
 ### [SC-FAM-05] Przełączanie kontekstu podopiecznego
 🔗 **Kontrakt:** `FAM-MULTI-RESIDENT` · **Status:** ✅
@@ -529,15 +529,15 @@
 
 ### Domena 2 — Personel
 
-#### [SC-NUR-07] Skrzynka wiadomości od rodzin
-🔗 **Kontrakt:** `FAM-MESSAGES`, `NUR-BOARD` · **WO:** [`NUR-MESSAGES-INBOX`](workorders/NUR-MESSAGES-INBOX.md) · **Status:** ✅ 📝
+#### [SC-NUR-07] Skrzynka wiadomości od rodzin (wyłącznie dla Kierownika / Administratora Placówki)
+🔗 **Kontrakt:** `FAM-MESSAGES` · **WO:** [`NUR-MESSAGES-INBOX`](workorders/NUR-MESSAGES-INBOX.md) · **Status:** ✅ 📝
 
-**User story:** Jako Personel, chcę widzieć wiadomości zostawione przez rodziny i odpowiadać na nie w wątkach, aby domknąć pętlę komunikacji z `SC-FAM-04` bez telefonów na dyżurkę.
+**User story:** Jako Kierownik / Administrator Placówki (`org_admin`), chcę widzieć wiadomości zostawione przez rodziny i odpowiadać na nie w wątkach, aby domknąć pętlę komunikacji z `SC-FAM-04` bez angażowania personelu opiekuńczego (`nurse`) i bez telefonów na dyżurkę.
 
 **Kryteria akceptacji:**
-- **AC1:** Widok `/staff/messages` z listą wątków per pensjonariusz, wyłącznie z własnej placówki.
-- **AC2:** Odpowiedź personelu dołącza do wątku; wiadomości pozostają niezmienialne.
-- **AC3:** Wejście do skrzynki z nawigacji (desktop i mobile).
+- **AC1:** Widok `/admin/messages` z listą wątków per pensjonariusz, dostępny po stronie placówki wyłącznie dla roli `org_admin` w ramach własnej organizacji (`organization_id`). Rola `nurse` nie ma dostępu do odczytu ani wysyłania wiadomości w `family_messages`.
+- **AC2:** Odpowiedź kierownika placówki (`org_admin`) dołącza do wątku; wiadomości pozostają niezmienialne (`append-only`).
+- **AC3:** Wejście do skrzynki z nawigacji panelu administratora (`/admin/messages`, desktop i mobile) oraz z dzwonka powiadomień.
 
 #### [SC-NUR-08] Redukcja kliknięć: szybki obchód, paleta poleceń, agenda dyżuru
 🔗 **Kontrakt:** `NUR-BOARD`, `NUR-AGENDA`, `REPORT-APPROVAL` · **WO:** [`NUR-CLICK-REDUCTION`](workorders/NUR-CLICK-REDUCTION.md); commit `NUR-STAFF-WORKFLOW-AGENDA` · **Status:** ✅ 📝
@@ -574,16 +574,16 @@
 
 > ⚖️ **Rozstrzygnięcie:** Wycofane w PR #39 (`SEC-PESEL-HASH`, ADR-008). Zgodnie z nadrzędną regułą `AGENTS.md` (*„PESEL wyłącznie jako `pesel_hash`."*) oraz kontraktem `SEC-PESEL-HASH`, w bazie danych nie ma kolumny z wartością jawną ani odwracalną (`pesel_encrypted` i moduł kryptograficzny zostały usunięte z bazy i kodu). Podgląd wartości PESEL nie jest wspierany.
 
-#### [SC-NUR-11] Wskaźnik nieodpowiedzianych wiadomości na pulpicie dyżuru i odpowiedź głosowa personelu
-🔗 **Kontrakt:** `NUR-BOARD`, `FAM-MESSAGES`, `INFRA-GROQ-TRANSCRIPTION` · **WO:** [`NUR-UNANSWERED-MESSAGES`](workorders/NUR-UNANSWERED-MESSAGES.md) · **Status:** ✅ 📝
+#### [SC-NUR-11] Powiadomienia o nieodpowiedzianych wiadomościach i odpowiedź głosowa Kierownika Placówki (`org_admin`)
+🔗 **Kontrakt:** `FAM-MESSAGES`, `INFRA-GROQ-TRANSCRIPTION` · **WO:** [`NUR-UNANSWERED-MESSAGES`](workorders/NUR-UNANSWERED-MESSAGES.md) · **Status:** ✅ 📝
 
-**User story:** Jako Pielęgniarka / Pracownik personelu na dyżurze, chcę widzieć na głównym pulpicie (`/staff`) informację o oczekujących, nieodpowiedzianych wiadomościach od rodzin podopiecznych oraz móc odpowiedzieć na nie głosowo, aby sprawnie zamykać pętlę komunikacji z bliskimi seniora bez konieczności ciągłego sprawdzania skrzynki i bez odrywania się od czynności opiekuńczych na pisanie na klawiaturze.
+**User story:** Jako Kierownik / Administrator Placówki (`org_admin`), chcę widzieć w panelu administracyjnym informację o oczekujących, nieodpowiedzianych wiadomościach od rodzin podopiecznych oraz móc odpowiedzieć na nie głosowo w `/admin/messages`, aby sprawnie zamykać pętlę komunikacji z bliskimi seniora.
 
 **Kryteria akceptacji:**
-- **AC1 (Wskaźnik nieodpowiedzianych wiadomości na pulpicie):** Na kafelku każdego podopiecznego w widoku `/staff` pojawia się wyraźny wskaźnik / badge (np. „Nowa wiadomość od rodziny” lub licznik oczekujących wiadomości), jeśli ostatnia wiadomość w wątku pochodzi od rodziny i nie doczekała się jeszcze odpowiedzi personelu. W nagłówku lub panelu filtrów widoczny jest globalny licznik podopiecznych z oczekującymi wiadomościami.
-- **AC2 (Dostępność dyżurowa dla zespołu):** Wiadomości nie są przypisywane personalnie do jednej pielęgniarki — każdy dyżurujący członek personelu (`nurse`, `caregiver`, `org_admin`) w placówce widzi status nieodpowiedzianej wiadomości i może przejść do wątku podopiecznego bezpośrednio z kafelka (`/staff/messages?residentId=...`).
-- **AC3 (Szybka odpowiedź głosowa):** W oknie konwersacji (`StaffMessagesInbox`), obok pola tekstowego odpowiedzi, znajduje się przycisk dyktowania (ikona mikrofonu). Pracownik może podyktować odpowiedź, która jest transkrybowana (z możliwością szybkiego odsłuchu / edycji) i wysyłana do rodziny.
-- **AC4 (Automatyczne wygaszenie wskaźnika):** Wysłanie odpowiedzi przez pracownika automatycznie oznacza wątek jako obsłużony i natychmiast zdejmuje wskaźnik „nieodpowiedziana” na pulpicie dla wszystkich pracowników placówki.
+- **AC1 (Wskaźnik nieodpowiedzianych wiadomości dla `org_admin`):** W menu bocznym administratora (`/admin/messages`) oraz w dzwonku powiadomień widoczny jest licznik wątków, w których ostatnia wiadomość pochodzi od rodziny i oczekuje na odpowiedź placówki.
+- **AC2 (Wyłączność dostępu `org_admin` po stronie placówki):** Dostęp do odczytu i odpowiadania na `family_messages` po stronie placówki posiada wyłącznie rola `org_admin`. Rola `nurse` (Personel opiekuńczy / Wsparcie) nie ma dostępu do wiadomości od rodzin ani na pulpicie `/staff`, ani w RLS/API.
+- **AC3 (Szybka odpowiedź głosowa):** W oknie konwersacji (`StaffMessagesInbox` w `/admin/messages`), obok pola tekstowego odpowiedzi, znajduje się przycisk dyktowania (ikona mikrofonu). Kierownik placówki może podyktować odpowiedź, która jest transkrybowana (z możliwością edycji) i wysyłana do rodziny.
+- **AC4 (Automatyczne wygaszenie wskaźnika):** Wysłanie odpowiedzi przez `org_admin` automatycznie oznacza wątek jako obsłużony i zdejmuje wskaźnik oczekującej wiadomości.
 - **AC5 (Ochrona danych i granica MDR):** Wiadomości i odpowiedzi podlegają ścisłej izolacji placówki w RLS (`organization_id`) oraz zasadzie niemutowalności (`append-only` w `family_messages`). Interfejs i transkrypcja rygorystycznie przestrzegają zakazu używania słowa „pacjent” (wyłącznie pensjonariusz / podopieczny).
 
 #### [SC-USR-01] Własny profil i bezpieczeństwo konta
@@ -796,3 +796,4 @@
 | 2026-10-10 | 2.7 | Poprawki błędów UI z audytu DevTools: spójny nagłówek sukcesu i kontrast przycisków w kreatorze przyjęcia (`SC-ADM-11`), utrwalanie rutynowej obserwacji 1-kliknięciem w `daily_logs` (`SC-NUR-08`), dodanie `NFR-UI-05` (dostępność WCAG, focus-visible, kontrast motywu ciemnego). |
 | 2026-10-12 | 2.8 | Dopisanie `SC-NUR-11` (wskaźnik nieodpowiedzianych wiadomości na dashboardzie personelu i dyktowanie odpowiedzi głosowej) ze statusem 📝 PROPOZYCJA. |
 | 2026-10-13 | 2.9 | Podbicie statusów `SC-ADM-15` i `SC-ADM-16` do ✅ 📝 po pełnej integracji klastrów Auth/OAuth Art. 9 (`OAUTH-GUARDIAN-CONSENTS`, PR #63), IAM (`ChangeRoleDialog`, PR #75), Caregiver (`SC-ADM-15`, PR #72) oraz potoku notatek głosowych (PR #83). |
+| 2026-10-20 | 2.10 | Ujednolicenie ról pracowników placówki do dwóch poziomów (`org_admin` — Kierownik / Administrator Placówki, `nurse` — Personel opiekuńczy / Wsparcie) oraz ograniczenie dostępu do `family_messages` po stronie placówki wyłącznie do `org_admin` (`/admin/messages`; aktualizacja `SC-FAM-04`, `SC-NUR-07`, `SC-NUR-11`). |

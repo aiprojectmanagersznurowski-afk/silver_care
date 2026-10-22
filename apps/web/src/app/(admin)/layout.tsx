@@ -9,6 +9,7 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/s
 import { ImpersonationBanner } from '@/components/ImpersonationBanner'
 import { getActiveImpersonation } from '@/lib/impersonation-guards'
 import { GlobalCommandPalette } from '@/components/GlobalCommandPalette'
+import { StaffNotificationBell } from '@/components/StaffNotificationBell'
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient()
@@ -41,6 +42,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
               <span className="text-sm font-medium">{role === 'super_admin' && !impersonationSession ? 'Panel platformy' : 'Panel placówki'}</span>
             </div>
             <div className="flex items-center gap-3">
+              {role !== 'super_admin' && <StaffNotificationBell />}
               <GlobalCommandPalette userRole={role} />
             </div>
           </div>

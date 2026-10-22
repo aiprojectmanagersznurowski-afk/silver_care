@@ -163,24 +163,24 @@ export function StaffBoardFilterBar({
             </div>
           )}
 
-          <div data-filter-group="messages" className="flex flex-wrap items-center gap-1.5 pt-1">
-            <span className="text-sm font-medium text-muted-foreground w-14 shrink-0">Kontakt:</span>
-            <button
-              type="button"
-              data-testid="filter-unanswered-messages"
-              onClick={onToggleOnlyUnanswered}
-              className={`rounded-full px-3 py-1 text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                onlyUnansweredFilter
-                  ? 'bg-primary text-primary-foreground'
-                  : totalUnansweredCount > 0
-                  ? 'bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20'
-                  : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
-              }`}
-            >
-              <MessageSquare className="h-3.5 w-3.5" />
-              <span>Oczekujące wiadomości ({totalUnansweredCount})</span>
-            </button>
-          </div>
+          {(totalUnansweredCount > 0 || onlyUnansweredFilter) && (
+            <div data-filter-group="messages" className="flex flex-wrap items-center gap-1.5 pt-1">
+              <span className="text-sm font-medium text-muted-foreground w-14 shrink-0">Kontakt:</span>
+              <button
+                type="button"
+                data-testid="filter-unanswered-messages"
+                onClick={onToggleOnlyUnanswered}
+                className={`rounded-full px-3 py-1 text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                  onlyUnansweredFilter
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20'
+                }`}
+              >
+                <MessageSquare className="h-3.5 w-3.5" />
+                <span>Oczekujące wiadomości ({totalUnansweredCount})</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {activeFiltersCount > 0 && (

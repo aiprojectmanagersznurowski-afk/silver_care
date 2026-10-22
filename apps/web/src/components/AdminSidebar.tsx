@@ -6,6 +6,7 @@ import {
   CalendarDays,
   LayoutDashboard,
   Mail,
+  MessageSquare,
   ShieldAlert,
   ShieldCheck,
   TrendingUp,
@@ -27,6 +28,7 @@ import {
 } from '@/components/ui/sidebar'
 import { SidebarNav, type SidebarNavGroup } from '@/components/SidebarNav'
 import { SidebarAccount } from '@/components/SidebarAccount'
+import { useStaffUnansweredMessages } from '@/hooks/useStaffUnansweredMessages'
 
 // Globalne linki Super Admina (zarządzanie całą platformą)
 const PLATFORM_GROUP: SidebarNavGroup = {
@@ -39,7 +41,7 @@ const PLATFORM_GROUP: SidebarNavGroup = {
 }
 
 // Linki operacyjne placówki (admin placówki albo Super Admin w trybie podglądu)
-function facilityGroup(isImpersonating: boolean): SidebarNavGroup {
+function facilityGroup(isImpersonating: boolean, unansweredCount = 0): SidebarNavGroup {
   return {
     label: isImpersonating ? 'Operacje placówki (podgląd)' : 'Placówka',
     items: [
@@ -48,6 +50,12 @@ function facilityGroup(isImpersonating: boolean): SidebarNavGroup {
       { href: '/admin/residents', label: 'Podopieczni', icon: Users },
       { href: '/admin/staff', label: 'Personel', icon: UserPlus },
       { href: '/admin/invitations', label: 'Zaproszenia', icon: Mail },
+      {
+        href: '/admin/messages',
+        label: 'Wiadomości',
+        icon: MessageSquare,
+        badge: unansweredCount > 0 ? unansweredCount : undefined,
+      },
       {
         href: '/admin/reports',
         label: 'Analiza',
@@ -72,7 +80,8 @@ export function AdminSidebar({
   isImpersonating?: boolean
 }) {
   const showPlatform = role === 'super_admin' && !isImpersonating
-  const groups = showPlatform ? [PLATFORM_GROUP] : [facilityGroup(isImpersonating)]
+  const { unansweredCount } = useStaffUnansweredMessages()
+  const groups = showPlatform ? [PLATFORM_GROUP] : [facilityGroup(isImpersonating, unansweredCount)]
 
   return (
     <Sidebar collapsible="icon">

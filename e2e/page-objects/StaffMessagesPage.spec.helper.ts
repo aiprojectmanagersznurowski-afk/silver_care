@@ -1,9 +1,8 @@
 import { Page, Locator, expect } from '@playwright/test';
 
 /**
- * Page Object dla Skrzynki Wiadomości Personelu (/staff/messages).
+ * Page Object dla Skrzynki Wiadomości Kierownika Placówki (/admin/messages).
  * @REQ: FAM-MESSAGES
- * @REQ: NUR-BOARD
  */
 export class StaffMessagesPage {
   readonly page: Page;
@@ -27,7 +26,7 @@ export class StaffMessagesPage {
   }
 
   async goto(residentId?: string) {
-    const url = residentId ? `/staff/messages?residentId=${residentId}` : '/staff/messages';
+    const url = residentId ? `/admin/messages?residentId=${residentId}` : '/admin/messages';
     await this.page.goto(url);
   }
 

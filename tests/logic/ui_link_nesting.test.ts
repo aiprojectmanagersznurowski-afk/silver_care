@@ -14,10 +14,10 @@ import { ACCESSIBILITY } from '@silvercare/contracts/src/generated/design';
 describe('Dostępność linków i akcji (@REQ: UI-ACCESSIBILITY, @REQ: FAM-MESSAGES)', () => {
   it('generuje poprawny URL do wątku podopiecznego @REQ: FAM-MESSAGES', () => {
     const href = getResidentMessagesHref('res-123');
-    expect(href).toBe('/staff/messages?residentId=res-123');
+    expect(href).toBe('/admin/messages?residentId=res-123');
 
     const specialHref = getResidentMessagesHref('uuid-456/test');
-    expect(specialHref).toBe('/staff/messages?residentId=uuid-456%2Ftest');
+    expect(specialHref).toBe('/admin/messages?residentId=uuid-456%2Ftest');
   });
 
   it('gwarantuje standardy dostępności WCAG dla elementów interaktywnych @REQ: UI-ACCESSIBILITY', () => {

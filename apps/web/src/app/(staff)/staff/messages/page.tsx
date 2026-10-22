@@ -1,26 +1,26 @@
-import { StaffMessagesInbox } from '@/components/StaffMessagesInbox'
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
 
-export default async function StaffMessagesPage({
+export default async function StaffMessagesRedirectPage({
   searchParams,
 }: {
   searchParams: Promise<{ residentId?: string }>
 }) {
-  const params = await searchParams;
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-display font-semibold tracking-tight text-foreground">
-          Wiadomości
-        </h1>
-        <p className="mt-2 text-muted-foreground">
-          Bezpośredni kontakt z rodzinami i opiekunami prawnymi podopiecznych.
-        </p>
-      </div>
+  if (!user) {
+    redirect('/')
+  }
 
-      <StaffMessagesInbox initialResidentId={params?.residentId} />
-    </div>
-  )
+  const role = user.app_metadata?.role || user.user_metadata?.role
+  if (role === 'org_admin' || role === 'admin') {
+    const params = await searchParams
+    const suffix = params?.residentId ? `?residentId=${encodeURIComponent(params.residentId)}` : ''
+    redirect(`/admin/messages${suffix}`)
+  }
+
+  redirect('/unauthorized')
 }
