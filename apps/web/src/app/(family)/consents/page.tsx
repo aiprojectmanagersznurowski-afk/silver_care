@@ -1,5 +1,4 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { createClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
@@ -7,6 +6,7 @@ import { ShieldCheck, ShieldAlert, Lock, CheckCircle2, History, AlertCircle } fr
 import { format } from 'date-fns'
 import { pl } from 'date-fns/locale'
 import { PageHeader } from '@/components/patterns/PageHeader'
+import { StatusBadge } from '@/components/patterns/StatusBadge'
 
 const PURPOSE_LABELS: Record<string, { title: string; desc: string }> = {
   wellness_data_ingest: {
@@ -76,13 +76,11 @@ export default async function FamilyConsentsPage() {
         description={<>Podopieczny: <span className="font-semibold text-foreground">{activeResident.first_name} {activeResident.last_name}</span></>}
         actions={
           <>
-            <Badge variant="outline" className="text-sm bg-primary/10 border-primary/20 text-primary gap-1">
-              <ShieldCheck className="w-3.5 h-3.5" />
+            <StatusBadge tone="brand">
+              <ShieldCheck />
               Art. 9 RODO & Rejestr Zgód
-            </Badge>
-            <Badge variant="outline" className="text-sm text-muted-foreground">
-              Append-Only
-            </Badge>
+            </StatusBadge>
+            <StatusBadge>Append-Only</StatusBadge>
             <div className="flex items-center gap-2 bg-muted/60 px-4 py-2 rounded-xl border border-border text-sm text-muted-foreground">
               <span>Rola konta:</span>
               <span className="font-semibold text-foreground">
@@ -151,13 +149,9 @@ export default async function FamilyConsentsPage() {
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-sm text-foreground">{purposeInfo.title}</span>
                         {isActive ? (
-                          <Badge variant="outline" className="text-sm bg-primary/10 border-primary/20 text-primary font-semibold">
-                            Aktywna
-                          </Badge>
+                          <StatusBadge tone="brand">Aktywna</StatusBadge>
                         ) : (
-                          <Badge variant="outline" className="text-sm bg-muted border-border text-muted-foreground">
-                            Wycofana
-                          </Badge>
+                          <StatusBadge>Wycofana</StatusBadge>
                         )}
                       </div>
                       <p className="text-sm text-muted-foreground max-w-xl">{purposeInfo.desc}</p>

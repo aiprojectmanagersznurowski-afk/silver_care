@@ -3,8 +3,8 @@
 import React, { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Watch, RefreshCw, CheckCircle2, AlertTriangle, ExternalLink } from 'lucide-react'
+import { StatusBadge } from '@/components/patterns/StatusBadge'
 
 interface PolarWearableCardProps {
   residentId: string
@@ -69,15 +69,15 @@ export function PolarWearableCard({
           </CardDescription>
         </div>
         {initialLinked ? (
-          <Badge className="bg-muted text-foreground border-border flex items-center gap-1.5 py-1 px-2.5">
-            <CheckCircle2 className="h-3.5 w-3.5" />
+          <StatusBadge tone="brand">
+            <CheckCircle2 />
             Połączono
-          </Badge>
+          </StatusBadge>
         ) : (
-          <Badge variant="outline" className="text-foreground border-border bg-muted flex items-center gap-1 py-1 px-2.5">
-            <AlertTriangle className="h-3.5 w-3.5" />
+          <StatusBadge>
+            <AlertTriangle />
             Niepołączono
-          </Badge>
+          </StatusBadge>
         )}
       </CardHeader>
 
