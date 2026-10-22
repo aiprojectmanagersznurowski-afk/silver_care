@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { OrganizationsManagementClient, OrganizationSummaryItem } from '@/components/OrganizationsManagementClient'
 import { CreateOrganizationDialog } from '@/components/CreateOrganizationDialog'
+import { PageHeader } from '@/components/patterns/PageHeader'
 
 export default async function OrganizationsPage() {
   const supabase = await createClient()
@@ -57,17 +58,11 @@ interface SuperadminOrgSummaryRow {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-display font-semibold tracking-tight text-foreground">
-            Zarządzanie Placówkami
-          </h2>
-          <p className="mt-2 text-muted-foreground">
-            Rejestr ośrodków, monitorowanie wykorzystania limitów oraz zarządzanie infrastrukturą platformy.
-          </p>
-        </div>
-        <CreateOrganizationDialog />
-      </div>
+      <PageHeader
+        title="Zarządzanie Placówkami"
+        description="Rejestr ośrodków, monitorowanie wykorzystania limitów oraz zarządzanie infrastrukturą platformy."
+        actions={<CreateOrganizationDialog />}
+      />
 
       <OrganizationsManagementClient
         initialOrganizations={organizations}
