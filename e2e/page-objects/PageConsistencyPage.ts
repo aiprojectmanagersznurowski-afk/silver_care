@@ -13,6 +13,14 @@ export interface HeaderSnapshot {
   descriptionStyle: string | null;
 }
 
+export interface BadgeSnapshot {
+  count: number;
+  /** Kształt i typografia: promień, rozmiar i grubość fontu, odstępy wewnętrzne. */
+  shapes: string[];
+  /** Pary kolor tekstu / tło — przy dwóch tonach co najwyżej dwie. */
+  tones: string[];
+}
+
 export class PageConsistencyPage {
   constructor(private readonly page: Page) {}
 
@@ -37,6 +45,21 @@ export class PageConsistencyPage {
         titleStyle: style(header?.querySelector('h1') ?? null) ?? 'brak',
         descriptionStyle: style(header?.querySelector('[data-slot="page-header-description"]') ?? null),
       };
+    });
+  }
+
+  async statusBadgeSnapshot(): Promise<BadgeSnapshot> {
+    return this.page.evaluate(() => {
+      const badges = [...document.querySelectorAll('[data-slot="status-badge"]')]
+        .filter((el) => (el as HTMLElement).offsetParent !== null);
+      const shapes = new Set<string>();
+      const tones = new Set<string>();
+      for (const el of badges) {
+        const cs = getComputedStyle(el);
+        shapes.add([cs.borderTopLeftRadius, cs.fontSize, cs.fontWeight, cs.paddingTop, cs.paddingLeft].join(' | '));
+        tones.add(`${cs.color} / ${cs.backgroundColor}`);
+      }
+      return { count: badges.length, shapes: [...shapes], tones: [...tones] };
     });
   }
 }
