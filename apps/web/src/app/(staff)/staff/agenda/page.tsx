@@ -6,6 +6,7 @@ import { AgendaItem, ResidentSummary } from '@/components/staff/agenda/agenda-ty
 import { AgendaTimelineSection } from '@/components/staff/agenda/AgendaTimelineSection'
 import { AgendaAddForm } from '@/components/staff/agenda/AgendaAddForm'
 import { AgendaModals } from '@/components/staff/agenda/AgendaModals'
+import { PageHeader } from '@/components/patterns/PageHeader'
 
 export default function StaffAgendaPage() {
   const [items, setItems] = useState<AgendaItem[]>([])
@@ -120,12 +121,10 @@ export default function StaffAgendaPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h2 className="text-3xl font-display font-semibold tracking-tight text-foreground">Agenda na dziś</h2>
-        <p className="mt-2 text-muted-foreground text-sm">
-          Planer dnia placówki podzielony na pory dnia. Zarządzaj zadaniami ogólnymi i dedykowanymi podopiecznym.
-        </p>
-      </div>
+      <PageHeader
+        title="Agenda na dziś"
+        description="Planer dnia placówki podzielony na pory dnia. Zarządzaj zadaniami ogólnymi i dedykowanymi podopiecznym."
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
