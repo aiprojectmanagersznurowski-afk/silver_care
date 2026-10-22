@@ -38,7 +38,7 @@ export function StaffNotificationBell() {
         {unansweredCount > 0 && (
           <span
             data-testid="staff-notifications-badge"
-            className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-sm font-bold text-destructive-foreground ring-2 ring-background animate-pulse"
+            className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-sm font-bold text-primary-foreground ring-2 ring-background"
           >
             {unansweredCount > 99 ? '99+' : unansweredCount}
           </span>
@@ -56,9 +56,8 @@ export function StaffNotificationBell() {
           </DropdownMenuLabel>
           {unansweredCount > 0 && (
             <Badge
-              variant="destructive"
               data-testid="staff-notifications-count"
-              className="h-5 px-1.5 text-sm"
+              className="h-5 px-1.5 text-sm border-none bg-primary/10 text-primary"
             >
               {unansweredCount} oczekujące
             </Badge>
