@@ -91,6 +91,18 @@
 
 > ℹ️ Kontrakt od początku wskazywał `source: 'SC-SUP-04'`, ale story nie istniało w v2.4 — tu zostało uzupełnione.
 
+### [SC-SUP-05] Globalne alerty systemowe i status platformy (System Status & Maintenance Alerts)
+🔗 **Kontrakt:** `SUP-IAM-PANEL`, `UI-TEMPLATE-ALIGNMENT`, `UI-FOUR-STATES`, `SEC-AUDIT-APPEND-ONLY`, `SEC-NO-PII-LOGS` · **Work Order:** [`SUP-SYSTEM-STATUS.md`](workorders/SUP-SYSTEM-STATUS.md) · **Status:** 📝 PROPOZYCJA
+
+**User story:** Jako Super Admin (operator platformy Silver Care), chcę zarządzać statusem technicznym platformy oraz publikować globalne komunikaty serwisowe (o trwających pracach naprawczych lub niedostępności konkretnych usług), a na pulpicie placówki (`org_admin`) usunąć statyczną atrapę „Status systemu: Stabilny” na rzecz użytecznej metryki operacyjnej ośrodka i globalnego bannera ostrzegawczego (Wariant A), aby placówki otrzymywały rzetelną informację o utrudnieniach bezpośrednio od operatora systemu.
+
+**Kryteria akceptacji:**
+- **AC1 (Wyłączność zarządzania dla Super Admina):** Widok `/admin/system-status` oraz akcje publikowania i zamykania alertów systemowych są dostępne wyłącznie dla roli `super_admin` (brak dostępu dla `org_admin`, `nurse`, `legal_guardian`, `family`; blokada modyfikacji w trybie impersonacji).
+- **AC2 (Publikacja i zamykanie alertów serwisowych):** Super Admin może utworzyć komunikat serwisowy określający poziom ważności (`info`, `warning`, `error`), stan systemu (`operational`, `degraded`, `maintenance`), listę dotkniętych modułów (`voice_pipeline`, `wearables`, `notifications`, `platform`), tytuł oraz opis problemu dla placówek, a także jednym kliknięciem zakończyć alert (przywracając status stabilny).
+- **AC3 (Globalny banner dla placówek — Wariant A):** Gdy w systemie istnieje aktywny alert od Super Admina, w panelach placówki (`/admin` oraz `/staff`) na górze ekranu wyświetla się czytelny `SystemAlertBanner` informujący personel i kierownictwo placówki o trwających pracach i niedostępnych usługach. Gdy system działa bez zakłóceń (brak aktywnych alertów), banner nie jest renderowany.
+- **AC4 (Wycofanie atrapy z pulpitu placówki — Wariant A):** Z głównego pulpitu administratora placówki (`/admin`) zostaje usunięty statyczny kafelek KPI „Status systemu: Stabilny”, a w jego miejsce prezentowany jest rzeczywisty wskaźnik operacyjny ośrodka („Raporty do zatwierdzenia” — liczba raportów w statusie `draft`).
+- **AC5 (Ślad audytowy i 4 stany UI):** Każda publikacja i zakończenie alertu systemowego rejestruje wpis w `audit_logs` (`SYSTEM_ALERT_PUBLISHED` / `SYSTEM_ALERT_RESOLVED`) bez danych osobowych (`SEC-NO-PII-LOGS`). Panel Super Admina obsługuje 4 stany UI (`loading`, `empty`, `success`, `error`).
+
 ---
 
 ## 👑 DOMENA 1: ADMINISTRATOR (Zarządzanie ośrodkiem)
@@ -797,3 +809,4 @@
 | 2026-10-12 | 2.8 | Dopisanie `SC-NUR-11` (wskaźnik nieodpowiedzianych wiadomości na dashboardzie personelu i dyktowanie odpowiedzi głosowej) ze statusem 📝 PROPOZYCJA. |
 | 2026-10-13 | 2.9 | Podbicie statusów `SC-ADM-15` i `SC-ADM-16` do ✅ 📝 po pełnej integracji klastrów Auth/OAuth Art. 9 (`OAUTH-GUARDIAN-CONSENTS`, PR #63), IAM (`ChangeRoleDialog`, PR #75), Caregiver (`SC-ADM-15`, PR #72) oraz potoku notatek głosowych (PR #83). |
 | 2026-10-20 | 2.10 | Ujednolicenie ról pracowników placówki do dwóch poziomów (`org_admin` — Kierownik / Administrator Placówki, `nurse` — Personel opiekuńczy / Wsparcie) oraz ograniczenie dostępu do `family_messages` po stronie placówki wyłącznie do `org_admin` (`/admin/messages`; aktualizacja `SC-FAM-04`, `SC-NUR-07`, `SC-NUR-11`). |
+| 2026-10-22 | 2.11 | Dopisanie `SC-SUP-05` (globalne alerty systemowe i status platformy zarządzane przez `super_admin` oraz wycofanie statycznego kafelka „Status systemu: Stabilny” z pulpitu placówki — Wariant A) ze statusem 📝 PROPOZYCJA. |
