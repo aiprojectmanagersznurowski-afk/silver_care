@@ -16,7 +16,7 @@ describe('UI Feedback & Tooltips (@REQ: UI-ACCESSIBILITY, @REQ: UI-FOUR-STATES)'
   it('zapewnia standardy dostępności WCAG dla komponentów feedbacku @REQ: UI-ACCESSIBILITY', () => {
     const a11yResult = validateAccessibilityStandards(ACCESSIBILITY);
     expect(a11yResult.valid).toBe(true);
-    expect(ACCESSIBILITY.touchTargetMinimum).toBe('44px');
+    expect(ACCESSIBILITY.touchTargetMinimum).toBe('38px');
   });
 
   it('wspiera wymagane 4 stany interfejsu (loading, empty, success, error) @REQ: UI-FOUR-STATES', () => {

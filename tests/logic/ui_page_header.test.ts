@@ -7,7 +7,7 @@ import { PageHeader } from '../../apps/web/src/components/patterns/PageHeader';
  * @REQ: UI-ACCESSIBILITY
  *
  * ADR-017 pkt 5: każdy ekran ma ten sam nagłówek strony — jeden h1, opis w kolorze
- * pomocniczym, akcje po prawej, powrót z celem dotykowym 44px. Test renderuje komponent.
+ * pomocniczym, akcje po prawej, powrót z celem dotykowym 38px (ADR-018). Test renderuje komponent.
  */
 const requireWeb = createRequire(new URL('../../apps/web/package.json', import.meta.url));
 const { renderToStaticMarkup } = requireWeb('react-dom/server') as typeof import('react-dom/server');
@@ -43,11 +43,11 @@ describe('PageHeader — wspólny nagłówek strony (ADR-017)', () => {
     expect(render({ title: 'Personel' })).not.toContain('page-header-actions');
   });
 
-  it('@REQ: UI-ACCESSIBILITY - link powrotu ma cel dotykowy 44px i prowadzi pod wskazany adres', () => {
+  it('@REQ: UI-ACCESSIBILITY - link powrotu ma cel dotykowy 38px (ADR-018) i prowadzi pod wskazany adres', () => {
     const html = render({ title: 'Raporty', back: { href: '/staff', label: 'Wróć do listy podopiecznych' } });
     const link = html.match(/<a [^>]*data-slot="page-header-back"[^>]*>/)?.[0] ?? '';
     expect(link).toContain('href="/staff"');
-    expect(link).toContain('min-h-11');
+    expect(link).toContain('min-h-touch');
     expect(html).toContain('Wróć do listy podopiecznych');
   });
 

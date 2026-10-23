@@ -8,7 +8,7 @@ import { ACCESSIBILITY } from '@silvercare/contracts/src/generated/design';
  *
  * Testy wykonawcze dla poprawności linków nawigacyjnych i dostępności interaktywnej:
  * 1. Generowanie poprawnych linków do wątków wiadomości pensjonariusza.
- * 2. Zgodność z normą minimalnego celu dotykowego 44px (brak problemu podwójnego fokusu).
+ * 2. Zgodność z normą minimalnego celu dotykowego 38px (ADR-018) (brak problemu podwójnego fokusu).
  * 3. Poprawny eksport komponentu karty tablicy personelu.
  */
 describe('Dostępność linków i akcji (@REQ: UI-ACCESSIBILITY, @REQ: FAM-MESSAGES)', () => {
@@ -21,7 +21,7 @@ describe('Dostępność linków i akcji (@REQ: UI-ACCESSIBILITY, @REQ: FAM-MESSA
   });
 
   it('gwarantuje standardy dostępności WCAG dla elementów interaktywnych @REQ: UI-ACCESSIBILITY', () => {
-    expect(ACCESSIBILITY.touchTargetMinimum).toBe('44px');
+    expect(ACCESSIBILITY.touchTargetMinimum).toBe('38px');
     expect(ACCESSIBILITY.rules).toContain('Nawigacja klawiaturą obejmuje wszystkie akcje.');
   });
 
