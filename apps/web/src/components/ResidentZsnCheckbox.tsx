@@ -64,7 +64,7 @@ export function ResidentZsnCheckbox({
         aria-checked={checked}
         aria-label={checked ? 'ZSN: Znaczny stopień niepełnosprawności (Aktywny)' : 'Brak ZSN — kliknij, aby zaznaczyć'}
         title={checked ? 'ZSN: Znaczny stopień niepełnosprawności (Aktywny)' : 'Brak ZSN — kliknij, aby zaznaczyć'}
-        className="group/zsn inline-flex items-center gap-1.5 min-h-touch min-w-touch p-2 rounded-lg hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-border transition-colors"
+        className="group/zsn inline-flex items-center gap-1.5 min-h-touch min-w-touch px-2 py-1 rounded-lg hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-border transition-colors"
       >
         <div
           className={`flex h-5 w-5 items-center justify-center rounded border transition-colors ${
