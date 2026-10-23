@@ -5,7 +5,7 @@ import { DoorOpen, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import BedList from './BedList'
-import AddBedDialog from './AddBedDialog'
+import { RoomRowActions } from './RoomRowActions'
 import { isGroundFloor } from '@/lib/bed-allocation-optimizer'
 import type { RoomItem } from './room-helpers'
 import { getRoomGenderLabel } from './room-helpers'
@@ -86,13 +86,12 @@ export function RoomTableView({
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <AddBedDialog roomId={room.id} onBedAdded={onUpdate} />
                         <Button
                           type="button"
                           variant="ghost"
-                          size="sm"
+                          aria-expanded={!!isExpanded}
                           onClick={() => toggleRoom(room.id)}
-                          className="h-8 px-2 text-sm text-primary hover:text-primary font-medium"
+                          className="text-primary hover:text-primary"
                         >
                           {isExpanded ? (
                             <>
@@ -106,6 +105,7 @@ export function RoomTableView({
                             </>
                           )}
                         </Button>
+                        <RoomRowActions roomId={room.id} onBedAdded={onUpdate} />
                       </div>
                     </TableCell>
                   </TableRow>
