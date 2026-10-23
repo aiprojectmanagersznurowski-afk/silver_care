@@ -34,9 +34,9 @@ describe('Granular Inline & Sheet Editing (UI-14)', () => {
   })
 
   it('ensures UI design contract accessibility and touch target standards @REQ: UI-ACCESSIBILITY', async () => {
-    // Wymogi celów dotykowych (minimum 44px wg kontraktu Silver Care)
+    // Wymogi celów dotykowych (minimum 38px (ADR-018) wg kontraktu Silver Care)
     const minTarget = parseInt(ACCESSIBILITY.touchTargetMinimum, 10)
-    expect(minTarget).toBeGreaterThanOrEqual(44)
+    expect(minTarget).toBeGreaterThanOrEqual(38)
     expect(ACCESSIBILITY.contrastMinimum).toBeGreaterThanOrEqual(4.5)
 
     // Weryfikacja eksportu komponentów edycji inline

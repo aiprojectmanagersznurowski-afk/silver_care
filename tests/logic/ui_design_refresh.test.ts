@@ -31,7 +31,7 @@ describe('UI Design System Refresh & Session Routing', () => {
 
     const a11yResult = validateAccessibilityStandards(ACCESSIBILITY);
     expect(a11yResult.valid).toBe(true);
-    expect(ACCESSIBILITY.touchTargetMinimum).toBe('44px');
+    expect(ACCESSIBILITY.touchTargetMinimum).toBe('38px');
   });
 
   it('@REQ: UI-FOUR-STATES - motyw zachowuje kanoniczną paletę Silver Care (Ciepłe Zaufanie)', () => {
