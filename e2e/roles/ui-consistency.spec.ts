@@ -99,6 +99,20 @@ test.describe('Portal rodziny — nagłówek i tło jak w reszcie aplikacji (@RE
   });
 });
 
+test.describe('Tryb ciemny — czytelne przyciski i filtry (@REQ: UI-ACCESSIBILITY)', () => {
+  test('@REQ: UI-ACCESSIBILITY - tablica dyżuru w trybie ciemnym: tekst przycisków ≥4.5:1, obramowanie ≥3:1 (WCAG 1.4.3, 1.4.11)', async ({ loginPage, page }) => {
+    await loginPage.loginAs('nurse');
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.evaluate(() => window.localStorage.setItem('sc-theme', 'dark'));
+    const screens = new PageConsistencyPage(page);
+    await screens.goto('/staff');
+    const contrasts = await screens.buttonContrasts();
+    expect(contrasts.length, 'brak przycisków do zmierzenia').toBeGreaterThan(3);
+    const weak = contrasts.filter((c) => c.text < 4.5 || c.border < 3);
+    expect(weak, 'przyciski słabo widoczne w trybie ciemnym').toEqual([]);
+  });
+});
+
 test.describe('Cel dotykowy z tokenu kontraktu (@REQ: UI-ACCESSIBILITY)', () => {
   test('@REQ: UI-ACCESSIBILITY - link powrotu w nagłówku ma cel dotykowy 38px (ADR-018)', async ({ loginPage, page }) => {
     await loginPage.loginAs('org_admin');
