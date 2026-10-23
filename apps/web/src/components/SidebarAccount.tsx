@@ -9,7 +9,6 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar'
-import { ThemeToggle } from '@/components/ThemeToggle'
 
 /** Stopka paska bocznego: zalogowane konto, link do profilu i wylogowanie (nav-user szablonu). */
 export function SidebarAccount({ userEmail }: { userEmail?: string | null }) {
@@ -30,10 +29,6 @@ export function SidebarAccount({ userEmail }: { userEmail?: string | null }) {
             <span className="block truncate text-sm font-medium">{userEmail}</span>
           </SidebarMenuItem>
         )}
-        <SidebarMenuItem className="flex items-center justify-between px-2 py-1">
-          <span className="text-sm text-muted-foreground group-data-[collapsible=icon]:hidden">Motyw</span>
-          <ThemeToggle />
-        </SidebarMenuItem>
         <SidebarMenuItem>
           <SidebarMenuButton
             render={<Link href="/settings/profile" onClick={handleLinkClick} />}

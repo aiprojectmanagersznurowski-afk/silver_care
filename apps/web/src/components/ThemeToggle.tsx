@@ -29,8 +29,9 @@ export function ThemeToggle({
       <button
         type="button"
         disabled
+        data-slot="theme-toggle"
         aria-label="Ładowanie motywu..."
-        className={`inline-flex items-center justify-center rounded-lg p-2 text-muted-foreground opacity-70 transition-colors ${className}`}
+        className={`inline-flex min-h-touch min-w-touch items-center justify-center rounded-lg p-2 text-muted-foreground opacity-70 transition-colors ${className}`}
       >
         <span className="h-5 w-5" />
         {variant === 'labeled' && <span className="ml-2 text-sm">Motyw</span>}
@@ -45,9 +46,10 @@ export function ThemeToggle({
     <button
       type="button"
       onClick={toggleTheme}
+      data-slot="theme-toggle"
       aria-label={label}
       title={label}
-      className={`inline-flex items-center justify-center rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors ${className}`}
+      className={`inline-flex min-h-touch min-w-touch items-center justify-center rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors ${className}`}
     >
       {isDark ? (
         <Sun className="h-5 w-5 text-foreground transition-transform hover:rotate-45" />

@@ -74,14 +74,14 @@ export function GlobalCommandPalette({ userRole }: GlobalCommandPaletteProps) {
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-border bg-card/80 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-colors min-h-touch"
+        className="inline-flex min-h-touch items-center gap-2 px-1 text-sm font-normal text-muted-foreground transition-colors hover:text-foreground"
         title="Otwórz wyszukiwarkę globalną (Cmd+K)"
         aria-label="Wyszukaj w systemie"
       >
-        <Search className="h-4 w-4 text-muted-foreground" />
-        <span className="hidden sm:inline">Szukaj w systemie...</span>
-        <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded bg-muted px-1.5 py-0.5 text-sm font-mono text-muted-foreground">
-          <Command className="h-2.5 w-2.5" />K
+        <Search className="size-4" />
+        <span className="hidden sm:inline">Szukaj</span>
+        <kbd className="hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 text-xs font-medium sm:inline-flex">
+          <Command className="size-3" />K
         </kbd>
       </button>
 
