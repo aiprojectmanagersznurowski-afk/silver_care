@@ -23,7 +23,7 @@ export function ObjectCard({ title, subtitle, badges, meta, actions }: ObjectCar
     <Card className="flex-1 gap-0 py-0">
       <div className="space-y-3 p-4">
         <div className="min-w-0">
-          <h3 className="truncate text-base font-semibold text-foreground">{title}</h3>
+          <h3 className="truncate text-base font-medium text-foreground">{title}</h3>
           {subtitle && <p className="truncate text-sm text-muted-foreground">{subtitle}</p>}
         </div>
         {badges && (
