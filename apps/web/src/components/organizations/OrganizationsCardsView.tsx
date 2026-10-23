@@ -9,10 +9,9 @@ import {
   UserCheck,
   Calendar,
   MapPin,
-  ChevronRight,
 } from 'lucide-react'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
-import { EditOrganizationDialog } from '@/components/EditOrganizationDialog'
+import { OrganizationRowActions } from './OrganizationRowActions'
 import { OrganizationSummaryItem } from './organizations-types'
 
 export function OrganizationsCardsView({
@@ -52,16 +51,7 @@ export function OrganizationsCardsView({
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 shrink-0">
-                <EditOrganizationDialog organization={org} />
-                <Link
-                  href={`/admin/organizations/${org.organization_id}`}
-                  className="flex items-center gap-1 rounded-lg bg-muted/50 px-2.5 py-1 text-sm font-medium text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors min-h-touch"
-                >
-                  <span>Szczegóły</span>
-                  <ChevronRight className="h-4 w-4" />
-                </Link>
-              </div>
+              <OrganizationRowActions org={org} />
             </div>
 
             <div className="mt-6 pt-4 border-t border-border grid grid-cols-3 gap-4 text-center">
