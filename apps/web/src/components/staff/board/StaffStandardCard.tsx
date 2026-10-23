@@ -120,7 +120,7 @@ export function StaffStandardCard({ resident, unansweredInfo }: StaffStandardCar
             <TooltipTrigger asChild>
               <Link
                 href={`/voice?resident=${resId}`}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors min-h-[44px]"
+                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors min-h-touch"
               >
                 <Mic className="h-4 w-4" />
                 Nagraj notatkę
@@ -136,7 +136,7 @@ export function StaffStandardCard({ resident, unansweredInfo }: StaffStandardCar
               <TooltipTrigger asChild>
                 <Link
                   href={`/staff/reports?resident=${resId}`}
-                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-card px-4 py-2.5 text-sm font-medium text-foreground ring-1 ring-inset ring-border hover:bg-muted/50 transition-colors min-h-[44px]"
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-card px-4 py-2.5 text-sm font-medium text-foreground ring-1 ring-inset ring-border hover:bg-muted/50 transition-colors min-h-touch"
                 >
                   <FileText className="h-4 w-4 text-muted-foreground" />
                   Podgląd raportu

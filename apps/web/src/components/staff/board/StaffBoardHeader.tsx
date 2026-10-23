@@ -35,7 +35,7 @@ export function StaffBoardHeader({
         >
           <ToggleGroupItem
             value="rounds"
-            className="gap-1.5 data-[pressed]:bg-primary data-[pressed]:text-primary-foreground min-h-11"
+            className="gap-1.5 data-[pressed]:bg-primary data-[pressed]:text-primary-foreground min-h-touch"
           >
             <Zap className="h-4 w-4" />
             <span className="sm:hidden text-sm">Obchód</span>
@@ -43,7 +43,7 @@ export function StaffBoardHeader({
           </ToggleGroupItem>
           <ToggleGroupItem
             value="standard"
-            className="gap-1.5 data-[pressed]:bg-primary data-[pressed]:text-primary-foreground min-h-11"
+            className="gap-1.5 data-[pressed]:bg-primary data-[pressed]:text-primary-foreground min-h-touch"
           >
             <LayoutGrid className="h-4 w-4" />
             <span className="text-sm">Karty</span>
@@ -53,7 +53,7 @@ export function StaffBoardHeader({
         {activeFiltersCount > 0 && (
           <button
             onClick={onClearFilters}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-muted/50 px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-muted hover:text-foreground transition-colors min-h-11"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-muted/50 px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-muted hover:text-foreground transition-colors min-h-touch"
           >
             Wyczyść ({activeFiltersCount})
             <X className="h-3.5 w-3.5" />

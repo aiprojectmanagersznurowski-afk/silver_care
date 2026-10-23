@@ -81,7 +81,7 @@ export function ResidentInlineCareLevel({
         <DropdownMenuTrigger
           type="button"
           disabled={isPending}
-          className="group inline-flex items-center gap-1.5 min-h-[48px] px-2 py-1 rounded-lg hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
+          className="group inline-flex items-center gap-1.5 min-h-touch px-2 py-1 rounded-lg hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
           aria-label="Zmień stan podopiecznego"
         >
           {currentLevel ? (
@@ -118,7 +118,7 @@ export function ResidentInlineCareLevel({
               <DropdownMenuItem
                 key={option.value}
                 onClick={() => handleSelect(option.value)}
-                className="w-full flex items-center justify-between px-3 py-2 text-sm text-foreground hover:bg-muted/50 cursor-pointer min-h-[44px]"
+                className="w-full flex items-center justify-between px-3 py-2 text-sm text-foreground hover:bg-muted/50 cursor-pointer min-h-touch"
               >
                 <span className="flex items-center gap-2">
                   <span

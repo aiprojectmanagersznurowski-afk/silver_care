@@ -213,7 +213,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
                   disabled={loading || (requiresMedConfirm && !medConfirmed)} 
                   onClick={handlePublish} 
                   title={requiresMedConfirm && !medConfirmed ? 'Potwierdź odnotowanie zdarzenia lekowego' : undefined}
-                  className="rounded-xl min-h-11 px-4 bg-primary hover:bg-primary/90 text-white text-sm font-semibold gap-1.5 disabled:opacity-50"
+                  className="rounded-xl min-h-touch px-4 bg-primary hover:bg-primary/90 text-white text-sm font-semibold gap-1.5 disabled:opacity-50"
                   data-testid="publish-report-button"
                 >
                   <Send className="h-3.5 w-3.5" />
@@ -224,7 +224,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
                 disabled={loading} 
                 onClick={() => setIsEditing(true)} 
                 variant="outline"
-                className="rounded-xl min-h-11 px-4 border-border text-foreground hover:bg-muted/50 text-sm font-medium gap-1.5"
+                className="rounded-xl min-h-touch px-4 border-border text-foreground hover:bg-muted/50 text-sm font-medium gap-1.5"
                 data-testid="edit-report-button"
               >
                 <Edit3 className="h-3.5 w-3.5" />

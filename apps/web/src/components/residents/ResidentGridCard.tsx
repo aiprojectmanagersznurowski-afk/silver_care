@@ -39,7 +39,7 @@ export function ResidentGridCard({ resident }: { resident: ResidentWithAssignmen
             <ResidentEditSheet resident={resident} />
             <Link
               href={`/admin/residents/${resident.id}`}
-              className="min-h-11 min-w-11 inline-flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"
+              className="min-h-touch min-w-touch inline-flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"
               title="Profil 360°"
               aria-label="Profil 360°"
             >

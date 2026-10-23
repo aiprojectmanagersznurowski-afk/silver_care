@@ -163,7 +163,7 @@ export function EditResidentDialog({
             variant="outline"
             onClick={() => setOpen(false)}
             disabled={isPending}
-            className="min-h-[44px]"
+            className="min-h-touch"
           >
             Anuluj
           </Button>
@@ -171,7 +171,7 @@ export function EditResidentDialog({
             type="submit"
             form="edit-resident-dialog-form"
             disabled={isPending}
-            className="bg-primary hover:bg-primary/90 text-white min-h-[44px] min-w-[130px]"
+            className="bg-primary hover:bg-primary/90 text-white min-h-touch min-w-[130px]"
           >
             {isPending ? (
               <>

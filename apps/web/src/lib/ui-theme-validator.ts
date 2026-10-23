@@ -68,8 +68,9 @@ export function validateAccessibilityStandards(accessibility: typeof ACCESSIBILI
   const violations: string[] = []
   const touchTarget = parseInt(accessibility.touchTargetMinimum, 10)
 
-  if (touchTarget < 44) {
-    violations.push(`Minimalny cel dotykowy ${accessibility.touchTargetMinimum} < 44px`)
+  // ADR-018: próg 38px — kompromis między ADR-016 (44px) a skalą szablonu (32px)
+  if (touchTarget < 38) {
+    violations.push(`Minimalny cel dotykowy ${accessibility.touchTargetMinimum} < 38px`)
   }
 
   if (accessibility.contrastMinimum < 4.5) {

@@ -96,7 +96,7 @@ export function DailyReportTable({
                     return (
                       <TableHead
                         key={row.report_date}
-                        className={`px-2 py-3 text-center font-medium min-w-10 ${
+                        className={`px-2 py-3 text-center font-medium min-w-touch ${
                           isWeekend ? 'bg-primary/5 text-primary' : 'text-muted-foreground'
                         }`}
                       >

@@ -34,7 +34,7 @@ export function ResidentEditSheetFormFields({
           id="first_name"
           value={formData.first_name}
           onChange={(e) => setFormData((prev) => ({ ...prev, first_name: e.target.value }))}
-          className="min-h-[44px]"
+          className="min-h-touch"
           required
         />
       </div>
@@ -47,7 +47,7 @@ export function ResidentEditSheetFormFields({
           id="last_name"
           value={formData.last_name}
           onChange={(e) => setFormData((prev) => ({ ...prev, last_name: e.target.value }))}
-          className="min-h-[44px]"
+          className="min-h-touch"
           required
         />
       </div>
@@ -62,7 +62,7 @@ export function ResidentEditSheetFormFields({
             type="date"
             value={formData.birth_date}
             onChange={(e) => setFormData((prev) => ({ ...prev, birth_date: e.target.value }))}
-            className="min-h-[44px]"
+            className="min-h-touch"
           />
         </div>
 
@@ -75,7 +75,7 @@ export function ResidentEditSheetFormFields({
             type="date"
             value={formData.admission_date}
             onChange={(e) => setFormData((prev) => ({ ...prev, admission_date: e.target.value }))}
-            className="min-h-[44px]"
+            className="min-h-touch"
           />
         </div>
       </div>

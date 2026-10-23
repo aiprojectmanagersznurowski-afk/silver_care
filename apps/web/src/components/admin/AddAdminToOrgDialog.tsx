@@ -128,7 +128,7 @@ export function AddAdminToOrgDialog({
                     variant="outline"
                     size="sm"
                     onClick={() => handleCopy(successData.inviteUrl!)}
-                    className="shrink-0 gap-1 text-sm min-h-11"
+                    className="shrink-0 gap-1 text-sm min-h-touch"
                   >
                     {copied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
                     {copied ? 'Skopiowano' : 'Kopiuj'}

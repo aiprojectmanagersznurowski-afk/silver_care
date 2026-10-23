@@ -86,7 +86,7 @@ export function CommandPaletteResults({
               key={`${item.category}-${item.id}`}
               onClick={() => onSelectItem(item)}
               onMouseEnter={() => onHoverIndex(idx)}
-              className={`flex items-center justify-between p-2.5 rounded-xl transition-colors cursor-pointer min-h-[48px] ${
+              className={`flex items-center justify-between p-2.5 rounded-xl transition-colors cursor-pointer min-h-touch ${
                 isSelected
                   ? 'bg-primary/10 text-foreground'
                   : 'hover:bg-muted/50 text-foreground'

@@ -31,7 +31,7 @@ export function ResidentProfileHeader({
     <div className="space-y-4">
       <Link
         href="/admin/residents"
-        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors min-h-11"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors min-h-touch"
       >
         <ArrowLeft className="h-4 w-4" />
         Wróć do listy podopiecznych

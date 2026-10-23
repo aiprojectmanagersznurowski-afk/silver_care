@@ -30,7 +30,7 @@ export function CreatedCredentialsBanner({ credentials, onClose }: CreatedCreden
         <button
           type="button"
           onClick={onClose}
-          className="text-muted-foreground hover:text-foreground text-sm font-medium min-h-11 px-2"
+          className="text-muted-foreground hover:text-foreground text-sm font-medium min-h-touch px-2"
         >
           Zamknij powiadomienie
         </button>
@@ -51,7 +51,7 @@ export function CreatedCredentialsBanner({ credentials, onClose }: CreatedCreden
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="min-h-11 px-3 text-sm"
+                  className="min-h-touch px-3 text-sm"
                   onClick={() => {
                     navigator.clipboard.writeText(credentials.temporaryPassword || '')
                     setCopiedPassword(true)

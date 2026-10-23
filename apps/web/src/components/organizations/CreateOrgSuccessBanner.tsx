@@ -45,7 +45,7 @@ export function CreateOrgSuccessBanner({ info, onClose }: CreateOrgSuccessBanner
         <button
           type="button"
           onClick={onClose}
-          className="text-sm text-muted-foreground hover:text-foreground font-medium min-h-11 px-2"
+          className="text-sm text-muted-foreground hover:text-foreground font-medium min-h-touch px-2"
         >
           Zamknij
         </button>
@@ -59,14 +59,14 @@ export function CreateOrgSuccessBanner({ info, onClose }: CreateOrgSuccessBanner
           <input
             readOnly
             value={info.inviteUrl}
-            className="text-sm font-mono bg-card px-3 py-1.5 rounded-lg border border-border flex-1 truncate text-foreground min-h-11"
+            className="text-sm font-mono bg-card px-3 py-1.5 rounded-lg border border-border flex-1 truncate text-foreground min-h-touch"
           />
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={() => handleCopy(info.inviteUrl!)}
-            className="min-h-11 text-sm shrink-0 rounded-lg gap-1.5 px-3"
+            className="min-h-touch text-sm shrink-0 rounded-lg gap-1.5 px-3"
           >
             {copied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
             {copied ? 'Skopiowano' : 'Kopiuj link'}

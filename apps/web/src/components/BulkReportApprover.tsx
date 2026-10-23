@@ -91,7 +91,7 @@ export function BulkReportApprover({ draftReports }: BulkReportApproverProps) {
             type="button"
             onClick={toggleSelectAll}
             disabled={isPending}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-foreground hover:text-primary min-h-[48px] px-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40 transition-colors"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-foreground hover:text-primary min-h-touch px-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40 transition-colors"
             aria-label={isAllSelected ? 'Odznacz wszystkie raporty' : 'Zaznacz wszystkie zweryfikowane raporty'}
           >
             {isAllSelected ? (
@@ -110,7 +110,7 @@ export function BulkReportApprover({ draftReports }: BulkReportApproverProps) {
           type="button"
           onClick={handleBulkPublish}
           disabled={selectedIds.length === 0 || isPending}
-          className="bg-primary hover:bg-primary/90 text-white font-semibold min-h-[48px] px-5 rounded-xl inline-flex items-center gap-2 transition-colors disabled:opacity-50"
+          className="bg-primary hover:bg-primary/90 text-white font-semibold min-h-touch px-5 rounded-xl inline-flex items-center gap-2 transition-colors disabled:opacity-50"
         >
           {isPending ? (
             <>
@@ -162,7 +162,7 @@ export function BulkReportApprover({ draftReports }: BulkReportApproverProps) {
               type="button"
               onClick={() => toggleSelectOne(report.id)}
               disabled={isPending}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors min-h-11 ${
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors min-h-touch ${
                 isSelected
                   ? 'bg-primary text-white border-primary'
                   : 'bg-card text-foreground border-border hover:border-border'

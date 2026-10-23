@@ -25,7 +25,7 @@ export function InviteFamilySuccessAlert({
         <Button 
           type="button" 
           variant="default" 
-          className="w-full mt-2 min-h-11" 
+          className="w-full mt-2 min-h-touch" 
           onClick={onClose}
         >
           Zamknij i odśwież
@@ -43,12 +43,12 @@ export function InviteFamilySuccessAlert({
         Wyślij poniższy link bliskim podopiecznego, aby umożliwić założenie konta:
       </p>
       <div className="flex items-center gap-2 mt-2">
-        <Input readOnly value={generatedUrl} className="text-sm font-mono min-h-11" />
+        <Input readOnly value={generatedUrl} className="text-sm font-mono min-h-touch" />
         <Button 
           type="button" 
           variant="outline" 
           size="sm" 
-          className="min-h-11 px-4 text-sm"
+          className="min-h-touch px-4 text-sm"
           onClick={() => {
             navigator.clipboard.writeText(generatedUrl)
             toast.success('Link zaproszenia skopiowano do schowka!')
@@ -60,7 +60,7 @@ export function InviteFamilySuccessAlert({
       <Button 
         type="button" 
         variant="default" 
-        className="w-full mt-2 min-h-11" 
+        className="w-full mt-2 min-h-touch" 
         onClick={onClose}
       >
         Zamknij i odśwież

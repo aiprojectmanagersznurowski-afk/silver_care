@@ -112,7 +112,7 @@ export function StaffQuickRoundsCard({
           <TooltipTrigger asChild>
             <Link
               href={`/voice?resident=${resId}`}
-              className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors min-h-[48px]"
+              className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors min-h-touch"
             >
               <Mic className="h-4 w-4" />
               Dyktuj (1-klik)
@@ -130,7 +130,7 @@ export function StaffQuickRoundsCard({
                 type="button"
                 onClick={() => onQuickLog(resId)}
                 disabled={isSubmitting || isLogged}
-                className={`w-full inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-3 text-sm font-semibold transition-colors min-h-[48px] ${
+                className={`w-full inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-3 text-sm font-semibold transition-colors min-h-touch ${
                   isLogged
                     ? 'bg-muted text-foreground border border-border cursor-default'
                     : 'bg-card border border-border text-foreground hover:bg-muted/50'

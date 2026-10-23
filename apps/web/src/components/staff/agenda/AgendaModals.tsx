@@ -77,7 +77,7 @@ function AgendaEditForm({ item, onClose, onUpdate, residents }: AgendaEditFormPr
           value={editTitle}
           onChange={(e) => setEditTitle(e.target.value)}
           required
-          className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary min-h-11"
+          className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary min-h-touch"
         />
       </div>
 
@@ -92,7 +92,7 @@ function AgendaEditForm({ item, onClose, onUpdate, residents }: AgendaEditFormPr
             value={editTime}
             onChange={(e) => setEditTime(e.target.value)}
             required
-            className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary min-h-11"
+            className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary min-h-touch"
           />
         </div>
 
@@ -104,7 +104,7 @@ function AgendaEditForm({ item, onClose, onUpdate, residents }: AgendaEditFormPr
             id="edit-type"
             value={editType}
             onChange={(e) => setEditType(e.target.value)}
-            className="w-full min-h-11"
+            className="w-full min-h-touch"
           >
             {ITEM_TYPES.map((t) => (
               <NativeSelectOption key={t.value} value={t.value}>{t.label}</NativeSelectOption>
@@ -121,7 +121,7 @@ function AgendaEditForm({ item, onClose, onUpdate, residents }: AgendaEditFormPr
           id="edit-resident"
           value={editResidentId}
           onChange={(e) => setEditResidentId(e.target.value)}
-          className="w-full min-h-11"
+          className="w-full min-h-touch"
         >
           <NativeSelectOption value="">Wszyscy podopieczni (Cała placówka)</NativeSelectOption>
           {residents.map((r) => (
@@ -138,10 +138,10 @@ function AgendaEditForm({ item, onClose, onUpdate, residents }: AgendaEditFormPr
       )}
 
       <DialogFooter className="gap-2 pt-2">
-        <Button type="button" variant="outline" onClick={onClose} disabled={editSubmitting} className="min-h-11">
+        <Button type="button" variant="outline" onClick={onClose} disabled={editSubmitting} className="min-h-touch">
           Anuluj
         </Button>
-        <Button type="submit" disabled={editSubmitting} className="min-h-11">
+        <Button type="submit" disabled={editSubmitting} className="min-h-touch">
           {editSubmitting ? 'Zapisywanie...' : 'Zapisz zmiany'}
         </Button>
       </DialogFooter>

@@ -168,7 +168,7 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
           {activeFiltersCount > 0 && (
             <button
               onClick={clearFilters}
-              className="mt-6 inline-flex items-center rounded-xl bg-card px-4 py-2 text-sm font-medium text-foreground ring-1 ring-inset ring-border hover:bg-muted/50 transition-colors min-h-[44px]"
+              className="mt-6 inline-flex items-center rounded-xl bg-card px-4 py-2 text-sm font-medium text-foreground ring-1 ring-inset ring-border hover:bg-muted/50 transition-colors min-h-touch"
             >
               Wyczyść wszystkie filtry
             </button>

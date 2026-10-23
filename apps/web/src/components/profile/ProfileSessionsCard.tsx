@@ -56,7 +56,7 @@ export function ProfileSessionsCard() {
             variant="outline"
             onClick={handleSignOutOthers}
             disabled={isPending || sessionState.status === 'loading'}
-            className="min-h-11 px-4"
+            className="min-h-touch px-4"
           >
             {sessionState.status === 'loading' ? 'Wylogowywanie...' : 'Wyloguj inne sesje'}
           </Button>

@@ -28,7 +28,7 @@ export function PageHeader({ title, description, actions, back, className }: Pag
           <Link
             href={back.href}
             data-slot="page-header-back"
-            className="mb-1 inline-flex min-h-11 items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            className="mb-1 inline-flex min-h-touch items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="size-4" aria-hidden="true" />
             {back.label}

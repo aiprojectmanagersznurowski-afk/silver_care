@@ -44,7 +44,7 @@ run_step "brak porzuconych nazw" node tools/sc-naming.mjs
 step "5/10 Spójność typów TypeScript (apps/web)"
 run_step "typy TypeScript poprawne" pnpm --filter web exec tsc --noEmit
 
-step "6/10 Norma UI: typografia (zakaz <14px) oraz cele dotykowe (min-h ≥ 44px)"
+step "6/10 Norma UI: typografia (zakaz <14px), cel dotykowy z tokenu (38px), kolory z tokenów"
 TYPO_VIOLATIONS=$(git grep -n -E "text-xs|text-\[(8|9|10|11|12|13)px\]" apps/web/src/ 2>/dev/null || true)
 if [ -n "$TYPO_VIOLATIONS" ]; then
   printf "%s\n" "$TYPO_VIOLATIONS"
@@ -53,31 +53,37 @@ else
   ok "brak zakazanych mikro-fontów (<14px) w apps/web/src/"
 fi
 
-TOUCH_VIOLATIONS=$(git grep -n -E "min-h-\[(28|30|32|34|36|38|40|42)px\]" apps/web/src/ 2>/dev/null || true)
-if [ -n "$TOUCH_VIOLATIONS" ]; then
-  printf "%s\n" "$TOUCH_VIOLATIONS"
-  bad "znaleziono cele dotykowe poniżej normy 44px (min-h < 44px) w apps/web/src/"
-else
-  ok "brak celów dotykowych poniżej normy 44px w apps/web/src/"
-fi
 
-# ADR-017 pkt 4: ta sama reguła co w hookach agentów — wzorzec czytany z tools/sc.config.mjs
-PALETTE_VIOLATIONS=$(node --input-type=module -e '
+# ADR-017 pkt 4 i ADR-018: te same reguły co w hookach agentów — wzorce czytane z tools/sc.config.mjs
+scan_rule(){
+  node --input-type=module -e '
 import { execSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { kkConfig } from "./tools/guard-core.mjs";
-const rule = kkConfig.forbiddenPatterns.find((p) => p.id === "ui-raw-palette");
-if (!rule) { console.log("brak reguły ui-raw-palette w tools/sc.config.mjs"); process.exit(0); }
+const id = process.argv[1];
+const rule = kkConfig.forbiddenPatterns.find((p) => p.id === id);
+if (!rule) { console.log(`brak reguły ${id} w tools/sc.config.mjs`); process.exit(0); }
 const re = new RegExp(rule.re), applies = new RegExp(rule.appliesTo);
 for (const f of execSync("git ls-files apps/web/src", { encoding: "utf8" }).split("\n").filter(Boolean)) {
   if (!applies.test(f) || (rule.allowIn || []).some((a) => f.includes(a))) continue;
   readFileSync(f, "utf8").split("\n").forEach((l, i) => { if (re.test(l)) console.log(`${f}:${i + 1}: ${l.trim().slice(0, 120)}`); });
-}' 2>&1)
+}' "$1" 2>&1
+}
+
+PALETTE_VIOLATIONS=$(scan_rule ui-raw-palette)
 if [ -n "$PALETTE_VIOLATIONS" ]; then
   printf "%s\n" "$PALETTE_VIOLATIONS"
   bad "znaleziono surową paletę Tailwind zamiast tokenów kontraktu w apps/web/src/ (ADR-017)"
 else
   ok "brak surowej palety Tailwind w apps/web/src/ (kolory wyłącznie z tokenów)"
+fi
+
+TOUCH_VIOLATIONS=$(scan_rule ui-touch-target-token)
+if [ -n "$TOUCH_VIOLATIONS" ]; then
+  printf "%s\n" "$TOUCH_VIOLATIONS"
+  bad "znaleziono cel dotykowy wpisany na sztywno zamiast min-h-touch / min-w-touch w apps/web/src/ (ADR-018)"
+else
+  ok "cele dotykowe wyłącznie z tokenu kontraktu (min-h-touch / min-w-touch, 38px)"
 fi
 
 step "7/10 Limit rozmiaru plików aplikacyjnych (max 250 LOC)"

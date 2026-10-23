@@ -147,7 +147,7 @@ function VoiceNoteContent() {
         description={resident && (
           <>
             Dla: <span className="font-semibold text-foreground">{resident.first_name} {resident.last_name}</span>
-            <button type="button" onClick={() => { setActiveResidentId(''); setResident(null); resetNote() }} className="ml-2 min-h-11 text-sm text-primary hover:underline">
+            <button type="button" onClick={() => { setActiveResidentId(''); setResident(null); resetNote() }} className="ml-2 min-h-touch text-sm text-primary hover:underline">
               (Zmień podopiecznego)
             </button>
           </>
@@ -196,8 +196,8 @@ function VoiceNoteContent() {
               <p className="text-sm font-medium text-destructive">{error || recorder.error}</p>
               {recorder.fallbackAudioBlob && (
                 <div className="mt-3 flex flex-wrap justify-center gap-2">
-                  <button type="button" onClick={recorder.downloadFallbackAudio} className="min-h-11 rounded-lg bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground">Pobierz nagranie lokalnie</button>
-                  <button type="button" onClick={() => void recorder.retryFallbackAudio()} className="min-h-11 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Ponów próbę</button>
+                  <button type="button" onClick={recorder.downloadFallbackAudio} className="min-h-touch rounded-lg bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground">Pobierz nagranie lokalnie</button>
+                  <button type="button" onClick={() => void recorder.retryFallbackAudio()} className="min-h-touch rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Ponów próbę</button>
                 </div>
               )}
             </div>

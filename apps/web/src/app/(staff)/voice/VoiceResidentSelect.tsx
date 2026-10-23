@@ -53,7 +53,7 @@ export function VoiceResidentSelect({
             placeholder="Wpisz imię lub nazwisko podopiecznego..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full min-h-11 rounded-xl border border-border bg-background pl-9 pr-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full min-h-touch rounded-xl border border-border bg-background pl-9 pr-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
       </div>
@@ -68,7 +68,7 @@ export function VoiceResidentSelect({
               type="button"
               variant={viewMode === 'grid' ? 'default' : 'ghost'}
               onClick={() => setViewMode('grid')}
-              className={`min-h-11 px-3 rounded-lg text-sm font-medium transition-all ${
+              className={`min-h-touch px-3 rounded-lg text-sm font-medium transition-all ${
                 viewMode === 'grid' ? 'bg-primary text-white hover:bg-primary/90' : 'text-foreground'
               }`}
             >
@@ -79,7 +79,7 @@ export function VoiceResidentSelect({
               type="button"
               variant={viewMode === 'table' ? 'default' : 'ghost'}
               onClick={() => setViewMode('table')}
-              className={`min-h-11 px-3 rounded-lg text-sm font-medium transition-all ${
+              className={`min-h-touch px-3 rounded-lg text-sm font-medium transition-all ${
                 viewMode === 'table' ? 'bg-primary text-white hover:bg-primary/90' : 'text-foreground'
               }`}
             >
@@ -100,7 +100,7 @@ export function VoiceResidentSelect({
                 key={r.id}
                 type="button"
                 onClick={() => onSelectResident(r)}
-                className="flex items-center gap-3 p-3 min-h-11 rounded-xl border border-border bg-background hover:bg-muted/50 hover:border-primary/50 text-left transition-all"
+                className="flex items-center gap-3 p-3 min-h-touch rounded-xl border border-border bg-background hover:bg-muted/50 hover:border-primary/50 text-left transition-all"
               >
                 <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm shrink-0">
                   {r.first_name?.[0]}{r.last_name?.[0]}
@@ -142,7 +142,7 @@ export function VoiceResidentSelect({
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <span className="inline-flex items-center justify-center gap-1.5 min-h-11 px-3 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white transition-colors text-sm font-medium">
+                      <span className="inline-flex items-center justify-center gap-1.5 min-h-touch px-3 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white transition-colors text-sm font-medium">
                         <Mic className="w-4 h-4" />
                         Nagraj
                       </span>

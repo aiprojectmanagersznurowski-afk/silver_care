@@ -34,7 +34,7 @@ export function EditResidentFormFields({ formData, setFormData }: EditResidentFo
             id="edit-first-name"
             value={formData.first_name}
             onChange={(e) => setFormData((prev) => ({ ...prev, first_name: e.target.value }))}
-            className="min-h-[44px]"
+            className="min-h-touch"
             required
           />
         </div>
@@ -47,7 +47,7 @@ export function EditResidentFormFields({ formData, setFormData }: EditResidentFo
             id="edit-last-name"
             value={formData.last_name}
             onChange={(e) => setFormData((prev) => ({ ...prev, last_name: e.target.value }))}
-            className="min-h-[44px]"
+            className="min-h-touch"
             required
           />
         </div>
@@ -62,7 +62,7 @@ export function EditResidentFormFields({ formData, setFormData }: EditResidentFo
             id="edit-gender"
             value={formData.gender}
             onChange={(e) => setFormData((prev) => ({ ...prev, gender: e.target.value }))}
-            className="w-full min-h-[44px]"
+            className="w-full min-h-touch"
           >
             <NativeSelectOption value="">Nieokreślona</NativeSelectOption>
             <NativeSelectOption value="F">Kobieta</NativeSelectOption>
@@ -79,7 +79,7 @@ export function EditResidentFormFields({ formData, setFormData }: EditResidentFo
             type="date"
             value={formData.birth_date}
             onChange={(e) => setFormData((prev) => ({ ...prev, birth_date: e.target.value }))}
-            className="min-h-[44px]"
+            className="min-h-touch"
           />
         </div>
 
@@ -92,7 +92,7 @@ export function EditResidentFormFields({ formData, setFormData }: EditResidentFo
             type="date"
             value={formData.admission_date}
             onChange={(e) => setFormData((prev) => ({ ...prev, admission_date: e.target.value }))}
-            className="min-h-[44px]"
+            className="min-h-touch"
           />
         </div>
       </div>
@@ -106,7 +106,7 @@ export function EditResidentFormFields({ formData, setFormData }: EditResidentFo
             id="edit-care-level"
             value={formData.care_level}
             onChange={(e) => setFormData((prev) => ({ ...prev, care_level: e.target.value }))}
-            className="w-full min-h-[44px]"
+            className="w-full min-h-touch"
           >
             <NativeSelectOption value="">Nieokreślony</NativeSelectOption>
             <NativeSelectOption value="walking">Chodzący</NativeSelectOption>
@@ -117,7 +117,7 @@ export function EditResidentFormFields({ formData, setFormData }: EditResidentFo
         </div>
 
         <div className="space-y-1.5 flex flex-col justify-end">
-          <label className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30 cursor-pointer min-h-[44px]">
+          <label className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30 cursor-pointer min-h-touch">
             <input
               type="checkbox"
               id="edit-is-zsn"

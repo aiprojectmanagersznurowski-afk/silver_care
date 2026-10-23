@@ -62,7 +62,7 @@ export function GlobalResidentSwitcher({ residents }: { residents: Resident[] })
           aria-selected={r.id === selectedId}
           onClick={() => handleSelect(r.id)}
           className={`
-            inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all min-h-11 min-w-11
+            inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all min-h-touch min-w-touch
             ${r.id === selectedId
               ? 'bg-primary text-primary-foreground'
               : 'bg-surface text-text-secondary hover:bg-surface-hover border border-border'

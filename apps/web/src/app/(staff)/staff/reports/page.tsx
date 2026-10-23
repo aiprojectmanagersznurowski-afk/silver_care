@@ -59,7 +59,7 @@ export default async function StaffReportsPage({ searchParams }: StaffReportsPag
           ? 'Historia oraz bieżące szkice raportów wygenerowane dla tego podopiecznego.'
           : 'Zatwierdź szkice raportów wygenerowane przez AI, aby rodzina mogła je zobaczyć.'}
         actions={residentId && (
-          <Link href={`/voice?resident=${residentId}`} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 transition-colors">
+          <Link href={`/voice?resident=${residentId}`} className="inline-flex min-h-touch items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 transition-colors">
             <Mic className="h-4 w-4" />
             Nagraj nową notatkę
           </Link>

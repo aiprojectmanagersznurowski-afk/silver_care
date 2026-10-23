@@ -16,6 +16,8 @@
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
   --radius-full: var(--sc-radius-full);
+  /* ADR-018: cel dotykowy z kontraktu → klasy min-h-touch / min-w-touch */
+  --spacing-touch: var(--sc-touch-target);
 
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);

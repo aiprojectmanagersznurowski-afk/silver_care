@@ -66,7 +66,7 @@ export function ResendAdminInviteButton({
         size="sm"
         disabled={isPending}
         onClick={handleResend}
-        className="rounded-xl border-border text-foreground hover:bg-muted/50 text-sm min-h-11 font-medium gap-1.5"
+        className="rounded-xl border-border text-foreground hover:bg-muted/50 text-sm min-h-touch font-medium gap-1.5"
         title="Wyślij e-mail z zaproszeniem lub wygeneruj link aktywacyjny"
       >
         {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4 text-primary" />}
@@ -121,7 +121,7 @@ export function ResendAdminInviteButton({
                       variant="outline"
                       size="sm"
                       onClick={() => handleCopy(resultData.inviteUrl!)}
-                      className="shrink-0 gap-1 text-sm min-h-11"
+                      className="shrink-0 gap-1 text-sm min-h-touch"
                     >
                       {copied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
                       {copied ? 'Skopiowano' : 'Kopiuj'}

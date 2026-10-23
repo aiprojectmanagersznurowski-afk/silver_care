@@ -26,7 +26,7 @@ export function IamErrorState({ errorMessage }: { errorMessage?: string }) {
       </p>
       <Button
         onClick={() => window.location.reload()}
-        className="min-h-11 rounded-xl px-6 bg-foreground text-white hover:bg-muted"
+        className="min-h-touch rounded-xl px-6 bg-foreground text-white hover:bg-muted"
       >
         <RefreshCw className="mr-2 h-4 w-4" />
         Spróbuj ponownie
