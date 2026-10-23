@@ -9,9 +9,9 @@
  * zwykle wygasza do 3:1. Minimalizm nie może kosztować czytelności.
  *
  * ADR-014 (2026-10-05): skala i komponenty szablonu shadcn-admin (styl nova) —
- * zaktualizowano do jednolitej normy UI/Mobile-First: tekst bazowy 16px (text-base),
- * minimalny dopuszczalny tekst pomocniczy 14px (text-sm), cel dotykowy 44x44px (min-h-11 min-w-11).
- * Klasy text-xs, text-[11px], text-[10px] są surowo zabronione.
+ * zaktualizowano do skali szablonu shadcn-admin: tekst bazowy 14px (text-sm), minimalny tekst
+ * pomocniczy 12px (text-xs) — ADR-020; cel dotykowy 38x38px (min-h-touch min-w-touch) — ADR-018.
+ * Klasy text-[11px], text-[10px] i mniejsze są zabronione.
  */
 
 /**
@@ -25,18 +25,18 @@
 export const TYPOGRAPHY = {
   fontStack: '-apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui, sans-serif',
   webfont: { family: 'Inter', weights: [400, 500, 600], subset: 'latin-ext', note: 'latin-ext jest wymagany — polskie znaki diakrytyczne.' },
-  baseSize: '16px',
+  baseSize: '14px',
   scale: [
     { id: 'display', size: '30px', weight: 600, lineHeight: 1.2,  tracking: '-0.02em', use: 'Nagłówek raportu dnia. Jedyne miejsce na ten rozmiar. (text-3xl)' },
     { id: 'title',   size: '24px', weight: 600, lineHeight: 1.33, tracking: '-0.01em', use: 'Nagłówek strony i sekcji, imię pensjonariusza. (text-2xl)' },
     { id: 'heading', size: '20px', weight: 600, lineHeight: 1.4,  tracking: '0',       use: 'Nagłówek karty. (text-xl)' },
-    { id: 'body',    size: '16px', weight: 400, lineHeight: 1.5,  tracking: '0',       use: 'Treść interfejsu i raportu, opisy. Domyślny rozmiar bazowy. (text-base)' },
-    { id: 'callout', size: '14px', weight: 500, lineHeight: 1.43, tracking: '0',       use: 'Etykiety pomocnicze, wartości metryk w tabelach. (text-sm)' },
-    { id: 'caption', size: '14px', weight: 400, lineHeight: 1.43, tracking: '0.01em',  use: 'Znaczniki czasu, etykieta AI. Minimalny dopuszczalny tekst pomocniczy. (text-sm)' },
+    { id: 'body',    size: '14px', weight: 400, lineHeight: 1.43, tracking: '0',       use: 'Treść interfejsu i raportu, opisy. Domyślny rozmiar bazowy — skala szablonu shadcn-admin (ADR-020). (text-sm)' },
+    { id: 'callout', size: '12px', weight: 500, lineHeight: 1.33, tracking: '0',       use: 'Etykiety pomocnicze, plakietki, małe przyciski. (text-xs)' },
+    { id: 'caption', size: '12px', weight: 400, lineHeight: 1.33, tracking: '0.01em',  use: 'Znaczniki czasu, etykieta AI. Minimalny dopuszczalny tekst pomocniczy. (text-xs)' },
   ],
   rules: [
     'Waga 600 zamiast 700 — cięższy krój psuje spokojny ton.',
-    'Nigdy poniżej 14px (text-sm). Klasy text-xs, text-[11px], text-[10px] są surowo zabronione.',
+    'Nigdy poniżej 12px (text-xs). Klasy text-[11px], text-[10px] i mniejsze są zabronione (ADR-020).',
     'Długość wiersza w raporcie maksymalnie 68 znaków.',
     'Bez wersalików w treści — pogarszają czytelność przy zmęczonym wzroku.',
   ],

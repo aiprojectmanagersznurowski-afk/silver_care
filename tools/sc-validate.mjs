@@ -359,9 +359,9 @@ else if (Number(m[1]) < 7 || Number(m[2]) > 21) {
 // Skala: tekst 16px, minimalny tekst pomocniczy 14px, przycisk/cel dotykowy 44px. Poniżej tych progów bramka się zapala.
 {
   const base = parseInt(TYPOGRAPHY.baseSize, 10);
-  if (!base || base < 16) err('R24-design-a11y', `Bazowy rozmiar tekstu ${TYPOGRAPHY.baseSize} jest za mały (minimum 16px).`);
+  if (!base || base < 14) err('R24-design-a11y', `Bazowy rozmiar tekstu ${TYPOGRAPHY.baseSize} jest za mały (minimum 14px, ADR-020).`);
   for (const s of TYPOGRAPHY.scale) {
-    if (parseInt(s.size, 10) < 14) err('R24-design-a11y', `Rozmiar "${s.id}" (${s.size}) poniżej minimalnego progu czytelności 14px (text-sm).`);
+    if (parseInt(s.size, 10) < 12) err('R24-design-a11y', `Rozmiar "${s.id}" (${s.size}) poniżej minimalnego progu czytelności 12px (text-xs, ADR-020).`);
   }
   if (!/latin-ext/.test(TYPOGRAPHY.webfont.subset)) {
     err('R24-design-a11y', 'Krój bez zestawu latin-ext — polskie znaki diakrytyczne byłyby zastępowane.');

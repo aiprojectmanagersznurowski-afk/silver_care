@@ -12,7 +12,7 @@ export const TYPOGRAPHY = {
     "subset": "latin-ext",
     "note": "latin-ext jest wymagany — polskie znaki diakrytyczne."
   },
-  "baseSize": "16px",
+  "baseSize": "14px",
   "scale": [
     {
       "id": "display",
@@ -40,32 +40,32 @@ export const TYPOGRAPHY = {
     },
     {
       "id": "body",
-      "size": "16px",
+      "size": "14px",
       "weight": 400,
-      "lineHeight": 1.5,
+      "lineHeight": 1.43,
       "tracking": "0",
-      "use": "Treść interfejsu i raportu, opisy. Domyślny rozmiar bazowy. (text-base)"
+      "use": "Treść interfejsu i raportu, opisy. Domyślny rozmiar bazowy — skala szablonu shadcn-admin (ADR-020). (text-sm)"
     },
     {
       "id": "callout",
-      "size": "14px",
+      "size": "12px",
       "weight": 500,
-      "lineHeight": 1.43,
+      "lineHeight": 1.33,
       "tracking": "0",
-      "use": "Etykiety pomocnicze, wartości metryk w tabelach. (text-sm)"
+      "use": "Etykiety pomocnicze, plakietki, małe przyciski. (text-xs)"
     },
     {
       "id": "caption",
-      "size": "14px",
+      "size": "12px",
       "weight": 400,
-      "lineHeight": 1.43,
+      "lineHeight": 1.33,
       "tracking": "0.01em",
-      "use": "Znaczniki czasu, etykieta AI. Minimalny dopuszczalny tekst pomocniczy. (text-sm)"
+      "use": "Znaczniki czasu, etykieta AI. Minimalny dopuszczalny tekst pomocniczy. (text-xs)"
     }
   ],
   "rules": [
     "Waga 600 zamiast 700 — cięższy krój psuje spokojny ton.",
-    "Nigdy poniżej 14px (text-sm). Klasy text-xs, text-[11px], text-[10px] są surowo zabronione.",
+    "Nigdy poniżej 12px (text-xs). Klasy text-[11px], text-[10px] i mniejsze są zabronione (ADR-020).",
     "Długość wiersza w raporcie maksymalnie 68 znaków.",
     "Bez wersalików w treści — pogarszają czytelność przy zmęczonym wzroku."
   ]
