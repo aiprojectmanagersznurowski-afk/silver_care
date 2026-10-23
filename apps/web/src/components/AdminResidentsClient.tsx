@@ -3,6 +3,9 @@
 import React, { useState } from 'react'
 import { ViewToggle, GRID_TABLE_OPTIONS } from '@/components/patterns/ViewToggle'
 import { ListToolbar, SearchField } from '@/components/patterns/ListToolbar'
+import { TableCard } from '@/components/patterns/TableCard'
+import { ObjectGrid } from '@/components/patterns/ObjectCard'
+import { ListEmpty } from '@/components/patterns/ListState'
 import { ResidentGridCard } from '@/components/residents/ResidentGridCard'
 import { ResidentsTable } from '@/components/residents/ResidentsTable'
 import { useViewPreference, VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-preference'
@@ -30,24 +33,30 @@ export function AdminResidentsClient({ residents }: AdminResidentsClientProps) {
   })
 
   return (
-    <div className="space-y-4">
-      <ListToolbar end={<ViewToggle value={viewMode} onChange={setViewMode} options={GRID_TABLE_OPTIONS} />}>
-        <SearchField value={searchQuery} onChange={setSearchQuery} label="Szukaj podopiecznego" placeholder="Szukaj podopiecznego..." />
-      </ListToolbar>
-
+    <TableCard
+      toolbar={
+        <ListToolbar end={<ViewToggle value={viewMode} onChange={setViewMode} options={GRID_TABLE_OPTIONS} />}>
+          <SearchField value={searchQuery} onChange={setSearchQuery} label="Szukaj podopiecznego" placeholder="Szukaj podopiecznego..." />
+        </ListToolbar>
+      }
+    >
       {filteredResidents.length === 0 ? (
-        <div className="rounded-xl bg-card p-8 text-center text-muted-foreground border border-border">
-          {searchQuery ? 'Brak podopiecznych pasujących do wyszukiwania.' : 'Brak podopiecznych w bazie.'}
-        </div>
+        <ListEmpty
+          framed={false}
+          title={searchQuery ? 'Brak podopiecznych pasujących do wyszukiwania' : 'Brak podopiecznych w bazie'}
+          description={searchQuery ? 'Zmień wyszukiwaną frazę.' : 'Przyjmij pierwszego podopiecznego przyciskiem u góry strony.'}
+        />
       ) : viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredResidents.map((resident) => (
-            <ResidentGridCard key={resident.id} resident={resident} />
-          ))}
+        <div className="p-4">
+          <ObjectGrid>
+            {filteredResidents.map((resident) => (
+              <ResidentGridCard key={resident.id} resident={resident} />
+            ))}
+          </ObjectGrid>
         </div>
       ) : (
         <ResidentsTable residents={filteredResidents} />
       )}
-    </div>
+    </TableCard>
   )
 }
