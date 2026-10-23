@@ -39,8 +39,8 @@ export class IamPage {
   async openResetPasswordForUser(email: string) {
     const row = this.page.locator('tbody tr', { hasText: email });
     await expect(row).toBeVisible();
-    const resetBtn = row.locator('button:has-text("Hasło")');
-    await resetBtn.click();
+    await row.locator('[data-slot="row-actions"]').click();
+    await this.page.getByRole('menuitem', { name: 'Hasło' }).click();
     await expect(this.resetPasswordTitle).toBeVisible();
   }
 
@@ -56,8 +56,8 @@ export class IamPage {
   async openChangeRoleForUser(email: string) {
     const row = this.page.locator('tbody tr', { hasText: email });
     await expect(row).toBeVisible();
-    const changeBtn = row.locator('button:has-text("Zmień rolę")');
-    await changeBtn.click();
+    await row.locator('[data-slot="row-actions"]').click();
+    await this.page.getByRole('menuitem', { name: 'Zmień rolę' }).click();
     await expect(this.page.locator('text=Zmień uprawnienia użytkownika')).toBeVisible();
   }
 

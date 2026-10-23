@@ -48,8 +48,8 @@ export class OrganizationManagementPage {
   }
 
   async openEditDialog() {
-    const editBtn = this.page.locator('button:has-text("Edytuj")').first();
-    await editBtn.click();
+    await this.table.locator('[data-slot="row-actions"]').first().click();
+    await this.page.getByRole('menuitem', { name: 'Edytuj' }).click();
     await expect(this.page.locator('div[role="dialog"]')).toBeVisible();
   }
 }
