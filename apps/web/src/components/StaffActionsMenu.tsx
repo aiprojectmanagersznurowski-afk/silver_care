@@ -112,7 +112,7 @@ export function StaffActionsMenu({ staffId, email, isActive }: StaffActionsMenuP
   return (
     <>
       <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
-        <DropdownMenuTrigger className="inline-flex items-center justify-center h-11 w-11 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
+        <DropdownMenuTrigger className="inline-flex items-center justify-center size-touch rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
           <span className="sr-only">Otwórz menu</span>
           <MoreHorizontal className="h-4 w-4" />
         </DropdownMenuTrigger>
