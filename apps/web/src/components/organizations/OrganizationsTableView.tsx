@@ -54,14 +54,14 @@ export function OrganizationsTableView({
                   {org.resident_limit}
                 </TableCell>
                 <TableCell className="text-center">
-                  <div className="font-semibold text-sm text-foreground">
+                  <span className="font-semibold text-sm text-foreground">
                     {org.active_resident_count} / {org.resident_limit}
-                  </div>
-                  <div className="text-sm text-muted-foreground">{occupancyPercent}%</div>
+                  </span>
+                  <span className="ml-1 text-sm text-muted-foreground">({occupancyPercent}%)</span>
                 </TableCell>
                 <TableCell className="text-center">
                   <span className="font-medium text-foreground">{org.staff_count}</span>
-                  <span className="text-sm text-muted-foreground block">({org.administrator_count} adm.)</span>
+                  <span className="ml-1 text-sm text-muted-foreground">({org.administrator_count} adm.)</span>
                 </TableCell>
                 <TableCell className="text-muted-foreground">
                   {new Date(org.created_at).toLocaleDateString('pl-PL')}

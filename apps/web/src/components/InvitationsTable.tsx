@@ -139,7 +139,7 @@ export function InvitationsTable({ initialInvitations }: { initialInvitations: I
               <TableRow key={inv.id} className="hover:bg-muted/50 data-[state=selected]:bg-muted">
                 <TableCell className="font-medium text-foreground">
                   {inv.email}
-                  {inv.phone && <span className="block text-sm text-muted-foreground font-normal">{inv.phone}</span>}
+                  {inv.phone && <span className="ml-2 text-sm text-muted-foreground font-normal">{inv.phone}</span>}
                 </TableCell>
                 <TableCell className="text-foreground">
                   {inv.residents ? `${inv.residents.first_name} ${inv.residents.last_name}` : '—'}

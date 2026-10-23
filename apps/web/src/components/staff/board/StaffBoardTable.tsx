@@ -42,10 +42,12 @@ export function StaffBoardTable({ residents, unansweredMessagesMap }: StaffBoard
             return (
               <TableRow key={resId}>
                 <TableCell>
-                  <div className="font-medium text-foreground text-base">
-                    {resident.first_name as string} {resident.last_name as string}
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-foreground">
+                      {resident.first_name as string} {resident.last_name as string}
+                    </span>
+                    <BusinessIdBadge type="resident" id={resId} />
                   </div>
-                  <div className="mt-1"><BusinessIdBadge type="resident" id={resId} /></div>
                 </TableCell>
                 <TableCell className="text-muted-foreground">
                   {roomNumber && bedLabel ? `Pokój ${roomNumber}, Łóżko ${bedLabel}` : 'Brak przypisanego łóżka'}
