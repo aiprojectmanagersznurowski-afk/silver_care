@@ -64,15 +64,17 @@ interface FilterChipProps {
   active: boolean
   onClick: () => void
   children: ReactNode
+  'data-testid'?: string
 }
 
 /** Przycisk filtra — wybrany w kolorze marki (jak ViewToggle), pozostałe w obrysie. */
-export function FilterChip({ active, onClick, children }: FilterChipProps) {
+export function FilterChip({ active, onClick, children, 'data-testid': testId }: FilterChipProps) {
   return (
     <Button
       type="button"
       variant="outline"
       data-slot="filter-chip"
+      data-testid={testId}
       aria-pressed={active}
       onClick={onClick}
       className={`min-h-touch gap-1.5 px-3 ${
