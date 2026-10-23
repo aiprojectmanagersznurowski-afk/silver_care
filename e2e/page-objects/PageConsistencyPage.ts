@@ -72,6 +72,24 @@ export class PageConsistencyPage {
     });
   }
 
+  /** Ramki kart (promień, cień, tło) i typografia tytułów kart w treści strony. */
+  async cardSnapshot(): Promise<{ frames: string[]; titles: string[] }> {
+    return this.page.evaluate(() => {
+      const visible = (sel: string) => [...document.querySelectorAll(sel)].filter((e) => (e as HTMLElement).offsetParent !== null);
+      const frames = new Set<string>();
+      const titles = new Set<string>();
+      for (const c of visible('main [data-slot="card"]')) {
+        const cs = getComputedStyle(c);
+        frames.add([cs.borderTopLeftRadius, cs.boxShadow, cs.backgroundColor].join(' | '));
+      }
+      for (const t of visible('main [data-slot="card-title"]')) {
+        const cs = getComputedStyle(t);
+        titles.add([cs.fontSize, cs.fontWeight].join(' | '));
+      }
+      return { frames: [...frames], titles: [...titles] };
+    });
+  }
+
   /** Wyszukiwarki i przyciski filtrów: ile jest i jakie mają kształty (wysokość, promień, obramowanie). */
   async toolbarSnapshot(): Promise<{ searchFields: number; searchShapes: string[]; chips: number; chipShapes: string[] }> {
     return this.page.evaluate(() => {

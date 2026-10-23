@@ -142,6 +142,33 @@ test.describe('Spójność ekranów — jedna wysokość wiersza tabeli (@REQ: U
   }
 });
 
+const CARD_SCREENS: { role: 'org_admin' | 'super_admin' | 'nurse' | 'family'; paths: string[] }[] = [
+  { role: 'org_admin', paths: ['/admin', '/admin/reports/statistics', '/admin/reports/daily', '/admin/audit', '/settings/profile'] },
+  { role: 'super_admin', paths: ['/admin/organizations'] },
+  { role: 'nurse', paths: ['/staff/reports', '/staff/agenda', '/voice'] },
+  { role: 'family', paths: ['/dashboard', '/consents'] },
+];
+
+test.describe('Spójność ekranów — jedna karta i jeden tytuł karty (@REQ: UI-TEMPLATE-ALIGNMENT)', () => {
+  for (const { role, paths } of CARD_SCREENS) {
+    test(`@REQ: UI-TEMPLATE-ALIGNMENT - ${role}: karty o jednej ramce, tytuły kart o jednej typografii`, async ({ loginPage, page }) => {
+      await loginPage.loginAs(role);
+      await page.evaluate(() => window.localStorage.setItem('sc-theme', 'light'));
+      const screens = new PageConsistencyPage(page);
+      const frames = new Set<string>();
+      const titles = new Set<string>();
+      for (const path of paths) {
+        await screens.goto(path);
+        const snap = await screens.cardSnapshot();
+        snap.frames.forEach((f) => frames.add(f));
+        snap.titles.forEach((t) => titles.add(t));
+      }
+      expect([...frames].length, `różne ramki kart: ${[...frames].join(' || ')}`).toBeLessThanOrEqual(1);
+      expect([...titles].length, 'różna typografia tytułów kart').toBeLessThanOrEqual(1);
+    });
+  }
+});
+
 test.describe('Pulpit placówki — karty wskaźników szablonu (@REQ: UI-TEMPLATE-ALIGNMENT)', () => {
   test('@REQ: UI-TEMPLATE-ALIGNMENT - wskaźniki w MetricCard o jednym kształcie, bez zmyślonego statusu', async ({ loginPage, page }) => {
     await loginPage.loginAs('org_admin');
