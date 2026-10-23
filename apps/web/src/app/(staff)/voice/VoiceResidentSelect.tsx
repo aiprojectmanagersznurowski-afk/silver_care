@@ -2,11 +2,11 @@
 
 import React from 'react'
 import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { TableCard } from '@/components/patterns/TableCard'
 import { ListEmpty, ListLoading } from '@/components/patterns/ListState'
-import { Search, Mic, LayoutGrid, Table as TableIcon } from 'lucide-react'
+import { Search, Mic } from 'lucide-react'
+import { ViewToggle, GRID_TABLE_OPTIONS } from '@/components/patterns/ViewToggle'
 import { useViewPreference, VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-preference'
 
 interface ResidentItem {
@@ -32,8 +32,8 @@ export function VoiceResidentSelect({
 }: VoiceResidentSelectProps) {
   const [viewMode, setViewMode] = useViewPreference(
     VIEW_PREFERENCE_KEYS.voiceResidents,
-    'grid',
-    ['grid', 'table'] as const
+    'table',
+    ['table', 'grid'] as const
   )
   const filteredResidents = residentsList.filter((r) =>
     `${r.first_name} ${r.last_name}`.toLowerCase().includes(searchQuery.toLowerCase())
@@ -63,30 +63,7 @@ export function VoiceResidentSelect({
           <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
             Wybierz podopiecznego ({filteredResidents.length})
           </h4>
-          <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-xl border border-border">
-            <Button
-              type="button"
-              variant={viewMode === 'grid' ? 'default' : 'ghost'}
-              onClick={() => setViewMode('grid')}
-              className={`min-h-touch px-3 rounded-lg text-sm font-medium transition-all ${
-                viewMode === 'grid' ? 'bg-primary text-white hover:bg-primary/90' : 'text-foreground'
-              }`}
-            >
-              <LayoutGrid className="w-4 h-4 mr-1" />
-              Kafelki
-            </Button>
-            <Button
-              type="button"
-              variant={viewMode === 'table' ? 'default' : 'ghost'}
-              onClick={() => setViewMode('table')}
-              className={`min-h-touch px-3 rounded-lg text-sm font-medium transition-all ${
-                viewMode === 'table' ? 'bg-primary text-white hover:bg-primary/90' : 'text-foreground'
-              }`}
-            >
-              <TableIcon className="w-4 h-4 mr-1" />
-              Tabela
-            </Button>
-          </div>
+          <ViewToggle value={viewMode} onChange={setViewMode} options={GRID_TABLE_OPTIONS} />
         </div>
 
         {loadingResidents ? (
@@ -118,7 +95,7 @@ export function VoiceResidentSelect({
           <TableCard>
           <div className="max-h-[420px] overflow-y-auto">
             <Table>
-              <TableHeader className="bg-muted/30">
+              <TableHeader>
                 <TableRow>
                   <TableHead>Podopieczny</TableHead>
                   <TableHead className="w-40 text-right">Akcja</TableHead>
@@ -126,11 +103,7 @@ export function VoiceResidentSelect({
               </TableHeader>
               <TableBody>
                 {filteredResidents.map((r) => (
-                  <TableRow
-                    key={r.id}
-                    onClick={() => onSelectResident(r)}
-                    className="cursor-pointer hover:bg-muted/40 transition-colors"
-                  >
+                  <TableRow key={r.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm shrink-0">
@@ -142,10 +115,15 @@ export function VoiceResidentSelect({
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <span className="inline-flex items-center justify-center gap-1.5 min-h-touch px-3 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white transition-colors text-sm font-medium">
+                      <button
+                        type="button"
+                        onClick={() => onSelectResident(r)}
+                        aria-label={`Kliknij, aby nagrać notatkę dla: ${r.first_name} ${r.last_name}`}
+                        className="inline-flex items-center justify-center gap-1.5 min-h-touch px-3 rounded-lg bg-primary text-primary-foreground shadow-xs hover:bg-primary/90 transition-colors text-sm font-medium"
+                      >
                         <Mic className="w-4 h-4" />
-                        Nagraj
-                      </span>
+                        Kliknij, aby nagrać
+                      </button>
                     </TableCell>
                   </TableRow>
                 ))}
