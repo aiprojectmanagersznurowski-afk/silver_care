@@ -290,7 +290,7 @@ export const REQUIREMENTS = [
       "Panel administratora i panel personelu mają zwijany pasek boczny szablonu z przyciskiem zwijania w nagłówku strony",
       "Komponenty bazowe szablonu potrzebne widokom (sidebar, table, tabs, select, field, empty, chart) są dostępne w components/ui",
       "Kolory chart-* nie prezentują metryk pensjonariusza — zestawienia trendu pozostają zakazane (ADR-005)",
-      "Każdy widok listy obiektów ma przełącznik kafelki/tabela z domyślną tabelą (patterns/ViewToggle)"
+      "Każdy widok listy obiektów ma przełącznik kafelki/tabela z domyślną tabelą (patterns/ViewToggle); wyjątek: rejestry audytowe (Rejestr Audytowy, Dziennik Audytowy IAM) pozostają wyłącznie tabelą"
     ]
   },
   {
