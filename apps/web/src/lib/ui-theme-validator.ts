@@ -42,19 +42,20 @@ export function validateCareLevelNeutrality(
 }
 
 /**
- * Walidacja skali typograficznej kontraktu (zakaz mikro-fontów <14px).
+ * Walidacja skali typograficznej kontraktu (zakaz mikro-fontów <12px, ADR-020).
  */
 export function validateTypographyScale(typography: typeof TYPOGRAPHY): { valid: boolean; violations: string[] } {
   const violations: string[] = []
 
-  if (typography.baseSize !== '16px') {
-    violations.push(`Rozmiar bazowy to ${typography.baseSize}, oczekiwano 16px`)
+  // ADR-020: skala szablonu shadcn-admin — 14px bazowo, minimum 12px
+  if (typography.baseSize !== '14px') {
+    violations.push(`Rozmiar bazowy to ${typography.baseSize}, oczekiwano 14px`)
   }
 
   for (const item of typography.scale) {
     const px = parseInt(item.size, 10)
-    if (px < 14) {
-      violations.push(`Element typografii ${item.id} ma ${item.size} (< 14px)`)
+    if (px < 12) {
+      violations.push(`Element typografii ${item.id} ma ${item.size} (< 12px)`)
     }
   }
 

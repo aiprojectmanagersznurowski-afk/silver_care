@@ -44,14 +44,7 @@ run_step "brak porzuconych nazw" node tools/sc-naming.mjs
 step "5/10 Spójność typów TypeScript (apps/web)"
 run_step "typy TypeScript poprawne" pnpm --filter web exec tsc --noEmit
 
-step "6/10 Norma UI: typografia (zakaz <14px), cel dotykowy z tokenu (38px), kolory z tokenów"
-TYPO_VIOLATIONS=$(git grep -n -E "text-xs|text-\[(8|9|10|11|12|13)px\]" apps/web/src/ 2>/dev/null || true)
-if [ -n "$TYPO_VIOLATIONS" ]; then
-  printf "%s\n" "$TYPO_VIOLATIONS"
-  bad "znaleziono zakazane mikro-fonty (<14px) w apps/web/src/"
-else
-  ok "brak zakazanych mikro-fontów (<14px) w apps/web/src/"
-fi
+step "6/10 Norma UI: typografia (min. 12px), cel dotykowy z tokenu (38px), kolory z tokenów"
 
 
 # ADR-017 pkt 4 i ADR-018: te same reguły co w hookach agentów — wzorce czytane z tools/sc.config.mjs
@@ -76,6 +69,14 @@ if [ -n "$PALETTE_VIOLATIONS" ]; then
   bad "znaleziono surową paletę Tailwind zamiast tokenów kontraktu w apps/web/src/ (ADR-017)"
 else
   ok "brak surowej palety Tailwind w apps/web/src/ (kolory wyłącznie z tokenów)"
+fi
+
+TYPO_VIOLATIONS=$(scan_rule ui-micro-font)
+if [ -n "$TYPO_VIOLATIONS" ]; then
+  printf "%s\n" "$TYPO_VIOLATIONS"
+  bad "znaleziono tekst poniżej 12px w apps/web/src/ (ADR-020)"
+else
+  ok "brak tekstu poniżej 12px w apps/web/src/ (skala szablonu, ADR-020)"
 fi
 
 TOUCH_VIOLATIONS=$(scan_rule ui-touch-target-token)
