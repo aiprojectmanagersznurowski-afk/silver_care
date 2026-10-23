@@ -150,7 +150,7 @@ export function SidebarNav({ groups }: { groups: SidebarNavGroup[] }) {
                     <div className="relative flex items-center justify-center">
                       <NavIcon icon={item.icon} />
                       {item.badge !== undefined && (
-                        <span className="hidden group-data-[collapsible=icon]:block absolute -top-1 -right-1 h-2 w-2 rounded-full bg-destructive ring-1 ring-background" />
+                        <span className="hidden group-data-[collapsible=icon]:block absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary ring-1 ring-background" />
                       )}
                     </div>
                     <span>{item.label}</span>
@@ -158,7 +158,7 @@ export function SidebarNav({ groups }: { groups: SidebarNavGroup[] }) {
                   {item.badge !== undefined && (
                     <SidebarMenuBadge
                       data-testid="sidebar-nav-badge"
-                      className="bg-destructive/15 text-destructive font-semibold border border-destructive/25 tabular-nums"
+                      className="bg-primary/15 text-primary font-semibold border border-primary/25 tabular-nums"
                     >
                       {item.badge}
                     </SidebarMenuBadge>
