@@ -28,7 +28,7 @@ export function ResidentProfileHeader({
     : null
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       <Link
         href="/admin/residents"
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors min-h-touch"
@@ -37,16 +37,16 @@ export function ResidentProfileHeader({
         Wróć do listy podopiecznych
       </Link>
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-6">
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div className="flex items-center gap-4">
-          <Avatar className="h-16 w-16 border border-border">
+          <Avatar className="size-16 border border-border sm:size-20">
             {resident.avatar_url && (
               <AvatarImage
                 src={resident.avatar_url}
                 alt={`${resident.first_name} ${resident.last_name}`}
               />
             )}
-            <AvatarFallback className="bg-primary/10 text-primary font-bold text-xl">
+            <AvatarFallback className="bg-muted text-foreground font-medium text-xl">
               {resident.first_name[0]}
               {resident.last_name[0]}
             </AvatarFallback>
@@ -66,12 +66,12 @@ export function ResidentProfileHeader({
               )}
             </div>
             <p className="text-sm text-muted-foreground mt-1">
-              Szczegółowa kartoteka pensjonariusza, dane opiekuńcze i historia zdarzeń.
+              {activeBedLabel ?? 'Brak przypisanego łóżka'}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 self-stretch sm:self-auto flex-wrap">
+        <div className="flex flex-wrap items-center gap-2">
           <EditResidentDialog resident={resident} />
 
           {isActive && !isImpersonating && (
