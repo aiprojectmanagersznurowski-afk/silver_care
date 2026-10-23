@@ -27,7 +27,7 @@ describe('ObjectCard — wspólny kafelek obiektu', () => {
     expect(full).toContain('data-slot="object-card"');
     expect(full).toContain('data-slot="card"');
     expect(full.match(/<h3\b/g)).toHaveLength(1);
-    expect(full).toMatch(/<h3[^>]*class="[^"]*text-base[^"]*font-semibold[^"]*"[^>]*>Jan Kowalski<\/h3>/);
+    expect(full).toMatch(/<h3[^>]*class="[^"]*text-base[^"]*font-medium[^"]*"[^>]*>Jan Kowalski<\/h3>/);
     expect(full).toMatch(/class="[^"]*text-muted-foreground[^"]*"[^>]*>jan@example\.test</);
   });
 
@@ -52,7 +52,7 @@ describe('ObjectCard — wspólny kafelek obiektu', () => {
     expect(cls.split(' ')).toEqual(expect.arrayContaining(['grid', 'grid-cols-1', 'gap-4', 'sm:grid-cols-2', 'xl:grid-cols-3']));
   });
 
-  it('@REQ: UI-ACCESSIBILITY - żadna klasa poniżej 14px', () => {
-    expect(full).not.toMatch(/text-xs|text-\[1[0-3]px\]/);
+  it('@REQ: UI-ACCESSIBILITY - żadna klasa poniżej 12px (ADR-020)', () => {
+    expect(full).not.toMatch(/text-\[(?:[0-9]|1[01])px\]/);
   });
 });
