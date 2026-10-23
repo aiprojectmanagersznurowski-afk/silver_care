@@ -14,14 +14,14 @@ test.describe('Profil podopiecznego — układ szablonu (@REQ: UI-TEMPLATE-ALIGN
     const profile = new ResidentProfilePage(page);
     await profile.openFirstFromList();
 
-    expect(await profile.tabNames()).toEqual(['Przegląd', 'Rodzina i kontakty', 'Zdarzenia', 'Opaska']);
+    expect(await profile.tabNames()).toEqual(['Przegląd', 'Bliscy i kontakty', 'Zdarzenia', 'Opaska']);
     await expect(profile.tab('Przegląd')).toHaveAttribute('aria-selected', 'true');
     await expect(profile.sidebar).toBeVisible();
     await expect(profile.sidebar.locator('[data-slot="card-title"]')).toContainText('Umowa');
 
-    await profile.tab('Rodzina i kontakty').click();
-    await expect(profile.tab('Rodzina i kontakty')).toHaveAttribute('aria-selected', 'true');
-    expect((await profile.visibleCardTitles()).join(' ')).toMatch(/Rodzina/);
+    await profile.tab('Bliscy i kontakty').click();
+    await expect(profile.tab('Bliscy i kontakty')).toHaveAttribute('aria-selected', 'true');
+    expect((await profile.visibleCardTitles()).join(' ')).toMatch(/Bliscy/);
 
     await profile.tab('Opaska').click();
     expect((await profile.visibleCardTitles()).join(' ')).toMatch(/Opaska/);
