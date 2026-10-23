@@ -72,6 +72,25 @@ export class PageConsistencyPage {
     });
   }
 
+  /** Wyszukiwarki i przyciski filtrów: ile jest i jakie mają kształty (wysokość, promień, obramowanie). */
+  async toolbarSnapshot(): Promise<{ searchFields: number; searchShapes: string[]; chips: number; chipShapes: string[] }> {
+    return this.page.evaluate(() => {
+      const shape = (el: Element) => {
+        const cs = getComputedStyle(el);
+        return [Math.round(el.getBoundingClientRect().height), cs.borderTopLeftRadius, cs.borderTopWidth].join(' | ');
+      };
+      const visible = (sel: string) => [...document.querySelectorAll(sel)].filter((e) => (e as HTMLElement).offsetParent !== null);
+      const fields = visible('main [data-slot="search-field"]');
+      const chips = visible('main [data-slot="filter-chip"]');
+      return {
+        searchFields: fields.length,
+        searchShapes: [...new Set(fields.map(shape))],
+        chips: chips.length,
+        chipShapes: [...new Set(chips.map((c) => shape(c).split(' | ')[0]))],
+      };
+    });
+  }
+
   /** Wysokości wierszy danych, nagłówków i odstępy komórek w widocznych tabelach (bez wierszy stanu). */
   async tableRowMetrics(): Promise<{ rowHeights: number[]; headHeights: number[]; cellPaddings: string[] }> {
     return this.page.evaluate(() => {
