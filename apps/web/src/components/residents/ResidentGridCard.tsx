@@ -1,13 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import { UserCircle2, ChevronRight } from 'lucide-react'
+import { UserCircle2 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 import { ResidentInlineCareLevel } from '@/components/ResidentInlineCareLevel'
 import { ResidentZsnCheckbox } from '@/components/ResidentZsnCheckbox'
-import { ResidentEditSheet } from '@/components/ResidentEditSheet'
+import { ResidentRowActions } from './ResidentRowActions'
 import { ResidentStatusBadge } from './ResidentStatusBadge'
 import { getActiveBed, type ResidentWithAssignments } from './resident-list-types'
 
@@ -35,17 +35,7 @@ export function ResidentGridCard({ resident }: { resident: ResidentWithAssignmen
             </div>
           </Link>
 
-          <div className="flex items-center gap-1 shrink-0">
-            <ResidentEditSheet resident={resident} />
-            <Link
-              href={`/admin/residents/${resident.id}`}
-              className="min-h-touch min-w-touch inline-flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"
-              title="Profil 360°"
-              aria-label="Profil 360°"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </Link>
-          </div>
+          <ResidentRowActions resident={resident} />
         </div>
 
         <div className="grid grid-cols-2 gap-2 text-sm pt-2 border-t border-border">
