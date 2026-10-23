@@ -1,6 +1,6 @@
 // ==============================================================================
 // Automatycznie wygenerowane typy bazy danych Silver Care (PostgreSQL/Supabase)
-// Wygenerowano: 2026-10-15T19:51:04.217Z
+// Wygenerowano: 2026-10-23T11:08:24.627Z
 // ==============================================================================
 
 export type Json =
@@ -14,48 +14,6 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
-      system_alerts: {
-        Row: {
-          id: string
-          title: string
-          message: string
-          severity: string
-          status: string
-          affected_services: string[]
-          is_active: boolean
-          created_by: string | null
-          created_at: string
-          updated_at: string
-          resolved_at: string | null
-        }
-        Insert: {
-          id?: string
-          title: string
-          message: string
-          severity?: string
-          status?: string
-          affected_services?: string[]
-          is_active?: boolean
-          created_by?: string | null
-          created_at?: string
-          updated_at?: string
-          resolved_at?: string | null
-        }
-        Update: {
-          id?: string
-          title?: string
-          message?: string
-          severity?: string
-          status?: string
-          affected_services?: string[]
-          is_active?: boolean
-          created_by?: string | null
-          created_at?: string
-          updated_at?: string
-          resolved_at?: string | null
-        }
-        Relationships: []
-      }
       agenda_items: {
         Row: {
           id: string
@@ -1073,6 +1031,49 @@ export interface Database {
           },
         ]
       }
+      system_alerts: {
+        Row: {
+          id: string
+          title: string
+          message: string
+          severity: string
+          status: string
+          affected_services: unknown[]
+          is_active: boolean
+          created_by: string | null
+          created_at: string
+          updated_at: string
+          resolved_at: string | null
+        }
+        Insert: {
+          id?: string
+          title: string
+          message: string
+          severity?: string
+          status?: string
+          affected_services?: unknown[]
+          is_active?: boolean
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+          resolved_at?: string | null
+        }
+        Update: {
+          id?: string
+          title?: string
+          message?: string
+          severity?: string
+          status?: string
+          affected_services?: unknown[]
+          is_active?: boolean
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+          resolved_at?: string | null
+        }
+        Relationships: [
+        ]
+      }
       voice_draft_notes: {
         Row: {
           id: string
@@ -1442,6 +1443,7 @@ export interface Database {
           p_ai_model?: string | null
           p_ai_prompt_version?: string | null
           p_ai_generated_at?: string | null
+          p_organization_id?: string | null
         }
         Returns: Json
       }

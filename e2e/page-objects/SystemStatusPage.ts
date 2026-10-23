@@ -36,6 +36,10 @@ export class SystemStatusPage {
   }
 
   async navigateFromSidebar() {
+    const trigger = this.page.locator('[data-slot="sidebar-trigger"]');
+    if (!(await this.sidebarLink.isVisible()) && (await trigger.isVisible())) {
+      await trigger.click();
+    }
     await this.sidebarLink.click();
     await this.page.waitForURL('**/admin/system-status');
   }
@@ -75,5 +79,10 @@ export class SystemStatusPage {
 
   async resolveFirstActiveAlert() {
     await this.resolveAlertButton.click();
+  }
+
+  async resolveAlertByTitle(title: string) {
+    const item = this.page.locator(`[data-testid="system-alert-item"][data-alert-title="${title}"]`);
+    await item.locator('[data-testid="resolve-system-alert-btn"]').click();
   }
 }

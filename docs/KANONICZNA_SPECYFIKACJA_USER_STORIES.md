@@ -92,7 +92,9 @@
 > ℹ️ Kontrakt od początku wskazywał `source: 'SC-SUP-04'`, ale story nie istniało w v2.4 — tu zostało uzupełnione.
 
 ### [SC-SUP-05] Globalne alerty systemowe i status platformy (System Status & Maintenance Alerts)
-🔗 **Kontrakt:** `SUP-IAM-PANEL`, `UI-TEMPLATE-ALIGNMENT`, `UI-FOUR-STATES`, `SEC-AUDIT-APPEND-ONLY`, `SEC-NO-PII-LOGS` · **Work Order:** [`SUP-SYSTEM-STATUS.md`](workorders/SUP-SYSTEM-STATUS.md) · **Status:** 📝 PROPOZYCJA
+🔗 **Kontrakt:** brak REQ (wdraża reguły: `SEC-AUDIT-APPEND-ONLY`, `SEC-NO-PII-LOGS`, `UI-FOUR-STATES`, `MDR-VOCABULARY`) · **Work Order:** [`SUP-SYSTEM-STATUS.md`](workorders/SUP-SYSTEM-STATUS.md) · **Status:** 📝 PROPOZYCJA
+
+> ℹ️ Ta funkcja nie wprowadza nowego identyfikatora `@REQ` w `contracts/requirements.contract.mjs` (brak nowego wpisu w kontrakcie — zmiana wymagałaby otwarcia okna kontraktowego przez człowieka). Story opiera się na istniejących regułach audytu i normach interfejsu.
 
 **User story:** Jako Super Admin (operator platformy Silver Care), chcę zarządzać statusem technicznym platformy oraz publikować globalne komunikaty serwisowe (o trwających pracach naprawczych lub niedostępności konkretnych usług), a na pulpicie placówki (`org_admin`) usunąć statyczną atrapę „Status systemu: Stabilny” na rzecz użytecznej metryki operacyjnej ośrodka i globalnego bannera ostrzegawczego (Wariant A), aby placówki otrzymywały rzetelną informację o utrudnieniach bezpośrednio od operatora systemu.
 

@@ -12,6 +12,8 @@ import {
   type SystemAlertRecord,
 } from '@/lib/system-status-helpers'
 
+const ALLOWED_STAFF_ROLES = ['super_admin', 'org_admin', 'nurse'] as const
+
 export async function getSystemAlertsAction(): Promise<{ alerts: SystemAlertRecord[]; error?: string }> {
   try {
     const supabase = await createClient()
@@ -21,57 +23,26 @@ export async function getSystemAlertsAction(): Promise<{ alerts: SystemAlertReco
       return { alerts: [], error: 'Użytkownik nieuwierzytelniony' }
     }
 
-    const adminClient = createAdminClient()
-    const { data, error } = await adminClient
+    const role = user.app_metadata?.role as string | undefined
+    if (!role || !ALLOWED_STAFF_ROLES.includes(role as (typeof ALLOWED_STAFF_ROLES)[number])) {
+      return { alerts: [], error: 'Brak uprawnień do odczytu alertów systemowych' }
+    }
+
+    // Odczyt z bazy z egzekwowaniem polityki RLS (system_alerts_staff_select)
+    const { data, error } = await supabase
       .from('system_alerts')
       .select('*')
       .order('created_at', { ascending: false })
 
     if (error) {
-      // Jeśli tabela nie istnieje jeszcze w zdalnej bazie, fallback do audit_logs
-      return getSystemAlertsFromAuditLogs()
+      console.error('Błąd pobierania alertów systemowych:', error)
+      return { alerts: [], error: 'Błąd pobierania alertów systemowych' }
     }
 
     return { alerts: (data as SystemAlertRecord[]) || [] }
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Błąd pobierania alertów'
-    return { alerts: [], error: message }
-  }
-}
-
-async function getSystemAlertsFromAuditLogs(): Promise<{ alerts: SystemAlertRecord[] }> {
-  try {
-    const adminClient = createAdminClient()
-    const { data } = await adminClient
-      .from('audit_logs')
-      .select('id, action, payload, created_at')
-      .in('action', ['SYSTEM_ALERT_PUBLISHED', 'SYSTEM_ALERT_RESOLVED'])
-      .order('created_at', { ascending: false })
-      .limit(50)
-
-    if (!data) return { alerts: [] }
-
-    const alertMap = new Map<string, SystemAlertRecord>()
-    for (const entry of data) {
-      const p = (entry.payload || {}) as Record<string, unknown>
-      const alertId = (p.alert_id as string) || entry.id
-      if (!alertMap.has(alertId)) {
-        alertMap.set(alertId, {
-          id: alertId,
-          title: (p.title as string) || 'Komunikat serwisowy',
-          message: (p.message as string) || '',
-          severity: (p.severity as SystemAlertRecord['severity']) || 'warning',
-          status: (p.status as SystemAlertRecord['status']) || (entry.action === 'SYSTEM_ALERT_RESOLVED' ? 'operational' : 'degraded'),
-          affected_services: (p.affected_services as string[]) || [],
-          is_active: entry.action === 'SYSTEM_ALERT_PUBLISHED',
-          created_at: entry.created_at,
-          resolved_at: entry.action === 'SYSTEM_ALERT_RESOLVED' ? entry.created_at : null,
-        })
-      }
-    }
-    return { alerts: Array.from(alertMap.values()) }
-  } catch {
-    return { alerts: [] }
+    console.error('Wyjątek podczas pobierania alertów:', err)
+    return { alerts: [], error: 'Błąd pobierania alertów systemowych' }
   }
 }
 
@@ -83,7 +54,12 @@ export async function publishSystemAlertAction(input: SystemAlertInput) {
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  const role = user?.app_metadata?.role || user?.user_metadata?.role
+  if (!user) {
+    return { error: 'Użytkownik nieuwierzytelniony', status: 401 }
+  }
+
+  // Autoryzacja wyłącznie z app_metadata (odporność na eskalację z user_metadata)
+  const role = user.app_metadata?.role as string | undefined
   const cookieStore = await safeGetCookieStore()
   const isImpersonating = isImpersonationSessionActive(cookieStore, user)
 
@@ -95,57 +71,48 @@ export async function publishSystemAlertAction(input: SystemAlertInput) {
     }
   }
 
-  const adminClient = createAdminClient()
-  const callerUserId = user?.id || null
-
-  let alertRecord: SystemAlertRecord | null = null
-
-  try {
-    const { data: alert, error: insertErr } = await adminClient
-      .from('system_alerts')
-      .insert({
-        title: input.title.trim(),
-        message: input.message.trim(),
-        severity: input.severity,
-        status: input.status,
-        affected_services: input.affectedServices,
-        is_active: true,
-        created_by: callerUserId,
-      })
-      .select()
-      .single()
-
-    if (!insertErr && alert) {
-      alertRecord = alert as SystemAlertRecord
-    }
-  } catch {
-    // Tabela system_alerts może być jeszcze nieutworzona na bazie zdalnej
-  }
-
-  const alertId = alertRecord?.id || crypto.randomUUID()
-
-  // Rejestracja w audit_logs (append-only, zero-PII)
-  const auditPayload = {
-    ...buildSystemAlertAuditPayload({
-      action: 'SYSTEM_ALERT_PUBLISHED',
-      alertId,
+  // Zapis do tabeli system_alerts z egzekwowaniem RLS super_admin
+  const { data: alert, error: insertErr } = await supabase
+    .from('system_alerts')
+    .insert({
+      title: input.title.trim(),
+      message: input.message.trim(),
       severity: input.severity,
       status: input.status,
-      affectedServices: input.affectedServices,
-    }),
-    title: input.title.trim(),
-    message: input.message.trim(),
+      affected_services: input.affectedServices,
+      is_active: true,
+      created_by: user.id,
+    })
+    .select()
+    .single()
+
+  if (insertErr || !alert) {
+    console.error('Błąd publikacji alertu systemowego:', insertErr)
+    return {
+      error: 'Nie udało się opublikować alertu systemowego. Spróbuj ponownie później.',
+      status: 500,
+    }
   }
 
+  // Rejestracja w audit_logs (append-only, zero-PII: bez tytułu i treści komunikatu)
+  const auditPayload = buildSystemAlertAuditPayload({
+    action: 'SYSTEM_ALERT_PUBLISHED',
+    alertId: alert.id,
+    severity: input.severity,
+    status: input.status,
+    affectedServices: input.affectedServices,
+  })
+
+  const adminClient = createAdminClient()
   await adminClient.from('audit_logs').insert({
     action: 'SYSTEM_ALERT_PUBLISHED',
-    performed_by: callerUserId,
+    performed_by: user.id,
     payload: auditPayload,
   })
 
   safeRevalidate(['/admin/system-status', '/admin', '/staff'])
 
-  return { success: true, alertId }
+  return { success: true, alertId: alert.id }
 }
 
 function safeRevalidate(paths: string[]) {
@@ -154,7 +121,7 @@ function safeRevalidate(paths: string[]) {
       revalidatePath(p)
     }
   } catch {
-    // Bezpieczne wyciszenie poza kontekstem serwera Next.js (np. w testach jednostkowych)
+    // Bezpieczne wyciszenie poza kontekstem serwera Next.js (np. w testach)
   }
 }
 
@@ -165,7 +132,12 @@ export async function resolveSystemAlertAction(alertId: string) {
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  const role = user?.app_metadata?.role || user?.user_metadata?.role
+  if (!user) {
+    return { error: 'Użytkownik nieuwierzytelniony', status: 401 }
+  }
+
+  // Autoryzacja wyłącznie z app_metadata
+  const role = user.app_metadata?.role as string | undefined
   const cookieStore = await safeGetCookieStore()
   const isImpersonating = isImpersonationSessionActive(cookieStore, user)
 
@@ -177,45 +149,39 @@ export async function resolveSystemAlertAction(alertId: string) {
     }
   }
 
-  const adminClient = createAdminClient()
-  const callerUserId = user?.id || null
+  const { data: updated, error: updateErr } = await supabase
+    .from('system_alerts')
+    .update({
+      is_active: false,
+      status: 'operational',
+      resolved_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', alertId)
+    .select()
+    .single()
 
-  let updatedSeverity = 'warning'
-  let affectedServices: string[] = []
-
-  try {
-    const { data: updated } = await adminClient
-      .from('system_alerts')
-      .update({
-        is_active: false,
-        status: 'operational',
-        resolved_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', alertId)
-      .select()
-      .single()
-
-    if (updated) {
-      updatedSeverity = updated.severity || updatedSeverity
-      affectedServices = updated.affected_services || affectedServices
+  if (updateErr || !updated) {
+    console.error('Błąd zamykania alertu systemowego:', updateErr)
+    return {
+      error: 'Nie udało się zamknąć alertu. Rekord nie istnieje lub brak uprawnień.',
+      status: 500,
     }
-  } catch {
-    // Tabela może jeszcze nie istnieć
   }
 
-  // Ślad audytowy
+  // Ślad audytowy zero-PII
   const auditPayload = buildSystemAlertAuditPayload({
     action: 'SYSTEM_ALERT_RESOLVED',
-    alertId,
-    severity: updatedSeverity as SystemAlertRecord['severity'],
+    alertId: updated.id,
+    severity: (updated.severity as SystemAlertRecord['severity']) || 'warning',
     status: 'operational',
-    affectedServices,
+    affectedServices: (updated.affected_services as string[]) || [],
   })
 
+  const adminClient = createAdminClient()
   await adminClient.from('audit_logs').insert({
     action: 'SYSTEM_ALERT_RESOLVED',
-    performed_by: callerUserId,
+    performed_by: user.id,
     payload: auditPayload,
   })
 

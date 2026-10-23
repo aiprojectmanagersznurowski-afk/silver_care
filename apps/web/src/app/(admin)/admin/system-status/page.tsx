@@ -13,7 +13,7 @@ export default async function SystemStatusPage() {
     redirect('/login')
   }
 
-  const role = user?.app_metadata?.role || user?.user_metadata?.role
+  const role = user?.app_metadata?.role
 
   // Dostęp wyłącznie dla roli super_admin
   if (role !== 'super_admin') {

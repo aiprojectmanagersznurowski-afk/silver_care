@@ -43,6 +43,10 @@ test.describe('SC-SUP-05: Status systemu i globalne alerty serwisowe (Wariant A)
     await loginPage.loginAs('super_admin');
 
     // Super Admin widzi pozycję w nawigacji bocznej
+    const sidebarTrigger = page.locator('[data-slot="sidebar-trigger"]');
+    if (await sidebarTrigger.isVisible()) {
+      await sidebarTrigger.click();
+    }
     await expect(systemStatusPage.sidebarLink).toBeVisible();
     await systemStatusPage.navigateFromSidebar();
     await systemStatusPage.expectPageLoaded();
@@ -61,8 +65,8 @@ test.describe('SC-SUP-05: Status systemu i globalne alerty serwisowe (Wariant A)
     await expect(systemStatusPage.globalAlertBanner).toBeVisible();
     await expect(systemStatusPage.globalAlertBanner).toContainText(alertTitle);
 
-    // Zakończenie alertu i przywrócenie stanu stabilnego
-    await systemStatusPage.resolveFirstActiveAlert();
+    // Zakończenie konkretnego alertu z testu i przywrócenie stanu stabilnego
+    await systemStatusPage.resolveAlertByTitle(alertTitle);
     await expect(page.locator(`text=${alertTitle}`).first()).toBeVisible();
   });
 });

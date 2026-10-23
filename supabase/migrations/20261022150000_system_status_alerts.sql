@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS public.system_alerts (
     message text NOT NULL,
     severity text NOT NULL DEFAULT 'warning' CHECK (severity IN ('info', 'warning', 'error')),
     status text NOT NULL DEFAULT 'degraded' CHECK (status IN ('operational', 'degraded', 'maintenance')),
-    affected_services text[] NOT NULL DEFAULT '{}'::text[],
+    affected_services text[] NOT NULL DEFAULT '{}'::text[] CHECK (affected_services <@ ARRAY['voice_pipeline', 'wearables', 'notifications', 'platform']::text[]),
     is_active boolean NOT NULL DEFAULT true,
     created_by uuid REFERENCES auth.users(id) ON DELETE SET NULL,
     created_at timestamptz NOT NULL DEFAULT now(),
@@ -24,7 +24,7 @@ CREATE POLICY "system_alerts_staff_select" ON public.system_alerts
   FOR SELECT
   USING (
     COALESCE(current_setting('request.jwt.claims', true)::jsonb->'app_metadata'->>'role', '')
-    IN ('super_admin', 'org_admin', 'nurse', 'admin', 'facility_manager')
+    IN ('super_admin', 'org_admin', 'nurse')
   );
 
 -- Zapis i aktualizacja wyłącznie dla roli super_admin

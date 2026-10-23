@@ -91,11 +91,17 @@ export function validateSystemAlertInput(input: SystemAlertInput): { valid: bool
   if (!message || message.length < 5) {
     return { valid: false, error: 'Treść komunikatu dla placówek jest wymagana (min. 5 znaków).' }
   }
+  if (message.length > 500) {
+    return { valid: false, error: 'Treść komunikatu nie może przekraczać 500 znaków.' }
+  }
   if (!VALID_SEVERITIES.includes(input.severity)) {
     return { valid: false, error: 'Nieprawidłowy poziom ważności alertu.' }
   }
   if (!VALID_STATUSES.includes(input.status)) {
     return { valid: false, error: 'Nieprawidłowy status techniczny systemu.' }
+  }
+  if (!Array.isArray(input.affectedServices) || input.affectedServices.some((s) => !SERVICE_MAP.has(s))) {
+    return { valid: false, error: 'Wybrano nieprawidłową usługę systemową.' }
   }
 
   const combinedLower = `${title} ${message}`.toLowerCase()

@@ -2,7 +2,7 @@
 
 ## Wymaganie
 Powiązane User Story: **`[SC-SUP-05]`**
-Powiązane wymagania kontraktowe: `@REQ: SUP-IAM-PANEL`, `@REQ: UI-TEMPLATE-ALIGNMENT`, `@REQ: UI-FOUR-STATES`, `@REQ: SEC-AUDIT-APPEND-ONLY`, `@REQ: SEC-NO-PII-LOGS`.
+Powiązane wymagania kontraktowe: brak nowego `@REQ` (wdraża reguły: `@REQ: SEC-AUDIT-APPEND-ONLY`, `@REQ: SEC-NO-PII-LOGS`, `@REQ: UI-FOUR-STATES`, `@REQ: MDR-VOCABULARY`).
 
 ## Kontekst i Problem
 1. Na głównym pulpicie administratora placówki (`/admin` — `apps/web/src/app/(admin)/admin/page.tsx`) wyświetlany był statyczny kafelek KPI „Status systemu: Stabilny”.

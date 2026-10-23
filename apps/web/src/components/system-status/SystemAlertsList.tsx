@@ -33,7 +33,12 @@ export function SystemAlertsList({ alerts, isPending, onResolve }: Props) {
           <div className="space-y-3">
             <h4 className="text-sm font-semibold text-foreground">Aktywne komunikaty (widoczne w placówkach)</h4>
             {activeAlerts.map((a) => (
-              <div key={a.id} className="p-4 rounded-xl border border-border bg-muted/30 space-y-3">
+              <div
+                key={a.id}
+                data-testid="system-alert-item"
+                data-alert-title={a.title}
+                className="p-4 rounded-xl border border-border bg-muted/30 space-y-3"
+              >
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2">
