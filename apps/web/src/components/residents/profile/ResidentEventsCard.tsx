@@ -37,9 +37,9 @@ const EVENT_TYPE_LUCIDE_ICONS: Partial<Record<EventType, React.ComponentType<{ c
 
 export function ResidentEventsCard({ events }: ResidentEventsCardProps) {
   return (
-    <Card className="rounded-xl border border-border bg-card">
+    <Card>
       <CardHeader className="pb-3 border-b border-border/60">
-        <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2">
           <Clock className="h-5 w-5 text-primary" />
           Historia i rejestr zdarzeń ({events.length})
         </CardTitle>

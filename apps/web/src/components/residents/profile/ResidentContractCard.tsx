@@ -24,9 +24,9 @@ export function ResidentContractCard({
   const contractSource = (resident.contract_source || 'private') as ContractSource
 
   return (
-    <Card className="rounded-xl border border-border bg-card">
+    <Card>
       <CardHeader className="pb-3 border-b border-border/60">
-        <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2">
           <FileText className="h-5 w-5 text-primary" />
           Umowa i pakiety opiekuńcze
         </CardTitle>
