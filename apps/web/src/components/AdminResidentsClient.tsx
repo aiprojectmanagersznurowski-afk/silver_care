@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useState } from 'react'
-import { LayoutGrid, Table as TableIcon, Search } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Search } from 'lucide-react'
+import { ViewToggle, GRID_TABLE_OPTIONS } from '@/components/patterns/ViewToggle'
 import { ResidentGridCard } from '@/components/residents/ResidentGridCard'
 import { ResidentsTable } from '@/components/residents/ResidentsTable'
 import { useViewPreference, VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-preference'
@@ -13,11 +13,6 @@ export type { ResidentWithAssignments } from '@/components/residents/resident-li
 interface AdminResidentsClientProps {
   residents: ResidentWithAssignments[]
 }
-
-const toggleClass = (active: boolean) =>
-  `min-h-touch px-3 rounded-lg text-sm font-medium transition-all ${
-    active ? 'bg-primary text-white hover:bg-primary/90' : 'text-foreground'
-  }`
 
 export function AdminResidentsClient({ residents }: AdminResidentsClientProps) {
   const [viewMode, setViewMode] = useViewPreference(
@@ -50,26 +45,7 @@ export function AdminResidentsClient({ residents }: AdminResidentsClientProps) {
           />
         </div>
 
-        <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-xl self-end sm:self-auto border border-border">
-          <Button
-            type="button"
-            variant={viewMode === 'grid' ? 'default' : 'ghost'}
-            onClick={() => setViewMode('grid')}
-            className={toggleClass(viewMode === 'grid')}
-          >
-            <LayoutGrid className="w-4 h-4 mr-1.5" />
-            Kafelki
-          </Button>
-          <Button
-            type="button"
-            variant={viewMode === 'table' ? 'default' : 'ghost'}
-            onClick={() => setViewMode('table')}
-            className={toggleClass(viewMode === 'table')}
-          >
-            <TableIcon className="w-4 h-4 mr-1.5" />
-            Tabela
-          </Button>
-        </div>
+        <ViewToggle value={viewMode} onChange={setViewMode} options={GRID_TABLE_OPTIONS} />
       </div>
 
       {filteredResidents.length === 0 ? (
