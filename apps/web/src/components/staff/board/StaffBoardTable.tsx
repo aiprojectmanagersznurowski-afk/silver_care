@@ -8,6 +8,7 @@ import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 import { buttonVariants } from '@/components/ui/button'
 import { StatusBadge } from '@/components/patterns/StatusBadge'
 import { TableStateRow } from '@/components/patterns/TableCard'
+import { RowActions } from '@/components/patterns/RowActions'
 import { getActiveAssignment, getNoteStatus, STATUS_CONFIG, UnansweredInfo } from './staff-board-types'
 
 interface StaffBoardTableProps {
@@ -71,7 +72,7 @@ export function StaffBoardTable({ residents, unansweredMessagesMap }: StaffBoard
                   )}
                 </TableCell>
                 <TableCell>
-                  <div className="flex flex-wrap justify-end gap-2">
+                  <div className="flex items-center justify-end gap-2">
                     <Link
                       href={`/voice?resident=${resId}`}
                       className={buttonVariants({ variant: 'default' })}
@@ -79,15 +80,16 @@ export function StaffBoardTable({ residents, unansweredMessagesMap }: StaffBoard
                       <Mic className="size-4" />
                       Nagraj notatkę
                     </Link>
-                    {noteStatus !== 'none' && (
-                      <Link
-                        href={`/staff/reports?resident=${resId}`}
-                        className={buttonVariants({ variant: 'outline' })}
-                      >
-                        <FileText className="size-4 text-muted-foreground" />
-                        Podgląd raportu
-                      </Link>
-                    )}
+                    <RowActions
+                      label="Podopieczny"
+                      actions={[{
+                        label: 'Podgląd raportu',
+                        icon: FileText,
+                        href: `/staff/reports?resident=${resId}`,
+                        disabled: noteStatus === 'none',
+                        hint: noteStatus === 'none' ? 'Brak wpisu na dziś' : undefined,
+                      }]}
+                    />
                   </div>
                 </TableCell>
               </TableRow>
