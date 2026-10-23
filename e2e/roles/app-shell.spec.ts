@@ -56,8 +56,8 @@ test.describe('Powłoka aplikacji — rozwijane menu konta (@REQ: UI-TEMPLATE-AL
       await loginPage.loginAs(shell.role);
       await page.goto(shell.start);
       const appShell = new AppShellPage(page);
-      await expect(appShell.accountTrigger).toContainText('@silvercare.test');
       const menu = await appShell.openAccountMenu();
+      await expect(appShell.accountTrigger).toContainText('@silvercare.test');
       await expect(menu).toContainText('@silvercare.test');
       await expect(menu.getByRole('menuitem', { name: 'Profil i bezpieczeństwo' })).toBeVisible();
       await expect(menu.getByRole('menuitem', { name: 'Wyloguj się' })).toBeVisible();
