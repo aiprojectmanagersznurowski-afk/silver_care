@@ -1,7 +1,16 @@
 'use client'
 
 import Link from 'next/link'
-import { LogOut, User } from 'lucide-react'
+import { EllipsisVertical, LogOut, User } from 'lucide-react'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   SidebarFooter,
   SidebarMenu,
@@ -10,42 +19,66 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 
-/** Stopka paska bocznego: zalogowane konto, link do profilu i wylogowanie (nav-user szablonu). */
-export function SidebarAccount({ userEmail }: { userEmail?: string | null }) {
-  const { isMobile, setOpenMobile } = useSidebar()
+const initialsOf = (email: string) => email.slice(0, 2).toUpperCase()
 
-  const handleLinkClick = () => {
-    if (isMobile) {
-      setOpenMobile(false)
-    }
-  }
+function AccountIdentity({ email, roleLabel }: { email: string; roleLabel: string }) {
+  return (
+    <>
+      <Avatar className="size-8 rounded-lg">
+        <AvatarFallback className="rounded-lg bg-muted text-foreground">{initialsOf(email)}</AvatarFallback>
+      </Avatar>
+      <div className="grid flex-1 text-left text-sm leading-tight">
+        <span className="truncate font-medium">{email}</span>
+        <span className="truncate text-xs text-muted-foreground">{roleLabel}</span>
+      </div>
+    </>
+  )
+}
+
+/**
+ * Stopka paska bocznego jak nav-user szablonu shadcn-admin: konto jako jeden przycisk,
+ * który rozwija menu z profilem i wylogowaniem.
+ */
+export function SidebarAccount({ userEmail, roleLabel }: { userEmail?: string | null; roleLabel: string }) {
+  const { isMobile, setOpenMobile } = useSidebar()
+  const email = userEmail || 'Konto'
 
   return (
     <SidebarFooter>
       <SidebarMenu>
-        {userEmail && (
-          <SidebarMenuItem className="px-2 py-1 group-data-[collapsible=icon]:hidden">
-            <span className="block text-sm text-muted-foreground">Zalogowano</span>
-            <span className="block truncate text-sm font-medium">{userEmail}</span>
-          </SidebarMenuItem>
-        )}
         <SidebarMenuItem>
-          <SidebarMenuButton
-            render={<Link href="/settings/profile" onClick={handleLinkClick} />}
-            tooltip="Profil i bezpieczeństwo"
-            onClick={handleLinkClick}
-          >
-            <User />
-            <span>Profil i bezpieczeństwo</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-        <SidebarMenuItem>
-          <form action="/auth/signout" method="post">
-            <SidebarMenuButton type="submit" tooltip="Wyloguj się">
-              <LogOut />
-              <span>Wyloguj się</span>
-            </SidebarMenuButton>
-          </form>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={<SidebarMenuButton size="lg" tooltip={email} className="data-popup-open:bg-sidebar-accent" />}
+            >
+              <span data-slot="nav-user-trigger" className="flex min-w-0 flex-1 items-center gap-2">
+                <AccountIdentity email={email} roleLabel={roleLabel} />
+              </span>
+              <EllipsisVertical className="ml-auto size-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="min-w-56" side={isMobile ? 'bottom' : 'right'} align="end">
+              <DropdownMenuLabel className="p-0 font-normal">
+                <div className="flex items-center gap-2 px-1 py-1.5">
+                  <AccountIdentity email={email} roleLabel={roleLabel} />
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="cursor-pointer"
+                render={<Link href="/settings/profile" onClick={() => isMobile && setOpenMobile(false)} />}
+              >
+                <User />
+                Profil i bezpieczeństwo
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <form action="/auth/signout" method="post">
+                <DropdownMenuItem nativeButton className="w-full cursor-pointer" render={<button type="submit" />}>
+                  <LogOut />
+                  Wyloguj się
+                </DropdownMenuItem>
+              </form>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </SidebarMenuItem>
       </SidebarMenu>
     </SidebarFooter>

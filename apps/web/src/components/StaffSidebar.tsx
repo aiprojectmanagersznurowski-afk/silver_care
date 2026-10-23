@@ -50,7 +50,7 @@ export function StaffSidebar({ userEmail }: { userEmail: string | undefined }) {
       <SidebarContent>
         <SidebarNav groups={groups} />
       </SidebarContent>
-      <SidebarAccount userEmail={userEmail} />
+      <SidebarAccount userEmail={userEmail} roleLabel="Personel opiekuńczy" />
       <SidebarRail />
     </Sidebar>
   )
