@@ -21,7 +21,7 @@ export function StatusBadge({ tone = 'neutral', children, ...props }: StatusBadg
       {...props}
       data-slot="status-badge"
       data-tone={tone}
-      className={`inline-flex w-fit shrink-0 items-center gap-1 whitespace-nowrap rounded-md px-2 py-0.5 text-sm font-medium [&>svg]:size-3.5 [&>svg]:shrink-0 ${TONE_CLASSES[tone]}`}
+      className={`inline-flex w-fit shrink-0 items-center gap-1 whitespace-nowrap rounded-md px-2 py-0.5 text-xs font-medium [&>svg]:size-3.5 [&>svg]:shrink-0 ${TONE_CLASSES[tone]}`}
     >
       {children}
     </span>
