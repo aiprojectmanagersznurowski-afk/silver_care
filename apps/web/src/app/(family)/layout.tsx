@@ -33,13 +33,13 @@ export default async function FamilyLayout({ children }: { children: ReactNode }
   ).filter(Boolean) as { id: string; first_name: string; last_name: string; avatar_url: string | null }[]
 
   return (
-    <div className="flex min-h-screen flex-col bg-surface-sunken">
+    <div className="flex min-h-screen flex-col bg-background">
       <FamilyHeader residents={residents} />
       <OnboardingModal />
       
       {/* Main content area */}
-      <main className="flex-1 px-4 py-8 pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] lg:pb-8">
-        <div className="mx-auto max-w-7xl">
+      <main className="flex-1 p-4 pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] md:p-6 lg:pb-6">
+        <div className="mx-auto w-full max-w-screen-2xl">
           {children}
         </div>
       </main>
