@@ -48,6 +48,20 @@ export class PageConsistencyPage {
     });
   }
 
+  /** Kolor tła strony, cień pierwszej widocznej karty i zmienna --accent-foreground (podświetlenie w menu). */
+  async surfaceSnapshot(): Promise<{ bodyBg: string; cardShadow: string | null; accentForeground: string; foreground: string }> {
+    return this.page.evaluate(() => {
+      const card = [...document.querySelectorAll('[data-slot="card"]')].find((c) => (c as HTMLElement).offsetParent !== null);
+      const root = getComputedStyle(document.documentElement);
+      return {
+        bodyBg: getComputedStyle(document.body).backgroundColor,
+        cardShadow: card ? getComputedStyle(card).boxShadow : null,
+        accentForeground: root.getPropertyValue('--accent-foreground').trim(),
+        foreground: root.getPropertyValue('--foreground').trim(),
+      };
+    });
+  }
+
   /** Obliczona minimalna wysokość i szerokość linku powrotu w nagłówku strony (cel dotykowy). */
   async backLinkTouchTarget(): Promise<{ minHeight: string; minWidth: string } | null> {
     return this.page.evaluate(() => {

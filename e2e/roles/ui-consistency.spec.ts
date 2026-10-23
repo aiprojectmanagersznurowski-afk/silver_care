@@ -45,6 +45,20 @@ test.describe('Spójność ekranów — wspólny nagłówek strony (@REQ: UI-TEM
   }
 });
 
+test.describe('Paleta szablonu: neutralne tła, cień kart, marka tylko jako akcent (@REQ: UI-TEMPLATE-ALIGNMENT)', () => {
+  test('@REQ: UI-TEMPLATE-ALIGNMENT - jasny motyw: białe tło, karty z cieniem, podświetlenie menu bez koloru marki (ADR-019)', async ({ loginPage, page }) => {
+    await loginPage.loginAs('org_admin');
+    await page.evaluate(() => window.localStorage.setItem('sc-theme', 'light'));
+    const screens = new PageConsistencyPage(page);
+    await screens.goto('/admin');
+    const snap = await screens.surfaceSnapshot();
+    expect(snap.bodyBg).toBe('rgb(255, 255, 255)');
+    // ring-1 też jest box-shadow, więc sprawdzamy konkretnie warstwę shadow-xs: 0 1px 2px
+    expect(snap.cardShadow ?? '').toContain('0px 1px 2px 0px');
+    expect(snap.accentForeground).toBe(snap.foreground);
+  });
+});
+
 test.describe('Cel dotykowy z tokenu kontraktu (@REQ: UI-ACCESSIBILITY)', () => {
   test('@REQ: UI-ACCESSIBILITY - link powrotu w nagłówku ma cel dotykowy 38px (ADR-018)', async ({ loginPage, page }) => {
     await loginPage.loginAs('org_admin');

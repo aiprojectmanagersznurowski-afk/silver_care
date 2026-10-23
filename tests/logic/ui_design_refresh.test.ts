@@ -15,7 +15,7 @@ import {
  *
  * Testy wykonawcze dla odświeżonego systemu projektowego (shadcn):
  * 1. Dostępność i eksporty kluczowych komponentów bazowych UI.
- * 2. Kanoniczna paleta kolorów „Ciepłe Zaufanie" w kontrakcie.
+ * 2. Neutralna paleta szablonu z jednym akcentem marki (ADR-019).
  * 3. Logika bezpiecznego kierowania ról po uwierzytelnieniu sesji (RBAC).
  */
 describe('UI Design System Refresh & Session Routing', () => {
@@ -34,11 +34,14 @@ describe('UI Design System Refresh & Session Routing', () => {
     expect(ACCESSIBILITY.touchTargetMinimum).toBe('38px');
   });
 
-  it('@REQ: UI-FOUR-STATES - motyw zachowuje kanoniczną paletę Silver Care (Ciepłe Zaufanie)', () => {
+  it('@REQ: UI-FOUR-STATES - motyw: neutralne tła szablonu, kolor marki wyłącznie jako akcent (ADR-019)', () => {
     expect(COLORS.light.accent.value).toBe('#2F6F5E');
-    expect(COLORS.light.bg.value).toBe('#FBFAF8');
-    expect(COLORS.light.text.value).toBe('#1C1B19');
-    expect(COLORS.light.border.value).toBe('#E8E4DD');
+    expect(COLORS.light.bg.value).toBe('#FFFFFF');
+    expect(COLORS.light.text.value).toBe('#171717');
+    expect(COLORS.light.border.value).toBe('#E5E5E5');
+    expect(COLORS.dark.bg.value).toBe('#171717');
+    expect(COLORS.light['accent-soft'].value).toBe('#F5F5F5');
+    expect(COLORS.light['sidebar-accent'].value).toBe('#F5F5F5');
   });
 
   it('@REQ: SEC-SESSION - resolveRoleDestination poprawnie kieruje uprawnienia użytkownika (RBAC)', () => {
