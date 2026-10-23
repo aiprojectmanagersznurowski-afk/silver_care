@@ -95,7 +95,7 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
                   {isMessages && unreadCount > 0 && (
                     <span
                       data-testid="family-nav-messages-badge"
-                      className="ml-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-sm font-bold text-destructive-foreground animate-pulse"
+                      className="ml-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-sm font-bold text-primary-foreground"
                     >
                       {unreadCount > 99 ? '99+' : unreadCount}
                     </span>
@@ -119,7 +119,7 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
                 {unreadCount > 0 && (
                   <span
                     data-testid="family-notifications-badge"
-                    className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-sm font-bold text-destructive-foreground ring-2 ring-background animate-pulse"
+                    className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-sm font-bold text-primary-foreground ring-2 ring-background"
                   >
                     {unreadCount > 99 ? '99+' : unreadCount}
                   </span>
@@ -236,7 +236,7 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
                 {item.href === '/messages' && unreadCount > 0 && (
                   <span
                     data-testid="family-mobile-messages-badge"
-                    className="absolute -top-1 -right-1 flex h-2.5 w-2.5 rounded-full bg-destructive ring-2 ring-background animate-pulse"
+                    className="absolute -top-1 -right-1 flex h-2.5 w-2.5 rounded-full bg-primary ring-2 ring-background"
                   />
                 )}
               </div>
