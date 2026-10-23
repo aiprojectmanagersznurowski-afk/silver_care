@@ -51,6 +51,8 @@ export class AppShellPage {
 
   /** Otwiera rozwijane menu konta w stopce paska bocznego (nav-user szablonu). */
   async openAccountMenu() {
+    // Na telefonie pasek boczny jest zamkniętą szufladą — najpierw ją otwieramy
+    if (!(await this.accountTrigger.isVisible())) await this.trigger.first().click();
     await this.accountTrigger.click();
     const menu = this.page.locator('[role="menu"]');
     await expect(menu).toBeVisible();
