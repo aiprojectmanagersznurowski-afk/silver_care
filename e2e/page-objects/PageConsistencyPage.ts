@@ -99,7 +99,8 @@ export class PageConsistencyPage {
         return {
           label: (b.textContent ?? '').trim().slice(0, 24),
           text: Math.round(ratio(rgb(cs.color, bg), bg) * 100) / 100,
-          border: Math.round(ratio(rgb(cs.borderTopColor, cardRgb), cardRgb) * 100) / 100,
+          // Granica kontrolki: obramowanie albo — dla przycisków wypełnionych — samo tło (WCAG 1.4.11)
+          border: Math.round(Math.max(ratio(rgb(cs.borderTopColor, cardRgb), cardRgb), ratio(bg, cardRgb)) * 100) / 100,
         };
       });
     });
