@@ -70,6 +70,35 @@ test.describe('Paleta szablonu: neutralne tła, cień kart, marka tylko jako akc
   });
 });
 
+test.describe('Portal rodziny — nagłówek i tło jak w reszcie aplikacji (@REQ: UI-TEMPLATE-ALIGNMENT)', () => {
+  test('@REQ: UI-TEMPLATE-ALIGNMENT - nagłówek 48px, przyciski 38px, aktywna pozycja menu neutralna, białe tło', async ({ loginPage, page }) => {
+    await loginPage.loginAs('family');
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.evaluate(() => window.localStorage.setItem('sc-theme', 'light'));
+    const screens = new PageConsistencyPage(page);
+    await screens.goto('/agenda');
+    const shell = await page.evaluate(() => {
+      const header = document.querySelector('header[data-slot="family-header"]');
+      const buttons = header ? [...header.querySelectorAll('[data-testid="family-notifications-bell"], [data-slot="theme-toggle"]')] : [];
+      const active = header?.querySelector('nav a[aria-current="page"]');
+      const main = document.querySelector('main');
+      return {
+        headerHeight: header ? Math.round(header.getBoundingClientRect().height) : 0,
+        buttonHeights: [...new Set(buttons.map((b) => Math.round(b.getBoundingClientRect().height)))],
+        activeBg: active ? getComputedStyle(active).backgroundColor : 'brak aktywnej pozycji',
+        primary: getComputedStyle(document.documentElement).getPropertyValue('--primary').trim(),
+        mainBg: main ? getComputedStyle(main.parentElement as Element).backgroundColor : '',
+      };
+    });
+    expect(shell.headerHeight).toBe(48);
+    expect(shell.buttonHeights).toEqual([38]);
+    expect(shell.activeBg).not.toBe('brak aktywnej pozycji');
+    expect(shell.activeBg).not.toBe(shell.primary);
+    expect(shell.activeBg).not.toBe('rgb(47, 111, 94)');
+    expect(shell.mainBg).toBe('rgb(255, 255, 255)');
+  });
+});
+
 test.describe('Cel dotykowy z tokenu kontraktu (@REQ: UI-ACCESSIBILITY)', () => {
   test('@REQ: UI-ACCESSIBILITY - link powrotu w nagłówku ma cel dotykowy 38px (ADR-018)', async ({ loginPage, page }) => {
     await loginPage.loginAs('org_admin');
