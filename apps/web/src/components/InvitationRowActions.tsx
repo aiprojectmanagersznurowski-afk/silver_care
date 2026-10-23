@@ -1,11 +1,9 @@
 'use client'
 
 import { Copy, RotateCw, Ban } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { RowActions, type RowAction } from '@/components/patterns/RowActions'
 import { StatusBadge } from '@/components/patterns/StatusBadge'
 import type { InvitationRecord } from './InvitationsTable'
-
-const ACTION = 'min-h-touch px-2 text-sm text-foreground hover:bg-muted'
 
 export const invitationState = (inv: InvitationRecord) => ({
   isPending: !inv.claimed_at && !inv.revoked_at && new Date(inv.expires_at) >= new Date(),
@@ -27,29 +25,17 @@ interface InvitationRowActionsProps {
   onRevoke: (id: string) => void
 }
 
-/** Akcje zaproszenia — ten sam rozmiar i styl w tabeli i w kafelku. */
+/** Akcje zaproszenia w menu „⋯" — to samo w tabeli i w kafelku. */
 export function InvitationRowActions({ inv, resending, onCopy, onResend, onRevoke }: InvitationRowActionsProps) {
   const { isPending, canCopy } = invitationState(inv)
-  return (
-    <div className="flex flex-wrap items-center justify-end gap-1.5">
-      {canCopy && (
-        <Button type="button" variant="ghost" onClick={() => onCopy(inv.id)} className={ACTION} title="Kopiuj link do rejestracji">
-          <Copy className="size-4" />
-          Kopiuj link
-        </Button>
-      )}
-      {isPending && (
-        <Button type="button" variant="ghost" disabled={resending} onClick={() => onResend(inv.id)} className={ACTION} title="Wyślij ponownie e-mail z zaproszeniem">
-          <RotateCw className={`size-4 ${resending ? 'animate-spin' : ''}`} />
-          Ponów
-        </Button>
-      )}
-      {isPending && (
-        <Button type="button" variant="ghost" onClick={() => onRevoke(inv.id)} className={ACTION} title="Odwołaj zaproszenie">
-          <Ban className="size-4" />
-          Odwołaj
-        </Button>
-      )}
-    </div>
-  )
+  const actions: RowAction[] = [
+    ...(canCopy ? [{ label: 'Kopiuj link', icon: Copy, hint: 'Kopiuj link do rejestracji', onSelect: () => onCopy(inv.id) }] : []),
+    ...(isPending ? [
+      { label: 'Ponów', icon: RotateCw, hint: 'Wyślij ponownie e-mail z zaproszeniem', disabled: resending, onSelect: () => onResend(inv.id) },
+      { label: 'Odwołaj', icon: Ban, hint: 'Odwołaj zaproszenie', separated: true, onSelect: () => onRevoke(inv.id) },
+    ] : []),
+  ]
+  // Zrealizowane i odwołane zaproszenia nie mają akcji — menu zostaje, żeby każdy wiersz wyglądał tak samo
+  const fallback: RowAction[] = [{ label: 'Brak dostępnych akcji', disabled: true }]
+  return <RowActions label="Zaproszenie" actions={actions.length ? actions : fallback} />
 }
