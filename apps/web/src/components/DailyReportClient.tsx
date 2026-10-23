@@ -6,6 +6,9 @@ import { Button } from '@/components/ui/button'
 import { ChevronLeft, ChevronRight, Download } from 'lucide-react'
 import { MONTH_LABELS_PL } from '@/lib/reporting-constants'
 import { DailyReportTable, type DailyRow, type MonthlySummary } from '@/components/reports/DailyReportTable'
+import { DailyReportGrid } from '@/components/reports/DailyReportGrid'
+import { ViewToggle, GRID_TABLE_OPTIONS } from '@/components/patterns/ViewToggle'
+import { useViewPreference, VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-preference'
 
 export function DailyReportClient({ organizationId }: { organizationId?: string }) {
   const now = new Date()
@@ -15,6 +18,7 @@ export function DailyReportClient({ organizationId }: { organizationId?: string 
   const [summary, setSummary] = useState<MonthlySummary | null>(null)
   const [loading, setLoading] = useState(true)
   const [failed, setFailed] = useState(false)
+  const [viewMode, setViewMode] = useViewPreference(VIEW_PREFERENCE_KEYS.dailyReport, 'table', ['table', 'grid'] as const)
 
   const fetchData = useCallback(async () => {
     if (!organizationId) return
@@ -104,10 +108,13 @@ export function DailyReportClient({ organizationId }: { organizationId?: string 
           </Button>
         </div>
 
-        <Button variant="outline" onClick={exportCSV} className="rounded-xl gap-2 w-full sm:w-auto" disabled={data.length === 0}>
-          <Download className="h-4 w-4" />
-          Eksport CSV
-        </Button>
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+          <ViewToggle value={viewMode} onChange={setViewMode} options={GRID_TABLE_OPTIONS} />
+          <Button variant="outline" onClick={exportCSV} className="min-h-touch gap-2" disabled={data.length === 0}>
+            <Download className="h-4 w-4" />
+            Eksport CSV
+          </Button>
+        </div>
       </div>
 
       {/* Summary KPI cards */}
@@ -127,6 +134,9 @@ export function DailyReportClient({ organizationId }: { organizationId?: string 
       )}
 
       {/* Daily data table */}
+      {viewMode === 'grid' ? (
+        <DailyReportGrid data={data} loading={loading} failed={failed} />
+      ) : (
       <DailyReportTable
         data={data}
         summary={summary}
@@ -135,6 +145,7 @@ export function DailyReportClient({ organizationId }: { organizationId?: string 
         month={month}
         year={year}
       />
+      )}
     </div>
   )
 }

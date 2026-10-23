@@ -34,7 +34,7 @@ interface MetricRow {
   summaryKey: SummaryKey | null
 }
 
-const metricRows: MetricRow[] = [
+export const metricRows: MetricRow[] = [
   { key: 'total_residents', label: 'ILOŚĆ PODOPIECZNYCH OGÓŁEM', summaryKey: 'avg_residents' },
   { key: 'zsn_count', label: 'ZSN: Znaczny stopień niepełnosprawności', summaryKey: 'avg_zsn' },
   { key: 'deaths', label: 'Zgony', summaryKey: 'total_deaths' },
@@ -45,7 +45,7 @@ const metricRows: MetricRow[] = [
   { key: 'occupied_beds', label: 'OGÓŁEM DZIEŃ', summaryKey: null },
 ]
 
-function getDailyValue(row: DailyRow, key: DailyRowKey): number {
+export function getDailyValue(row: DailyRow, key: DailyRowKey): number {
   const val = row[key]
   return typeof val === 'number' ? val : 0
 }
