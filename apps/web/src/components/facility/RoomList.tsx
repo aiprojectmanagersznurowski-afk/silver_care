@@ -25,8 +25,8 @@ export function formatSectorName(sector?: string | null): string {
 export default function RoomList({ rooms, onUpdate }: RoomListProps) {
   const [viewMode, setViewMode] = useViewPreference(
     VIEW_PREFERENCE_KEYS.facilityRooms,
-    'grid',
-    ['grid', 'table'] as const
+    'table',
+    ['table', 'grid'] as const
   )
   const [expandedRooms, setExpandedRooms] = useState<Record<string, boolean>>({})
 

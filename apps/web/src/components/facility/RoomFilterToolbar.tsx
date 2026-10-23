@@ -1,8 +1,8 @@
 'use client'
 
 import React from 'react'
-import { LayoutGrid, Table as TableIcon, Search, Filter } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Search, Filter } from 'lucide-react'
+import { ViewToggle, GRID_TABLE_OPTIONS } from '@/components/patterns/ViewToggle'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 
 interface RoomFilterToolbarProps {
@@ -54,32 +54,7 @@ export function RoomFilterToolbar({
           />
         </div>
 
-        <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-xl self-end sm:self-auto border">
-          <Button
-            type="button"
-            variant={viewMode === 'grid' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => onModeChange('grid')}
-            className={`h-8 px-3 rounded-lg text-sm font-medium ${
-              viewMode === 'grid' ? 'bg-primary hover:bg-primary/90 text-white' : 'text-foreground'
-            }`}
-          >
-            <LayoutGrid className="w-3.5 h-3.5 mr-1.5" />
-            Kafelki
-          </Button>
-          <Button
-            type="button"
-            variant={viewMode === 'table' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => onModeChange('table')}
-            className={`h-8 px-3 rounded-lg text-sm font-medium ${
-              viewMode === 'table' ? 'bg-primary hover:bg-primary/90 text-white' : 'text-foreground'
-            }`}
-          >
-            <TableIcon className="w-3.5 h-3.5 mr-1.5" />
-            Tabela
-          </Button>
-        </div>
+        <ViewToggle value={viewMode} onChange={onModeChange} options={GRID_TABLE_OPTIONS} />
       </div>
 
       <div className="flex flex-wrap items-center gap-3 pt-3 border-t text-sm">
