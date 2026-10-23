@@ -40,7 +40,7 @@ export default async function FamilyConsentsPage() {
 
   if (residents.length === 0) {
     return (
-      <Card className="max-w-md mx-auto my-12 border-border text-center">
+      <Card className="max-w-md mx-auto my-12 text-center">
         <CardContent className="py-12 space-y-3">
           <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center text-foreground">
             <Lock className="w-6 h-6" />
@@ -93,9 +93,9 @@ export default async function FamilyConsentsPage() {
 
       {/* Rola 'family' - komunikat edukacyjny o rozgraniczeniu uprawnień */}
       {!isLegalGuardian && (
-        <Card className="rounded-xl border border-border bg-card">
+        <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base text-foreground">
+            <CardTitle className="flex items-center gap-2">
               <ShieldAlert className="w-5 h-5 text-primary shrink-0" />
               Uprawnienia roli: Członek rodziny
             </CardTitle>
@@ -113,9 +113,9 @@ export default async function FamilyConsentsPage() {
       )}
 
       {/* Tabela / Karty rejestru zgód */}
-      <Card className="rounded-xl border border-border bg-card">
+      <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg text-foreground">
+          <CardTitle className="flex items-center gap-2">
             <History className="w-5 h-5 text-primary shrink-0" />
             Rejestr zdarzeń zgód (Consent Ledger)
           </CardTitle>
