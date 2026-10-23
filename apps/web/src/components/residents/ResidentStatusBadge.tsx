@@ -12,7 +12,7 @@ export function ResidentStatusBadge({ resident, activeTone = 'neutral' }: Reside
     return <Badge className="bg-muted text-muted-foreground border-none text-sm">Zarchiwizowany</Badge>
   }
   if (resident.death_date) {
-    return <Badge className="bg-destructive/10 text-destructive border-none text-sm">Zgon</Badge>
+    return <Badge className="bg-muted text-foreground border-none text-sm">Zgon</Badge>
   }
   if (resident.contract_end_date && new Date(resident.contract_end_date) <= new Date()) {
     return <Badge className="bg-muted text-muted-foreground border-none text-sm">Wypisany</Badge>

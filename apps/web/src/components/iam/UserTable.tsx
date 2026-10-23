@@ -86,7 +86,7 @@ export function UserTable({
                           {displayRole}
                         </span>
                         {isDeactivated && (
-                          <span className="inline-flex items-center gap-1 rounded-lg bg-destructive/10 text-destructive border border-destructive/20 px-2 py-0.5 text-sm font-semibold">
+                          <span className="inline-flex items-center gap-1 rounded-lg bg-muted text-foreground border border-border px-2 py-0.5 text-sm font-semibold">
                             <ShieldBan className="h-3 w-3" />
                             Zablokowany
                           </span>
@@ -145,7 +145,7 @@ export function UserTable({
                                   ? 'opacity-50 cursor-not-allowed text-muted-foreground'
                                   : isDeactivated
                                   ? 'text-primary hover:bg-primary/10 border-primary/30'
-                                  : 'text-destructive hover:bg-destructive/10 border-destructive/30'
+                                  : 'text-foreground hover:bg-muted border-border'
                               )}
                             >
                               {isDeactivated ? (
