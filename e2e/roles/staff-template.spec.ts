@@ -19,7 +19,7 @@ test.describe('Panel personelu — tokeny szablonu (@REQ: UI-TEMPLATE-ALIGNMENT)
     await staffBoardPage.expectStaffBoardLoaded();
 
     // Domyślnie tabela (decyzja Michała 2026-10-23: tablica dyżuru nie jest wyjątkiem)
-    await expect(page.locator('[data-slot="view-toggle"] button[aria-label="Widok tabeli"]')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('[data-slot="view-toggle"]:visible button[aria-label="Widok tabeli"]')).toHaveAttribute('aria-pressed', 'true');
     await expect(staffBoardPage.quickRoundsButton).toHaveAttribute('aria-pressed', 'false');
     await staffBoardPage.switchToRounds();
     await expect(staffBoardPage.cardsViewButton).toHaveAttribute('aria-pressed', 'false');

@@ -10,7 +10,7 @@ export class ViewTogglePage {
   readonly gridButton: Locator;
 
   constructor(private readonly page: Page) {
-    this.toggle = page.locator('[data-slot="view-toggle"]').first();
+    this.toggle = page.locator('[data-slot="view-toggle"]:visible').first();
     this.tableButton = this.toggle.locator('button[aria-label="Widok tabeli"]');
     this.gridButton = this.toggle.locator('button[aria-label="Widok kafelków"]');
   }
