@@ -57,6 +57,17 @@ test.describe('Paleta szablonu: neutralne tła, cień kart, marka tylko jako akc
     expect(snap.cardShadow ?? '').toContain('0px 1px 2px 0px');
     expect(snap.accentForeground).toBe(snap.foreground);
   });
+
+  test('@REQ: UI-TEMPLATE-ALIGNMENT - skala tekstu szablonu: treść 14px, opis nagłówka 14px (ADR-020)', async ({ loginPage, page }) => {
+    await loginPage.loginAs('org_admin');
+    const screens = new PageConsistencyPage(page);
+    await screens.goto('/admin/staff');
+    const sizes = await page.evaluate(() => ({
+      body: getComputedStyle(document.body).fontSize,
+      description: getComputedStyle(document.querySelector('[data-slot="page-header-description"]')!).fontSize,
+    }));
+    expect(sizes).toEqual({ body: '14px', description: '14px' });
+  });
 });
 
 test.describe('Cel dotykowy z tokenu kontraktu (@REQ: UI-ACCESSIBILITY)', () => {
