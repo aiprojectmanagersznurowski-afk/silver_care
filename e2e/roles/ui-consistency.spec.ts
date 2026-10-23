@@ -45,6 +45,15 @@ test.describe('Spójność ekranów — wspólny nagłówek strony (@REQ: UI-TEM
   }
 });
 
+test.describe('Cel dotykowy z tokenu kontraktu (@REQ: UI-ACCESSIBILITY)', () => {
+  test('@REQ: UI-ACCESSIBILITY - link powrotu w nagłówku ma cel dotykowy 38px (ADR-018)', async ({ loginPage, page }) => {
+    await loginPage.loginAs('org_admin');
+    const screens = new PageConsistencyPage(page);
+    await screens.goto('/settings/profile');
+    expect(await screens.backLinkTouchTarget()).toEqual({ minHeight: '38px', minWidth: '0px' });
+  });
+});
+
 /** Widoki z tabelami (dane demo zawsze zawierają pensjonariuszy, konta i wpisy audytowe). */
 const TABLE_SCREENS: { role: 'org_admin' | 'super_admin'; paths: string[] }[] = [
   { role: 'org_admin', paths: ['/admin/staff', '/admin/invitations', '/admin/audit', '/admin/reports/daily'] },
