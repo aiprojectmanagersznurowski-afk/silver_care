@@ -166,7 +166,7 @@ export default async function FamilyConsentsPage() {
                         {c.revoked_at && (
                           <>
                             <span>•</span>
-                            <span className="text-destructive">
+                            <span className="text-foreground">
                               Wycofano: {format(new Date(c.revoked_at), 'd MMMM yyyy, HH:mm', { locale: pl })}
                             </span>
                           </>
