@@ -28,15 +28,23 @@ interface EditOrganizationDialogProps {
   }
   trigger?: React.ReactNode
   onSuccess?: () => void
+  /** Sterowanie z zewnątrz (np. z menu „⋯") — wtedy bez własnego przycisku. */
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 export function EditOrganizationDialog({
   organization,
   trigger,
   onSuccess,
+  open: openProp,
+  onOpenChange,
 }: EditOrganizationDialogProps) {
   const router = useRouter()
-  const [open, setOpen] = useState(false)
+  const [innerOpen, setInnerOpen] = useState(false)
+  const controlled = openProp !== undefined
+  const open = controlled ? openProp : innerOpen
+  const setOpen = (next: boolean) => (controlled ? onOpenChange?.(next) : setInnerOpen(next))
   const [isPending, startTransition] = useTransition()
   const [orgName, setOrgName] = useState(organization.organization_name)
   const [address, setAddress] = useState(organization.address || '')
@@ -85,13 +93,15 @@ export function EditOrganizationDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger render={trigger ? (trigger as React.ReactElement) : (
-        <Button variant="outline" size="sm" className="h-8 gap-1.5 text-sm">
-          <Pencil className="h-3.5 w-3.5" />
-          Edytuj
-        </Button>
-      )}>
-      </DialogTrigger>
+      {!controlled && (
+        <DialogTrigger render={trigger ? (trigger as React.ReactElement) : (
+          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-sm">
+            <Pencil className="h-3.5 w-3.5" />
+            Edytuj
+          </Button>
+        )}>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-xl md:max-w-2xl p-6">
         <DialogHeader>
           <DialogTitle>Edycja danych placówki</DialogTitle>
