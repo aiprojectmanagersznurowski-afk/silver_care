@@ -142,6 +142,20 @@ test.describe('Spójność ekranów — jedna wysokość wiersza tabeli (@REQ: U
   }
 });
 
+test.describe('Pulpit placówki — karty wskaźników szablonu (@REQ: UI-TEMPLATE-ALIGNMENT)', () => {
+  test('@REQ: UI-TEMPLATE-ALIGNMENT - wskaźniki w MetricCard o jednym kształcie, bez zmyślonego statusu', async ({ loginPage, page }) => {
+    await loginPage.loginAs('org_admin');
+    const screens = new PageConsistencyPage(page);
+    await screens.goto('/admin');
+    const cards = page.locator('[data-slot="metric-card"]');
+    expect(await cards.count()).toBeGreaterThanOrEqual(3);
+    const heights = await cards.evaluateAll((els) => [...new Set(els.map((e) => Math.round(e.getBoundingClientRect().height)))]);
+    expect(heights, 'karty wskaźników różnej wysokości').toHaveLength(1);
+    // CLAUDE.md: zakaz fabrykowania danych — „Status systemu: Stabilny” nie wynikał z żadnego pomiaru
+    await expect(page.getByText('Stabilny', { exact: true })).toHaveCount(0);
+  });
+});
+
 /** Widoki list z wyszukiwarką (i filtrami na tablicy dyżuru oraz w strukturze placówki). */
 const TOOLBAR_SCREENS: { role: 'org_admin' | 'nurse'; paths: string[] }[] = [
   { role: 'org_admin', paths: ['/admin/residents', '/admin/facility', '/admin/messages'] },
