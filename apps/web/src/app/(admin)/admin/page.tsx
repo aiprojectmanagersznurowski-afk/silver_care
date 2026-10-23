@@ -2,10 +2,12 @@ import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
 import { createClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Users, Bed, BedDouble, FileText, Building2 } from 'lucide-react'
 import Link from 'next/link'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { buttonVariants } from '@/components/ui/button'
+import { Users, Bed, BedDouble, FileText, Building2 } from 'lucide-react'
 import { PageHeader } from '@/components/patterns/PageHeader'
+import { MetricCard, MetricGrid } from '@/components/patterns/MetricCard'
 
 export default async function AdminDashboard() {
   const supabase = await createClient()
@@ -19,117 +21,45 @@ export default async function AdminDashboard() {
   if (role === 'super_admin' && !isImpersonating) {
     redirect('/admin/organizations')
   }
-  
-  // 1. Get total residents
-  const { count: residentsCount } = await supabase
-    .from('residents')
-    .select('*', { count: 'exact', head: true })
-    .is('archived_at', null)
 
-  // 2. Get total beds
-  const { count: totalBedsCount } = await supabase
-    .from('beds')
-    .select('*', { count: 'exact', head: true })
+  const [{ count: residentsCount }, { count: totalBedsCount }, { count: occupiedBedsCount }, { count: pendingReportsCount }] = await Promise.all([
+    supabase.from('residents').select('*', { count: 'exact', head: true }).is('archived_at', null),
+    supabase.from('beds').select('*', { count: 'exact', head: true }),
+    supabase.from('bed_assignments').select('*', { count: 'exact', head: true }).is('unassigned_at', null),
+    supabase.from('daily_reports').select('*', { count: 'exact', head: true }).eq('status', 'draft'),
+  ])
 
-  // 3. Get occupied beds
-  const { count: occupiedBedsCount } = await supabase
-    .from('bed_assignments')
-    .select('*', { count: 'exact', head: true })
-    .is('unassigned_at', null)
-
-  // 4. Get draft reports waiting for approval
-  const { count: pendingReportsCount } = await supabase
-    .from('daily_reports')
-    .select('*', { count: 'exact', head: true })
-    .eq('status', 'draft')
-  
-  const occupancyRate = totalBedsCount ? Math.round(((occupiedBedsCount || 0) / totalBedsCount) * 100) : 0
+  const totalBeds = totalBedsCount || 0
+  const occupiedBeds = occupiedBedsCount || 0
+  const occupancyRate = totalBeds ? Math.round((occupiedBeds / totalBeds) * 100) : 0
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-col gap-4 md:gap-6">
       <PageHeader title="Pulpit Główny" description="Szybki podgląd stanu placówki i obłożenia." />
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Card 1: Residents */}
-        <Card className="rounded-xl border-none ring-1 ring-border">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <Users className="h-6 w-6" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Aktywni podopieczni</p>
-                <h3 className="text-2xl font-bold text-foreground">{residentsCount || 0}</h3>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <MetricGrid>
+        <MetricCard icon={<Users />} label="Aktywni podopieczni" value={residentsCount || 0} description="Podopieczni bez archiwizacji." />
+        <MetricCard icon={<Bed />} label="Obłożenie placówki" value={`${occupancyRate}%`} description={`${occupiedBeds} z ${totalBeds} łóżek zajętych.`} />
+        <MetricCard icon={<BedDouble />} label="Wolne łóżka" value={totalBeds - occupiedBeds} description="Łóżka bez aktywnego przypisania." />
+        <MetricCard icon={<FileText />} label="Raporty do zatwierdzenia" value={pendingReportsCount || 0} description="Raporty do zatwierdzenia w statusie roboczym." />
+      </MetricGrid>
 
-        {/* Card 2: Occupancy Rate */}
-        <Card className="rounded-xl border-none ring-1 ring-border">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted text-foreground">
-                <Bed className="h-6 w-6" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Obłożenie placówki</p>
-                <h3 className="text-2xl font-bold text-foreground">{occupancyRate}%</h3>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Card 3: Free Beds */}
-        <Card className="rounded-xl border-none ring-1 ring-border">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted text-foreground">
-                <BedDouble className="h-6 w-6" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Wolne łóżka</p>
-                <h3 className="text-2xl font-bold text-foreground">{(totalBedsCount || 0) - (occupiedBedsCount || 0)}</h3>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Card 4: Pending Daily Reports */}
-        <Card className="rounded-xl border-none ring-1 ring-border">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <FileText className="h-6 w-6" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Raporty do zatwierdzenia</p>
-                <h3 className="text-2xl font-bold text-foreground">{pendingReportsCount || 0}</h3>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card className="rounded-xl border-none ring-1 ring-border">
-          <CardHeader>
-            <CardTitle className="text-lg text-foreground">Na skróty</CardTitle>
-            <CardDescription>Szybki dostęp do kluczowych sekcji</CardDescription>
-          </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-4">
-             <Link href="/admin/residents" className="flex flex-col items-center justify-center p-6 rounded-xl bg-muted/50 hover:bg-muted transition-colors text-foreground font-medium text-sm gap-3">
-               <Users className="h-8 w-8 text-primary" />
-               Lista podopiecznych
-             </Link>
-             <Link href="/admin/facility" className="flex flex-col items-center justify-center p-6 rounded-xl bg-muted/50 hover:bg-muted transition-colors text-foreground font-medium text-sm gap-3">
-               <Building2 className="h-8 w-8 text-primary" />
-               Struktura ośrodka
-             </Link>
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Na skróty</CardTitle>
+          <CardDescription>Szybki dostęp do kluczowych sekcji</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-2">
+          <Link href="/admin/residents" className={buttonVariants({ variant: 'outline' })}>
+            <Users />
+            Lista podopiecznych
+          </Link>
+          <Link href="/admin/facility" className={buttonVariants({ variant: 'outline' })}>
+            <Building2 />
+            Struktura ośrodka
+          </Link>
+        </CardContent>
+      </Card>
     </div>
   )
 }
