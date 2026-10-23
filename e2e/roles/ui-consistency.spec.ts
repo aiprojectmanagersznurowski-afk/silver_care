@@ -145,6 +145,26 @@ test.describe('Tryb ciemny — czytelne przyciski i filtry (@REQ: UI-ACCESSIBILI
   });
 });
 
+test.describe('Logo w obu motywach tej samej wielkości (@REQ: UI-TEMPLATE-ALIGNMENT)', () => {
+  test('@REQ: UI-TEMPLATE-ALIGNMENT - logo w pasku bocznym w trybie ciemnym ma te same wymiary co w jasnym', async ({ loginPage, page }) => {
+    await loginPage.loginAs('org_admin');
+    await page.setViewportSize({ width: 1280, height: 800 });
+    const logoSize = async (scheme: 'light' | 'dark') => {
+      await page.emulateMedia({ colorScheme: scheme });
+      await page.goto('/admin');
+      await page.waitForLoadState('networkidle');
+      const logo = page.locator('[data-sidebar="header"] img[alt="Silver Care"]:visible');
+      await expect(logo).toHaveJSProperty('complete', true);
+      const box = await logo.boundingBox();
+      return box && { width: Math.round(box.width), height: Math.round(box.height) };
+    };
+    const light = await logoSize('light');
+    const dark = await logoSize('dark');
+    expect(light).not.toBeNull();
+    expect(dark).toEqual(light);
+  });
+});
+
 test.describe('Cel dotykowy z tokenu kontraktu (@REQ: UI-ACCESSIBILITY)', () => {
   test('@REQ: UI-ACCESSIBILITY - link powrotu w nagłówku ma cel dotykowy 38px (ADR-018)', async ({ loginPage, page }) => {
     await loginPage.loginAs('org_admin');
