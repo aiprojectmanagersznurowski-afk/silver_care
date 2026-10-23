@@ -15,6 +15,10 @@ import { StaffBoardFilterBar } from './staff/board/StaffBoardFilterBar'
 import { StaffQuickRoundsCard } from './staff/board/StaffQuickRoundsCard'
 import { StaffStandardCard } from './staff/board/StaffStandardCard'
 import { StaffBoardTable } from './staff/board/StaffBoardTable'
+import { TableCard } from '@/components/patterns/TableCard'
+import { ObjectGrid } from '@/components/patterns/ObjectCard'
+import { ListEmpty } from '@/components/patterns/ListState'
+import { Button } from '@/components/ui/button'
 
 export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {} }: StaffBoardClientProps) {
   const [viewMode, setViewMode] = useViewPreference(
@@ -112,6 +116,8 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
         onClearFilters={clearFilters}
       />
 
+      <TableCard
+        toolbar={
       <StaffBoardFilterBar
         searchFilter={searchFilter}
         onSearchChange={setSearchFilter}
@@ -130,54 +136,41 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
         roomsForCurrentFloor={roomsForCurrentFloor}
         totalUnansweredCount={totalUnansweredCount}
       />
-
-      {viewMode === 'table' ? (
-        <StaffBoardTable residents={filtered} unansweredMessagesMap={unansweredMessagesMap} />
-      ) : viewMode === 'rounds' ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((resident) => {
-            const resId = resident.id as string
-            return (
-              <StaffQuickRoundsCard
-                key={resId}
-                resident={resident}
-                isLogged={Boolean(loggedResidentIds[resId])}
-                isSubmitting={pendingResidentId === resId}
-                unansweredInfo={unansweredMessagesMap[resId]}
-                onQuickLog={handleQuickLog}
-              />
-            )
-          })}
-        </div>
-      ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filtered.map((resident) => {
-            const resId = resident.id as string
-            return (
-              <StaffStandardCard
-                key={resId}
-                resident={resident}
-                unansweredInfo={unansweredMessagesMap[resId]}
-              />
-            )
-          })}
-        </div>
-      )}
-
-      {filtered.length === 0 && (
-        <div className="col-span-full py-16 text-center rounded-xl border border-dashed border-border bg-muted/50">
-          <h3 className="text-sm font-medium text-foreground mb-1">Brak podopiecznych</h3>
-          <p className="text-sm text-muted-foreground">Nie znaleziono osób spełniających kryteria wyszukiwania.</p>
-          {activeFiltersCount > 0 && (
-            <button
-              onClick={clearFilters}
-              className="mt-6 inline-flex items-center rounded-xl bg-card px-4 py-2 text-sm font-medium text-foreground ring-1 ring-inset ring-border hover:bg-muted/50 transition-colors min-h-touch"
-            >
-              Wyczyść wszystkie filtry
-            </button>
-          )}
-        </div>
-      )}
+        }
+      >
+        {filtered.length === 0 ? (
+          <ListEmpty
+            framed={false}
+            title="Brak podopiecznych"
+            description="Nie znaleziono osób spełniających kryteria wyszukiwania."
+            action={activeFiltersCount > 0 ? (
+              <Button type="button" variant="outline" onClick={clearFilters}>Wyczyść wszystkie filtry</Button>
+            ) : undefined}
+          />
+        ) : viewMode === 'table' ? (
+          <StaffBoardTable residents={filtered} unansweredMessagesMap={unansweredMessagesMap} />
+        ) : (
+          <div className="p-4">
+            <ObjectGrid>
+              {filtered.map((resident) => {
+                const resId = resident.id as string
+                return viewMode === 'rounds' ? (
+                  <StaffQuickRoundsCard
+                    key={resId}
+                    resident={resident}
+                    isLogged={Boolean(loggedResidentIds[resId])}
+                    isSubmitting={pendingResidentId === resId}
+                    unansweredInfo={unansweredMessagesMap[resId]}
+                    onQuickLog={handleQuickLog}
+                  />
+                ) : (
+                  <StaffStandardCard key={resId} resident={resident} unansweredInfo={unansweredMessagesMap[resId]} />
+                )
+              })}
+            </ObjectGrid>
+          </div>
+        )}
+      </TableCard>
     </div>
   )
 }
