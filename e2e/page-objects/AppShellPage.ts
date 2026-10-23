@@ -11,6 +11,7 @@ export class AppShellPage {
   readonly trigger: Locator;
   readonly inset: Locator;
   readonly header: Locator;
+  readonly accountTrigger: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -18,6 +19,7 @@ export class AppShellPage {
     this.trigger = page.locator('[data-slot="sidebar-trigger"]');
     this.inset = page.locator('[data-slot="sidebar-inset"]');
     this.header = page.locator('[data-slot="app-header"]');
+    this.accountTrigger = page.locator('[data-slot="sidebar"] [data-slot="nav-user-trigger"]');
   }
 
   navLink(href: string): Locator {
@@ -45,6 +47,14 @@ export class AppShellPage {
         endHasTheme: !!end?.querySelector('[data-slot="theme-toggle"]'),
       };
     });
+  }
+
+  /** Otwiera rozwijane menu konta w stopce paska bocznego (nav-user szablonu). */
+  async openAccountMenu() {
+    await this.accountTrigger.click();
+    const menu = this.page.locator('[role="menu"]');
+    await expect(menu).toBeVisible();
+    return menu;
   }
 
   async toggle() {
