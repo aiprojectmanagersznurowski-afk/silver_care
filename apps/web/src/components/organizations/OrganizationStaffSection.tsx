@@ -1,4 +1,8 @@
-import { TableCard, TableStateRow } from '@/components/patterns/TableCard'
+import { TableStateRow } from '@/components/patterns/TableCard'
+import { ListViewFrame } from '@/components/patterns/ListViewFrame'
+import { ObjectCard, ObjectGrid } from '@/components/patterns/ObjectCard'
+import { ListEmpty } from '@/components/patterns/ListState'
+import { VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-preference'
 import { UserCheck } from 'lucide-react'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -9,13 +13,33 @@ interface OrganizationStaffSectionProps {
   staff: User[]
 }
 
+const roleOf = (person: User) =>
+  (person.app_metadata?.role as string) || (person.user_metadata?.role as string) || 'Personel'
+const lastSignIn = (person: User) =>
+  person.last_sign_in_at ? new Date(person.last_sign_in_at).toLocaleString('pl-PL') : 'Nigdy'
+const EMPTY_TITLE = 'Brak zarejestrowanego personelu w tej placówce'
+
 export function OrganizationStaffSection({ staff }: OrganizationStaffSectionProps) {
-  return (
-    <TableCard
-      icon={<UserCheck />}
-      title="Personel Opiekuńczy"
-      description="Lista personelu i opiekunów przypisanych do tej placówki (wyłącznie dane techniczne kont)."
-    >
+  const grid = staff.length === 0 ? (
+    <ListEmpty title={EMPTY_TITLE} />
+  ) : (
+    <ObjectGrid>
+      {staff.map((person) => (
+        <ObjectCard
+          key={person.id}
+          title={person.email}
+          badges={<StatusBadge>{roleOf(person)}</StatusBadge>}
+          meta={[
+            { label: 'Identyfikator', value: <BusinessIdBadge type="user" id={person.id} /> },
+            { label: 'Data rejestracji', value: new Date(person.created_at).toLocaleDateString('pl-PL') },
+            { label: 'Ostatnie logowanie', value: lastSignIn(person) },
+          ]}
+        />
+      ))}
+    </ObjectGrid>
+  )
+
+  const table = (
           <Table>
             <TableHeader className="text-muted-foreground">
               <TableRow>
@@ -35,26 +59,31 @@ export function OrganizationStaffSection({ staff }: OrganizationStaffSectionProp
                     </div>
                   </TableCell>
                   <TableCell>
-                    <StatusBadge>
-                      {(person.app_metadata?.role as string) || (person.user_metadata?.role as string) || 'Personel'}
-                    </StatusBadge>
+                    <StatusBadge>{roleOf(person)}</StatusBadge>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {new Date(person.created_at).toLocaleDateString('pl-PL')}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {person.last_sign_in_at
-                      ? new Date(person.last_sign_in_at).toLocaleString('pl-PL')
-                      : 'Nigdy'
-                    }
+                    {lastSignIn(person)}
                   </TableCell>
                 </TableRow>
               ))}
               {staff.length === 0 && (
-                <TableStateRow colSpan={4} state="empty" title="Brak zarejestrowanego personelu w tej placówce" />
+                <TableStateRow colSpan={4} state="empty" title={EMPTY_TITLE} />
               )}
             </TableBody>
           </Table>
-    </TableCard>
+  )
+
+  return (
+    <ListViewFrame
+      storageKey={VIEW_PREFERENCE_KEYS.orgStaff}
+      icon={<UserCheck />}
+      title="Personel Opiekuńczy"
+      description="Lista personelu i opiekunów przypisanych do tej placówki (wyłącznie dane techniczne kont)."
+      table={table}
+      grid={grid}
+    />
   )
 }

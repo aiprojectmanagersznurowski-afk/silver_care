@@ -1,4 +1,8 @@
-import { TableCard, TableStateRow } from '@/components/patterns/TableCard'
+import { TableStateRow } from '@/components/patterns/TableCard'
+import { ListViewFrame } from '@/components/patterns/ListViewFrame'
+import { ObjectCard, ObjectGrid } from '@/components/patterns/ObjectCard'
+import { ListEmpty } from '@/components/patterns/ListState'
+import { VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-preference'
 import { Button } from '@/components/ui/button'
 import { UserCog } from 'lucide-react'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
@@ -7,6 +11,9 @@ import { ResendAdminInviteButton, AddAdminToOrgDialog } from '@/components/Admin
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import type { User } from '@supabase/supabase-js'
 import { StatusBadge } from '@/components/patterns/StatusBadge'
+
+const lastSignIn = (u: User) => (u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleString('pl-PL') : 'Nigdy')
+const EMPTY_TITLE = 'Brak przypisanych administratorów placówki'
 
 interface OrganizationAdminsSectionProps {
   organizationId: string
@@ -19,13 +26,52 @@ export function OrganizationAdminsSection({
   organizationName,
   administrators
 }: OrganizationAdminsSectionProps) {
-  return (
-    <TableCard
-      icon={<UserCog />}
-      title="Administratorzy Ośrodka (org_admin)"
-      description="Konta posiadające uprawnienia do zarządzania personelem, podopiecznymi i salami w tej placówce."
-      actions={<AddAdminToOrgDialog organizationId={organizationId} organizationName={organizationName} />}
-    >
+  const actionsFor = (admin: User) => (
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        <ResendAdminInviteButton
+          adminEmail={admin.email || ''}
+          organizationId={organizationId}
+          organizationName={organizationName}
+        />
+        <form action={startImpersonationAction}>
+          <input type="hidden" name="targetAdminId" value={admin.id} />
+          <input type="hidden" name="targetOrgId" value={organizationId} />
+          <input type="hidden" name="targetOrgName" value={organizationName} />
+          <input type="hidden" name="adminEmail" value={admin.email || ''} />
+          <Button
+            type="submit"
+            variant="outline"
+            size="sm"
+            className="rounded-xl border-border bg-muted text-foreground hover:bg-muted text-sm min-h-touch font-medium"
+            title="Zaloguj jako ten administrator placówki"
+          >
+            Zaloguj jako
+          </Button>
+        </form>
+      </div>
+  )
+
+  const grid = administrators.length === 0 ? (
+    <ListEmpty title={EMPTY_TITLE} />
+  ) : (
+    <ObjectGrid>
+      {administrators.map((admin) => (
+        <ObjectCard
+          key={admin.id}
+          title={admin.email}
+          badges={<StatusBadge tone="brand">Administrator Ośrodka</StatusBadge>}
+          meta={[
+            { label: 'Identyfikator', value: <BusinessIdBadge type="user" id={admin.id} /> },
+            { label: 'Data rejestracji', value: new Date(admin.created_at).toLocaleDateString('pl-PL') },
+            { label: 'Ostatnie logowanie', value: lastSignIn(admin) },
+          ]}
+          actions={actionsFor(admin)}
+        />
+      ))}
+    </ObjectGrid>
+  )
+
+  const table = (
           <Table>
             <TableHeader className="text-muted-foreground">
               <TableRow>
@@ -52,42 +98,29 @@ export function OrganizationAdminsSection({
                     {new Date(admin.created_at).toLocaleDateString('pl-PL')}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {admin.last_sign_in_at
-                      ? new Date(admin.last_sign_in_at).toLocaleString('pl-PL')
-                      : 'Nigdy'
-                    }
+                    {lastSignIn(admin)}
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <ResendAdminInviteButton
-                        adminEmail={admin.email || ''}
-                        organizationId={organizationId}
-                        organizationName={organizationName}
-                      />
-                      <form action={startImpersonationAction}>
-                        <input type="hidden" name="targetAdminId" value={admin.id} />
-                        <input type="hidden" name="targetOrgId" value={organizationId} />
-                        <input type="hidden" name="targetOrgName" value={organizationName} />
-                        <input type="hidden" name="adminEmail" value={admin.email || ''} />
-                        <Button
-                          type="submit"
-                          variant="outline"
-                          size="sm"
-                          className="rounded-xl border-border bg-muted text-foreground hover:bg-muted text-sm min-h-touch font-medium"
-                          title="Zaloguj jako ten administrator placówki"
-                        >
-                          Zaloguj jako
-                        </Button>
-                      </form>
-                    </div>
+                    {actionsFor(admin)}
                   </TableCell>
                 </TableRow>
               ))}
               {administrators.length === 0 && (
-                <TableStateRow colSpan={5} state="empty" title="Brak przypisanych administratorów placówki" />
+                <TableStateRow colSpan={5} state="empty" title={EMPTY_TITLE} />
               )}
             </TableBody>
           </Table>
-    </TableCard>
+  )
+
+  return (
+    <ListViewFrame
+      storageKey={VIEW_PREFERENCE_KEYS.orgAdmins}
+      icon={<UserCog />}
+      title="Administratorzy Ośrodka (org_admin)"
+      description="Konta posiadające uprawnienia do zarządzania personelem, podopiecznymi i salami w tej placówce."
+      actions={<AddAdminToOrgDialog organizationId={organizationId} organizationName={organizationName} />}
+      table={table}
+      grid={grid}
+    />
   )
 }
