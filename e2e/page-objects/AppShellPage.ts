@@ -10,12 +10,14 @@ export class AppShellPage {
   readonly sidebar: Locator;
   readonly trigger: Locator;
   readonly inset: Locator;
+  readonly header: Locator;
 
   constructor(page: Page) {
     this.page = page;
     this.sidebar = page.locator('[data-slot="sidebar"][data-state]');
     this.trigger = page.locator('[data-slot="sidebar-trigger"]');
     this.inset = page.locator('[data-slot="sidebar-inset"]');
+    this.header = page.locator('[data-slot="app-header"]');
   }
 
   navLink(href: string): Locator {
@@ -29,6 +31,20 @@ export class AppShellPage {
   async expectCollapsed() {
     await expect(this.sidebar).toHaveAttribute('data-state', 'collapsed');
     await expect(this.sidebar).toHaveAttribute('data-collapsible', 'icon');
+  }
+
+  /** Układ nagłówka szablonu: start (zwijanie, separator, wyszukiwarka) i koniec (akcje, motyw). */
+  async headerLayout() {
+    return this.header.evaluate((h) => {
+      const start = h.querySelector('[data-slot="app-header-start"]');
+      const end = h.querySelector('[data-slot="app-header-end"]');
+      return {
+        height: Math.round(h.getBoundingClientRect().height),
+        startHasTrigger: !!start?.querySelector('[data-slot="sidebar-trigger"]'),
+        startHasSearch: !!start?.querySelector('button[aria-label="Wyszukaj w systemie"]'),
+        endHasTheme: !!end?.querySelector('[data-slot="theme-toggle"]'),
+      };
+    });
   }
 
   async toggle() {
