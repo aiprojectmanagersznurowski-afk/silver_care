@@ -252,7 +252,7 @@ Przed prezentacjami i demo dla potencjalnych klientów (Marconi, KIDO) potrzebny
 
 ---
 
-## ADR-016 — Zunifikowana Norma Typografii i Dotyku Mobile-First (16px / min. 14px / 44px) ✅
+## ADR-016 — Zunifikowana Norma Typografii i Dotyku Mobile-First (16px / min. 14px / 44px) (Status: punkt 4 częściowo zastąpiony przez ADR-018 — cel dotykowy 38px) ✅
 
 **Kontekst.** W systemie występował rozjazd między historycznymi standardami typografii i dotyku (ADR-011 narzucał bazowy tekst 17px i cel dotykowy 48px, z kolei ADR-014 obniżał skalę do 14px tekstu i 32px przycisków na wzór szablonu shadcn-admin). Skutkowało to niespójnością interfejsów portalu bliskich oraz panelu personelu na urządzeniach mobilnych oraz ryzykiem niedostępności dla personelu w biegu i osób starszych.
 
@@ -283,7 +283,7 @@ Przed prezentacjami i demo dla potencjalnych klientów (Marconi, KIDO) potrzebny
 2. **Czerwień (`destructive`) wyłącznie dla błędów technicznych.** Nie dla liczników, statusów pensjonariusza ani przycisków usuwania. Opis tokenu w kontrakcie zostaje dostosowany w oknie kontraktowym (`UI-TEMPLATE-ALIGNMENT`).
 3. **Dwa tony statusu: neutralny i kolor marki.** Nie wprowadzamy tonu „uwaga/warning”; jeśli konkretny ekran będzie go potrzebował, wymaga to zmiany kontraktu.
 4. **Egzekwowanie w istniejących mechanizmach, nie w nowych.** Każda reguła UI trafia jednocześnie do `tools/sc.config.mjs` (hooki Claude Code i Antigravity, pre-commit) i do `scripts/verify.sh` krok 6 (CI, niezależnie od narzędzia). Regułę wprowadzamy jako blokującą wyłącznie wtedy, gdy na `main` ma zero naruszeń, a jej działanie potwierdza test w `tests/logic/`. Pierwsza reguła: zakaz surowej palety Tailwind (np. `bg-amber-500`); `text-white`/`bg-white` na kolorze marki pozostają dozwolone.
-5. **Spójność ekranów przez wspólne komponenty.** Celem jest, by każdy ekran składał się z tych samych elementów, przy zachowaniu czytelności z ADR-016. Audyt wykazał powielanie: nagłówek strony w 16 plikach, 21 ręcznie stylowanych plakietek statusu w 12 plikach, 15 tabel z własnymi akcjami i stanami, nieużywane `ui/empty` i `ui/skeleton`. Powstają kolejno, każdy z pilotażem na jednym ekranie: `PageHeader`, `StatusBadge` (dwa tony z pkt 3), wspólne stany listy (pusty, ładowanie, błąd; `UI-FOUR-STATES`) oraz wspólna tabela na `ui/table` z akcjami wiersza o celu 44px. Komponenty są pisane pod to repo; kompozytów zestawu (`ConfirmDialog`, `EmptyState`, `FormField`, `DataTable`) nie przenosimy, bo repo ma odpowiedniki albo nie spełniają ADR-016.
+5. **Spójność ekranów przez wspólne komponenty.** Celem jest, by każdy ekran składał się z tych samych elementów, przy zachowaniu czytelności z ADR-016. Audyt wykazał powielanie: nagłówek strony w 16 plikach, 21 ręcznie stylowanych plakietek statusu w 12 plikach, 15 tabel z własnymi akcjami i stanami, nieużywane `ui/empty` i `ui/skeleton`. Powstają kolejno, każdy z pilotażem na jednym ekranie: `PageHeader`, `StatusBadge` (dwa tony z pkt 3), wspólne stany listy (pusty, ładowanie, błąd; `UI-FOUR-STATES`) oraz wspólna tabela na `ui/table` z akcjami wiersza o celu dotykowym z ADR-018 (38px). Komponenty są pisane pod to repo; kompozytów zestawu (`ConfirmDialog`, `EmptyState`, `FormField`, `DataTable`) nie przenosimy, bo repo ma odpowiedniki albo nie spełniają ADR-016.
 6. **Bez nowych zależności z szablonu** (Radix, Biome, `react-hook-form`, `zod`, `@vercel/analytics` i in.), zgodnie z `DEFAULTS.library_choice`.
 7. **Nowy ekran składa się ze wspólnych komponentów.** Zasada trafia do `.claude/CLAUDE.md` i `AGENTS.md`, więc obowiązuje agentów Claude Code i Gemini. Istniejące ekrany są migrowane stopniowo, przy okazji zmian w danym ekranie.
 
@@ -291,3 +291,19 @@ Przed prezentacjami i demo dla potencjalnych klientów (Marconi, KIDO) potrzebny
 - Agenci obu osób (Claude Code i Gemini) dostają te same reguły z jednego miejsca, a CI pilnuje ich niezależnie od narzędzia.
 - Bez reguły automatycznej pozostają: czerwień dla elementów niebędących błędem, cele dotykowe `h-6`–`h-9` i kolor w stylach inline. Pilnuje ich recenzja i test E2E `appearance-audit` (dziś poza CI).
 - Każdy etap wdrożenia to osobny PR mieszczący się w limicie 3 plików, scalany przez drugą osobę. Pełna migracja istniejących ekranów to szacunkowo 15–20 takich PR, dlatego jest rozłożona w czasie.
+
+---
+
+## ADR-018 — Cel dotykowy 38px: kompromis między ADR-016 (44px) a skalą szablonu (32px) (Status: PROPOZYCJA — wymaga potwierdzenia Darka, zmienia wspólną decyzję) 📝
+
+**Kontekst.** ADR-016 (Michał & Darek, 2026-10-16) ustalił cel dotykowy 44px, odwracając skalę szablonu shadcn-admin (32px, ADR-014) z powodu ryzyka bezpieczeństwa: personel w rękawiczkach lub w biegu pomyłkowo trafia w mniejsze przyciski, a opiekunowie prawni (często starsi) potrzebują większego celu. 2026-10-23 Michał poprosił o przejęcie stylu i proporcji szablonu 21st.dev dla przycisków i filtrów.
+
+**Decyzja (Michał, 2026-10-23; Darek: do potwierdzenia — zmienia wspólną decyzję z ADR-016).**
+1. **Cel dotykowy: 38px**, nie 44px (ADR-016) i nie 32px (szablon). Kompromis wybrany świadomie przez Michała po przedstawieniu uzasadnienia bezpieczeństwa z ADR-016.
+2. **Jedno źródło wartości.** `contracts/design.contract.mjs` → `ACCESSIBILITY.touchTargetMinimum`. Token CSS `--sc-touch-target` mapowany w `globals.css` na `--spacing-touch` (Tailwind v4), więc kod używa `min-h-touch min-w-touch`, nigdy liczby wpisanej na sztywno.
+3. **Bramka aktualizowana w tym samym PR**: `tools/sc-validate.mjs` (R24-design-a11y), `scripts/verify.sh` krok 6, `.claude/CLAUDE.md`, `AGENTS.md`.
+4. **Tekst (16px/14px/zakaz mikro-fontów) z ADR-016 punkty 1–3 zostają bez zmian.** Ten ADR dotyczy wyłącznie punktu 4 (cel dotykowy).
+
+**Konsekwencje.**
+- Globalny refaktor: każde użycie `min-h-11 min-w-11` i `min-h-[44px] min-w-[44px]` w `apps/web/src/` zamienione na `min-h-touch min-w-touch` — jedno zadanie typu „globalny refaktor tokenów" (wyjątek od limitu 3 plików z CLAUDE.md).
+- Do czasu potwierdzenia przez Darka status pozostaje PROPOZYCJA; w razie sporu wygrywa 44px z ADR-016, bo to jego i Michała wspólna decyzja bezpieczeństwa.

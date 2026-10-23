@@ -48,7 +48,7 @@ Wszystko, co dotyczy pensjonariusza, to dane szczególnej kategorii z artykułu 
 W całym systemie obowiązuje jedna, niesprzeczna norma UI:
 - **Tekst bazowy (body)**: `16px` (`text-base`).
 - **Minimalny dopuszczalny tekst pomocniczy**: `14px` (`text-sm`). Klasy `text-xs`, `text-[11px]`, `text-[10px]` są **surowo zabronione**.
-- **Minimalny cel dotykowy (touch target)**: dla przycisków i elementów interaktywnych wynosi **44x44px** (`min-h-11 min-w-11`).
+- **Minimalny cel dotykowy (touch target)**: dla przycisków i elementów interaktywnych wynosi **38x38px** (`min-h-touch min-w-touch`, ADR-018).
 - Tokeny są generowane z kontraktu do `packages/contracts/src/generated/tokens.css`. Nie wpisujesz wartości kolorów ani odstępów na sztywno — używasz zmiennych CSS.
 - **Kolor nie niesie oceny**: zakaz czerwieni/zieleni jako oceny stanu zdrowia. Czerwień wyłącznie dla błędów technicznych w panelu personelu.
 - **Metryki prezentujesz jako fakty**, bez wykresów sugerujących trend lub ocenę kondycji (ADR-005).

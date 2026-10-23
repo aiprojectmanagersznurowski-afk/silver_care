@@ -367,7 +367,7 @@ else if (Number(m[1]) < 7 || Number(m[2]) > 21) {
     err('R24-design-a11y', 'Krój bez zestawu latin-ext — polskie znaki diakrytyczne byłyby zastępowane.');
   }
   if (ACCESSIBILITY.contrastMinimum < 4.5) err('R24-design-a11y', `Minimalny kontrast ${ACCESSIBILITY.contrastMinimum} poniżej progu WCAG AA.`);
-  if (parseInt(ACCESSIBILITY.touchTargetMinimum, 10) < 44) err('R24-design-a11y', 'Cel dotykowy poniżej 44px (min-h-11 min-w-11).');
+  if (parseInt(ACCESSIBILITY.touchTargetMinimum, 10) < 38) err('R24-design-a11y', 'Cel dotykowy poniżej 38px (min-h-touch min-w-touch, ADR-018).');
   for (const tok of ['bg', 'surface', 'text', 'text-secondary', 'accent', 'border', 'focus']) {
     if (!COLORS.light[tok]) err('R24-design-a11y', `Brak tokenu koloru "${tok}" w motywie jasnym.`);
     if (!COLORS.dark[tok]) err('R24-design-a11y', `Brak tokenu koloru "${tok}" w motywie ciemnym.`);

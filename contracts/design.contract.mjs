@@ -65,7 +65,7 @@ export const COLORS = {
     // ADR-014 — tokeny wymagane przez komponenty szablonu shadcn
     'accent-foreground':      { value: '#FFFFFF', desc: 'Tekst na tle akcentu (przycisk główny). Kontrast 5.6:1.' },
     'input':                  { value: '#E8E4DD', desc: 'Obramowanie pól formularza.' },
-    'destructive':            { value: '#DC2626', desc: 'Wyłącznie błąd techniczny i akcja destrukcyjna. Kontrast 4.8:1. Nigdy ocena stanu pensjonariusza.' },
+    'destructive':            { value: '#DC2626', desc: 'Wyłącznie błąd techniczny (walidacja, awaria sieci/serwera). Nigdy potwierdzenie akcji nieodwracalnej i nigdy ocena stanu pensjonariusza. Kontrast 4.8:1.' },
     'destructive-foreground': { value: '#FFFFFF', desc: 'Tekst na tle błędu.' },
     'sidebar':                { value: '#FFFFFF', desc: 'Tło paska bocznego.' },
     'sidebar-accent':         { value: '#E8F0ED', desc: 'Aktywna i najechana pozycja menu.' },
@@ -145,11 +145,11 @@ export const MOTION = {
 /** Dostępność. Wymagania ostrzejsze niż standardowe, bo odbiorca tego wymaga. */
 export const ACCESSIBILITY = {
   contrastMinimum: 4.5,
-  touchTargetMinimum: '44px',
+  touchTargetMinimum: '38px',
   focusVisible: 'Zawsze widoczny pierścień 2px w kolorze akcentu z odsunięciem 2px.',
   textZoom: 'Układ nie psuje się przy powiększeniu do 200%.',
   rules: [
-    'Minimalny cel dotykowy dla przycisków i interakcji: 44x44px (min-h-11 min-w-11).',
+    'Minimalny cel dotykowy dla przycisków i interakcji: 38x38px (min-h-touch min-w-touch); ADR-018 odwraca część ADR-016 — kompromis między normą bezpieczeństwa (44px) a skalą szablonu (32px).',
     'Każda ikona niosąca znaczenie ma etykietę tekstową.',
     'Formularz opisany etykietą, nigdy samym placeholderem.',
     'Nawigacja klawiaturą obejmuje wszystkie akcje.',
