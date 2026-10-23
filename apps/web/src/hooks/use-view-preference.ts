@@ -8,6 +8,13 @@ export const VIEW_PREFERENCE_KEYS = {
   organizations: 'silver_care_org_view_mode',
   residents: 'silvercare_residents_view',
   voiceResidents: 'silvercare_voice_residents_view',
+  staff: 'silvercare_staff_view',
+  invitations: 'silvercare_invitations_view',
+  iamUsers: 'silvercare_iam_users_view',
+  orgAdmins: 'silvercare_org_admins_view',
+  orgStaff: 'silvercare_org_staff_view',
+  beds: 'silvercare_beds_view',
+  dailyReport: 'silvercare_daily_report_view',
 } as const
 
 export function validateViewPreference<T extends string>(
