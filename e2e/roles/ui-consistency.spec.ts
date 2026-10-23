@@ -98,6 +98,39 @@ test.describe('Spójność ekranów — wspólna ramka tabeli (@REQ: UI-TEMPLATE
   }
 });
 
+/** Tabele list obiektów (bez macierzy Danych Dziennych, która ma inną budowę). */
+const ROW_SCREENS: { role: 'org_admin' | 'super_admin'; paths: string[] }[] = [
+  { role: 'org_admin', paths: ['/admin/residents', '/admin/staff', '/admin/invitations', '/admin/facility', '/admin/audit'] },
+  { role: 'super_admin', paths: ['/admin/organizations', '/admin/iam'] },
+];
+
+test.describe('Spójność ekranów — jedna wysokość wiersza tabeli (@REQ: UI-TEMPLATE-ALIGNMENT)', () => {
+  for (const { role, paths } of ROW_SCREENS) {
+    test(`@REQ: UI-TEMPLATE-ALIGNMENT - ${role}: wiersze, nagłówki i odstępy komórek jednakowe we wszystkich tabelach`, async ({ loginPage, page }) => {
+      await loginPage.loginAs(role);
+      await page.setViewportSize({ width: 1440, height: 900 });
+      const screens = new PageConsistencyPage(page);
+      const rows = new Set<number>();
+      const heads = new Set<number>();
+      const paddings = new Set<string>();
+
+      for (const path of paths) {
+        await screens.goto(path);
+        await page.evaluate(() => window.localStorage.clear());
+        await screens.goto(path);
+        const m = await screens.tableRowMetrics();
+        m.rowHeights.forEach((h) => rows.add(h));
+        m.headHeights.forEach((h) => heads.add(h));
+        m.cellPaddings.forEach((p) => paddings.add(p));
+      }
+
+      expect([...heads], 'różne wysokości nagłówków tabel').toHaveLength(1);
+      expect([...paddings], 'różne odstępy komórek').toHaveLength(1);
+      expect([...rows].sort(), 'różne wysokości wierszy').toHaveLength(1);
+    });
+  }
+});
+
 /** Widoki, na których dane demo zawsze zawierają statusy (pensjonariusze, konta, raporty). */
 const BADGE_SCREENS: { role: 'org_admin' | 'super_admin' | 'nurse'; paths: string[] }[] = [
   { role: 'org_admin', paths: ['/admin/residents', '/admin/invitations', '/admin/staff'] },

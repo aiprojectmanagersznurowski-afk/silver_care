@@ -72,6 +72,27 @@ export class PageConsistencyPage {
     });
   }
 
+  /** Wysokości wierszy danych, nagłówków i odstępy komórek w widocznych tabelach (bez wierszy stanu). */
+  async tableRowMetrics(): Promise<{ rowHeights: number[]; headHeights: number[]; cellPaddings: string[] }> {
+    return this.page.evaluate(() => {
+      const tables = [...document.querySelectorAll('main table')].filter((t) => (t as HTMLElement).offsetParent !== null);
+      const rowHeights: number[] = [];
+      const headHeights: number[] = [];
+      const cellPaddings = new Set<string>();
+      for (const t of tables) {
+        const th = t.querySelector('thead th');
+        if (th) headHeights.push(Math.round(th.getBoundingClientRect().height));
+        for (const tr of t.querySelectorAll('tbody tr')) {
+          if (tr.querySelector('td[colspan]')) continue;
+          rowHeights.push(Math.round(tr.getBoundingClientRect().height));
+          const td = tr.querySelector('td');
+          if (td) { const cs = getComputedStyle(td); cellPaddings.add(`${cs.paddingTop} ${cs.paddingLeft}`); }
+        }
+      }
+      return { rowHeights, headHeights, cellPaddings: [...cellPaddings] };
+    });
+  }
+
   /** Widoczne tabele: ile leży poza wspólną ramką TableCard i jakie style mają ramki. */
   async tableSnapshot(): Promise<{ tables: number; outsideCard: string[]; frames: string[] }> {
     return this.page.evaluate(() => {
