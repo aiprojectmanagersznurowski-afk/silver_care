@@ -51,8 +51,9 @@ describe('PageHeader — wspólny nagłówek strony (ADR-017)', () => {
     expect(html).toContain('Wróć do listy podopiecznych');
   });
 
-  it('@REQ: UI-ACCESSIBILITY - żadna klasa nie schodzi poniżej 14px (ADR-016)', () => {
+  it('@REQ: UI-ACCESSIBILITY - opis text-sm jak w szablonie, żadna klasa poniżej 12px (ADR-020)', () => {
     const html = render({ title: 'T', description: 'D', back: { href: '/x', label: 'Wróć' } });
-    expect(html).not.toMatch(/text-xs|text-\[1[0-3]px\]/);
+    expect(html).toMatch(/data-slot="page-header-description" class="[^"]*text-sm/);
+    expect(html).not.toMatch(/text-\[(?:[0-9]|1[01])px\]/);
   });
 });
