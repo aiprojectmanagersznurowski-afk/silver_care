@@ -38,8 +38,8 @@ describe('Likwidacja ślepego zaułka profilu (@REQ: UI-TEMPLATE-ALIGNMENT, @REQ
     expect(ROLE_LABELS.legal_guardian).toBe('Opiekun Prawny');
   });
 
-  it('gwarantuje spełnienie minimalnego celu dotykowego 44px @REQ: UI-ACCESSIBILITY', () => {
-    expect(ACCESSIBILITY.touchTargetMinimum).toBe('44px');
+  it('gwarantuje spełnienie minimalnego celu dotykowego 38px (ADR-018) @REQ: UI-ACCESSIBILITY', () => {
+    expect(ACCESSIBILITY.touchTargetMinimum).toBe('38px');
   });
 
   it('poprawnie eksportuje komponent ProfileSecurityClient @REQ: UI-TEMPLATE-ALIGNMENT', async () => {
