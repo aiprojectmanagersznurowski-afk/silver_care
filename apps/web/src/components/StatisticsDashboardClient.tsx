@@ -79,9 +79,9 @@ export function StatisticsDashboardClient({
       {/* Charts Row 1: Care Level + Contract End Reasons */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Care Level Breakdown */}
-        <Card className="rounded-xl border-none ring-1 ring-border">
+        <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg text-foreground">
+            <CardTitle className="flex items-center gap-2">
               <PieChartIcon className="h-5 w-5 text-primary" /> Stan podopiecznych
             </CardTitle>
           </CardHeader>
@@ -142,9 +142,9 @@ export function StatisticsDashboardClient({
         </Card>
 
         {/* Contract End Reasons */}
-        <Card className="rounded-xl border-none ring-1 ring-border">
+        <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg text-foreground">
+            <CardTitle className="flex items-center gap-2">
               <PieChartIcon className="h-5 w-5 text-primary" /> Powody zakończenia umowy
             </CardTitle>
           </CardHeader>
@@ -166,9 +166,9 @@ export function StatisticsDashboardClient({
 
       {/* Charts Row 2: Deaths by Stay + Contract Sources */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="rounded-xl border-none ring-1 ring-border">
+        <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg text-foreground">
+            <CardTitle className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-primary" /> Zgony a długość pobytu
             </CardTitle>
           </CardHeader>
@@ -189,9 +189,9 @@ export function StatisticsDashboardClient({
           </CardContent>
         </Card>
 
-        <Card className="rounded-xl border-none ring-1 ring-border">
+        <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg text-foreground">
+            <CardTitle className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-primary" /> Źródło umowy
             </CardTitle>
           </CardHeader>
@@ -214,9 +214,9 @@ export function StatisticsDashboardClient({
       </div>
 
       {/* Charts Row 3: Admissions by Month */}
-      <Card className="rounded-xl border-none ring-1 ring-border">
+      <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg text-foreground">
+          <CardTitle className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-primary" /> Przyjęcia wg miesiąca i stanu
           </CardTitle>
         </CardHeader>

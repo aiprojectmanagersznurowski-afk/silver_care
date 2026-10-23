@@ -73,11 +73,11 @@ export function ReportCard({ report }: { report: ReportItem }) {
   }
 
   return (
-    <Card className="rounded-xl border-border bg-card overflow-hidden" data-testid="report-card">
+    <Card className="overflow-hidden" data-testid="report-card">
       <CardHeader className="pb-3 border-b border-border bg-muted/30">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <CardTitle className="text-base font-display font-semibold text-foreground">
+            <CardTitle>
               {report.residents 
                 ? `${report.residents.first_name || ''} ${report.residents.last_name || ''}`.trim()
                 : 'Podopieczny'
