@@ -54,7 +54,7 @@ export function OrganizationStaffSection({ staff }: OrganizationStaffSectionProp
                 <TableRow key={person.id}>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-foreground">{person.email}</span>
+                      <div className="font-medium text-foreground">{person.email}</div>
                       <BusinessIdBadge type="user" id={person.id} />
                     </div>
                   </TableCell>
