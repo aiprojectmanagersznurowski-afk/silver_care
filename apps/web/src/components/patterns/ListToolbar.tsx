@@ -78,7 +78,7 @@ export function FilterChip({ active, onClick, children, 'data-testid': testId }:
       aria-pressed={active}
       onClick={onClick}
       className={`min-h-touch gap-1.5 px-3 ${
-        active ? 'border-primary bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground' : ''
+        active ? 'border-primary bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground dark:border-primary dark:bg-primary dark:hover:bg-primary/90' : ''
       }`}
     >
       {children}
