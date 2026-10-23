@@ -4,6 +4,8 @@ import { useState, useMemo } from 'react'
 import { DoorOpen } from 'lucide-react'
 import { useViewPreference, VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-preference'
 import { RoomFilterToolbar } from './RoomFilterToolbar'
+import { TableCard } from '@/components/patterns/TableCard'
+import { ListEmpty } from '@/components/patterns/ListState'
 import { RoomGridView } from './RoomGridView'
 import { RoomTableView } from './RoomTableView'
 import type { RoomItem } from './room-helpers'
@@ -73,18 +75,16 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
 
   if (rooms.length === 0) {
     return (
-      <div className="text-center p-12 bg-muted/20 rounded-lg border border-dashed">
-        <DoorOpen className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-        <h3 className="text-lg font-medium">Brak pokoi w placówce</h3>
-        <p className="text-sm text-muted-foreground mt-1">
-          Dodaj pierwszy pokój, aby rozpocząć zarządzanie strukturą i łóżkami.
-        </p>
+      <div className="mt-8">
+        <ListEmpty icon={<DoorOpen />} title="Brak pokoi w placówce" description="Dodaj pierwszy pokój, aby rozpocząć zarządzanie strukturą i łóżkami." />
       </div>
     )
   }
 
   return (
-    <div className="space-y-6 mt-8">
+    <TableCard
+      className="mt-8"
+      toolbar={
       <RoomFilterToolbar
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -102,14 +102,12 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
         totalCount={rooms.length}
         formatSectorName={formatSectorName}
       />
-
+      }
+    >
       {filteredRooms.length === 0 ? (
-        <div className="text-center p-8 bg-muted/10 rounded-xl border border-dashed">
-          <p className="text-sm text-muted-foreground">
-            Brak pokoi spełniających wybrane kryteria filtrów.
-          </p>
-        </div>
+        <ListEmpty framed={false} title="Brak pokoi spełniających wybrane filtry" description="Zmień filtry lub wyszukiwaną frazę." />
       ) : viewMode === 'grid' ? (
+        <div className="p-4">
         <RoomGridView
           rooms={filteredRooms}
           expandedRooms={expandedRooms}
@@ -117,6 +115,7 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
           onUpdate={onUpdate}
           formatSectorName={formatSectorName}
         />
+        </div>
       ) : (
         <RoomTableView
           rooms={filteredRooms}
@@ -126,6 +125,6 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
           formatSectorName={formatSectorName}
         />
       )}
-    </div>
+    </TableCard>
   )
 }

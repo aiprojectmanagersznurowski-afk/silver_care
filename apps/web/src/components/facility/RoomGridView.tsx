@@ -27,7 +27,7 @@ export function RoomGridView({
   formatSectorName,
 }: RoomGridViewProps) {
   return (
-    <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+    <div data-slot="object-grid" className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {rooms.map((room) => {
         const genderInfo = getRoomGenderLabel(room)
         const isGround = isGroundFloor(room.floor)
@@ -37,7 +37,7 @@ export function RoomGridView({
           <Card
             key={room.id}
             data-testid="room-card"
-            className={`overflow-hidden rounded-xl border transition-all duration-200 ${
+            className={`overflow-hidden transition-all duration-200 ${
               isExpanded ? 'ring-2 ring-primary/30' : 'hover:bg-muted/40'
             }`}
           >
