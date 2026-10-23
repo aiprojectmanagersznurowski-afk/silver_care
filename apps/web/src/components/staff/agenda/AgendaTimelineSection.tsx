@@ -35,7 +35,7 @@ export function AgendaTimelineSection({
   const isToday = viewDate === new Date().toISOString().slice(0, 10)
 
   return (
-    <Card className="rounded-xl border-none ring-1 ring-border bg-card overflow-hidden">
+    <Card className="overflow-hidden">
       <div className="p-6 border-b border-border flex flex-col sm:flex-row justify-between sm:items-center gap-4 bg-muted/50">
         <div>
           <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
