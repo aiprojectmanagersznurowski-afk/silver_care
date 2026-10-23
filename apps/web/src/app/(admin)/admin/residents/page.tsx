@@ -44,7 +44,7 @@ export default async function AdminResidentsPage() {
       />
 
       {masked ? (
-        <Card className="rounded-xl border border-border bg-primary p-8 text-center">
+        <Card className="p-8 text-center">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-muted text-foreground mb-3">
             <ShieldAlert className="h-6 w-6" />
           </div>
