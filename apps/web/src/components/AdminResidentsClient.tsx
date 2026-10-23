@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Search } from 'lucide-react'
 import { ViewToggle, GRID_TABLE_OPTIONS } from '@/components/patterns/ViewToggle'
+import { ListToolbar, SearchField } from '@/components/patterns/ListToolbar'
 import { ResidentGridCard } from '@/components/residents/ResidentGridCard'
 import { ResidentsTable } from '@/components/residents/ResidentsTable'
 import { useViewPreference, VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-preference'
@@ -31,22 +31,9 @@ export function AdminResidentsClient({ residents }: AdminResidentsClientProps) {
 
   return (
     <div className="space-y-4">
-      {/* Pasek narzędziowy: Wyszukiwarka + Przełącznik Kafelki / Tabela */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-card p-3 rounded-xl border border-border">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Szukaj podopiecznego..."
-            aria-label="Szukaj podopiecznego"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex min-h-touch w-full rounded-lg border border-input bg-background pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-        </div>
-
-        <ViewToggle value={viewMode} onChange={setViewMode} options={GRID_TABLE_OPTIONS} />
-      </div>
+      <ListToolbar end={<ViewToggle value={viewMode} onChange={setViewMode} options={GRID_TABLE_OPTIONS} />}>
+        <SearchField value={searchQuery} onChange={setSearchQuery} label="Szukaj podopiecznego" placeholder="Szukaj podopiecznego..." />
+      </ListToolbar>
 
       {filteredResidents.length === 0 ? (
         <div className="rounded-xl bg-card p-8 text-center text-muted-foreground border border-border">

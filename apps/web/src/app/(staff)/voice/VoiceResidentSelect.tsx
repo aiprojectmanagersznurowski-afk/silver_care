@@ -5,7 +5,8 @@ import { Card } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { TableCard } from '@/components/patterns/TableCard'
 import { ListEmpty, ListLoading } from '@/components/patterns/ListState'
-import { Search, Mic } from 'lucide-react'
+import { Mic } from 'lucide-react'
+import { SearchField } from '@/components/patterns/ListToolbar'
 import { ViewToggle, GRID_TABLE_OPTIONS } from '@/components/patterns/ViewToggle'
 import { useViewPreference, VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-preference'
 
@@ -45,17 +46,13 @@ export function VoiceResidentSelect({
         <label htmlFor="search-resident" className="text-sm font-medium text-foreground">
           Szukaj podopiecznego
         </label>
-        <div className="relative">
-          <Search className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
-          <input
-            id="search-resident"
-            type="text"
-            placeholder="Wpisz imię lub nazwisko podopiecznego..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full min-h-touch rounded-xl border border-border bg-background pl-9 pr-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-        </div>
+        <SearchField
+          id="search-resident"
+          value={searchQuery}
+          onChange={setSearchQuery}
+          label="Szukaj podopiecznego"
+          placeholder="Wpisz imię lub nazwisko podopiecznego..."
+        />
       </div>
 
       <div className="space-y-3 pt-2">
