@@ -184,11 +184,12 @@ test.describe('Pulpit placówki — karty wskaźników szablonu (@REQ: UI-TEMPLA
 });
 
 /** Listy obiektów z tabelą: wyszukiwarka i filtry w nagłówku tej samej karty co tabela (szablon „users”). */
-const LIST_CARD_PATHS = ['/admin/residents', '/admin/facility', '/staff'];
+const LIST_CARD_PATHS = ['/admin/residents', '/admin/facility', '/staff', '/admin/staff', '/admin/invitations', '/admin/iam'];
 
 /** Widoki list z wyszukiwarką (i filtrami na tablicy dyżuru oraz w strukturze placówki). */
-const TOOLBAR_SCREENS: { role: 'org_admin' | 'nurse'; paths: string[] }[] = [
-  { role: 'org_admin', paths: ['/admin/residents', '/admin/facility', '/admin/messages'] },
+const TOOLBAR_SCREENS: { role: 'org_admin' | 'nurse' | 'super_admin'; paths: string[] }[] = [
+  { role: 'org_admin', paths: ['/admin/residents', '/admin/facility', '/admin/messages', '/admin/staff', '/admin/invitations'] },
+  { role: 'super_admin', paths: ['/admin/iam'] },
   { role: 'nurse', paths: ['/staff', '/voice'] },
 ];
 
