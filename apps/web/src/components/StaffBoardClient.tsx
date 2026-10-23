@@ -14,12 +14,13 @@ import { StaffBoardHeader } from './staff/board/StaffBoardHeader'
 import { StaffBoardFilterBar } from './staff/board/StaffBoardFilterBar'
 import { StaffQuickRoundsCard } from './staff/board/StaffQuickRoundsCard'
 import { StaffStandardCard } from './staff/board/StaffStandardCard'
+import { StaffBoardTable } from './staff/board/StaffBoardTable'
 
 export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {} }: StaffBoardClientProps) {
   const [viewMode, setViewMode] = useViewPreference(
     VIEW_PREFERENCE_KEYS.staffBoard,
-    'rounds',
-    ['rounds', 'standard'] as const
+    'table',
+    ['table', 'rounds', 'standard'] as const
   )
   const [searchFilter, setSearchFilter] = useState<string>('')
   const [floorFilter, setFloorFilter] = useState<string>('all')
@@ -130,7 +131,9 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
         totalUnansweredCount={totalUnansweredCount}
       />
 
-      {viewMode === 'rounds' ? (
+      {viewMode === 'table' ? (
+        <StaffBoardTable residents={filtered} unansweredMessagesMap={unansweredMessagesMap} />
+      ) : viewMode === 'rounds' ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((resident) => {
             const resId = resident.id as string
