@@ -86,8 +86,8 @@ export function OrganizationAdminsSection({
               {administrators.map(admin => (
                 <TableRow key={admin.id}>
                   <TableCell>
-                    <div className="font-medium text-foreground">{admin.email}</div>
-                    <div className="mt-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-foreground">{admin.email}</span>
                       <BusinessIdBadge type="user" id={admin.id} />
                     </div>
                   </TableCell>

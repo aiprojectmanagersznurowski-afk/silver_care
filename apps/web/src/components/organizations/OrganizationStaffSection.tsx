@@ -53,8 +53,8 @@ export function OrganizationStaffSection({ staff }: OrganizationStaffSectionProp
               {staff.map(person => (
                 <TableRow key={person.id}>
                   <TableCell>
-                    <div className="font-medium text-foreground">{person.email}</div>
-                    <div className="mt-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-foreground">{person.email}</span>
                       <BusinessIdBadge type="user" id={person.id} />
                     </div>
                   </TableCell>

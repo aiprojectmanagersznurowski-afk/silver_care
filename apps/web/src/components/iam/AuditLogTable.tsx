@@ -57,17 +57,13 @@ export function AuditLogTable({
                         {formatDateTime(log.created_at)}
                       </TableCell>
                       <TableCell className="font-medium">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-sm font-semibold bg-muted text-foreground">
-                          {log.action}
-                        </span>
+                        <StatusBadge>{log.action}</StatusBadge>
                       </TableCell>
                       <TableCell>
-                        <div className="font-medium text-foreground">{targetEmail}</div>
-                        {log.payload?.target_user_id && (
-                          <div className="mt-1">
-                            <BusinessIdBadge type="user" id={log.payload.target_user_id} />
-                          </div>
-                        )}
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-foreground">{targetEmail}</span>
+                          {log.payload?.target_user_id && <BusinessIdBadge type="user" id={log.payload.target_user_id} />}
+                        </div>
                       </TableCell>
                       <TableCell>
                         {log.action === 'role_change' && (
