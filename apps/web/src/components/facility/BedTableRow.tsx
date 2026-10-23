@@ -108,7 +108,7 @@ export function BedTableRow({
                       <Button
                         variant="outline"
                         size="sm"
-                        className="text-destructive hover:bg-destructive/10 hover:text-destructive h-8 px-2.5 text-sm"
+                        className="min-h-11 px-2.5 text-sm text-foreground hover:bg-muted"
                         onClick={() => {
                           if (bed.active_assignment?.resident) {
                             onUnassignClick({

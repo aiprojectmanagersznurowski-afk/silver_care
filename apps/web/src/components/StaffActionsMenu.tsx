@@ -126,7 +126,7 @@ export function StaffActionsMenu({ staffId, email, isActive }: StaffActionsMenuP
           </DropdownMenuItem>
 
           {isActive ? (
-            <DropdownMenuItem onClick={() => openDialog('suspend')} className="text-destructive focus:text-destructive min-h-11 cursor-pointer">
+            <DropdownMenuItem onClick={() => openDialog('suspend')} className="min-h-11 cursor-pointer">
               <Ban className="mr-2 h-4 w-4" />
               Zawieś konto
             </DropdownMenuItem>
