@@ -26,9 +26,9 @@ export function ResidentFamilyCard({
   relativeLinks,
 }: ResidentFamilyCardProps) {
   return (
-    <Card className="rounded-xl border border-border bg-card">
+    <Card>
       <CardHeader className="pb-3 border-b border-border/60 flex flex-row items-center justify-between">
-        <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2">
           <Users className="h-5 w-5 text-primary" />
           Bliscy i kontakty ({relativeLinks.length})
         </CardTitle>
