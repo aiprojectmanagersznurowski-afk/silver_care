@@ -10,6 +10,7 @@ import type { ComponentProps } from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 import { cn } from '@/lib/utils'
+import { StatusBadge } from '@/components/patterns/StatusBadge'
 
 interface UserTableProps {
   users: UserItem[]
@@ -82,14 +83,12 @@ export function UserTable({
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="inline-flex items-center rounded-lg bg-muted px-2.5 py-1 text-sm font-medium text-foreground">
-                          {displayRole}
-                        </span>
+                        <StatusBadge>{displayRole}</StatusBadge>
                         {isDeactivated && (
-                          <span className="inline-flex items-center gap-1 rounded-lg bg-muted text-foreground border border-border px-2 py-0.5 text-sm font-semibold">
-                            <ShieldBan className="h-3 w-3" />
+                          <StatusBadge>
+                            <ShieldBan />
                             Zablokowany
-                          </span>
+                          </StatusBadge>
                         )}
                       </div>
                     </TableCell>

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Copy, RotateCw, Ban } from 'lucide-react'
 import { toast } from 'sonner'
+import { StatusBadge } from '@/components/patterns/StatusBadge'
 
 export interface InvitationRecord {
   id: string
@@ -86,31 +87,15 @@ export function InvitationsTable({ initialInvitations }: { initialInvitations: I
 
   const getStatusBadge = (inv: InvitationRecord) => {
     if (inv.claimed_at) {
-      return (
-        <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-sm font-semibold bg-primary text-primary-foreground">
-          Zrealizowane
-        </span>
-      )
+      return <StatusBadge tone="brand">Zrealizowane</StatusBadge>
     }
     if (inv.revoked_at) {
-      return (
-        <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-sm font-semibold bg-destructive/10 text-destructive border-destructive/20">
-          Odwołane
-        </span>
-      )
+      return <StatusBadge>Odwołane</StatusBadge>
     }
     if (new Date(inv.expires_at) < new Date()) {
-      return (
-        <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-sm font-semibold bg-muted text-muted-foreground border-border">
-          Wygasłe
-        </span>
-      )
+      return <StatusBadge>Wygasłe</StatusBadge>
     }
-    return (
-      <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-sm font-semibold bg-muted text-muted-foreground border-border">
-        Oczekujące
-      </span>
-    )
+    return <StatusBadge>Oczekujące</StatusBadge>
   }
 
   return (

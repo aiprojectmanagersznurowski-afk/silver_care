@@ -44,3 +44,34 @@ test.describe('Spójność ekranów — wspólny nagłówek strony (@REQ: UI-TEM
     });
   }
 });
+
+/** Widoki, na których dane demo zawsze zawierają statusy (pensjonariusze, konta, raporty). */
+const BADGE_SCREENS: { role: 'org_admin' | 'super_admin' | 'nurse'; paths: string[] }[] = [
+  { role: 'org_admin', paths: ['/admin/residents', '/admin/invitations', '/admin/staff'] },
+  { role: 'super_admin', paths: ['/admin/iam'] },
+  { role: 'nurse', paths: ['/staff/reports', '/staff/agenda'] },
+];
+
+test.describe('Spójność ekranów — wspólna plakietka statusu (@REQ: UI-TEMPLATE-ALIGNMENT)', () => {
+  for (const { role, paths } of BADGE_SCREENS) {
+    test(`@REQ: UI-TEMPLATE-ALIGNMENT - ${role}: statusy mają jeden kształt i najwyżej dwa tony`, async ({ loginPage, page }) => {
+      await loginPage.loginAs(role);
+      const screens = new PageConsistencyPage(page);
+      let count = 0;
+      const shapes = new Set<string>();
+      const tones = new Set<string>();
+
+      for (const path of paths) {
+        await screens.goto(path);
+        const snap = await screens.statusBadgeSnapshot();
+        count += snap.count;
+        snap.shapes.forEach((s) => shapes.add(s));
+        snap.tones.forEach((t) => tones.add(t));
+      }
+
+      expect(count, 'brak plakietek StatusBadge na widokach ze statusami').toBeGreaterThan(0);
+      expect([...shapes], 'różne kształty plakietek statusu').toHaveLength(1);
+      expect(tones.size, `więcej niż dwa tony plakietek: ${[...tones].join(', ')}`).toBeLessThanOrEqual(2);
+    });
+  }
+});

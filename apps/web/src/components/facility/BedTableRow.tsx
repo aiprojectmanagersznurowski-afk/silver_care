@@ -9,6 +9,7 @@ import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 import AssignBedDialog from './AssignBedDialog'
 import ReassignBedDialog from './ReassignBedDialog'
 import type { BedItem } from './bed-types'
+import { StatusBadge } from '@/components/patterns/StatusBadge'
 
 interface BedTableRowProps {
   bed: BedItem
@@ -42,17 +43,11 @@ export function BedTableRow({
       </TableCell>
       <TableCell className="py-2.5">
         {!bed.is_active ? (
-          <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-sm font-semibold bg-secondary text-secondary-foreground">
-            Nieaktywne
-          </span>
+          <StatusBadge>Nieaktywne</StatusBadge>
         ) : bed.active_assignment ? (
-          <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-sm font-semibold bg-primary text-white">
-            Zajęte
-          </span>
+          <StatusBadge tone="brand">Zajęte</StatusBadge>
         ) : (
-          <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-sm font-semibold text-foreground border-border">
-            Wolne
-          </span>
+          <StatusBadge>Wolne</StatusBadge>
         )}
       </TableCell>
       <TableCell className="py-2.5">

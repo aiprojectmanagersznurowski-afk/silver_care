@@ -4,7 +4,7 @@ import React from 'react'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
+import { StatusBadge } from '@/components/patterns/StatusBadge'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 import { EditResidentDialog } from '@/components/EditResidentDialog'
 import { DischargeResidentDialog } from '@/components/DischargeResidentDialog'
@@ -58,17 +58,11 @@ export function ResidentProfileHeader({
               </h1>
               <BusinessIdBadge type="resident" id={resident.id} />
               {isActive ? (
-                <Badge variant="outline" className="border-primary/30 text-primary bg-primary/5 text-sm">
-                  Aktywny pobyt
-                </Badge>
+                <StatusBadge tone="brand">Aktywny pobyt</StatusBadge>
               ) : resident.death_date ? (
-                <Badge variant="outline" className="border-border text-muted-foreground bg-muted text-sm">
-                  Zmarły ({resident.death_date})
-                </Badge>
+                <StatusBadge>Zmarły ({resident.death_date})</StatusBadge>
               ) : (
-                <Badge variant="outline" className="border-border text-muted-foreground bg-muted text-sm">
-                  Zakończony pobyt
-                </Badge>
+                <StatusBadge>Zakończony pobyt</StatusBadge>
               )}
             </div>
             <p className="text-sm text-muted-foreground mt-1">

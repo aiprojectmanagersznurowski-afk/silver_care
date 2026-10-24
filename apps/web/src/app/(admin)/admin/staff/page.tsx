@@ -5,6 +5,7 @@ import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
 import { Card, CardContent } from '@/components/ui/card'
 import { InviteStaffDialog } from '@/components/InviteStaffDialog'
 import { PageHeader, PageHeaderNotice } from '@/components/patterns/PageHeader'
+import { StatusBadge } from '@/components/patterns/StatusBadge'
 import { redirect } from 'next/navigation'
 import { deleteStaffAction } from '@/actions/admin'
 import { Trash2, UserCog } from 'lucide-react'
@@ -83,9 +84,7 @@ export default async function AdminStaffPage() {
                         <div>
                           <div className="font-medium text-foreground text-base">{staffUser.email}</div>
                           {staffUser.app_metadata?.is_active === false && (
-                            <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-sm font-medium text-muted-foreground mt-1">
-                              Zarchiwizowany
-                            </span>
+                            <div className="mt-1"><StatusBadge>Zarchiwizowany</StatusBadge></div>
                           )}
                         </div>
                       </div>

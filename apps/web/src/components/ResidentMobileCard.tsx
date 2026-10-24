@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
+import { ResidentStatusBadge } from '@/components/residents/ResidentStatusBadge'
 import { UserCircle2, ChevronRight } from 'lucide-react'
 import { ResidentEditSheet } from '@/components/ResidentEditSheet'
 import { ResidentInlineCareLevel } from '@/components/ResidentInlineCareLevel'
@@ -42,12 +42,6 @@ export function ResidentMobileCard({ resident }: ResidentMobileCardProps) {
   )
   const activeBed = activeAssignments[0]?.beds ?? null
 
-  const statusBadge = resident.archived_at
-    ? { label: 'Zarchiwizowany', className: 'bg-muted text-muted-foreground border-none text-sm' }
-    : resident.death_date
-    ? { label: 'Zgon', className: 'bg-muted text-muted-foreground border-none text-sm' }
-    : { label: 'Aktywny', className: 'bg-muted text-foreground border-none text-sm' }
-
   const admissionDate = resident.admission_date
     ? format(new Date(resident.admission_date), 'd MMM yyyy', { locale: pl })
     : resident.created_at
@@ -84,7 +78,7 @@ export function ResidentMobileCard({ resident }: ResidentMobileCardProps) {
             <BusinessIdBadge type="resident" id={resident.id} />
           </div>
           <div className="flex flex-wrap items-center gap-2 mt-1">
-            <Badge className={statusBadge.className}>{statusBadge.label}</Badge>
+            <ResidentStatusBadge resident={resident} />
             {activeBed ? (
               <span className="text-sm text-muted-foreground">
                 Pok. {activeBed.rooms?.number}, ł. {activeBed.label}

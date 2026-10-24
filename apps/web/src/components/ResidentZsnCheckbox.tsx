@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Check, Loader2 } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
+import { StatusBadge } from '@/components/patterns/StatusBadge'
 
 interface ResidentZsnCheckboxProps {
   residentId: string
@@ -124,9 +124,7 @@ export function ResidentZsnCheckbox({
             ZSN: Znaczny stopień niepełnosprawności
           </span>
           {checked ? (
-            <Badge className="bg-muted text-foreground border-border text-sm">
-              Zaznaczono
-            </Badge>
+            <StatusBadge>Zaznaczono</StatusBadge>
           ) : (
             <span className="text-sm text-muted-foreground">Nieoznaczone</span>
           )}

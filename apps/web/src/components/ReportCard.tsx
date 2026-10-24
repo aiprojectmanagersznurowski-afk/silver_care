@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { MedicationAlertBanner } from '@/components/MedicationAlertBanner'
 
 import type { Json } from '@/types/database.types'
+import { StatusBadge } from '@/components/patterns/StatusBadge'
 
 export interface ReportItem {
   id: string
@@ -95,15 +96,15 @@ export function ReportCard({ report }: { report: ReportItem }) {
 
           <div>
             {isPublished ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-sm font-medium text-primary border border-primary/20" data-testid="report-status-published">
-                <CheckCircle2 className="h-3 w-3" />
+              <StatusBadge tone="brand" data-testid="report-status-published">
+                <CheckCircle2 />
                 Opublikowany dla rodziny
-              </span>
+              </StatusBadge>
             ) : (
-              <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-sm font-medium text-foreground border border-border" data-testid="report-status-draft">
-                <Clock className="h-3 w-3" />
+              <StatusBadge data-testid="report-status-draft">
+                <Clock />
                 Szkic do weryfikacji
-              </span>
+              </StatusBadge>
             )}
           </div>
         </div>
