@@ -4,15 +4,8 @@ import { cookies } from 'next/headers'
 import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
 import { InviteStaffDialog } from '@/components/InviteStaffDialog'
 import { PageHeader, PageHeaderNotice } from '@/components/patterns/PageHeader'
-import { StatusBadge } from '@/components/patterns/StatusBadge'
-import { TableCard, TableStateRow } from '@/components/patterns/TableCard'
+import { StaffListView, type StaffListItem } from '@/components/staff/StaffListView'
 import { redirect } from 'next/navigation'
-import { deleteStaffAction } from '@/actions/admin'
-import { Trash2, UserCog } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { StaffActionsMenu } from '@/components/StaffActionsMenu'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 export default async function AdminStaffPage() {
   const supabase = await createClient()
@@ -41,6 +34,16 @@ export default async function AdminStaffPage() {
     u.app_metadata?.role === 'nurse'
   )
 
+  const staffItems: StaffListItem[] = staff.map((u) => ({
+    id: u.id,
+    email: u.email ?? '',
+    isActive: u.app_metadata?.is_active !== false,
+    avatarUrl: (u.user_metadata?.avatar_url as string | undefined) ?? null,
+    lastSignInLabel: u.last_sign_in_at
+      ? new Date(u.last_sign_in_at).toLocaleDateString('pl-PL') + ' ' + new Date(u.last_sign_in_at).toLocaleTimeString('pl-PL')
+      : 'Nigdy',
+  }))
+
   const cookieStore = await cookies()
   const isImpersonating = isImpersonationSessionActive(cookieStore, user)
 
@@ -56,70 +59,7 @@ export default async function AdminStaffPage() {
         )}
       />
 
-      <TableCard>
-            <Table>
-              <TableHeader className="text-muted-foreground">
-                <TableRow>
-                  <TableHead>Pracownik</TableHead>
-                  <TableHead>Rola</TableHead>
-                  <TableHead>Ostatnie logowanie</TableHead>
-                  <TableHead className="text-right">Akcje</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {staff.map((staffUser) => (
-                  <TableRow key={staffUser.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10 border border-border">
-                          {staffUser.user_metadata?.avatar_url && (
-                            <AvatarImage src={staffUser.user_metadata.avatar_url} alt={staffUser.email} />
-                          )}
-                          <AvatarFallback className="bg-primary/10 text-primary">
-                            <UserCog className="h-5 w-5" />
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className="font-medium text-foreground text-base">{staffUser.email}</div>
-                          {staffUser.app_metadata?.is_active === false && (
-                            <div className="mt-1"><StatusBadge>Zarchiwizowany</StatusBadge></div>
-                          )}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-foreground">
-                      Personel opiekuńczy / Wsparcie
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {staffUser.last_sign_in_at 
-                        ? new Date(staffUser.last_sign_in_at).toLocaleDateString('pl-PL') + ' ' + new Date(staffUser.last_sign_in_at).toLocaleTimeString('pl-PL')
-                        : 'Nigdy'
-                      }
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex justify-end gap-2 items-center">
-                        <StaffActionsMenu
-                          staffId={staffUser.id}
-                          email={staffUser.email}
-                          isActive={staffUser.app_metadata?.is_active !== false}
-                        />
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {error ? (
-                  <TableStateRow colSpan={4} state="error" description="Lista personelu jest chwilowo niedostępna. Odśwież stronę za chwilę." />
-                ) : staff.length === 0 && (
-                  <TableStateRow
-                    colSpan={4}
-                    state="empty"
-                    title="Brak przypisanego personelu"
-                    description="Zaproś pracowników za pomocą przycisku powyżej."
-                  />
-                )}
-              </TableBody>
-            </Table>
-      </TableCard>
+      <StaffListView staff={staffItems} failed={Boolean(error)} />
     </div>
   )
 }

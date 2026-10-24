@@ -6,6 +6,10 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import type { BedItem } from './bed-types'
 import { BedTableRow } from './BedTableRow'
+import { BedRowActions, BedResident, BedStatusBadge, bedDisplayLabel } from './BedRowActions'
+import { ViewToggle, GRID_TABLE_OPTIONS } from '@/components/patterns/ViewToggle'
+import { ObjectCard, ObjectGrid } from '@/components/patterns/ObjectCard'
+import { useViewPreference, VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-preference'
 import { TableCard } from '@/components/patterns/TableCard'
 import { ListEmpty, ListError, ListLoading } from '@/components/patterns/ListState'
 
@@ -20,6 +24,7 @@ export default function BedList({ roomId, roomNumber, floor, onUpdate }: BedList
   const [beds, setBeds] = useState<BedItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [loadFailed, setLoadFailed] = useState(false)
+  const [viewMode, setViewMode] = useViewPreference(VIEW_PREFERENCE_KEYS.beds, 'table', ['table', 'grid'] as const)
   const [unassignTarget, setUnassignTarget] = useState<{
     bedId: string
     residentId: string
@@ -107,8 +112,29 @@ export default function BedList({ roomId, roomNumber, floor, onUpdate }: BedList
     return <ListEmpty title="Brak łóżek w tym pokoju" description="Dodaj łóżko w ustawieniach pokoju." />
   }
 
+  const refresh = () => {
+    fetchBeds()
+    onUpdate()
+  }
+
   return (
     <>
+      <div className="mb-3 flex justify-end">
+        <ViewToggle value={viewMode} onChange={setViewMode} options={GRID_TABLE_OPTIONS} />
+      </div>
+      {viewMode === 'grid' ? (
+        <ObjectGrid>
+          {beds.map((bed) => (
+            <ObjectCard
+              key={bed.id}
+              title={bedDisplayLabel(bed)}
+              badges={<BedStatusBadge bed={bed} />}
+              meta={[{ label: 'Pensjonariusz', value: <BedResident bed={bed} /> }]}
+              actions={<BedRowActions bed={bed} roomNumber={roomNumber} floor={floor} onDeactivate={handleDeactivate} onUnassignClick={setUnassignTarget} onRefresh={refresh} />}
+            />
+          ))}
+        </ObjectGrid>
+      ) : (
       <div data-testid="beds-table">
       <TableCard>
         <Table>
@@ -129,16 +155,14 @@ export default function BedList({ roomId, roomNumber, floor, onUpdate }: BedList
                 floor={floor}
                 onDeactivate={handleDeactivate}
                 onUnassignClick={setUnassignTarget}
-                onRefresh={() => {
-                  fetchBeds()
-                  onUpdate()
-                }}
+                onRefresh={refresh}
               />
             ))}
           </TableBody>
         </Table>
       </TableCard>
       </div>
+      )}
 
       <ConfirmDialog
         open={!!unassignTarget}

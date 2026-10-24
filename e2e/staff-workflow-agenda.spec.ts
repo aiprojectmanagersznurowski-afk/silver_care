@@ -24,7 +24,8 @@ test.describe('Panel personelu i Agenda na dziś (@REQ: NUR-BOARD, @REQ: NUR-AGE
     const statusTokens = tokenBar.locator('[data-filter-group="status"] button');
     await expect(statusTokens.first()).toBeVisible();
 
-    // Sprawdzenie przycisków szybkiego obchodu (1-klik)
+    // Tablica otwiera się w tabeli; szybki obchód (1-klik) jest jednym z widoków kafelkowych
+    await page.locator('[data-slot="view-toggle"] button[aria-label="Widok szybkiego obchodu"]').click();
     const quickLogButtons = page.locator('button:has-text("Stan stabilny"), button:has-text("Stabilny")');
     await expect(quickLogButtons.first()).toBeVisible();
   });

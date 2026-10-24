@@ -2,12 +2,14 @@
 
 import { useState } from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
-import { Copy, RotateCw, Ban } from 'lucide-react'
 import { toast } from 'sonner'
-import { StatusBadge } from '@/components/patterns/StatusBadge'
-import { TableStateRow } from '@/components/patterns/TableCard'
+import { TableCard, TableStateRow } from '@/components/patterns/TableCard'
+import { ViewToggle, GRID_TABLE_OPTIONS } from '@/components/patterns/ViewToggle'
+import { ObjectCard, ObjectGrid } from '@/components/patterns/ObjectCard'
+import { ListEmpty } from '@/components/patterns/ListState'
+import { useViewPreference, VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-preference'
+import { InvitationRowActions, InvitationStatusBadge } from './InvitationRowActions'
 
 export interface InvitationRecord {
   id: string
@@ -29,6 +31,7 @@ export function InvitationsTable({ initialInvitations }: { initialInvitations: I
   const [revokingId, setRevokingId] = useState<string | null>(null)
   const [isRevoking, setIsRevoking] = useState(false)
   const [resendingId, setResendingId] = useState<string | null>(null)
+  const [viewMode, setViewMode] = useViewPreference(VIEW_PREFERENCE_KEYS.invitations, 'table', ['table', 'grid'] as const)
 
   const handleCopyLink = (invitationId: string) => {
     const origin = typeof window !== 'undefined' ? window.location.origin : ''
@@ -86,36 +89,52 @@ export function InvitationsTable({ initialInvitations }: { initialInvitations: I
     }
   }
 
-  const getStatusBadge = (inv: InvitationRecord) => {
-    if (inv.claimed_at) {
-      return <StatusBadge tone="brand">Zrealizowane</StatusBadge>
-    }
-    if (inv.revoked_at) {
-      return <StatusBadge>Odwołane</StatusBadge>
-    }
-    if (new Date(inv.expires_at) < new Date()) {
-      return <StatusBadge>Wygasłe</StatusBadge>
-    }
-    return <StatusBadge>Oczekujące</StatusBadge>
-  }
+  const rowActions = (inv: InvitationRecord) => (
+    <InvitationRowActions inv={inv} resending={resendingId === inv.id} onCopy={handleCopyLink} onResend={handleResend} onRevoke={setRevokingId} />
+  )
 
   return (
     <>
+      <TableCard
+        title="Oczekujące i zrealizowane zaproszenia"
+        description="Rejestr zaproszeń, statusy oraz akcje zarządzania."
+        actions={<ViewToggle value={viewMode} onChange={setViewMode} options={GRID_TABLE_OPTIONS} />}
+      >
+      {viewMode === 'grid' ? (
+        <div className="p-4">
+          {invitations.length === 0 ? (
+            <ListEmpty title="Brak zaproszeń" description="Zaproś bliskich podopiecznego przyciskiem u góry strony." />
+          ) : (
+            <ObjectGrid>
+              {invitations.map((inv) => (
+                <ObjectCard
+                  key={inv.id}
+                  title={inv.email}
+                  subtitle={inv.phone ?? undefined}
+                  badges={<InvitationStatusBadge inv={inv} />}
+                  meta={[
+                    { label: 'Podopieczny', value: inv.residents ? `${inv.residents.first_name} ${inv.residents.last_name}` : '—' },
+                    { label: 'Rola', value: inv.role === 'legal_guardian' ? 'Opiekun prawny' : 'Obserwator' },
+                  ]}
+                  actions={rowActions(inv)}
+                />
+              ))}
+            </ObjectGrid>
+          )}
+        </div>
+      ) : (
       <Table>
         <TableHeader className="[&_tr]:border-b">
           <TableRow className="hover:bg-muted/50 data-[state=selected]:bg-muted">
-            <TableHead className="h-12 text-muted-foreground">Email zapraszanego</TableHead>
-            <TableHead className="h-12 text-muted-foreground">Podopieczny</TableHead>
-            <TableHead className="h-12 text-muted-foreground">Rola</TableHead>
-            <TableHead className="h-12 text-muted-foreground">Status</TableHead>
-            <TableHead className="h-12 text-right text-muted-foreground">Akcje</TableHead>
+            <TableHead className="text-muted-foreground">Email zapraszanego</TableHead>
+            <TableHead className="text-muted-foreground">Podopieczny</TableHead>
+            <TableHead className="text-muted-foreground">Rola</TableHead>
+            <TableHead className="text-muted-foreground">Status</TableHead>
+            <TableHead className="text-right text-muted-foreground">Akcje</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className="[&_tr:last-child]:border-0">
           {invitations.map((inv) => {
-            const isPending = !inv.claimed_at && !inv.revoked_at && new Date(inv.expires_at) >= new Date()
-            const canCopy = !inv.claimed_at && !inv.revoked_at
-
             return (
               <TableRow key={inv.id} className="hover:bg-muted/50 data-[state=selected]:bg-muted">
                 <TableCell className="font-medium text-foreground">
@@ -129,52 +148,9 @@ export function InvitationsTable({ initialInvitations }: { initialInvitations: I
                   {inv.role === 'legal_guardian' ? 'Opiekun prawny' : 'Obserwator'}
                 </TableCell>
                 <TableCell>
-                  {getStatusBadge(inv)}
+                  <InvitationStatusBadge inv={inv} />
                 </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex items-center justify-end gap-1.5">
-                    {canCopy && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleCopyLink(inv.id)}
-                        className="h-8 px-2 text-sm text-muted-foreground hover:text-foreground"
-                        title="Kopiuj link do rejestracji"
-                      >
-                        <Copy className="h-3.5 w-3.5 mr-1" />
-                        Kopiuj link
-                      </Button>
-                    )}
-                    {isPending && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        disabled={resendingId === inv.id}
-                        onClick={() => handleResend(inv.id)}
-                        className="h-8 px-2 text-sm text-muted-foreground hover:text-foreground"
-                        title="Wyślij ponownie e-mail z zaproszeniem"
-                      >
-                        <RotateCw className={`h-3.5 w-3.5 mr-1 ${resendingId === inv.id ? 'animate-spin' : ''}`} />
-                        Ponów
-                      </Button>
-                    )}
-                    {isPending && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setRevokingId(inv.id)}
-                        className="min-h-touch px-2 text-sm text-foreground hover:bg-muted"
-                        title="Odwołaj zaproszenie"
-                      >
-                        <Ban className="h-3.5 w-3.5 mr-1" />
-                        Odwołaj
-                      </Button>
-                    )}
-                  </div>
-                </TableCell>
+                <TableCell className="text-right">{rowActions(inv)}</TableCell>
               </TableRow>
             )
           })}
@@ -183,6 +159,8 @@ export function InvitationsTable({ initialInvitations }: { initialInvitations: I
           )}
         </TableBody>
       </Table>
+      )}
+      </TableCard>
 
       <ConfirmDialog
         open={!!revokingId}

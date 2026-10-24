@@ -1,16 +1,17 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
-import { Shield, Key, ShieldAlert, Trash2, ShieldBan } from 'lucide-react'
-import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
+import { Shield, ShieldBan } from 'lucide-react'
 import type { UserItem } from '@/components/IamManagementClient'
 import { AddUserDialog } from './AddUserDialog'
 import type { ComponentProps } from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
-import { cn } from '@/lib/utils'
 import { StatusBadge } from '@/components/patterns/StatusBadge'
 import { TableCard } from '@/components/patterns/TableCard'
+import { ViewToggle, GRID_TABLE_OPTIONS } from '@/components/patterns/ViewToggle'
+import { ObjectCard, ObjectGrid } from '@/components/patterns/ObjectCard'
+import { useViewPreference, VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-preference'
+import { UserRowActions } from './UserRowActions'
 
 interface UserTableProps {
   users: UserItem[]
@@ -31,13 +32,59 @@ export function UserTable({
   roleLabels,
   addUserProps,
 }: UserTableProps) {
+  const [viewMode, setViewMode] = useViewPreference(VIEW_PREFERENCE_KEYS.iamUsers, 'table', ['table', 'grid'] as const)
+  const badgesFor = (user: UserItem) => (
+    <>
+      <StatusBadge>{roleLabels[user.role] || user.role}</StatusBadge>
+      {user.isActive === false && (
+        <StatusBadge>
+          <ShieldBan />
+          Zablokowany
+        </StatusBadge>
+      )}
+    </>
+  )
+  const actionsFor = (user: UserItem) => (
+    <UserRowActions
+      user={user}
+      isSelf={user.id === currentUserId}
+      isDeactivated={user.isActive === false}
+      onChangeRoleClick={onChangeRoleClick}
+      onResetPasswordClick={onResetPasswordClick}
+      onDeleteUserClick={onDeleteUserClick}
+    />
+  )
+
   return (
     <TableCard
       icon={<Shield />}
       title="Użytkownicy i Role"
       description="Zarządzaj kontami użytkowników, przydziałem ról i uprawnień dostępowych."
-      actions={<AddUserDialog {...addUserProps} />}
+      actions={
+        <>
+          <ViewToggle value={viewMode} onChange={setViewMode} options={GRID_TABLE_OPTIONS} />
+          <AddUserDialog {...addUserProps} />
+        </>
+      }
     >
+      {viewMode === 'grid' ? (
+        <div className="p-4">
+          <ObjectGrid>
+            {users.map((user) => (
+              <ObjectCard
+                key={user.id}
+                title={user.email}
+                badges={badgesFor(user)}
+                meta={[
+                  { label: 'Identyfikator', value: <BusinessIdBadge type="user" id={user.id} /> },
+                  { label: 'Placówka', value: user.organizationId ? <BusinessIdBadge type="organization" id={user.organizationId} /> : 'Globalna / Brak' },
+                ]}
+                actions={actionsFor(user)}
+              />
+            ))}
+          </ObjectGrid>
+        </div>
+      ) : (
           <Table aria-label="Tabela użytkowników i ról IAM">
             <TableHeader className="text-muted-foreground">
               <TableRow>
@@ -49,10 +96,6 @@ export function UserTable({
             </TableHeader>
             <TableBody>
               {users.map(user => {
-                const displayRole = roleLabels[user.role] || user.role
-                const isDeactivated = user.isActive === false
-                const isSelf = user.id === currentUserId
-
                 return (
                   <TableRow key={user.id}>
                     <TableCell>
@@ -69,94 +112,17 @@ export function UserTable({
                       )}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <StatusBadge>{displayRole}</StatusBadge>
-                        {isDeactivated && (
-                          <StatusBadge>
-                            <ShieldBan />
-                            Zablokowany
-                          </StatusBadge>
-                        )}
-                      </div>
+                      <div className="flex items-center gap-1.5 flex-wrap">{badgesFor(user)}</div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => onChangeRoleClick(user)}
-                              className="min-h-touch rounded-xl border-border text-foreground hover:bg-muted/50"
-                            >
-                              <ShieldAlert className="h-4 w-4 mr-1.5 text-muted-foreground" />
-                              Zmień rolę
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            Zmień uprawnienia i przypisaną rolę
-                          </TooltipContent>
-                        </Tooltip>
-
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => onResetPasswordClick(user)}
-                              className="min-h-touch rounded-xl border-border text-foreground hover:bg-muted/50"
-                            >
-                              <Key className="h-4 w-4 mr-1.5 text-muted-foreground" />
-                              Hasło
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            Resetuj hasło lub wyślij link e-mail
-                          </TooltipContent>
-                        </Tooltip>
-
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              disabled={isSelf}
-                              onClick={() => onDeleteUserClick(user)}
-                              className={cn(
-                                'min-h-touch rounded-xl border-border',
-                                isSelf
-                                  ? 'opacity-50 cursor-not-allowed text-muted-foreground'
-                                  : isDeactivated
-                                  ? 'text-primary hover:bg-primary/10 border-primary/30'
-                                  : 'text-foreground hover:bg-muted border-border'
-                              )}
-                            >
-                              {isDeactivated ? (
-                                <ShieldBan className="h-4 w-4 mr-1.5" />
-                              ) : (
-                                <Trash2 className="h-4 w-4 mr-1.5" />
-                              )}
-                              {isDeactivated ? 'Status' : 'Usuń'}
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            {isSelf
-                              ? 'Nie możesz zablokować ani usunąć własnego konta'
-                              : isDeactivated
-                              ? 'Zarządzaj statusem (odblokuj lub usuń trwale)'
-                              : 'Zablokuj konto lub usuń trwale'}
-                          </TooltipContent>
-                        </Tooltip>
-                      </div>
+                      {actionsFor(user)}
                     </TableCell>
                   </TableRow>
                 )
               })}
             </TableBody>
           </Table>
+      )}
     </TableCard>
   )
 }

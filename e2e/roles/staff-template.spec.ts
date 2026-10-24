@@ -11,12 +11,17 @@ import { test, expect } from '../fixtures/base-test';
 const BRAND_GREEN = 'rgb(47, 111, 94)'; // --sc-accent = #2F6F5E
 
 test.describe('Panel personelu — tokeny szablonu (@REQ: UI-TEMPLATE-ALIGNMENT)', () => {
-  test('@REQ: UI-TEMPLATE-ALIGNMENT - przełącznik widoku obchód/karty zaznacza aktywny tryb przez aria-pressed', async ({ loginPage, staffBoardPage }) => {
+  test('@REQ: UI-TEMPLATE-ALIGNMENT - przełącznik widoku tabela/obchód/karty zaznacza aktywny tryb przez aria-pressed', async ({ loginPage, staffBoardPage, page }) => {
     await loginPage.loginAs('nurse');
     await staffBoardPage.goto();
+    await page.evaluate(() => window.localStorage.clear());
+    await page.reload();
     await staffBoardPage.expectStaffBoardLoaded();
 
-    await expect(staffBoardPage.quickRoundsButton).toHaveAttribute('aria-pressed', 'true');
+    // Domyślnie tabela (decyzja Michała 2026-10-23: tablica dyżuru nie jest wyjątkiem)
+    await expect(page.locator('[data-slot="view-toggle"] button[aria-label="Widok tabeli"]')).toHaveAttribute('aria-pressed', 'true');
+    await expect(staffBoardPage.quickRoundsButton).toHaveAttribute('aria-pressed', 'false');
+    await staffBoardPage.switchToRounds();
     await expect(staffBoardPage.cardsViewButton).toHaveAttribute('aria-pressed', 'false');
     await staffBoardPage.switchToCards();
     await expect(staffBoardPage.quickRoundsButton).toHaveAttribute('aria-pressed', 'false');
