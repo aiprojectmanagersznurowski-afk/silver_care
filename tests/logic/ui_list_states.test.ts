@@ -18,10 +18,10 @@ const { createElement: h } = requireWeb('react') as typeof import('react');
 const html = (el: unknown) => renderToStaticMarkup(el as never);
 
 describe('Wspólne stany list (UI-FOUR-STATES)', () => {
-  it('@REQ: UI-FOUR-STATES - pusty: tytuł 16px, opis i akcja; bez czerwieni', () => {
+  it('@REQ: UI-FOUR-STATES - pusty: tytuł text-sm jak w szablonie, opis i akcja; bez czerwieni', () => {
     const out = html(h(ListEmpty as never, { title: 'Brak zaproszeń', description: 'Zaproś bliskich.', action: h('button', { type: 'button' }, 'Zaproś') }));
     expect(out).toContain('data-slot="list-empty"');
-    expect(out).toMatch(/class="[^"]*text-base[^"]*"[^>]*>Brak zaproszeń</);
+    expect(out).toMatch(/class="[^"]*text-sm[^"]*font-medium[^"]*"[^>]*>Brak zaproszeń</);
     expect(out).toContain('Zaproś bliskich.');
     expect(out).toContain('<button type="button">Zaproś</button>');
     expect(out).not.toMatch(/destructive/);
@@ -44,9 +44,9 @@ describe('Wspólne stany list (UI-FOUR-STATES)', () => {
     expect(out).toContain('Nie udało się wczytać danych');
   });
 
-  it('@REQ: UI-ACCESSIBILITY - żaden stan nie schodzi poniżej 14px', () => {
+  it('@REQ: UI-ACCESSIBILITY - żaden stan nie schodzi poniżej 12px (ADR-020)', () => {
     for (const el of [h(ListEmpty as never, { title: 'T', description: 'D' }), h(ListLoading as never, {}), h(ListError as never, { description: 'D' })]) {
-      expect(html(el)).not.toMatch(/text-xs|text-\[1[0-3]px\]/);
+      expect(html(el)).not.toMatch(/text-\[(?:[0-9]|1[01])px\]/);
     }
   });
 });

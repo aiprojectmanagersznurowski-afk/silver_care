@@ -36,7 +36,7 @@ export function PageHeader({ title, description, actions, back, className }: Pag
         )}
         <h1 className="text-2xl sm:text-3xl font-display font-semibold tracking-tight text-foreground">{title}</h1>
         {description && (
-          <p data-slot="page-header-description" className="mt-2 text-base text-muted-foreground">
+          <p data-slot="page-header-description" className="mt-1 text-sm text-muted-foreground">
             {description}
           </p>
         )}

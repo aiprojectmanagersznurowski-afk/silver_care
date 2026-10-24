@@ -252,7 +252,7 @@ Przed prezentacjami i demo dla potencjalnych klientów (Marconi, KIDO) potrzebny
 
 ---
 
-## ADR-016 — Zunifikowana Norma Typografii i Dotyku Mobile-First (16px / min. 14px / 44px) (Status: punkt 4 częściowo zastąpiony przez ADR-018 — cel dotykowy 38px) ✅
+## ADR-016 — Zunifikowana Norma Typografii i Dotyku Mobile-First (16px / min. 14px / 44px) (Status: punkty 1–3 zastąpione przez ADR-020, punkt 4 przez ADR-018) ⚠️
 
 **Kontekst.** W systemie występował rozjazd między historycznymi standardami typografii i dotyku (ADR-011 narzucał bazowy tekst 17px i cel dotykowy 48px, z kolei ADR-014 obniżał skalę do 14px tekstu i 32px przycisków na wzór szablonu shadcn-admin). Skutkowało to niespójnością interfejsów portalu bliskich oraz panelu personelu na urządzeniach mobilnych oraz ryzykiem niedostępności dla personelu w biegu i osób starszych.
 
@@ -325,3 +325,19 @@ Przed prezentacjami i demo dla potencjalnych klientów (Marconi, KIDO) potrzebny
 - Tokeny zmienione w kontrakcie; mapowanie w `globals.css` (`--accent-foreground`, `--sidebar-accent-foreground`) przechodzi z koloru marki na kolor tekstu w osobnym commicie.
 - Test `appearance-audit` (jeden akcent, bez gradientów) pozostaje ważny: nowa paleta to wyłącznie szarości bez nasycenia plus jeden akcent marki.
 - Testy oczekujące wartości „Ciepłe Zaufanie” (`#FBFAF8`, `#1C1B19`, `#E8E4DD`) są aktualizowane razem z wymaganiem.
+
+---
+
+## ADR-020 — Skala tekstu szablonu: 14px bazowo, minimum 12px (Status: PROPOZYCJA — wymaga potwierdzenia Darka) 📝
+
+**Kontekst.** ADR-016 (Michał & Darek, 2026-10-16) ustalił tekst bazowy 16px i minimum 14px, odwracając skalę szablonu (ADR-014), z myślą o czytelności dla personelu w biegu oraz starszych i zaniepokojonych bliskich i opiekunów prawnych. 2026-10-23 Michał zdecydował o pełnym przejęciu wyglądu szablonu shadcn-admin, w tym jego skali tekstu, po przedstawieniu tego uzasadnienia.
+
+**Decyzja (Michał, 2026-10-23; Darek: do potwierdzenia — odwraca punkty 1–3 ADR-016).**
+1. Tekst bazowy 14px (`text-sm`), tekst pomocniczy minimum 12px (`text-xs`) — jak w szablonie.
+2. Zakazane pozostają rozmiary poniżej 12px (`text-[11px]`, `text-[10px]` i mniejsze).
+3. Komponenty `components/ui/` wracają do klas szablonu (m.in. `text-xs` w małych przyciskach, plakietkach, tooltipach, menu).
+4. Bramka: `tools/sc-validate.mjs` (R24: baza ≥ 14px, skala ≥ 12px), `scripts/verify.sh` krok 6, `CLAUDE.md`, `AGENTS.md`.
+
+**Konsekwencje.**
+- Raporty dla bliskich czytane są mniejszym tekstem niż dotąd. Jeśli pilotaż pokaże problem z czytelnością, powrót do 16px dla treści raportu jest zmianą jednego tokenu w kontrakcie.
+- Do potwierdzenia przez Darka status pozostaje PROPOZYCJA; w razie sporu wraca ADR-016.

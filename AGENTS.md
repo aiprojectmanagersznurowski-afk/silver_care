@@ -37,8 +37,8 @@ Narzędzie komunikacji i organizacji codziennego życia placówki. **Nie jest wy
 ## Norma UI / Mobile-First
 
 W całym systemie obowiązuje jedna, niesprzeczna norma UI:
-- Tekst bazowy (body): `16px` (`text-base`).
-- Minimalny dopuszczalny tekst pomocniczy: `14px` (`text-sm`). Klasy `text-xs`, `text-[11px]`, `text-[10px]` są **surowo zabronione**.
+- Tekst bazowy (body): `14px` (`text-sm`) — skala szablonu shadcn-admin (ADR-020).
+- Minimalny dopuszczalny tekst pomocniczy: `12px` (`text-xs`). Klasy `text-[11px]`, `text-[10px]` i mniejsze są **surowo zabronione**.
 - Minimalny cel dotykowy (touch target) dla przycisków/interakcji: `38x38px` (`min-h-touch min-w-touch`, ADR-018).
 - Tokeny są generowane z kontraktu do `packages/contracts/src/generated/tokens.css`. Używaj zmiennych CSS.
 - Kolor nie niesie oceny stanu pensjonariusza (brak czerwieni/zieleni jako oceny). Metryki prezentowane jako fakty (ADR-005).

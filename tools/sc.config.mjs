@@ -131,6 +131,8 @@ export const config = {
     { id: 'hex-color', re: '#[0-9a-fA-F]{6}\\b', appliesTo: 'apps/.*/(components|app)/.*\\.(tsx)$', allowIn: ['tailwind.config', 'globals.css', 'tokens'], msg: 'NFR-UI-01: kolor zaszyty w komponencie. Używaj tokenów design systemu „Ciepłe Zaufanie".' },
     // ADR-017 pkt 4: kolor wyłącznie z tokenów kontraktu; surowa paleta Tailwind omija kontrakt i może nieść ocenę
     { id: 'ui-raw-palette', re: '\\b(?:bg|text|border|ring|fill|stroke|from|to|via|outline|decoration|divide|accent|caret|placeholder|shadow)-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)(?:-(?:50|[1-9]00|950))?(?:\\/\\d+)?\\b', appliesTo: 'apps/.*/(components|app|lib)/.*\\.(tsx|ts)$', allowIn: ['globals.css', 'tokens'], msg: 'ADR-017: surowa paleta Tailwind (np. bg-amber-500). Używaj tokenów kontraktu: primary, muted, foreground, destructive (wyłącznie błąd techniczny).' },
+    // ADR-020: skala szablonu — text-xs (12px) dozwolony, mniejsze rozmiary zabronione
+    { id: 'ui-micro-font', re: '\\btext-\\[(?:[0-9]|1[01])(?:\\.\\d+)?px\\]', appliesTo: 'apps/.*/(components|app|lib)/.*\\.(tsx|ts)$', allowIn: ['globals.css', 'tokens'], msg: 'ADR-020: tekst poniżej 12px. Najmniejszy dopuszczalny rozmiar to text-xs (12px).' },
     // ADR-018: cel dotykowy wyłącznie z tokenu kontraktu (min-h-touch / min-w-touch), nigdy liczba wpisana na sztywno
     { id: 'ui-touch-target-token', re: '\\bmin-[hw]-(?:1[0-2]|\\[(?:3[0-9]|4[0-9]|5[0-6])px\\])(?![\\w-])', appliesTo: 'apps/.*/(components|app|lib)/.*\\.(tsx|ts)$', allowIn: ['globals.css', 'tokens'], msg: 'ADR-018: cel dotykowy wpisany na sztywno. Użyj min-h-touch / min-w-touch (token z contracts/design.contract.mjs).' },
   ],

@@ -42,11 +42,11 @@ describe('StatusBadge — wspólna plakietka statusu (ADR-017)', () => {
     }
   });
 
-  it('@REQ: UI-TEMPLATE-ALIGNMENT - kształt i typografia identyczne w obu tonach, min. 14px', () => {
+  it('@REQ: UI-TEMPLATE-ALIGNMENT - kształt i typografia identyczne w obu tonach, tekst plakietki szablonu (text-xs)', () => {
     const shape = (tone: string) => classesOf(render({ tone })).filter((c) => !/^(bg|text)-(muted|foreground|primary)/.test(c)).sort();
     expect(shape('neutral')).toEqual(shape('brand'));
-    expect(classesOf(render({}))).toContain('text-sm');
-    expect(render({})).not.toMatch(/text-xs|text-\[1[0-3]px\]/);
+    expect(classesOf(render({}))).toContain('text-xs');
+    expect(render({})).not.toMatch(/text-\[(?:[0-9]|1[01])px\]/);
   });
 
   it('@REQ: UI-TEMPLATE-ALIGNMENT - przekazuje atrybuty (data-testid) i nie pozwala nadpisać koloru klasą', () => {

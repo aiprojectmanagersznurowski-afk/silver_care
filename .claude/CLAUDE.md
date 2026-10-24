@@ -45,8 +45,8 @@ Wszystko, co dotyczy pensjonariusza, to dane szczególnej kategorii z artykułu 
 ## Norma UI / Mobile-First
 
 W całym systemie obowiązuje jedna, niesprzeczna norma UI:
-- **Tekst bazowy (body)**: `16px` (`text-base`).
-- **Minimalny dopuszczalny tekst pomocniczy**: `14px` (`text-sm`). Klasy `text-xs`, `text-[11px]`, `text-[10px]` są **surowo zabronione**.
+- **Tekst bazowy (body)**: `14px` (`text-sm`) — skala szablonu shadcn-admin (ADR-020).
+- **Minimalny dopuszczalny tekst pomocniczy**: `12px` (`text-xs`). Klasy `text-[11px]`, `text-[10px]` i mniejsze są **surowo zabronione**.
 - **Minimalny cel dotykowy (touch target)**: dla przycisków i elementów interaktywnych wynosi **38x38px** (`min-h-touch min-w-touch`, ADR-018).
 - Tokeny są generowane z kontraktu do `packages/contracts/src/generated/tokens.css`. Nie wpisujesz wartości kolorów ani odstępów na sztywno — używasz zmiennych CSS.
 - **Kolor nie niesie oceny**: zakaz czerwieni/zieleni jako oceny stanu zdrowia. Czerwień wyłącznie dla błędów technicznych w panelu personelu.

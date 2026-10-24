@@ -20,7 +20,7 @@ export function ListEmpty({ title, description, icon, action, framed = true }: L
     <Empty data-slot="list-empty" className={cn('py-10', framed && 'border border-dashed border-border bg-muted/30')}>
       <EmptyHeader>
         {icon && <EmptyMedia variant="icon">{icon}</EmptyMedia>}
-        <EmptyTitle className="text-base font-semibold text-foreground">{title}</EmptyTitle>
+        <EmptyTitle className="text-sm font-medium text-foreground">{title}</EmptyTitle>
         {description && <EmptyDescription>{description}</EmptyDescription>}
       </EmptyHeader>
       {action && <EmptyContent>{action}</EmptyContent>}
