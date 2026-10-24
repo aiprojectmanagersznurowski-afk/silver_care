@@ -61,6 +61,25 @@ else
   ok "brak celów dotykowych poniżej normy 44px w apps/web/src/"
 fi
 
+# ADR-017 pkt 4: ta sama reguła co w hookach agentów — wzorzec czytany z tools/sc.config.mjs
+PALETTE_VIOLATIONS=$(node --input-type=module -e '
+import { execSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+import { kkConfig } from "./tools/guard-core.mjs";
+const rule = kkConfig.forbiddenPatterns.find((p) => p.id === "ui-raw-palette");
+if (!rule) { console.log("brak reguły ui-raw-palette w tools/sc.config.mjs"); process.exit(0); }
+const re = new RegExp(rule.re), applies = new RegExp(rule.appliesTo);
+for (const f of execSync("git ls-files apps/web/src", { encoding: "utf8" }).split("\n").filter(Boolean)) {
+  if (!applies.test(f) || (rule.allowIn || []).some((a) => f.includes(a))) continue;
+  readFileSync(f, "utf8").split("\n").forEach((l, i) => { if (re.test(l)) console.log(`${f}:${i + 1}: ${l.trim().slice(0, 120)}`); });
+}' 2>&1)
+if [ -n "$PALETTE_VIOLATIONS" ]; then
+  printf "%s\n" "$PALETTE_VIOLATIONS"
+  bad "znaleziono surową paletę Tailwind zamiast tokenów kontraktu w apps/web/src/ (ADR-017)"
+else
+  ok "brak surowej palety Tailwind w apps/web/src/ (kolory wyłącznie z tokenów)"
+fi
+
 step "7/10 Limit rozmiaru plików aplikacyjnych (max 250 LOC)"
 LOC_VIOLATIONS=$(find apps/web/src -type f \( -name "*.ts" -o -name "*.tsx" \) \
   ! -path "apps/web/src/types/database.types.ts" \

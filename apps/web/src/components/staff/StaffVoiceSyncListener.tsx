@@ -74,13 +74,13 @@ export function StaffVoiceSyncListener() {
     <div
       role="status"
       aria-live="polite"
-      className="mb-4 flex flex-col gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-foreground sm:flex-row sm:items-center sm:justify-between"
+      className="mb-4 flex flex-col gap-3 rounded-xl border border-border bg-muted p-4 text-foreground sm:flex-row sm:items-center sm:justify-between"
     >
       <div className="flex items-center gap-3">
         {stats.failedCount > 0 ? (
           <AlertCircle className="h-5 w-5 shrink-0 text-destructive" />
         ) : (
-          <CloudOff className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
+          <CloudOff className="h-5 w-5 shrink-0 text-muted-foreground" />
         )}
         <div className="space-y-0.5">
           <p className="text-sm font-semibold">

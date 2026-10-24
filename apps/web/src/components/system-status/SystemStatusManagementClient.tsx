@@ -84,7 +84,7 @@ export function SystemStatusManagementClient({ initialAlerts }: Props) {
             <div className="flex items-center gap-4">
               <div
                 className={`flex h-12 w-12 items-center justify-center rounded-xl ${
-                  isSystemHealthy ? 'bg-primary/10 text-primary' : 'bg-amber-500/15 text-amber-600'
+                  isSystemHealthy ? 'bg-primary/10 text-primary' : 'bg-muted text-foreground'
                 }`}
               >
                 {isSystemHealthy ? <CheckCircle2 className="h-6 w-6" /> : <AlertTriangle className="h-6 w-6" />}
@@ -100,7 +100,7 @@ export function SystemStatusManagementClient({ initialAlerts }: Props) {
               className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold ${
                 isSystemHealthy
                   ? 'bg-primary/10 text-primary border border-primary/20'
-                  : 'bg-amber-500/15 text-amber-600 border border-amber-500/30'
+                  : 'bg-muted text-foreground border border-border'
               }`}
             >
               <ShieldCheck className="h-4 w-4" />

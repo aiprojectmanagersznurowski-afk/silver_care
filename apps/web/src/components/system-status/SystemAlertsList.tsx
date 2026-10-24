@@ -4,6 +4,7 @@ import React from 'react'
 import { Clock } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { StatusBadge } from '@/components/patterns/StatusBadge'
 import { type SystemAlertRecord } from '@/lib/system-status-helpers'
 
 interface Props {
@@ -43,9 +44,7 @@ export function SystemAlertsList({ alerts, isPending, onResolve }: Props) {
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-foreground">{a.title}</span>
-                      <span className="text-sm px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 font-medium">
-                        {a.severity}
-                      </span>
+                      <StatusBadge>{a.severity}</StatusBadge>
                     </div>
                     <p className="text-sm text-foreground/80 mt-1">{a.message}</p>
                   </div>
