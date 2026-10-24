@@ -1,6 +1,7 @@
 'use client'
 
 import {
+  Activity,
   BarChart3,
   Building2,
   CalendarDays,
@@ -36,6 +37,7 @@ const PLATFORM_GROUP: SidebarNavGroup = {
   items: [
     { href: '/admin/organizations', label: 'Placówki', icon: Building2 },
     { href: '/admin/iam', label: 'Uprawnienia (IAM)', icon: ShieldCheck },
+    { href: '/admin/system-status', label: 'Status systemu', icon: Activity },
     { href: '/admin/audit', label: 'Rejestr audytowy', icon: ShieldAlert },
   ],
 }

@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Users, Bed, BedDouble, ShieldAlert, CheckCircle2, Building2 } from 'lucide-react'
+import { Users, Bed, BedDouble, FileText, Building2 } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function AdminDashboard() {
@@ -36,8 +36,11 @@ export default async function AdminDashboard() {
     .select('*', { count: 'exact', head: true })
     .is('unassigned_at', null)
 
-  // 4. Get total staff
-  const { data: { users } } = await supabase.auth.admin.listUsers() // Need org context or similar
+  // 4. Get draft reports waiting for approval
+  const { count: pendingReportsCount } = await supabase
+    .from('daily_reports')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'draft')
   
   const occupancyRate = totalBedsCount ? Math.round(((occupiedBedsCount || 0) / totalBedsCount) * 100) : 0
 
@@ -97,16 +100,16 @@ export default async function AdminDashboard() {
           </CardContent>
         </Card>
 
-        {/* Card 4: System Status */}
+        {/* Card 4: Pending Daily Reports */}
         <Card className="rounded-xl border-none ring-1 ring-border">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-white">
-                <CheckCircle2 className="h-6 w-6" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <FileText className="h-6 w-6" />
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Status systemu</p>
-                <h3 className="text-lg font-bold text-foreground">Stabilny</h3>
+                <p className="text-sm font-medium text-muted-foreground">Raporty do zatwierdzenia</p>
+                <h3 className="text-2xl font-bold text-foreground">{pendingReportsCount || 0}</h3>
               </div>
             </div>
           </CardContent>
