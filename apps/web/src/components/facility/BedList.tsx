@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import type { BedItem } from './bed-types'
 import { BedTableRow } from './BedTableRow'
+import { TableCard } from '@/components/patterns/TableCard'
+import { ListEmpty, ListError, ListLoading } from '@/components/patterns/ListState'
 
 interface BedListProps {
   roomId: string
@@ -18,6 +19,7 @@ interface BedListProps {
 export default function BedList({ roomId, roomNumber, floor, onUpdate }: BedListProps) {
   const [beds, setBeds] = useState<BedItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [loadFailed, setLoadFailed] = useState(false)
   const [unassignTarget, setUnassignTarget] = useState<{
     bedId: string
     residentId: string
@@ -29,11 +31,13 @@ export default function BedList({ roomId, roomNumber, floor, onUpdate }: BedList
     try {
       setIsLoading(true)
       const res = await fetch(`/api/facility/beds?roomId=${roomId}`)
+      setLoadFailed(!res.ok)
       if (res.ok) {
         const data = await res.json()
         setBeds(data.beds || [])
       }
     } catch (error) {
+      setLoadFailed(true)
       console.error('Failed to fetch beds', error)
     } finally {
       setIsLoading(false)
@@ -92,21 +96,21 @@ export default function BedList({ roomId, roomNumber, floor, onUpdate }: BedList
   }
 
   if (isLoading) {
-    return <div className="text-sm text-muted-foreground p-4">Ładowanie łóżek...</div>
+    return <ListLoading label="Wczytywanie łóżek" rows={2} />
+  }
+
+  if (loadFailed) {
+    return <ListError description="Nie udało się pobrać listy łóżek tego pokoju. Spróbuj ponownie za chwilę." />
   }
 
   if (beds.length === 0) {
-    return (
-      <div className="text-sm text-muted-foreground p-4 flex items-center bg-background rounded border border-dashed">
-        <AlertCircle className="w-4 h-4 mr-2" />
-        Brak łóżek w tym pokoju.
-      </div>
-    )
+    return <ListEmpty title="Brak łóżek w tym pokoju" description="Dodaj łóżko w ustawieniach pokoju." />
   }
 
   return (
     <>
-      <div className="rounded-lg border border-border bg-card overflow-hidden" data-testid="beds-table">
+      <div data-testid="beds-table">
+      <TableCard>
         <Table>
           <TableHeader className="bg-muted/50 font-semibold text-muted-foreground">
             <TableRow>
@@ -133,6 +137,7 @@ export default function BedList({ roomId, roomNumber, floor, onUpdate }: BedList
             ))}
           </TableBody>
         </Table>
+      </TableCard>
       </div>
 
       <ConfirmDialog

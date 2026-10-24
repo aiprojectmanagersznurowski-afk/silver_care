@@ -4,7 +4,9 @@ import React from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Search, Loader2, Mic, LayoutGrid, Table as TableIcon } from 'lucide-react'
+import { TableCard } from '@/components/patterns/TableCard'
+import { ListEmpty, ListLoading } from '@/components/patterns/ListState'
+import { Search, Mic, LayoutGrid, Table as TableIcon } from 'lucide-react'
 import { useViewPreference, VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-preference'
 
 interface ResidentItem {
@@ -88,13 +90,9 @@ export function VoiceResidentSelect({
         </div>
 
         {loadingResidents ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-primary" />
-          </div>
+          <ListLoading label="Wczytywanie listy podopiecznych" />
         ) : filteredResidents.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-6 text-center">
-            Nie znaleziono podopiecznych pasujących do wyszukiwania.
-          </p>
+          <ListEmpty title="Nie znaleziono podopiecznych" description="Zmień wyszukiwaną frazę." />
         ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[420px] overflow-y-auto pr-1">
             {filteredResidents.map((r) => (
@@ -117,7 +115,8 @@ export function VoiceResidentSelect({
             ))}
           </div>
         ) : (
-          <div className="border border-border rounded-xl overflow-hidden max-h-[420px] overflow-y-auto">
+          <TableCard>
+          <div className="max-h-[420px] overflow-y-auto">
             <Table>
               <TableHeader className="bg-muted/30">
                 <TableRow>
@@ -153,6 +152,7 @@ export function VoiceResidentSelect({
               </TableBody>
             </Table>
           </div>
+          </TableCard>
         )}
       </div>
     </Card>

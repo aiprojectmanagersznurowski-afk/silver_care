@@ -3,6 +3,7 @@
 import React, { Fragment } from 'react'
 import { DoorOpen, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { TableCard } from '@/components/patterns/TableCard'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import BedList from './BedList'
 import AddBedDialog from './AddBedDialog'
@@ -26,11 +27,8 @@ export function RoomTableView({
   formatSectorName,
 }: RoomTableViewProps) {
   return (
-    <div
-      data-testid="room-table"
-      className="rounded-xl border border-border bg-card overflow-hidden"
-    >
-      <div className="overflow-x-auto">
+    <div data-testid="room-table">
+      <TableCard>
         <Table>
           <TableHeader className="font-semibold text-muted-foreground">
             <TableRow>
@@ -141,7 +139,7 @@ export function RoomTableView({
             })}
           </TableBody>
         </Table>
-      </div>
+      </TableCard>
     </div>
   )
 }

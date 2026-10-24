@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { TableCard, TableStateRow } from '@/components/patterns/TableCard'
 import { UserCheck } from 'lucide-react'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -11,18 +11,11 @@ interface OrganizationStaffSectionProps {
 
 export function OrganizationStaffSection({ staff }: OrganizationStaffSectionProps) {
   return (
-    <Card className="rounded-xl border-none ring-1 ring-border overflow-hidden">
-      <CardHeader className="border-b border-border bg-card px-6 py-5">
-        <div className="flex items-center gap-2 text-foreground font-semibold">
-          <UserCheck className="h-5 w-5 text-primary" />
-          <CardTitle className="text-lg">Personel Opiekuńczy</CardTitle>
-        </div>
-        <CardDescription className="text-muted-foreground">
-          Lista personelu i opiekunów przypisanych do tej placówki (wyłącznie dane techniczne kont).
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="p-0">
-        <div className="overflow-x-auto">
+    <TableCard
+      icon={<UserCheck />}
+      title="Personel Opiekuńczy"
+      description="Lista personelu i opiekunów przypisanych do tej placówki (wyłącznie dane techniczne kont)."
+    >
           <Table>
             <TableHeader className="text-muted-foreground">
               <TableRow>
@@ -58,16 +51,10 @@ export function OrganizationStaffSection({ staff }: OrganizationStaffSectionProp
                 </TableRow>
               ))}
               {staff.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground">
-                    Brak zarejestrowanego personelu w tej placówce.
-                  </TableCell>
-                </TableRow>
+                <TableStateRow colSpan={4} state="empty" title="Brak zarejestrowanego personelu w tej placówce" />
               )}
             </TableBody>
           </Table>
-        </div>
-      </CardContent>
-    </Card>
+    </TableCard>
   )
 }

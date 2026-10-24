@@ -6,6 +6,7 @@ import { ChevronRight } from 'lucide-react'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 import { EditOrganizationDialog } from '@/components/EditOrganizationDialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { TableCard } from '@/components/patterns/TableCard'
 import { OrganizationSummaryItem } from './organizations-types'
 
 export function OrganizationsTableView({
@@ -14,7 +15,7 @@ export function OrganizationsTableView({
   organizations: OrganizationSummaryItem[]
 }) {
   return (
-    <div className="overflow-x-auto rounded-xl bg-card ring-1 ring-border">
+    <TableCard>
       <Table>
         <TableHeader className="text-muted-foreground">
           <TableRow>
@@ -82,6 +83,6 @@ export function OrganizationsTableView({
           })}
         </TableBody>
       </Table>
-    </div>
+    </TableCard>
   )
 }

@@ -4,6 +4,7 @@ import React from 'react'
 import { Button } from '@/components/ui/button'
 import { Download, Check, AlertCircle, Loader2 } from 'lucide-react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { TableCard } from '@/components/patterns/TableCard'
 import { FacilityDryRunResult } from '@/lib/facility-helpers'
 
 interface FacilityDryRunTableProps {
@@ -60,7 +61,8 @@ export function FacilityDryRunTable({
         </div>
       </div>
 
-      <div className="border border-border rounded-lg overflow-x-auto max-h-56">
+      <TableCard>
+      <div className="max-h-56 overflow-y-auto">
         <Table>
           <TableHeader className="bg-muted text-foreground sticky top-0">
             <TableRow>
@@ -97,6 +99,7 @@ export function FacilityDryRunTable({
           </TableBody>
         </Table>
       </div>
+      </TableCard>
 
       <div className="flex items-center justify-between pt-2">
         <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">

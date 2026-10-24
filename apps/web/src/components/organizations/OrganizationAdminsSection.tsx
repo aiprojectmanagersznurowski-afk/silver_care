@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { TableCard, TableStateRow } from '@/components/patterns/TableCard'
 import { Button } from '@/components/ui/button'
 import { UserCog } from 'lucide-react'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
@@ -20,26 +20,12 @@ export function OrganizationAdminsSection({
   administrators
 }: OrganizationAdminsSectionProps) {
   return (
-    <Card className="rounded-xl border-none ring-1 ring-border overflow-hidden">
-      <CardHeader className="border-b border-border bg-card px-6 py-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-foreground font-semibold">
-              <UserCog className="h-5 w-5 text-primary" />
-              <CardTitle className="text-lg">Administratorzy Ośrodka (org_admin)</CardTitle>
-            </div>
-            <CardDescription className="text-muted-foreground">
-              Konta posiadające uprawnienia do zarządzania personelem, podopiecznymi i salami w tej placówce.
-            </CardDescription>
-          </div>
-          <AddAdminToOrgDialog
-            organizationId={organizationId}
-            organizationName={organizationName}
-          />
-        </div>
-      </CardHeader>
-      <CardContent className="p-0">
-        <div className="overflow-x-auto">
+    <TableCard
+      icon={<UserCog />}
+      title="Administratorzy Ośrodka (org_admin)"
+      description="Konta posiadające uprawnienia do zarządzania personelem, podopiecznymi i salami w tej placówce."
+      actions={<AddAdminToOrgDialog organizationId={organizationId} organizationName={organizationName} />}
+    >
           <Table>
             <TableHeader className="text-muted-foreground">
               <TableRow>
@@ -98,16 +84,10 @@ export function OrganizationAdminsSection({
                 </TableRow>
               ))}
               {administrators.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground">
-                    Brak przypisanych administratorów placówki.
-                  </TableCell>
-                </TableRow>
+                <TableStateRow colSpan={5} state="empty" title="Brak przypisanych administratorów placówki" />
               )}
             </TableBody>
           </Table>
-        </div>
-      </CardContent>
-    </Card>
+    </TableCard>
   )
 }

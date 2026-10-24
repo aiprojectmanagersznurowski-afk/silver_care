@@ -2,7 +2,8 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
+import { TableCard, TableStateRow } from '@/components/patterns/TableCard'
 import { Button } from '@/components/ui/button'
 import { Download, Calendar, Filter, RotateCcw, Clock, ShieldCheck } from 'lucide-react'
 import {
@@ -177,15 +178,10 @@ export function AuditManagementClient({
       </Card>
 
       {/* Tabela zdarzeń audytowych */}
-      <Card className="rounded-xl border-none ring-1 ring-border overflow-hidden">
-        <CardHeader className="border-b border-border bg-card px-6 py-5">
-          <CardTitle className="text-lg font-semibold text-foreground">Zdarzenia Audytowe</CardTitle>
-          <CardDescription className="text-muted-foreground">
-            Wyświetlono {filteredLogs.length} wpisów{appliedStartDate || appliedEndDate ? ' dla wybranego zakresu dat' : ''}.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="relative w-full overflow-auto">
+      <TableCard
+        title="Zdarzenia Audytowe"
+        description={`Wyświetlono ${filteredLogs.length} wpisów${appliedStartDate || appliedEndDate ? ' dla wybranego zakresu dat' : ''}.`}
+      >
             <Table aria-label="Tabela rejestru audytowego">
               <TableHeader className="text-muted-foreground">
                 <TableRow>
@@ -217,17 +213,11 @@ export function AuditManagementClient({
                   </TableRow>
                 ))}
                 {filteredLogs.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground">
-                      Brak wpisów w rejestrze audytowym dla wybranych kryteriów.
-                    </TableCell>
-                  </TableRow>
+                  <TableStateRow colSpan={4} state="empty" title="Brak wpisów" description="Rejestr nie zawiera zdarzeń dla wybranych kryteriów." />
                 )}
               </TableBody>
             </Table>
-          </div>
-        </CardContent>
-      </Card>
+      </TableCard>
     </div>
   )
 }

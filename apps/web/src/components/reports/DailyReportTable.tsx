@@ -1,5 +1,5 @@
-import { Card, CardContent } from '@/components/ui/card'
-import { Loader2 } from 'lucide-react'
+import { TableCard } from '@/components/patterns/TableCard'
+import { ListEmpty, ListError, ListLoading } from '@/components/patterns/ListState'
 import { MONTH_LABELS_PL } from '@/lib/reporting-constants'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
@@ -58,28 +58,28 @@ export function DailyReportTable({
   data,
   summary,
   loading,
+  failed = false,
   month,
   year,
 }: {
   data: DailyRow[]
   summary: MonthlySummary | null
   loading: boolean
+  failed?: boolean
   month: number
   year: number
 }) {
   return (
-    <Card className="rounded-xl border-none ring-1 ring-border overflow-hidden">
-      <CardContent className="p-0">
+    <TableCard>
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <ListLoading label="Wczytywanie danych dziennych" rows={5} />
+        ) : failed ? (
+          <div className="p-4">
+            <ListError description="Dane dzienne są chwilowo niedostępne. Spróbuj ponownie za chwilę." />
           </div>
         ) : data.length === 0 ? (
-          <div className="text-center py-20 text-muted-foreground">
-            Brak danych dla wybranego miesiąca.
-          </div>
+          <ListEmpty framed={false} title="Brak danych dla wybranego miesiąca" description="Wybierz inny miesiąc strzałkami powyżej." />
         ) : (
-          <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -171,9 +171,7 @@ export function DailyReportTable({
                 })}
               </TableBody>
             </Table>
-          </div>
         )}
-      </CardContent>
-    </Card>
+    </TableCard>
   )
 }

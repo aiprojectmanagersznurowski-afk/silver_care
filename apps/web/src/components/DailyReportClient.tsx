@@ -14,6 +14,7 @@ export function DailyReportClient({ organizationId }: { organizationId?: string 
   const [data, setData] = useState<DailyRow[]>([])
   const [summary, setSummary] = useState<MonthlySummary | null>(null)
   const [loading, setLoading] = useState(true)
+  const [failed, setFailed] = useState(false)
 
   const fetchData = useCallback(async () => {
     if (!organizationId) return
@@ -21,7 +22,7 @@ export function DailyReportClient({ organizationId }: { organizationId?: string 
 
     const supabase = createClient()
 
-    const [{ data: dailyData }, { data: summaryData }] = await Promise.all([
+    const [{ data: dailyData, error: dailyError }, { data: summaryData, error: summaryError }] = await Promise.all([
       supabase.rpc('fn_daily_report', {
         p_org_id: organizationId,
         p_year: year,
@@ -34,6 +35,7 @@ export function DailyReportClient({ organizationId }: { organizationId?: string 
       }),
     ])
 
+    setFailed(Boolean(dailyError || summaryError))
     setData((dailyData as DailyRow[] | null) || [])
     const summaryArr = summaryData as MonthlySummary[] | null
     setSummary(Array.isArray(summaryArr) && summaryArr.length > 0 ? summaryArr[0] : null)
@@ -91,13 +93,13 @@ export function DailyReportClient({ organizationId }: { organizationId?: string 
       {/* Month navigation */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-3 w-full sm:w-auto">
-          <Button variant="outline" size="icon" onClick={goToPrevMonth} className="h-10 w-10 rounded-xl shrink-0">
+          <Button variant="outline" size="icon" onClick={goToPrevMonth} className="size-11 rounded-xl shrink-0">
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <h3 className="text-lg sm:text-xl font-semibold text-foreground min-w-36 sm:min-w-48 text-center flex-1 sm:flex-initial">
             {MONTH_LABELS_PL[month - 1]} {year}
           </h3>
-          <Button variant="outline" size="icon" onClick={goToNextMonth} className="h-10 w-10 rounded-xl shrink-0">
+          <Button variant="outline" size="icon" onClick={goToNextMonth} className="size-11 rounded-xl shrink-0">
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
@@ -129,6 +131,7 @@ export function DailyReportClient({ organizationId }: { organizationId?: string 
         data={data}
         summary={summary}
         loading={loading}
+        failed={failed}
         month={month}
         year={year}
       />

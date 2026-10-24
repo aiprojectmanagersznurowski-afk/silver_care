@@ -2,10 +2,10 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
 import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
-import { Card, CardContent } from '@/components/ui/card'
 import { InviteStaffDialog } from '@/components/InviteStaffDialog'
 import { PageHeader, PageHeaderNotice } from '@/components/patterns/PageHeader'
 import { StatusBadge } from '@/components/patterns/StatusBadge'
+import { TableCard, TableStateRow } from '@/components/patterns/TableCard'
 import { redirect } from 'next/navigation'
 import { deleteStaffAction } from '@/actions/admin'
 import { Trash2, UserCog } from 'lucide-react'
@@ -56,9 +56,7 @@ export default async function AdminStaffPage() {
         )}
       />
 
-      <Card className="rounded-xl border-none ring-1 ring-border overflow-hidden">
-        <CardContent className="p-0">
-          <div className="relative w-full overflow-auto">
+      <TableCard>
             <Table>
               <TableHeader className="text-muted-foreground">
                 <TableRow>
@@ -109,18 +107,19 @@ export default async function AdminStaffPage() {
                     </TableCell>
                   </TableRow>
                 ))}
-                {staff.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground">
-                      Brak przypisanego personelu. Zaproś pracowników za pomocą przycisku powyżej.
-                    </TableCell>
-                  </TableRow>
+                {error ? (
+                  <TableStateRow colSpan={4} state="error" description="Lista personelu jest chwilowo niedostępna. Odśwież stronę za chwilę." />
+                ) : staff.length === 0 && (
+                  <TableStateRow
+                    colSpan={4}
+                    state="empty"
+                    title="Brak przypisanego personelu"
+                    description="Zaproś pracowników za pomocą przycisku powyżej."
+                  />
                 )}
               </TableBody>
             </Table>
-          </div>
-        </CardContent>
-      </Card>
+      </TableCard>
     </div>
   )
 }

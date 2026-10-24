@@ -45,6 +45,36 @@ test.describe('Spójność ekranów — wspólny nagłówek strony (@REQ: UI-TEM
   }
 });
 
+/** Widoki z tabelami (dane demo zawsze zawierają pensjonariuszy, konta i wpisy audytowe). */
+const TABLE_SCREENS: { role: 'org_admin' | 'super_admin'; paths: string[] }[] = [
+  { role: 'org_admin', paths: ['/admin/staff', '/admin/invitations', '/admin/audit', '/admin/reports/daily'] },
+  { role: 'super_admin', paths: ['/admin/iam'] },
+];
+
+test.describe('Spójność ekranów — wspólna ramka tabeli (@REQ: UI-TEMPLATE-ALIGNMENT)', () => {
+  for (const { role, paths } of TABLE_SCREENS) {
+    test(`@REQ: UI-TEMPLATE-ALIGNMENT - ${role}: każda tabela w ramce TableCard o jednym stylu`, async ({ loginPage, page }) => {
+      await loginPage.loginAs(role);
+      const screens = new PageConsistencyPage(page);
+      let tables = 0;
+      const outside: Record<string, string[]> = {};
+      const frames = new Set<string>();
+
+      for (const path of paths) {
+        await screens.goto(path);
+        const snap = await screens.tableSnapshot();
+        tables += snap.tables;
+        if (snap.outsideCard.length) outside[path] = snap.outsideCard;
+        snap.frames.forEach((f) => frames.add(f));
+      }
+
+      expect(tables, 'brak tabel na widokach tabelarycznych').toBeGreaterThan(0);
+      expect(outside, 'tabele poza wspólną ramką TableCard').toEqual({});
+      expect([...frames], 'różne style ramek tabel').toHaveLength(1);
+    });
+  }
+});
+
 /** Widoki, na których dane demo zawsze zawierają statusy (pensjonariusze, konta, raporty). */
 const BADGE_SCREENS: { role: 'org_admin' | 'super_admin' | 'nurse'; paths: string[] }[] = [
   { role: 'org_admin', paths: ['/admin/residents', '/admin/invitations', '/admin/staff'] },
