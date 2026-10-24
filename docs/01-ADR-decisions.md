@@ -267,3 +267,27 @@ Przed prezentacjami i demo dla potencjalnych klientów (Marconi, KIDO) potrzebny
 - WCAG 2.1 / 2.2 AA (kontrast min. 4.5:1, target size 2.5.8 i 2.5.5).
 - Norma Mobile-First eliminuje pomyłkowe stuknięcia u personelu w rękawiczkach lub w biegu oraz zapewnia pełną czytelność dla opiekunów prawnych i bliskich.
 
+
+---
+
+## ADR-017 — Spójność interfejsu przez wspólne komponenty i egzekwowanie normy UI, bez zmiany stylu (Status: PROPOZYCJA — czeka na akceptację Darka) 📝
+
+**Kontekst.** 2026-10-22 przeprowadzono audyt możliwości wdrożenia systemu UI w stylu 21st.dev: szablonu referencyjnego (kopia MIT `arhamkhnz/next-shadcn-admin-dashboard`, commit `6dd9ab0`) i ogólnego zestawu wdrożeniowego (reguły, hook, kompozyty, wytyczne). Ustalenia:
+- **Szablon jest sprzeczny z ADR-016 i ADR-005.** Ma 341 użyć `text-xs` w 93 plikach, domyślny przycisk 32px (`h-8`), 103 kolory spoza tokenów, ekran monitorowania parametrów życiowych z wykresami trendu (`patient-monitoring`), telemetrię `@vercel/analytics`, pobieranie zasobów z CDN i awatary z serwerów zewnętrznych.
+- **Reguły zestawu dałyby fałszywe blokady.** Na istniejącym kodzie zablokowałyby 50 z 227 plików UI (głównie `text-white` na kolorze marki), wygenerowany `tokens.css` i bazowy `ui/chart.tsx` z shadcn. Część kompozytów zestawu nie kompiluje się w repo (brak `ui/alert-dialog` i `react-hook-form`).
+- **Repo ma już własny system:** `contracts/design.contract.mjs`, ADR-016 i bramkę `scripts/verify.sh` (krok 6). Stan kodu jest dobry: 0 mikro-fontów, 0 kolorów hex w komponentach, 0 surowych `<table>`.
+- **Luki w egzekwowaniu:** reguły z `tools/sc.config.mjs` działają tylko w hookach agentów i lokalnym pre-commicie; CI (`verify.sh`) ich nie uruchamia, więc narzędzie bez hooków albo repo bez `core.hooksPath` omija je w całości.
+
+**Decyzja (Michał, 2026-10-22; Darek: do potwierdzenia).**
+1. **Styl bez zmian.** Źródłem prawdy pozostaje `contracts/design.contract.mjs` i ADR-016. Nie przyjmujemy stylu, tokenów, `components.json` ani wytycznych szablonu. Zewnętrzne szablony nie trafiają do repozytorium; materiał referencyjny leży poza nim.
+2. **Czerwień (`destructive`) wyłącznie dla błędów technicznych.** Nie dla liczników, statusów pensjonariusza ani przycisków usuwania. Opis tokenu w kontrakcie zostaje dostosowany w oknie kontraktowym (`UI-TEMPLATE-ALIGNMENT`).
+3. **Dwa tony statusu: neutralny i kolor marki.** Nie wprowadzamy tonu „uwaga/warning”; jeśli konkretny ekran będzie go potrzebował, wymaga to zmiany kontraktu.
+4. **Egzekwowanie w istniejących mechanizmach, nie w nowych.** Każda reguła UI trafia jednocześnie do `tools/sc.config.mjs` (hooki Claude Code i Antigravity, pre-commit) i do `scripts/verify.sh` krok 6 (CI, niezależnie od narzędzia). Regułę wprowadzamy jako blokującą wyłącznie wtedy, gdy na `main` ma zero naruszeń, a jej działanie potwierdza test w `tests/logic/`. Pierwsza reguła: zakaz surowej palety Tailwind (np. `bg-amber-500`); `text-white`/`bg-white` na kolorze marki pozostają dozwolone.
+5. **Spójność ekranów przez wspólne komponenty.** Celem jest, by każdy ekran składał się z tych samych elementów, przy zachowaniu czytelności z ADR-016. Audyt wykazał powielanie: nagłówek strony w 16 plikach, 21 ręcznie stylowanych plakietek statusu w 12 plikach, 15 tabel z własnymi akcjami i stanami, nieużywane `ui/empty` i `ui/skeleton`. Powstają kolejno, każdy z pilotażem na jednym ekranie: `PageHeader`, `StatusBadge` (dwa tony z pkt 3), wspólne stany listy (pusty, ładowanie, błąd; `UI-FOUR-STATES`) oraz wspólna tabela na `ui/table` z akcjami wiersza o celu 44px. Komponenty są pisane pod to repo; kompozytów zestawu (`ConfirmDialog`, `EmptyState`, `FormField`, `DataTable`) nie przenosimy, bo repo ma odpowiedniki albo nie spełniają ADR-016.
+6. **Bez nowych zależności z szablonu** (Radix, Biome, `react-hook-form`, `zod`, `@vercel/analytics` i in.), zgodnie z `DEFAULTS.library_choice`.
+7. **Nowy ekran składa się ze wspólnych komponentów.** Zasada trafia do `.claude/CLAUDE.md` i `AGENTS.md`, więc obowiązuje agentów Claude Code i Gemini. Istniejące ekrany są migrowane stopniowo, przy okazji zmian w danym ekranie.
+
+**Konsekwencje.**
+- Agenci obu osób (Claude Code i Gemini) dostają te same reguły z jednego miejsca, a CI pilnuje ich niezależnie od narzędzia.
+- Bez reguły automatycznej pozostają: czerwień dla elementów niebędących błędem, cele dotykowe `h-6`–`h-9` i kolor w stylach inline. Pilnuje ich recenzja i test E2E `appearance-audit` (dziś poza CI).
+- Każdy etap wdrożenia to osobny PR mieszczący się w limicie 3 plików, scalany przez drugą osobę. Pełna migracja istniejących ekranów to szacunkowo 15–20 takich PR, dlatego jest rozłożona w czasie.
