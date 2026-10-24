@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { UserCog } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -9,6 +10,7 @@ import { TableCard, TableStateRow } from '@/components/patterns/TableCard'
 import { ViewToggle, GRID_TABLE_OPTIONS } from '@/components/patterns/ViewToggle'
 import { ObjectCard, ObjectGrid } from '@/components/patterns/ObjectCard'
 import { ListEmpty, ListError } from '@/components/patterns/ListState'
+import { ListToolbar, SearchField } from '@/components/patterns/ListToolbar'
 import { useViewPreference, VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-preference'
 
 export interface StaffListItem {
@@ -35,21 +37,26 @@ function StaffAvatar({ item }: { item: StaffListItem }) {
   )
 }
 
-export function StaffListView({ staff, failed }: { staff: StaffListItem[]; failed: boolean }) {
+export function StaffListView({ staff: allStaff, failed }: { staff: StaffListItem[]; failed: boolean }) {
   const [viewMode, setViewMode] = useViewPreference(VIEW_PREFERENCE_KEYS.staff, 'table', ['table', 'grid'] as const)
+  const [query, setQuery] = useState('')
+  const staff = allStaff.filter((s) => s.email.toLowerCase().includes(query.trim().toLowerCase()))
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-end">
-        <ViewToggle value={viewMode} onChange={setViewMode} options={GRID_TABLE_OPTIONS} />
-      </div>
-
+    <TableCard
+      toolbar={
+        <ListToolbar end={<ViewToggle value={viewMode} onChange={setViewMode} options={GRID_TABLE_OPTIONS} />}>
+          <SearchField value={query} onChange={setQuery} label="Szukaj pracownika" placeholder="Szukaj po adresie e-mail..." />
+        </ListToolbar>
+      }
+    >
       {viewMode === 'grid' ? (
         failed ? (
-          <ListError description={ERROR} />
+          <div className="p-4"><ListError description={ERROR} /></div>
         ) : staff.length === 0 ? (
-          <ListEmpty {...EMPTY} />
+          <ListEmpty framed={false} {...EMPTY} />
         ) : (
+          <div className="p-4">
           <ObjectGrid>
             {staff.map((item) => (
               <ObjectCard
@@ -62,9 +69,9 @@ export function StaffListView({ staff, failed }: { staff: StaffListItem[]; faile
               />
             ))}
           </ObjectGrid>
+          </div>
         )
       ) : (
-        <TableCard>
           <Table>
             <TableHeader className="text-muted-foreground">
               <TableRow>
@@ -100,8 +107,7 @@ export function StaffListView({ staff, failed }: { staff: StaffListItem[]; faile
               )}
             </TableBody>
           </Table>
-        </TableCard>
       )}
-    </div>
+    </TableCard>
   )
 }

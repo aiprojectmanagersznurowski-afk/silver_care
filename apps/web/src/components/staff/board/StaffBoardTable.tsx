@@ -6,7 +6,7 @@ import { Mic, FileText, MessageSquare } from 'lucide-react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 import { StatusBadge } from '@/components/patterns/StatusBadge'
-import { TableCard, TableStateRow } from '@/components/patterns/TableCard'
+import { TableStateRow } from '@/components/patterns/TableCard'
 import { getActiveAssignment, getNoteStatus, STATUS_CONFIG, UnansweredInfo } from './staff-board-types'
 
 interface StaffBoardTableProps {
@@ -20,8 +20,7 @@ const actionLink =
 /** Tablica dyżuru w widoku tabeli — te same informacje i akcje co karta podopiecznego. */
 export function StaffBoardTable({ residents, unansweredMessagesMap }: StaffBoardTableProps) {
   return (
-    <TableCard>
-      <Table aria-label="Tablica dyżuru — podopieczni">
+    <Table aria-label="Tablica dyżuru — podopieczni">
         <TableHeader className="text-muted-foreground">
           <TableRow>
             <TableHead scope="col">Podopieczny</TableHead>
@@ -98,6 +97,5 @@ export function StaffBoardTable({ residents, unansweredMessagesMap }: StaffBoard
           )}
         </TableBody>
       </Table>
-    </TableCard>
   )
 }

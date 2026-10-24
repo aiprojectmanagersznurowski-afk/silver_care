@@ -8,6 +8,7 @@ import { TableCard, TableStateRow } from '@/components/patterns/TableCard'
 import { ViewToggle, GRID_TABLE_OPTIONS } from '@/components/patterns/ViewToggle'
 import { ObjectCard, ObjectGrid } from '@/components/patterns/ObjectCard'
 import { ListEmpty } from '@/components/patterns/ListState'
+import { ListToolbar, SearchField } from '@/components/patterns/ListToolbar'
 import { useViewPreference, VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-preference'
 import { InvitationRowActions, InvitationStatusBadge } from './InvitationRowActions'
 
@@ -27,7 +28,12 @@ export interface InvitationRecord {
 }
 
 export function InvitationsTable({ initialInvitations }: { initialInvitations: InvitationRecord[] }) {
-  const [invitations, setInvitations] = useState<InvitationRecord[]>(initialInvitations)
+  const [allInvitations, setInvitations] = useState<InvitationRecord[]>(initialInvitations)
+  const [query, setQuery] = useState('')
+  const q = query.trim().toLowerCase()
+  const invitations = allInvitations.filter((inv) =>
+    `${inv.email} ${inv.residents?.first_name ?? ''} ${inv.residents?.last_name ?? ''}`.toLowerCase().includes(q)
+  )
   const [revokingId, setRevokingId] = useState<string | null>(null)
   const [isRevoking, setIsRevoking] = useState(false)
   const [resendingId, setResendingId] = useState<string | null>(null)
@@ -98,7 +104,11 @@ export function InvitationsTable({ initialInvitations }: { initialInvitations: I
       <TableCard
         title="Oczekujące i zrealizowane zaproszenia"
         description="Rejestr zaproszeń, statusy oraz akcje zarządzania."
-        actions={<ViewToggle value={viewMode} onChange={setViewMode} options={GRID_TABLE_OPTIONS} />}
+        toolbar={
+          <ListToolbar end={<ViewToggle value={viewMode} onChange={setViewMode} options={GRID_TABLE_OPTIONS} />}>
+            <SearchField value={query} onChange={setQuery} label="Szukaj zaproszenia" placeholder="Szukaj po e-mailu lub podopiecznym..." />
+          </ListToolbar>
+        }
       >
       {viewMode === 'grid' ? (
         <div className="p-4">

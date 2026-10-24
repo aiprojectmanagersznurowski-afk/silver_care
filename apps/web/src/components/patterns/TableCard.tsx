@@ -16,9 +16,11 @@ interface TableCardProps {
   /** Ikona w neutralnym kaflu — ta sama na każdym ekranie, bez koloru marki. */
   icon?: ReactNode
   actions?: ReactNode
+  /** Pasek wyszukiwania i filtrów w nagłówku karty, nad tabelą (układ listy szablonu). */
+  toolbar?: ReactNode
 }
 
-export function TableCard({ children, className, title, description, icon, actions }: TableCardProps) {
+export function TableCard({ children, className, title, description, icon, actions, toolbar }: TableCardProps) {
   return (
     <div data-slot="table-card" className={cn('overflow-hidden rounded-xl border border-border bg-card', className)}>
       {title && (
@@ -41,6 +43,11 @@ export function TableCard({ children, className, title, description, icon, actio
             </div>
           </div>
           {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+        </div>
+      )}
+      {toolbar && (
+        <div data-slot="table-card-toolbar" className="border-b border-border px-4 py-3">
+          {toolbar}
         </div>
       )}
       {children}

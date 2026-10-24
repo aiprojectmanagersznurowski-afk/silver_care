@@ -7,11 +7,14 @@ import type { ComponentProps } from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 import { StatusBadge } from '@/components/patterns/StatusBadge'
-import { TableCard } from '@/components/patterns/TableCard'
+import { TableCard, TableStateRow } from '@/components/patterns/TableCard'
+import { ListEmpty } from '@/components/patterns/ListState'
 import { ViewToggle, GRID_TABLE_OPTIONS } from '@/components/patterns/ViewToggle'
 import { ObjectCard, ObjectGrid } from '@/components/patterns/ObjectCard'
 import { useViewPreference, VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-preference'
 import { UserRowActions } from './UserRowActions'
+import { ListToolbar, SearchField } from '@/components/patterns/ListToolbar'
+import { useState } from 'react'
 
 interface UserTableProps {
   users: UserItem[]
@@ -24,7 +27,7 @@ interface UserTableProps {
 }
 
 export function UserTable({
-  users,
+  users: allUsers,
   onChangeRoleClick,
   onResetPasswordClick,
   onDeleteUserClick,
@@ -33,6 +36,8 @@ export function UserTable({
   addUserProps,
 }: UserTableProps) {
   const [viewMode, setViewMode] = useViewPreference(VIEW_PREFERENCE_KEYS.iamUsers, 'table', ['table', 'grid'] as const)
+  const [query, setQuery] = useState('')
+  const users = allUsers.filter((u) => u.email.toLowerCase().includes(query.trim().toLowerCase()))
   const badgesFor = (user: UserItem) => (
     <>
       <StatusBadge>{roleLabels[user.role] || user.role}</StatusBadge>
@@ -61,15 +66,16 @@ export function UserTable({
       icon={<Shield />}
       title="Użytkownicy i Role"
       description="Zarządzaj kontami użytkowników, przydziałem ról i uprawnień dostępowych."
-      actions={
-        <>
-          <ViewToggle value={viewMode} onChange={setViewMode} options={GRID_TABLE_OPTIONS} />
-          <AddUserDialog {...addUserProps} />
-        </>
+      actions={<AddUserDialog {...addUserProps} />}
+      toolbar={
+        <ListToolbar end={<ViewToggle value={viewMode} onChange={setViewMode} options={GRID_TABLE_OPTIONS} />}>
+          <SearchField value={query} onChange={setQuery} label="Szukaj użytkownika" placeholder="Szukaj po adresie e-mail..." />
+        </ListToolbar>
       }
     >
       {viewMode === 'grid' ? (
         <div className="p-4">
+          {users.length === 0 && <ListEmpty title="Brak użytkowników" description="Zmień wyszukiwaną frazę." />}
           <ObjectGrid>
             {users.map((user) => (
               <ObjectCard
@@ -121,6 +127,9 @@ export function UserTable({
                   </TableRow>
                 )
               })}
+              {users.length === 0 && (
+                <TableStateRow colSpan={4} state="empty" title="Brak użytkowników" description="Zmień wyszukiwaną frazę." />
+              )}
             </TableBody>
           </Table>
       )}

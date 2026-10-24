@@ -5,7 +5,6 @@ import { format } from 'date-fns'
 import { pl } from 'date-fns/locale'
 import { UserCircle2, ChevronRight } from 'lucide-react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { TableCard } from '@/components/patterns/TableCard'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 import { ResidentInlineCareLevel } from '@/components/ResidentInlineCareLevel'
@@ -24,16 +23,16 @@ export function ResidentsTable({ residents }: { residents: ResidentWithAssignmen
   return (
     <>
       {/* Mobilny fallback dla małych ekranów */}
-      <div className="block sm:hidden space-y-3">
+      <div className="block space-y-3 p-4 sm:hidden">
         {residents.map((resident) => (
           <ResidentMobileCard key={resident.id} resident={resident} />
         ))}
       </div>
 
       {/* Pełna tabela na ekranach sm+ */}
-      <TableCard className="hidden sm:block">
+      <div className="hidden sm:block">
             <Table>
-              <TableHeader className="text-muted-foreground bg-muted/30">
+              <TableHeader className="text-muted-foreground">
                 <TableRow>
                   <TableHead>Imię i nazwisko</TableHead>
                   <TableHead>Stan</TableHead>
@@ -102,7 +101,7 @@ export function ResidentsTable({ residents }: { residents: ResidentWithAssignmen
                 })}
               </TableBody>
             </Table>
-      </TableCard>
+      </div>
     </>
   )
 }

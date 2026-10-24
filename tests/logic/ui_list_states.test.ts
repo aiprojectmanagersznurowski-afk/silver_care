@@ -75,6 +75,13 @@ describe('TableCard — jedna ramka tabeli', () => {
     expect(html(h(TableCard as never, null, h('table', null)))).not.toContain('table-card-header');
   });
 
+  it('@REQ: UI-TEMPLATE-ALIGNMENT - pasek narzędzi w nagłówku karty, oddzielony linią, przed treścią (układ listy szablonu)', () => {
+    const out = html(h(TableCard as never, { toolbar: h('input', { type: 'search' }) }, h('table', null)));
+    expect(out).toMatch(/data-slot="table-card-toolbar"[^>]*class="[^"]*border-b[^"]*"/);
+    expect(out.indexOf('table-card-toolbar')).toBeLessThan(out.indexOf('<table>'));
+    expect(html(h(TableCard as never, null, h('table', null)))).not.toContain('table-card-toolbar');
+  });
+
   it('@REQ: UI-FOUR-STATES - TableStateRow rozciąga stan na wszystkie kolumny', () => {
     const empty = html(h('table', null, h('tbody', null, h(TableStateRow as never, { colSpan: 5, state: 'empty', title: 'Brak danych' }))));
     expect(empty).toMatch(/<td[^>]*colSpan="5"|<td[^>]*colspan="5"/);

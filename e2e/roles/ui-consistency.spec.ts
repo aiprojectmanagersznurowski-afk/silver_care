@@ -183,9 +183,13 @@ test.describe('Pulpit placówki — karty wskaźników szablonu (@REQ: UI-TEMPLA
   });
 });
 
+/** Listy obiektów z tabelą: wyszukiwarka i filtry w nagłówku tej samej karty co tabela (szablon „users”). */
+const LIST_CARD_PATHS = ['/admin/residents', '/admin/facility', '/staff', '/admin/staff', '/admin/invitations', '/admin/iam'];
+
 /** Widoki list z wyszukiwarką (i filtrami na tablicy dyżuru oraz w strukturze placówki). */
-const TOOLBAR_SCREENS: { role: 'org_admin' | 'nurse'; paths: string[] }[] = [
-  { role: 'org_admin', paths: ['/admin/residents', '/admin/facility', '/admin/messages'] },
+const TOOLBAR_SCREENS: { role: 'org_admin' | 'nurse' | 'super_admin'; paths: string[] }[] = [
+  { role: 'org_admin', paths: ['/admin/residents', '/admin/facility', '/admin/messages', '/admin/staff', '/admin/invitations'] },
+  { role: 'super_admin', paths: ['/admin/iam'] },
   { role: 'nurse', paths: ['/staff', '/voice'] },
 ];
 
@@ -195,6 +199,7 @@ test.describe('Spójność ekranów — wspólny pasek wyszukiwania i filtrów (
       await loginPage.loginAs(role);
       const screens = new PageConsistencyPage(page);
       const missing: string[] = [];
+      const outsideCard: string[] = [];
       const searchShapes = new Set<string>();
       const chipShapes = new Set<string>();
 
@@ -202,11 +207,15 @@ test.describe('Spójność ekranów — wspólny pasek wyszukiwania i filtrów (
         await screens.goto(path);
         const snap = await screens.toolbarSnapshot();
         if (snap.searchFields !== 1) missing.push(`${path}: ${snap.searchFields} wyszukiwarek`);
+        if (LIST_CARD_PATHS.includes(path) && !(await page.locator('main [data-slot="table-card"]:visible [data-slot="search-field"]').count())) {
+          outsideCard.push(path);
+        }
         snap.searchShapes.forEach((s) => searchShapes.add(s));
         snap.chipShapes.forEach((s) => chipShapes.add(s));
       }
 
       expect(missing, 'widoki bez jednej wspólnej wyszukiwarki SearchField').toEqual([]);
+      expect(outsideCard, 'listy, w których wyszukiwarka nie jest w nagłówku karty listy (układ szablonu)').toEqual([]);
       expect([...searchShapes], 'różne kształty wyszukiwarek').toHaveLength(1);
       expect([...chipShapes].length, 'różne wysokości przycisków filtrów').toBeLessThanOrEqual(1);
     });

@@ -23,6 +23,7 @@ import { ResidentBedInfoCard } from '@/components/residents/profile/ResidentBedI
 import { ResidentFamilyCard } from '@/components/residents/profile/ResidentFamilyCard'
 import { ResidentContractCard } from '@/components/residents/profile/ResidentContractCard'
 import { ResidentEventsCard } from '@/components/residents/profile/ResidentEventsCard'
+import { ResidentProfileTabs } from '@/components/residents/profile/ResidentProfileTabs'
 
 export default async function ResidentProfilePage({
   params,
@@ -98,7 +99,7 @@ export default async function ResidentProfilePage({
     : []
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-col gap-4">
       <ResidentProfileHeader
         resident={resident}
         isActive={isActive}
@@ -106,37 +107,25 @@ export default async function ResidentProfilePage({
         activeAssignment={activeAssignment}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="space-y-6">
-          <ResidentGeneralInfoCard
-            resident={resident}
-            age={age}
-            stayDays={stayDays}
-          />
-          <ResidentBedInfoCard
-            activeAssignment={activeAssignment}
-            pastAssignments={pastAssignments}
-          />
-          <ResidentEventsCard events={sortedEvents} />
-        </div>
-
-        <div className="space-y-6">
-          <ResidentFamilyCard
-            resident={resident}
-            relativeLinks={relativeLinks}
-          />
+      <ResidentProfileTabs
+        overview={
+          <>
+            <ResidentGeneralInfoCard resident={resident} age={age} stayDays={stayDays} />
+            <ResidentBedInfoCard activeAssignment={activeAssignment} pastAssignments={pastAssignments} />
+          </>
+        }
+        sidebar={<ResidentContractCard resident={resident} activePackages={activePackages} />}
+        family={<ResidentFamilyCard resident={resident} relativeLinks={relativeLinks} />}
+        events={<ResidentEventsCard events={sortedEvents} />}
+        wearable={
           <PolarWearableCard
             residentId={resident.id}
             initialLinked={Boolean(polarLink)}
             externalUserId={polarLink?.external_user_id}
             linkedAt={polarLink?.created_at}
           />
-          <ResidentContractCard
-            resident={resident}
-            activePackages={activePackages}
-          />
-        </div>
-      </div>
+        }
+      />
     </div>
   )
 }
