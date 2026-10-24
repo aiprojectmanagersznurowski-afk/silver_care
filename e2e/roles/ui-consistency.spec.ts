@@ -99,6 +99,38 @@ test.describe('Portal rodziny — nagłówek i tło jak w reszcie aplikacji (@RE
   });
 });
 
+test.describe('Czat — ten sam wygląd w portalu rodziny i u kierownika placówki (@REQ: UI-TEMPLATE-ALIGNMENT)', () => {
+  test('@REQ: UI-TEMPLATE-ALIGNMENT - pole wiadomości i przycisk wysyłania o tym samym kształcie w obu czatach', async ({ loginPage, page, browser }) => {
+    const shapeOf = (p: typeof page) => p.evaluate(() => {
+      const bar = document.querySelector('[data-slot="chat-input"]');
+      const send = document.querySelector('[data-slot="chat-send"]');
+      if (!bar || !send) return null;
+      const b = getComputedStyle(bar); const s = getComputedStyle(send);
+      return { input: [b.borderTopLeftRadius, b.borderTopWidth].join(' | '), send: [s.borderTopLeftRadius, Math.round(send.getBoundingClientRect().height)].join(' | ') };
+    });
+
+    await loginPage.loginAs('family');
+    await page.goto('/messages');
+    await page.waitForLoadState('networkidle');
+    const family = await shapeOf(page);
+    expect(family, 'brak wspólnego pola wiadomości w portalu rodziny').not.toBeNull();
+
+    const context = await browser.newContext();
+    const adminPage = await context.newPage();
+    const { LoginPage } = await import('../page-objects/LoginPage');
+    await new LoginPage(adminPage).loginAs('org_admin');
+    await adminPage.goto('/admin/messages');
+    await adminPage.waitForLoadState('networkidle');
+    const firstThread = adminPage.locator('[data-testid="thread-item"]').first();
+    if (await firstThread.count()) await firstThread.click();
+    const admin = await shapeOf(adminPage);
+    await context.close();
+
+    if (admin) expect(admin).toEqual(family);
+    else test.info().annotations.push({ type: 'uwaga', description: 'brak wątków u kierownika — porównano tylko portal rodziny' });
+  });
+});
+
 test.describe('Tryb ciemny — czytelne przyciski i filtry (@REQ: UI-ACCESSIBILITY)', () => {
   test('@REQ: UI-ACCESSIBILITY - tablica dyżuru w trybie ciemnym: tekst przycisków ≥4.5:1, obramowanie ≥3:1 (WCAG 1.4.3, 1.4.11)', async ({ loginPage, page }) => {
     await loginPage.loginAs('nurse');

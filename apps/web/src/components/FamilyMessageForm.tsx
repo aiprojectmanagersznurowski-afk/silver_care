@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useSendFamilyMessage } from '../hooks/useSendFamilyMessage';
 import { format, isSameDay } from 'date-fns';
 import { pl } from 'date-fns/locale';
-import { SendHorizontal } from 'lucide-react';
+import { ChatBubble, ChatComposer, ChatDateSeparator, ChatSendButton, CHAT_SCROLL_AREA } from './patterns/Chat';
 
 interface FamilyMessageFormProps {
   residentId: string;
@@ -106,7 +106,7 @@ export function FamilyMessageForm({ residentId }: FamilyMessageFormProps) {
       {/* Okno czatu */}
       <div 
         ref={scrollRef}
-        className="flex-1 overflow-y-auto px-5 py-4 space-y-2 pb-20 bg-surface-sunken"
+        className={`min-h-0 flex-1 overflow-y-auto px-5 py-4 space-y-2 ${CHAT_SCROLL_AREA}`}
       >
         {loadingHistory ? (
           <div className="flex items-center justify-center h-full">
@@ -134,33 +134,17 @@ export function FamilyMessageForm({ residentId }: FamilyMessageFormProps) {
             return (
               <React.Fragment key={msg.id}>
                 {showTime && (
-                  <div className="flex justify-center my-4">
-                    <span className="text-sm font-semibold text-text-tertiary uppercase tracking-wider">
-                      {format(new Date(msg.created_at), "EEEE, d MMMM, HH:mm", { locale: pl })}
-                    </span>
-                  </div>
+                  <ChatDateSeparator>{format(new Date(msg.created_at), "EEEE, d MMMM, HH:mm", { locale: pl })}</ChatDateSeparator>
                 )}
-                <div className={`flex flex-col ${isFamily ? 'items-end' : 'items-start'}`}>
-                  <div 
-                    className={`max-w-[78%] px-4 py-2.5 rounded-xl ${
-                      isFamily 
-                        ? 'bg-primary text-primary-foreground rounded-br-sm' 
-                        : 'bg-card text-foreground border border-border rounded-bl-sm'
-                    }`}
-                  >
-                    <p className="text-sm leading-relaxed font-normal whitespace-pre-wrap">{msg.content}</p>
-                  </div>
-                  <div className="flex items-center gap-1 mt-0.5 px-1">
-                    <span className="text-sm text-text-secondary flex items-center gap-1">
-                      {format(new Date(msg.created_at), "HH:mm")} • {isFamily ? 'Ty' : 'Personel dyżurny'}
-                      {isFamily && (
-                        <span className="inline-flex items-center text-primary font-medium ml-1">
-                          ✓ Doręczono do dyżurki
-                        </span>
-                      )}
-                    </span>
-                  </div>
-                </div>
+                <ChatBubble
+                  own={isFamily}
+                  meta={<>
+                    {format(new Date(msg.created_at), "HH:mm")} • {isFamily ? 'Ty' : 'Personel dyżurny'}
+                    {isFamily && <span className="ml-1 font-medium text-primary">✓ Doręczono do dyżurki</span>}
+                  </>}
+                >
+                  {msg.content}
+                </ChatBubble>
               </React.Fragment>
             );
           })
@@ -169,42 +153,24 @@ export function FamilyMessageForm({ residentId }: FamilyMessageFormProps) {
 
       {/* Komunikat o błędzie (np. limit wiadomości) */}
       {sendState === 'error' && sendError && (
-        <div className="absolute bottom-[64px] left-4 right-4 bg-destructive/10 border border-destructive/20 rounded-xl p-2.5 text-center text-sm text-destructive font-medium z-20 animate-in fade-in slide-in-from-bottom-2">
+        <div className="absolute bottom-[72px] left-4 right-4 bg-destructive/10 border border-destructive/20 rounded-xl p-2.5 text-center text-sm text-destructive font-medium z-20 animate-in fade-in slide-in-from-bottom-2">
           {sendError}
         </div>
       )}
 
       {/* Formularz wprowadzania */}
-      <div
-        className="absolute bottom-0 left-0 right-0 px-4 py-3 flex items-center gap-3 bg-surface/90 backdrop-blur-md border-t border-border"
-      >
-        <div
-          className="flex-1 flex items-center rounded-full px-4 py-2.5 bg-background border border-border"
-        >
+      <form onSubmit={handleSubmit}>
+        <ChatComposer after={<ChatSendButton disabled={sendState === 'loading' || !content.trim()} loading={sendState === 'loading'} />}>
           <input
-            className="flex-1 text-sm font-normal bg-transparent text-foreground outline-none"
+            className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+            aria-label="Wiadomość do personelu"
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Napisz wiadomość..."
             disabled={sendState === 'loading'}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSubmit(e);
-              }
-            }}
           />
-        </div>
-        <button
-          onClick={handleSubmit}
-          disabled={sendState === 'loading' || !content.trim()}
-          className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all active:scale-90 ${
-            content.trim() ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-          }`}
-        >
-          <SendHorizontal className="h-4 w-4" />
-        </button>
-      </div>
+        </ChatComposer>
+      </form>
     </div>
   );
 }
