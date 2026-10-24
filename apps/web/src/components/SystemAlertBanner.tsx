@@ -63,9 +63,9 @@ export function SystemAlertBanner({ role, initialAlerts }: SystemAlertBannerProp
       label: 'Awaria usługi',
     },
     warning: {
-      wrapper: 'bg-amber-500/15 text-foreground border-amber-500/30',
-      icon: <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />,
-      badge: 'bg-amber-600 text-white dark:bg-amber-500',
+      wrapper: 'bg-muted text-foreground border-border',
+      icon: <AlertTriangle className="h-5 w-5 shrink-0 text-foreground" />,
+      badge: 'bg-foreground text-background',
       label: 'Prace serwisowe / Utrudnienia',
     },
     info: {
