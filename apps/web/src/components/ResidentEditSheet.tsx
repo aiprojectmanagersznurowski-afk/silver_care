@@ -111,7 +111,7 @@ export function ResidentEditSheet({ resident, onUpdated }: ResidentEditSheetProp
       <button
         type="button"
         onClick={handleOpen}
-        className="p-2 rounded-lg text-muted-foreground/70 hover:text-foreground hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/50 min-h-[48px] min-w-[48px] inline-flex items-center justify-center transition-colors"
+        className="p-2 rounded-lg text-muted-foreground/70 hover:text-foreground hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/50 min-h-touch min-w-touch inline-flex items-center justify-center transition-colors"
         title={`Edytuj dane: ${resident.first_name} ${resident.last_name}`}
         aria-label={`Edytuj dane podopiecznego ${resident.first_name} ${resident.last_name}`}
         data-testid="resident-edit-btn"
@@ -162,7 +162,7 @@ export function ResidentEditSheet({ resident, onUpdated }: ResidentEditSheetProp
               variant="outline"
               onClick={() => setOpen(false)}
               disabled={isPending}
-              className="min-h-[44px]"
+              className="min-h-touch"
             >
               Anuluj
             </Button>
@@ -170,7 +170,7 @@ export function ResidentEditSheet({ resident, onUpdated }: ResidentEditSheetProp
               type="submit"
               form="resident-edit-form"
               disabled={isPending}
-              className="bg-primary hover:bg-primary/90 text-white min-h-[44px] min-w-[120px]"
+              className="bg-primary hover:bg-primary/90 text-white min-h-touch min-w-[120px]"
             >
               {isPending ? (
                 <>

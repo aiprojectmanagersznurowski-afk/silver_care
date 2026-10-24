@@ -33,7 +33,7 @@ describe('Panel personelu: tokeny szablonu (@REQ: UI-TEMPLATE-ALIGNMENT)', () =>
   });
 
   it('spełnia normy dostępności celu dotykowego dla personelu @REQ: UI-TEMPLATE-ALIGNMENT', () => {
-    expect(ACCESSIBILITY.touchTargetMinimum).toBe('44px');
+    expect(ACCESSIBILITY.touchTargetMinimum).toBe('38px');
     expect(ACCESSIBILITY.contrastMinimum).toBeGreaterThanOrEqual(4.5);
   });
 

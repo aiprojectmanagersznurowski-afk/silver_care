@@ -51,7 +51,7 @@ export function VoiceReportReview({
       <div className="flex flex-col sm:flex-row gap-3 pt-2">
         <Link
           href="/staff/reports"
-          className="flex-1 w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white hover:bg-primary transition-colors min-h-11"
+          className="flex-1 w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white hover:bg-primary transition-colors min-h-touch"
         >
           Przejdź do weryfikacji raportów
           <ArrowRight className="h-4 w-4" />
@@ -59,7 +59,7 @@ export function VoiceReportReview({
         <button
           type="button"
           onClick={onResetNote}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-card px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 ring-1 ring-inset ring-border transition-colors min-h-11"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-card px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 ring-1 ring-inset ring-border transition-colors min-h-touch"
         >
           Nagraj nową notatkę
         </button>

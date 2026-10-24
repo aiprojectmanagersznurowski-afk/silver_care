@@ -284,12 +284,13 @@ export const REQUIREMENTS = [
     "risk": "MEDIUM",
     "source": "NFR-UI-03",
     "domain": "presentation",
-    "statement": "Interfejs używa komponentów i układu szablonu shadcn-admin (styl nova) w skali 14px/32px, z tokenami generowanymi z kontraktu.",
+    "statement": "Interfejs używa komponentów, układu i wygladu szablonu shadcn-admin (styl nova) — promień, cień, odstępy, jeden styl przycisków i filtrów — z tekstem min. 14px i celem dotykowym 38px (ADR-016, ADR-018), z tokenami generowanymi z kontraktu.",
     "acceptance": [
       "apps/web importuje wygenerowany tokens.css, a zmienne motywu w globals.css wskazują tokeny --sc-* bez wartości kolorów wpisanych ręcznie",
       "Panel administratora i panel personelu mają zwijany pasek boczny szablonu z przyciskiem zwijania w nagłówku strony",
       "Komponenty bazowe szablonu potrzebne widokom (sidebar, table, tabs, select, field, empty, chart) są dostępne w components/ui",
-      "Kolory chart-* nie prezentują metryk pensjonariusza — zestawienia trendu pozostają zakazane (ADR-005)"
+      "Kolory chart-* nie prezentują metryk pensjonariusza — zestawienia trendu pozostają zakazane (ADR-005)",
+      "Każdy widok listy obiektów ma przełącznik kafelki/tabela z domyślną tabelą (patterns/ViewToggle); wyjątek: rejestry audytowe (Rejestr Audytowy, Dziennik Audytowy IAM) pozostają wyłącznie tabelą"
     ]
   },
   {

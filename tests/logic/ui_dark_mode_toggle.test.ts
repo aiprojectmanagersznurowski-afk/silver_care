@@ -48,7 +48,7 @@ describe('Logika przełączania motywu (Dark Mode) @REQ: UI-TEMPLATE-ALIGNMENT',
   it('komponent ThemeToggle poprawnie się eksportuje i spełnia normy dostępności @REQ: UI-ACCESSIBILITY', async () => {
     const toggleModule = await import('../../apps/web/src/components/ThemeToggle');
     expect(typeof toggleModule.ThemeToggle).toBe('function');
-    expect(ACCESSIBILITY.touchTargetMinimum).toBe('44px');
+    expect(ACCESSIBILITY.touchTargetMinimum).toBe('38px');
   });
 
   it('komponent ThemeProvider poprawnie się eksportuje i zarządza kontekstem @REQ: UI-TEMPLATE-ALIGNMENT', async () => {

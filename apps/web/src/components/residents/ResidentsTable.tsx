@@ -89,7 +89,7 @@ export function ResidentsTable({ residents }: { residents: ResidentWithAssignmen
                           <ResidentEditSheet resident={resident} />
                           <Link
                             href={`/admin/residents/${resident.id}`}
-                            className="p-2 text-muted-foreground/50 hover:text-primary transition-colors min-h-11 min-w-11 inline-flex items-center justify-center"
+                            className="p-2 text-muted-foreground/50 hover:text-primary transition-colors min-h-touch min-w-touch inline-flex items-center justify-center"
                             title="Profil 360°"
                             aria-label="Profil 360°"
                           >

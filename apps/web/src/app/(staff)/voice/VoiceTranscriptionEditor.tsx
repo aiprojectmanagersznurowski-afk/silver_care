@@ -46,14 +46,14 @@ export function VoiceTranscriptionEditor({
         <button
           onClick={onGenerateReport}
           disabled={isGenerating || isBusy}
-          className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white hover:bg-primary/90 transition-colors disabled:opacity-50 min-h-11"
+          className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white hover:bg-primary/90 transition-colors disabled:opacity-50 min-h-touch"
         >
           <Sparkles className="h-4 w-4" /> {followupQuestion ? 'Zatwierdź uzupełnienie i buduj raport' : 'Buduj raport'}
         </button>
         <button
           onClick={onResetNote}
           disabled={isGenerating || isBusy}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-card px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 ring-1 ring-inset ring-border transition-colors disabled:opacity-50 min-h-11"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-card px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 ring-1 ring-inset ring-border transition-colors disabled:opacity-50 min-h-touch"
         >
           <X className="h-4 w-4 mr-1" /> Zacznij od nowa
         </button>

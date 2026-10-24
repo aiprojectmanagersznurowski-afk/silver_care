@@ -76,8 +76,8 @@ describe('Wdrożenie audytów UI/UX (@REQ: UI-TEMPLATE-ALIGNMENT, @REQ: UI-ACCES
   });
 
   describe('4. Standardy dostępności', () => {
-    it('zapewnia minimalny cel dotykowy 44px @REQ: UI-ACCESSIBILITY', () => {
-      expect(ACCESSIBILITY.touchTargetMinimum).toBe('44px');
+    it('zapewnia minimalny cel dotykowy 38px (ADR-018) @REQ: UI-ACCESSIBILITY', () => {
+      expect(ACCESSIBILITY.touchTargetMinimum).toBe('38px');
     });
   });
 });

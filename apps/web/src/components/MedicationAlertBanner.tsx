@@ -52,7 +52,7 @@ export function MedicationAlertBanner({
       </div>
 
       {interactive && onConfirmChange && (
-        <label className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border cursor-pointer hover:bg-muted/50 transition-colors min-h-11">
+        <label className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border cursor-pointer hover:bg-muted/50 transition-colors min-h-touch">
           <input
             type="checkbox"
             checked={confirmed}

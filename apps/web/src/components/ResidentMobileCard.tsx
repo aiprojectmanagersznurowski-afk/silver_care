@@ -103,7 +103,7 @@ export function ResidentMobileCard({ resident }: ResidentMobileCardProps) {
           />
           <Link
             href={`/admin/residents/${resident.id}`}
-            className="p-2 text-muted-foreground/50 hover:text-primary transition-colors min-h-[48px] min-w-[48px] inline-flex items-center justify-center rounded-lg hover:bg-muted/50"
+            className="p-2 text-muted-foreground/50 hover:text-primary transition-colors min-h-touch min-w-touch inline-flex items-center justify-center rounded-lg hover:bg-muted/50"
             title="Profil 360°"
             aria-label={`Profil 360° ${resident.first_name} ${resident.last_name}`}
           >

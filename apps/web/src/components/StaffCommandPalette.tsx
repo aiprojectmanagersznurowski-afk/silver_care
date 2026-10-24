@@ -115,7 +115,7 @@ export function StaffCommandPalette({ residents = [] }: StaffCommandPaletteProps
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-border bg-card/80 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-colors min-h-[44px]"
+        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-border bg-card/80 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-colors min-h-touch"
         title="Otwórz paletę poleceń (Cmd+K)"
         aria-label="Otwórz szybkie polecenia i wyszukiwanie pensjonariuszy"
       >
@@ -159,7 +159,7 @@ export function StaffCommandPalette({ residents = [] }: StaffCommandPaletteProps
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="p-1 rounded-lg text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
+                className="p-1 rounded-lg text-muted-foreground hover:text-foreground min-h-touch min-w-touch inline-flex items-center justify-center"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -173,7 +173,7 @@ export function StaffCommandPalette({ residents = [] }: StaffCommandPaletteProps
                   return (
                     <div
                       key={resident.id}
-                      className={`flex items-center justify-between p-2.5 rounded-xl transition-colors min-h-[48px] ${
+                      className={`flex items-center justify-between p-2.5 rounded-xl transition-colors min-h-touch ${
                         isSelected ? 'bg-primary/10 text-foreground' : 'hover:bg-muted/50 text-foreground'
                       }`}
                     >
@@ -195,7 +195,7 @@ export function StaffCommandPalette({ residents = [] }: StaffCommandPaletteProps
                         <button
                           type="button"
                           onClick={() => handleSelectVoice(resident.id)}
-                          className="px-2.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white text-sm font-semibold inline-flex items-center gap-1 transition-colors min-h-11"
+                          className="px-2.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white text-sm font-semibold inline-flex items-center gap-1 transition-colors min-h-touch"
                           title="Dyktuj nową notatkę"
                         >
                           <Mic className="h-3.5 w-3.5" />
@@ -204,7 +204,7 @@ export function StaffCommandPalette({ residents = [] }: StaffCommandPaletteProps
                         <button
                           type="button"
                           onClick={() => handleSelectReports(resident.id)}
-                          className="px-2.5 py-1.5 rounded-lg border border-border hover:bg-muted text-foreground text-sm font-medium inline-flex items-center gap-1 transition-colors min-h-11"
+                          className="px-2.5 py-1.5 rounded-lg border border-border hover:bg-muted text-foreground text-sm font-medium inline-flex items-center gap-1 transition-colors min-h-touch"
                           title="Przejdź do raportów"
                         >
                           <FileText className="h-3.5 w-3.5 text-muted-foreground" />

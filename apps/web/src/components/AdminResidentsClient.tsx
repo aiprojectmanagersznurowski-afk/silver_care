@@ -15,7 +15,7 @@ interface AdminResidentsClientProps {
 }
 
 const toggleClass = (active: boolean) =>
-  `min-h-11 px-3 rounded-lg text-sm font-medium transition-all ${
+  `min-h-touch px-3 rounded-lg text-sm font-medium transition-all ${
     active ? 'bg-primary text-white hover:bg-primary/90' : 'text-foreground'
   }`
 
@@ -46,7 +46,7 @@ export function AdminResidentsClient({ residents }: AdminResidentsClientProps) {
             aria-label="Szukaj podopiecznego"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex min-h-11 w-full rounded-lg border border-input bg-background pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            className="flex min-h-touch w-full rounded-lg border border-input bg-background pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
 

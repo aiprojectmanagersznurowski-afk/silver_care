@@ -73,7 +73,7 @@ export function OrganizationAdminsSection({
                           type="submit"
                           variant="outline"
                           size="sm"
-                          className="rounded-xl border-border bg-muted text-foreground hover:bg-muted text-sm min-h-11 font-medium"
+                          className="rounded-xl border-border bg-muted text-foreground hover:bg-muted text-sm min-h-touch font-medium"
                           title="Zaloguj jako ten administrator placówki"
                         >
                           Zaloguj jako

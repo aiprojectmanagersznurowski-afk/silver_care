@@ -120,18 +120,18 @@ export function StaffActionsMenu({ staffId, email, isActive }: StaffActionsMenuP
           <DropdownMenuLabel>Zarządzaj kontem</DropdownMenuLabel>
           <DropdownMenuSeparator />
 
-          <DropdownMenuItem onClick={() => openDialog('reset')} className="min-h-11 cursor-pointer">
+          <DropdownMenuItem onClick={() => openDialog('reset')} className="min-h-touch cursor-pointer">
             <KeyRound className="mr-2 h-4 w-4 text-foreground" />
             Zresetuj hasło
           </DropdownMenuItem>
 
           {isActive ? (
-            <DropdownMenuItem onClick={() => openDialog('suspend')} className="min-h-11 cursor-pointer">
+            <DropdownMenuItem onClick={() => openDialog('suspend')} className="min-h-touch cursor-pointer">
               <Ban className="mr-2 h-4 w-4" />
               Zawieś konto
             </DropdownMenuItem>
           ) : (
-            <DropdownMenuItem onClick={() => openDialog('restore')} className="text-foreground focus:text-foreground min-h-11 cursor-pointer">
+            <DropdownMenuItem onClick={() => openDialog('restore')} className="text-foreground focus:text-foreground min-h-touch cursor-pointer">
               <CheckCircle className="mr-2 h-4 w-4" />
               Przywróć konto
             </DropdownMenuItem>

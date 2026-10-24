@@ -25,13 +25,13 @@ import {
  *
  * Testy wykonawcze dla kontraktu szablonu i spójności projektowej:
  * 1. Skala typograficzna i zakaz mikro-fontów (<14px).
- * 2. Standardy dostępności WCAG (cel dotykowy 44px, kontrast 4.5:1).
+ * 2. Standardy dostępności WCAG (cel dotykowy 38px (ADR-018), kontrast 4.5:1).
  * 3. Tokeny motywu jasnego i ciemnego oraz ochrona danych fizjologicznych.
  */
 describe('Tokeny z kontraktu w motywie aplikacji (@REQ: UI-TEMPLATE-ALIGNMENT)', () => {
-  it('kontrakt spełnia normę Mobile-First: tekst bazowy 16px, cel dotykowy 44px @REQ: UI-TEMPLATE-ALIGNMENT', () => {
+  it('kontrakt spełnia normę Mobile-First: tekst bazowy 16px, cel dotykowy 38px (ADR-018) @REQ: UI-TEMPLATE-ALIGNMENT', () => {
     expect(TYPOGRAPHY.baseSize).toBe('16px');
-    expect(ACCESSIBILITY.touchTargetMinimum).toBe('44px');
+    expect(ACCESSIBILITY.touchTargetMinimum).toBe('38px');
     expect(ACCESSIBILITY.contrastMinimum).toBe(4.5);
 
     const typoResult = validateTypographyScale(TYPOGRAPHY);

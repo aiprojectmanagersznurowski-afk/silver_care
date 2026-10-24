@@ -56,7 +56,7 @@ export function OrganizationsCardsView({
                 <EditOrganizationDialog organization={org} />
                 <Link
                   href={`/admin/organizations/${org.organization_id}`}
-                  className="flex items-center gap-1 rounded-lg bg-muted/50 px-2.5 py-1 text-sm font-medium text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors min-h-11"
+                  className="flex items-center gap-1 rounded-lg bg-muted/50 px-2.5 py-1 text-sm font-medium text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors min-h-touch"
                 >
                   <span>Szczegóły</span>
                   <ChevronRight className="h-4 w-4" />

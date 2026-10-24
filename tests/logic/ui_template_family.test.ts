@@ -33,11 +33,11 @@ describe('Portal bliskich: zasady kompozycji i tokeny szablonu (@REQ: UI-TEMPLAT
     expect(maxWidthPrinciple?.rule).toContain('680px');
   });
 
-  it('spełnia wymogi dostępności WCAG i minimalnego celu dotykowego 44px @REQ: UI-TEMPLATE-ALIGNMENT', () => {
+  it('spełnia wymogi dostępności WCAG i minimalnego celu dotykowego 38px (ADR-018) @REQ: UI-TEMPLATE-ALIGNMENT', () => {
     const a11yResult = validateAccessibilityStandards(ACCESSIBILITY);
     expect(a11yResult.valid).toBe(true);
     expect(a11yResult.violations).toEqual([]);
-    expect(ACCESSIBILITY.touchTargetMinimum).toBe('44px');
+    expect(ACCESSIBILITY.touchTargetMinimum).toBe('38px');
   });
 
   it('wspiera wymagane 4 stany interfejsu (loading, empty, success, error) @REQ: UI-TEMPLATE-ALIGNMENT', () => {

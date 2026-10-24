@@ -123,7 +123,7 @@ export const COLORS = {
     },
     "destructive": {
       "value": "#DC2626",
-      "desc": "Wyłącznie błąd techniczny i akcja destrukcyjna. Kontrast 4.8:1. Nigdy ocena stanu pensjonariusza."
+      "desc": "Wyłącznie błąd techniczny (walidacja, awaria sieci/serwera). Nigdy potwierdzenie akcji nieodwracalnej i nigdy ocena stanu pensjonariusza. Kontrast 4.8:1."
     },
     "destructive-foreground": {
       "value": "#FFFFFF",
@@ -287,11 +287,11 @@ export const MOTION = {
 
 export const ACCESSIBILITY = {
   "contrastMinimum": 4.5,
-  "touchTargetMinimum": "44px",
+  "touchTargetMinimum": "38px",
   "focusVisible": "Zawsze widoczny pierścień 2px w kolorze akcentu z odsunięciem 2px.",
   "textZoom": "Układ nie psuje się przy powiększeniu do 200%.",
   "rules": [
-    "Minimalny cel dotykowy dla przycisków i interakcji: 44x44px (min-h-11 min-w-11).",
+    "Minimalny cel dotykowy dla przycisków i interakcji: 38x38px (min-h-touch min-w-touch); ADR-018 odwraca część ADR-016 — kompromis między normą bezpieczeństwa (44px) a skalą szablonu (32px).",
     "Każda ikona niosąca znaczenie ma etykietę tekstową.",
     "Formularz opisany etykietą, nigdy samym placeholderem.",
     "Nawigacja klawiaturą obejmuje wszystkie akcje."

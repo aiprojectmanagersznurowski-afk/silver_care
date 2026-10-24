@@ -107,7 +107,7 @@ export function DischargeResidentDialog({
             <Button
               variant="outline"
               size="sm"
-              className="min-h-11"
+              className="min-h-touch"
             >
               <LogOut className="h-4 w-4 mr-1.5" />
               Zakończ pobyt

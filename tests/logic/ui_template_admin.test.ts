@@ -42,7 +42,7 @@ describe('Panel administratora na komponentach szablonu (@REQ: UI-TEMPLATE-ALIGN
   it('spełnia normę dostępności WCAG dla interakcji administratorskich @REQ: UI-TEMPLATE-ALIGNMENT', () => {
     const a11yResult = validateAccessibilityStandards(ACCESSIBILITY);
     expect(a11yResult.valid).toBe(true);
-    expect(ACCESSIBILITY.touchTargetMinimum).toBe('44px');
+    expect(ACCESSIBILITY.touchTargetMinimum).toBe('38px');
   });
 
   it('poprawnie eksportuje kluczowe komponenty panelu administratora @REQ: UI-TEMPLATE-ALIGNMENT', async () => {

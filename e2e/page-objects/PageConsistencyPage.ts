@@ -48,6 +48,16 @@ export class PageConsistencyPage {
     });
   }
 
+  /** Obliczona minimalna wysokość i szerokość linku powrotu w nagłówku strony (cel dotykowy). */
+  async backLinkTouchTarget(): Promise<{ minHeight: string; minWidth: string } | null> {
+    return this.page.evaluate(() => {
+      const el = document.querySelector('[data-slot="page-header-back"]');
+      if (!el) return null;
+      const cs = getComputedStyle(el);
+      return { minHeight: cs.minHeight, minWidth: cs.minWidth };
+    });
+  }
+
   /** Widoczne tabele: ile leży poza wspólną ramką TableCard i jakie style mają ramki. */
   async tableSnapshot(): Promise<{ tables: number; outsideCard: string[]; frames: string[] }> {
     return this.page.evaluate(() => {

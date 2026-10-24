@@ -89,7 +89,7 @@ export function ProfilePasswordCard() {
           </div>
         </CardContent>
         <CardFooter className="p-6 pt-4">
-          <Button type="submit" disabled={isPending || passwordState.status === 'loading'} className="min-h-11 px-4">
+          <Button type="submit" disabled={isPending || passwordState.status === 'loading'} className="min-h-touch px-4">
             {passwordState.status === 'loading' ? 'Zmienianie hasła...' : 'Zmień hasło'}
           </Button>
         </CardFooter>

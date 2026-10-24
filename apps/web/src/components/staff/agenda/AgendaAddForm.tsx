@@ -93,7 +93,7 @@ export function AgendaAddForm({ residents, onAdd }: AgendaAddFormProps) {
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Np. Podwieczorek i herbata"
               required
-              className="w-full rounded-xl border border-border bg-card px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary min-h-11"
+              className="w-full rounded-xl border border-border bg-card px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary min-h-touch"
             />
           </div>
 
@@ -108,7 +108,7 @@ export function AgendaAddForm({ residents, onAdd }: AgendaAddFormProps) {
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
                 required
-                className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary min-h-11"
+                className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary min-h-touch"
               />
             </div>
 
@@ -120,7 +120,7 @@ export function AgendaAddForm({ residents, onAdd }: AgendaAddFormProps) {
                 id="agenda-type"
                 value={type}
                 onChange={(e) => setType(e.target.value)}
-                className="w-full min-h-11"
+                className="w-full min-h-touch"
               >
                 {ITEM_TYPES.map((t) => (
                   <NativeSelectOption key={t.value} value={t.value}>{t.label}</NativeSelectOption>
@@ -137,7 +137,7 @@ export function AgendaAddForm({ residents, onAdd }: AgendaAddFormProps) {
               id="agenda-resident"
               value={selectedResidentId}
               onChange={(e) => setSelectedResidentId(e.target.value)}
-              className="w-full min-h-11"
+              className="w-full min-h-touch"
             >
               <NativeSelectOption value="">Wszyscy podopieczni (Cała placówka)</NativeSelectOption>
               {residents.map((r) => (
@@ -157,7 +157,7 @@ export function AgendaAddForm({ residents, onAdd }: AgendaAddFormProps) {
               <button
                 type="button"
                 onClick={() => setIsRecurring(true)}
-                className={`flex flex-col items-center justify-center rounded-xl p-3 text-center transition-all min-h-11 ${
+                className={`flex flex-col items-center justify-center rounded-xl p-3 text-center transition-all min-h-touch ${
                   isRecurring ? 'bg-primary/10 ring-2 ring-primary' : 'bg-muted/50 ring-1 ring-border hover:bg-muted'
                 }`}
               >
@@ -167,7 +167,7 @@ export function AgendaAddForm({ residents, onAdd }: AgendaAddFormProps) {
               <button
                 type="button"
                 onClick={() => setIsRecurring(false)}
-                className={`flex flex-col items-center justify-center rounded-xl p-3 text-center transition-all min-h-11 ${
+                className={`flex flex-col items-center justify-center rounded-xl p-3 text-center transition-all min-h-touch ${
                   !isRecurring ? 'bg-primary/10 ring-2 ring-primary' : 'bg-muted/50 ring-1 ring-border hover:bg-muted'
                 }`}
               >
@@ -186,12 +186,12 @@ export function AgendaAddForm({ residents, onAdd }: AgendaAddFormProps) {
                   type="date"
                   value={currentDateInput}
                   onChange={(e) => setCurrentDateInput(e.target.value)}
-                  className="flex-1 rounded-xl border border-border bg-card px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary min-h-11"
+                  className="flex-1 rounded-xl border border-border bg-card px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary min-h-touch"
                 />
                 <button
                   type="button"
                   onClick={addDate}
-                  className="rounded-xl bg-card px-3 py-1.5 text-sm font-semibold text-foreground ring-1 ring-inset ring-border hover:bg-muted/50 transition-colors min-h-11"
+                  className="rounded-xl bg-card px-3 py-1.5 text-sm font-semibold text-foreground ring-1 ring-inset ring-border hover:bg-muted/50 transition-colors min-h-touch"
                 >
                   Dodaj
                 </button>
@@ -223,7 +223,7 @@ export function AgendaAddForm({ residents, onAdd }: AgendaAddFormProps) {
           <button
             type="submit"
             disabled={submitting || (!isRecurring && itemDates.length === 0)}
-            className="w-full mt-4 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white hover:bg-primary/90 transition-colors disabled:opacity-50 min-h-11"
+            className="w-full mt-4 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white hover:bg-primary/90 transition-colors disabled:opacity-50 min-h-touch"
           >
             {submitting ? 'Dodawanie...' : 'Dodaj wpis do harmonogramu'}
           </button>

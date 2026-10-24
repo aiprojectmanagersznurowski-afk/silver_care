@@ -60,7 +60,7 @@ export function StaffAccountModals({
 
           <div className="space-y-3 py-2">
             <Button
-              className="w-full justify-start min-h-11"
+              className="w-full justify-start min-h-touch"
               variant="outline"
               disabled={isPending}
               onClick={() => onResetPassword('email')}
@@ -68,7 +68,7 @@ export function StaffAccountModals({
               Wyślij e-mail z linkiem do resetu hasła
             </Button>
             <Button
-              className="w-full justify-start min-h-11"
+              className="w-full justify-start min-h-touch"
               variant="outline"
               disabled={isPending}
               onClick={() => onResetPassword('temp')}
@@ -77,7 +77,7 @@ export function StaffAccountModals({
             </Button>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={onClose} className="min-h-11">
+            <Button variant="ghost" onClick={onClose} className="min-h-touch">
               Zamknij
             </Button>
           </DialogFooter>
@@ -110,18 +110,18 @@ export function StaffAccountModals({
               onChange={(e) => onConfirmationInputChange(e.target.value)}
               placeholder="DEZAKTYWUJ"
               disabled={isPending}
-              className="min-h-11"
+              className="min-h-touch"
             />
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={onClose} disabled={isPending} className="min-h-11">
+            <Button variant="ghost" onClick={onClose} disabled={isPending} className="min-h-touch">
               Anuluj
             </Button>
             <Button
               variant="default"
               onClick={onSuspend}
               disabled={isPending || confirmationInput !== 'DEZAKTYWUJ'}
-              className="min-h-11"
+              className="min-h-touch"
             >
               {isPending ? 'Zawieszanie...' : 'Zawieś konto'}
             </Button>
@@ -146,13 +146,13 @@ export function StaffAccountModals({
           )}
 
           <DialogFooter>
-            <Button variant="ghost" onClick={onClose} disabled={isPending} className="min-h-11">
+            <Button variant="ghost" onClick={onClose} disabled={isPending} className="min-h-touch">
               Anuluj
             </Button>
             <Button
               onClick={onRestore}
               disabled={isPending}
-              className="bg-primary hover:bg-primary text-white min-h-11"
+              className="bg-primary hover:bg-primary text-white min-h-touch"
             >
               {isPending ? 'Przywracanie...' : 'Przywróć konto'}
             </Button>

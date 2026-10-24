@@ -2,7 +2,7 @@
 :root {
   --sc-font-sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui, sans-serif;
   --sc-text-base-size: 16px;
-  --sc-touch-target: 44px;
+  --sc-touch-target: 38px;
   --sc-text-display: 30px;
   --sc-text-display-weight: 600;
   --sc-text-display-leading: 1.2;

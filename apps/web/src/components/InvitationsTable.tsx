@@ -166,7 +166,7 @@ export function InvitationsTable({ initialInvitations }: { initialInvitations: I
                         variant="ghost"
                         size="sm"
                         onClick={() => setRevokingId(inv.id)}
-                        className="min-h-11 px-2 text-sm text-foreground hover:bg-muted"
+                        className="min-h-touch px-2 text-sm text-foreground hover:bg-muted"
                         title="Odwołaj zaproszenie"
                       >
                         <Ban className="h-3.5 w-3.5 mr-1" />

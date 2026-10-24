@@ -71,7 +71,7 @@ export function OrganizationsTableView({
                     <EditOrganizationDialog organization={org} />
                     <Link
                       href={`/admin/organizations/${org.organization_id}`}
-                      className="inline-flex items-center gap-1 rounded-lg bg-muted/50 px-2.5 py-1.5 text-sm font-medium text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors min-h-11"
+                      className="inline-flex items-center gap-1 rounded-lg bg-muted/50 px-2.5 py-1.5 text-sm font-medium text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors min-h-touch"
                     >
                       Szczegóły
                       <ChevronRight className="h-4 w-4" />
