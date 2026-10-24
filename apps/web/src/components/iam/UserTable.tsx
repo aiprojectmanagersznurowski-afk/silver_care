@@ -44,8 +44,9 @@ export function UserTable({
       )}
     </>
   )
-  const actionsFor = (user: UserItem) => (
+  const actionsFor = (user: UserItem, wrap = false) => (
     <UserRowActions
+      wrap={wrap}
       user={user}
       isSelf={user.id === currentUserId}
       isDeactivated={user.isActive === false}
@@ -79,7 +80,7 @@ export function UserTable({
                   { label: 'Identyfikator', value: <BusinessIdBadge type="user" id={user.id} /> },
                   { label: 'Placówka', value: user.organizationId ? <BusinessIdBadge type="organization" id={user.organizationId} /> : 'Globalna / Brak' },
                 ]}
-                actions={actionsFor(user)}
+                actions={actionsFor(user, true)}
               />
             ))}
           </ObjectGrid>
@@ -99,8 +100,8 @@ export function UserTable({
                 return (
                   <TableRow key={user.id}>
                     <TableCell>
-                      <div className="font-medium text-foreground text-base">{user.email}</div>
-                      <div className="mt-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-foreground">{user.email}</span>
                         <BusinessIdBadge type="user" id={user.id} />
                       </div>
                     </TableCell>
@@ -112,7 +113,7 @@ export function UserTable({
                       )}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1.5 flex-wrap">{badgesFor(user)}</div>
+                      <div className="flex items-center gap-1.5">{badgesFor(user)}</div>
                     </TableCell>
                     <TableCell className="text-right">
                       {actionsFor(user)}

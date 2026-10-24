@@ -8,6 +8,8 @@ import { cn } from '@/lib/utils'
 
 interface UserRowActionsProps {
   user: UserItem
+  /** W kafelku przyciski mogą się zawijać; w tabeli zostają w jednym wierszu. */
+  wrap?: boolean
   isSelf: boolean
   isDeactivated: boolean
   onChangeRoleClick: (user: UserItem) => void
@@ -16,9 +18,9 @@ interface UserRowActionsProps {
 }
 
 /** Akcje konta w IAM — te same w tabeli i w kafelku. */
-export function UserRowActions({ user, isSelf, isDeactivated, onChangeRoleClick, onResetPasswordClick, onDeleteUserClick }: UserRowActionsProps) {
+export function UserRowActions({ user, wrap = false, isSelf, isDeactivated, onChangeRoleClick, onResetPasswordClick, onDeleteUserClick }: UserRowActionsProps) {
   return (
-    <div className="flex flex-wrap items-center justify-end gap-2">
+    <div className={`flex items-center justify-end gap-2 ${wrap ? 'flex-wrap' : ''}`}>
         <Tooltip>
           <TooltipTrigger asChild>
             <Button

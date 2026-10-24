@@ -26,10 +26,10 @@ const ERROR = 'Lista personelu jest chwilowo niedostępna. Odśwież stronę za 
 
 function StaffAvatar({ item }: { item: StaffListItem }) {
   return (
-    <Avatar className="h-10 w-10 border border-border">
+    <Avatar className="size-8 border border-border">
       {item.avatarUrl && <AvatarImage src={item.avatarUrl} alt={item.email} />}
       <AvatarFallback className="bg-muted text-foreground">
-        <UserCog className="h-5 w-5" />
+        <UserCog className="size-4" />
       </AvatarFallback>
     </Avatar>
   )
@@ -80,10 +80,8 @@ export function StaffListView({ staff, failed }: { staff: StaffListItem[]; faile
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <StaffAvatar item={item} />
-                      <div>
-                        <div className="font-medium text-foreground text-base">{item.email}</div>
-                        {!item.isActive && <div className="mt-1"><StatusBadge>Zarchiwizowany</StatusBadge></div>}
-                      </div>
+                      <span className="font-medium text-foreground">{item.email}</span>
+                      {!item.isActive && <StatusBadge>Zarchiwizowany</StatusBadge>}
                     </div>
                   </TableCell>
                   <TableCell className="text-foreground">{ROLE_LABEL}</TableCell>

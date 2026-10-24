@@ -51,15 +51,15 @@ export function ResidentsTable({ residents }: { residents: ResidentWithAssignmen
                     <TableRow key={resident.id} className="group hover:bg-muted/30 transition-colors">
                       <TableCell>
                         <Link href={`/admin/residents/${resident.id}`} className="flex items-center gap-3">
-                          <Avatar className="h-10 w-10 border border-border shrink-0">
+                          <Avatar className="size-8 border border-border shrink-0">
                             {resident.avatar_url && (
                               <AvatarImage src={resident.avatar_url} alt={`${resident.first_name} ${resident.last_name}`} />
                             )}
                             <AvatarFallback className="bg-primary/10 text-primary">
-                              <UserCircle2 className="h-5 w-5" />
+                              <UserCircle2 className="size-4" />
                             </AvatarFallback>
                           </Avatar>
-                          <div className="flex items-center gap-2 flex-wrap min-w-0">
+                          <div className="flex items-center gap-2 min-w-0">
                             <span className="font-medium text-foreground text-sm group-hover:text-primary transition-colors">
                               {resident.first_name} {resident.last_name}
                             </span>
