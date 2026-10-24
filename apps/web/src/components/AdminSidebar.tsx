@@ -101,7 +101,7 @@ export function AdminSidebar({
       <SidebarContent>
         <SidebarNav groups={groups} />
       </SidebarContent>
-      <SidebarAccount userEmail={userEmail} />
+      <SidebarAccount userEmail={userEmail} roleLabel={role === 'super_admin' ? 'Super administrator' : 'Administrator placówki'} />
       <SidebarRail />
     </Sidebar>
   )

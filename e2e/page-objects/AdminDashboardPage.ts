@@ -72,6 +72,8 @@ export class AdminDashboardPage {
   }
 
   async logout() {
+    // Wylogowanie jest w rozwijanym menu konta w stopce paska bocznego (nav-user szablonu)
+    await this.page.locator('[data-slot="sidebar"] [data-slot="nav-user-trigger"]').click();
     await this.logoutButton.first().click();
     await this.page.waitForURL('**/login');
   }

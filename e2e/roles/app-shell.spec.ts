@@ -49,3 +49,18 @@ test.describe('Powłoka aplikacji — wspólny nagłówek szablonu (@REQ: UI-TEM
     });
   }
 });
+
+test.describe('Powłoka aplikacji — rozwijane menu konta (@REQ: UI-TEMPLATE-ALIGNMENT)', () => {
+  for (const shell of SHELLS) {
+    test(`@REQ: UI-TEMPLATE-ALIGNMENT - ${shell.role}: konto w stopce paska bocznego rozwija menu z profilem i wylogowaniem`, async ({ loginPage, page }) => {
+      await loginPage.loginAs(shell.role);
+      await page.goto(shell.start);
+      const appShell = new AppShellPage(page);
+      const menu = await appShell.openAccountMenu();
+      await expect(appShell.accountTrigger).toContainText('@silvercare.test');
+      await expect(menu).toContainText('@silvercare.test');
+      await expect(menu.getByRole('menuitem', { name: 'Profil i bezpieczeństwo' })).toBeVisible();
+      await expect(menu.getByRole('menuitem', { name: 'Wyloguj się' })).toBeVisible();
+    });
+  }
+});
