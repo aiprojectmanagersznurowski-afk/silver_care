@@ -37,3 +37,15 @@ test.describe('Powłoka aplikacji — zwijany pasek boczny (@REQ: UI-TEMPLATE-AL
     });
   }
 });
+
+test.describe('Powłoka aplikacji — wspólny nagłówek szablonu (@REQ: UI-TEMPLATE-ALIGNMENT)', () => {
+  for (const shell of SHELLS) {
+    test(`@REQ: UI-TEMPLATE-ALIGNMENT - ${shell.role}: nagłówek 48px, zwijanie i wyszukiwarka po lewej, motyw po prawej`, async ({ loginPage, page }) => {
+      await loginPage.loginAs(shell.role);
+      await page.goto(shell.start);
+      const appShell = new AppShellPage(page);
+      await expect(appShell.header).toHaveCount(1);
+      expect(await appShell.headerLayout()).toEqual({ height: 48, startHasTrigger: true, startHasSearch: true, endHasTheme: true });
+    });
+  }
+});

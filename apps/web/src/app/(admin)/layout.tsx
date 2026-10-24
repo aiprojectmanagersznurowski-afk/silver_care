@@ -4,8 +4,8 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { AdminSidebar } from '@/components/AdminSidebar'
-import { Separator } from '@/components/ui/separator'
-import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
+import { AppHeader } from '@/components/patterns/AppHeader'
 import { ImpersonationBanner } from '@/components/ImpersonationBanner'
 import { SystemAlertBanner } from '@/components/SystemAlertBanner'
 import { getActiveImpersonation } from '@/lib/impersonation-guards'
@@ -27,7 +27,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   const sidebarOpen = cookieStore.get('sidebar_state')?.value !== 'false'
 
   return (
-    <SidebarProvider defaultOpen={sidebarOpen}>
+    <SidebarProvider defaultOpen={sidebarOpen} style={{ '--sidebar-width': 'calc(var(--spacing) * 68)' } as React.CSSProperties}>
       <AdminSidebar
         userEmail={user.email || ''}
         role={role}
@@ -36,19 +36,10 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       <SidebarInset className="min-w-0 overflow-x-clip">
         {impersonationSession && <ImpersonationBanner session={impersonationSession} />}
         <SystemAlertBanner role={role} />
-        <header className="flex h-12 shrink-0 items-center gap-2 border-b">
-          <div className="flex w-full items-center justify-between px-4 lg:px-6">
-            <div className="flex items-center gap-1 lg:gap-2">
-              <SidebarTrigger className="-ml-1 min-h-touch min-w-touch" aria-label="Zwiń lub rozwiń menu" />
-              <Separator orientation="vertical" className="mx-2 data-[orientation=vertical]:h-4 data-[orientation=vertical]:self-center" />
-              <span className="text-sm font-medium">{role === 'super_admin' && !impersonationSession ? 'Panel platformy' : 'Panel placówki'}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              {role !== 'super_admin' && <StaffNotificationBell />}
-              <GlobalCommandPalette userRole={role} />
-            </div>
-          </div>
-        </header>
+        <AppHeader
+          search={<GlobalCommandPalette userRole={role} />}
+          actions={role !== 'super_admin' ? <StaffNotificationBell /> : undefined}
+        />
         <div className="flex-1 p-4 md:p-6">
           <div className="mx-auto w-full max-w-screen-2xl">{children}</div>
         </div>
