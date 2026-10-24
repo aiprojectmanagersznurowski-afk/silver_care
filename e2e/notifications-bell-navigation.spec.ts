@@ -77,6 +77,6 @@ test.describe('Dzwonek alertów i wyróżnienia zakładek nawigacji (@REQ: FAM-M
     await goToMessages.click();
 
     await page.waitForURL('**/messages');
-    await expect(page.locator('h2')).toContainText('Wiadomości');
+    await expect(page.locator(':is(h1, h2)').first()).toContainText('Wiadomości');
   });
 });

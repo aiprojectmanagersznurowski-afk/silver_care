@@ -25,12 +25,12 @@ test.describe('Rola: Członek Rodziny (Portal Bliskich)', () => {
     // Przejście do planu dnia podopiecznego
     await familyDashboardPage.navigateToAgenda();
     await expect(page).toHaveURL(/\/agenda/);
-    await expect(page.locator('h2:has-text("Plan Dnia")')).toBeVisible();
+    await expect(page.locator(':is(h1, h2):has-text("Plan Dnia")')).toBeVisible();
 
     // Przejście do wiadomości z personelem
     await familyDashboardPage.navigateToMessages();
     await expect(page).toHaveURL(/\/messages/);
-    await expect(page.locator('h2:has-text("Wiadomości")')).toBeVisible();
+    await expect(page.locator(':is(h1, h2):has-text("Wiadomości")')).toBeVisible();
 
     // Wylogowanie
     await familyDashboardPage.logout();

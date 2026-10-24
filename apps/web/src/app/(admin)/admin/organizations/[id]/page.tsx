@@ -3,13 +3,13 @@ export const dynamic = 'force-dynamic'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { notFound, redirect } from 'next/navigation'
-import Link from 'next/link'
-import { Building2, ArrowLeft, MapPin } from 'lucide-react'
+import { MapPin } from 'lucide-react'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 import { EditOrganizationDialog } from '@/components/EditOrganizationDialog'
 import { OrganizationKpiCards } from '@/components/organizations/OrganizationKpiCards'
 import { OrganizationAdminsSection } from '@/components/organizations/OrganizationAdminsSection'
 import { OrganizationStaffSection } from '@/components/organizations/OrganizationStaffSection'
+import { PageHeader } from '@/components/patterns/PageHeader'
 
 export default async function OrganizationDetailsPage({
   params,
@@ -65,44 +65,27 @@ export default async function OrganizationDetailsPage({
 
   return (
     <div className="space-y-8">
-      <div>
-        <Link
-          href="/admin/organizations"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Wróć do listy placówek
-        </Link>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <Building2 className="h-6 w-6" />
-            </div>
-            <div>
-              <div className="flex items-center gap-3 flex-wrap">
-                <h2 className="text-3xl font-display font-semibold tracking-tight text-foreground">
-                  {organization.name}
-                </h2>
-                <BusinessIdBadge type="organization" id={organization.id} />
-              </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                <MapPin className="h-4 w-4" />
-                <span>{organization.address || 'Brak adresu'}</span>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <EditOrganizationDialog
-              organization={{
-                organization_id: organization.id,
-                organization_name: organization.name,
-                address: organization.address,
-                resident_limit: organization.resident_limit || 50,
-              }}
-            />
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        back={{ href: '/admin/organizations', label: 'Wróć do listy placówek' }}
+        title={organization.name}
+        description={
+          <span className="inline-flex flex-wrap items-center gap-2">
+            <MapPin className="h-4 w-4" aria-hidden="true" />
+            <span>{organization.address || 'Brak adresu'}</span>
+            <BusinessIdBadge type="organization" id={organization.id} />
+          </span>
+        }
+        actions={
+          <EditOrganizationDialog
+            organization={{
+              organization_id: organization.id,
+              organization_name: organization.name,
+              address: organization.address,
+              resident_limit: organization.resident_limit || 50,
+            }}
+          />
+        }
+      />
 
       {/* Karty KPI placówki */}
       <OrganizationKpiCards

@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
 import { Card, CardContent } from '@/components/ui/card'
 import { InviteStaffDialog } from '@/components/InviteStaffDialog'
+import { PageHeader, PageHeaderNotice } from '@/components/patterns/PageHeader'
 import { redirect } from 'next/navigation'
 import { deleteStaffAction } from '@/actions/admin'
 import { Trash2, UserCog } from 'lucide-react'
@@ -44,21 +45,15 @@ export default async function AdminStaffPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-display font-semibold tracking-tight text-foreground">
-            Personel
-          </h2>
-          <p className="mt-2 text-muted-foreground">Zarządzaj zespołem wsparcia i personelu opiekuńczego.</p>
-        </div>
-        {!isImpersonating ? (
+      <PageHeader
+        title="Personel"
+        description="Zarządzaj zespołem wsparcia i personelu opiekuńczego."
+        actions={!isImpersonating ? (
           <InviteStaffDialog />
         ) : (
-          <div className="flex items-center gap-2 rounded-xl bg-muted px-4 py-2 text-sm font-medium text-foreground border border-border">
-            <span>Tryb podglądu (impersonacja) — dodawanie personelu wyłączone</span>
-          </div>
+          <PageHeaderNotice>Tryb podglądu (impersonacja) — dodawanie personelu wyłączone</PageHeaderNotice>
         )}
-      </div>
+      />
 
       <Card className="rounded-xl border-none ring-1 ring-border overflow-hidden">
         <CardContent className="p-0">

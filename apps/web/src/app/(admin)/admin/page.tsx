@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Users, Bed, BedDouble, FileText, Building2 } from 'lucide-react'
 import Link from 'next/link'
+import { PageHeader } from '@/components/patterns/PageHeader'
 
 export default async function AdminDashboard() {
   const supabase = await createClient()
@@ -46,12 +47,7 @@ export default async function AdminDashboard() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h2 className="text-3xl font-display font-semibold tracking-tight text-foreground">
-          Pulpit Główny
-        </h2>
-        <p className="mt-2 text-muted-foreground">Szybki podgląd stanu placówki i obłożenia.</p>
-      </div>
+      <PageHeader title="Pulpit Główny" description="Szybki podgląd stanu placówki i obłożenia." />
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">

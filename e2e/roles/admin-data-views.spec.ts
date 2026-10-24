@@ -25,7 +25,7 @@ test.describe('Panel administratora — komponenty szablonu (@REQ: UI-TEMPLATE-A
     const views = new AdminDataViewsPage(page);
     await views.goto('/admin/reports/statistics');
 
-    await expect(page.locator('h2:has-text("Statystyka")')).toBeVisible();
+    await expect(page.locator(':is(h1, h2):has-text("Statystyka")')).toBeVisible();
     const chartCount = await views.charts.count();
     const emptyCount = await page.locator('text=Brak danych').count();
     expect(chartCount + emptyCount).toBeGreaterThan(0);

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { AgendaTimelineClient } from '@/components/AgendaTimelineClient'
+import { PageHeader } from '@/components/patterns/PageHeader'
 
 export default async function FamilyAgendaPage(props: { searchParams: Promise<{ date?: string }> }) {
   const supabase = await createClient()
@@ -73,12 +74,10 @@ export default async function FamilyAgendaPage(props: { searchParams: Promise<{ 
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div>
-        <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-          Plan Dnia — {activeResident.first_name} {activeResident.last_name}
-        </h2>
-        <p className="text-text-secondary">Przewidywany harmonogram w placówce.</p>
-      </div>
+      <PageHeader
+        title={`Plan Dnia — ${activeResident.first_name} ${activeResident.last_name}`}
+        description="Przewidywany harmonogram w placówce."
+      />
 
       <div className="flex items-center justify-between bg-card border border-border p-2 rounded-lg">
         <Link href={`/agenda?date=${prevDateStr}`}>

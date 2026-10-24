@@ -2,14 +2,14 @@
 
 import React, { useState, useRef, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
-import { Mic, Square, Loader2, Sparkles, ArrowLeft } from 'lucide-react'
+import { Mic, Square, Loader2, Sparkles } from 'lucide-react'
 import { useVoiceRecorder } from '@/hooks/useVoiceRecorder'
 import { VoiceResidentSelect } from './VoiceResidentSelect'
 import { VoiceReportReview } from './VoiceReportReview'
 import { VoiceTranscriptionEditor } from './VoiceTranscriptionEditor'
+import { PageHeader } from '@/components/patterns/PageHeader'
 
 function VoiceNoteContent() {
   const searchParams = useSearchParams()
@@ -123,15 +123,11 @@ function VoiceNoteContent() {
   if (!activeResidentId) {
     return (
       <div className="mx-auto max-w-2xl space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-3xl font-display font-semibold tracking-tight text-foreground">Notatka Głosowa</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Wybierz podopiecznego, dla którego chcesz nagrać notatkę ze statusu dnia.</p>
-          </div>
-          <Link href="/staff" className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-2 text-sm font-semibold text-foreground hover:bg-muted/50 transition-colors w-fit">
-            <ArrowLeft className="h-4 w-4" /> Wróć do tablicy dyżuru
-          </Link>
-        </div>
+        <PageHeader
+          back={{ href: '/staff', label: 'Wróć do tablicy dyżuru' }}
+          title="Notatka Głosowa"
+          description="Wybierz podopiecznego, dla którego chcesz nagrać notatkę ze statusu dnia."
+        />
         <VoiceResidentSelect
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -145,22 +141,18 @@ function VoiceNoteContent() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-display font-semibold tracking-tight text-foreground">Notatka Głosowa</h2>
-          {resident && (
-            <div className="mt-2 flex items-center gap-2">
-              <p className="text-muted-foreground text-lg">Dla: <span className="font-semibold text-foreground">{resident.first_name} {resident.last_name}</span></p>
-              <button type="button" onClick={() => { setActiveResidentId(''); setResident(null); resetNote() }} className="text-sm text-primary hover:underline ml-2">
-                (Zmień podopiecznego)
-              </button>
-            </div>
-          )}
-        </div>
-        <Link href="/staff" className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-2 text-sm font-semibold text-foreground hover:bg-muted/50 transition-colors w-fit">
-          <ArrowLeft className="h-4 w-4" /> Wróć do tablicy dyżuru
-        </Link>
-      </div>
+      <PageHeader
+        back={{ href: '/staff', label: 'Wróć do tablicy dyżuru' }}
+        title="Notatka Głosowa"
+        description={resident && (
+          <>
+            Dla: <span className="font-semibold text-foreground">{resident.first_name} {resident.last_name}</span>
+            <button type="button" onClick={() => { setActiveResidentId(''); setResident(null); resetNote() }} className="ml-2 min-h-11 text-sm text-primary hover:underline">
+              (Zmień podopiecznego)
+            </button>
+          </>
+        )}
+      />
 
       <Card className="overflow-hidden rounded-xl border-none ring-1 ring-border bg-card">
         <CardContent className="p-8 space-y-8 flex flex-col items-center">

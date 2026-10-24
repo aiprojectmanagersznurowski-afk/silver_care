@@ -3,6 +3,7 @@
 import React from 'react'
 import { Zap, LayoutGrid, X } from 'lucide-react'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { PageHeader } from '@/components/patterns/PageHeader'
 
 interface StaffBoardHeaderProps {
   viewMode: 'rounds' | 'standard'
@@ -18,17 +19,11 @@ export function StaffBoardHeader({
   onClearFilters,
 }: StaffBoardHeaderProps) {
   return (
-    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-      <div>
-        <h2 className="text-3xl font-display font-semibold tracking-tight text-foreground">
-          Podopieczni
-        </h2>
-        <p className="mt-1 text-muted-foreground text-sm">
-          Szybki obchód dyżurny, bezpośrednie dyktowanie i bieżący stan podopiecznych.
-        </p>
-      </div>
-
-      <div className="flex items-center gap-2">
+    <PageHeader
+      title="Podopieczni"
+      description="Szybki obchód dyżurny, bezpośrednie dyktowanie i bieżący stan podopiecznych."
+      actions={
+      <>
         <ToggleGroup
           variant="outline"
           aria-label="Tryb widoku podopiecznych"
@@ -64,7 +59,8 @@ export function StaffBoardHeader({
             <X className="h-3.5 w-3.5" />
           </button>
         )}
-      </div>
-    </div>
+      </>
+      }
+    />
   )
 }

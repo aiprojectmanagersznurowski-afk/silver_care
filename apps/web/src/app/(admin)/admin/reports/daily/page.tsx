@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { DailyReportClient } from '@/components/DailyReportClient'
+import { PageHeader } from '@/components/patterns/PageHeader'
 
 export default async function DailyReportPage() {
   const supabase = await createClient()
@@ -10,14 +11,7 @@ export default async function DailyReportPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h2 className="text-3xl font-display font-semibold tracking-tight text-foreground">
-          Dane Dzienne
-        </h2>
-        <p className="mt-2 text-muted-foreground">
-          Dzienny raport obłożenia, umów i zdarzeń w placówce.
-        </p>
-      </div>
+      <PageHeader title="Dane Dzienne" description="Dzienny raport obłożenia, umów i zdarzeń w placówce." />
 
       <DailyReportClient organizationId={orgId} />
     </div>

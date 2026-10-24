@@ -7,6 +7,7 @@ import AddRoomDialog from '@/components/facility/AddRoomDialog'
 import { FacilityImportExportDialog } from '@/components/facility/FacilityImportExportDialog'
 import { BedAllocationOptimizerDialog } from '@/components/facility/BedAllocationOptimizerDialog'
 import RoomList, { RoomItem } from '@/components/facility/RoomList'
+import { PageHeader } from '@/components/patterns/PageHeader'
 
 export default function FacilityManagementPage() {
   const [rooms, setRooms] = useState<RoomItem[]>([])
@@ -37,21 +38,17 @@ export default function FacilityManagementPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-display font-semibold tracking-tight text-foreground">
-            Struktura Placówki
-          </h2>
-          <p className="mt-2 text-muted-foreground">
-            Zarządzaj pokojami i łóżkami w twojej placówce.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <FacilityImportExportDialog onStructureChanged={fetchRooms} />
-          <BedAllocationOptimizerDialog onAllocationChanged={fetchRooms} />
-          <AddRoomDialog onRoomAdded={fetchRooms} />
-        </div>
-      </div>
+      <PageHeader
+        title="Struktura Placówki"
+        description="Zarządzaj pokojami i łóżkami w twojej placówce."
+        actions={
+          <>
+            <FacilityImportExportDialog onStructureChanged={fetchRooms} />
+            <BedAllocationOptimizerDialog onAllocationChanged={fetchRooms} />
+            <AddRoomDialog onRoomAdded={fetchRooms} />
+          </>
+        }
+      />
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <Card className="rounded-xl border-none ring-1 ring-border">

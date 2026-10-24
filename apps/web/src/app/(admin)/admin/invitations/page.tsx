@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { InviteFamilyDialog } from '@/components/InviteFamilyDialog'
 import { InvitationsTable, type InvitationRecord } from '@/components/InvitationsTable'
 import { redirect } from 'next/navigation'
+import { PageHeader } from '@/components/patterns/PageHeader'
 
 export default async function AdminInvitationsPage() {
   const supabase = await createClient()
@@ -47,15 +48,11 @@ export default async function AdminInvitationsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            Zaproszenia
-          </h2>
-          <p className="text-muted-foreground">Zarządzaj dostępem dla bliskich podopiecznych.</p>
-        </div>
-        <InviteFamilyDialog residents={residents || []} />
-      </div>
+      <PageHeader
+        title="Zaproszenia"
+        description="Zarządzaj dostępem dla bliskich podopiecznych."
+        actions={<InviteFamilyDialog residents={residents || []} />}
+      />
 
       <Card>
         <CardHeader>

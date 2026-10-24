@@ -24,7 +24,7 @@ export class StaffReportsPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.headerTitle = page.locator('h2:has-text("Raporty")').first();
+    this.headerTitle = page.locator(':is(h1, h2):has-text("Raporty")').first();
     this.emptyStateHeading = page.locator('h3:has-text("Brak raportów")');
     this.reportCards = page.locator('[data-testid="report-card"]');
     this.completenessGate = page.locator('[data-testid="completeness-gate"]');
