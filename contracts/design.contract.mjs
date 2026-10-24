@@ -44,7 +44,8 @@ export const TYPOGRAPHY = {
 
 /**
  * Paleta „Ciepłe Zaufanie" (NFR-UI-01/AC2) w wydaniu minimalistycznym:
- * tło prawie białe z ciepłym odcieniem, jeden kolor akcentu, reszta to skala szarości.
+ * tło białe (ciemny motyw: prawie czarne) jak w szablonie shadcn-admin, jeden kolor akcentu marki
+ * używany tylko tam, gdzie konieczny, reszta to neutralna skala szarości (ADR-019).
  *
  * Kolor NIE niesie znaczenia sam z siebie — nigdzie nie ma czerwieni oznaczającej
  * „źle" ani zieleni oznaczającej „dobrze". To wynika wprost z ADR-005: system nie
@@ -52,56 +53,57 @@ export const TYPOGRAPHY = {
  */
 export const COLORS = {
   light: {
-    'bg':              { value: '#FBFAF8', desc: 'Tło aplikacji. Ciepła biel, nie czysta — mniej męczy oczy.' },
-    'surface':         { value: '#FFFFFF', desc: 'Karty i panele.' },
-    'surface-sunken':  { value: '#F4F2EE', desc: 'Tło stanu pustego, wyróżnienia bez ramki.' },
-    'border':          { value: '#E8E4DD', desc: 'Linie rozdzielające. Jedyny sposób na granicę — bez cieni.' },
-    'text':            { value: '#1C1B19', desc: 'Tekst główny. Kontrast 15.8:1 na tle.' },
-    'text-secondary':  { value: '#57534E', desc: 'Tekst drugorzędny. Kontrast 7.4:1 — powyżej AA, celowo ciemniejszy niż zwykle.' },
-    'text-tertiary':   { value: '#78716C', desc: 'Znaczniki czasu. Kontrast 4.7:1 — nadal AA.' },
+    'bg':              { value: '#FFFFFF', desc: 'Tło aplikacji. Czysta biel jak w szablonie shadcn-admin (ADR-019).' },
+    'surface':         { value: '#FFFFFF', desc: 'Karty i panele; granicę daje linia i cień shadow-xs.' },
+    'surface-sunken':  { value: '#F5F5F5', desc: 'Tło wyciszone (muted/secondary): stan pusty, najechanie, wyróżnienie bez ramki.' },
+    'border':          { value: '#E5E5E5', desc: 'Linie rozdzielające (neutral-200 szablonu).' },
+    'text':            { value: '#171717', desc: 'Tekst główny. Kontrast 17.9:1 na tle.' },
+    'text-secondary':  { value: '#666666', desc: 'Tekst drugorzędny. Kontrast 5.7:1 na bieli i 5.3:1 na tle wyciszonym — AA także na szarym tle.' },
+    'text-tertiary':   { value: '#6B6B6B', desc: 'Znaczniki czasu. Kontrast 5.3:1 — AA.' },
     'accent':          { value: '#2F6F5E', desc: 'Kojąca zieleń. Akcje i odnośniki. Kontrast 5.6:1.' },
-    'accent-soft':     { value: '#E8F0ED', desc: 'Tło akcentu, delikatne wyróżnienie.' },
+    'accent-soft':     { value: '#F5F5F5', desc: 'Tło najechania i wyróżnienia — neutralne; kolor marki tylko tam, gdzie konieczny (ADR-019).' },
     'focus':           { value: '#2F6F5E', desc: 'Pierścień fokusu, grubość 2px, odsunięcie 2px.' },
     // ADR-014 — tokeny wymagane przez komponenty szablonu shadcn
     'accent-foreground':      { value: '#FFFFFF', desc: 'Tekst na tle akcentu (przycisk główny). Kontrast 5.6:1.' },
-    'input':                  { value: '#E8E4DD', desc: 'Obramowanie pól formularza.' },
+    'input':                  { value: '#E5E5E5', desc: 'Obramowanie pól formularza.' },
     'destructive':            { value: '#DC2626', desc: 'Wyłącznie błąd techniczny (walidacja, awaria sieci/serwera). Nigdy potwierdzenie akcji nieodwracalnej i nigdy ocena stanu pensjonariusza. Kontrast 4.8:1.' },
     'destructive-foreground': { value: '#FFFFFF', desc: 'Tekst na tle błędu.' },
-    'sidebar':                { value: '#FFFFFF', desc: 'Tło paska bocznego.' },
-    'sidebar-accent':         { value: '#E8F0ED', desc: 'Aktywna i najechana pozycja menu.' },
+    'sidebar':                { value: '#FAFAFA', desc: 'Tło paska bocznego (neutral-50 szablonu).' },
+    'sidebar-accent':         { value: '#F5F5F5', desc: 'Aktywna i najechana pozycja menu — neutralna, znacznik aktywności w kolorze marki.' },
     // Wykresy — wyłącznie statystyki placówki w panelu administratora (quiet-metrics, ADR-005)
     'chart-1':                { value: '#2F6F5E', desc: 'Seria 1.' },
     'chart-2':                { value: '#4F8F7C', desc: 'Seria 2. Kontrast 3,6:1.' },
-    'chart-3':                { value: '#8C8680', desc: 'Seria 3 — neutralna, jasna szarość. Kontrast 3,5:1.' },
+    'chart-3':                { value: '#878787', desc: 'Seria 3 — neutralna szarość. Kontrast 3,6:1.' },
     'chart-4':                { value: '#1F4A3F', desc: 'Seria 4 — głęboka zieleń. Kontrast 9,5:1.' },
-    'chart-5':                { value: '#57534E', desc: 'Seria 5 — neutralna, ciemna. Kontrast 7,3:1.' },
+    'chart-5':                { value: '#525252', desc: 'Seria 5 — neutralna, ciemna. Kontrast 7,8:1.' },
   },
   dark: {
-    'bg':              { value: '#171614' },
-    'surface':         { value: '#211F1D' },
-    'surface-sunken':  { value: '#2A2724' },
-    'border':          { value: '#38342F' },
-    'text':            { value: '#F5F3F0' },
-    'text-secondary':  { value: '#B8B2AA' },
-    'text-tertiary':   { value: '#918B83' },
+    'bg':              { value: '#171717' },
+    'surface':         { value: '#262626' },
+    'surface-sunken':  { value: '#303030' },
+    'border':          { value: '#333333' },
+    'text':            { value: '#FAFAFA' },
+    'text-secondary':  { value: '#A1A1A1' },
+    'text-tertiary':   { value: '#A1A1A1' },
     'accent':          { value: '#7FBCA8' },
-    'accent-soft':     { value: '#1E3A32' },
+    'accent-soft':     { value: '#303030' },
     'focus':           { value: '#7FBCA8' },
-    'accent-foreground':      { value: '#171614' },
-    'input':                  { value: '#38342F' },
+    'accent-foreground':      { value: '#171717' },
+    'input':                  { value: '#3A3A3A' },
     'destructive':            { value: '#F87171' },
-    'destructive-foreground': { value: '#171614' },
-    'sidebar':                { value: '#211F1D' },
-    'sidebar-accent':         { value: '#1E3A32' },
+    'destructive-foreground': { value: '#171717' },
+    'sidebar':                { value: '#262626' },
+    'sidebar-accent':         { value: '#303030' },
     'chart-1':                { value: '#7FBCA8' },
     'chart-2':                { value: '#5FA08C' },
-    'chart-3':                { value: '#918B83' },
+    'chart-3':                { value: '#8F8F8F' },
     'chart-4':                { value: '#3F7A69' },
-    'chart-5':                { value: '#B8B2AA' },
+    'chart-5':                { value: '#B5B5B5' },
   },
   rules: [
     'Zakaz czerwieni i zieleni jako oceny stanu pensjonariusza (ADR-005).',
-    'Czerwień wyłącznie dla błędów technicznych i akcji destrukcyjnych w panelu personelu.',
+    'Czerwień wyłącznie dla błędów technicznych (ADR-017).',
+    'Kolor marki (accent) wyłącznie tam, gdzie konieczny: akcja główna, element aktywny, odnośnik, fokus. Tła, powierzchnie i najechania są neutralne (ADR-019).',
     'Kolor nigdy nie jest jedynym nośnikiem informacji — zawsze towarzyszy mu tekst.',
     'Kolory chart-* wyłącznie dla statystyk placówki w panelu administratora — nigdy dla metryk pensjonariusza (ADR-005).',
     'Każda seria chart-* ma kontrast co najmniej 3:1 na tle bg i surface w obu motywach (WCAG 1.4.11). Serie rozróżnia też podpis lub legenda, nie tylko kolor.',
@@ -122,14 +124,14 @@ export const SPACING = {
 export const RADIUS = { sm: '6px', md: '8px', lg: '10px', xl: '14px', full: '999px', rules: ['Bazowe zaokrąglenie 10px (--radius szablonu). Karty 14px, pola i przyciski 8px (ADR-014).'] };
 
 /**
- * Cienie: prawie nieobecne. Apple używa ich oszczędnie, a przy jasnym,
- * ciepłym tle cień szybko wygląda na brud.
+ * Cienie jak w szablonie shadcn-admin (ADR-019): delikatny shadow-xs na kartach
+ * i przyciskach głównych, większy cień wyłącznie dla warstw nad treścią.
  */
 export const ELEVATION = {
   none:  'none',
-  card:  '0 1px 2px rgba(28, 27, 25, 0.04)',
-  modal: '0 8px 32px rgba(28, 27, 25, 0.12)',
-  rules: ['Karty domyślnie bez cienia — wystarczy tło i linia.', 'Cień zarezerwowany dla warstw nad treścią.'],
+  card:  '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+  modal: '0 8px 32px rgb(0 0 0 / 0.12)',
+  rules: ['Karty i przyciski główne z cieniem shadow-xs (jak w szablonie, ADR-019).', 'Większy cień zarezerwowany dla warstw nad treścią (dialog, menu, popover).'],
 };
 
 export const MOTION = {

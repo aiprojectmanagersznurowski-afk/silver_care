@@ -307,3 +307,21 @@ Przed prezentacjami i demo dla potencjalnych klientów (Marconi, KIDO) potrzebny
 **Konsekwencje.**
 - Globalny refaktor: każde użycie `min-h-11 min-w-11` i `min-h-[44px] min-w-[44px]` w `apps/web/src/` zamienione na `min-h-touch min-w-touch` — jedno zadanie typu „globalny refaktor tokenów" (wyjątek od limitu 3 plików z CLAUDE.md).
 - Do czasu potwierdzenia przez Darka status pozostaje PROPOZYCJA; w razie sporu wygrywa 44px z ADR-016, bo to jego i Michała wspólna decyzja bezpieczeństwa.
+
+---
+
+## ADR-019 — Neutralna paleta szablonu, kolor marki tylko jako akcent, cienie xs (Status: PROPOZYCJA — wymaga potwierdzenia Darka) 📝
+
+**Kontekst.** 2026-10-23 Michał zdecydował: zostajemy na `@base-ui/react` (wygląd stylu „nova” jest ten sam co w wariancie Radix szablonu), przejmujemy układ i komponenty szablonu shadcn-admin z wyjątkiem ekranów klinicznych (ADR-005), a kolory mają być rozłożone jak w szablonie: białe tło w motywie jasnym, prawie czarne w ciemnym, cienie na komponentach. Barwa marki zostaje, ale tylko tam, gdzie jest konieczna.
+
+**Decyzja (Michał, 2026-10-23; Darek: do potwierdzenia).**
+1. **Tła i powierzchnie neutralne, wartości szablonu:** jasny `bg`/`surface` `#FFFFFF`, `surface-sunken` `#F5F5F5`, `border` `#E5E5E5`, `sidebar` `#FAFAFA`; ciemny `bg` `#171717`, `surface` `#262626`, `surface-sunken` `#303030`. Paleta „Ciepłe Zaufanie” (ciepła biel, ciepłe szarości) przestaje obowiązywać.
+2. **Kolor marki `#2F6F5E` / `#7FBCA8` wyłącznie jako akcent:** akcja główna, element aktywny (w tym wybrany przycisk przełącznika), odnośnik, fokus, serie wykresów placówki. Najechania i aktywne tło pozycji menu (`accent-soft`, `sidebar-accent`) są neutralne.
+3. **Tekst drugorzędny `#666666` zamiast `#737373` szablonu** — `#737373` ma na tle `#F5F5F5` kontrast 4,35:1 (poniżej AA). `#666666`: 5,74:1 na bieli, 5,27:1 na tle wyciszonym. W motywie ciemnym `#A1A1A1` (szablon): 5,11–6,94:1.
+4. **Cienie jak w szablonie:** `shadow-xs` na kartach i przyciskach głównych (`ELEVATION.card` = Tailwind `shadow-xs`), większe cienie tylko dla warstw nad treścią. Odwraca regułę „karty bez cienia”.
+5. Tekst bazowy 16px i minimum 14px (ADR-016) oraz cel dotykowy 38px (ADR-018) bez zmian w tym ADR.
+
+**Konsekwencje.**
+- Tokeny zmienione w kontrakcie; mapowanie w `globals.css` (`--accent-foreground`, `--sidebar-accent-foreground`) przechodzi z koloru marki na kolor tekstu w osobnym commicie.
+- Test `appearance-audit` (jeden akcent, bez gradientów) pozostaje ważny: nowa paleta to wyłącznie szarości bez nasycenia plus jeden akcent marki.
+- Testy oczekujące wartości „Ciepłe Zaufanie” (`#FBFAF8`, `#1C1B19`, `#E8E4DD`) są aktualizowane razem z wymaganiem.

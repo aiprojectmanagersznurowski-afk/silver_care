@@ -86,7 +86,7 @@
   --muted-foreground: var(--sc-text-secondary);
   --text-tertiary: var(--sc-text-tertiary);
   --accent: var(--sc-accent-soft);
-  --accent-foreground: var(--sc-accent);
+  --accent-foreground: var(--sc-text); /* ADR-019: najechanie w menu neutralne */
   --destructive: var(--sc-destructive);
   --destructive-foreground: var(--sc-destructive-foreground);
   --border: var(--sc-border);
@@ -104,7 +104,7 @@
   --sidebar-primary: var(--sc-accent);
   --sidebar-primary-foreground: var(--sc-accent-foreground);
   --sidebar-accent: var(--sc-sidebar-accent);
-  --sidebar-accent-foreground: var(--sc-accent);
+  --sidebar-accent-foreground: var(--sc-text); /* ADR-019 */
   --sidebar-border: var(--sc-border);
   --sidebar-ring: var(--sc-focus);
 
