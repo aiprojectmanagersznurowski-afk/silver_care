@@ -103,7 +103,7 @@ export function PublishAlertForm({ isPending, onSubmit }: Props) {
                   key={s.id}
                   data-testid={`service-checkbox-${s.id}`}
                   onClick={() => toggleService(s.id)}
-                  className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer text-sm font-medium transition-colors min-h-11 ${
+                  className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer text-sm font-medium transition-colors min-h-touch ${
                     selectedServices.includes(s.id)
                       ? 'border-primary bg-primary/10 text-primary'
                       : 'border-border bg-background text-foreground hover:bg-muted/50'
@@ -138,7 +138,7 @@ export function PublishAlertForm({ isPending, onSubmit }: Props) {
             type="submit"
             data-testid="system-alert-publish-btn"
             disabled={isPending}
-            className="w-full min-h-11 font-semibold text-sm"
+            className="w-full min-h-touch font-semibold text-sm"
           >
             {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
             Opublikuj alert dla placówek

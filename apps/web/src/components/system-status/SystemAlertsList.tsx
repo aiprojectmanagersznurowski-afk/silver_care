@@ -55,7 +55,7 @@ export function SystemAlertsList({ alerts, isPending, onResolve }: Props) {
                     data-testid="resolve-system-alert-btn"
                     disabled={isPending}
                     onClick={() => onResolve(a.id)}
-                    className="shrink-0 min-h-11 text-sm font-semibold text-primary hover:text-primary"
+                    className="shrink-0 min-h-touch text-sm font-semibold text-primary hover:text-primary"
                   >
                     Zakończ alert
                   </Button>
