@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Mic, FileText, MessageSquare } from 'lucide-react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
+import { buttonVariants } from '@/components/ui/button'
 import { StatusBadge } from '@/components/patterns/StatusBadge'
 import { TableStateRow } from '@/components/patterns/TableCard'
 import { getActiveAssignment, getNoteStatus, STATUS_CONFIG, UnansweredInfo } from './staff-board-types'
@@ -73,7 +74,7 @@ export function StaffBoardTable({ residents, unansweredMessagesMap }: StaffBoard
                   <div className="flex flex-wrap justify-end gap-2">
                     <Link
                       href={`/voice?resident=${resId}`}
-                      className={`${actionLink} bg-primary text-primary-foreground shadow-xs hover:bg-primary/90`}
+                      className={buttonVariants({ variant: 'default' })}
                     >
                       <Mic className="size-4" />
                       Nagraj notatkę
@@ -81,7 +82,7 @@ export function StaffBoardTable({ residents, unansweredMessagesMap }: StaffBoard
                     {noteStatus !== 'none' && (
                       <Link
                         href={`/staff/reports?resident=${resId}`}
-                        className={`${actionLink} border border-border bg-background text-foreground hover:bg-muted`}
+                        className={buttonVariants({ variant: 'outline' })}
                       >
                         <FileText className="size-4 text-muted-foreground" />
                         Podgląd raportu

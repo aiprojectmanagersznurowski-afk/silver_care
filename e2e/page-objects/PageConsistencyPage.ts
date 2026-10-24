@@ -72,6 +72,40 @@ export class PageConsistencyPage {
     });
   }
 
+  /**
+   * Kontrasty przycisków filtrów i przycisków obrysowych względem karty, na której leżą.
+   * Kolory zamieniane na RGB przez canvas, bo Tailwind v4 zwraca oklab()/oklch().
+   */
+  async buttonContrasts(): Promise<{ label: string; text: number; border: number }[]> {
+    return this.page.evaluate(() => {
+      const ctx = document.createElement('canvas').getContext('2d', { willReadFrequently: true })!;
+      const rgb = (css: string, under: [number, number, number]) => {
+        ctx.clearRect(0, 0, 1, 1);
+        ctx.fillStyle = `rgb(${under.join(',')})`; ctx.fillRect(0, 0, 1, 1);
+        ctx.fillStyle = css; ctx.fillRect(0, 0, 1, 1);
+        const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+        return [r, g, b] as [number, number, number];
+      };
+      const lin = (v: number) => { const c = v / 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
+      const lum = ([r, g, b]: number[]) => 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+      const ratio = (a: number[], b: number[]) => { const [x, y] = [lum(a), lum(b)]; return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+      const buttons = [...document.querySelectorAll('main [data-slot="filter-chip"], main [data-slot="table-card"] a, main [data-slot="table-card"] button')]
+        .filter((b) => (b as HTMLElement).offsetParent !== null && getComputedStyle(b).borderTopWidth !== '0px');
+      return buttons.slice(0, 20).map((b) => {
+        const card = b.closest('[data-slot="table-card"]') ?? document.body;
+        const cardRgb = rgb(getComputedStyle(card).backgroundColor, [255, 255, 255]);
+        const cs = getComputedStyle(b);
+        const bg = rgb(cs.backgroundColor, cardRgb);
+        return {
+          label: (b.textContent ?? '').trim().slice(0, 24),
+          text: Math.round(ratio(rgb(cs.color, bg), bg) * 100) / 100,
+          // Granica kontrolki: obramowanie albo — dla przycisków wypełnionych — samo tło (WCAG 1.4.11)
+          border: Math.round(Math.max(ratio(rgb(cs.borderTopColor, cardRgb), cardRgb), ratio(bg, cardRgb)) * 100) / 100,
+        };
+      });
+    });
+  }
+
   /** Ramki kart (promień, cień, tło) i typografia tytułów kart w treści strony. */
   async cardSnapshot(): Promise<{ frames: string[]; titles: string[] }> {
     return this.page.evaluate(() => {
