@@ -101,7 +101,7 @@ export function UserTable({
                   <TableRow key={user.id}>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <span className="font-medium text-foreground">{user.email}</span>
+                        <div className="font-medium text-foreground">{user.email}</div>
                         <BusinessIdBadge type="user" id={user.id} />
                       </div>
                     </TableCell>

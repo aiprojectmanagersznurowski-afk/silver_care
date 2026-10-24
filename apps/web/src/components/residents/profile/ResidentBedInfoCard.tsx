@@ -18,9 +18,9 @@ export function ResidentBedInfoCard({
   const currentRoom = currentBed?.rooms
 
   return (
-    <Card className="rounded-xl border border-border bg-card">
+    <Card>
       <CardHeader className="pb-3 border-b border-border/60">
-        <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2">
           <BedDouble className="h-5 w-5 text-primary" />
           Lokalizacja i historia łóżek
         </CardTitle>

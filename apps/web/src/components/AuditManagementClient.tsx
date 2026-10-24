@@ -95,7 +95,7 @@ export function AuditManagementClient({
   return (
     <div className="space-y-6">
       {/* Pasek filtrów daty oraz akcji eksportu RODO */}
-      <Card className="rounded-xl border-none ring-1 ring-border bg-card p-5">
+      <Card className="p-5">
         <form onSubmit={handleApplyFilter} className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2">

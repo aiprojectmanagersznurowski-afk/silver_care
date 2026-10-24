@@ -41,7 +41,7 @@ export function VoiceResidentSelect({
   )
 
   return (
-    <Card className="rounded-xl border border-border bg-card p-6 space-y-4">
+    <Card className="p-6 space-y-4">
       <div className="space-y-2">
         <label htmlFor="search-resident" className="text-sm font-medium text-foreground">
           Szukaj podopiecznego

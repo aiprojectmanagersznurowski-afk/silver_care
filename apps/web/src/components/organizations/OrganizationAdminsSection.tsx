@@ -87,7 +87,7 @@ export function OrganizationAdminsSection({
                 <TableRow key={admin.id}>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-foreground">{admin.email}</span>
+                      <div className="font-medium text-foreground">{admin.email}</div>
                       <BusinessIdBadge type="user" id={admin.id} />
                     </div>
                   </TableCell>

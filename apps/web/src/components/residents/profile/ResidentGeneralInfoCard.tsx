@@ -28,9 +28,9 @@ export function ResidentGeneralInfoCard({
   const careLevelBg = CARE_LEVEL_BG_CLASSES[careLevel] || 'bg-muted text-foreground'
 
   return (
-    <Card className="rounded-xl border border-border bg-card">
+    <Card>
       <CardHeader className="pb-3 border-b border-border/60">
-        <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2">
           <UserCircle2 className="h-5 w-5 text-primary" />
           Dane osobowe i profil opiekuńczy
         </CardTitle>

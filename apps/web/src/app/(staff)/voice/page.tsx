@@ -154,7 +154,7 @@ function VoiceNoteContent() {
         )}
       />
 
-      <Card className="overflow-hidden rounded-xl border-none ring-1 ring-border bg-card">
+      <Card className="overflow-hidden">
         <CardContent className="p-8 space-y-8 flex flex-col items-center">
           <div className="text-center space-y-2 max-w-md">
             <h3 className="font-medium text-foreground text-lg">Zaraportuj status</h3>

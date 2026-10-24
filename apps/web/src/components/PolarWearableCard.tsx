@@ -57,12 +57,12 @@ export function PolarWearableCard({
   }
 
   return (
-    <Card className="rounded-xl border-none ring-1 ring-border">
+    <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-3">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <Watch className="h-5 w-5 text-foreground" />
-            <CardTitle className="text-lg font-display text-foreground">Opaska telemetryczna Polar 360</CardTitle>
+            <CardTitle>Opaska telemetryczna Polar 360</CardTitle>
           </div>
           <CardDescription className="text-sm text-muted-foreground">
             Integracja przez Polar AccessLink API v3 (kroki, sen, czas aktywności)

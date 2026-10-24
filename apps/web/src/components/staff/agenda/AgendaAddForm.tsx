@@ -74,7 +74,7 @@ export function AgendaAddForm({ residents, onAdd }: AgendaAddFormProps) {
   }
 
   return (
-    <Card className="rounded-xl border-none ring-1 ring-border bg-card">
+    <Card>
       <div className="p-6 border-b border-border">
         <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
           <Plus className="h-5 w-5 text-primary" />

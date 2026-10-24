@@ -3,10 +3,11 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
-import { ChevronLeft, ChevronRight, Download } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Download, Users, ShieldCheck, Heart, FileSignature, FileX, Activity } from 'lucide-react'
 import { MONTH_LABELS_PL } from '@/lib/reporting-constants'
 import { DailyReportTable, type DailyRow, type MonthlySummary } from '@/components/reports/DailyReportTable'
 import { DailyReportGrid } from '@/components/reports/DailyReportGrid'
+import { MetricCard, MetricGrid } from '@/components/patterns/MetricCard'
 import { ViewToggle, GRID_TABLE_OPTIONS } from '@/components/patterns/ViewToggle'
 import { useViewPreference, VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-preference'
 
@@ -119,18 +120,14 @@ export function DailyReportClient({ organizationId }: { organizationId?: string 
 
       {/* Summary KPI cards */}
       {summary && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-          <SummaryCard label="Średnia podopiecznych" value={summary.avg_residents?.toFixed(1)} />
-          <SummaryCard label="Średnio ZSN" value={summary.avg_zsn ? summary.avg_zsn.toFixed(1) : '0'} />
-          <SummaryCard label="Zgony" value={summary.total_deaths} variant="danger" />
-          <SummaryCard label="Podpisane umowy" value={summary.total_contracts_signed} variant="success" />
-          <SummaryCard label="Zakończone umowy" value={summary.total_contracts_ended} variant="warning" />
-          <SummaryCard
-            label="Zmiana netto"
-            value={summary.net_change > 0 ? `+${summary.net_change}` : String(summary.net_change)}
-            variant={summary.net_change >= 0 ? 'success' : 'danger'}
-          />
-        </div>
+        <MetricGrid>
+          <MetricCard icon={<Users />} label="Średnia podopiecznych" value={summary.avg_residents?.toFixed(1) ?? '—'} />
+          <MetricCard icon={<ShieldCheck />} label="Średnio ZSN" value={summary.avg_zsn ? summary.avg_zsn.toFixed(1) : '0'} />
+          <MetricCard icon={<Heart />} label="Zgony" value={summary.total_deaths ?? '—'} />
+          <MetricCard icon={<FileSignature />} label="Podpisane umowy" value={summary.total_contracts_signed ?? '—'} />
+          <MetricCard icon={<FileX />} label="Zakończone umowy" value={summary.total_contracts_ended ?? '—'} />
+          <MetricCard icon={<Activity />} label="Zmiana netto" value={summary.net_change > 0 ? `+${summary.net_change}` : String(summary.net_change)} />
+        </MetricGrid>
       )}
 
       {/* Daily data table */}
@@ -146,30 +143,6 @@ export function DailyReportClient({ organizationId }: { organizationId?: string 
         year={year}
       />
       )}
-    </div>
-  )
-}
-
-function SummaryCard({
-  label,
-  value,
-  variant = 'default',
-}: {
-  label: string
-  value: string | number | null | undefined
-  variant?: 'default' | 'success' | 'danger' | 'warning'
-}) {
-  const colorMap = {
-    default: 'bg-muted/50 text-foreground',
-    success: 'bg-muted text-foreground',
-    danger: 'bg-muted text-foreground',
-    warning: 'bg-muted text-foreground',
-  }
-
-  return (
-    <div className={`rounded-xl p-4 ${colorMap[variant]}`}>
-      <p className="text-sm font-medium opacity-70">{label}</p>
-      <p className="text-2xl font-bold mt-1 tabular-nums">{value ?? '—'}</p>
     </div>
   )
 }

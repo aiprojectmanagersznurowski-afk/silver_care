@@ -15,7 +15,7 @@ export function ResidentGridCard({ resident }: { resident: ResidentWithAssignmen
   const activeBed = getActiveBed(resident)
 
   return (
-    <Card className="rounded-xl border border-border bg-card overflow-hidden hover:border-primary/50 transition-colors">
+    <Card className="overflow-hidden hover:border-primary/50 transition-colors">
       <CardContent className="p-4 space-y-3">
         <div className="flex items-start justify-between gap-2">
           <Link href={`/admin/residents/${resident.id}`} className="flex items-center gap-3 min-w-0 group">

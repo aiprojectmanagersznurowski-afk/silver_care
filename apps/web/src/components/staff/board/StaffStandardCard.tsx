@@ -32,7 +32,7 @@ export function StaffStandardCard({ resident, unansweredInfo }: StaffStandardCar
   const hasUnanswered = Boolean(unansweredInfo?.hasUnanswered)
 
   return (
-    <Card className="group relative overflow-hidden rounded-xl border-none ring-1 ring-border bg-card transition-all hover:ring-primary/30 flex flex-col">
+    <Card className="group relative overflow-hidden transition-all hover:ring-primary/30 flex flex-col">
       <CardContent className="p-0 flex flex-col h-full">
         <div className="p-5 flex-grow space-y-4">
           <div className="flex items-start justify-between">
