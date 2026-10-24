@@ -3,13 +3,14 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react'
 import { format } from 'date-fns'
 import { pl } from 'date-fns/locale'
-import { Search, MessageSquare, Clock, AlertCircle, RefreshCw, ChevronLeft } from 'lucide-react'
+import { MessageSquare, Clock, AlertCircle, RefreshCw, ChevronLeft } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { groupMessagesIntoThreads, filterThreadsBySearch, RawMessage } from '@/lib/messages-helper'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 import { StaffMessageList } from './StaffMessageList'
 import { StaffMessageComposer } from './StaffMessageComposer'
 import { StatusBadge } from '@/components/patterns/StatusBadge'
+import { SearchField } from '@/components/patterns/ListToolbar'
 
 interface StaffMessagesInboxProps {
   initialResidentId?: string
@@ -115,16 +116,7 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
       <div className="flex flex-1 min-h-0 overflow-hidden relative">
         <div className={`${activeThreadId ? 'hidden md:flex' : 'flex'} w-full md:w-96 border-r border-border flex-col bg-muted/50 shrink-0 min-h-0`}>
           <div className="p-3 border-b border-border bg-card">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Szukaj podopiecznego lub treści..."
-                className="w-full rounded-xl bg-muted/50 pl-9 pr-4 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-1 focus:ring-primary border border-transparent focus:border-primary"
-              />
-            </div>
+            <SearchField value={searchQuery} onChange={setSearchQuery} label="Szukaj wątku" placeholder="Szukaj podopiecznego lub treści..." />
           </div>
 
           <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-border" data-testid="message-threads-list">

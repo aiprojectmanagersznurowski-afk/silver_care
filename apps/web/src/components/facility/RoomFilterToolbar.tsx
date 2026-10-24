@@ -1,8 +1,8 @@
 'use client'
 
 import React from 'react'
-import { Search, Filter } from 'lucide-react'
 import { ViewToggle, GRID_TABLE_OPTIONS } from '@/components/patterns/ViewToggle'
+import { ListToolbar, SearchField } from '@/components/patterns/ListToolbar'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 
 interface RoomFilterToolbarProps {
@@ -41,27 +41,8 @@ export function RoomFilterToolbar({
   formatSectorName,
 }: RoomFilterToolbarProps) {
   return (
-    <div className="flex flex-col gap-4 rounded-xl bg-card p-4 border border-border">
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Szukaj pokoju..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex h-9 w-full rounded-lg border border-input bg-background pl-9 pr-3 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-          />
-        </div>
-
-        <ViewToggle value={viewMode} onChange={onModeChange} options={GRID_TABLE_OPTIONS} />
-      </div>
-
-      <div className="flex flex-wrap items-center gap-3 pt-3 border-t text-sm">
-        <div className="flex items-center gap-1.5 text-muted-foreground text-sm font-medium">
-          <Filter className="w-3.5 h-3.5" />
-          <span>Filtry:</span>
-        </div>
+    <ListToolbar end={<ViewToggle value={viewMode} onChange={onModeChange} options={GRID_TABLE_OPTIONS} />}>
+        <SearchField value={searchQuery} onChange={setSearchQuery} label="Szukaj pokoju" placeholder="Szukaj pokoju..." />
 
         <NativeSelect
           name="floorFilter"
@@ -106,10 +87,9 @@ export function RoomFilterToolbar({
           <NativeSelectOption value="full">W pełni zajęte</NativeSelectOption>
         </NativeSelect>
 
-        <div className="ml-auto text-sm text-muted-foreground">
+        <span className="text-sm text-muted-foreground">
           Znaleziono: <strong>{filteredCount}</strong> z {totalCount} pokoi
-        </div>
-      </div>
-    </div>
+        </span>
+    </ListToolbar>
   )
 }
