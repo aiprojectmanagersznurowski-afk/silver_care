@@ -176,7 +176,7 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
                   <form action="/auth/signout" method="post" className="w-full">
                     <DropdownMenuItem 
                       nativeButton
-                      className="flex w-full cursor-pointer items-center py-2.5 text-left font-medium text-destructive focus:bg-destructive/10" 
+                      className="flex w-full cursor-pointer items-center py-2.5 text-left font-medium text-foreground focus:bg-muted" 
                       render={<button type="submit" />}
                     >
                       Wyloguj się
@@ -203,7 +203,7 @@ export function FamilyHeader({ residents }: { residents: Resident[] }) {
                   <form action="/auth/signout" method="post" className="w-full">
                     <DropdownMenuItem 
                       nativeButton
-                      className="flex w-full cursor-pointer items-center py-2.5 text-left font-medium text-destructive focus:bg-destructive/10" 
+                      className="flex w-full cursor-pointer items-center py-2.5 text-left font-medium text-foreground focus:bg-muted" 
                       render={<button type="submit" />}
                     >
                       Wyloguj się

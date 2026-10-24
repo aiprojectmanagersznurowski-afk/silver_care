@@ -102,7 +102,7 @@ export function StaffAccountModals({
 
           <div className="space-y-3 py-2">
             <Label htmlFor="confirmation">
-              Aby potwierdzić, wpisz słowo <span className="font-bold text-destructive">DEZAKTYWUJ</span>:
+              Aby potwierdzić, wpisz słowo <span className="font-bold text-foreground">DEZAKTYWUJ</span>:
             </Label>
             <Input
               id="confirmation"
@@ -118,7 +118,7 @@ export function StaffAccountModals({
               Anuluj
             </Button>
             <Button
-              variant="destructive"
+              variant="default"
               onClick={onSuspend}
               disabled={isPending || confirmationInput !== 'DEZAKTYWUJ'}
               className="min-h-11"
