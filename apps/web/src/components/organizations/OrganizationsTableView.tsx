@@ -2,9 +2,8 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { ChevronRight } from 'lucide-react'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
-import { EditOrganizationDialog } from '@/components/EditOrganizationDialog'
+import { OrganizationRowActions } from './OrganizationRowActions'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { TableCard } from '@/components/patterns/TableCard'
 import { OrganizationSummaryItem } from './organizations-types'
@@ -67,16 +66,7 @@ export function OrganizationsTableView({
                   {new Date(org.created_at).toLocaleDateString('pl-PL')}
                 </TableCell>
                 <TableCell className="text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    <EditOrganizationDialog organization={org} />
-                    <Link
-                      href={`/admin/organizations/${org.organization_id}`}
-                      className="inline-flex items-center gap-1 rounded-lg bg-muted/50 px-2.5 py-1.5 text-sm font-medium text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors min-h-touch"
-                    >
-                      Szczegóły
-                      <ChevronRight className="h-4 w-4" />
-                    </Link>
-                  </div>
+                  <OrganizationRowActions org={org} />
                 </TableCell>
               </TableRow>
             )

@@ -2,7 +2,7 @@
 
 import React, { useState, useTransition } from 'react'
 import { resetStaffPasswordAction, suspendStaffAction, restoreStaffAction } from '@/actions/staff-management'
-import { KeyRound, Ban, CheckCircle, MoreHorizontal } from 'lucide-react'
+import { KeyRound, Ban, CheckCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   DropdownMenu,
@@ -10,8 +10,8 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { RowActionsTrigger } from '@/components/patterns/RowActions'
 import { StaffAccountModals, StaffDialogType } from './StaffAccountModals'
 
 interface StaffActionsMenuProps {
@@ -112,10 +112,7 @@ export function StaffActionsMenu({ staffId, email, isActive }: StaffActionsMenuP
   return (
     <>
       <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
-        <DropdownMenuTrigger className="inline-flex items-center justify-center size-touch rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
-          <span className="sr-only">Otwórz menu</span>
-          <MoreHorizontal className="h-4 w-4" />
-        </DropdownMenuTrigger>
+        <RowActionsTrigger />
         <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuLabel>Zarządzaj kontem</DropdownMenuLabel>
           <DropdownMenuSeparator />

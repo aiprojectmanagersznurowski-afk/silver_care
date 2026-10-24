@@ -30,6 +30,9 @@ interface ReassignBedDialogProps {
   residentIsZsn?: boolean
   residentCareLevel?: string
   onReassigned: () => void
+  /** Sterowanie z zewnątrz (np. z menu „⋯") — wtedy bez własnego przycisku. */
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 export default function ReassignBedDialog({
@@ -43,8 +46,13 @@ export default function ReassignBedDialog({
   residentIsZsn,
   residentCareLevel,
   onReassigned,
+  open: openProp,
+  onOpenChange,
 }: ReassignBedDialogProps) {
-  const [open, setOpen] = useState(false)
+  const [innerOpen, setInnerOpen] = useState(false)
+  const controlled = openProp !== undefined
+  const open = controlled ? openProp : innerOpen
+  const setOpen = (next: boolean) => (controlled ? onOpenChange?.(next) : setInnerOpen(next))
   const [selectedBedId, setSelectedBedId] = useState('')
   const [reason, setReason] = useState('Dostosowanie do stanu zdrowia')
   const [customReason, setCustomReason] = useState('')
@@ -165,18 +173,20 @@ export default function ReassignBedDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger
-        render={
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-sm h-8 text-foreground hover:bg-muted/50 border-border"
-          />
-        }
-      >
-        <ArrowRightLeft className="w-3.5 h-3.5 mr-1.5 text-primary" />
-        Zmień łóżko
-      </DialogTrigger>
+      {!controlled && (
+        <DialogTrigger
+          render={
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-sm h-8 text-foreground hover:bg-muted/50 border-border"
+            />
+          }
+        >
+          <ArrowRightLeft className="w-3.5 h-3.5 mr-1.5 text-primary" />
+          Zmień łóżko
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-xl md:max-w-2xl p-6">
         <form onSubmit={handleSubmit}>
           <DialogHeader>

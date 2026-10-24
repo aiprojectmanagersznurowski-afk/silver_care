@@ -217,7 +217,38 @@ test.describe('Spójność ekranów — jedna wysokość wiersza tabeli (@REQ: U
   }
 });
 
-const CARD_SCREENS: { role: 'org_admin' | 'super_admin' | 'nurse' | 'family'; paths: string[] }[] = [
+/** Tabele z kolumną „Akcje": akcje wiersza w menu „⋯" jak w szablonie; na tablicy dyżuru zostaje „Nagraj notatkę". */
+const ROW_ACTION_SCREENS: { role: 'org_admin' | 'super_admin' | 'nurse'; paths: string[] }[] = [
+  { role: 'org_admin', paths: ['/admin/residents', '/admin/staff', '/admin/invitations', '/admin/facility'] },
+  { role: 'super_admin', paths: ['/admin/organizations', '/admin/iam'] },
+  { role: 'nurse', paths: ['/staff'] },
+];
+const VISIBLE_ROW_ACTIONS = ['Nagraj notatkę'];
+
+test.describe('Spójność ekranów — akcje wiersza w menu „⋯" (@REQ: UI-TEMPLATE-ALIGNMENT)', () => {
+  for (const { role, paths } of ROW_ACTION_SCREENS) {
+    test(`@REQ: UI-TEMPLATE-ALIGNMENT - ${role}: każdy wiersz ma jedno menu akcji o tym samym kształcie`, async ({ loginPage, page }) => {
+      await loginPage.loginAs(role);
+      await page.setViewportSize({ width: 1440, height: 900 });
+      const screens = new PageConsistencyPage(page);
+      const shapes = new Set<string>();
+
+      for (const path of paths) {
+        await screens.goto(path);
+        await page.evaluate(() => window.localStorage.clear());
+        await screens.goto(path);
+        const s = await screens.rowActionSnapshot();
+        expect(s.menus, `${path}: wiersze bez menu „⋯"`).toBe(s.rows);
+        expect(s.stray.filter((label) => !VISIBLE_ROW_ACTIONS.includes(label)), `${path}: akcje poza menu`).toEqual([]);
+        s.triggerShapes.forEach((shape) => shapes.add(shape));
+      }
+
+      expect([...shapes], 'różne kształty przycisku „⋯"').toHaveLength(1);
+    });
+  }
+});
+
+const CARD_SCREENS:{ role: 'org_admin' | 'super_admin' | 'nurse' | 'family'; paths: string[] }[] = [
   { role: 'org_admin', paths: ['/admin', '/admin/reports/statistics', '/admin/reports/daily', '/admin/audit', '/settings/profile'] },
   { role: 'super_admin', paths: ['/admin/organizations'] },
   { role: 'nurse', paths: ['/staff/reports', '/staff/agenda', '/voice'] },

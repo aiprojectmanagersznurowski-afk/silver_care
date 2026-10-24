@@ -1,8 +1,8 @@
 'use client'
 
-import React from 'react'
-import { Button } from '@/components/ui/button'
-import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
+import React, { useState } from 'react'
+import { ArrowRightLeft, LogOut, Power, PowerOff, UserPlus } from 'lucide-react'
+import { RowActions, type RowAction } from '@/components/patterns/RowActions'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 import { StatusBadge } from '@/components/patterns/StatusBadge'
 import AssignBedDialog from './AssignBedDialog'
@@ -48,95 +48,58 @@ export function BedResident({ bed }: { bed: BedItem }) {
   )
 }
 
-/** Akcje łóżka — te same w tabeli i w kafelku. */
+/** Akcje łóżka w menu „⋯" — te same w tabeli i w kafelku. */
 export function BedRowActions({ bed, roomNumber, floor, onDeactivate, onUnassignClick, onRefresh }: BedActionsProps) {
-  return (
-    <div className="flex items-center justify-end gap-1.5 flex-wrap">
-      {bed.is_active ? (
-        <>
-          {bed.active_assignment ? (
-            <>
-              <ReassignBedDialog
-                currentBedId={bed.id}
-                currentBedLabel={bed.label}
-                currentRoomNumber={roomNumber || ''}
-                currentFloor={floor}
-                residentId={bed.active_assignment.resident.id}
-                residentName={`${bed.active_assignment.resident.first_name} ${bed.active_assignment.resident.last_name}`}
-                residentGender={bed.active_assignment.resident.gender}
-                residentIsZsn={bed.active_assignment.resident.is_zsn}
-                residentCareLevel={bed.active_assignment.resident.care_level}
-                onReassigned={onRefresh}
-              />
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="min-h-touch px-2.5 text-sm text-foreground hover:bg-muted"
-                    onClick={() => {
-                      if (bed.active_assignment?.resident) {
-                        onUnassignClick({
-                          bedId: bed.id,
-                          residentId: bed.active_assignment.resident.id,
-                          residentName: `${bed.active_assignment.resident.first_name} ${bed.active_assignment.resident.last_name}`,
-                        })
-                      }
-                    }}
-                  >
-                    Wypisz
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  Zwolnij to łóżko i usuń bieżące przypisanie pensjonariusza
-                </TooltipContent>
-              </Tooltip>
-            </>
-          ) : (
-            <AssignBedDialog
-              bedId={bed.id}
-              onAssigned={onRefresh}
-            />
-          )}
+  const [dialog, setDialog] = useState<'none' | 'assign' | 'reassign'>('none')
+  const close = (open: boolean) => !open && setDialog('none')
+  const resident = bed.active_assignment?.resident
+  const residentName = resident ? `${resident.first_name} ${resident.last_name}` : ''
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="min-h-touch px-2.5 text-sm text-muted-foreground hover:text-foreground"
-                  onClick={() => onDeactivate(bed.id, false)}
-                  disabled={!!bed.active_assignment}
-                >
-                  Dezaktywuj
-                </Button>
-              </span>
-            </TooltipTrigger>
-            <TooltipContent>
-              {bed.active_assignment
-                ? 'Nie można dezaktywować zajętego łóżka — najpierw wypisz pensjonariusza'
-                : 'Wyłącz łóżko z puli dostępnych w placówce'}
-            </TooltipContent>
-          </Tooltip>
-        </>
-      ) : (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onDeactivate(bed.id, true)}
-              className="min-h-touch px-3 text-sm"
-            >
-              Aktywuj łóżko
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            Przywróć łóżko do puli dostępnych do przypisania
-          </TooltipContent>
-        </Tooltip>
+  const actions: RowAction[] = !bed.is_active
+    ? [{ label: 'Aktywuj łóżko', icon: Power, hint: 'Przywróć łóżko do puli dostępnych do przypisania', onSelect: () => onDeactivate(bed.id, true) }]
+    : [
+        ...(resident
+          ? [
+              { label: 'Zmień łóżko', icon: ArrowRightLeft, onSelect: () => setDialog('reassign') },
+              {
+                label: 'Wypisz',
+                icon: LogOut,
+                hint: 'Zwolnij to łóżko i usuń bieżące przypisanie pensjonariusza',
+                onSelect: () => onUnassignClick({ bedId: bed.id, residentId: resident.id, residentName }),
+              },
+            ]
+          : [{ label: 'Przypisz', icon: UserPlus, onSelect: () => setDialog('assign') }]),
+        {
+          label: 'Dezaktywuj',
+          icon: PowerOff,
+          separated: true,
+          disabled: !!resident,
+          hint: resident
+            ? 'Nie można dezaktywować zajętego łóżka — najpierw wypisz pensjonariusza'
+            : 'Wyłącz łóżko z puli dostępnych w placówce',
+          onSelect: () => onDeactivate(bed.id, false),
+        },
+      ]
+
+  return (
+    <RowActions label={bedDisplayLabel(bed)} actions={actions}>
+      {dialog === 'assign' && <AssignBedDialog bedId={bed.id} onAssigned={onRefresh} open onOpenChange={close} />}
+      {dialog === 'reassign' && resident && (
+        <ReassignBedDialog
+          currentBedId={bed.id}
+          currentBedLabel={bed.label}
+          currentRoomNumber={roomNumber || ''}
+          currentFloor={floor}
+          residentId={resident.id}
+          residentName={residentName}
+          residentGender={resident.gender}
+          residentIsZsn={resident.is_zsn}
+          residentCareLevel={resident.care_level}
+          onReassigned={onRefresh}
+          open
+          onOpenChange={close}
+        />
       )}
-    </div>
+    </RowActions>
   )
 }

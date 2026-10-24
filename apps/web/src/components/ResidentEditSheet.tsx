@@ -32,10 +32,16 @@ interface ResidentData {
 interface ResidentEditSheetProps {
   resident: ResidentData
   onUpdated?: (updated: Partial<ResidentData>) => void
+  /** Sterowanie z zewnątrz (np. z menu „⋯") — wtedy bez własnego przycisku. */
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
-export function ResidentEditSheet({ resident, onUpdated }: ResidentEditSheetProps) {
-  const [open, setOpen] = useState(false)
+export function ResidentEditSheet({ resident, onUpdated, open: openProp, onOpenChange }: ResidentEditSheetProps) {
+  const [innerOpen, setInnerOpen] = useState(false)
+  const controlled = openProp !== undefined
+  const open = controlled ? openProp : innerOpen
+  const setOpen = (next: boolean) => (controlled ? onOpenChange?.(next) : setInnerOpen(next))
   const [isPending, startTransition] = useTransition()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState(false)
@@ -108,16 +114,18 @@ export function ResidentEditSheet({ resident, onUpdated }: ResidentEditSheetProp
 
   return (
     <>
-      <button
-        type="button"
-        onClick={handleOpen}
-        className="p-2 rounded-lg text-muted-foreground/70 hover:text-foreground hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/50 min-h-touch min-w-touch inline-flex items-center justify-center transition-colors"
-        title={`Edytuj dane: ${resident.first_name} ${resident.last_name}`}
-        aria-label={`Edytuj dane podopiecznego ${resident.first_name} ${resident.last_name}`}
-        data-testid="resident-edit-btn"
-      >
-        <Pencil className="h-4 w-4" />
-      </button>
+      {!controlled && (
+        <button
+          type="button"
+          onClick={handleOpen}
+          className="p-2 rounded-lg text-muted-foreground/70 hover:text-foreground hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/50 min-h-touch min-w-touch inline-flex items-center justify-center transition-colors"
+          title={`Edytuj dane: ${resident.first_name} ${resident.last_name}`}
+          aria-label={`Edytuj dane podopiecznego ${resident.first_name} ${resident.last_name}`}
+          data-testid="resident-edit-btn"
+        >
+          <Pencil className="h-4 w-4" />
+        </button>
+      )}
 
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent className="w-full sm:max-w-lg md:max-w-xl p-6 flex flex-col justify-between overflow-y-auto">

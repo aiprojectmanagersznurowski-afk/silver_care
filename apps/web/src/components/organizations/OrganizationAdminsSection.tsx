@@ -3,11 +3,10 @@ import { ListViewFrame } from '@/components/patterns/ListViewFrame'
 import { ObjectCard, ObjectGrid } from '@/components/patterns/ObjectCard'
 import { ListEmpty } from '@/components/patterns/ListState'
 import { VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-preference'
-import { Button } from '@/components/ui/button'
 import { UserCog } from 'lucide-react'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
-import { startImpersonationAction } from '@/actions/impersonation'
-import { ResendAdminInviteButton, AddAdminToOrgDialog } from '@/components/AdminInviteActions'
+import { AddAdminToOrgDialog } from '@/components/AdminInviteActions'
+import { OrgAdminRowActions } from './OrgAdminRowActions'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import type { User } from '@supabase/supabase-js'
 import { StatusBadge } from '@/components/patterns/StatusBadge'
@@ -27,28 +26,12 @@ export function OrganizationAdminsSection({
   administrators
 }: OrganizationAdminsSectionProps) {
   const actionsFor = (admin: User) => (
-      <div className="flex flex-wrap items-center justify-end gap-2">
-        <ResendAdminInviteButton
-          adminEmail={admin.email || ''}
-          organizationId={organizationId}
-          organizationName={organizationName}
-        />
-        <form action={startImpersonationAction}>
-          <input type="hidden" name="targetAdminId" value={admin.id} />
-          <input type="hidden" name="targetOrgId" value={organizationId} />
-          <input type="hidden" name="targetOrgName" value={organizationName} />
-          <input type="hidden" name="adminEmail" value={admin.email || ''} />
-          <Button
-            type="submit"
-            variant="outline"
-            size="sm"
-            className="rounded-xl border-border bg-muted text-foreground hover:bg-muted text-sm min-h-touch font-medium"
-            title="Zaloguj jako ten administrator placówki"
-          >
-            Zaloguj jako
-          </Button>
-        </form>
-      </div>
+    <OrgAdminRowActions
+      adminId={admin.id}
+      adminEmail={admin.email || ''}
+      organizationId={organizationId}
+      organizationName={organizationName}
+    />
   )
 
   const grid = administrators.length === 0 ? (

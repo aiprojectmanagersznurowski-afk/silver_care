@@ -3,13 +3,13 @@
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { pl } from 'date-fns/locale'
-import { UserCircle2, ChevronRight } from 'lucide-react'
+import { UserCircle2 } from 'lucide-react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 import { ResidentInlineCareLevel } from '@/components/ResidentInlineCareLevel'
 import { ResidentZsnCheckbox } from '@/components/ResidentZsnCheckbox'
-import { ResidentEditSheet } from '@/components/ResidentEditSheet'
+import { ResidentRowActions } from './ResidentRowActions'
 import { ResidentMobileCard } from '@/components/ResidentMobileCard'
 import { ResidentStatusBadge } from './ResidentStatusBadge'
 import { getActiveBed, type ResidentWithAssignments } from './resident-list-types'
@@ -84,17 +84,7 @@ export function ResidentsTable({ residents }: { residents: ResidentWithAssignmen
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm">{admissionLabel(resident)}</TableCell>
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <ResidentEditSheet resident={resident} />
-                          <Link
-                            href={`/admin/residents/${resident.id}`}
-                            className="p-2 text-muted-foreground/50 hover:text-primary transition-colors min-h-touch min-w-touch inline-flex items-center justify-center"
-                            title="Profil 360°"
-                            aria-label="Profil 360°"
-                          >
-                            <ChevronRight className="h-5 w-5" />
-                          </Link>
-                        </div>
+                        <ResidentRowActions resident={resident} />
                       </TableCell>
                     </TableRow>
                   )

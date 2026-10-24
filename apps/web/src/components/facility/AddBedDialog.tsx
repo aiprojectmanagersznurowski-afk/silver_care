@@ -18,10 +18,16 @@ import { Label } from '@/components/ui/label'
 interface AddBedDialogProps {
   roomId: string
   onBedAdded: () => void
+  /** Sterowanie z zewnątrz (np. z menu „⋯") — wtedy bez własnego przycisku. */
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
-export default function AddBedDialog({ roomId, onBedAdded }: AddBedDialogProps) {
-  const [open, setOpen] = useState(false)
+export default function AddBedDialog({ roomId, onBedAdded, open: openProp, onOpenChange }: AddBedDialogProps) {
+  const [innerOpen, setInnerOpen] = useState(false)
+  const controlled = openProp !== undefined
+  const open = controlled ? openProp : innerOpen
+  const setOpen = (next: boolean) => (controlled ? onOpenChange?.(next) : setInnerOpen(next))
   const [label, setLabel] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -58,10 +64,12 @@ export default function AddBedDialog({ roomId, onBedAdded }: AddBedDialogProps) 
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="outline" size="sm" />}>
-        <Plus className="w-4 h-4 mr-2" />
-        Dodaj łóżko
-      </DialogTrigger>
+      {!controlled && (
+        <DialogTrigger render={<Button variant="outline" size="sm" />}>
+          <Plus className="w-4 h-4 mr-2" />
+          Dodaj łóżko
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-lg md:max-w-xl p-6">
         <form onSubmit={handleSubmit}>
           <DialogHeader>

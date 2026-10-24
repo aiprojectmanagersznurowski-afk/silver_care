@@ -18,6 +18,9 @@ import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 interface AssignBedDialogProps {
   bedId: string
   onAssigned: () => void
+  /** Sterowanie z zewnątrz (np. z menu „⋯") — wtedy bez własnego przycisku. */
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 interface AssignableResident {
@@ -26,8 +29,11 @@ interface AssignableResident {
   last_name: string
 }
 
-export default function AssignBedDialog({ bedId, onAssigned }: AssignBedDialogProps) {
-  const [open, setOpen] = useState(false)
+export default function AssignBedDialog({ bedId, onAssigned, open: openProp, onOpenChange }: AssignBedDialogProps) {
+  const [innerOpen, setInnerOpen] = useState(false)
+  const controlled = openProp !== undefined
+  const open = controlled ? openProp : innerOpen
+  const setOpen = (next: boolean) => (controlled ? onOpenChange?.(next) : setInnerOpen(next))
   const [residentId, setResidentId] = useState('')
   const [residents, setResidents] = useState<AssignableResident[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -91,10 +97,12 @@ export default function AssignBedDialog({ bedId, onAssigned }: AssignBedDialogPr
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button size="sm" className="h-8 text-sm" />}>
-        <UserPlus className="w-3.5 h-3.5 mr-1.5" />
-        Przypisz
-      </DialogTrigger>
+      {!controlled && (
+        <DialogTrigger render={<Button size="sm" className="h-8 text-sm" />}>
+          <UserPlus className="w-3.5 h-3.5 mr-1.5" />
+          Przypisz
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-lg md:max-w-xl p-6">
         <form onSubmit={handleSubmit}>
           <DialogHeader>

@@ -164,6 +164,41 @@ export class PageConsistencyPage {
     });
   }
 
+  /**
+   * Kolumna akcji (ostatnia komórka wiersza danych): ile wierszy ma menu „⋯", jaki kształt ma
+   * jego przycisk i jakie inne przyciski/linki tam leżą. Rozwijanie wiersza (aria-expanded) nie jest akcją.
+   */
+  async rowActionSnapshot(): Promise<{ rows: number; menus: number; triggerShapes: string[]; stray: string[] }> {
+    return this.page.evaluate(() => {
+      const tables = [...document.querySelectorAll('main table')].filter((t) => (t as HTMLElement).offsetParent !== null);
+      const shapes = new Set<string>();
+      const stray = new Set<string>();
+      let rows = 0;
+      let menus = 0;
+      for (const t of tables) {
+        if (!t.querySelector('thead th:last-child')?.textContent?.includes('Akcje')) continue;
+        for (const tr of t.querySelectorAll(':scope > tbody > tr')) {
+          if (tr.querySelector(':scope > td[colspan]')) continue;
+          const cell = tr.querySelector(':scope > td:last-child');
+          if (!cell) continue;
+          rows++;
+          const trigger = cell.querySelector('[data-slot="row-actions"]');
+          if (trigger) {
+            menus++;
+            const cs = getComputedStyle(trigger);
+            const r = trigger.getBoundingClientRect();
+            shapes.add([Math.round(r.width), Math.round(r.height), cs.borderTopLeftRadius, cs.backgroundColor].join(' | '));
+          }
+          for (const el of cell.querySelectorAll('button, a')) {
+            if (el.closest('[data-slot="row-actions"]') || el.hasAttribute('aria-expanded')) continue;
+            stray.add((el.textContent || el.getAttribute('aria-label') || '?').trim().slice(0, 30));
+          }
+        }
+      }
+      return { rows, menus, triggerShapes: [...shapes], stray: [...stray] };
+    });
+  }
+
   /** Widoczne tabele: ile leży poza wspólną ramką TableCard i jakie style mają ramki. */
   async tableSnapshot(): Promise<{ tables: number; outsideCard: string[]; frames: string[] }> {
     return this.page.evaluate(() => {

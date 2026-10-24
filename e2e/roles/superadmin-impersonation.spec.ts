@@ -15,7 +15,8 @@ test.describe('Bezpieczny tryb impersonacji Super Admina (@REQ: SUP-IMPERSONATIO
 
     // Prawdziwa ścieżka: „Zaloguj jako" przy administratorze placówki ustawia ciasteczko powiązane z tym super adminem
     await page.goto(`/admin/organizations/${MAIN_ORG_ID}`);
-    await page.getByRole('button', { name: 'Zaloguj jako' }).first().click();
+    await page.locator('main [data-slot="row-actions"]').first().click();
+    await page.getByRole('menuitem', { name: 'Zaloguj jako' }).click();
     await page.waitForURL('**/admin');
 
     await page.goto('/admin/residents');
