@@ -12,7 +12,7 @@ interface LogoProps {
 /**
  * Komponent Logo Silver Care z automatycznym przełączaniem motywu:
  * - W trybie jasnym (light mode): /logo.png
- * - W trybie ciemnym (dark mode): /logo_dark.png
+ * - W trybie ciemnym (dark mode): /logo-dark.png
  */
 export function Logo({
   className,
@@ -32,7 +32,7 @@ export function Logo({
         className={cn('dark:hidden', className)}
       />
       <Image
-        src="/logo_dark.png"
+        src="/logo-dark.png"
         alt={alt}
         width={width}
         height={height}
