@@ -125,6 +125,18 @@ describe('RLS: izolacja według roli w obrębie placówki (ORG-ISOLATION)', () =
     });
   }, 20000);
 
+  it('@REQ: ORG-ISOLATION - powiązania bliskich czyta kierownik, a pielęgniarka nie (kontrakt: resident_relative_links)', async () => {
+    await rollback(async (tx) => {
+      const { orgId } = await seedOrg(tx);
+
+      await asRole(tx, 'org_admin', orgId);
+      expect(await tx`SELECT id FROM resident_relative_links`).toHaveLength(2);
+
+      await asRole(tx, 'nurse', orgId);
+      expect(await tx`SELECT id FROM resident_relative_links`).toHaveLength(0);
+    });
+  }, 20000);
+
   it('@REQ: ORG-ISOLATION - personel obcej placówki nie widzi niczego z tej placówki', async () => {
     await rollback(async (tx) => {
       const { orgId } = await seedOrg(tx);
