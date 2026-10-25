@@ -1,140 +1,33 @@
-/**
- * Strona profilu podopiecznego — integruje:
- * - EditResidentDialog (w sekcji nagłówka profilu podopiecznego)
- * - InviteFamilyDialog z triggerLabel="Zaproś bliskiego" (w sekcji bliskich i kontaktów)
- */
-
-import { createClient } from '@/lib/supabase/server'
-import { notFound } from 'next/navigation'
 import { cookies } from 'next/headers'
-import { differenceInYears, differenceInDays } from 'date-fns'
-import { PolarWearableCard } from '@/components/PolarWearableCard'
+import { notFound, redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
 import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
-import {
-  FullResidentData,
-  ResidentBedAssignment,
-  ResidentEventItem,
-  ResidentPackageItem,
-  ResidentRelativeLinkItem,
-} from '@/components/residents/profile/profile-types'
-import { ResidentProfileHeader } from '@/components/residents/profile/ResidentProfileHeader'
-import { ResidentGeneralInfoCard } from '@/components/residents/profile/ResidentGeneralInfoCard'
-import { ResidentBedInfoCard } from '@/components/residents/profile/ResidentBedInfoCard'
-import { ResidentFamilyCard } from '@/components/residents/profile/ResidentFamilyCard'
-import { ResidentContractCard } from '@/components/residents/profile/ResidentContractCard'
-import { ResidentEventsCard } from '@/components/residents/profile/ResidentEventsCard'
-import { ResidentProfileTabs } from '@/components/residents/profile/ResidentProfileTabs'
+import { getResidentCard } from '@/lib/resident-card/get-resident-card'
+import { ResidentCard } from '@/components/residents/card/ResidentCard'
+import { ListError } from '@/components/patterns/ListState'
 
-export default async function ResidentProfilePage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+/** Karta podopiecznego kierownika (i superadmina w impersonacji, tylko do odczytu) — SC-ADM-20. */
+export default async function ResidentProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  const cookieStore = await cookies()
-  const isImpersonating = isImpersonationSessionActive(cookieStore, user)
+  if (!user) redirect('/login')
 
-  // Pobierz podopiecznego wraz ze wszystkimi relacjami
-  const { data: rawResident, error } = await supabase
-    .from('residents')
-    .select(`
-      *,
-      bed_assignments(id, assigned_at, unassigned_at, beds(id, label, rooms(number, floor, sector))),
-      resident_relative_links(id, relative_user_id, relationship_code, role, is_primary_contact, created_at),
-      resident_events(id, event_type, event_date, event_reason, metadata, created_at),
-      resident_packages(id, package_type, package_name, monthly_rate, started_at, ended_at)
-    `)
-    .eq('id', id)
-    .single()
+  const isImpersonating = isImpersonationSessionActive(await cookies(), user)
+  const card = await getResidentCard(supabase, id, user, isImpersonating)
 
-  // Pobierz status urządzenia Polar
-  const { data: polarLink } = await supabase
-    .from('external_wearable_links')
-    .select('id, provider, external_user_id, created_at')
-    .eq('resident_id', id)
-    .eq('provider', 'POLAR')
-    .maybeSingle()
-
-  if (error || !rawResident) {
-    notFound()
+  if (card.status === 'forbidden') redirect('/')
+  if (card.status === 'not_found') notFound()
+  if (card.status === 'error') {
+    return <ListError description="Nie udało się wczytać karty podopiecznego. Odśwież stronę albo spróbuj później." />
   }
 
-  const resident = rawResident as unknown as FullResidentData
-
-  const age = resident.birth_date
-    ? differenceInYears(new Date(), new Date(resident.birth_date))
-    : null
-
-  const stayDays = resident.admission_date
-    ? differenceInDays(new Date(), new Date(resident.admission_date))
-    : null
-
-  const isActive = !resident.archived_at && !resident.death_date &&
-    (!resident.contract_end_date || new Date(resident.contract_end_date) > new Date())
-
-  const activeAssignment = Array.isArray(resident.bed_assignments)
-    ? (resident.bed_assignments as ResidentBedAssignment[]).find((a) => a.unassigned_at === null)
-    : null
-
-  const pastAssignments = Array.isArray(resident.bed_assignments)
-    ? (resident.bed_assignments as ResidentBedAssignment[])
-        .filter((a) => a.unassigned_at !== null)
-        .sort((a, b) => new Date(b.assigned_at).getTime() - new Date(a.assigned_at).getTime())
-    : []
-
-  const sortedEvents = Array.isArray(resident.resident_events)
-    ? [...(resident.resident_events as ResidentEventItem[])].sort(
-        (a, b) => new Date(b.event_date).getTime() - new Date(a.event_date).getTime()
-      )
-    : []
-
-  const activePackages = Array.isArray(resident.resident_packages)
-    ? (resident.resident_packages as ResidentPackageItem[]).filter((p) => !p.ended_at)
-    : []
-
-  const relativeLinks = Array.isArray(resident.resident_relative_links)
-    ? (resident.resident_relative_links as ResidentRelativeLinkItem[])
-    : []
-
   return (
-    <div className="flex flex-col gap-4">
-      <ResidentProfileHeader
-        resident={resident}
-        isActive={isActive}
-        canManage={!isImpersonating}
-        backHref="/admin/residents"
-        backLabel="Wróć do listy podopiecznych"
-        activeAssignment={activeAssignment}
-      />
-
-      <ResidentProfileTabs
-        overviewLabel="Przegląd"
-        overview={
-          <>
-            <ResidentGeneralInfoCard resident={resident} age={age} stayDays={stayDays} />
-            <ResidentBedInfoCard activeAssignment={activeAssignment} pastAssignments={pastAssignments} />
-          </>
-        }
-        sidebar={<ResidentContractCard resident={resident} activePackages={activePackages} />}
-        tabs={[
-          { id: 'family', label: 'Bliscy i kontakty', content: <ResidentFamilyCard resident={resident} relativeLinks={relativeLinks} /> },
-          { id: 'events', label: 'Zdarzenia', content: <ResidentEventsCard events={sortedEvents} /> },
-          {
-            id: 'wearable',
-            label: 'Opaska',
-            content: (
-              <PolarWearableCard
-                residentId={resident.id}
-                initialLinked={Boolean(polarLink)}
-                externalUserId={polarLink?.external_user_id}
-                linkedAt={polarLink?.created_at}
-              />
-            ),
-          },
-        ]}
-      />
-    </div>
+    <ResidentCard
+      card={card}
+      backHref="/admin/residents"
+      backLabel="Wróć do listy podopiecznych"
+      reportsHref="/admin/reports/daily"
+    />
   )
 }
