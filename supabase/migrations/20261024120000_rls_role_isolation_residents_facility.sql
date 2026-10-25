@@ -5,7 +5,8 @@
 -- więc konto rodziny / opiekuna prawnego z tokenem placówki mogło odczytać wszystkich jej podopiecznych,
 -- łóżka, przypisania i cudze powiązania rodzin, a polityka ALL na rooms pozwalała każdej roli zmieniać pokoje.
 -- Kontrakt (roles.contract.mjs): residents read = org_admin:own, nurse:own, legal_guardian:own, family:own;
--- rooms/beds read = org_admin:own, nurse:own; rooms create = org_admin.
+-- rooms/beds read = org_admin:own, nurse:own; rooms create = org_admin;
+-- resident_relative_links read = org_admin:own, legal_guardian:own (pielęgniarka bez dostępu).
 --
 -- Wycofanie (osobną migracją): odtworzyć polityki sprzed zmiany:
 --   residents_isolation       FOR SELECT USING (organization_id = public.get_jwt_organization_id())
@@ -87,7 +88,8 @@ CREATE POLICY "bed_assignments_staff_select" ON public.bed_assignments
     COALESCE(current_setting('request.jwt.claims', true)::jsonb->'app_metadata'->>'role', '') IN ('org_admin', 'nurse', 'super_admin')
   );
 
--- 5. resident_relative_links: personel widzi powiązania swojej placówki, rodzina tylko własne
+-- 5. resident_relative_links: kierownik (i superadmin) widzi powiązania swojej placówki, rodzina tylko własne.
+--    Pielęgniarka nie: kontrakt daje odczyt resident_relative_links tylko org_admin i legal_guardian.
 DROP POLICY IF EXISTS "links_isolation" ON public.resident_relative_links;
 DROP POLICY IF EXISTS "links_staff_select" ON public.resident_relative_links;
 DROP POLICY IF EXISTS "links_own_select" ON public.resident_relative_links;
@@ -100,7 +102,7 @@ CREATE POLICY "links_staff_select" ON public.resident_relative_links
       WHERE residents.id = resident_relative_links.resident_id
       AND residents.organization_id = public.get_jwt_organization_id()
     ) AND
-    COALESCE(current_setting('request.jwt.claims', true)::jsonb->'app_metadata'->>'role', '') IN ('org_admin', 'nurse', 'super_admin')
+    COALESCE(current_setting('request.jwt.claims', true)::jsonb->'app_metadata'->>'role', '') IN ('org_admin', 'super_admin')
   );
 
 CREATE POLICY "links_own_select" ON public.resident_relative_links
