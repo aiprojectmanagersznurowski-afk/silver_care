@@ -116,9 +116,9 @@ test.describe('Wyszukiwarka Cmd+K: dostępność i odporność okna (@REQ: UI-AC
     await page.goto('/admin');
     const search = new GlobalSearchPage(page);
     await search.open();
-    const box = await search.dialog.boundingBox();
-    expect(box?.width).toBeGreaterThanOrEqual(388);
-    expect(box?.height).toBeGreaterThanOrEqual(842);
+    // Okno animuje wejście (skalowanie), więc rozmiar mierzymy po jej zakończeniu
+    await expect.poll(async () => (await search.dialog.boundingBox())?.width).toBeGreaterThanOrEqual(388);
+    await expect.poll(async () => (await search.dialog.boundingBox())?.height).toBeGreaterThanOrEqual(842);
   });
 
   test('@REQ: UI-FOUR-STATES - przy błędzie połączenia jest przycisk „Spróbuj ponownie”, który ponawia zapytanie', async ({ loginPage, page }) => {
@@ -127,11 +127,11 @@ test.describe('Wyszukiwarka Cmd+K: dostępność i odporność okna (@REQ: UI-AC
     const search = new GlobalSearchPage(page);
     await search.open();
 
-    let failed = false;
+    // Blokujemy wszystkie wywołania akcji serwerowej (aplikacja sama powtarza przerwane żądanie), aż do kliknięcia „Spróbuj ponownie”
+    let blocking = true;
     await page.route('**/*', async (route) => {
       const req = route.request();
-      if (!failed && req.method() === 'POST' && req.headers()['next-action']) {
-        failed = true;
+      if (blocking && req.method() === 'POST' && req.headers()['next-action']) {
         await route.abort('failed');
       } else {
         await route.continue();
@@ -140,6 +140,7 @@ test.describe('Wyszukiwarka Cmd+K: dostępność i odporność okna (@REQ: UI-AC
 
     await search.search('an');
     await expect(search.retryButton).toBeVisible();
+    blocking = false;
     await search.retryButton.click();
     await expect(search.retryButton).not.toBeVisible();
     await expect(search.options.first()).toBeVisible();
