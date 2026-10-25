@@ -69,6 +69,11 @@ export function sanitizeSearchQuery(input: string): string {
     .trim()
 }
 
+/** Słowa frazy (po sanitizacji), do 4; imię i nazwisko wpisane razem to dwa słowa. */
+export function splitSearchWords(cleanQuery: string): string[] {
+  return cleanQuery.split(' ').filter(Boolean).slice(0, 4)
+}
+
 export function isCategoryAvailableForRole(
   category: SearchCategoryKey,
   role?: string | null
