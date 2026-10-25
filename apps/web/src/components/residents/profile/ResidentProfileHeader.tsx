@@ -13,14 +13,20 @@ import { FullResidentData, ResidentBedAssignment } from './profile-types'
 interface ResidentProfileHeaderProps {
   resident: FullResidentData
   isActive: boolean
-  isImpersonating: boolean
+  /** Sekcja „Edycja i wypis” z kontraktu (kierownik, nie w trybie tylko do odczytu). */
+  canManage: boolean
+  /** Powrót do listy w części aplikacji właściwej dla roli. */
+  backHref: string
+  backLabel: string
   activeAssignment?: ResidentBedAssignment | null
 }
 
 export function ResidentProfileHeader({
   resident,
   isActive,
-  isImpersonating,
+  canManage,
+  backHref,
+  backLabel,
   activeAssignment,
 }: ResidentProfileHeaderProps) {
   const activeBedLabel = activeAssignment?.beds
@@ -30,11 +36,11 @@ export function ResidentProfileHeader({
   return (
     <div className="space-y-2">
       <Link
-        href="/admin/residents"
+        href={backHref}
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors min-h-touch"
       >
         <ArrowLeft className="h-4 w-4" />
-        Wróć do listy podopiecznych
+        {backLabel}
       </Link>
 
       <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
@@ -71,10 +77,11 @@ export function ResidentProfileHeader({
           </div>
         </div>
 
+        {canManage && (
         <div className="flex flex-wrap items-center gap-2">
           <EditResidentDialog resident={resident} />
 
-          {isActive && !isImpersonating && (
+          {isActive && (
             <DischargeResidentDialog
               resident={{
                 id: resident.id,
@@ -85,6 +92,7 @@ export function ResidentProfileHeader({
             />
           )}
         </div>
+        )}
       </div>
     </div>
   )

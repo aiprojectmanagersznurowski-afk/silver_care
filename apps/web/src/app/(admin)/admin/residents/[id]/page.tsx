@@ -103,11 +103,14 @@ export default async function ResidentProfilePage({
       <ResidentProfileHeader
         resident={resident}
         isActive={isActive}
-        isImpersonating={isImpersonating}
+        canManage={!isImpersonating}
+        backHref="/admin/residents"
+        backLabel="Wróć do listy podopiecznych"
         activeAssignment={activeAssignment}
       />
 
       <ResidentProfileTabs
+        overviewLabel="Przegląd"
         overview={
           <>
             <ResidentGeneralInfoCard resident={resident} age={age} stayDays={stayDays} />
@@ -115,16 +118,22 @@ export default async function ResidentProfilePage({
           </>
         }
         sidebar={<ResidentContractCard resident={resident} activePackages={activePackages} />}
-        family={<ResidentFamilyCard resident={resident} relativeLinks={relativeLinks} />}
-        events={<ResidentEventsCard events={sortedEvents} />}
-        wearable={
-          <PolarWearableCard
-            residentId={resident.id}
-            initialLinked={Boolean(polarLink)}
-            externalUserId={polarLink?.external_user_id}
-            linkedAt={polarLink?.created_at}
-          />
-        }
+        tabs={[
+          { id: 'family', label: 'Bliscy i kontakty', content: <ResidentFamilyCard resident={resident} relativeLinks={relativeLinks} /> },
+          { id: 'events', label: 'Zdarzenia', content: <ResidentEventsCard events={sortedEvents} /> },
+          {
+            id: 'wearable',
+            label: 'Opaska',
+            content: (
+              <PolarWearableCard
+                residentId={resident.id}
+                initialLinked={Boolean(polarLink)}
+                externalUserId={polarLink?.external_user_id}
+                linkedAt={polarLink?.created_at}
+              />
+            ),
+          },
+        ]}
       />
     </div>
   )
