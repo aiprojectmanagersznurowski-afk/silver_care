@@ -5,6 +5,7 @@ vi.mock('@/lib/supabase/server', () => ({ createClient: vi.fn() }))
 import { createClient } from '@/lib/supabase/server'
 import { searchGlobalAction } from '../../apps/web/src/actions/global-search'
 import { isStaffRole, categoriesToSearch } from '../../apps/web/src/lib/global-search-helpers'
+import { mapSearchQueryResults } from '../../apps/web/src/lib/global-search-mappers'
 
 /**
  * @REQ: ORG-ISOLATION
@@ -147,5 +148,42 @@ describe('pomocniki dostępu (@REQ: ORG-ISOLATION)', () => {
     expect(categoriesToSearch('all', 'super_admin')).toContain('organizations')
     expect(categoriesToSearch('organizations', 'org_admin')).toEqual([])
     expect(categoriesToSearch('agenda', 'nurse')).toEqual(['agenda'])
+  })
+})
+
+describe('zapytania zgodne ze schematem bazy (@REQ: UI-FOUR-STATES)', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('@REQ: UI-FOUR-STATES - placówki wybierają kolumny, które istnieją (address, nie city)', async () => {
+    const { calls } = mockClient({ role: 'super_admin' })
+    await searchGlobalAction('Sloneczna')
+    const select = calls.find((c) => c.table === 'organizations' && c.method === 'select')
+    expect(String(select?.args[0])).toContain('address')
+    expect(String(select?.args[0])).not.toContain('city')
+  })
+
+  it('@REQ: UI-FOUR-STATES - podtytuł placówki pokazuje adres, a bez adresu neutralny opis', () => {
+    const items = mapSearchQueryResults(
+      { orgsData: [{ id: 'o1', name: 'Dom Sloneczny', address: 'ul. Lipowa 3, Gdansk' }, { id: 'o2', name: 'Dom Ksiezycowy', address: null }] },
+      'Dom'
+    )
+    expect(items[0].subtitle).toContain('ul. Lipowa 3, Gdansk')
+    expect(items[1].subtitle).toBe('Placówka opiekuńcza')
+  })
+
+  it('@REQ: UI-FOUR-STATES - cztery cyfry bez pełnej daty szukają po nazwiskach, a nie po zakresie dat', async () => {
+    const { calls } = mockClient({ role: 'org_admin', organization_id: ORG })
+    await searchGlobalAction('2026')
+    const reports = calls.filter((c) => c.table === 'daily_reports')
+    expect(reports.some((c) => c.method === 'gte' || c.method === 'lte')).toBe(false)
+    expect(reports.some((c) => c.method === 'or')).toBe(true)
+  })
+
+  it('@REQ: UI-FOUR-STATES - pełna data RRRR-MM-DD zawęża raporty do tego dnia', async () => {
+    const { calls } = mockClient({ role: 'nurse', organization_id: ORG })
+    await searchGlobalAction('2026-10-24')
+    const reports = calls.filter((c) => c.table === 'daily_reports')
+    expect(reports.find((c) => c.method === 'gte')?.args).toEqual(['created_at', '2026-10-24T00:00:00Z'])
+    expect(reports.find((c) => c.method === 'lte')?.args).toEqual(['created_at', '2026-10-24T23:59:59Z'])
   })
 })
