@@ -88,7 +88,8 @@ export async function searchGlobalAction(
   }
 
   const reports = () => {
-    const isDateSearch = /^\d{4}/.test(cleanQ) || /^\d{2}-\d{2}/.test(cleanQ)
+    // Zakres dat tylko dla pełnej daty; samo „2026” albo „10-24” to zwykły tekst (inaczej powstaje niepoprawny znacznik czasu)
+    const isDateSearch = /^\d{4}-\d{2}-\d{2}$/.test(cleanQ)
     let q = supabase
       .from('daily_reports')
       .select('id, created_at, status, residents!inner(first_name, last_name, organization_id)')
@@ -99,7 +100,7 @@ export async function searchGlobalAction(
       : q.or(`first_name.ilike.${like},last_name.ilike.${like}`, { foreignTable: 'residents' })
   }
 
-  const organizations = () => supabase.from('organizations').select('id, name, city').ilike('name', like).limit(6)
+  const organizations = () => supabase.from('organizations').select('id, name, address').ilike('name', like).limit(6)
 
   try {
     const settled = (await Promise.allSettled([

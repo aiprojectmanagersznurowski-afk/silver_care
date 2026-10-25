@@ -170,7 +170,7 @@ export function mapSearchQueryResults(
       results.push({
         id: org.id,
         title: org.name,
-        subtitle: org.city ? `Miasto: ${org.city}` : 'Placówka opiekuńcza',
+        subtitle: org.address || 'Placówka opiekuńcza',
         href: `/admin/organizations/${org.id}`,
         category: 'organizations',
         badge: 'Placówka',
