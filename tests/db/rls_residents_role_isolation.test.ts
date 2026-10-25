@@ -137,6 +137,23 @@ describe('RLS: izolacja według roli w obrębie placówki (ORG-ISOLATION)', () =
     });
   }, 20000);
 
+  it('@REQ: ORG-ISOLATION - zdarzenia pobytu i pakiety czyta tylko kierownik (kontrakt: org_admin:own)', async () => {
+    await rollback(async (tx) => {
+      const { orgId, linkedId } = await seedOrg(tx);
+      await tx`INSERT INTO resident_events (organization_id, resident_id, event_type, event_reason) VALUES (${orgId}, ${linkedId}, 'death', 'death')`;
+      await tx`INSERT INTO resident_packages (organization_id, resident_id, package_type, package_name, monthly_rate) VALUES (${orgId}, ${linkedId}, 'zsn', 'Pakiet ZSN', 1200)`;
+
+      expect(await tx`SELECT id FROM resident_events`).toHaveLength(1);
+      expect(await tx`SELECT id FROM resident_packages`).toHaveLength(1);
+
+      for (const [role, sub] of [['nurse', undefined], ['family', FAMILY_UID], ['legal_guardian', FAMILY_UID]] as const) {
+        await asRole(tx, role, orgId, sub);
+        expect(await tx`SELECT id FROM resident_events`, `${role}: resident_events`).toHaveLength(0);
+        expect(await tx`SELECT id FROM resident_packages`, `${role}: resident_packages`).toHaveLength(0);
+      }
+    });
+  }, 20000);
+
   it('@REQ: ORG-ISOLATION - personel obcej placówki nie widzi niczego z tej placówki', async () => {
     await rollback(async (tx) => {
       const { orgId } = await seedOrg(tx);
