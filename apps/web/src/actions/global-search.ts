@@ -53,9 +53,9 @@ export async function searchGlobalAction(
   const residents = () => {
     const q = supabase
       .from('residents')
-      .select('id, first_name, last_name, care_level, is_zsn, bed_assignments(unassigned_at, beds(label, rooms(number)))')
-      .is('archived_at', null)
+      .select('id, first_name, last_name, care_level, is_zsn, archived_at, death_date, contract_end_date, bed_assignments(unassigned_at, beds(label, rooms(number)))')
       .or(`first_name.ilike.${like},last_name.ilike.${like}`)
+      .order('archived_at', { ascending: true, nullsFirst: true }) // aktywni przed archiwalnymi, zanim zadziała limit
       .limit(6)
     return isSuperAdmin ? q : q.eq('organization_id', org)
   }

@@ -38,11 +38,17 @@ export function mapSearchQueryResults(
           last_name: r.last_name,
           care_level: r.care_level,
           is_zsn: r.is_zsn,
+          archived_at: r.archived_at,
+          death_date: r.death_date,
+          contract_end_date: r.contract_end_date,
           room_number: activeAssignment?.beds?.rooms?.number || null,
           bed_label: activeAssignment?.beds?.label || null,
         })
       )
     }
+    // Aktywni przed archiwalnymi; sort jest stabilny, więc kolejność w grupach zostaje
+    const rank = new Map(rows.map((r) => [r.id, r.archived_at || r.death_date ? 1 : 0]))
+    results.sort((a, b) => (rank.get(a.id) ?? 0) - (rank.get(b.id) ?? 0))
   }
 
   const seenFacilityIds = new Set<string>()
