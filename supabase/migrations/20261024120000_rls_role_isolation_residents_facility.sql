@@ -6,7 +6,8 @@
 -- łóżka, przypisania i cudze powiązania rodzin, a polityka ALL na rooms pozwalała każdej roli zmieniać pokoje.
 -- Kontrakt (roles.contract.mjs): residents read = org_admin:own, nurse:own, legal_guardian:own, family:own;
 -- rooms/beds read = org_admin:own, nurse:own; rooms create = org_admin;
--- resident_relative_links read = org_admin:own, legal_guardian:own (pielęgniarka bez dostępu).
+-- resident_relative_links read = org_admin:own, legal_guardian:own (pielęgniarka bez dostępu);
+-- resident_events i resident_packages read = org_admin:own (zdarzenia pobytu, w tym zgon, i opłaty).
 --
 -- Wycofanie (osobną migracją): odtworzyć polityki sprzed zmiany:
 --   residents_isolation       FOR SELECT USING (organization_id = public.get_jwt_organization_id())
@@ -14,6 +15,7 @@
 --   bed_assignments_isolation FOR SELECT USING (EXISTS (SELECT 1 FROM public.residents WHERE residents.id = bed_assignments.resident_id AND residents.organization_id = public.get_jwt_organization_id()))
 --   links_isolation           FOR SELECT USING (EXISTS (SELECT 1 FROM public.residents WHERE residents.id = resident_relative_links.resident_id AND residents.organization_id = public.get_jwt_organization_id()))
 --   "Isolated access for rooms" FOR ALL USING (organization_id = public.get_jwt_organization_id())
+--   resident_events_isolation, resident_packages_isolation FOR SELECT USING (organization_id = public.get_jwt_organization_id())
 -- i usunąć polityki dodane poniżej.
 
 -- Personel placówki: role z kontraktu. Rodzina i opiekun prawny: przez is_relative_linked (SECURITY DEFINER,
@@ -110,4 +112,26 @@ CREATE POLICY "links_own_select" ON public.resident_relative_links
   USING (
     relative_user_id = auth.uid() AND
     COALESCE(current_setting('request.jwt.claims', true)::jsonb->'app_metadata'->>'role', '') IN ('family', 'legal_guardian')
+  );
+
+-- 6. resident_events (wypis, zgon, zakończenie umowy) i resident_packages (opłaty): odczyt tylko kierownik
+--    i superadmin. Wstawianie zdarzeń idzie kluczem serwisowym w akcji wypisu, więc tego nie zmienia.
+DROP POLICY IF EXISTS "resident_events_isolation" ON public.resident_events;
+DROP POLICY IF EXISTS "resident_events_manager_select" ON public.resident_events;
+
+CREATE POLICY "resident_events_manager_select" ON public.resident_events
+  FOR SELECT
+  USING (
+    organization_id = public.get_jwt_organization_id() AND
+    COALESCE(current_setting('request.jwt.claims', true)::jsonb->'app_metadata'->>'role', '') IN ('org_admin', 'super_admin')
+  );
+
+DROP POLICY IF EXISTS "resident_packages_isolation" ON public.resident_packages;
+DROP POLICY IF EXISTS "resident_packages_manager_select" ON public.resident_packages;
+
+CREATE POLICY "resident_packages_manager_select" ON public.resident_packages
+  FOR SELECT
+  USING (
+    organization_id = public.get_jwt_organization_id() AND
+    COALESCE(current_setting('request.jwt.claims', true)::jsonb->'app_metadata'->>'role', '') IN ('org_admin', 'super_admin')
   );
