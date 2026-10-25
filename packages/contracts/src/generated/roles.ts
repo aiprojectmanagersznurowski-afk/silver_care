@@ -86,7 +86,9 @@ export const RESOURCES = [
   "security_access_logs",
   "rooms",
   "beds",
-  "bed_assignments"
+  "bed_assignments",
+  "resident_events",
+  "resident_packages"
 ] as const;
 
 export const MATRIX = [
@@ -329,6 +331,30 @@ export const MATRIX = [
     "read": [
       "org_admin:own",
       "nurse:own"
+    ],
+    "create": [
+      "org_admin"
+    ],
+    "update": [
+      "org_admin:own"
+    ],
+    "delete": []
+  },
+  {
+    "resource": "resident_events",
+    "read": [
+      "org_admin:own"
+    ],
+    "create": [
+      "org_admin"
+    ],
+    "update": [],
+    "delete": []
+  },
+  {
+    "resource": "resident_packages",
+    "read": [
+      "org_admin:own"
     ],
     "create": [
       "org_admin"
