@@ -35,9 +35,9 @@ Szybka poprawka niezależna od karty (proponuję zrobić od razu): w obecnym pro
 - Testy bazy: pielęgniarka nie czyta powiązań bliskich ani zgód; izolacja placówek bez zmian.
 - E2E Playwright: kierownik widzi wszystkie sekcje, pielęgniarka tylko swoje; rodzina i opiekun prawny nie otwierają obu tras; klawiatura i powrót fokusu; pełna bramka `bash scripts/verify.sh --full`.
 
-## Pytania do człowieka (blokują zakres)
-1. **Bliscy i kontakty dla personelu.** Kontrakt: odczyt tylko kierownik. Domyślnie personel tej sekcji nie widzi. Jeśli pielęgniarka ma móc zadzwonić do rodziny, trzeba zmienić kontrakt (osobna decyzja, okno kontraktowe).
-2. **Metryki fizjologiczne dla personelu.** Kontrakt pozwala personelowi je czytać, ale ADR-005 zakazuje oceny. Domyślnie w pierwszej wersji tylko behawioralne (kroki, aktywność, sen) jako fakty.
-3. **Zdarzenia pobytu i pakiety.** Nie ma ich w kontrakcie. Domyślnie wyłącznie kierownik, do czasu dopisania zasobów do kontraktu.
-4. **Adres trasy personelu:** proponuję `/staff/residents/[id]`.
-5. **Poprawka #119 (3.0):** zgoda na zawężenie odczytu powiązań bliskich do kierownika i superadmina.
+## Decyzje (Michał, 2026-10-25)
+1. **Bliscy i kontakty:** personel opiekuńczy **nie** widzi tej sekcji (zgodnie z kontraktem: odczyt `resident_relative_links` tylko kierownik i opiekun prawny). Bez zmiany kontraktu.
+2. **Metryki:** w karcie wyłącznie metryki behawioralne (kroki, czas aktywności, długość i godziny snu) jako fakty, bez wykresów trendu. Fizjologiczne nie są prezentowane.
+3. **Zdarzenia pobytu i pakiety:** wyłącznie kierownik, do czasu dopisania `resident_events` i `resident_packages` do kontraktu.
+4. **Trasa personelu:** `/staff/residents/[id]`.
+5. **Poprawka #119 (etap 3.0):** zatwierdzona — odczyt powiązań bliskich zawężony do kierownika i superadmina.
