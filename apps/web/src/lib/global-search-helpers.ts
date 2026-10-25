@@ -1,3 +1,5 @@
+import { STAFF_ROLES } from '@silvercare/contracts/src/generated/roles'
+
 export type SearchCategoryKey =
   | 'residents'
   | 'facility'
@@ -74,6 +76,20 @@ export function isCategoryAvailableForRole(
     return role === 'super_admin'
   }
   return true
+}
+
+/** Wyszukiwarka jest dla personelu z kontraktu; rodzina, opiekun prawny i konto bez roli nie mają do niej dostępu. */
+export function isStaffRole(role?: string | null): boolean {
+  return !!role && (STAFF_ROLES as readonly string[]).includes(role)
+}
+
+/** Kategorie, dla których akcja ma dziś zapytania (personel dojdzie w osobnym etapie). */
+const IMPLEMENTED_CATEGORIES: SearchCategoryKey[] = ['residents', 'facility', 'agenda', 'reports', 'organizations']
+
+/** Które kategorie faktycznie odpytać: wybrana albo wszystkie dostępne dla roli. */
+export function categoriesToSearch(selected: SearchCategoryKey | 'all', role?: string | null): SearchCategoryKey[] {
+  const available = IMPLEMENTED_CATEGORIES.filter((c) => isCategoryAvailableForRole(c, role))
+  return selected === 'all' ? available : available.filter((c) => c === selected)
 }
 
 export function formatResidentSearchResult(resident: {
