@@ -8,12 +8,13 @@ import { buttonVariants } from '@/components/ui/button'
 import { Users, Bed, BedDouble, FileText, Building2 } from 'lucide-react'
 import { PageHeader } from '@/components/patterns/PageHeader'
 import { MetricCard, MetricGrid } from '@/components/patterns/MetricCard'
+import { getAppRole } from '@/lib/auth/app-role'
 
 export default async function AdminDashboard() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const role = user?.app_metadata?.role || user?.user_metadata?.role
+  const role = getAppRole(user)
   const cookieStore = await cookies()
   const isImpersonating = isImpersonationSessionActive(cookieStore, user)
 
