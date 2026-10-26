@@ -11,7 +11,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import {
-  Sparkles,
+  Shuffle,
   Check,
   AlertCircle,
   Loader2,
@@ -127,15 +127,15 @@ export function BedAllocationOptimizerDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger render={<Button variant="outline" className="gap-2 border-border text-foreground" />}>
-        <Sparkles className="w-4 h-4 text-foreground" />
-        Optymalizator przydziału (AI)
+        <Shuffle className="w-4 h-4 text-foreground" />
+        Optymalizuj przydział łóżek
       </DialogTrigger>
       <DialogContent className="max-w-4xl lg:max-w-5xl max-h-[90vh] flex flex-col p-6 overflow-hidden">
         <DialogHeader className="shrink-0 mb-4">
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-foreground">
-              <Sparkles className="w-5 h-5 text-foreground" />
-              Optymalizator przydziału łóżek
+              <Shuffle className="w-5 h-5 text-foreground" />
+              Optymalizacja przydziału łóżek
             </DialogTitle>
             <Button
               variant="ghost"
@@ -149,7 +149,7 @@ export function BedAllocationOptimizerDialog({
             </Button>
           </div>
           <DialogDescription className="text-sm text-muted-foreground">
-            Inteligentna weryfikacja obłożenia placówki pod kątem zgodności płciowej oraz poziomu mobilności.
+            Sprawdza zgodność płci w pokojach wieloosobowych i to, czy osoby o ograniczonej mobilności mają łóżko na parterze.
           </DialogDescription>
         </DialogHeader>
 
@@ -161,7 +161,7 @@ export function BedAllocationOptimizerDialog({
             </p>
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto pr-1 space-y-5">
+          <div data-testid="bed-optimizer-result" className="flex-1 overflow-y-auto pr-1 space-y-5">
             {metrics && <BedOptimizerMetricsView metrics={metrics} />}
 
             {error && (

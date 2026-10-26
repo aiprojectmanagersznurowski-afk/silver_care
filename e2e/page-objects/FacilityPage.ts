@@ -19,6 +19,8 @@ export class FacilityPage {
   readonly roomTable: Locator;
   readonly bedsTable: Locator;
   readonly expandedBedRows: Locator;
+  readonly optimizerButton: Locator;
+  readonly optimizerSuggestions: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -33,6 +35,16 @@ export class FacilityPage {
     this.roomTable = page.locator('[data-testid="room-table"]');
     this.bedsTable = page.locator('[data-testid="beds-table"]');
     this.expandedBedRows = page.locator('[data-testid="room-expanded-beds"]');
+    this.optimizerButton = page.getByRole('button', { name: 'Optymalizuj przydział łóżek' });
+    this.optimizerSuggestions = page.locator('[data-testid="bed-optimizer-suggestion"]');
+  }
+
+  /** Otwiera optymalizator i czeka na koniec analizy (propozycje albo brak konfliktów). */
+  async openOptimizer() {
+    await this.optimizerButton.click();
+    const dialog = this.page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+    await expect(dialog.locator('[data-testid="bed-optimizer-result"]')).toBeVisible({ timeout: 20000 });
   }
 
   /** Etykiety opcji filtra sektora bez pozycji „Wszystkie sektory”. */

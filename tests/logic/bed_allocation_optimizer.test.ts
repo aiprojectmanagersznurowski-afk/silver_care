@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
   isGroundFloor,
-  pseudonymizeResident,
   analyzeCurrentAllocation,
   generateRelocationSuggestions,
   OptimizerRoom,
@@ -14,13 +13,6 @@ import {
  */
 describe('Bed Allocation Optimizer Logic (@REQ: ADM-BED-ASSIGNMENT)', () => {
   describe('Helper Functions', () => {
-    it('correctly pseudonymizes resident names to initials without exposing PII', () => {
-      expect(pseudonymizeResident('Jan', 'Kowalski')).toBe('J. K.')
-      expect(pseudonymizeResident('Anna', 'Nowak-Zielińska')).toBe('A. N.')
-      expect(pseudonymizeResident('', '')).toBe('? ?')
-      expect(pseudonymizeResident(null, undefined)).toBe('? ?')
-    })
-
     it('accurately identifies ground floor designations', () => {
       expect(isGroundFloor(0)).toBe(true)
       expect(isGroundFloor('0')).toBe(true)
@@ -56,7 +48,7 @@ describe('Bed Allocation Optimizer Logic (@REQ: ADM-BED-ASSIGNMENT)', () => {
       const occupants: OptimizerOccupant[] = [
         {
           residentId: 'res-1',
-          pseudonym: 'J. K.',
+          residentName: 'Kowalski Jan',
           gender: 'M',
           careLevel: 'walking',
           isZsn: false,
@@ -65,7 +57,7 @@ describe('Bed Allocation Optimizer Logic (@REQ: ADM-BED-ASSIGNMENT)', () => {
         },
         {
           residentId: 'res-2',
-          pseudonym: 'S. N.',
+          residentName: 'Nowak Stefan',
           gender: 'M',
           careLevel: 'bedridden',
           isZsn: false,
@@ -85,7 +77,7 @@ describe('Bed Allocation Optimizer Logic (@REQ: ADM-BED-ASSIGNMENT)', () => {
       const occupants: OptimizerOccupant[] = [
         {
           residentId: 'res-1',
-          pseudonym: 'J. K.',
+          residentName: 'Kowalski Jan',
           gender: 'M',
           careLevel: 'walking',
           isZsn: false,
@@ -94,7 +86,7 @@ describe('Bed Allocation Optimizer Logic (@REQ: ADM-BED-ASSIGNMENT)', () => {
         },
         {
           residentId: 'res-2',
-          pseudonym: 'A. N.',
+          residentName: 'Nowak Anna',
           gender: 'F',
           careLevel: 'walking',
           isZsn: false,
@@ -114,7 +106,7 @@ describe('Bed Allocation Optimizer Logic (@REQ: ADM-BED-ASSIGNMENT)', () => {
       const occupants: OptimizerOccupant[] = [
         {
           residentId: 'res-3',
-          pseudonym: 'T. W.',
+          residentName: 'Wiśniewski Tomasz',
           gender: 'M',
           careLevel: 'bedridden',
           isZsn: false,
@@ -149,7 +141,7 @@ describe('Bed Allocation Optimizer Logic (@REQ: ADM-BED-ASSIGNMENT)', () => {
       const occupants: OptimizerOccupant[] = [
         {
           residentId: 'res-f1',
-          pseudonym: 'A. N.',
+          residentName: 'Nowak Anna',
           gender: 'F',
           careLevel: 'walking',
           isZsn: false,
@@ -158,7 +150,7 @@ describe('Bed Allocation Optimizer Logic (@REQ: ADM-BED-ASSIGNMENT)', () => {
         },
         {
           residentId: 'res-f2',
-          pseudonym: 'B. C.',
+          residentName: 'Czarna Barbara',
           gender: 'F',
           careLevel: 'sitting',
           isZsn: false,
@@ -167,7 +159,7 @@ describe('Bed Allocation Optimizer Logic (@REQ: ADM-BED-ASSIGNMENT)', () => {
         },
         {
           residentId: 'res-m1',
-          pseudonym: 'J. K.',
+          residentName: 'Kowalski Jan',
           gender: 'M',
           careLevel: 'walking',
           isZsn: false,
@@ -183,6 +175,9 @@ describe('Bed Allocation Optimizer Logic (@REQ: ADM-BED-ASSIGNMENT)', () => {
       expect(genderFix).toBeDefined()
       expect(genderFix?.priority).toBe('high')
       expect(genderFix?.toRoomNumber).toBe('102')
+      // Kierownik widzi pełne dane: Nazwisko Imię (decyzja Michała 2026-10-26; optymalizator nie wysyła danych do modelu)
+      expect(genderFix?.residentName).toMatch(/^\S+ \S+$/)
+      expect(genderFix?.residentName).not.toMatch(/^[A-Z?]\. [A-Z?]\.$/)
       expect(genderFix?.reason).toContain('Rozwiązanie konfliktu płci')
     })
 
@@ -200,7 +195,7 @@ describe('Bed Allocation Optimizer Logic (@REQ: ADM-BED-ASSIGNMENT)', () => {
       const occupants: OptimizerOccupant[] = [
         {
           residentId: 'res-bedridden',
-          pseudonym: 'H. P.',
+          residentName: 'Pawlak Henryk',
           gender: 'F',
           careLevel: 'bedridden',
           isZsn: false,
@@ -212,6 +207,7 @@ describe('Bed Allocation Optimizer Logic (@REQ: ADM-BED-ASSIGNMENT)', () => {
       const suggestions = generateRelocationSuggestions(rooms, beds, occupants)
       expect(suggestions.length).toBe(1)
       expect(suggestions[0].residentId).toBe('res-bedridden')
+      expect(suggestions[0].residentName).toBe('Pawlak Henryk')
       expect(suggestions[0].toRoomNumber).toBe('101')
       expect(suggestions[0].toFloor).toBe('0')
       expect(suggestions[0].priority).toBe('high')
