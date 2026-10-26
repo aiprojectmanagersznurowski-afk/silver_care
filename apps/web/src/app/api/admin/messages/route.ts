@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-export async function GET() {
+export async function GET(request: Request) {
   const supabase = await createClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
 
@@ -14,9 +14,15 @@ export async function GET() {
     return NextResponse.json({ error: 'Brak uprawnień administratora placówki' }, { status: 403 });
   }
 
+  // Odświeżanie w tle dociąga tylko wiadomości nowsze niż `since` (skalowanie skrzynki)
+  const since = new URL(request.url).searchParams.get('since');
+  if (since !== null && Number.isNaN(Date.parse(since))) {
+    return NextResponse.json({ error: 'Nieprawidłowy parametr since' }, { status: 400 });
+  }
+
   // Admin policy in Supabase (family_messages_select) ensures 
   // only org_admin can read these and only from their organization.
-  const { data, error } = await supabase
+  let query = supabase
     .from('family_messages')
     .select(`
       id,
@@ -32,12 +38,29 @@ export async function GET() {
       )
     `)
     .order('created_at', { ascending: false });
+  if (since !== null) query = query.gt('created_at', since);
+
+  const { data, error } = await query;
 
   if (error) {
     return NextResponse.json({ error: 'Failed to fetch messages' }, { status: 500 });
   }
 
-  return NextResponse.json({ messages: data }, { status: 200 });
+  // Kto z bliskich pisze: rola z resident_relative_links tylko dla par obecnych w wiadomościach
+  const pairs = new Set((data || []).map((m) => `${m.resident_id}:${m.relative_user_id}`));
+  const residentIds = [...new Set((data || []).map((m) => m.resident_id))];
+  let relatives: Array<{ residentId: string; relativeUserId: string; role: string; isPrimaryContact: boolean }> = [];
+  if (residentIds.length > 0) {
+    const { data: links } = await supabase
+      .from('resident_relative_links')
+      .select('resident_id, relative_user_id, role, is_primary_contact')
+      .in('resident_id', residentIds);
+    relatives = (links || [])
+      .filter((l) => pairs.has(`${l.resident_id}:${l.relative_user_id}`))
+      .map((l) => ({ residentId: l.resident_id, relativeUserId: l.relative_user_id, role: l.role, isPrimaryContact: Boolean(l.is_primary_contact) }));
+  }
+
+  return NextResponse.json({ messages: data, relatives }, { status: 200 });
 }
 
 export async function POST(request: Request) {
