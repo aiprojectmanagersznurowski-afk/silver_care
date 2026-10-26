@@ -1,4 +1,5 @@
 import { STAFF_ROLES } from '@silvercare/contracts/src/generated/roles'
+import { getResidentStatus } from '@/lib/resident-status'
 
 export type SearchCategoryKey =
   | 'residents'
@@ -100,6 +101,9 @@ export function formatResidentSearchResult(resident: {
   bed_label?: string | null
   care_level?: string | null
   is_zsn?: boolean | null
+  archived_at?: string | null
+  death_date?: string | null
+  contract_end_date?: string | null
 }): SearchResultItem {
   const roomBedStr =
     resident.room_number && resident.bed_label
@@ -108,20 +112,31 @@ export function formatResidentSearchResult(resident: {
       ? `Pokój ${resident.room_number}`
       : 'Brak przypisanego łóżka'
 
-  let badge: string | undefined
-  if (resident.is_zsn) {
-    badge = 'ZSN'
-  }
+  // Status jako fakt, tą samą funkcją co lista podopiecznych; data zgonu lub archiwizacji w podtytule
+  const status = getResidentStatus(resident)
+  const isActive = status.kind === 'active'
+  const subtitle = resident.death_date
+    ? `Zgon: ${formatDatePl(resident.death_date)}`
+    : resident.archived_at
+    ? `Zarchiwizowany: ${formatDatePl(resident.archived_at)}`
+    : roomBedStr
+  const badge = isActive ? (resident.is_zsn ? 'ZSN' : undefined) : status.label
 
   return {
     id: resident.id,
     title: `${resident.first_name} ${resident.last_name}`,
-    subtitle: roomBedStr,
+    subtitle,
     href: `/admin/residents/${resident.id}`,
     category: 'residents',
     badge,
-    badgeVariant: badge ? 'secondary' : undefined,
+    badgeVariant: badge ? (isActive ? 'secondary' : 'outline') : undefined,
   }
+}
+
+/** RRRR-MM-DD (także z czasem) → DD.MM.RRRR, bez stref czasowych. */
+function formatDatePl(iso: string): string {
+  const [y, m, d] = iso.slice(0, 10).split('-')
+  return `${d}.${m}.${y}`
 }
 
 export function formatFacilitySearchResult(roomBed: {

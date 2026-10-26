@@ -27,7 +27,7 @@ function mockClient(
   const calls: Call[] = []
   const from = vi.fn((table: string) => {
     const b: Record<string, unknown> = {}
-    for (const method of ['select', 'is', 'or', 'ilike', 'eq', 'gte', 'lte', 'limit']) {
+    for (const method of ['select', 'is', 'or', 'ilike', 'eq', 'gte', 'lte', 'limit', 'order']) {
       b[method] = (...args: unknown[]) => {
         calls.push({ table, method, args })
         return b

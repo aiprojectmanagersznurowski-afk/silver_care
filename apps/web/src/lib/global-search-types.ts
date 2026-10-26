@@ -52,6 +52,9 @@ export interface RawResidentRow {
   last_name: string
   care_level: string | null
   is_zsn: boolean | null
+  archived_at?: string | null
+  death_date?: string | null
+  contract_end_date?: string | null
   bed_assignments: Array<{
     unassigned_at: string | null
     beds: {
