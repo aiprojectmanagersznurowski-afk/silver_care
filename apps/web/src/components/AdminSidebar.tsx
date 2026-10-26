@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   Mail,
   MessageSquare,
+  Settings,
   ShieldAlert,
   ShieldCheck,
   TrendingUp,
@@ -69,6 +70,7 @@ function facilityGroup(isImpersonating: boolean, unansweredCount = 0): SidebarNa
         ],
       },
       { href: '/admin/audit', label: 'Rejestr placówki', icon: ShieldAlert },
+      { href: '/admin/settings', label: 'Ustawienia', icon: Settings },
     ],
   }
 }
