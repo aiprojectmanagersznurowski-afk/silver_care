@@ -9,6 +9,7 @@ import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 import { EditResidentDialog } from '@/components/EditResidentDialog'
 import { DischargeResidentDialog } from '@/components/DischargeResidentDialog'
 import { FullResidentData, ResidentBedAssignment } from './profile-types'
+import { formatPersonName } from '@/lib/person-name'
 
 interface ResidentProfileHeaderProps {
   resident: FullResidentData
@@ -49,7 +50,7 @@ export function ResidentProfileHeader({
             {resident.avatar_url && (
               <AvatarImage
                 src={resident.avatar_url}
-                alt={`${resident.first_name} ${resident.last_name}`}
+                alt={formatPersonName(resident.first_name, resident.last_name)}
               />
             )}
             <AvatarFallback className="bg-muted text-foreground font-medium text-xl">
@@ -60,7 +61,7 @@ export function ResidentProfileHeader({
           <div>
             <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-2xl sm:text-3xl font-display font-semibold text-foreground tracking-tight">
-                {resident.first_name} {resident.last_name}
+                {formatPersonName(resident.first_name, resident.last_name)}
               </h1>
               <BusinessIdBadge type="resident" id={resident.id} />
               {isActive ? (
