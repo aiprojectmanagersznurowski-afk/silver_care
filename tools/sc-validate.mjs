@@ -476,9 +476,8 @@ else if (Number(m[1]) < 7 || Number(m[2]) > 21) {
 
 // R28 — plan dnia rodziny bez treści medycznych (FAM-AGENDA-NO-MEDICAL, decyzja Michała 2026-10-26).
 // Każda kategoria MEDICAL ma słowa, po których pozycja planu dnia jest ukrywana przed rodziną.
-// Łagodnie do czasu dodania listy w kontrakcie.
-if (AGENDA_FAMILY_EXCLUSION) {
-  const ex = AGENDA_FAMILY_EXCLUSION;
+{
+  const ex = AGENDA_FAMILY_EXCLUSION || {};
   if (!(ex.excludedTypes || []).includes('medication')) err('R28-agenda-no-medical', 'Typ „medication” nie jest wykluczony z planu dnia rodziny.');
   const seen = new Set();
   for (const cat of MEDICAL_CATEGORIES) {
