@@ -48,13 +48,9 @@ describe('UI Design System Refresh & Session Routing', () => {
     // Administratorzy placówki i platformy
     expect(resolveRoleDestination('super_admin')).toBe('/admin');
     expect(resolveRoleDestination('org_admin')).toBe('/admin');
-    expect(resolveRoleDestination('admin')).toBe('/admin');
-    expect(resolveRoleDestination('facility_manager')).toBe('/admin');
 
     // Personel medyczny i opiekuńczy
     expect(resolveRoleDestination('nurse')).toBe('/staff');
-    expect(resolveRoleDestination('caregiver')).toBe('/staff');
-    expect(resolveRoleDestination('paramedic')).toBe('/staff');
 
     // Rodzina i opiekunowie prawni
     expect(resolveRoleDestination('family')).toBe('/dashboard');

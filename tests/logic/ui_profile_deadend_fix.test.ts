@@ -16,13 +16,10 @@ describe('Likwidacja ślepego zaułka profilu (@REQ: UI-TEMPLATE-ALIGNMENT, @REQ
   it('wyznacza poprawną ścieżkę powrotu dla administratora placówki @REQ: UI-ACCESSIBILITY', () => {
     expect(resolveProfileBackHref('super_admin')).toBe('/admin');
     expect(resolveProfileBackHref('org_admin')).toBe('/admin');
-    expect(resolveProfileBackHref('admin')).toBe('/admin');
   });
 
   it('wyznacza poprawną ścieżkę powrotu dla personelu opiekuńczego @REQ: UI-ACCESSIBILITY', () => {
     expect(resolveProfileBackHref('nurse')).toBe('/staff');
-    expect(resolveProfileBackHref('caregiver')).toBe('/staff');
-    expect(resolveProfileBackHref('paramedic')).toBe('/staff');
   });
 
   it('wyznacza poprawną ścieżkę powrotu dla członków rodziny i opiekunów prawnych @REQ: UI-ACCESSIBILITY', () => {

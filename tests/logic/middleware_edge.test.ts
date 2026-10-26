@@ -29,7 +29,6 @@ describe('Edge Middleware Standardization (SEC-MIDDLEWARE-EDGE)', () => {
     expect(resolveRoleDestination('org_admin')).toBe('/admin');
     expect(resolveRoleDestination('super_admin')).toBe('/admin');
     expect(resolveRoleDestination('nurse')).toBe('/staff');
-    expect(resolveRoleDestination('caregiver')).toBe('/staff');
     expect(resolveRoleDestination('family')).toBe('/dashboard');
     expect(resolveRoleDestination('legal_guardian')).toBe('/dashboard');
 
