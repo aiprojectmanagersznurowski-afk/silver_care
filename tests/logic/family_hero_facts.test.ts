@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import * as hero from '../../apps/web/src/components/DailySummaryHero'
+import { getCategoryIcon } from '../../apps/web/src/components/AgendaTimelineClient'
 
 /**
  * @REQ: FAM-DASHBOARD
@@ -26,5 +27,11 @@ describe('Podsumowanie dnia — tylko fakty (@REQ: FAM-DASHBOARD)', () => {
 
   it('@REQ: MDR-NO-INTERPRETATION - moduł nie wyprowadza ocen samopoczucia z tekstu', () => {
     expect('deriveWellbeing' in hero).toBe(false)
+  })
+
+  it('@REQ: FAM-AGENDA - ikony kategorii planu dnia to komponenty interfejsu, nie emoji', () => {
+    for (const category of ['meal', 'medication', 'therapy', 'hygiene', 'rest', 'activity', 'inne']) {
+      expect(typeof getCategoryIcon(category), category).not.toBe('string')
+    }
   })
 })
