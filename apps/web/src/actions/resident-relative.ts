@@ -24,7 +24,7 @@ export async function setPrimaryRelativeAction(linkId: string, residentId: strin
   }
 
   const role = user.app_metadata?.role
-  if (role !== 'org_admin' && role !== 'super_admin' && role !== 'admin') {
+  if (role !== 'org_admin' && role !== 'super_admin') {
     return { error: 'Tylko administrator placówki może zarządzać kontaktami głównymi.' }
   }
 
