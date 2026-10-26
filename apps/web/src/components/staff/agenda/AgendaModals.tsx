@@ -12,7 +12,8 @@ import {
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Button } from '@/components/ui/button'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
-import { AlertCircle } from 'lucide-react'
+import { AlertCircle, EyeOff } from 'lucide-react'
+import { isMedicalAgendaItem } from '@/lib/agenda-family-visibility'
 import { AgendaItem, ResidentSummary, ITEM_TYPES } from './agenda-types'
 import { formatPersonName } from '@/lib/person-name'
 
@@ -38,6 +39,8 @@ function AgendaEditForm({ item, onClose, onUpdate, residents }: AgendaEditFormPr
   const [editTime, setEditTime] = useState(item.time.slice(0, 5))
   const [editType, setEditType] = useState(item.type)
   const [editResidentId, setEditResidentId] = useState(item.resident_id || '')
+  // FAM-AGENDA-NO-MEDICAL: ta sama reguła co baza (family_visible)
+  const hiddenFromFamily = isMedicalAgendaItem({ title: editTitle, type: editType })
   const [editSubmitting, setEditSubmitting] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
 
@@ -78,8 +81,15 @@ function AgendaEditForm({ item, onClose, onUpdate, residents }: AgendaEditFormPr
           value={editTitle}
           onChange={(e) => setEditTitle(e.target.value)}
           required
+          aria-describedby={hiddenFromFamily ? 'edit-family-hidden-hint' : undefined}
           className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary min-h-touch"
         />
+        {hiddenFromFamily && (
+          <p id="edit-family-hidden-hint" className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <EyeOff className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            Ten wpis nie będzie widoczny dla rodziny (treść medyczna).
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-3">
