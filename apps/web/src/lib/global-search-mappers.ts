@@ -4,6 +4,7 @@ import {
   formatFacilitySearchResult,
   formatAgendaSearchResult,
   formatReportSearchResult,
+  rankSearchResults,
 } from './global-search-helpers'
 import type {
   RawRoomWithBeds,
@@ -46,9 +47,6 @@ export function mapSearchQueryResults(
         })
       )
     }
-    // Aktywni przed archiwalnymi; sort jest stabilny, więc kolejność w grupach zostaje
-    const rank = new Map(rows.map((r) => [r.id, r.archived_at || r.death_date ? 1 : 0]))
-    results.sort((a, b) => (rank.get(a.id) ?? 0) - (rank.get(b.id) ?? 0))
   }
 
   const seenFacilityIds = new Set<string>()
@@ -185,5 +183,5 @@ export function mapSearchQueryResults(
     }
   }
 
-  return results
+  return rankSearchResults(results, cleanQ)
 }

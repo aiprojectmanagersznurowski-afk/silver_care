@@ -58,7 +58,10 @@ export interface SearchResultItem {
   category: SearchCategoryKey
   badge?: string
   badgeVariant?: 'default' | 'secondary' | 'outline' | 'destructive'
+  /** Podopieczny zarchiwizowany lub po zgonie — w rankingu przy równym dopasowaniu idzie za aktywnym. */
+  archived?: boolean
 }
+
 
 export function sanitizeSearchQuery(input: string): string {
   if (!input || typeof input !== 'string') return ''
@@ -135,6 +138,7 @@ export function formatResidentSearchResult(resident: {
     category: 'residents',
     badge,
     badgeVariant: badge ? (isActive ? 'secondary' : 'outline') : undefined,
+    archived: status.kind === 'archived' || status.kind === 'deceased',
   }
 }
 
@@ -228,3 +232,11 @@ export function filterSearchResultsByCategory(
   }
   return items.filter((item) => item.category === selectedCategory)
 }
+
+export {
+  SEARCH_CANDIDATE_LIMIT,
+  SEARCH_GROUP_LIMIT,
+  normalizeForSearch,
+  matchScore,
+  rankSearchResults,
+} from './global-search-ranking'

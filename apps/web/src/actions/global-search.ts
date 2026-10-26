@@ -8,6 +8,7 @@ import {
   isStaffRole,
   categoriesToSearch,
   splitSearchWords,
+  SEARCH_CANDIDATE_LIMIT,
 } from '@/lib/global-search-helpers'
 import {
   mapSearchQueryResults,
@@ -61,7 +62,7 @@ export async function searchGlobalAction(
     for (const w of words) q = q.or(nameFilter(w))
     const ordered = q
       .order('archived_at', { ascending: true, nullsFirst: true }) // aktywni przed archiwalnymi, zanim zadziała limit
-      .limit(6)
+      .limit(SEARCH_CANDIDATE_LIMIT)
     return isSuperAdmin ? ordered : ordered.eq('organization_id', org)
   }
 
@@ -70,7 +71,7 @@ export async function searchGlobalAction(
       .from('rooms')
       .select('id, number, floor, sector, organization_id, beds(id, label, bed_assignments(unassigned_at, residents(first_name, last_name)))')
       .or(`number.ilike.${like},sector.ilike.${like}`)
-      .limit(6)
+      .limit(SEARCH_CANDIDATE_LIMIT)
     return isSuperAdmin ? q : q.eq('organization_id', org)
   }
 
@@ -79,7 +80,7 @@ export async function searchGlobalAction(
       .from('beds')
       .select('id, label, rooms!inner(id, number, floor, sector, organization_id), bed_assignments(unassigned_at, residents(first_name, last_name))')
       .ilike('label', like)
-      .limit(6)
+      .limit(SEARCH_CANDIDATE_LIMIT)
     return isSuperAdmin ? q : q.eq('rooms.organization_id', org)
   }
 
@@ -88,7 +89,7 @@ export async function searchGlobalAction(
       .from('agenda_items')
       .select('id, title, time, residents(first_name, last_name)')
       .ilike('title', like)
-      .limit(6)
+      .limit(SEARCH_CANDIDATE_LIMIT)
     return isSuperAdmin ? q : q.eq('organization_id', org)
   }
 
@@ -98,14 +99,14 @@ export async function searchGlobalAction(
     let q = supabase
       .from('daily_reports')
       .select('id, created_at, status, residents!inner(first_name, last_name, organization_id)')
-      .limit(6)
+      .limit(SEARCH_CANDIDATE_LIMIT)
     if (!isSuperAdmin) q = q.eq('residents.organization_id', org)
     if (isDateSearch) return q.gte('created_at', `${cleanQ}T00:00:00Z`).lte('created_at', `${cleanQ}T23:59:59Z`)
     for (const w of words) q = q.or(nameFilter(w), { foreignTable: 'residents' })
     return q
   }
 
-  const organizations = () => supabase.from('organizations').select('id, name, address').ilike('name', like).limit(6)
+  const organizations = () => supabase.from('organizations').select('id, name, address').ilike('name', like).limit(SEARCH_CANDIDATE_LIMIT)
 
   try {
     const settled = (await Promise.allSettled([
