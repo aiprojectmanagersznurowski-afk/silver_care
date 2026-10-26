@@ -634,7 +634,7 @@
 - **AC2:** Paleta poleceń (Cmd/Ctrl+K) — wyszukanie pensjonariusza i start dyktowania w < 2 s.
 - **AC3:** Masowe zatwierdzanie raportów (do 10 naraz) — każdy raport nadal przechodzi `REPORT-APPROVAL`.
 - **AC4:** Widok „Agenda na dziś" z porami dnia i edycją.
-- **AC5:** Rejestracja rutynowej obserwacji 1-kliknięciem („Stan stabilny”) poprawnie utrwala rekord w `daily_logs` z `resident_id`, `nurse_id` oraz ustrukturyzowanym obiektem `data` (typ `ROUTINE_OBSERVATION`), natychmiast aktualizując stan kafelka w widoku obchodu dyżuru.
+- **AC5:** Wycofanie przycisku „Stan stabilny” z widoku obchodu dyżuru (zgodnie z regułą zakazu fabrykowania danych w fallbackach). Kafelek pensjonariusza eksponuje bezpośredni start dyktowania notatki oraz wskaźnik liczby notatek w bieżącej zmianie. Raport końcowy przy braku indywidualnych notatek transparentnie informuje o braku zarejestrowanych zdarzeń.
 
 #### [SC-NUR-09] Strażnik kompletności raportu przed publikacją
 🔗 **Kontrakt:** `REPORT-AI-FEEDBACK`, `REPORT-APPROVAL`, `MDR-VOCABULARY` · **WO:** [`NUR-REPORT-COMPLETENESS-GATE`](workorders/NUR-REPORT-COMPLETENESS-GATE.md) · **Status:** ✅ 📝 — zrealizowane w `completeness-gate.ts`, `ReportCard.tsx`, testy w `completeness_gate.test.ts` oraz E2E w `staff-portal.spec.ts`
