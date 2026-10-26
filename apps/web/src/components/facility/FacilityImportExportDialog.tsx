@@ -10,12 +10,11 @@ import {
   DialogDescription,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { FileSpreadsheet, Download, Upload, Check, AlertCircle, Loader2, ArrowUpDown, Mic } from 'lucide-react'
+import { FileSpreadsheet, Download, Upload, Check, AlertCircle, Loader2, ArrowUpDown } from 'lucide-react'
 import { RawFacilityRoomRow, FacilityDryRunResult } from '@/lib/facility-helpers'
 import { analyzeFacilityImportAction, commitFacilityImportAction } from '@/actions/facility'
 import * as XLSX from 'xlsx'
 import { FacilityExportTab } from './FacilityExportTab'
-import { FacilityVoiceTab } from './FacilityVoiceTab'
 import { FacilityDryRunTable } from './FacilityDryRunTable'
 import { generateFacilityStructureTemplate } from '@/lib/facility-import-template'
 
@@ -25,7 +24,7 @@ interface FacilityImportExportDialogProps {
 
 export function FacilityImportExportDialog({ onStructureChanged }: FacilityImportExportDialogProps) {
   const [open, setOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState<'export' | 'import' | 'voice'>('export')
+  const [activeTab, setActiveTab] = useState<'export' | 'import'>('export')
   const [importLoading, setImportLoading] = useState(false)
   const [importError, setImportError] = useState<string | null>(null)
   const [dryRunResult, setDryRunResult] = useState<FacilityDryRunResult | null>(null)
@@ -115,7 +114,7 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
             Zarządzanie strukturą placówki (Import / Eksport)
           </DialogTitle>
           <DialogDescription>
-            Eksportuj pokoje do arkusza lub importuj masowo strukturę z pliku Excel. Możesz też podyktować pokój głosowo.
+            Eksportuj pokoje do arkusza lub importuj masowo strukturę z pliku Excel.
           </DialogDescription>
         </DialogHeader>
 
@@ -137,15 +136,6 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
             }`}
           >
             <span className="flex items-center gap-1.5"><Upload className="w-4 h-4" /> Import Excel (.xlsx)</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('voice')}
-            className={`pb-2 px-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'voice' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <span className="flex items-center gap-1.5"><Mic className="w-4 h-4" /> Dodaj głosowo</span>
           </button>
         </div>
 
@@ -215,8 +205,6 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
               )}
             </div>
           )}
-
-          {activeTab === 'voice' && <FacilityVoiceTab onStructureChanged={onStructureChanged} />}
         </div>
       </DialogContent>
     </Dialog>
