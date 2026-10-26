@@ -35,6 +35,17 @@ export class StaffBoardPage {
     await this.page.goto('/staff');
   }
 
+  /** Nagłówek kolumny tabeli tablicy dyżuru (sortowanie przyciskiem w środku). */
+  columnHeader(name: string): Locator {
+    return this.page.locator('main [data-slot="table-header"]').getByRole('columnheader', { name });
+  }
+
+  /** Nazwy podopiecznych w kolejności wierszy tabeli. */
+  async tableResidentNames(): Promise<string[]> {
+    const names = await this.page.locator('main [data-slot="table-body"] a[href^="/staff/residents/"]').allInnerTexts();
+    return names.map((n) => n.trim());
+  }
+
   async expectStaffBoardLoaded() {
     await expect(this.searchInput).toBeVisible();
     await expect(this.cardsViewButton).toBeVisible();
