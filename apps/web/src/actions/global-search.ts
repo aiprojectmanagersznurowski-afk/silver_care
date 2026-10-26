@@ -7,6 +7,7 @@ import {
   filterSearchResultsByCategory,
   isStaffRole,
   categoriesToSearch,
+  splitSearchWords,
 } from '@/lib/global-search-helpers'
 import {
   mapSearchQueryResults,
@@ -48,16 +49,20 @@ export async function searchGlobalAction(
   const org = orgId as string
   const want = new Set(categoriesToSearch(selectedCategory, role))
   const like = `%${cleanQ}%`
+  const words = splitSearchWords(cleanQ)
+  // Każde słowo musi pasować do imienia albo nazwiska (osobne .or() są łączone warunkiem „i”)
+  const nameFilter = (w: string) => `first_name.ilike.%${w}%,last_name.ilike.%${w}%`
 
   // Odpytujemy tylko wybrane kategorie; poza super_admin każde zapytanie jest zawężone do organizacji z tokenu
   const residents = () => {
-    const q = supabase
+    let q = supabase
       .from('residents')
       .select('id, first_name, last_name, care_level, is_zsn, archived_at, death_date, contract_end_date, bed_assignments(unassigned_at, beds(label, rooms(number)))')
-      .or(`first_name.ilike.${like},last_name.ilike.${like}`)
+    for (const w of words) q = q.or(nameFilter(w))
+    const ordered = q
       .order('archived_at', { ascending: true, nullsFirst: true }) // aktywni przed archiwalnymi, zanim zadziała limit
       .limit(6)
-    return isSuperAdmin ? q : q.eq('organization_id', org)
+    return isSuperAdmin ? ordered : ordered.eq('organization_id', org)
   }
 
   const rooms = () => {
@@ -95,9 +100,9 @@ export async function searchGlobalAction(
       .select('id, created_at, status, residents!inner(first_name, last_name, organization_id)')
       .limit(6)
     if (!isSuperAdmin) q = q.eq('residents.organization_id', org)
-    return isDateSearch
-      ? q.gte('created_at', `${cleanQ}T00:00:00Z`).lte('created_at', `${cleanQ}T23:59:59Z`)
-      : q.or(`first_name.ilike.${like},last_name.ilike.${like}`, { foreignTable: 'residents' })
+    if (isDateSearch) return q.gte('created_at', `${cleanQ}T00:00:00Z`).lte('created_at', `${cleanQ}T23:59:59Z`)
+    for (const w of words) q = q.or(nameFilter(w), { foreignTable: 'residents' })
+    return q
   }
 
   const organizations = () => supabase.from('organizations').select('id, name, address').ilike('name', like).limit(6)
