@@ -16,6 +16,7 @@ import {
   analyzeFacilityImportAction as analyzeImpl,
   commitFacilityImportAction as commitImpl,
 } from './facility-import-export'
+import { normalizeSectorInput } from '@/lib/sector'
 
 export async function exportFacilityStructureAction(): Promise<{
   error?: string
@@ -101,7 +102,7 @@ export async function createRoomWithBedsAction(data: {
 
     const number = (data.number || '').trim()
     const floor = (data.floor || '').trim()
-    const sector = (data.sector || '').trim() || null
+    const sector = normalizeSectorInput(data.sector)
     const bedLabels = (data.bedLabels || []).map((s) => s.trim()).filter(Boolean)
 
     if (!number || !floor) {
