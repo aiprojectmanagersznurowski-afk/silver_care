@@ -438,6 +438,7 @@
 - **AC1:** Hierarchia organizacja → piętro → pokój → łóżko; numer pokoju unikalny w placówce, etykieta łóżka unikalna w pokoju.
 - **AC2:** Jedno łóżko ma co najwyżej jednego aktywnego pensjonariusza, jeden pensjonariusz — co najwyżej jedno aktywne łóżko (wymuszane na poziomie bazy).
 - **AC3:** Przeniesienie pensjonariusza to jedna transakcja zamykająca stare przypisanie i otwierająca nowe; historia przypisań zachowana (`unassigned_at`).
+- **AC3a (Optymalizacja przydziału — 📝 2026-10-26):** Przycisk „Optymalizuj przydział łóżek” otwiera listę propozycji przeniesień (zgodność płci w pokojach wieloosobowych, osoby o ograniczonej mobilności i ZSN na parterze). Propozycja to pole wyboru z trasą „skąd → dokąd”, pod nią podopieczny („Nazwisko Imię”) i uzasadnienie. Analiza jest deterministyczna, bez modelu AI; przeniesienie wykonuje się dopiero po zatwierdzeniu wybranych propozycji.
 - **AC4:** Liczba wolnych łóżek wyliczana z aktywnych przypisań i aktualna natychmiast po zmianie.
 - **AC5:** Widok kafelków i tabeli z filtrowaniem po piętrze, sektorze, obłożeniu i frazie.
 
