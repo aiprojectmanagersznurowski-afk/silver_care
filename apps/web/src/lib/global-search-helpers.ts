@@ -1,5 +1,6 @@
 import { STAFF_ROLES } from '@silvercare/contracts/src/generated/roles'
 import { getResidentStatus } from '@/lib/resident-status'
+import { residentCardHref, facilityHref } from './global-search-links'
 
 export type SearchCategoryKey =
   | 'residents'
@@ -54,7 +55,8 @@ export interface SearchResultItem {
   id: string
   title: string
   subtitle: string
-  href: string
+  /** Brak adresu = pozycja informacyjna bez przejścia (np. wolne łóżko dla pielęgniarki). */
+  href?: string
   category: SearchCategoryKey
   badge?: string
   badgeVariant?: 'default' | 'secondary' | 'outline' | 'destructive'
@@ -112,7 +114,7 @@ export function formatResidentSearchResult(resident: {
   archived_at?: string | null
   death_date?: string | null
   contract_end_date?: string | null
-}): SearchResultItem {
+}, role?: string): SearchResultItem {
   const roomBedStr =
     resident.room_number && resident.bed_label
       ? `Pokój ${resident.room_number}, łóżko ${resident.bed_label}`
@@ -134,7 +136,7 @@ export function formatResidentSearchResult(resident: {
     id: resident.id,
     title: `${resident.first_name} ${resident.last_name}`,
     subtitle,
-    href: `/admin/residents/${resident.id}`,
+    href: residentCardHref(role, resident.id),
     category: 'residents',
     badge,
     badgeVariant: badge ? (isActive ? 'secondary' : 'outline') : undefined,
@@ -156,7 +158,8 @@ export function formatFacilitySearchResult(roomBed: {
   sector?: string | null
   bed_label?: string | null
   resident_name?: string | null
-}): SearchResultItem {
+  resident_id?: string | null
+}, role?: string): SearchResultItem {
   const title = roomBed.bed_label
     ? `Pokój ${roomBed.room_number}, łóżko ${roomBed.bed_label}`
     : `Pokój ${roomBed.room_number}`
@@ -176,7 +179,7 @@ export function formatFacilitySearchResult(roomBed: {
     id: roomBed.id,
     title,
     subtitle,
-    href: `/admin/facility`,
+    href: facilityHref(role, roomBed.resident_id),
     category: 'facility',
     badge: roomBed.resident_name ? 'Zajęte' : 'Wolne',
     badgeVariant: roomBed.resident_name ? 'default' : 'outline',
