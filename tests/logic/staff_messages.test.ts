@@ -54,7 +54,7 @@ describe('Staff Messages Inbox Logic (@REQ: FAM-MESSAGES, @REQ: NUR-BOARD)', () 
     expect(threads[0].messages).toHaveLength(1);
 
     expect(threads[1].residentId).toBe('res-1');
-    expect(threads[1].residentName).toBe('Janina Kowalska');
+    expect(threads[1].residentName).toBe('Kowalska Janina');
     expect(threads[1].messages).toHaveLength(2);
     expect(threads[1].lastMessage.content).toBe('Tak, zjadła cały posiłek i poszła na krótki spacer.');
   });
@@ -68,7 +68,7 @@ describe('Staff Messages Inbox Logic (@REQ: FAM-MESSAGES, @REQ: NUR-BOARD)', () 
 
     const filteredByContent = filterThreadsBySearch(threads, 'obiad');
     expect(filteredByContent).toHaveLength(1);
-    expect(filteredByContent[0].residentName).toBe('Janina Kowalska');
+    expect(filteredByContent[0].residentName).toBe('Kowalska Janina');
 
     const emptyMatch = filterThreadsBySearch(threads, 'nieistniejący');
     expect(emptyMatch).toHaveLength(0);
