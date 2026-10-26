@@ -12,6 +12,7 @@ import { ListToolbar, SearchField } from '@/components/patterns/ListToolbar'
 import { useViewPreference, VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-preference'
 import { InvitationRowActions, InvitationStatusBadge } from './InvitationRowActions'
 import { roleLabel } from '@/lib/auth/role-labels'
+import { formatPersonName, matchesPersonName } from '@/lib/person-name'
 
 export interface InvitationRecord {
   id: string
@@ -33,7 +34,7 @@ export function InvitationsTable({ initialInvitations }: { initialInvitations: I
   const [query, setQuery] = useState('')
   const q = query.trim().toLowerCase()
   const invitations = allInvitations.filter((inv) =>
-    `${inv.email} ${inv.residents?.first_name ?? ''} ${inv.residents?.last_name ?? ''}`.toLowerCase().includes(q)
+    inv.email.toLowerCase().includes(q) || matchesPersonName(inv.residents?.first_name, inv.residents?.last_name, q)
   )
   const [revokingId, setRevokingId] = useState<string | null>(null)
   const [isRevoking, setIsRevoking] = useState(false)
@@ -124,7 +125,7 @@ export function InvitationsTable({ initialInvitations }: { initialInvitations: I
                   subtitle={inv.phone ?? undefined}
                   badges={<InvitationStatusBadge inv={inv} />}
                   meta={[
-                    { label: 'Podopieczny', value: inv.residents ? `${inv.residents.first_name} ${inv.residents.last_name}` : '—' },
+                    { label: 'Podopieczny', value: inv.residents ? formatPersonName(inv.residents.first_name, inv.residents.last_name) : '—' },
                     { label: 'Rola', value: roleLabel(inv.role) },
                   ]}
                   actions={rowActions(inv)}
@@ -153,7 +154,7 @@ export function InvitationsTable({ initialInvitations }: { initialInvitations: I
                   {inv.phone && <span className="ml-2 text-sm text-muted-foreground font-normal">{inv.phone}</span>}
                 </TableCell>
                 <TableCell className="text-foreground">
-                  {inv.residents ? `${inv.residents.first_name} ${inv.residents.last_name}` : '—'}
+                  {inv.residents ? formatPersonName(inv.residents.first_name, inv.residents.last_name) : '—'}
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
                   {roleLabel(inv.role)}

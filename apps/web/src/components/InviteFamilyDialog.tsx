@@ -17,6 +17,7 @@ import {
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { InviteFamilySuccessAlert } from './family/InviteFamilySuccessAlert'
 import { roleLabel } from '@/lib/auth/role-labels'
+import { formatPersonName } from '@/lib/person-name'
 
 type Resident = {
   id: string
@@ -142,7 +143,7 @@ export function InviteFamilyDialog({
                 required
               >
                 {residents.map(r => (
-                  <NativeSelectOption key={r.id} value={r.id}>{r.first_name} {r.last_name}</NativeSelectOption>
+                  <NativeSelectOption key={r.id} value={r.id}>{formatPersonName(r.first_name, r.last_name)}</NativeSelectOption>
                 ))}
               </NativeSelect>
             </div>
