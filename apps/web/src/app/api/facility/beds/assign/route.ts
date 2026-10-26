@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     }
 
     const role = user.app_metadata?.role as string | undefined
-    if (!['org_admin', 'super_admin', 'admin'].includes(role || '')) {
+    if (!['org_admin', 'super_admin'].includes(role || '')) {
       return NextResponse.json({ error: 'Brak uprawnień administratora placówki' }, { status: 403 })
     }
 
