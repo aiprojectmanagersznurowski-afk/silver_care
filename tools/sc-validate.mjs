@@ -14,7 +14,7 @@ const load = (f) => import(`file://${join(ROOT, 'contracts', f)}`);
 const { ROLES, STAFF_ROLES, RELATIVE_ROLES, MFA_REQUIRED_ROLES, CONSENT_GRANTORS, CONSENT_PURPOSES,
         RESOURCES, MATRIX, AUDIT_REQUIREMENTS, DELETE_POLICIES } = await load('roles.contract.mjs');
 const { FAMILY_VISIBLE_METRICS, PHYSIOLOGICAL_FIELDS, FORBIDDEN_UI_TERMS, MDR_GUARDRAILS,
-        REQUIRED_UI_STATES, RESIDENT_CARD_SECTIONS = [] } = await load('presentation.contract.mjs');
+        REQUIRED_UI_STATES, RESIDENT_CARD_SECTIONS = [], AGENDA_FAMILY_EXCLUSION } = await load('presentation.contract.mjs');
 const { TRANSCRIPT_STREAMS, MEDICAL_CATEGORIES, PIPELINE_STAGES, VOICE_RETENTION,
         AI_PROVENANCE_FIELDS, AI_FEEDBACK_CATEGORIES } = await load('voice.contract.mjs');
 const { PROVIDERS, WEARABLE_LINK, ORG_LINK, FIELD_MAPPINGS, INGEST_PRECONDITIONS, SYNC_STALENESS } = await load('integration.contract.mjs');
@@ -472,6 +472,31 @@ else if (Number(m[1]) < 7 || Number(m[2]) > 21) {
     if (seen.has(label.toLowerCase())) err('R27-role-labels', `Etykieta "${label}" powtarza się — dwie role byłyby nie do odróżnienia.`);
     seen.add(label.toLowerCase());
   }
+}
+
+// R28 — plan dnia rodziny bez treści medycznych (FAM-AGENDA-NO-MEDICAL, decyzja Michała 2026-10-26).
+// Każda kategoria MEDICAL ma słowa, po których pozycja planu dnia jest ukrywana przed rodziną.
+// Łagodnie do czasu dodania listy w kontrakcie.
+if (AGENDA_FAMILY_EXCLUSION) {
+  const ex = AGENDA_FAMILY_EXCLUSION;
+  if (!(ex.excludedTypes || []).includes('medication')) err('R28-agenda-no-medical', 'Typ „medication” nie jest wykluczony z planu dnia rodziny.');
+  const seen = new Set();
+  for (const cat of MEDICAL_CATEGORIES) {
+    const terms = (ex.termsByCategory || {})[cat.id] || [];
+    if (terms.length === 0) err('R28-agenda-no-medical', `Kategoria MEDICAL „${cat.id}” bez słów — takie pozycje trafiłyby do rodziny.`);
+    for (const t of terms) {
+      if (t !== t.toLowerCase() || t.trim() !== t) err('R28-agenda-no-medical', `Słowo „${t}” nie jest zapisane małymi literami bez spacji na brzegach.`);
+      if (t.length < 3) err('R28-agenda-no-medical', `Słowo „${t}” jest za krótkie — ukrywałoby niemedyczne pozycje.`);
+      if (seen.has(t)) err('R28-agenda-no-medical', `Słowo „${t}” powtarza się.`);
+      seen.add(t);
+    }
+  }
+  for (const id of Object.keys(ex.termsByCategory || {})) {
+    if (!MEDICAL_CATEGORIES.some((c) => c.id === id)) err('R28-agenda-no-medical', `Kategoria „${id}” nie istnieje w MEDICAL_CATEGORIES.`);
+  }
+  const req = REQUIREMENTS_BY_ID?.['FAM-AGENDA-NO-MEDICAL'] ?? REQUIREMENTS.find((r) => r.id === 'FAM-AGENDA-NO-MEDICAL');
+  if (!req) err('R28-agenda-no-medical', 'Brak wymagania FAM-AGENDA-NO-MEDICAL w rejestrze.');
+  else if (req.risk !== 'HIGH') err('R28-agenda-no-medical', 'FAM-AGENDA-NO-MEDICAL musi mieć ryzyko HIGH — dotyczy granicy MDR.');
 }
 
 // ── raport ────────────────────────────────────────────────────────────────

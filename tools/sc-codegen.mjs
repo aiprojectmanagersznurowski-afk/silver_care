@@ -43,6 +43,7 @@ files['packages/contracts/src/generated/presentation.ts'] = BANNER
   + emit('REQUIRED_UI_STATES', pres.REQUIRED_UI_STATES)
   + (pres.RESIDENT_CARD_SECTIONS ? emit('RESIDENT_CARD_SECTIONS', pres.RESIDENT_CARD_SECTIONS)
     + `export type ResidentCardSection = typeof RESIDENT_CARD_SECTIONS[number]['id'];\n\n` : '')
+  + (pres.AGENDA_FAMILY_EXCLUSION ? emit('AGENDA_FAMILY_EXCLUSION', pres.AGENDA_FAMILY_EXCLUSION) : '')
   + `export const AI_DISCLOSURE_LABEL = ${JSON.stringify(pres.AI_DISCLOSURE_LABEL)} as const;\n\n`
   + `export type FamilyMetric = typeof FAMILY_VISIBLE_METRICS[number]['id'];\n`
   + `export type UIState = typeof REQUIRED_UI_STATES[number];\n\n`
