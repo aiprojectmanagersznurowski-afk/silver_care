@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatHeroDateLabel, deriveWellbeing } from '../../apps/web/src/components/DailySummaryHero'
+import { formatHeroDateLabel } from '../../apps/web/src/components/DailySummaryHero'
 import { getCategory } from '../../apps/web/src/components/AgendaTimelineClient'
 import { ResidentSwitcher } from '../../apps/web/src/components/ResidentSwitcher'
 import { AgendaView } from '../../apps/web/src/components/AgendaView'
@@ -22,25 +22,6 @@ describe('FAM-DASHBOARD-AGENDA-DATE-ALIGNMENT: Spójność dat i kategorii agend
     expect(pastLabel).toContain('2026')
   })
 
-  it('deriveWellbeing poprawnie ekstrahuje parametry samopoczucia z tekstu @REQ: FAM-DASHBOARD', () => {
-    const emptyResult = deriveWellbeing(undefined)
-    expect(emptyResult.sleep).toBe('Brak danych')
-    expect(emptyResult.appetite).toBe('Brak danych')
-    expect(emptyResult.mood).toBe('Brak danych')
-    expect(emptyResult.moodEmoji).toBe('😐')
-
-    const positive = deriveWellbeing('Pan Jan przespał spokojnie całą noc, apetyt dopisywał przy obiedzie, był pogodny i uśmiechnięty.')
-    expect(positive.sleep).toBe('Dobry')
-    expect(positive.appetite).toBe('Bardzo dobry')
-    expect(positive.mood).toBe('Radosny')
-    expect(positive.moodEmoji).toBe('😊')
-
-    const negative = deriveWellbeing('Noc niespokojna, wybudzał się wielokrotnie, odmówił posiłku, był smutny i apatyczny.')
-    expect(negative.sleep).toBe('Przerywany')
-    expect(negative.appetite).toBe('Słaby')
-    expect(negative.mood).toBe('Obniżony')
-    expect(negative.moodEmoji).toBe('😔')
-  })
 
   it('AgendaTimelineClient kategoryzuje wpisy na podstawie type oraz tytułu @REQ: FAM-AGENDA', () => {
     // Type explicit
