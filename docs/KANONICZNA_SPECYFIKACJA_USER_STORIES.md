@@ -541,6 +541,22 @@
 - **AC4 (Wgląd rodziny read-only — Wariant B):** Wypis i zakończenie umowy nie ustawiają automatycznie `archived_at` — bliscy w Portalu Rodziny zachowują dostęp w trybie tylko do odczytu (read-only) do czasu ręcznej archiwizacji (`ADM-ARCHIVE`). Zdarzenie rejestrowane jest w `resident_events` (`contract_ended` i/lub `death`) na potrzeby modułu BI i wskaźników rotacji.
 - **AC5 (Ślad audytowy i ochrona danych):** Całość operacji jest rejestrowana w `audit_logs` pod akcją `RESIDENT_DISCHARGE` bez wycieku danych wrażliwych. W trybie impersonacji Super Admina akcja jest zablokowana.
 
+#### [SC-ADM-20] Wspólna karta podopiecznego dla personelu (widoczność sekcji według roli)
+🔗 **Kontrakt:** brak REQ (proponowany nowy: `ADM-RESIDENT-CARD-VISIBILITY`; wdraża reguły: `ORG-ISOLATION`, `SEC-PESEL-HASH`, `MDR-NO-INTERPRETATION`, `UI-ACCESSIBILITY`, `UI-TEMPLATE-ALIGNMENT`) · **WO:** [`UI-RESIDENT-CARD`](workorders/UI-RESIDENT-CARD.md) · **Status:** 📝 PROPOZYCJA
+
+> ℹ️ Nowy `@REQ` wymaga zmiany `contracts/` (lista sekcji karty z rolami, w `presentation.contract.mjs`), czyli okna kontraktowego otwartego przez człowieka. Do tego czasu story opiera się na istniejącej macierzy uprawnień (`roles.contract.mjs`).
+
+**User story:** Jako Kierownik Placówki lub Członek Personelu opiekuńczego, chcę z wyszukiwarki globalnej, tablicy dyżuru i listy podopiecznych otwierać jedną, wspólną kartę podopiecznego, w której każdy widzi wyłącznie sekcje i dane, do których kontrakt daje jego roli dostęp do odczytu, aby szybko znaleźć potrzebne informacje bez dostępu do danych, których nie powinien widzieć (kontakty bliskich, umowy i opłaty, zgody), a placówka utrzymywała jeden spójny widok zamiast osobnych ekranów dla każdej roli.
+
+**Kryteria akceptacji:**
+- **AC1 (Jedna karta, dwie trasy):** Ten sam komponent karty jest renderowany pod `/admin/residents/{id}` (kierownik, a także superadmin w trybie impersonacji — tylko do odczytu) i `/staff/residents/{id}` (personel opiekuńczy), każdy w swojej powłoce nawigacyjnej. Konta spoza personelu z kontraktu (rodzina, opiekun prawny, konto bez roli) dostają odmowę **zanim** powstanie zapytanie do bazy.
+- **AC2 (Widoczność sekcji z kontraktu):** Lista sekcji danej roli pochodzi z kontraktu, a nie z komponentu: Przegląd (dane ogólne, poziom opieki, ZSN, status), Łóżko i pokój, metryki behawioralne oraz skróty do raportów i planu dnia — dla kierownika i personelu; Bliscy i kontakty, Umowa i pakiety, Zdarzenia pobytu, zarządzanie Opaską oraz akcje edycji i wypisu — wyłącznie dla kierownika. Walidator kontraktu odrzuca sekcję, której rola nie ma prawa odczytu w macierzy uprawnień.
+- **AC3 (Minimalizacja danych):** Karta pobiera jawną listę kolumn dozwolonych dla roli, nigdy `select('*')`. `pesel_hash` nie trafia do komponentów klienckich ani do odpowiedzi. Sekcje niedostępne dla roli nie są w ogóle pobierane z bazy (obrona w głębi obok RLS).
+- **AC4 (Granica MDR):** Karta podaje fakty, bez ocen stanu zdrowia i bez wykresów sugerujących trend (ADR-005); kolor nie niesie oceny; słowo „pacjent” jest zakazane. Metryki fizjologiczne nie są prezentowane w pierwszej wersji (do decyzji, patrz WO).
+- **AC5 (Podopieczny po zgonie lub w archiwum):** Karta otwiera się tylko do odczytu z neutralną plakietką statusu („Zgon”, „Zarchiwizowany”, „Wypisany”); personel opiekuńczy nie ma na niej żadnych akcji zapisu.
+- **AC6 (Nawigacja według roli):** Wyniki wyszukiwarki, tablica dyżuru i lista podopiecznych prowadzą do trasy właściwej dla roli (kierownik → `/admin/residents/{id}`, personel → `/staff/residents/{id}`).
+- **AC7 (Norma UI i dostępność):** Zakładki obsługiwane klawiaturą, cele dotykowe `min-h-touch`, tekst ≥12px, kolory z tokenów, 4 stany UI (loading, empty, success, error); brak zapisu danych osobowych w logach (`SEC-NO-PII-LOGS`).
+
 ### Domena 2 — Personel
 
 #### [SC-NUR-07] Skrzynka wiadomości od rodzin (wyłącznie dla Kierownika / Administratora Placówki)
@@ -812,3 +828,4 @@
 | 2026-10-13 | 2.9 | Podbicie statusów `SC-ADM-15` i `SC-ADM-16` do ✅ 📝 po pełnej integracji klastrów Auth/OAuth Art. 9 (`OAUTH-GUARDIAN-CONSENTS`, PR #63), IAM (`ChangeRoleDialog`, PR #75), Caregiver (`SC-ADM-15`, PR #72) oraz potoku notatek głosowych (PR #83). |
 | 2026-10-20 | 2.10 | Ujednolicenie ról pracowników placówki do dwóch poziomów (`org_admin` — Kierownik / Administrator Placówki, `nurse` — Personel opiekuńczy / Wsparcie) oraz ograniczenie dostępu do `family_messages` po stronie placówki wyłącznie do `org_admin` (`/admin/messages`; aktualizacja `SC-FAM-04`, `SC-NUR-07`, `SC-NUR-11`). |
 | 2026-10-22 | 2.11 | Dopisanie `SC-SUP-05` (globalne alerty systemowe i status platformy zarządzane przez `super_admin` oraz wycofanie statycznego kafelka „Status systemu: Stabilny” z pulpitu placówki — Wariant A) ze statusem 📝 PROPOZYCJA. |
+| 2026-10-24 | 2.12 | Dopisanie `SC-ADM-20` (wspólna karta podopiecznego dla personelu z widocznością sekcji według roli) ze statusem 📝 PROPOZYCJA. |
