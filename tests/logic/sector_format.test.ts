@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { formatSectorName, normalizeSectorInput } from '../../apps/web/src/lib/sector'
+import { validateFacilityRows, parseFacilityVoiceJson } from '../../apps/web/src/lib/facility-helpers'
 
 /**
  * @REQ: ADM-FACILITY-MANAGE
@@ -30,5 +31,11 @@ describe('Nazwa sektora bez przedrostka (@REQ: ADM-FACILITY-MANAGE)', () => {
     expect(normalizeSectorInput('   ')).toBeNull()
     expect(normalizeSectorInput(null)).toBeNull()
     expect(normalizeSectorInput(undefined)).toBeNull()
+  })
+
+  it('@REQ: ADM-FACILITY-MANAGE - import pliku i polecenie głosowe zapisują sektor bez przedrostka', () => {
+    const dry = validateFacilityRows([{ floor: '1', number: '901', sector: 'Sektor A', bedCount: 1, bedLabels: '1' }], new Set())
+    expect(dry.rows[0].sector).toBe('A')
+    expect(parseFacilityVoiceJson('{"number":"902","floor":"1","sector":"sektor B","bedLabels":["1"]}').sector).toBe('B')
   })
 })
