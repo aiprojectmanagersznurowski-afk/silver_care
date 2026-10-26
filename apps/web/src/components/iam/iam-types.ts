@@ -1,4 +1,5 @@
 import { ROLES } from '@silvercare/contracts/src/generated/roles'
+import { ROLE_LABELS } from '@/lib/auth/role-labels'
 
 export interface UserItem {
   id: string
@@ -30,18 +31,12 @@ export interface IamManagementClientProps {
   errorMessage?: string
 }
 
-export const ROLE_LABELS: Record<string, string> = {
-  super_admin: 'Super Admin (Globalny)',
-  org_admin: 'Administrator Placówki (Org Admin)',
-  nurse: 'Personel Opiekuńczy (Nurse)',
-  legal_guardian: 'Opiekun Prawny (Legal Guardian)',
-  family: 'Członek Rodziny (Family)',
-}
+export { ROLE_LABELS }
 
 // AC2: Blokada wyboru roli super_admin w UI
 export const AVAILABLE_ROLES = ROLES
   .filter(r => r.id !== 'super_admin')
   .map(r => ({
     id: r.id,
-    label: ROLE_LABELS[r.id] || r.id,
+    label: ROLE_LABELS[r.id],
   }))
