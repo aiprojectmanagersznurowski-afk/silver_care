@@ -9,6 +9,7 @@ import { ListEmpty } from '@/components/patterns/ListState'
 import { RoomGridView } from './RoomGridView'
 import { RoomTableView } from './RoomTableView'
 import type { RoomItem } from './room-helpers'
+import { formatSectorName } from '@/lib/sector'
 
 export type { RoomItem }
 
@@ -17,12 +18,7 @@ interface RoomListProps {
   onUpdate: () => void
 }
 
-export function formatSectorName(sector?: string | null): string {
-  if (!sector) return '—'
-  const trimmed = sector.trim()
-  if (!trimmed) return '—'
-  return trimmed.toLowerCase().startsWith('sektor') ? trimmed : `Sektor ${trimmed}`
-}
+export { formatSectorName }
 
 export default function RoomList({ rooms, onUpdate }: RoomListProps) {
   const [viewMode, setViewMode] = useViewPreference(
