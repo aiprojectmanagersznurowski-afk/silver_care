@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
   isGroundFloor,
-  pseudonymizeResident,
   analyzeCurrentAllocation,
   generateRelocationSuggestions,
   OptimizerRoom,
@@ -45,7 +44,7 @@ describe('Facility & Bed Management Logic (@REQ: ADM-FACILITY-MANAGE, @REQ: ADM-
     const occupants: OptimizerOccupant[] = [
       {
         residentId: 'res-1',
-        pseudonym: 'J. K.',
+        residentName: 'Kowalski Jan',
         gender: 'M',
         careLevel: 'walking',
         isZsn: false,
@@ -54,7 +53,7 @@ describe('Facility & Bed Management Logic (@REQ: ADM-FACILITY-MANAGE, @REQ: ADM-
       },
       {
         residentId: 'res-2',
-        pseudonym: 'A. N.',
+        residentName: 'Nowak Anna',
         gender: 'F',
         careLevel: 'walking',
         isZsn: false,
@@ -63,7 +62,7 @@ describe('Facility & Bed Management Logic (@REQ: ADM-FACILITY-MANAGE, @REQ: ADM-
       },
       {
         residentId: 'res-3',
-        pseudonym: 'E. S.',
+        residentName: 'Sowa Ewa',
         gender: 'F',
         careLevel: 'bedridden',
         isZsn: true,
@@ -213,7 +212,7 @@ describe('Facility & Bed Management Logic (@REQ: ADM-FACILITY-MANAGE, @REQ: ADM-
     const occupants: OptimizerOccupant[] = [
       {
         residentId: 'res-m',
-        pseudonym: 'J. K.',
+        residentName: 'Kowalski Jan',
         gender: 'M',
         careLevel: 'walking',
         isZsn: false,
@@ -222,7 +221,7 @@ describe('Facility & Bed Management Logic (@REQ: ADM-FACILITY-MANAGE, @REQ: ADM-
       },
       {
         residentId: 'res-f',
-        pseudonym: 'A. N.',
+        residentName: 'Nowak Anna',
         gender: 'F',
         careLevel: 'walking',
         isZsn: false,
@@ -250,10 +249,4 @@ describe('Facility & Bed Management Logic (@REQ: ADM-FACILITY-MANAGE, @REQ: ADM-
     expect(formatSectorName('   ')).toBe('—');
   });
 
-  it('protects privacy by pseudonymizing resident names @REQ: ADM-FACILITY-OCCUPANCY', () => {
-    expect(pseudonymizeResident('Jan', 'Kowalski')).toBe('J. K.');
-    expect(pseudonymizeResident('Anna', 'Nowak-Zielińska')).toBe('A. N.');
-    expect(pseudonymizeResident('', '')).toBe('? ?');
-    expect(pseudonymizeResident(null, null)).toBe('? ?');
-  });
 });
