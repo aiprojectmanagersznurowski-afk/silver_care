@@ -18,10 +18,10 @@ test.describe('Zarządzanie personelem i role zaproszeń (@REQ: ADM-INVITE, @REQ
 
     await staffPage.openInviteDialog();
 
-    // Weryfikacja opcji Administrator Placówki w select ról
+    // Weryfikacja opcji Kierownik placówki w select ról (nazwa z kontraktu)
     const orgAdminOption = page.locator('#role option[value="org_admin"]');
     await expect(orgAdminOption).toHaveCount(1);
-    await expect(orgAdminOption).toContainText('Administrator Placówki');
+    await expect(orgAdminOption).toHaveText('Kierownik placówki');
   });
 
   test('@REQ: CONSENT-GRANTOR - Zapraszanie rodziny zawiera jednoznaczny wybór roli opiekun prawny vs obserwator', async ({ loginPage, page }) => {
@@ -42,8 +42,9 @@ test.describe('Zarządzanie personelem i role zaproszeń (@REQ: ADM-INVITE, @REQ
 
     await expect(guardianOption).toHaveCount(1);
     await expect(guardianOption).toContainText('Opiekun prawny');
+    await expect(guardianOption).not.toContainText('(');
 
     await expect(familyOption).toHaveCount(1);
-    await expect(familyOption).toContainText('Obserwator');
+    await expect(familyOption).toHaveText('Członek rodziny');
   });
 });
