@@ -87,6 +87,26 @@ export const RESIDENT_CARD_SECTIONS = [
   { id: 'manage',   label: 'Edycja i wypis',      roles: ['org_admin'],          resources: ['residents'], access: 'update' },
 ];
 
+/**
+ * Plan dnia widoczny dla rodziny bez treści medycznych (FAM-AGENDA-NO-MEDICAL, decyzja Michała 2026-10-26).
+ * Strumień MEDICAL (voice.contract MEDICAL_CATEGORIES) nie trafia do bliskich — także przez plan dnia.
+ * Pozycja jest ukrywana przed rodziną, gdy ma wykluczony typ albo jej tytuł zawiera słowo z listy.
+ * Dopasowanie: małe litery, słowo ZACZYNA SIĘ od podanego rdzenia (przed nim początek tekstu albo znak
+ * niebędący literą). Rdzenie są celowo dłuższe niż „lek”, żeby nie ukrywać np. „lekcji tańca”,
+ * a „wizyta” sama nie wystarcza („Wizyta wnuczki” zostaje).
+ * Egzekwowanie: baza (agenda_items.family_visible + RLS rodziny), nie tylko interfejs.
+ */
+export const AGENDA_FAMILY_EXCLUSION = {
+  excludedTypes: ['medication'],
+  termsByCategory: {
+    medication:      ['leki', 'leków', 'lekami', 'lekarstw', 'dawk', 'tabletk', 'kapsułk', 'kropl', 'zastrzyk', 'iniekcj', 'insulin', 'antybiotyk', 'syrop', 'inhalacj', 'maści'],
+    diagnosis:       ['diagnoz', 'rozpoznani', 'chorob', 'infekcj', 'gorączk'],
+    test_result:     ['badani', 'pobrani', 'morfologi', 'rtg', 'usg', 'tomograf'],
+    vital_sign:      ['ciśnieni', 'cukru', 'cukier', 'glukoz', 'glikemi', 'ekg', 'saturacj', 'tętn', 'pomiar'],
+    clinical_advice: ['lekarz', 'lekarsk', 'zabieg', 'konsultacj', 'zaleceni', 'opatrun'],
+  },
+};
+
 /** Wymagane stany każdego komponentu prezentującego dane (NFR-UI-01). */
 export const REQUIRED_UI_STATES = ['loading', 'empty', 'success', 'error'];
 

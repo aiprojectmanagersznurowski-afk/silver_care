@@ -212,6 +212,65 @@ export const RESIDENT_CARD_SECTIONS = [
 
 export type ResidentCardSection = typeof RESIDENT_CARD_SECTIONS[number]['id'];
 
+export const AGENDA_FAMILY_EXCLUSION = {
+  "excludedTypes": [
+    "medication"
+  ],
+  "termsByCategory": {
+    "medication": [
+      "leki",
+      "leków",
+      "lekami",
+      "lekarstw",
+      "dawk",
+      "tabletk",
+      "kapsułk",
+      "kropl",
+      "zastrzyk",
+      "iniekcj",
+      "insulin",
+      "antybiotyk",
+      "syrop",
+      "inhalacj",
+      "maści"
+    ],
+    "diagnosis": [
+      "diagnoz",
+      "rozpoznani",
+      "chorob",
+      "infekcj",
+      "gorączk"
+    ],
+    "test_result": [
+      "badani",
+      "pobrani",
+      "morfologi",
+      "rtg",
+      "usg",
+      "tomograf"
+    ],
+    "vital_sign": [
+      "ciśnieni",
+      "cukru",
+      "cukier",
+      "glukoz",
+      "glikemi",
+      "ekg",
+      "saturacj",
+      "tętn",
+      "pomiar"
+    ],
+    "clinical_advice": [
+      "lekarz",
+      "lekarsk",
+      "zabieg",
+      "konsultacj",
+      "zaleceni",
+      "opatrun"
+    ]
+  }
+} as const;
+
 export const AI_DISCLOSURE_LABEL = "Podsumowanie generowane przy wsparciu AI, zatwierdzone przez personel placówki" as const;
 
 export type FamilyMetric = typeof FAMILY_VISIBLE_METRICS[number]['id'];
