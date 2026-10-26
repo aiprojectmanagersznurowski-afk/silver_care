@@ -52,9 +52,12 @@ test.describe('Wiadomości kierownika — wątki (@REQ: FAM-MESSAGES)', () => {
     const chosen = (await messages.threadItems.nth(1).locator('[data-testid="thread-resident"]').innerText()).trim();
     await expect(messages.conversationHeader).toContainText(chosen);
 
-    const refreshed = page.waitForResponse((r) => r.url().includes('/api/admin/messages') && r.request().method() === 'GET');
+    // Odświeżanie skrzynki w tle (z ?since=); inne komponenty też pytają /api/admin/messages
+    const refreshed = page.waitForResponse((r) => r.url().includes('/api/admin/messages?since=') && r.request().method() === 'GET');
     await page.clock.fastForward(31_000);
     await refreshed;
+    // Czas rzeczywisty (nie zegar strony) na przerysowanie widoku po odpowiedzi
+    await page.waitForTimeout(1000);
     await expect(messages.conversationHeader).toContainText(chosen);
   });
 });
