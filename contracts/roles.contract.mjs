@@ -11,12 +11,13 @@
  * jego opiekun prawny — nie dowolny krewny.
  */
 
+/** `label` — nazwa biznesowa widoczna w aplikacji (SUP-IAM-PANEL, decyzja Michała 2026-10-26). Aplikacja nie wpisuje nazw ról sama. */
 export const ROLES = [
-  { id: 'super_admin', scope: 'GLOBAL', desc: 'Operator platformy Silver Care. Zarządza placówkami, nie czyta treści opieki.' },
-  { id: 'org_admin', scope: 'ORGANIZATION', desc: 'Administrator placówki. Zarządza pensjonariuszami, personelem i powiązaniami rodzin.' },
-  { id: 'nurse', scope: 'ORGANIZATION', desc: 'Personel opiekuńczy. Tworzy notatki, zatwierdza raporty.' },
-  { id: 'legal_guardian', scope: 'RESIDENT', desc: 'Opiekun prawny. JEDYNA rola po stronie bliskich, która może wyrazić zgodę na przetwarzanie danych o zdrowiu.' },
-  { id: 'family', scope: 'RESIDENT', desc: 'Członek rodziny. Odbiorca raportów. NIE może wyrażać ani cofać zgód.' },
+  { id: 'super_admin', label: 'Administrator platformy', scope: 'GLOBAL', desc: 'Operator platformy Silver Care. Zarządza placówkami, nie czyta treści opieki.' },
+  { id: 'org_admin', label: 'Kierownik placówki', scope: 'ORGANIZATION', desc: 'Administrator placówki. Zarządza pensjonariuszami, personelem i powiązaniami rodzin.' },
+  { id: 'nurse', label: 'Personel opiekuńczy', scope: 'ORGANIZATION', desc: 'Personel opiekuńczy. Tworzy notatki, zatwierdza raporty.' },
+  { id: 'legal_guardian', label: 'Opiekun prawny', scope: 'RESIDENT', desc: 'Opiekun prawny. JEDYNA rola po stronie bliskich, która może wyrazić zgodę na przetwarzanie danych o zdrowiu.' },
+  { id: 'family', label: 'Członek rodziny', scope: 'RESIDENT', desc: 'Członek rodziny. Odbiorca raportów. NIE może wyrażać ani cofać zgód.' },
 ];
 
 export const STAFF_ROLES = ['super_admin', 'org_admin', 'nurse'];
