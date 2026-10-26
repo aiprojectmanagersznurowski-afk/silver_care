@@ -14,11 +14,10 @@ import { validateDeactivationConfirmation, generateTemporaryPassword } from '../
  */
 describe('Staff Management & Role Invitations (@REQ: ADM-INVITE, @REQ: CONSENT-GRANTOR, @REQ: ORG-ISOLATION)', () => {
   it('strictly validates staff roles allowed for invitations including org_admin @REQ: ADM-INVITE', () => {
-    const allowedStaffRoles = ['org_admin', 'nurse', 'paramedic'];
+    const allowedStaffRoles = ['org_admin', 'nurse'];
 
     expect(allowedStaffRoles).toContain('org_admin');
     expect(allowedStaffRoles).toContain('nurse');
-    expect(allowedStaffRoles).toContain('paramedic');
 
     // Zakaz zapraszania super_admina z poziomu placówki
     expect(allowedStaffRoles).not.toContain('super_admin');

@@ -3,7 +3,7 @@ import { Page } from '@playwright/test';
 export interface MockUser {
   id: string;
   email: string;
-  role: 'family' | 'legal_guardian' | 'nurse' | 'caregiver' | 'admin' | 'org_admin' | 'super_admin';
+  role: 'family' | 'legal_guardian' | 'nurse' | 'org_admin' | 'super_admin';
 }
 
 /**
