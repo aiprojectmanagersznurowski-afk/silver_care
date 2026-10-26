@@ -25,7 +25,8 @@ describe('FAM-DASHBOARD-AGENDA-DATE-ALIGNMENT: Spójność dat i kategorii agend
 
   it('AgendaTimelineClient kategoryzuje wpisy na podstawie type oraz tytułu @REQ: FAM-AGENDA', () => {
     // Type explicit
-    expect(getCategory({ id: '1', time: '08:00', title: 'Dowolny tytuł', type: 'medication' })).toBe('medication')
+    // FAM-AGENDA-NO-MEDICAL (2026-10-26): widok rodziny nie ma kategorii leków
+    expect(getCategory({ id: '1', time: '08:00', title: 'Dowolny tytuł', type: 'medication' })).toBe('other')
     expect(getCategory({ id: '2', time: '12:00', title: 'Dowolny tytuł', type: 'meal' })).toBe('meal')
     expect(getCategory({ id: '3', time: '14:00', title: 'Dowolny tytuł', type: 'therapy' })).toBe('therapy')
     expect(getCategory({ id: '4', time: '16:00', title: 'Dowolny tytuł', type: 'rest' })).toBe('rest')
@@ -33,7 +34,7 @@ describe('FAM-DASHBOARD-AGENDA-DATE-ALIGNMENT: Spójność dat i kategorii agend
     expect(getCategory({ id: '6', time: '20:00', title: 'Dowolny tytuł', type: 'other' })).toBe('other')
 
     // Title heuristic fallback
-    expect(getCategory({ id: '7', time: '07:30', title: 'Poranne leki i zastrzyk' })).toBe('medication')
+    expect(getCategory({ id: '7', time: '07:30', title: 'Poranne leki i zastrzyk' })).not.toBe('medication')
     expect(getCategory({ id: '8', time: '13:00', title: 'Ciepły obiad i deser' })).toBe('meal')
     expect(getCategory({ id: '9', time: '10:00', title: 'Terapia zajęciowa' })).toBe('therapy')
     expect(getCategory({ id: '10', time: '15:00', title: 'Popołudniowa drzemka i odpoczynek' })).toBe('rest')
