@@ -431,8 +431,7 @@ else if (Number(m[1]) < 7 || Number(m[2]) > 21) {
 
 // R27 — role mają polskie nazwy biznesowe z kontraktu (SUP-IAM-PANEL, decyzja Michała 2026-10-26).
 // Etykieta bez identyfikatora technicznego w nawiasie i bez angielskich nazw; aplikacja nie wpisuje nazw ról sama.
-// Łagodnie do czasu dodania etykiet w kontrakcie: sprawdzane, gdy choć jedna rola ma etykietę.
-if (ROLES.some((r) => 'label' in r)) {
+{
   const seen = new Set();
   const roleIds = ROLES.map((r) => r.id);
   for (const r of ROLES) {

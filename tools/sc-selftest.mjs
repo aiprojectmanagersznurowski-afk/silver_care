@@ -42,6 +42,10 @@ const MUTATIONS = [
   { rule: 'R19-req-shape', file: 'requirements.contract.mjs', from: "deferredUntil: 'Decyzja o skalowaniu poza pilotaż (Michał) albo pierwszy incydent wymagający odtworzenia stanu bazy co do sekundy.', risk: 'MEDIUM' }),", to: "risk: 'MEDIUM' }),", desc: 'status DEFERRED bez deferredUntil — odłożone bezterminowo' },
   { rule: 'R24-design-a11y', file: 'design.contract.mjs', from: "'chart-3':                { value: '#878787',", to: "'chart-3':                { value: '#D4D4D4',", desc: 'seria wykresu poniżej kontrastu 3:1 (WCAG 1.4.11)' },
   { rule: 'R25-occupancy-integrity', file: 'facility.contract.mjs', from: "{ id: 'bed_single_occupant', desc: 'Przypisanie do łóżka z aktywnym przypisaniem innej osoby jest odrzucane, nie nadpisywane.', onViolation: 'REJECT' },", to: "{ id: 'bed_single_occupant', desc: 'Przypisanie do łóżka z aktywnym przypisaniem innej osoby jest odrzucane, nie nadpisywane.', onViolation: 'OVERWRITE' },", desc: 'podwójne przypisanie łóżka ciche nadpisanie zamiast odrzucenia' },
+  { rule: 'R27-role-labels', file: 'roles.contract.mjs', from: "label: 'Kierownik placówki',", to: "label: 'Kierownik placówki (org_admin)',", desc: 'etykieta roli z identyfikatorem technicznym w nawiasie' },
+  { rule: 'R27-role-labels', file: 'roles.contract.mjs', from: "label: 'Personel opiekuńczy',", to: "label: 'Nurse',", desc: 'etykieta roli po angielsku' },
+  { rule: 'R27-role-labels', file: 'roles.contract.mjs', from: "{ id: 'family', label: 'Członek rodziny',", to: "{ id: 'family',", desc: 'rola bez etykiety' },
+  { rule: 'R27-role-labels', file: 'roles.contract.mjs', from: "label: 'Opiekun prawny',", to: "label: 'Członek rodziny',", desc: 'dwie role z tą samą etykietą' },
   { rule: 'R21-send-window', file: 'notifications.contract.mjs', from: "SMS: '08:00-20:00'", to: "SMS: '00:00-23:59'", desc: 'SMS o raporcie wysyłany w nocy' },
 ];
 
