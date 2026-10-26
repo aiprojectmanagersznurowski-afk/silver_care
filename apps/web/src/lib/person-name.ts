@@ -29,3 +29,8 @@ export function compareByPersonName(a: NamedPerson, b: NamedPerson): number {
 export function sortByPersonName<T extends NamedPerson>(people: readonly T[]): T[] {
   return [...people].sort(compareByPersonName)
 }
+
+/** Klucz sortowania kolumny „Nazwisko i imię”; pusty, gdy brak danych (trafia na koniec listy). */
+export function personSortKey(firstName?: string | null, lastName?: string | null): string {
+  return [lastName, firstName].map((part) => (part || '').trim()).filter(Boolean).join(' ')
+}
