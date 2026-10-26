@@ -1,6 +1,6 @@
 # 📖 Kanoniczna specyfikacja user stories — Silver Care
 
-> **Wersja:** 2.10 (uproszczenie ról personelu do `org_admin` i `nurse` oraz wyłączny dostęp `org_admin` do `family_messages`) · **Ostatnia aktualizacja:** 2026-10-20
+> **Wersja:** 2.13 (polskie nazwy ról z kontraktu `ROLES.label`; usunięte dawne role `admin`, `facility_manager`, `caregiver`, `paramedic`) · **Ostatnia aktualizacja:** 2026-10-26
 > **Właściciele:** Darek Rink, Michał Sznurowski
 
 ## Jak czytać i utrzymywać ten dokument
@@ -88,6 +88,8 @@
 - **AC2:** Możliwość zarządzania przypisaniem ról do kont użytkowników.
 - **AC3:** Widok audytu zmian uprawnień zintegrowany z `audit_logs`; wpis `role_change` bez danych osobowych.
 - **AC4 (Zarządzanie statusem i usuwaniem kont):** Możliwość zablokowania konta (deaktywacja / unieważnienie sesji) lub trwałego usunięcia (dla kont testowych/błędnych) z poziomu panelu IAM z zabezpieczeniem przed modyfikacją własnego konta i rejestracją w audit_logs.
+- **AC5 (Nazwy ról — 📝 2026-10-26):** Wszędzie w aplikacji rola ma polską nazwę biznesową z kontraktu (`ROLES.label`), bez identyfikatora technicznego w nawiasie: `super_admin` = „Administrator platformy”, `org_admin` = „Kierownik placówki”, `nurse` = „Personel opiekuńczy”, `legal_guardian` = „Opiekun prawny”, `family` = „Członek rodziny”. Reguła walidatora `R27-role-labels` pilnuje kształtu nazw.
+- **AC6 (Tylko role z kontraktu — 📝 2026-10-26):** Dawne role (`admin`, `facility_manager`, `caregiver`, `paramedic`) nie dają dostępu ani w aplikacji, ani w politykach i funkcjach bazy; konto z taką rolą trafia na `/login?error=unauthorized`. Rola i placówka są zapisywane i czytane wyłącznie z `app_metadata`. Reguły bramki: `auth-legacy-role`, `auth-role-from-user-metadata`.
 
 > ℹ️ Kontrakt od początku wskazywał `source: 'SC-SUP-04'`, ale story nie istniało w v2.4 — tu zostało uzupełnione.
 
