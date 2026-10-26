@@ -66,6 +66,27 @@ export const MDR_GUARDRAILS = {
   status: 'STABLE',
 };
 
+/**
+ * Wspólna karta podopiecznego dla personelu (SC-ADM-20, ADM-RESIDENT-CARD-VISIBILITY).
+ * Jedna karta dla kierownika i pielęgniarki; każda rola widzi wyłącznie sekcje z zasobów, które według
+ * MATRIX (roles.contract.mjs) może czytać. Reguła R26 w sc-validate pilnuje tej zgodności.
+ * Decyzje Michała z 2026-10-25: pielęgniarka nie widzi bliskich i kontaktów, umowy, pakietów, zdarzeń pobytu
+ * ani zarządzania opaską; karta pokazuje wyłącznie metryki behawioralne (bez fizjologicznych).
+ * Superadmin w impersonacji widzi kartę kierownika tylko do odczytu (rozstrzyga warstwa aplikacji).
+ * `access: 'update'` oznacza sekcję akcji zapisu — rola musi mieć też uprawnienie update.
+ */
+export const RESIDENT_CARD_SECTIONS = [
+  { id: 'overview', label: 'Przegląd',            roles: ['org_admin', 'nurse'], resources: ['residents'] },
+  { id: 'bed',      label: 'Łóżko i pokój',       roles: ['org_admin', 'nurse'], resources: ['bed_assignments', 'beds', 'rooms'] },
+  { id: 'wellness', label: 'Aktywność i sen',     roles: ['org_admin', 'nurse'], resources: ['wellness_daily'], metricKind: 'BEHAVIORAL' },
+  { id: 'daily',    label: 'Raporty i plan dnia', roles: ['org_admin', 'nurse'], resources: ['daily_reports', 'daily_agenda'] },
+  { id: 'family',   label: 'Bliscy i kontakty',   roles: ['org_admin'],          resources: ['resident_relative_links'] },
+  { id: 'contract', label: 'Umowa i pakiety',     roles: ['org_admin'],          resources: ['residents', 'resident_packages'] },
+  { id: 'events',   label: 'Zdarzenia pobytu',    roles: ['org_admin'],          resources: ['resident_events'] },
+  { id: 'wearable', label: 'Opaska',              roles: ['org_admin'],          resources: ['external_wearable_links'] },
+  { id: 'manage',   label: 'Edycja i wypis',      roles: ['org_admin'],          resources: ['residents'], access: 'update' },
+];
+
 /** Wymagane stany każdego komponentu prezentującego dane (NFR-UI-01). */
 export const REQUIRED_UI_STATES = ['loading', 'empty', 'success', 'error'];
 

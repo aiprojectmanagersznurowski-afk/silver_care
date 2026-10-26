@@ -107,6 +107,111 @@ export const REQUIRED_UI_STATES = [
   "error"
 ] as const;
 
+export const RESIDENT_CARD_SECTIONS = [
+  {
+    "id": "overview",
+    "label": "Przegląd",
+    "roles": [
+      "org_admin",
+      "nurse"
+    ],
+    "resources": [
+      "residents"
+    ]
+  },
+  {
+    "id": "bed",
+    "label": "Łóżko i pokój",
+    "roles": [
+      "org_admin",
+      "nurse"
+    ],
+    "resources": [
+      "bed_assignments",
+      "beds",
+      "rooms"
+    ]
+  },
+  {
+    "id": "wellness",
+    "label": "Aktywność i sen",
+    "roles": [
+      "org_admin",
+      "nurse"
+    ],
+    "resources": [
+      "wellness_daily"
+    ],
+    "metricKind": "BEHAVIORAL"
+  },
+  {
+    "id": "daily",
+    "label": "Raporty i plan dnia",
+    "roles": [
+      "org_admin",
+      "nurse"
+    ],
+    "resources": [
+      "daily_reports",
+      "daily_agenda"
+    ]
+  },
+  {
+    "id": "family",
+    "label": "Bliscy i kontakty",
+    "roles": [
+      "org_admin"
+    ],
+    "resources": [
+      "resident_relative_links"
+    ]
+  },
+  {
+    "id": "contract",
+    "label": "Umowa i pakiety",
+    "roles": [
+      "org_admin"
+    ],
+    "resources": [
+      "residents",
+      "resident_packages"
+    ]
+  },
+  {
+    "id": "events",
+    "label": "Zdarzenia pobytu",
+    "roles": [
+      "org_admin"
+    ],
+    "resources": [
+      "resident_events"
+    ]
+  },
+  {
+    "id": "wearable",
+    "label": "Opaska",
+    "roles": [
+      "org_admin"
+    ],
+    "resources": [
+      "external_wearable_links"
+    ]
+  },
+  {
+    "id": "manage",
+    "label": "Edycja i wypis",
+    "roles": [
+      "org_admin"
+    ],
+    "resources": [
+      "residents"
+    ],
+    "access": "update"
+  }
+] as const;
+
+export type ResidentCardSection = typeof RESIDENT_CARD_SECTIONS[number]['id'];
+
 export const AI_DISCLOSURE_LABEL = "Podsumowanie generowane przy wsparciu AI, zatwierdzone przez personel placówki" as const;
 
 export type FamilyMetric = typeof FAMILY_VISIBLE_METRICS[number]['id'];

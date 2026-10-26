@@ -123,6 +123,21 @@ export const REQUIREMENTS = [
     ]
   },
   {
+    "id": "ADM-RESIDENT-CARD-VISIBILITY",
+    "status": "TODO",
+    "risk": "HIGH",
+    "source": "SC-ADM-20",
+    "domain": "residents",
+    "statement": "Wspólna karta podopiecznego dla personelu pokazuje każdej roli wyłącznie sekcje z zasobów, które ta rola może czytać według macierzy uprawnień.",
+    "acceptance": [
+      "Lista sekcji karty i ról pochodzi z RESIDENT_CARD_SECTIONS, a nie z komponentu",
+      "Pielęgniarka nie widzi bliskich i kontaktów, umowy, pakietów, zdarzeń pobytu ani zarządzania opaską",
+      "Karta pobiera jawną listę kolumn dla roli; pesel_hash nie trafia do przeglądarki",
+      "Rodzina, opiekun prawny i konto bez roli dostają odmowę przed zapytaniem do bazy",
+      "Karta pokazuje wyłącznie metryki behawioralne jako fakty, bez parametrów fizjologicznych"
+    ]
+  },
+  {
     "id": "ADM-ARCHIVE",
     "status": "TODO",
     "risk": "HIGH",

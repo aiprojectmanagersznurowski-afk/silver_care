@@ -44,6 +44,7 @@ export const RESOURCES = [
   'voice_draft_notes', 'family_messages', 'invitations',
   'external_wearable_links', 'wellness_daily', 'audit_logs', 'security_access_logs',
   'rooms', 'beds', 'bed_assignments',
+  'resident_events', 'resident_packages',
 ];
 
 /**
@@ -75,6 +76,11 @@ export const MATRIX = [
   { resource: 'rooms',                   read: ['org_admin:own', 'nurse:own'],              create: ['org_admin'],    update: ['org_admin:own'],          delete: [] },
   { resource: 'beds',                    read: ['org_admin:own', 'nurse:own'],              create: ['org_admin'],    update: ['org_admin:own'],          delete: [] },
   { resource: 'bed_assignments',         read: ['org_admin:own', 'nurse:own'],              create: ['org_admin'],    update: ['org_admin:own'],          delete: [] },
+
+  // Zdarzenia pobytu (wypis, zgon, zakończenie umowy) i pakiety z opłatami (SC-ADM-19, SC-ADM-20).
+  // Wyłącznie kierownik placówki — decyzja Michała z 2026-10-25. Zdarzenia są historią: bez edycji i usuwania.
+  { resource: 'resident_events',         read: ['org_admin:own'],                           create: ['org_admin'],    update: [],                         delete: [] },
+  { resource: 'resident_packages',       read: ['org_admin:own'],                           create: ['org_admin'],    update: ['org_admin:own'],          delete: [] },
 ];
 
 /**
