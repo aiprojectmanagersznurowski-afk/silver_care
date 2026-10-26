@@ -9,13 +9,14 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { AppHeader } from '@/components/patterns/AppHeader'
 import { StaffVoiceSyncListener } from '@/components/staff/StaffVoiceSyncListener'
 import { SystemAlertBanner } from '@/components/SystemAlertBanner'
+import { getAppRole } from '@/lib/auth/app-role'
 
 export default async function StaffLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const role = user?.app_metadata?.role || user?.user_metadata?.role
-  if (!user || (role !== 'nurse' && role !== 'paramedic' && role !== 'caregiver' && role !== 'admin' && role !== 'org_admin' && role !== 'facility_manager' && role !== 'super_admin')) {
+  const role = getAppRole(user)
+  if (!user || (role !== 'nurse' && role !== 'org_admin' && role !== 'super_admin')) {
     redirect('/')
   }
 
