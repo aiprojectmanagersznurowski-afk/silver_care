@@ -97,70 +97,15 @@ export async function bulkPublishReportsAction(reportIds: string[]): Promise<Bul
   return { success: true, publishedCount: validDraftIds.length }
 }
 
+/**
+ * @deprecated Wycofane zgodnie z regułą zakazu fabrykowania danych w fallbackach (NUR-ROUNDS-REMOVE-STABLE).
+ */
 export async function quickLogRoutineObservationAction(
-  residentId: string,
-  summary: string = 'Stan stabilny, podopieczny spokojny, bez uwag.'
+  _residentId: string,
+  _summary: string = 'Stan stabilny, podopieczny spokojny, bez uwag.'
 ): Promise<{ success: boolean; error?: string; logId?: string }> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return { success: false, error: 'Brak aktywnej sesji użytkownika.' }
+  return {
+    success: false,
+    error: 'Rejestracja szablonowych obserwacji została wycofana (zakaz fabrykowania danych w fallbackach).',
   }
-
-  const cookieStore = await safeGetCookieStore()
-  const guard = assertMutationAllowedDuringImpersonation(isImpersonationSessionActive(cookieStore, user))
-  if (!guard.allowed) {
-    return { success: false, error: guard.error }
-  }
-
-  const role = user.app_metadata?.role as string | undefined
-  const orgId = user.app_metadata?.organization_id as string | undefined
-
-  const allowedRoles = ['nurse', 'org_admin', 'super_admin']
-  if (!role || !allowedRoles.includes(role)) {
-    return { success: false, error: 'Brak uprawnień do rejestracji obserwacji.' }
-  }
-
-  const adminClient = createAdminClient()
-
-  // Sprawdź czy podopieczny istnieje w placówce
-  const { data: resident, error: resErr } = await adminClient
-    .from('residents')
-    .select('id, organization_id')
-    .eq('id', residentId)
-    .single()
-
-  if (resErr || !resident) {
-    return { success: false, error: 'Nie znaleziono podopiecznego.' }
-  }
-
-  if (role !== 'super_admin' && orgId && resident.organization_id !== orgId) {
-    return { success: false, error: 'Brak uprawnień do podopiecznego w tej placówce.' }
-  }
-
-  const { data: newLog, error: insertErr } = await adminClient
-    .from('daily_logs')
-    .insert({
-      resident_id: residentId,
-      nurse_id: user.id,
-      data: {
-        action: 'ROUTINE_OBSERVATION',
-        note: summary,
-        behavioral_items: [summary],
-        source: 'quick_rounds_1click',
-        recorded_at: new Date().toISOString(),
-      },
-    })
-    .select('id')
-    .single()
-
-  if (insertErr) {
-    return { success: false, error: `Błąd zapisu wpisu: ${insertErr.message}` }
-  }
-
-  revalidatePath('/staff')
-  return { success: true, logId: newLog?.id }
 }
