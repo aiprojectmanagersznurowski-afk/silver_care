@@ -94,29 +94,23 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
 
   return (
     <div className="flex flex-col flex-1 min-h-0 bg-card rounded-xl border border-border overflow-hidden">
-      <div className="flex items-center justify-between border-b border-border bg-background/50 px-6 py-4">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-            <MessageSquare className="h-5 w-5" />
-          </div>
-          <div>
-            <h3 className="text-base font-semibold text-foreground font-display">Skrzynka wiadomości placówki</h3>
-            <p className="text-sm text-muted-foreground">Bezpośrednia komunikacja z bliskimi pensjonariuszy placówki.</p>
-          </div>
-        </div>
-        <button
-          onClick={fetchMessages}
-          disabled={loading}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted/50 transition-colors disabled:opacity-50 min-h-touch"
-        >
-          <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} /> Odśwież
-        </button>
-      </div>
-
       <div className="flex flex-1 min-h-0 overflow-hidden relative">
         <div className={`${activeThreadId ? 'hidden md:flex' : 'flex'} w-full md:w-96 border-r border-border flex-col bg-muted/50 shrink-0 min-h-0`}>
-          <div className="p-3 border-b border-border bg-card">
-            <SearchField value={searchQuery} onChange={setSearchQuery} label="Szukaj wątku" placeholder="Szukaj podopiecznego lub treści..." />
+          {/* Nagłówek strony opisuje widok; tu tylko wyszukiwanie i odświeżanie wątków */}
+          <div data-testid="message-threads-toolbar" className="p-3 border-b border-border bg-card flex items-center gap-2">
+            <div className="flex-1 min-w-0">
+              <SearchField value={searchQuery} onChange={setSearchQuery} label="Szukaj wątku" placeholder="Szukaj podopiecznego lub treści..." />
+            </div>
+            <button
+              type="button"
+              onClick={fetchMessages}
+              disabled={loading}
+              aria-label="Odśwież wiadomości"
+              title="Odśwież wiadomości"
+              className="inline-flex shrink-0 items-center justify-center rounded-xl border border-border bg-card text-foreground hover:bg-muted/50 transition-colors disabled:opacity-50 min-h-touch min-w-touch focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            </button>
           </div>
 
           <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-border" data-testid="message-threads-list">
