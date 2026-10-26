@@ -13,6 +13,7 @@ export class FacilityPage {
   readonly searchInput: Locator;
   readonly floorFilter: Locator;
   readonly sectorFilter: Locator;
+  readonly sectorCells: Locator;
   readonly occupancyFilter: Locator;
   readonly roomCards: Locator;
   readonly roomTable: Locator;
@@ -26,11 +27,18 @@ export class FacilityPage {
     this.searchInput = page.locator('input[placeholder*="Szukaj pokoju"]');
     this.floorFilter = page.locator('select[name="floorFilter"]');
     this.sectorFilter = page.locator('select[name="sectorFilter"]');
+    this.sectorCells = page.locator('[data-testid="room-table"] [data-testid="room-sector"]');
     this.occupancyFilter = page.locator('select[name="occupancyFilter"]');
     this.roomCards = page.locator('[data-testid="room-card"]');
     this.roomTable = page.locator('[data-testid="room-table"]');
     this.bedsTable = page.locator('[data-testid="beds-table"]');
     this.expandedBedRows = page.locator('[data-testid="room-expanded-beds"]');
+  }
+
+  /** Etykiety opcji filtra sektora bez pozycji „Wszystkie sektory”. */
+  async sectorOptionLabels(): Promise<string[]> {
+    const labels = await this.sectorFilter.locator('option:not([value="all"])').allInnerTexts();
+    return labels.map((l) => l.trim());
   }
 
   async goto() {

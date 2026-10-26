@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { withAuth } from '@/lib/api-auth'
 import { ApiError } from '@/lib/api-errors'
+import { normalizeSectorInput } from '@/lib/sector'
 
 /**
  * @REQ: ADM-FACILITY-OCCUPANCY
@@ -72,7 +73,7 @@ export const POST = withAuth(
         organization_id: orgId,
         number: number.toString().trim(),
         floor: floor.toString().trim(),
-        sector: sector ? sector.toString().trim() : null,
+        sector: normalizeSectorInput(sector),
       })
       .select()
       .single()

@@ -47,12 +47,11 @@ describe('Wdrożenie audytów UI/UX (@REQ: UI-TEMPLATE-ALIGNMENT, @REQ: UI-ACCES
   });
 
   describe('2. Panel placówki i struktura pokoi', () => {
-    it('formatSectorName deduplikuje prefiks Sektor w nazwach @REQ: UI-TEMPLATE-ALIGNMENT', () => {
-      // Jeśli nazwa nie posiada prefiksu, dodaje "Sektor "
-      expect(formatSectorName('A')).toBe('Sektor A');
-      // Jeśli nazwa już posiada prefiks "Sektor", nie duplikuje go (brak "Sektor Sektor B")
-      expect(formatSectorName('Sektor B-Północ')).toBe('Sektor B-Północ');
-      expect(formatSectorName('sektor C')).toBe('sektor C');
+    it('formatSectorName pokazuje nazwę sektora bez przedrostka Sektor @REQ: UI-TEMPLATE-ALIGNMENT', () => {
+      // Zmiana wymagania 2026-10-26 (Michał): bez dopisywania i z usunięciem przedrostka „Sektor”
+      expect(formatSectorName('A')).toBe('A');
+      expect(formatSectorName('Sektor B-Północ')).toBe('B-Północ');
+      expect(formatSectorName('sektor C')).toBe('C');
       expect(formatSectorName(null)).toBe('—');
       expect(formatSectorName(undefined)).toBe('—');
       expect(formatSectorName('')).toBe('—');

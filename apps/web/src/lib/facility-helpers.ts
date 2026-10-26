@@ -1,3 +1,5 @@
+import { normalizeSectorInput } from '@/lib/sector'
+
 /**
  * facility-helpers.ts — logika pomocnicza dla modułu struktury placówki (ADM-FACILITY-IO-VOICE).
  * Zgodność z contracts/facility.contract.mjs.
@@ -57,7 +59,7 @@ export function validateFacilityRows(
 
     const floor = (raw.floor || '').toString().trim()
     const number = (raw.number || '').toString().trim()
-    const sector = (raw.sector || '').toString().trim() || null
+    const sector = normalizeSectorInput(raw.sector)
     const bedCountRaw = Number(raw.bedCount) || 0
     const bedLabelsRaw = (raw.bedLabels || '').toString().trim()
 
@@ -127,7 +129,7 @@ export function parseFacilityVoiceJson(raw: string): {
     return {
       number: (parsed.number || parsed.room_number || '').toString().trim() || undefined,
       floor: parsed.floor ? parsed.floor.toString().trim() : undefined,
-      sector: parsed.sector ? parsed.sector.toString().trim() : undefined,
+      sector: normalizeSectorInput(parsed.sector) ?? undefined,
       bedLabels: Array.isArray(parsed.bedLabels)
         ? parsed.bedLabels.map(String).map((s: string) => s.trim()).filter(Boolean)
         : bedCount > 0
