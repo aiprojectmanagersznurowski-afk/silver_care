@@ -102,8 +102,7 @@ export function PublishAlertForm({ isPending, onSubmit }: Props) {
                 <label
                   key={s.id}
                   data-testid={`service-checkbox-${s.id}`}
-                  onClick={() => toggleService(s.id)}
-                  className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer text-sm font-medium transition-colors min-h-touch ${
+                  className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer text-sm font-medium transition-colors min-h-touch has-focus-visible:ring-2 has-focus-visible:ring-ring ${
                     selectedServices.includes(s.id)
                       ? 'border-primary bg-primary/10 text-primary'
                       : 'border-border bg-background text-foreground hover:bg-muted/50'
@@ -112,7 +111,7 @@ export function PublishAlertForm({ isPending, onSubmit }: Props) {
                   <input
                     type="checkbox"
                     checked={selectedServices.includes(s.id)}
-                    onChange={() => {}}
+                    onChange={() => toggleService(s.id)}
                     className="sr-only"
                   />
                   <span>{s.label}</span>
