@@ -188,9 +188,9 @@ export async function GET(request: Request) {
   const role = user.app_metadata?.role
 
   let destination = '/dashboard'
-  if (role === 'super_admin' || role === 'org_admin' || role === 'admin' || role === 'facility_manager') {
+  if (role === 'super_admin' || role === 'org_admin') {
     destination = '/admin'
-  } else if (role === 'nurse' || role === 'paramedic' || role === 'caregiver') {
+  } else if (role === 'nurse') {
     destination = '/staff'
   } else if (role === 'family' || role === 'legal_guardian') {
     destination = '/dashboard'
