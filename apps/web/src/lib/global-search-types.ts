@@ -86,7 +86,7 @@ export interface RawReportRow {
 export interface RawOrgRow {
   id: string
   name: string
-  city: string | null
+  address: string | null
 }
 
 export interface RawSearchResultsPayload {
