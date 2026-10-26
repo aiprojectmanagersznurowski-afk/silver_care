@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     }
 
     const role = user.app_metadata?.role
-    if (role !== 'nurse' && role !== 'org_admin' && role !== 'super_admin' && role !== 'admin') {
+    if (role !== 'nurse' && role !== 'org_admin' && role !== 'super_admin') {
       return NextResponse.json({ error: 'Tylko personel może przesyłać nagrania' }, { status: 403 })
     }
 
