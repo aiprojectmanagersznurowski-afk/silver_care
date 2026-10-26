@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/sidebar'
 import { SidebarNav, type SidebarNavGroup } from '@/components/SidebarNav'
 import { SidebarAccount } from '@/components/SidebarAccount'
+import { roleLabel } from '@/lib/auth/role-labels'
 
 export function getStaffNavGroups(): SidebarNavGroup[] {
   return [
@@ -50,7 +51,7 @@ export function StaffSidebar({ userEmail }: { userEmail: string | undefined }) {
       <SidebarContent>
         <SidebarNav groups={groups} />
       </SidebarContent>
-      <SidebarAccount userEmail={userEmail} roleLabel="Personel opiekuńczy" />
+      <SidebarAccount userEmail={userEmail} roleLabel={roleLabel('nurse')} />
       <SidebarRail />
     </Sidebar>
   )

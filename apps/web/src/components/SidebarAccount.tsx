@@ -29,7 +29,7 @@ function AccountIdentity({ email, roleLabel }: { email: string; roleLabel: strin
       </Avatar>
       <div className="grid flex-1 text-left text-sm leading-tight">
         <span className="truncate font-medium">{email}</span>
-        <span className="truncate text-xs text-muted-foreground">{roleLabel}</span>
+        <span data-slot="nav-user-role" className="truncate text-xs text-muted-foreground">{roleLabel}</span>
       </div>
     </>
   )
