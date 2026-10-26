@@ -17,6 +17,7 @@ import {
   ResidentEditSheetFormFields,
   type ResidentEditSheetFormData,
 } from './residents/ResidentEditSheetFormFields'
+import { formatPersonName } from '@/lib/person-name'
 
 interface ResidentData {
   id: string
@@ -119,8 +120,8 @@ export function ResidentEditSheet({ resident, onUpdated, open: openProp, onOpenC
           type="button"
           onClick={handleOpen}
           className="p-2 rounded-lg text-muted-foreground/70 hover:text-foreground hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/50 min-h-touch min-w-touch inline-flex items-center justify-center transition-colors"
-          title={`Edytuj dane: ${resident.first_name} ${resident.last_name}`}
-          aria-label={`Edytuj dane podopiecznego ${resident.first_name} ${resident.last_name}`}
+          title={`Edytuj dane: ${formatPersonName(resident.first_name, resident.last_name)}`}
+          aria-label={`Edytuj dane podopiecznego ${formatPersonName(resident.first_name, resident.last_name)}`}
           data-testid="resident-edit-btn"
         >
           <Pencil className="h-4 w-4" />
