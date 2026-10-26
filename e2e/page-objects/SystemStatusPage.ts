@@ -49,6 +49,11 @@ export class SystemStatusPage {
     await expect(this.currentStatusBadge).toBeVisible();
   }
 
+  /** Pole wyboru modułu w kafelku — do sprawdzania zaznaczenia (bez publikowania alertu). */
+  serviceCheckbox(serviceId: string): Locator {
+    return this.page.locator(`[data-testid="service-checkbox-${serviceId}"] input[type="checkbox"]`);
+  }
+
   async toggleServiceCheckbox(serviceId: string) {
     const checkbox = this.page.locator(`[data-testid="service-checkbox-${serviceId}"]`);
     await checkbox.click();
