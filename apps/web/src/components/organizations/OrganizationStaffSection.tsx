@@ -8,13 +8,14 @@ import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import type { User } from '@supabase/supabase-js'
 import { StatusBadge } from '@/components/patterns/StatusBadge'
+import { getAppRole } from '@/lib/auth/app-role'
 
 interface OrganizationStaffSectionProps {
   staff: User[]
 }
 
 const roleOf = (person: User) =>
-  (person.app_metadata?.role as string) || (person.user_metadata?.role as string) || 'Personel'
+  getAppRole(person) ?? 'Personel'
 const lastSignIn = (person: User) =>
   person.last_sign_in_at ? new Date(person.last_sign_in_at).toLocaleString('pl-PL') : 'Nigdy'
 const EMPTY_TITLE = 'Brak zarejestrowanego personelu w tej placówce'

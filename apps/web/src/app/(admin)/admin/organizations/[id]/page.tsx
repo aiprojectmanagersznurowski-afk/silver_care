@@ -10,6 +10,7 @@ import { OrganizationKpiCards } from '@/components/organizations/OrganizationKpi
 import { OrganizationAdminsSection } from '@/components/organizations/OrganizationAdminsSection'
 import { OrganizationStaffSection } from '@/components/organizations/OrganizationStaffSection'
 import { PageHeader } from '@/components/patterns/PageHeader'
+import { getAppRole, getAppOrganizationId } from '@/lib/auth/app-role'
 
 export default async function OrganizationDetailsPage({
   params,
@@ -24,7 +25,7 @@ export default async function OrganizationDetailsPage({
     redirect('/login')
   }
 
-  const role = user?.app_metadata?.role || user?.user_metadata?.role
+  const role = getAppRole(user)
   if (role !== 'super_admin') {
     redirect('/admin')
   }
@@ -52,15 +53,15 @@ export default async function OrganizationDetailsPage({
   const { data: usersData } = await adminClient.auth.admin.listUsers()
 
   const orgUsers = (usersData?.users || []).filter(u =>
-    u.app_metadata?.organization_id === id || u.user_metadata?.organization_id === id
+    getAppOrganizationId(u) === id
   )
 
   const administrators = orgUsers.filter(u =>
-    u.app_metadata?.role === 'org_admin' || u.user_metadata?.role === 'org_admin'
+    getAppRole(u) === 'org_admin'
   )
 
   const staff = orgUsers.filter(u =>
-    u.app_metadata?.role !== 'org_admin' && u.user_metadata?.role !== 'org_admin'
+    getAppRole(u) !== 'org_admin'
   )
 
   return (
