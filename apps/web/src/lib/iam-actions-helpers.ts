@@ -3,6 +3,7 @@ import { ROLES } from '@silvercare/contracts/src/generated/roles'
 import { createClient } from '@/lib/supabase/server'
 import { isImpersonationSessionActive, safeGetCookieStore } from '@/lib/impersonation-guards'
 import { generateSecureTemporaryPassword } from '@/lib/staff-helpers'
+import { getAppRole } from '@/lib/auth/app-role'
 
 export type UserStatusMode = 'deactivate' | 'activate' | 'hard_delete'
 export type ValidRole = typeof ROLES[number]['id']
@@ -23,7 +24,7 @@ export async function verifySuperAdminCaller(options?: { allowImpersonation?: bo
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const callerRole = user?.app_metadata?.role || user?.user_metadata?.role
+  const callerRole = getAppRole(user)
   if (!user || callerRole !== 'super_admin') {
     return { error: 'Brak uprawnień. Wymagana rola super_admin.', status: 403, code: 403, user: null, supabase }
   }

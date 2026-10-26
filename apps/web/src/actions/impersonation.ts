@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { getAppRole } from '@/lib/auth/app-role'
 
 export interface ImpersonationSession {
   targetAdminId: string
@@ -26,7 +27,7 @@ export async function startImpersonationAction(formData: FormData): Promise<void
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const role = user?.app_metadata?.role || user?.user_metadata?.role
+  const role = getAppRole(user)
   if (!user || role !== 'super_admin') {
     throw new Error('Odmowa dostępu. Wymagana rola super_admin.')
   }
