@@ -10,10 +10,10 @@ export const metadata: Metadata = {
 }
 
 function resolveDashboardHref(role?: string) {
-  if (role === 'super_admin' || role === 'org_admin' || role === 'admin') {
+  if (role === 'super_admin' || role === 'org_admin') {
     return '/admin'
   }
-  if (role === 'nurse' || role === 'caregiver' || role === 'paramedic') {
+  if (role === 'nurse') {
     return '/staff'
   }
   return '/dashboard'

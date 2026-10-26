@@ -208,7 +208,7 @@ describe('IAM User Status & Deletion Management (@REQ: SUP-IAM-PANEL, @REQ: SEC-
               user: {
                 id: 'deactivated-user-1',
                 email: 'deact@silvercare.pl',
-                app_metadata: { role: 'caregiver', is_active: false, organization_id: 'org-1' },
+                app_metadata: { role: 'nurse', is_active: false, organization_id: 'org-1' },
               },
             },
             error: null,

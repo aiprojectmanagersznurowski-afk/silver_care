@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     }
 
     const appRole = user.app_metadata?.role
-    if (appRole !== 'org_admin' && appRole !== 'admin' && appRole !== 'super_admin') {
+    if (appRole !== 'org_admin' && appRole !== 'super_admin') {
       return NextResponse.json({ error: 'Brak uprawnień administratora' }, { status: 403 })
     }
 
@@ -121,7 +121,7 @@ export async function PATCH(request: Request) {
     }
 
     const appRole = user.app_metadata?.role
-    if (appRole !== 'org_admin' && appRole !== 'admin' && appRole !== 'super_admin') {
+    if (appRole !== 'org_admin' && appRole !== 'super_admin') {
       return NextResponse.json({ error: 'Brak uprawnień administratora' }, { status: 403 })
     }
 

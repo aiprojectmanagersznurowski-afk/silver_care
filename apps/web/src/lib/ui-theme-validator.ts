@@ -97,10 +97,10 @@ export function validateThemeTokens(themeColors: Record<string, { value: string 
  * Rozstrzyga ścieżkę powrotu z profilu w zależności od roli (UI-PROFILE-DEADEND-FIX).
  */
 export function resolveProfileBackHref(role?: string): string {
-  if (role === 'super_admin' || role === 'org_admin' || role === 'admin' || role === 'facility_manager') {
+  if (role === 'super_admin' || role === 'org_admin') {
     return '/admin'
   }
-  if (role === 'nurse' || role === 'caregiver' || role === 'paramedic') {
+  if (role === 'nurse') {
     return '/staff'
   }
   return '/dashboard'
@@ -110,10 +110,10 @@ export function resolveProfileBackHref(role?: string): string {
  * Rozstrzyga docelową stronę logowania wg roli (SEC-SESSION, RBAC).
  */
 export function resolveRoleDestination(role?: string): string {
-  if (role === 'super_admin' || role === 'org_admin' || role === 'admin' || role === 'facility_manager') {
+  if (role === 'super_admin' || role === 'org_admin') {
     return '/admin'
   }
-  if (role === 'nurse' || role === 'paramedic' || role === 'caregiver') {
+  if (role === 'nurse') {
     return '/staff'
   }
   if (role === 'family' || role === 'legal_guardian') {

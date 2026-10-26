@@ -30,7 +30,7 @@ export async function bulkPublishReportsAction(reportIds: string[]): Promise<Bul
   const role = user.app_metadata?.role as string | undefined
   const orgId = user.app_metadata?.organization_id as string | undefined
 
-  const allowedRoles = ['nurse', 'caregiver', 'paramedic', 'org_admin', 'super_admin']
+  const allowedRoles = ['nurse', 'org_admin', 'super_admin']
   if (!role || !allowedRoles.includes(role)) {
     return { success: false, error: 'Brak uprawnień do publikacji raportów.' }
   }
@@ -119,7 +119,7 @@ export async function quickLogRoutineObservationAction(
   const role = user.app_metadata?.role as string | undefined
   const orgId = user.app_metadata?.organization_id as string | undefined
 
-  const allowedRoles = ['nurse', 'caregiver', 'paramedic', 'org_admin', 'super_admin']
+  const allowedRoles = ['nurse', 'org_admin', 'super_admin']
   if (!role || !allowedRoles.includes(role)) {
     return { success: false, error: 'Brak uprawnień do rejestracji obserwacji.' }
   }

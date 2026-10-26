@@ -10,7 +10,7 @@ export async function GET() {
   }
 
   const role = user.app_metadata?.role as string | undefined;
-  if (role !== 'org_admin' && role !== 'admin') {
+  if (role !== 'org_admin') {
     return NextResponse.json({ error: 'Brak uprawnień administratora placówki' }, { status: 403 });
   }
 
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
   }
 
   const role = user.app_metadata?.role as string | undefined;
-  if (role !== 'org_admin' && role !== 'admin') {
+  if (role !== 'org_admin') {
     return NextResponse.json({ error: 'Brak uprawnień administratora placówki' }, { status: 403 });
   }
 

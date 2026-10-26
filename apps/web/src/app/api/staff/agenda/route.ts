@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
 import type { TablesInsert } from '@/types/database.types'
 
-const STAFF_ROLES = ['nurse', 'paramedic', 'caregiver', 'org_admin', 'admin', 'super_admin']
+const STAFF_ROLES = ['nurse', 'org_admin', 'super_admin']
 
 export async function GET(request: Request) {
   const supabase = await createClient()

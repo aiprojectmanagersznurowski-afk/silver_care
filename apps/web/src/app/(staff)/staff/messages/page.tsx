@@ -16,7 +16,7 @@ export default async function StaffMessagesRedirectPage({
   }
 
   const role = user.app_metadata?.role
-  if (role === 'org_admin' || role === 'admin') {
+  if (role === 'org_admin') {
     const params = await searchParams
     const suffix = params?.residentId ? `?residentId=${encodeURIComponent(params.residentId)}` : ''
     redirect(`/admin/messages${suffix}`)
