@@ -58,8 +58,8 @@ export function RoomTableView({
                       </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground">{room.floor}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {room.sector ? formatSectorName(room.sector) : '—'}
+                    <TableCell data-testid="room-sector" className="text-muted-foreground">
+                      {formatSectorName(room.sector)}
                     </TableCell>
                     <TableCell className="text-center font-medium">
                       {room.beds || 0}
