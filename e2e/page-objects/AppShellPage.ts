@@ -12,6 +12,7 @@ export class AppShellPage {
   readonly inset: Locator;
   readonly header: Locator;
   readonly accountTrigger: Locator;
+  readonly accountRoleLabel: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -20,6 +21,7 @@ export class AppShellPage {
     this.inset = page.locator('[data-slot="sidebar-inset"]');
     this.header = page.locator('[data-slot="app-header"]');
     this.accountTrigger = page.locator('[data-slot="sidebar"] [data-slot="nav-user-trigger"]');
+    this.accountRoleLabel = this.accountTrigger.locator('[data-slot="nav-user-role"]');
   }
 
   navLink(href: string): Locator {

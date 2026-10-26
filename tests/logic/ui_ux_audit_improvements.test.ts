@@ -61,10 +61,10 @@ describe('Wdrożenie audytów UI/UX (@REQ: UI-TEMPLATE-ALIGNMENT, @REQ: UI-ACCES
 
   describe('3. Super Admin i IAM', () => {
     it('IAM posiada czytelne polskie etykiety ról @REQ: UI-TEMPLATE-ALIGNMENT', () => {
-      expect(ROLE_LABELS.org_admin).toContain('Administrator Placówki');
-      expect(ROLE_LABELS.nurse).toContain('Personel Opiekuńczy');
-      expect(ROLE_LABELS.family).toContain('Członek Rodziny');
-      expect(ROLE_LABELS.legal_guardian).toContain('Opiekun Prawny');
+      expect(ROLE_LABELS.org_admin).toBe('Kierownik placówki');
+      expect(ROLE_LABELS.nurse).toBe('Personel opiekuńczy');
+      expect(ROLE_LABELS.family).toBe('Członek rodziny');
+      expect(ROLE_LABELS.legal_guardian).toBe('Opiekun prawny');
     });
 
     it('AVAILABLE_ROLES blokuje wybór roli super_admin w UI @REQ: UI-TEMPLATE-ALIGNMENT', () => {

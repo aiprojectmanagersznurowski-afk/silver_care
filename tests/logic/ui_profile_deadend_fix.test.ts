@@ -29,10 +29,10 @@ describe('Likwidacja ślepego zaułka profilu (@REQ: UI-TEMPLATE-ALIGNMENT, @REQ
   });
 
   it('posiada czytelne polskie etykiety ról w profilu użytkownika @REQ: UI-TEMPLATE-ALIGNMENT', () => {
-    expect(ROLE_LABELS.org_admin).toBe('Administrator Placówki');
-    expect(ROLE_LABELS.nurse).toBe('Pielęgniarka / Personel Medyczny');
-    expect(ROLE_LABELS.family).toBe('Bliski / Rodzina');
-    expect(ROLE_LABELS.legal_guardian).toBe('Opiekun Prawny');
+    expect(ROLE_LABELS.org_admin).toBe('Kierownik placówki');
+    expect(ROLE_LABELS.nurse).toBe('Personel opiekuńczy');
+    expect(ROLE_LABELS.family).toBe('Członek rodziny');
+    expect(ROLE_LABELS.legal_guardian).toBe('Opiekun prawny');
   });
 
   it('gwarantuje spełnienie minimalnego celu dotykowego 38px (ADR-018) @REQ: UI-ACCESSIBILITY', () => {
