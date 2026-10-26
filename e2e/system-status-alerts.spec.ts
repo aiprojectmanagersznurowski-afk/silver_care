@@ -67,6 +67,9 @@ test.describe('SC-SUP-05: Status systemu i globalne alerty serwisowe (Wariant A)
 
     // Zakończenie konkretnego alertu z testu i przywrócenie stanu stabilnego
     await systemStatusPage.resolveAlertByTitle(alertTitle);
-    await expect(page.locator(`text=${alertTitle}`).first()).toBeVisible();
+    // Czekamy, aż zamknięcie faktycznie się zapisze — inaczej test kończy się przed akcją serwera
+    // i zostawia aktywny alert widoczny dla personelu wszystkich placówek na wspólnej bazie.
+    await expect(page.locator(`[data-testid="system-alert-item"][data-alert-title="${alertTitle}"]`)).toHaveCount(0, { timeout: 15000 });
+    await expect(systemStatusPage.globalAlertBanner.filter({ hasText: alertTitle })).toHaveCount(0);
   });
 });
