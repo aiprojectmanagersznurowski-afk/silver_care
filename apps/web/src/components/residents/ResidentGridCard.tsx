@@ -10,6 +10,7 @@ import { ResidentZsnCheckbox } from '@/components/ResidentZsnCheckbox'
 import { ResidentRowActions } from './ResidentRowActions'
 import { ResidentStatusBadge } from './ResidentStatusBadge'
 import { getActiveBed, type ResidentWithAssignments } from './resident-list-types'
+import { formatPersonName } from '@/lib/person-name'
 
 export function ResidentGridCard({ resident }: { resident: ResidentWithAssignments }) {
   const activeBed = getActiveBed(resident)
@@ -21,7 +22,7 @@ export function ResidentGridCard({ resident }: { resident: ResidentWithAssignmen
           <Link href={`/admin/residents/${resident.id}`} className="flex items-center gap-3 min-w-0 group">
             <Avatar className="h-11 w-11 border border-border shrink-0">
               {resident.avatar_url && (
-                <AvatarImage src={resident.avatar_url} alt={`${resident.first_name} ${resident.last_name}`} />
+                <AvatarImage src={resident.avatar_url} alt={formatPersonName(resident.first_name, resident.last_name)} />
               )}
               <AvatarFallback className="bg-primary/10 text-primary">
                 <UserCircle2 className="h-5 w-5" />
@@ -29,7 +30,7 @@ export function ResidentGridCard({ resident }: { resident: ResidentWithAssignmen
             </Avatar>
             <div className="min-w-0">
               <span className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors block truncate">
-                {resident.first_name} {resident.last_name}
+                {formatPersonName(resident.first_name, resident.last_name)}
               </span>
               <BusinessIdBadge type="resident" id={resident.id} />
             </div>

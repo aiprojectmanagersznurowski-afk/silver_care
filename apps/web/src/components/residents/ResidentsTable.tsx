@@ -13,6 +13,7 @@ import { ResidentRowActions } from './ResidentRowActions'
 import { ResidentMobileCard } from '@/components/ResidentMobileCard'
 import { ResidentStatusBadge } from './ResidentStatusBadge'
 import { getActiveBed, type ResidentWithAssignments } from './resident-list-types'
+import { formatPersonName } from '@/lib/person-name'
 
 function admissionLabel(resident: ResidentWithAssignments): string {
   const date = resident.admission_date ?? resident.created_at
@@ -52,15 +53,15 @@ export function ResidentsTable({ residents }: { residents: ResidentWithAssignmen
                         <Link href={`/admin/residents/${resident.id}`} className="flex items-center gap-3">
                           <Avatar className="size-8 border border-border shrink-0">
                             {resident.avatar_url && (
-                              <AvatarImage src={resident.avatar_url} alt={`${resident.first_name} ${resident.last_name}`} />
+                              <AvatarImage src={resident.avatar_url} alt={formatPersonName(resident.first_name, resident.last_name)} />
                             )}
                             <AvatarFallback className="bg-primary/10 text-primary">
                               <UserCircle2 className="size-4" />
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex items-center gap-2 min-w-0">
-                            <span className="font-medium text-foreground text-sm group-hover:text-primary transition-colors">
-                              {resident.first_name} {resident.last_name}
+                            <span data-testid="resident-name" className="font-medium text-foreground text-sm group-hover:text-primary transition-colors">
+                              {formatPersonName(resident.first_name, resident.last_name)}
                             </span>
                             <BusinessIdBadge type="resident" id={resident.id} />
                           </div>

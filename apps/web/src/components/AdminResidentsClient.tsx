@@ -10,6 +10,7 @@ import { ResidentGridCard } from '@/components/residents/ResidentGridCard'
 import { ResidentsTable } from '@/components/residents/ResidentsTable'
 import { useViewPreference, VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-preference'
 import type { ResidentWithAssignments } from '@/components/residents/resident-list-types'
+import { matchesPersonName, sortByPersonName } from '@/lib/person-name'
 
 export type { ResidentWithAssignments } from '@/components/residents/resident-list-types'
 
@@ -25,11 +26,11 @@ export function AdminResidentsClient({ residents }: AdminResidentsClientProps) {
   )
   const [searchQuery, setSearchQuery] = useState('')
 
-  const filteredResidents = (residents || []).filter((r) => {
+  // Domyślna kolejność: po nazwisku, potem imieniu (decyzja Michała 2026-10-26)
+  const filteredResidents = sortByPersonName(residents || []).filter((r) => {
     if (!searchQuery.trim()) return true
     const q = searchQuery.toLowerCase()
-    const fullName = `${r.first_name} ${r.last_name}`.toLowerCase()
-    return fullName.includes(q) || r.id.toLowerCase().includes(q)
+    return matchesPersonName(r.first_name, r.last_name, searchQuery) || r.id.toLowerCase().includes(q)
   })
 
   return (
