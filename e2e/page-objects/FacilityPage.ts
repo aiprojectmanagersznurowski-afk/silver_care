@@ -22,6 +22,10 @@ export class FacilityPage {
   readonly optimizerButton: Locator;
   readonly optimizerSuggestions: Locator;
   readonly roomNumbers: Locator;
+  readonly importExportButton: Locator;
+  readonly voiceTabButton: Locator;
+  readonly exportTabButton: Locator;
+  readonly importTabButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -39,6 +43,17 @@ export class FacilityPage {
     this.optimizerButton = page.getByRole('button', { name: 'Optymalizuj przydział łóżek' });
     this.optimizerSuggestions = page.locator('[data-testid="bed-optimizer-suggestion"]');
     this.roomNumbers = page.locator('[data-testid="room-table"] [data-testid="room-number"]');
+    this.importExportButton = page.getByRole('button', { name: 'Import / Eksport' });
+    this.voiceTabButton = page.getByRole('button', { name: 'Dodaj głosowo' });
+    this.exportTabButton = page.getByRole('button', { name: 'Eksport' });
+    this.importTabButton = page.getByRole('button', { name: 'Import Excel (.xlsx)' });
+  }
+
+  /** Otwiera dialog Import / Eksport struktury placówki. */
+  async openImportExport() {
+    await this.importExportButton.click();
+    const dialog = this.page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
   }
 
   columnHeader(name: string): Locator {
