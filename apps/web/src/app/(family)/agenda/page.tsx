@@ -8,6 +8,7 @@ import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react'
 import { AgendaTimelineClient } from '@/components/AgendaTimelineClient'
 import { PageHeader } from '@/components/patterns/PageHeader'
 import { formatPersonName } from '@/lib/person-name'
+import { isMedicalAgendaItem } from '@/lib/agenda-family-visibility'
 
 export default async function FamilyAgendaPage(props: { searchParams: Promise<{ date?: string }> }) {
   const supabase = await createClient()
@@ -69,8 +70,9 @@ export default async function FamilyAgendaPage(props: { searchParams: Promise<{ 
     .or(`resident_id.is.null,resident_id.eq.${activeResident.id}`)
     .order('time', { ascending: true })
 
-  const agendaItems = (allItems || []).filter(item => 
-    item.target_date === null || item.target_date === viewDateStr
+  // Bez treści medycznych (FAM-AGENDA-NO-MEDICAL); twarda granica to RLS rodziny (family_visible)
+  const agendaItems = (allItems || []).filter(item =>
+    (item.target_date === null || item.target_date === viewDateStr) && !isMedicalAgendaItem(item)
   )
 
   return (

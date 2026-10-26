@@ -3,6 +3,7 @@ import { FamilyDashboardClient } from '@/components/FamilyDashboardClient'
 import { cookies } from 'next/headers'
 import { mergeAndSortAgenda, AgendaItem } from '@/lib/agenda'
 import { Users } from 'lucide-react'
+import { isMedicalAgendaItem } from '@/lib/agenda-family-visibility'
 
 type ResidentType = { id: string; first_name: string; last_name: string };
 
@@ -105,7 +106,8 @@ export default async function FamilyDashboard(props: { searchParams: Promise<{ d
   const common: AgendaItem[] = []
   const individual: AgendaItem[] = []
   
-  ;(agendaData || []).forEach(item => {
+  // Bez treści medycznych (FAM-AGENDA-NO-MEDICAL); twarda granica to RLS rodziny (family_visible)
+  ;(agendaData || []).filter((item) => !isMedicalAgendaItem(item)).forEach(item => {
     if (item.resident_id === null) {
       common.push(item as AgendaItem)
     } else {
