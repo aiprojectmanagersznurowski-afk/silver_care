@@ -79,7 +79,7 @@ export function generateRelocationSuggestions(
           suggestions.push({
             id: `gender-fix-${occ.residentId}`,
             residentId: occ.residentId,
-            residentPseudonym: occ.pseudonym,
+            residentName: occ.residentName,
             gender: occ.gender,
             careLevel: occ.careLevel,
             fromBedId: occ.currentBedId,
@@ -126,7 +126,7 @@ export function generateRelocationSuggestions(
       suggestions.push({
         id: `mobility-fix-${occ.residentId}`,
         residentId: occ.residentId,
-        residentPseudonym: occ.pseudonym,
+        residentName: occ.residentName,
         gender: occ.gender,
         careLevel: occ.careLevel,
         fromBedId: occ.currentBedId,
@@ -171,7 +171,7 @@ export function generateRelocationSuggestions(
       suggestions.push({
         id: `zsn-ground-${occ.residentId}`,
         residentId: occ.residentId,
-        residentPseudonym: occ.pseudonym,
+        residentName: occ.residentName,
         gender: occ.gender,
         careLevel: occ.careLevel,
         fromBedId: occ.currentBedId,
