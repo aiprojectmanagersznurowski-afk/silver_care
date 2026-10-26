@@ -23,6 +23,7 @@ export interface Database {
           time: string
           type: string
           created_at: string
+          family_visible: boolean
           is_template: boolean
           target_date: string | null
         }
@@ -34,6 +35,7 @@ export interface Database {
           time: string
           type: string
           created_at?: string
+          family_visible?: boolean
           is_template?: boolean
           target_date?: string | null
         }
@@ -45,6 +47,7 @@ export interface Database {
           time?: string
           type?: string
           created_at?: string
+          family_visible?: boolean
           is_template?: boolean
           target_date?: string | null
         }
