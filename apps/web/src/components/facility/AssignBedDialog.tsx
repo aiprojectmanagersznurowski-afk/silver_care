@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
+import { formatPersonName } from '@/lib/person-name'
 
 interface AssignBedDialogProps {
   bedId: string
@@ -133,7 +134,7 @@ export default function AssignBedDialog({ bedId, onAssigned, open: openProp, onO
                     <NativeSelectOption value="" disabled>Wybierz z listy</NativeSelectOption>
                     {residents.map(r => (
                       <NativeSelectOption key={r.id} value={r.id}>
-                        {r.first_name} {r.last_name}
+                        {formatPersonName(r.first_name, r.last_name)}
                       </NativeSelectOption>
                     ))}
                   </NativeSelect>

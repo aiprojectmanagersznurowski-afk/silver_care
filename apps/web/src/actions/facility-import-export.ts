@@ -9,6 +9,7 @@ import {
   validateFacilityRows,
 } from '@/lib/facility-helpers'
 import { requireOrgAdmin } from '@/lib/facility-auth'
+import { formatPersonName } from '@/lib/person-name'
 
 interface BedAssignmentRecord {
   unassigned_at: string | null
@@ -59,7 +60,7 @@ export async function exportFacilityStructureAction(): Promise<{
           const active = assignments.find((a) => a.unassigned_at === null)
           const resident = Array.isArray(active?.residents) ? active.residents[0] : active?.residents
           const residentName = resident
-            ? `${resident.first_name} ${resident.last_name}`
+            ? formatPersonName(resident.first_name, resident.last_name)
             : null
           return {
             id: b.id,

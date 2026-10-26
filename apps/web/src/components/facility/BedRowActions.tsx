@@ -8,6 +8,7 @@ import { StatusBadge } from '@/components/patterns/StatusBadge'
 import AssignBedDialog from './AssignBedDialog'
 import ReassignBedDialog from './ReassignBedDialog'
 import type { BedItem } from './bed-types'
+import { formatPersonName } from '@/lib/person-name'
 
 export interface BedActionsProps {
   bed: BedItem
@@ -36,7 +37,7 @@ export function BedResident({ bed }: { bed: BedItem }) {
   return (
     <div className="space-y-1">
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="font-medium text-foreground">{r.first_name} {r.last_name}</span>
+        <span className="font-medium text-foreground">{formatPersonName(r.first_name, r.last_name)}</span>
         <BusinessIdBadge type="resident" id={r.id} />
       </div>
       <div className="flex flex-wrap gap-1">
@@ -53,7 +54,7 @@ export function BedRowActions({ bed, roomNumber, floor, onDeactivate, onUnassign
   const [dialog, setDialog] = useState<'none' | 'assign' | 'reassign'>('none')
   const close = (open: boolean) => !open && setDialog('none')
   const resident = bed.active_assignment?.resident
-  const residentName = resident ? `${resident.first_name} ${resident.last_name}` : ''
+  const residentName = resident ? formatPersonName(resident.first_name, resident.last_name) : ''
 
   const actions: RowAction[] = !bed.is_active
     ? [{ label: 'Aktywuj łóżko', icon: Power, hint: 'Przywróć łóżko do puli dostępnych do przypisania', onSelect: () => onDeactivate(bed.id, true) }]
