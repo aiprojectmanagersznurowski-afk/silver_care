@@ -201,7 +201,7 @@ export function formatAgendaSearchResult(agenda: {
     id: agenda.id,
     title: agenda.title,
     subtitle: parts.join(' • ') || 'Zadanie z planu dnia',
-    href: `/agenda`,
+    href: '/staff/agenda', // widok personelu (kierownik też ma do niego dostęp), nie portal rodziny
     category: 'agenda',
   }
 }
@@ -210,13 +210,14 @@ export function formatReportSearchResult(report: {
   id: string
   report_date: string
   resident_name?: string | null
+  resident_id?: string | null
   status?: string | null
 }): SearchResultItem {
   return {
     id: report.id,
     title: `Raport z dnia ${report.report_date}`,
     subtitle: report.resident_name ? `Podopieczny: ${report.resident_name}` : 'Raport dobowy',
-    href: `/reports`,
+    href: report.resident_id ? `/staff/reports?resident=${report.resident_id}` : '/staff/reports',
     category: 'reports',
     badge: report.status === 'approved' ? 'Zatwierdzony' : 'Wersja robocza',
     badgeVariant: report.status === 'approved' ? 'default' : 'outline',

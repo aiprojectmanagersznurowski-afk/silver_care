@@ -5,6 +5,8 @@ import {
   formatAgendaSearchResult,
   formatReportSearchResult,
   rankSearchResults,
+  normalizeForSearch,
+  splitSearchWords,
 } from './global-search-helpers'
 import type {
   RawRoomWithBeds,
@@ -153,7 +155,9 @@ export function mapSearchQueryResults(
         ? `${rep.residents.first_name} ${rep.residents.last_name}`
         : null
 
-      const nameMatches = residentName?.toLowerCase().includes(cleanQ.toLowerCase())
+      // Jak w zapytaniu do bazy: każde słowo frazy musi pasować do imienia lub nazwiska (kolejność dowolna)
+      const nameText = normalizeForSearch(residentName ?? '')
+      const nameMatches = Boolean(residentName) && splitSearchWords(cleanQ).every((w) => nameText.includes(normalizeForSearch(w)))
       const dateMatches = dateStr.includes(cleanQ)
       if (!nameMatches && !dateMatches) continue
 
@@ -162,6 +166,7 @@ export function mapSearchQueryResults(
           id: rep.id,
           report_date: dateStr,
           resident_name: residentName,
+          resident_id: rep.residents?.id ?? null,
           status: rep.status,
         })
       )
