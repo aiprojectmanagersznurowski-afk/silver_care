@@ -69,7 +69,7 @@ export async function searchGlobalAction(
   const rooms = () => {
     const q = supabase
       .from('rooms')
-      .select('id, number, floor, sector, organization_id, beds(id, label, bed_assignments(unassigned_at, residents(first_name, last_name)))')
+      .select('id, number, floor, sector, organization_id, beds(id, label, bed_assignments(unassigned_at, residents(id, first_name, last_name)))')
       .or(`number.ilike.${like},sector.ilike.${like}`)
       .limit(SEARCH_CANDIDATE_LIMIT)
     return isSuperAdmin ? q : q.eq('organization_id', org)
@@ -78,7 +78,7 @@ export async function searchGlobalAction(
   const beds = () => {
     const q = supabase
       .from('beds')
-      .select('id, label, rooms!inner(id, number, floor, sector, organization_id), bed_assignments(unassigned_at, residents(first_name, last_name))')
+      .select('id, label, rooms!inner(id, number, floor, sector, organization_id), bed_assignments(unassigned_at, residents(id, first_name, last_name))')
       .ilike('label', like)
       .limit(SEARCH_CANDIDATE_LIMIT)
     return isSuperAdmin ? q : q.eq('rooms.organization_id', org)
@@ -129,7 +129,7 @@ export async function searchGlobalAction(
     const [resData, roomsData, bedsData, agendaData, reportsData, orgsData] = settled.map((s) =>
       s.status === 'fulfilled' ? (s.value.data ?? undefined) : undefined
     )
-    const results = mapSearchQueryResults({ resData, roomsData, bedsData, agendaData, reportsData, orgsData }, cleanQ)
+    const results = mapSearchQueryResults({ resData, roomsData, bedsData, agendaData, reportsData, orgsData }, cleanQ, role)
     const filtered = filterSearchResultsByCategory(results, selectedCategory)
 
     return { success: true, query: cleanQ, items: filtered, totalCount: filtered.length }

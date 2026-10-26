@@ -117,9 +117,11 @@ export function CommandPaletteResults({
               id={getOptionId(idx)}
               role="option"
               aria-selected={isSelected}
+              aria-disabled={item.href ? undefined : true}
+              title={item.href ? undefined : 'Brak karty do otwarcia'}
               onClick={() => onSelectItem(item)}
               onMouseEnter={() => onHoverIndex(idx)}
-              className={`flex items-center justify-between p-2.5 rounded-xl transition-colors cursor-pointer min-h-touch ${
+              className={`flex items-center justify-between p-2.5 rounded-xl transition-colors min-h-touch ${item.href ? 'cursor-pointer' : 'cursor-default'} ${
                 isSelected
                   ? 'bg-primary/10 text-foreground'
                   : 'hover:bg-muted/50 text-foreground'
