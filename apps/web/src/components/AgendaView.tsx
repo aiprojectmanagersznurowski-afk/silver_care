@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { formatPersonName } from '@/lib/person-name'
 
 interface AgendaItem {
   id: string
@@ -64,7 +65,7 @@ export function AgendaView({ residents }: AgendaViewProps) {
                     </div>
                     {resident ? (
                       <div className="text-sm text-text-tertiary mt-1 font-medium">
-                        Pensjonariusz: {resident.first_name as string} {resident.last_name as string}
+                        Pensjonariusz: {formatPersonName(resident.first_name as string, resident.last_name as string)}
                       </div>
                     ) : (
                       <div className="text-sm text-text-tertiary mt-1">
