@@ -10,6 +10,7 @@ import { TableCard, TableStateRow } from '@/components/patterns/TableCard'
 import { ViewToggle, GRID_TABLE_OPTIONS } from '@/components/patterns/ViewToggle'
 import { ObjectCard, ObjectGrid } from '@/components/patterns/ObjectCard'
 import { ListEmpty, ListError } from '@/components/patterns/ListState'
+import { roleLabel } from '@/lib/auth/role-labels'
 import { ListToolbar, SearchField } from '@/components/patterns/ListToolbar'
 import { useViewPreference, VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-preference'
 
@@ -22,7 +23,7 @@ export interface StaffListItem {
   lastSignInLabel: string
 }
 
-const ROLE_LABEL = 'Personel opiekuńczy / Wsparcie'
+const ROLE_LABEL = roleLabel('nurse')
 const EMPTY = { title: 'Brak przypisanego personelu', description: 'Zaproś pracowników za pomocą przycisku powyżej.' }
 const ERROR = 'Lista personelu jest chwilowo niedostępna. Odśwież stronę za chwilę.'
 

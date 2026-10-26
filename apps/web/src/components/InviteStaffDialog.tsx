@@ -17,6 +17,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
+import { roleLabel } from '@/lib/auth/role-labels'
 
 export function InviteStaffDialog() {
   const router = useRouter()
@@ -134,8 +135,8 @@ export function InviteStaffDialog() {
                 onChange={(e) => setRole(e.target.value)}
                 className="flex w-full items-center justify-between disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <NativeSelectOption value="nurse">Personel opiekuńczy / Wsparcie</NativeSelectOption>
-                <NativeSelectOption value="org_admin">Kierownik / Administrator Placówki</NativeSelectOption>
+                <NativeSelectOption value="nurse">{roleLabel('nurse')}</NativeSelectOption>
+                <NativeSelectOption value="org_admin">{roleLabel('org_admin')}</NativeSelectOption>
               </NativeSelect>
             </div>
           </div>
