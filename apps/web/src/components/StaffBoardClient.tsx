@@ -61,7 +61,7 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
     return residents.filter((r) => {
       const resId = String(r.id || '')
       if (onlyUnansweredFilter && !unansweredMessagesMap[resId]?.hasUnanswered) return false
-      if (!matchesPersonName(r.first_name, r.last_name, searchFilter)) return false
+      if (!matchesPersonName(String(r.first_name ?? ''), String(r.last_name ?? ''), searchFilter)) return false
       if (floorFilter !== 'all' && getFloorLabel(r) !== floorFilter) return false
       if (roomFilter !== 'all' && getRoomNumber(r) !== roomFilter) return false
       if (statusFilter !== 'all' && getNoteStatus(r) !== statusFilter) return false
