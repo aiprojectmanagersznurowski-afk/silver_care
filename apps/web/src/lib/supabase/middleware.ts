@@ -50,11 +50,11 @@ export async function updateSession(request: NextRequest) {
         const redirectUrl = request.nextUrl.clone()
         redirectUrl.pathname = '/dashboard'
         return NextResponse.redirect(redirectUrl)
-      } else if (role === 'nurse' || role === 'paramedic' || role === 'caregiver') {
+      } else if (role === 'nurse') {
         const redirectUrl = request.nextUrl.clone()
         redirectUrl.pathname = '/staff'
         return NextResponse.redirect(redirectUrl)
-      } else if (role === 'super_admin' || role === 'org_admin' || role === 'admin' || role === 'facility_manager') {
+      } else if (role === 'super_admin' || role === 'org_admin') {
         const redirectUrl = request.nextUrl.clone()
         redirectUrl.pathname = '/admin'
         return NextResponse.redirect(redirectUrl)
@@ -62,10 +62,10 @@ export async function updateSession(request: NextRequest) {
     }
     
     // Zabezpieczenie ścieżek panelowych
-    if (path.startsWith('/admin') && role !== 'super_admin' && role !== 'org_admin' && role !== 'admin' && role !== 'facility_manager') {
+    if (path.startsWith('/admin') && role !== 'super_admin' && role !== 'org_admin') {
        return NextResponse.redirect(new URL('/unauthorized', request.url))
     }
-    if ((path.startsWith('/staff') || path.startsWith('/voice') || path.startsWith('/reports')) && role !== 'nurse' && role !== 'paramedic' && role !== 'caregiver' && role !== 'super_admin' && role !== 'org_admin' && role !== 'admin') {
+    if ((path.startsWith('/staff') || path.startsWith('/voice') || path.startsWith('/reports')) && role !== 'nurse' && role !== 'super_admin' && role !== 'org_admin') {
        return NextResponse.redirect(new URL('/unauthorized', request.url))
     }
   } else {

@@ -47,10 +47,6 @@ const STAFF_ROLES = new Set([
   'super_admin',
   'org_admin',
   'nurse',
-  'admin',
-  'facility_manager',
-  'paramedic',
-  'caregiver',
 ]);
 
 export interface OAuthInviteClaimInput {
