@@ -213,5 +213,81 @@ describe('Bed Allocation Optimizer Logic (@REQ: ADM-BED-ASSIGNMENT)', () => {
       expect(suggestions[0].priority).toBe('high')
       expect(suggestions[0].reason).toContain('Alokacja na parter ze względu na poziom opieki')
     })
+
+    it('respects enforceGenderSeparation: false flag and skips gender relocation suggestions', () => {
+      const rooms: OptimizerRoom[] = [
+        { id: 'r1', number: '101', floor: '0', isActive: true },
+        { id: 'r2', number: '102', floor: '0', isActive: true },
+      ]
+      const beds: OptimizerBed[] = [
+        { id: 'b1', roomId: 'r1', label: '1', isActive: true },
+        { id: 'b2', roomId: 'r1', label: '2', isActive: true },
+        { id: 'b3', roomId: 'r2', label: '1', isActive: true },
+      ]
+      const occupants: OptimizerOccupant[] = [
+        {
+          residentId: 'res-f1',
+          residentName: 'Kowalska Anna',
+          gender: 'F',
+          careLevel: 'walking',
+          isZsn: false,
+          currentBedId: 'b1',
+          currentRoomId: 'r1',
+        },
+        {
+          residentId: 'res-m1',
+          residentName: 'Nowak Jan',
+          gender: 'M',
+          careLevel: 'walking',
+          isZsn: false,
+          currentBedId: 'b2',
+          currentRoomId: 'r1',
+        },
+      ]
+
+      // Default (true) -> should propose moving
+      const defaultSuggestions = generateRelocationSuggestions(rooms, beds, occupants)
+      expect(defaultSuggestions.some((s) => s.id.startsWith('gender-fix'))).toBe(true)
+
+      // Configured (false) -> should NOT propose moving
+      const disabledSuggestions = generateRelocationSuggestions(rooms, beds, occupants, {
+        enforceGenderSeparation: false,
+        preferGroundFloorForReducedMobility: true,
+      })
+      expect(disabledSuggestions.some((s) => s.id.startsWith('gender-fix'))).toBe(false)
+    })
+
+    it('respects preferGroundFloorForReducedMobility: false flag and skips mobility/ZSN relocations', () => {
+      const rooms: OptimizerRoom[] = [
+        { id: 'r1', number: '101', floor: '0', isActive: true },
+        { id: 'r2', number: '201', floor: '1', isActive: true },
+      ]
+      const beds: OptimizerBed[] = [
+        { id: 'b1', roomId: 'r1', label: 'A', isActive: true },
+        { id: 'b2', roomId: 'r2', label: 'A', isActive: true },
+      ]
+      const occupants: OptimizerOccupant[] = [
+        {
+          residentId: 'res-bedridden',
+          residentName: 'Pawlak Henryk',
+          gender: 'M',
+          careLevel: 'bedridden',
+          isZsn: false,
+          currentBedId: 'b2',
+          currentRoomId: 'r2',
+        },
+      ]
+
+      // Default (true) -> should propose moving to ground
+      const defaultSuggestions = generateRelocationSuggestions(rooms, beds, occupants)
+      expect(defaultSuggestions.some((s) => s.id.startsWith('mobility-fix'))).toBe(true)
+
+      // Configured (false) -> should NOT propose moving to ground
+      const disabledSuggestions = generateRelocationSuggestions(rooms, beds, occupants, {
+        enforceGenderSeparation: true,
+        preferGroundFloorForReducedMobility: false,
+      })
+      expect(disabledSuggestions.some((s) => s.id.startsWith('mobility-fix'))).toBe(false)
+    })
   })
 })
