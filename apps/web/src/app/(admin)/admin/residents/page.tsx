@@ -52,7 +52,7 @@ export default async function AdminResidentsPage() {
             Tryb podglądu (impersonacja) — Ochrona Danych Art. 9 RODO
           </h3>
           <p className="text-sm text-muted-foreground max-w-lg mx-auto mb-4">
-            Dostęp do danych osobowych (PII) podopiecznych jest wyłączony dla Super Administratora. 
+            Dostęp do danych osobowych (PII) podopiecznych jest wyłączony dla Administratora platformy. 
             Wyświetlane jest wyłącznie podsumowanie statystyczne placówki.
           </p>
           <div className="inline-flex items-center gap-3 bg-card px-5 py-3 rounded-xl border border-border">
