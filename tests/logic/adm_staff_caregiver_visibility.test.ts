@@ -7,21 +7,24 @@ import { evaluateOAuthInviteClaim } from '../../apps/web/src/lib/invite-authoriz
  * @REQ: ADM-INVITE
  * @REQ: UI-ACCESSIBILITY
  *
- * Testy dla zadania ADM-STAFF-CAREGIVER-VISIBILITY:
- * AC1: Rola caregiver jest pełnoprawną rolą personelu z routingiem do /staff.
+ * Testy dla zadania ADM-STAFF-CAREGIVER-VISIBILITY (zaktualizowane 2026-10-26: role spoza kontraktu usunięte, decyzja Michała):
+ * AC1: Dawne role (caregiver, paramedic, admin, facility_manager) nie są rolami — brak routingu do części personelu ani admina.
  * AC2: Dialog zapraszania pracownika InviteStaffDialog jest poprawnie eksportowanym komponentem.
  * AC3: Bezpieczeństwo ról: konto opiekuna nie może przejąć zaproszenia dla bliskich (fail-closed).
  * AC4: Spełnienie norm kontrastu i dostępności WCAG 2.1 AA.
  */
 describe('Staff Caregiver Visibility & Invitation Dialog (@REQ: ADM-INVITE, @REQ: UI-ACCESSIBILITY)', () => {
-  it('rola caregiver jest mapowana do widoku personelu (/staff) w systemie routingu @REQ: ADM-INVITE', () => {
-    const destination = resolveRoleDestination('caregiver')
-    expect(destination).toBe('/staff')
+  it('dawne role spoza kontraktu nie prowadzą do części personelu ani admina @REQ: ADM-INVITE', () => {
+    for (const legacy of ['caregiver', 'paramedic', 'admin', 'facility_manager']) {
+      expect(resolveRoleDestination(legacy), legacy).toBe('/login?error=unauthorized')
+    }
+    expect(resolveRoleDestination('nurse')).toBe('/staff')
+    expect(resolveRoleDestination('org_admin')).toBe('/admin')
   })
 
-  it('konto personelu z rolą caregiver jest chronione przed nadpisaniem rolą bliskiego @REQ: ADM-INVITE', () => {
+  it('konto personelu (nurse) jest chronione przed nadpisaniem rolą bliskiego @REQ: ADM-INVITE', () => {
     const decision = evaluateOAuthInviteClaim({
-      currentUserRole: 'caregiver',
+      currentUserRole: 'nurse',
       currentUserOrgId: 'org-1111',
       invitationRole: 'family',
       invitationOrgId: 'org-1111',
