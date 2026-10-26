@@ -70,3 +70,24 @@ test.describe('SC-SUP-05: Status systemu i globalne alerty serwisowe (Wariant A)
     await expect(page.locator(`text=${alertTitle}`).first()).toBeVisible();
   });
 });
+
+test.describe('Status systemu: wybór dotkniętych modułów (@REQ: UI-FOUR-STATES)', () => {
+  test('@REQ: UI-FOUR-STATES - kliknięcie kafelka zaznacza moduł, ponowne kliknięcie odznacza (bez publikowania alertu)', async ({ loginPage, page }) => {
+    const systemStatusPage = new SystemStatusPage(page);
+    await loginPage.loginAs('super_admin');
+    await page.goto('/admin/system-status');
+    await systemStatusPage.expectPageLoaded();
+
+    await expect(systemStatusPage.serviceCheckbox('voice_pipeline')).not.toBeChecked();
+    await systemStatusPage.toggleServiceCheckbox('voice_pipeline');
+    await expect(systemStatusPage.serviceCheckbox('voice_pipeline')).toBeChecked();
+
+    await systemStatusPage.toggleServiceCheckbox('notifications');
+    await expect(systemStatusPage.serviceCheckbox('notifications')).toBeChecked();
+    await expect(systemStatusPage.serviceCheckbox('voice_pipeline')).toBeChecked();
+
+    await systemStatusPage.toggleServiceCheckbox('voice_pipeline');
+    await expect(systemStatusPage.serviceCheckbox('voice_pipeline')).not.toBeChecked();
+  });
+});
+
