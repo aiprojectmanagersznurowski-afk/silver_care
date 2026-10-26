@@ -48,7 +48,9 @@ export function StaffQuickRoundsCard({
           </Avatar>
           <div>
             <h4 className="font-semibold text-foreground text-base">
-              {resident.first_name as string} {resident.last_name as string}
+              <Link href={`/staff/residents/${resId}`} className="hover:text-primary hover:underline">
+                {resident.first_name as string} {resident.last_name as string}
+              </Link>
             </h4>
             <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
               <Bed className="h-3.5 w-3.5" />
