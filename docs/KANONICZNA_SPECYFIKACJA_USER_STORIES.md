@@ -440,6 +440,7 @@
 - **AC3:** Przeniesienie pensjonariusza to jedna transakcja zamykająca stare przypisanie i otwierająca nowe; historia przypisań zachowana (`unassigned_at`).
 - **AC4:** Liczba wolnych łóżek wyliczana z aktywnych przypisań i aktualna natychmiast po zmianie.
 - **AC5:** Widok kafelków i tabeli z filtrowaniem po piętrze, sektorze, obłożeniu i frazie.
+- **AC6 (Nazwa sektora — 📝 2026-10-26):** Sektor jest pokazywany tak, jak go nazwano (np. „A”, „Skrzydło Północne”), bez dopisywanego przedrostka „Sektor”. Przedrostek wpisany przez użytkownika (formularz, import, polecenie głosowe) jest usuwany przy zapisie; dane zapisane wcześniej porządkuje migracja `20261026160000_rooms_sector_strip_prefix`. Brak sektora to „—”.
 
 #### [SC-ADM-11] Kreator przyjęcia pensjonariusza z sugestią łóżka
 🔗 **Kontrakt:** `ADM-RESIDENT-ADD`, `ADM-BED-ASSIGNMENT`, `SEC-PESEL-HASH` · **WO:** [`ADM-RESIDENT-WIZARD`](workorders/ADM-RESIDENT-WIZARD.md), [`ADM-AI-BED-ALLOCATION`](workorders/ADM-AI-BED-ALLOCATION.md); commit `ADM-RESIDENT-ADMISSION-CARD` · **Status:** ✅ 📝
