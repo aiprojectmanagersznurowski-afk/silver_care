@@ -99,7 +99,7 @@ export function OrganizationAdminsSection({
     <ListViewFrame
       storageKey={VIEW_PREFERENCE_KEYS.orgAdmins}
       icon={<UserCog />}
-      title="Administratorzy Ośrodka (org_admin)"
+      title="Kierownicy placówki"
       description="Konta posiadające uprawnienia do zarządzania personelem, podopiecznymi i salami w tej placówce."
       actions={<AddAdminToOrgDialog organizationId={organizationId} organizationName={organizationName} />}
       table={table}

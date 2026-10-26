@@ -20,7 +20,7 @@ export function OrgAdminRowActions({ adminId, adminEmail, organizationId, organi
 
   return (
     <RowActions
-      label="Administrator placówki"
+      label="Kierownik placówki"
       actions={[
         {
           label: invite.isPending ? 'Wysyłanie...' : 'Wyślij zaproszenie',
