@@ -71,7 +71,7 @@ describe('Granica placówki przy zapraszaniu bliskich (@REQ: ORG-ISOLATION, @REQ
     expect(missing).toEqual(foreign);
   });
 
-  it('rola admin podlega tej samej granicy co org_admin @REQ: ORG-ISOLATION', () => {
+  it('dawna rola admin (spoza kontraktu) nie dostaje dostępu do obcej placówki @REQ: ORG-ISOLATION', () => {
     expect(authorizeInviteTarget({ appRole: 'admin', tokenOrgId: ORG_A, residentOrgId: ORG_B }))
       .toEqual({ ok: false, status: 404 });
   });
