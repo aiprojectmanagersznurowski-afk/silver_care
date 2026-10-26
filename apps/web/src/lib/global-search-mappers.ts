@@ -23,7 +23,9 @@ export type { GlobalSearchResponse }
 
 export function mapSearchQueryResults(
   payload: RawSearchResultsPayload,
-  cleanQ: string
+  cleanQ: string,
+  /** Rola z app_metadata — decyduje, dokąd prowadzą wyniki (karta personelu albo kierownika). */
+  role?: string
 ): SearchResultItem[] {
   const results: SearchResultItem[] = []
 
@@ -46,7 +48,7 @@ export function mapSearchQueryResults(
           contract_end_date: r.contract_end_date,
           room_number: activeAssignment?.beds?.rooms?.number || null,
           bed_label: activeAssignment?.beds?.label || null,
-        })
+        }, role)
       )
     }
   }
@@ -69,7 +71,7 @@ export function mapSearchQueryResults(
               sector: r.sector,
               bed_label: null,
               resident_name: null,
-            })
+            }, role)
           )
         }
       } else {
@@ -94,7 +96,8 @@ export function mapSearchQueryResults(
               sector: r.sector,
               bed_label: b.label,
               resident_name: residentName,
-            })
+              resident_id: activeAssignment?.residents?.id ?? null,
+            }, role)
           )
         }
       }
@@ -124,7 +127,8 @@ export function mapSearchQueryResults(
           sector: b.rooms.sector,
           bed_label: b.label,
           resident_name: residentName,
-        })
+          resident_id: activeAssignment?.residents?.id ?? null,
+        }, role)
       )
     }
   }

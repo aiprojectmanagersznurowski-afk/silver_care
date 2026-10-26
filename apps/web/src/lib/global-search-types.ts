@@ -20,6 +20,7 @@ export interface RawRoomWithBeds {
     bed_assignments: Array<{
       unassigned_at: string | null
       residents: {
+        id: string
         first_name: string
         last_name: string
       } | null
@@ -40,6 +41,7 @@ export interface RawBedWithRoom {
   bed_assignments: Array<{
     unassigned_at: string | null
     residents: {
+      id: string
       first_name: string
       last_name: string
     } | null

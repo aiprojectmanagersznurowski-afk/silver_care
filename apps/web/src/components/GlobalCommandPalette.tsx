@@ -18,6 +18,7 @@ export function GlobalCommandPalette({ userRole }: GlobalCommandPaletteProps) {
   const inputRef = useRef<HTMLInputElement>(null)
 
   const handleSelectItem = (item: SearchResultItem) => {
+    if (!item.href) return // pozycja informacyjna (np. wolne łóżko dla pielęgniarki) — bez przejścia
     setIsOpen(false)
     router.push(item.href)
   }

@@ -147,3 +147,17 @@ test.describe('Wyszukiwarka Cmd+K: dostępność i odporność okna (@REQ: UI-AC
   });
 });
 
+test.describe('Wyszukiwarka prowadzi do karty podopiecznego według roli (@REQ: UI-TEMPLATE-ALIGNMENT)', () => {
+  test('@REQ: UI-TEMPLATE-ALIGNMENT - pielęgniarka: wynik podopiecznego otwiera kartę personelu, nie stronę kierownika', async ({ loginPage, page }) => {
+    await loginPage.loginAs('nurse');
+    await page.goto('/staff');
+    const search = new GlobalSearchPage(page);
+    await search.open();
+    await search.dialog.getByRole('button', { name: 'Podopieczni' }).click();
+    await search.search('an');
+    await expect(search.options.first()).toBeVisible();
+    await page.keyboard.press('Enter');
+    await page.waitForURL(/\/staff\/residents\/[0-9a-f-]{36}$/);
+  });
+});
+
