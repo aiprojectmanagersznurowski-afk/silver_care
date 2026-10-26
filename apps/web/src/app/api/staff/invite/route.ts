@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     const appRole = user.app_metadata?.role
     let orgId = user.app_metadata?.organization_id
 
-    if (appRole !== 'org_admin' && appRole !== 'admin' && appRole !== 'super_admin') {
+    if (appRole !== 'org_admin' && appRole !== 'super_admin') {
       return NextResponse.json({ error: 'Brak uprawnień administratora' }, { status: 403 })
     }
 
