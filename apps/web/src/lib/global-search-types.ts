@@ -81,6 +81,7 @@ export interface RawReportRow {
   created_at: string | null
   status: string
   residents: {
+    id: string
     first_name: string
     last_name: string
   } | null

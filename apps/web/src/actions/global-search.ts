@@ -98,7 +98,7 @@ export async function searchGlobalAction(
     const isDateSearch = /^\d{4}-\d{2}-\d{2}$/.test(cleanQ)
     let q = supabase
       .from('daily_reports')
-      .select('id, created_at, status, residents!inner(first_name, last_name, organization_id)')
+      .select('id, created_at, status, residents!inner(id, first_name, last_name, organization_id)')
       .limit(SEARCH_CANDIDATE_LIMIT)
     if (!isSuperAdmin) q = q.eq('residents.organization_id', org)
     if (isDateSearch) return q.gte('created_at', `${cleanQ}T00:00:00Z`).lte('created_at', `${cleanQ}T23:59:59Z`)
