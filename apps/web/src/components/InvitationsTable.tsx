@@ -11,6 +11,7 @@ import { ListEmpty } from '@/components/patterns/ListState'
 import { ListToolbar, SearchField } from '@/components/patterns/ListToolbar'
 import { useViewPreference, VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-preference'
 import { InvitationRowActions, InvitationStatusBadge } from './InvitationRowActions'
+import { roleLabel } from '@/lib/auth/role-labels'
 
 export interface InvitationRecord {
   id: string
@@ -124,7 +125,7 @@ export function InvitationsTable({ initialInvitations }: { initialInvitations: I
                   badges={<InvitationStatusBadge inv={inv} />}
                   meta={[
                     { label: 'Podopieczny', value: inv.residents ? `${inv.residents.first_name} ${inv.residents.last_name}` : '—' },
-                    { label: 'Rola', value: inv.role === 'legal_guardian' ? 'Opiekun prawny' : 'Obserwator' },
+                    { label: 'Rola', value: roleLabel(inv.role) },
                   ]}
                   actions={rowActions(inv)}
                 />
@@ -155,7 +156,7 @@ export function InvitationsTable({ initialInvitations }: { initialInvitations: I
                   {inv.residents ? `${inv.residents.first_name} ${inv.residents.last_name}` : '—'}
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
-                  {inv.role === 'legal_guardian' ? 'Opiekun prawny' : 'Obserwator'}
+                  {roleLabel(inv.role)}
                 </TableCell>
                 <TableCell>
                   <InvitationStatusBadge inv={inv} />

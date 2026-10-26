@@ -46,6 +46,10 @@ const MUTATIONS = [
   { rule: 'R26-resident-card', file: 'presentation.contract.mjs', from: "{ id: 'overview', label: 'Przegląd',            roles: ['org_admin', 'nurse'],", to: "{ id: 'overview', label: 'Przegląd',            roles: ['org_admin', 'nurse', 'family'],", desc: 'karta podopiecznego przyznana rodzinie (rola spoza personelu)' },
   { rule: 'R26-resident-card', file: 'presentation.contract.mjs', from: "resources: ['wellness_daily'], metricKind: 'BEHAVIORAL' }", to: "resources: ['wellness_daily'], metricKind: 'PHYSIOLOGICAL' }", desc: 'karta prezentuje metryki fizjologiczne' },
   { rule: 'R26-resident-card', file: 'presentation.contract.mjs', from: "{ id: 'manage',   label: 'Edycja i wypis',      roles: ['org_admin'],", to: "{ id: 'manage',   label: 'Edycja i wypis',      roles: ['org_admin', 'nurse'],", desc: 'pielęgniarka z akcjami zapisu bez uprawnienia update do residents' },
+  { rule: 'R27-role-labels', file: 'roles.contract.mjs', from: "label: 'Kierownik placówki',", to: "label: 'Kierownik placówki (org_admin)',", desc: 'etykieta roli z identyfikatorem technicznym w nawiasie' },
+  { rule: 'R27-role-labels', file: 'roles.contract.mjs', from: "label: 'Personel opiekuńczy',", to: "label: 'Nurse',", desc: 'etykieta roli po angielsku' },
+  { rule: 'R27-role-labels', file: 'roles.contract.mjs', from: "{ id: 'family', label: 'Członek rodziny',", to: "{ id: 'family',", desc: 'rola bez etykiety' },
+  { rule: 'R27-role-labels', file: 'roles.contract.mjs', from: "label: 'Opiekun prawny',", to: "label: 'Członek rodziny',", desc: 'dwie role z tą samą etykietą' },
   { rule: 'R21-send-window', file: 'notifications.contract.mjs', from: "SMS: '08:00-20:00'", to: "SMS: '00:00-23:59'", desc: 'SMS o raporcie wysyłany w nocy' },
 ];
 

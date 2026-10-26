@@ -4,6 +4,7 @@ import { useTransition } from 'react'
 import { stopImpersonationAction, ImpersonationSession } from '@/actions/impersonation'
 import { ShieldAlert, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { roleLabel } from '@/lib/auth/role-labels'
 
 export function ImpersonationBanner({ session }: { session: ImpersonationSession }) {
   const [isPending, startTransition] = useTransition()
@@ -22,7 +23,7 @@ export function ImpersonationBanner({ session }: { session: ImpersonationSession
       <div className="flex items-center gap-2.5 truncate">
         <ShieldAlert className="h-5 w-5 shrink-0 text-background" />
         <span className="truncate">
-          Działasz w trybie impersonacji jako Administrator Placówki: <strong>{session.targetOrgName}</strong> ({session.adminEmail})
+          Działasz w trybie impersonacji jako {roleLabel('org_admin')}: <strong>{session.targetOrgName}</strong> ({session.adminEmail})
         </span>
       </div>
 

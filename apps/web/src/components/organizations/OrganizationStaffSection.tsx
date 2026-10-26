@@ -81,7 +81,7 @@ export function OrganizationStaffSection({ staff }: OrganizationStaffSectionProp
     <ListViewFrame
       storageKey={VIEW_PREFERENCE_KEYS.orgStaff}
       icon={<UserCheck />}
-      title="Personel Opiekuńczy"
+      title="Personel opiekuńczy"
       description="Lista personelu i opiekunów przypisanych do tej placówki (wyłącznie dane techniczne kont)."
       table={table}
       grid={grid}

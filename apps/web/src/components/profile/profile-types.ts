@@ -14,10 +14,4 @@ export interface ProfileData {
   }>
 }
 
-export const ROLE_LABELS: Record<string, string> = {
-  super_admin: 'Super Administrator',
-  org_admin: 'Administrator Placówki',
-  nurse: 'Pielęgniarka / Personel Medyczny',
-  family: 'Bliski / Rodzina',
-  legal_guardian: 'Opiekun Prawny',
-}
+export { ROLE_LABELS } from '@/lib/auth/role-labels'

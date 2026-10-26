@@ -4,13 +4,13 @@ Ten plik powstaje z `contracts/`. Nie edytuj go ręcznie.
 
 ## Role (5)
 
-| Rola | Zakres | Opis |
-|---|---|---|
-| `super_admin` | GLOBAL | Operator platformy Silver Care. Zarządza placówkami, nie czyta treści opieki. |
-| `org_admin` | ORGANIZATION | Administrator placówki. Zarządza pensjonariuszami, personelem i powiązaniami rodzin. |
-| `nurse` | ORGANIZATION | Personel opiekuńczy. Tworzy notatki, zatwierdza raporty. |
-| `legal_guardian` | RESIDENT | Opiekun prawny. JEDYNA rola po stronie bliskich, która może wyrazić zgodę na przetwarzanie danych o zdrowiu. |
-| `family` | RESIDENT | Członek rodziny. Odbiorca raportów. NIE może wyrażać ani cofać zgód. |
+| Rola | Nazwa | Zakres | Opis |
+|---|---|---|---|
+| `super_admin` | Administrator platformy | GLOBAL | Operator platformy Silver Care. Zarządza placówkami, nie czyta treści opieki. |
+| `org_admin` | Kierownik placówki | ORGANIZATION | Administrator placówki. Zarządza pensjonariuszami, personelem i powiązaniami rodzin. |
+| `nurse` | Personel opiekuńczy | ORGANIZATION | Personel opiekuńczy. Tworzy notatki, zatwierdza raporty. |
+| `legal_guardian` | Opiekun prawny | RESIDENT | Opiekun prawny. JEDYNA rola po stronie bliskich, która może wyrazić zgodę na przetwarzanie danych o zdrowiu. |
+| `family` | Członek rodziny | RESIDENT | Członek rodziny. Odbiorca raportów. NIE może wyrażać ani cofać zgód. |
 
 **Zgodę na dane o zdrowiu mogą wyrazić:** `resident_self`, `legal_guardian`. Rola `family` świadomie poza tą listą (ADR-003).
 

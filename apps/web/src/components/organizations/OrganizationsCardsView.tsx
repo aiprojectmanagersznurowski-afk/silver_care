@@ -86,7 +86,7 @@ export function OrganizationsCardsView({
                 <div className="text-base font-bold text-foreground">
                   {org.administrator_count}
                 </div>
-                <div className="text-sm text-muted-foreground mt-0.5">Org Admini</div>
+                <div className="text-sm text-muted-foreground mt-0.5">Kierownicy</div>
               </div>
             </div>
 

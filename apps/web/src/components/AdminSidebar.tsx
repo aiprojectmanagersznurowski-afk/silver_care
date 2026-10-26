@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/sidebar'
 import { SidebarNav, type SidebarNavGroup } from '@/components/SidebarNav'
 import { SidebarAccount } from '@/components/SidebarAccount'
+import { roleLabel } from '@/lib/auth/role-labels'
 import { useStaffUnansweredMessages } from '@/hooks/useStaffUnansweredMessages'
 
 // Globalne linki Super Admina (zarządzanie całą platformą)
@@ -93,7 +94,7 @@ export function AdminSidebar({
             <SidebarMenuButton size="lg" render={<Link href="/admin" aria-label="Silver Care — strona główna" />}>
               <Image src="/logo-mark.png" alt="" width={32} height={32} className="hidden size-8 object-contain group-data-[collapsible=icon]:block" />
               <Logo width={124} height={36} className="h-7 w-auto object-contain group-data-[collapsible=icon]:hidden" priority />
-              <Badge variant="secondary" className="ml-auto group-data-[collapsible=icon]:hidden">{role === 'super_admin' ? 'Super Admin' : 'Admin'}</Badge>
+              <Badge variant="secondary" className="ml-auto group-data-[collapsible=icon]:hidden">{role === 'super_admin' ? 'Platforma' : 'Placówka'}</Badge>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -101,7 +102,7 @@ export function AdminSidebar({
       <SidebarContent>
         <SidebarNav groups={groups} />
       </SidebarContent>
-      <SidebarAccount userEmail={userEmail} roleLabel={role === 'super_admin' ? 'Super administrator' : 'Administrator placówki'} />
+      <SidebarAccount userEmail={userEmail} roleLabel={roleLabel(role)} />
       <SidebarRail />
     </Sidebar>
   )

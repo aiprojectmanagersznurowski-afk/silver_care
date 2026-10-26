@@ -12,6 +12,7 @@ import { Loader2, AlertCircle } from 'lucide-react'
 import { RegisterLoadingCard, RegisterErrorCard, RegisterSuccessCard } from '@/components/auth/RegisterStateCards'
 import { RegisterConsentsSection } from '@/components/auth/RegisterConsentsSection'
 import { useRegisterToken } from '@/components/auth/useRegisterToken'
+import { roleLabel } from '@/lib/auth/role-labels'
 
 function RegisterContent() {
   const router = useRouter()
@@ -121,7 +122,7 @@ function RegisterContent() {
             <span className={`inline-flex items-center px-2 py-0.5 rounded text-sm font-semibold ${
               isGuardian ? 'bg-primary/15 text-primary' : 'bg-secondary text-secondary-foreground'
             }`}>
-              {isGuardian ? 'Opiekun prawny' : 'Bliski / Rodzina'}
+              {roleLabel(isGuardian ? 'legal_guardian' : 'family')}
             </span>
           </div>
         </div>

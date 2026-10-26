@@ -100,7 +100,7 @@ export function CreateOrganizationDialog() {
           <DialogHeader>
             <DialogTitle>Utwórz nową placówkę</DialogTitle>
             <DialogDescription>
-              Atomowy provisioning: zakładanie ośrodka i konta pierwszego administratora (org_admin).
+              Zakładanie placówki razem z kontem pierwszego kierownika placówki.
             </DialogDescription>
           </DialogHeader>
 

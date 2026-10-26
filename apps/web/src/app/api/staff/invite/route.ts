@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
 import { renderStaffInviteEmail } from '@/lib/notification-templates'
 import { getRequestOrigin } from '@/lib/url-helper'
+import { roleLabel } from '@/lib/auth/role-labels'
 
 export async function POST(request: Request) {
   try {
@@ -62,8 +63,6 @@ export async function POST(request: Request) {
         organization_id: orgId
       },
       user_metadata: {
-        role: role,
-        organization_id: orgId,
         avatar_url: avatar_url || null
       }
     })
@@ -106,11 +105,10 @@ export async function POST(request: Request) {
           if (org?.name) orgName = org.name
         }
 
-        const roleDisplay = role === 'org_admin' ? 'Kierownik / Administrator Placówki' : 'Personel opiekuńczy / Wsparcie'
         const emailTemplate = renderStaffInviteEmail({
           inviteUrl: proxyUrl,
           organizationName: orgName,
-          roleName: roleDisplay,
+          roleName: roleLabel(role),
         })
 
         await fetch('https://send.api.mailtrap.io/api/send', {

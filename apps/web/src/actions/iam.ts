@@ -54,15 +54,15 @@ export async function updateUserRoleAction(formData: FormData) {
     return { error: 'Błąd audytu: ' + rpcErr.message }
   }
 
+  // Rola tylko w app_metadata; stare wpisy role/organization_id z user_metadata usuwamy przy zapisie
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { role: _role, organization_id: _orgId, ...userMetadata } = targetUser.user.user_metadata ?? {}
   const { error: updateErr } = await adminClient.auth.admin.updateUserById(targetUserId, {
     app_metadata: {
       ...targetUser.user.app_metadata,
       role: newRole
     },
-    user_metadata: {
-      ...targetUser.user.user_metadata,
-      role: newRole
-    }
+    user_metadata: userMetadata
   })
 
   if (updateErr) {
