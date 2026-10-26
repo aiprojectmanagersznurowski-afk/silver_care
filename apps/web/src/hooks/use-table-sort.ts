@@ -10,7 +10,8 @@ import { nextSort, sortRows, type SortState, type SortValue } from '@/lib/table-
 export function useTableSort<T, K extends string>(
   rows: readonly T[],
   accessors: Record<K, (row: T) => SortValue>,
-  initial: SortState<K> | null = null
+  // NoInfer: klucze kolumn wynikają z `accessors`, nie z wartości początkowej
+  initial: SortState<NoInfer<K>> | null = null
 ) {
   const [sort, setSort] = useState<SortState<K> | null>(initial)
 
