@@ -58,7 +58,9 @@ export function StaffStandardCard({ resident, unansweredInfo }: StaffStandardCar
           <div>
             <div className="flex items-center justify-between gap-2">
               <h3 className="text-lg font-semibold text-foreground truncate">
-                {resident.first_name as string} {resident.last_name as string}
+                <Link href={`/staff/residents/${resId}`} className="hover:text-primary hover:underline">
+                  {resident.first_name as string} {resident.last_name as string}
+                </Link>
               </h3>
               <BusinessIdBadge type="resident" id={resId} />
             </div>

@@ -1,5 +1,6 @@
 import { test, expect } from '../fixtures/base-test';
 import { ResidentProfilePage } from '../page-objects/ResidentProfilePage';
+import { StaffBoardPage } from '../page-objects/StaffBoardPage';
 
 /**
  * @REQ: ADM-RESIDENT-CARD-VISIBILITY
@@ -63,3 +64,34 @@ test.describe('Karta podopiecznego — personel opiekuńczy (@REQ: ADM-RESIDENT-
     await context.close();
   });
 });
+
+test.describe('Tablica dyżuru prowadzi do karty podopiecznego (@REQ: ADM-RESIDENT-CARD-VISIBILITY)', () => {
+  test('@REQ: ADM-RESIDENT-CARD-VISIBILITY - nazwisko w tabeli to link do karty personelu, który ją otwiera', async ({ loginPage, page }) => {
+    await loginPage.loginAs('nurse');
+    const board = new StaffBoardPage(page);
+    await board.goto();
+    await board.expectStaffBoardLoaded();
+
+    const link = board.residentCardLinks.first();
+    await expect(link).toBeVisible();
+    await expect(link).toHaveAttribute('href', /^\/staff\/residents\/[0-9a-f-]{36}$/);
+    await link.click();
+    await page.waitForURL(/\/staff\/residents\/[0-9a-f-]{36}$/);
+    await expect(new ResidentProfilePage(page).tab('Przegląd')).toBeVisible();
+  });
+
+  test('@REQ: ADM-RESIDENT-CARD-VISIBILITY - w widoku kart i obchodu nazwisko też prowadzi do karty', async ({ loginPage, page }) => {
+    await loginPage.loginAs('nurse');
+    const board = new StaffBoardPage(page);
+    await board.goto();
+    await board.expectStaffBoardLoaded();
+
+    await board.cardsViewButton.click();
+    await expect(board.residentCardLinks.first()).toHaveAttribute('href', /^\/staff\/residents\/[0-9a-f-]{36}$/);
+
+    await board.quickRoundsButton.click();
+    await expect(board.residentCardLinks.first()).toHaveAttribute('href', /^\/staff\/residents\/[0-9a-f-]{36}$/);
+    await expect(board.buttonsNestedInLinks).toHaveCount(0);
+  });
+});
+
