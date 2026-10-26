@@ -1,67 +1,98 @@
 'use client'
 
-import React, { useEffect, useState, useRef, useMemo } from 'react'
-import { format } from 'date-fns'
-import { pl } from 'date-fns/locale'
-import { MessageSquare, Clock, AlertCircle, RefreshCw, ChevronLeft } from 'lucide-react'
+import React, { useCallback, useEffect, useState, useRef, useMemo } from 'react'
+import { MessageSquare, ChevronLeft } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { groupMessagesIntoThreads, filterThreadsBySearch, RawMessage } from '@/lib/messages-helper'
+import { groupMessagesIntoThreads, filterThreadsBySearch, RawMessage, type MessageThread } from '@/lib/messages-helper'
+import {
+  countAwaitingReply,
+  filterAwaitingReply,
+  keepSelectedThread,
+  latestCreatedAt,
+  mergeMessages,
+  relativeKey,
+  relativeLabel,
+  type RelativeInfo,
+} from '@/lib/message-threads'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 import { StaffMessageList } from './StaffMessageList'
 import { StaffMessageComposer } from './StaffMessageComposer'
-import { StatusBadge } from '@/components/patterns/StatusBadge'
-import { SearchField } from '@/components/patterns/ListToolbar'
+import { StaffMessageThreadList } from './StaffMessageThreadList'
 
 interface StaffMessagesInboxProps {
   initialResidentId?: string
 }
 
+type RelativeRow = { residentId: string; relativeUserId: string } & RelativeInfo
+
 export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProps) {
   const [messages, setMessages] = useState<RawMessage[]>([])
-  const [loading, setLoading] = useState(true)
+  const [relatives, setRelatives] = useState<Map<string, RelativeInfo>>(new Map())
+  const [initialLoading, setInitialLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [onlyAwaiting, setOnlyAwaiting] = useState(false)
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null)
   const [replyText, setReplyText] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [sendError, setSendError] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
+  // Refy zamiast stanu w domknięciu: odświeżanie co 30 s widzi aktualne wiadomości i nie resetuje wyboru
+  const messagesRef = useRef<RawMessage[]>([])
+  const initialSelectionDone = useRef(false)
 
-  const fetchMessages = async () => {
+  /** `manual` pokazuje kręcącą się ikonę; odświeżanie w tle jest ciche i dociąga tylko nowe wiadomości. */
+  const fetchMessages = useCallback(async (manual = false) => {
+    const since = latestCreatedAt(messagesRef.current)
     try {
-      setLoading(true)
+      if (manual) setRefreshing(true)
       setError(null)
-      const res = await fetch('/api/admin/messages')
+      const res = await fetch(`/api/admin/messages${since ? `?since=${encodeURIComponent(since)}` : ''}`)
       if (!res.ok) throw new Error('Nie udało się pobrać wiadomości')
       const data = await res.json()
       const fetched: RawMessage[] = data.messages || []
-      setMessages(fetched)
-
-      if (fetched.length > 0) {
-        const grouped = groupMessagesIntoThreads(fetched)
-        if (initialResidentId) {
-          const match = grouped.find((t) => t.residentId === initialResidentId)
-          setActiveThreadId(match ? match.threadId : grouped[0]?.threadId || null)
-        } else if (!activeThreadId && grouped.length > 0 && typeof window !== 'undefined' && window.innerWidth >= 768) {
-          setActiveThreadId(grouped[0].threadId)
-        }
+      const merged = since ? mergeMessages(messagesRef.current, fetched) : fetched
+      messagesRef.current = merged
+      setMessages(merged)
+      const rows: RelativeRow[] = data.relatives || []
+      if (rows.length > 0) {
+        setRelatives((prev) => {
+          const next = new Map(prev)
+          for (const r of rows) next.set(relativeKey(r.residentId, r.relativeUserId), { role: r.role, isPrimaryContact: r.isPrimaryContact })
+          return next
+        })
       }
+
+      const grouped = groupMessagesIntoThreads(merged)
+      const preferResidentId = initialSelectionDone.current ? undefined : initialResidentId
+      initialSelectionDone.current = true
+      const autoSelectFirst = typeof window !== 'undefined' && window.innerWidth >= 768
+      setActiveThreadId((current) => keepSelectedThread(current, grouped, { preferResidentId, autoSelectFirst }))
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Wystąpił błąd podczas ładowania')
     } finally {
-      setLoading(false)
+      setInitialLoading(false)
+      setRefreshing(false)
     }
-  }
+  }, [initialResidentId])
 
   useEffect(() => {
     void Promise.resolve().then(() => fetchMessages())
-    const interval = setInterval(fetchMessages, 30000)
+    const interval = setInterval(() => void fetchMessages(), 30000)
     return () => clearInterval(interval)
-  }, [initialResidentId])
+  }, [fetchMessages])
 
   const threads = useMemo(() => groupMessagesIntoThreads(messages), [messages])
-  const filteredThreads = useMemo(() => filterThreadsBySearch(threads, searchQuery), [threads, searchQuery])
+  const visibleThreads = useMemo(
+    () => filterAwaitingReply(filterThreadsBySearch(threads, searchQuery), onlyAwaiting),
+    [threads, searchQuery, onlyAwaiting]
+  )
   const activeThread = useMemo(() => threads.find((t) => t.threadId === activeThreadId) || null, [threads, activeThreadId])
+  const relativeLabelOf = useCallback(
+    (t: MessageThread) => relativeLabel(relatives.get(relativeKey(t.residentId, t.relativeUserId))),
+    [relatives]
+  )
   useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight }, [activeThread?.messages, activeThreadId])
 
   const handleSendReply = async () => {
@@ -96,81 +127,21 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
     <div className="flex flex-col flex-1 min-h-0 bg-card rounded-xl border border-border overflow-hidden">
       <div className="flex flex-1 min-h-0 overflow-hidden relative">
         <div className={`${activeThreadId ? 'hidden md:flex' : 'flex'} w-full md:w-96 border-r border-border flex-col bg-muted/50 shrink-0 min-h-0`}>
-          {/* Nagłówek strony opisuje widok; tu tylko wyszukiwanie i odświeżanie wątków */}
-          <div data-testid="message-threads-toolbar" className="p-3 border-b border-border bg-card flex items-center gap-2">
-            <div className="flex-1 min-w-0">
-              <SearchField value={searchQuery} onChange={setSearchQuery} label="Szukaj wątku" placeholder="Szukaj podopiecznego lub treści..." />
-            </div>
-            <button
-              type="button"
-              onClick={fetchMessages}
-              disabled={loading}
-              aria-label="Odśwież wiadomości"
-              title="Odśwież wiadomości"
-              className="inline-flex shrink-0 items-center justify-center rounded-xl border border-border bg-card text-foreground hover:bg-muted/50 transition-colors disabled:opacity-50 min-h-touch min-w-touch focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            </button>
-          </div>
-
-          <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-border" data-testid="message-threads-list">
-            {loading && threads.length === 0 ? (
-              <div className="p-6 text-center text-sm text-muted-foreground space-y-2">
-                <RefreshCw className="h-5 w-5 animate-spin text-primary mx-auto" />
-                <p>Ładowanie wątków...</p>
-              </div>
-            ) : error && threads.length === 0 ? (
-              <div className="p-6 text-center text-sm text-destructive space-y-2">
-                <AlertCircle className="h-5 w-5 mx-auto" />
-                <p>{error}</p>
-                <button onClick={fetchMessages} className="mt-2 text-sm font-semibold underline text-foreground">Spróbuj ponownie</button>
-              </div>
-            ) : filteredThreads.length === 0 ? (
-              <div className="p-8 text-center text-sm text-muted-foreground" data-testid="messages-empty-state">
-                <p className="font-medium text-foreground">Brak wiadomości</p>
-                <p className="mt-1">{searchQuery ? 'Brak wyników pasujących do wyszukiwania.' : 'Nie ma jeszcze wiadomości od rodzin.'}</p>
-              </div>
-            ) : (
-              filteredThreads.map((thread) => {
-                const isSelected = activeThreadId === thread.threadId
-                const lastMsg = thread.lastMessage
-                return (
-                  <button
-                    key={thread.threadId}
-                    data-testid="thread-item"
-                    onClick={() => { setActiveThreadId(thread.threadId); setSendError(null) }}
-                    className={`w-full text-left p-4 transition-all flex items-start gap-3 border-l-4 ${isSelected ? 'bg-card border-primary' : 'border-transparent hover:bg-card/60'}`}
-                  >
-                    <Avatar className="h-10 w-10 shrink-0 border border-border">
-                      <AvatarFallback className="bg-primary/10 text-primary font-medium text-sm">{thread.residentName.split(' ').map((n) => n[0]).join('')}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-1 mb-1">
-                        <span className="font-semibold text-sm text-foreground truncate">{thread.residentName}</span>
-                        <span className="text-sm text-muted-foreground whitespace-nowrap flex items-center gap-0.5">
-                          <Clock className="h-3 w-3" />
-                          {format(new Date(lastMsg.created_at), 'd MMM, HH:mm', { locale: pl })}
-                        </span>
-                      </div>
-                      <p className="text-sm text-muted-foreground truncate">
-                        {lastMsg.is_from_family ? <span className="font-medium text-foreground">Rodzina: </span> : <span className="font-medium text-primary">Personel: </span>}
-                        {lastMsg.content}
-                      </p>
-                      <div className="mt-2 flex items-center justify-between">
-                        <span className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground">
-                          <MessageSquare className="h-3 w-3 text-muted-foreground" />
-                          {thread.messages.length} {thread.messages.length === 1 ? 'wiadomość' : 'wiadomości'}
-                        </span>
-                        {lastMsg.is_from_family && (
-                          <StatusBadge tone="brand">Do odpowiedzi</StatusBadge>
-                        )}
-                      </div>
-                    </div>
-                  </button>
-                )
-              })
-            )}
-          </div>
+          <StaffMessageThreadList
+            threads={visibleThreads}
+            activeThreadId={activeThreadId}
+            onSelect={(id) => { setActiveThreadId(id); setSendError(null) }}
+            relativeLabelOf={relativeLabelOf}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onlyAwaiting={onlyAwaiting}
+            onToggleAwaiting={() => setOnlyAwaiting((v) => !v)}
+            awaitingCount={countAwaitingReply(threads)}
+            onRefresh={() => void fetchMessages(true)}
+            initialLoading={initialLoading}
+            refreshing={refreshing}
+            error={error}
+          />
         </div>
 
         <div className={`w-full flex md:flex-1 flex-col bg-card min-w-0 min-h-0 ${activeThreadId ? '' : 'hidden md:flex'}`}>
@@ -194,9 +165,9 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
                   </Avatar>
                   <div className="min-w-0">
                     <h3 className="font-semibold text-sm text-foreground truncate">{activeThread.residentName}</h3>
-                    <p className="text-sm text-muted-foreground flex items-center gap-1.5 truncate">
-                      <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
-                      Wątek wiadomości z rodziną podopiecznego
+                    <p className="text-sm text-muted-foreground flex items-center gap-2 truncate">
+                      <span>Pisze: {relativeLabelOf(activeThread)}</span>
+                      <BusinessIdBadge type="user" id={activeThread.relativeUserId} />
                     </p>
                   </div>
                 </div>
@@ -207,7 +178,7 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
                 </div>
               </div>
 
-              <StaffMessageList messages={activeThread.messages} scrollRef={scrollRef} />
+              <StaffMessageList messages={activeThread.messages} scrollRef={scrollRef} familyLabel={relativeLabelOf(activeThread)} />
 
               <StaffMessageComposer
                 replyText={replyText}
