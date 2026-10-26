@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search, Mic, FileText, X, Command, User } from 'lucide-react'
+import { formatPersonName, matchesPersonName } from '@/lib/person-name'
 
 interface ResidentItem {
   id: string
@@ -80,7 +81,7 @@ export function StaffCommandPalette({ residents = [] }: StaffCommandPaletteProps
     if (!query.trim()) return cachedResidents.slice(0, 8)
     const q = query.toLowerCase().trim()
     return cachedResidents
-      .filter((r) => `${r.first_name} ${r.last_name}`.toLowerCase().includes(q))
+      .filter((r) => matchesPersonName(r.first_name, r.last_name, q))
       .slice(0, 8)
   }, [cachedResidents, query])
 
@@ -183,7 +184,7 @@ export function StaffCommandPalette({ residents = [] }: StaffCommandPaletteProps
                         </div>
                         <div>
                           <div className="text-sm font-semibold">
-                            {resident.first_name} {resident.last_name}
+                            {formatPersonName(resident.first_name, resident.last_name)}
                           </div>
                           <div className="text-sm text-muted-foreground">
                             Enter: Dyktuj notatkę głosową
