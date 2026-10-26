@@ -13,7 +13,7 @@ export async function GET(
   }
 
   const role = user.app_metadata?.role as string | undefined;
-  if (!['org_admin', 'admin'].includes(role || '')) {
+  if (!['org_admin'].includes(role || '')) {
     return NextResponse.json({ error: 'Brak uprawnień do zasobów administracyjnych' }, { status: 403 });
   }
 
