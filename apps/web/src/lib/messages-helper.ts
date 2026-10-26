@@ -1,3 +1,5 @@
+import { formatPersonName } from '@/lib/person-name'
+
 /**
  * @REQ: FAM-MESSAGES
  * @REQ: NUR-BOARD
@@ -40,7 +42,7 @@ export function groupMessagesIntoThreads(messages: RawMessage[]): MessageThread[
   for (const msg of sorted) {
     const threadId = `${msg.resident_id}-${msg.relative_user_id}`;
     const residentName = msg.residents
-      ? `${msg.residents.first_name} ${msg.residents.last_name}`
+      ? formatPersonName(msg.residents.first_name, msg.residents.last_name)
       : `Podopieczny (${msg.resident_id.slice(0, 6)})`;
 
     if (!threadsMap.has(threadId)) {
