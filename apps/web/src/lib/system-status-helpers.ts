@@ -44,6 +44,8 @@ export interface SystemAlertRecord {
   created_at: string
   updated_at?: string
   resolved_at?: string | null
+  /** Opcjonalny termin wygaśnięcia; po nim alert ma status „Wygasł”. */
+  expires_at?: string | null
 }
 
 export interface SystemAlertInput {
@@ -52,6 +54,8 @@ export interface SystemAlertInput {
   severity: SystemAlertSeverity
   status: SystemAlertStatus
   affectedServices: string[]
+  /** ISO 8601; puste = alert do ręcznego zakończenia */
+  expiresAt?: string | null
 }
 
 export interface ActiveSystemBannerState {
@@ -78,7 +82,7 @@ export function formatServiceLabels(serviceIds: string[]): string[] {
   return (serviceIds || []).map((id) => SERVICE_MAP.get(id) || id)
 }
 
-export function validateSystemAlertInput(input: SystemAlertInput): { valid: boolean; error?: string } {
+export function validateSystemAlertInput(input: SystemAlertInput, now: Date = new Date()): { valid: boolean; error?: string } {
   const title = (input.title || '').trim()
   const message = (input.message || '').trim()
 
@@ -103,6 +107,11 @@ export function validateSystemAlertInput(input: SystemAlertInput): { valid: bool
   if (!Array.isArray(input.affectedServices) || input.affectedServices.some((s) => !SERVICE_MAP.has(s))) {
     return { valid: false, error: 'Wybrano nieprawidłową usługę systemową.' }
   }
+  if (input.expiresAt) {
+    const expires = new Date(input.expiresAt).getTime()
+    if (Number.isNaN(expires)) return { valid: false, error: 'Nieprawidłowy termin wygaśnięcia.' }
+    if (expires <= now.getTime()) return { valid: false, error: 'Termin wygaśnięcia musi być w przyszłości.' }
+  }
 
   const combinedLower = `${title} ${message}`.toLowerCase()
   for (const forbidden of FORBIDDEN_UI_TERMS) {
@@ -124,8 +133,37 @@ const SEVERITY_PRIORITY: Record<SystemAlertSeverity, number> = {
   info: 1,
 }
 
-export function getActiveSystemBannerState(alerts: SystemAlertRecord[]): ActiveSystemBannerState | null {
-  const active = (alerts || []).filter((a) => a.is_active)
+export type AlertLifecycle = 'active' | 'expired' | 'resolved'
+
+export const ALERT_LIFECYCLE_LABELS: Record<AlertLifecycle, string> = {
+  active: 'Aktywny',
+  expired: 'Wygasł',
+  resolved: 'Zakończony',
+}
+
+/** Stan alertu w danej chwili: zakończony ręcznie, po terminie albo aktywny. */
+export function getAlertLifecycle(alert: SystemAlertRecord, now: Date = new Date()): AlertLifecycle {
+  if (!alert.is_active) return 'resolved'
+  if (alert.expires_at && new Date(alert.expires_at).getTime() <= now.getTime()) return 'expired'
+  return 'active'
+}
+
+/** Wiersz do zapisu w system_alerts; expires_at tylko, gdy podano termin. */
+export function buildSystemAlertInsert(input: SystemAlertInput, userId: string) {
+  return {
+    title: input.title.trim(),
+    message: input.message.trim(),
+    severity: input.severity,
+    status: input.status,
+    affected_services: input.affectedServices,
+    is_active: true,
+    created_by: userId,
+    ...(input.expiresAt ? { expires_at: new Date(input.expiresAt).toISOString() } : {}),
+  }
+}
+
+export function getActiveSystemBannerState(alerts: SystemAlertRecord[], now: Date = new Date()): ActiveSystemBannerState | null {
+  const active = (alerts || []).filter((a) => getAlertLifecycle(a, now) === 'active')
   if (active.length === 0) return null
 
   const sorted = [...active].sort((a, b) => {

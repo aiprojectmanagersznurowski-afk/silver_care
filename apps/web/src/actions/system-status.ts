@@ -8,6 +8,7 @@ import {
   canManageSystemAlerts,
   validateSystemAlertInput,
   buildSystemAlertAuditPayload,
+  buildSystemAlertInsert,
   type SystemAlertInput,
   type SystemAlertRecord,
 } from '@/lib/system-status-helpers'
@@ -74,15 +75,7 @@ export async function publishSystemAlertAction(input: SystemAlertInput) {
   // Zapis do tabeli system_alerts z egzekwowaniem RLS super_admin
   const { data: alert, error: insertErr } = await supabase
     .from('system_alerts')
-    .insert({
-      title: input.title.trim(),
-      message: input.message.trim(),
-      severity: input.severity,
-      status: input.status,
-      affected_services: input.affectedServices,
-      is_active: true,
-      created_by: user.id,
-    })
+    .insert(buildSystemAlertInsert(input, user.id))
     .select()
     .single()
 

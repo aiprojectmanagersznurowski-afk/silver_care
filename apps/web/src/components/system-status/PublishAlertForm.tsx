@@ -23,6 +23,7 @@ export function PublishAlertForm({ isPending, onSubmit }: Props) {
   const [severity, setSeverity] = useState<SystemAlertSeverity>('warning')
   const [status, setStatus] = useState<SystemAlertStatus>('maintenance')
   const [selectedServices, setSelectedServices] = useState<SystemServiceId[]>([])
+  const [expiresAt, setExpiresAt] = useState('')
 
   const toggleService = (sId: SystemServiceId) => {
     setSelectedServices((prev) =>
@@ -38,6 +39,8 @@ export function PublishAlertForm({ isPending, onSubmit }: Props) {
       severity,
       status,
       affectedServices: selectedServices,
+      // datetime-local jest w czasie lokalnym; do serwera idzie ISO z strefą
+      expiresAt: expiresAt ? new Date(expiresAt).toISOString() : null,
     })
   }
 
@@ -131,6 +134,22 @@ export function PublishAlertForm({ isPending, onSubmit }: Props) {
               placeholder="Krótki opis sytuacji dla personelu i kierowników placówek..."
               className="w-full p-3 rounded-lg border border-border bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none resize-none"
             />
+          </div>
+
+          <div>
+            <label htmlFor="system-alert-expires-at" className="text-sm font-medium text-foreground block mb-1">Wygasa (opcjonalnie)</label>
+            <input
+              id="system-alert-expires-at"
+              type="datetime-local"
+              data-testid="system-alert-expires-at-input"
+              value={expiresAt}
+              onChange={(e) => setExpiresAt(e.target.value)}
+              aria-describedby="system-alert-expires-at-hint"
+              className="w-full h-11 px-3 rounded-lg border border-border bg-background text-foreground text-sm focus:ring-2 focus:ring-primary outline-none"
+            />
+            <p id="system-alert-expires-at-hint" className="text-sm text-muted-foreground mt-1">
+              Bez terminu alert trwa do ręcznego zakończenia.
+            </p>
           </div>
 
           <Button

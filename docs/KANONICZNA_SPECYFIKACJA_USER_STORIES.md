@@ -104,6 +104,7 @@
 - **AC3 (Globalny banner dla placówek — Wariant A):** Gdy w systemie istnieje aktywny alert od Super Admina, w panelach placówki (`/admin` oraz `/staff`) na górze ekranu wyświetla się czytelny `SystemAlertBanner` informujący personel i kierownictwo placówki o trwających pracach i niedostępnych usługach. Gdy system działa bez zakłóceń (brak aktywnych alertów), banner nie jest renderowany.
 - **AC4 (Wycofanie atrapy z pulpitu placówki — Wariant A):** Z głównego pulpitu administratora placówki (`/admin`) zostaje usunięty statyczny kafelek KPI „Status systemu: Stabilny”, a w jego miejsce prezentowany jest rzeczywisty wskaźnik operacyjny ośrodka („Raporty do zatwierdzenia” — liczba raportów w statusie `draft`).
 - **AC5 (Ślad audytowy i 4 stany UI):** Każda publikacja i zakończenie alertu systemowego rejestruje wpis w `audit_logs` (`SYSTEM_ALERT_PUBLISHED` / `SYSTEM_ALERT_RESOLVED`) bez danych osobowych (`SEC-NO-PII-LOGS`). Panel Super Admina obsługuje 4 stany UI (`loading`, `empty`, `success`, `error`).
+- **AC6 (Termin wygaśnięcia — 📝 2026-10-26):** Przy publikacji Super Admin może podać opcjonalny termin wygaśnięcia (`system_alerts.expires_at`, późniejszy niż utworzenie). Po terminie alert znika z banera placówek i z listy aktywnych, a w historii ma status „Wygasł”; wiersz w bazie nie jest zmieniany. Bez terminu alert trwa do ręcznego zakończenia. Termin z przeszłości jest odrzucany przed zapisem.
 
 ---
 
