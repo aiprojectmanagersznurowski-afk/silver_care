@@ -147,8 +147,8 @@ test.describe('Wyszukiwarka Cmd+K: dostępność i odporność okna (@REQ: UI-AC
   });
 });
 
-test.describe('Wyszukiwarka prowadzi do karty podopiecznego według roli (@REQ: ADM-RESIDENT-CARD-VISIBILITY)', () => {
-  test('@REQ: ADM-RESIDENT-CARD-VISIBILITY - pielęgniarka: wynik podopiecznego otwiera kartę personelu, nie stronę kierownika', async ({ loginPage, page }) => {
+test.describe('Wyszukiwarka prowadzi do karty podopiecznego według roli (@REQ: UI-TEMPLATE-ALIGNMENT)', () => {
+  test('@REQ: UI-TEMPLATE-ALIGNMENT - pielęgniarka: wynik podopiecznego otwiera kartę personelu, nie stronę kierownika', async ({ loginPage, page }) => {
     await loginPage.loginAs('nurse');
     await page.goto('/staff');
     const search = new GlobalSearchPage(page);

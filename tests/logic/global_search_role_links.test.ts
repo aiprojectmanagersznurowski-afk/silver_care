@@ -7,7 +7,7 @@ import { searchGlobalAction } from '../../apps/web/src/actions/global-search'
 import { mapSearchQueryResults } from '../../apps/web/src/lib/global-search-mappers'
 
 /**
- * @REQ: ADM-RESIDENT-CARD-VISIBILITY
+ * @REQ: UI-TEMPLATE-ALIGNMENT
  * @REQ: ORG-ISOLATION
  *
  * Wynik wyszukiwarki prowadzi do karty podopiecznego w części aplikacji właściwej dla roli
@@ -21,14 +21,14 @@ const room = (beds: unknown[]) => ({ id: 'room-1', number: '101', floor: 1, sect
 const occupied = { id: 'bed-1', label: '1', bed_assignments: [{ unassigned_at: null, residents: { id: 'res-9', first_name: 'Anna', last_name: 'Nowak' } }] }
 const free = { id: 'bed-2', label: '2', bed_assignments: [] }
 
-describe('link do karty podopiecznego według roli (@REQ: ADM-RESIDENT-CARD-VISIBILITY)', () => {
-  it('@REQ: ADM-RESIDENT-CARD-VISIBILITY - pielęgniarka → karta personelu, kierownik i superadmin → karta kierownika', () => {
+describe('link do karty podopiecznego według roli (@REQ: UI-TEMPLATE-ALIGNMENT)', () => {
+  it('@REQ: UI-TEMPLATE-ALIGNMENT - pielęgniarka → karta personelu, kierownik i superadmin → karta kierownika', () => {
     expect(mapSearchQueryResults({ resData: [resident] }, 'Kowalski', 'nurse')[0].href).toBe('/staff/residents/res-1')
     expect(mapSearchQueryResults({ resData: [resident] }, 'Kowalski', 'org_admin')[0].href).toBe('/admin/residents/res-1')
     expect(mapSearchQueryResults({ resData: [resident] }, 'Kowalski', 'super_admin')[0].href).toBe('/admin/residents/res-1')
   })
 
-  it('@REQ: ADM-RESIDENT-CARD-VISIBILITY - pielęgniarka: zajęte łóżko → karta podopiecznego, wolne łóżko i pusty pokój bez linku', () => {
+  it('@REQ: UI-TEMPLATE-ALIGNMENT - pielęgniarka: zajęte łóżko → karta podopiecznego, wolne łóżko i pusty pokój bez linku', () => {
     const items = mapSearchQueryResults({ roomsData: [room([occupied, free])] }, '101', 'nurse')
     expect(items.find((i) => i.id === 'bed-1')?.href).toBe('/staff/residents/res-9')
     expect(items.find((i) => i.id === 'bed-2')?.href).toBeUndefined()
@@ -36,7 +36,7 @@ describe('link do karty podopiecznego według roli (@REQ: ADM-RESIDENT-CARD-VISI
     expect(empty[0].href).toBeUndefined()
   })
 
-  it('@REQ: ADM-RESIDENT-CARD-VISIBILITY - kierownik: pokoje i łóżka prowadzą do struktury placówki', () => {
+  it('@REQ: UI-TEMPLATE-ALIGNMENT - kierownik: pokoje i łóżka prowadzą do struktury placówki', () => {
     const items = mapSearchQueryResults({ roomsData: [room([occupied, free])] }, '101', 'org_admin')
     expect(items.every((i) => i.href === '/admin/facility')).toBe(true)
   })
