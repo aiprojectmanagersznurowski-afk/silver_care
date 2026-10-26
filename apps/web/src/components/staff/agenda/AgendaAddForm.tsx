@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Plus, Clock, Users, X, AlertCircle } from 'lucide-react'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { ITEM_TYPES, ResidentSummary } from './agenda-types'
+import { formatPersonName } from '@/lib/person-name'
 
 interface AgendaAddFormProps {
   residents: ResidentSummary[]
@@ -141,7 +142,7 @@ export function AgendaAddForm({ residents, onAdd }: AgendaAddFormProps) {
             >
               <NativeSelectOption value="">Wszyscy podopieczni (Cała placówka)</NativeSelectOption>
               {residents.map((r) => (
-                <NativeSelectOption key={r.id} value={r.id}>{r.first_name} {r.last_name}</NativeSelectOption>
+                <NativeSelectOption key={r.id} value={r.id}>{formatPersonName(r.first_name, r.last_name)}</NativeSelectOption>
               ))}
             </NativeSelect>
             <p className="text-sm text-muted-foreground">

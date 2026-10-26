@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { formatPersonName } from '@/lib/person-name'
 
 interface Resident {
   id: string
@@ -71,13 +72,13 @@ export function GlobalResidentSwitcher({ residents }: { residents: Resident[] })
         >
           <Avatar className={`h-6 w-6 border ${r.id === selectedId ? 'border-primary-foreground/20' : 'border-transparent'}`}>
             {r.avatar_url && (
-              <AvatarImage src={r.avatar_url} alt={`${r.first_name} ${r.last_name}`} />
+              <AvatarImage src={r.avatar_url} alt={formatPersonName(r.first_name, r.last_name)} />
             )}
             <AvatarFallback className={`text-sm font-bold ${r.id === selectedId ? 'bg-card/20 text-white' : 'bg-primary/10 text-primary'}`}>
               {r.first_name[0]}{r.last_name[0]}
             </AvatarFallback>
           </Avatar>
-          {r.first_name} {r.last_name}
+          {formatPersonName(r.first_name, r.last_name)}
         </button>
       ))}
     </div>

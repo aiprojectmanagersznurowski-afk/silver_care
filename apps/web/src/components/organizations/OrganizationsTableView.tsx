@@ -7,28 +7,43 @@ import { OrganizationRowActions } from './OrganizationRowActions'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { TableCard } from '@/components/patterns/TableCard'
 import { OrganizationSummaryItem } from './organizations-types'
+import { useTableSort } from '@/hooks/use-table-sort'
+import { SortableTableHead } from '@/components/patterns/SortableTableHead'
+
+const occupancy = (o: OrganizationSummaryItem) => (o.resident_limit > 0 ? o.active_resident_count / o.resident_limit : 0)
+
+const ORG_SORT_ACCESSORS = {
+  name: (o: OrganizationSummaryItem) => o.organization_name,
+  address: (o: OrganizationSummaryItem) => o.address,
+  limit: (o: OrganizationSummaryItem) => o.resident_limit,
+  occupancy,
+  staff: (o: OrganizationSummaryItem) => o.staff_count,
+  created: (o: OrganizationSummaryItem) => (o.created_at ? new Date(o.created_at) : null),
+}
 
 export function OrganizationsTableView({
   organizations
 }: {
   organizations: OrganizationSummaryItem[]
 }) {
+  const { sorted, sort, toggleSort } = useTableSort(organizations, ORG_SORT_ACCESSORS, { key: 'name', direction: 'asc' })
+
   return (
     <TableCard>
       <Table>
         <TableHeader className="text-muted-foreground">
           <TableRow>
-            <TableHead>Nazwa</TableHead>
-            <TableHead>Adres</TableHead>
-            <TableHead className="text-center">Limit</TableHead>
-            <TableHead className="text-center">Obłożenie</TableHead>
-            <TableHead className="text-center">Personel</TableHead>
-            <TableHead>Utworzono</TableHead>
+            <SortableTableHead sortKey="name" sort={sort} onSort={toggleSort}>Nazwa</SortableTableHead>
+            <SortableTableHead sortKey="address" sort={sort} onSort={toggleSort}>Adres</SortableTableHead>
+            <SortableTableHead sortKey="limit" sort={sort} onSort={toggleSort} className="text-center">Limit</SortableTableHead>
+            <SortableTableHead sortKey="occupancy" sort={sort} onSort={toggleSort} className="text-center">Obłożenie</SortableTableHead>
+            <SortableTableHead sortKey="staff" sort={sort} onSort={toggleSort} className="text-center">Personel</SortableTableHead>
+            <SortableTableHead sortKey="created" sort={sort} onSort={toggleSort}>Utworzono</SortableTableHead>
             <TableHead className="text-right">Akcje</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {organizations.map((org) => {
+          {sorted.map((org) => {
             const occupancyPercent = org.resident_limit > 0
               ? Math.round((org.active_resident_count / org.resident_limit) * 100)
               : 0

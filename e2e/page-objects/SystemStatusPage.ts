@@ -13,6 +13,7 @@ export class SystemStatusPage {
   readonly messageInput: Locator;
   readonly severitySelect: Locator;
   readonly statusSelect: Locator;
+  readonly expiresAtInput: Locator;
   readonly publishButton: Locator;
   readonly globalAlertBanner: Locator;
   readonly resolveAlertButton: Locator;
@@ -26,6 +27,7 @@ export class SystemStatusPage {
     this.messageInput = page.locator('[data-testid="system-alert-message-input"]');
     this.severitySelect = page.locator('[data-testid="system-alert-severity-select"]');
     this.statusSelect = page.locator('[data-testid="system-alert-status-select"]');
+    this.expiresAtInput = page.locator('[data-testid="system-alert-expires-at-input"]');
     this.publishButton = page.locator('[data-testid="system-alert-publish-btn"]');
     this.globalAlertBanner = page.locator('[data-testid="global-system-alert-banner"]');
     this.resolveAlertButton = page.locator('[data-testid="resolve-system-alert-btn"]').first();
@@ -49,6 +51,11 @@ export class SystemStatusPage {
     await expect(this.currentStatusBadge).toBeVisible();
   }
 
+  /** Pole wyboru modułu w kafelku — do sprawdzania zaznaczenia (bez publikowania alertu). */
+  serviceCheckbox(serviceId: string): Locator {
+    return this.page.locator(`[data-testid="service-checkbox-${serviceId}"] input[type="checkbox"]`);
+  }
+
   async toggleServiceCheckbox(serviceId: string) {
     const checkbox = this.page.locator(`[data-testid="service-checkbox-${serviceId}"]`);
     await checkbox.click();
@@ -60,6 +67,8 @@ export class SystemStatusPage {
     severity?: 'info' | 'warning' | 'error';
     status?: 'degraded' | 'maintenance';
     services?: string[];
+    /** Wartość pola datetime-local, np. 2026-10-27T06:00 */
+    expiresAt?: string;
   }) {
     await this.titleInput.fill(params.title);
     await this.messageInput.fill(params.message);
@@ -73,6 +82,9 @@ export class SystemStatusPage {
       for (const s of params.services) {
         await this.toggleServiceCheckbox(s);
       }
+    }
+    if (params.expiresAt) {
+      await this.expiresAtInput.fill(params.expiresAt);
     }
     await this.publishButton.click();
   }

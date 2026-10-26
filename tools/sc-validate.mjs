@@ -14,7 +14,7 @@ const load = (f) => import(`file://${join(ROOT, 'contracts', f)}`);
 const { ROLES, STAFF_ROLES, RELATIVE_ROLES, MFA_REQUIRED_ROLES, CONSENT_GRANTORS, CONSENT_PURPOSES,
         RESOURCES, MATRIX, AUDIT_REQUIREMENTS, DELETE_POLICIES } = await load('roles.contract.mjs');
 const { FAMILY_VISIBLE_METRICS, PHYSIOLOGICAL_FIELDS, FORBIDDEN_UI_TERMS, MDR_GUARDRAILS,
-        REQUIRED_UI_STATES } = await load('presentation.contract.mjs');
+        REQUIRED_UI_STATES, RESIDENT_CARD_SECTIONS = [] } = await load('presentation.contract.mjs');
 const { TRANSCRIPT_STREAMS, MEDICAL_CATEGORIES, PIPELINE_STAGES, VOICE_RETENTION,
         AI_PROVENANCE_FIELDS, AI_FEEDBACK_CATEGORIES } = await load('voice.contract.mjs');
 const { PROVIDERS, WEARABLE_LINK, ORG_LINK, FIELD_MAPPINGS, INGEST_PRECONDITIONS, SYNC_STALENESS } = await load('integration.contract.mjs');
@@ -386,6 +386,30 @@ else if (Number(m[1]) < 7 || Number(m[2]) > 21) {
   }
   if (!LAYOUT_PRINCIPLES.find((l) => l.id === 'quiet-metrics')) {
     err('R24-design-a11y', 'Brak zasady o cichej prezentacji metryk — wykres sugerujący trend narusza ADR-005.');
+  }
+}
+
+// R26 — karta podopiecznego (SC-ADM-20): sekcje wyłącznie dla personelu i wyłącznie z zasobów, które rola
+// może czytać (a dla akcji zapisu — zmieniać) według MATRIX. Karta pokazuje tylko metryki behawioralne.
+{
+  const allowed = (role, resource, op) => {
+    const row = MATRIX.find((m) => m.resource === resource);
+    return Boolean(row) && row[op].some((p) => p === role || p === `${role}:own`);
+  };
+  const seenSections = new Set();
+  for (const s of RESIDENT_CARD_SECTIONS) {
+    if (seenSections.has(s.id)) err('R26-resident-card', `Zduplikowana sekcja karty "${s.id}".`);
+    seenSections.add(s.id);
+    if (!(s.roles || []).length || !(s.resources || []).length) err('R26-resident-card', `Sekcja "${s.id}" bez ról albo bez zasobów.`);
+    for (const role of s.roles || []) {
+      if (!STAFF_ROLES.includes(role)) err('R26-resident-card', `Sekcja "${s.id}" przyznana roli "${role}" spoza personelu — karta podopiecznego jest wyłącznie dla personelu.`);
+      for (const res of s.resources || []) {
+        if (!RESOURCES.includes(res)) { err('R26-resident-card', `Sekcja "${s.id}": zasób "${res}" nie istnieje w RESOURCES.`); continue; }
+        if (!allowed(role, res, 'read')) err('R26-resident-card', `Sekcja "${s.id}": rola "${role}" nie ma odczytu "${res}" w MATRIX.`);
+        if (s.access === 'update' && !allowed(role, res, 'update')) err('R26-resident-card', `Sekcja "${s.id}": rola "${role}" nie może zmieniać "${res}" w MATRIX.`);
+      }
+    }
+    if (s.metricKind && s.metricKind !== 'BEHAVIORAL') err('R26-resident-card', `Sekcja "${s.id}" prezentuje metryki ${s.metricKind}; karta pokazuje wyłącznie behawioralne (SC-ADM-20, ADR-005).`);
   }
 }
 

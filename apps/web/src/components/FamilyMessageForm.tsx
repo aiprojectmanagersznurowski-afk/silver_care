@@ -4,6 +4,7 @@ import { useSendFamilyMessage } from '../hooks/useSendFamilyMessage';
 import { format, isSameDay } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { ChatBubble, ChatComposer, ChatDateSeparator, ChatSendButton, CHAT_SCROLL_AREA } from './patterns/Chat';
+import { MessageCircle } from 'lucide-react'
 
 interface FamilyMessageFormProps {
   residentId: string;
@@ -118,8 +119,8 @@ export function FamilyMessageForm({ residentId }: FamilyMessageFormProps) {
           </div>
         ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-4">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center text-3xl mb-4 bg-surface border border-border">
-              👋
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4 bg-surface border border-border">
+              <MessageCircle className="size-7 text-primary" aria-hidden="true" />
             </div>
             <p className="text-sm text-text-secondary">
               Napisz wiadomość do personelu.<br/>Odpiszemy najszybciej jak to możliwe.

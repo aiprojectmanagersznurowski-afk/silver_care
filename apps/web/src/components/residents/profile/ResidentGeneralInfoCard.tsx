@@ -59,12 +59,6 @@ export function ResidentGeneralInfoCard({
             </span>
           </div>
 
-          <div>
-            <span className="text-sm text-muted-foreground block">PESEL (skrót kryptograficzny)</span>
-            <span className="text-sm font-mono text-muted-foreground">
-              {resident.pesel_hash ? `${resident.pesel_hash.substring(0, 12)}…` : 'Brak'}
-            </span>
-          </div>
         </div>
 
         <div className="pt-3 border-t border-border/60 grid grid-cols-1 sm:grid-cols-3 gap-4">

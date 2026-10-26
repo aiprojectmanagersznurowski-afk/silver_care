@@ -4,9 +4,10 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react'
 import { AgendaTimelineClient } from '@/components/AgendaTimelineClient'
 import { PageHeader } from '@/components/patterns/PageHeader'
+import { formatPersonName } from '@/lib/person-name'
 
 export default async function FamilyAgendaPage(props: { searchParams: Promise<{ date?: string }> }) {
   const supabase = await createClient()
@@ -27,8 +28,8 @@ export default async function FamilyAgendaPage(props: { searchParams: Promise<{ 
     return (
       <Card className="max-w-md mx-auto my-12 text-center">
         <CardContent className="py-12 space-y-3">
-          <div className="mx-auto w-12 h-12 rounded-full bg-surface-sunken flex items-center justify-center text-2xl">
-            📅
+          <div className="mx-auto w-12 h-12 rounded-full bg-surface-sunken flex items-center justify-center">
+            <CalendarDays className="size-6 text-primary" aria-hidden="true" />
           </div>
           <h3 className="text-lg font-semibold text-foreground">Brak powiązanych podopiecznych</h3>
           <p className="text-sm text-text-secondary max-w-xs mx-auto">
@@ -75,7 +76,7 @@ export default async function FamilyAgendaPage(props: { searchParams: Promise<{ 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <PageHeader
-        title={`Plan Dnia — ${activeResident.first_name} ${activeResident.last_name}`}
+        title={`Plan Dnia — ${formatPersonName(activeResident.first_name, activeResident.last_name)}`}
         description="Przewidywany harmonogram w placówce."
       />
 

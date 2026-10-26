@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Check, Loader2, ArrowRight } from 'lucide-react'
+import { Check, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { RelocationSuggestion } from '@/lib/bed-allocation-optimizer'
 
@@ -41,47 +41,34 @@ export function BedOptimizerSuggestionsList({
 
       <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
         {suggestions.map((s) => (
-          <div
+          <label
             key={s.id}
-            onClick={() => toggleSelect(s.id)}
-            className={`p-3 rounded-xl border cursor-pointer transition-all ${
-              selectedIds.has(s.id)
-                ? 'bg-muted border-border'
-                : 'bg-card border-border opacity-70 hover:opacity-100'
+            data-testid="bed-optimizer-suggestion"
+            className={`flex items-start gap-3 p-3 rounded-xl border border-border cursor-pointer transition-colors has-focus-visible:ring-2 has-focus-visible:ring-ring ${
+              selectedIds.has(s.id) ? 'bg-muted' : 'bg-card hover:bg-muted/50'
             }`}
           >
-            <div className="flex items-start gap-3">
-              <input
-                type="checkbox"
-                checked={selectedIds.has(s.id)}
-                onChange={() => {}}
-                className="mt-1 rounded border-border text-primary focus:ring-primary"
-              />
+            <input
+              type="checkbox"
+              checked={selectedIds.has(s.id)}
+              onChange={() => toggleSelect(s.id)}
+              className="mt-0.5 size-5 shrink-0 rounded border-border text-primary focus:ring-primary"
+            />
 
-              <div className="flex-1 space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold text-foreground tracking-wide font-mono">
-                    Pensjonariusz {s.residentPseudonym} ({s.gender === 'F' ? 'K' : 'M'})
-                  </span>
-                  <span className="text-sm uppercase font-semibold px-2 py-0.5 rounded-full bg-muted text-foreground">
-                    Priorytet: {s.priority === 'high' ? 'Wysoki' : 'Średni'}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2 text-sm text-foreground">
-                  <span className="bg-muted px-2 py-0.5 rounded-md font-medium">
-                    Pokój {s.fromRoomNumber} (P.{s.fromFloor}), Łóżko {s.fromBedLabel}
-                  </span>
-                  <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="bg-muted text-foreground border border-border px-2 py-0.5 rounded-md font-medium">
-                    Pokój {s.toRoomNumber} (P.{s.toFloor}), Łóżko {s.toBedLabel}
-                  </span>
-                </div>
-
-                <p className="text-sm text-foreground pt-0.5">{s.reason}</p>
+            <div className="flex-1 min-w-0 space-y-1">
+              <div data-testid="bed-optimizer-route" className="text-sm font-semibold text-foreground">
+                Pokój {s.fromRoomNumber}, łóżko {s.fromBedLabel} (piętro {s.fromFloor}) → Pokój {s.toRoomNumber}, łóżko {s.toBedLabel} (piętro {s.toFloor})
               </div>
+              <div className="flex flex-wrap items-center gap-2 text-sm text-foreground">
+                <span data-testid="bed-optimizer-resident" className="font-medium">{s.residentName}</span>
+                <span className="text-muted-foreground">{s.gender === 'F' ? 'kobieta' : 'mężczyzna'}</span>
+                <span className="px-2 py-0.5 rounded-full bg-muted text-foreground">
+                  Priorytet: {s.priority === 'high' ? 'wysoki' : 'średni'}
+                </span>
+              </div>
+              <p data-testid="bed-optimizer-reason" className="text-sm text-muted-foreground">{s.reason}</p>
             </div>
-          </div>
+          </label>
         ))}
       </div>
 
@@ -92,7 +79,7 @@ export function BedOptimizerSuggestionsList({
         <Button
           onClick={handleExecuteRelocations}
           disabled={isExecuting || selectedIds.size === 0}
-          className="bg-primary hover:bg-primary/90 text-white gap-2 text-sm"
+          className="gap-2 text-sm"
         >
           {isExecuting ? (
             <Loader2 className="w-4 h-4 animate-spin" />

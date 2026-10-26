@@ -1,4 +1,5 @@
 import { test, expect } from './fixtures/base-test';
+import { GlobalSearchPage } from './page-objects/GlobalSearchPage';
 
 /**
  * @REQ: UI-TEMPLATE-ALIGNMENT
@@ -63,3 +64,100 @@ test.describe('Global Command Palette / Spotlight Cmd+K (@REQ: UI-TEMPLATE-ALIGN
     await expect(searchDialog).not.toBeVisible();
   });
 });
+
+test.describe('Wyszukiwarka Cmd+K: dostępność i odporność okna (@REQ: UI-ACCESSIBILITY, @REQ: UI-FOUR-STATES)', () => {
+  test('@REQ: UI-ACCESSIBILITY - pole to combobox, wyniki to listbox z opcjami, strzałki przesuwają aktywną opcję', async ({ loginPage, page }) => {
+    await loginPage.loginAs('org_admin');
+    await page.goto('/admin');
+    const search = new GlobalSearchPage(page);
+    await search.open();
+
+    await expect(search.input).toHaveAttribute('role', 'combobox');
+    await expect(search.input).toHaveAttribute('aria-expanded', 'false');
+
+    await search.search('an');
+    await expect(search.listbox).toBeVisible();
+    await expect(search.input).toHaveAttribute('aria-expanded', 'true');
+    await expect(search.input).toHaveAttribute('aria-controls', (await search.listbox.getAttribute('id')) as string);
+
+    const count = await search.options.count();
+    expect(count).toBeGreaterThan(1);
+    await expect(search.input).toHaveAttribute('aria-activedescendant', (await search.options.nth(0).getAttribute('id')) as string);
+    await expect(search.options.nth(0)).toHaveAttribute('aria-selected', 'true');
+
+    await page.keyboard.press('ArrowDown');
+    await expect(search.input).toHaveAttribute('aria-activedescendant', (await search.options.nth(1).getAttribute('id')) as string);
+    await expect(search.options.nth(1)).toHaveAttribute('aria-selected', 'true');
+    await expect(search.options.nth(0)).toHaveAttribute('aria-selected', 'false');
+  });
+
+  test('@REQ: UI-ACCESSIBILITY - liczba wyników jest ogłaszana w regionie aria-live', async ({ loginPage, page }) => {
+    await loginPage.loginAs('org_admin');
+    await page.goto('/admin');
+    const search = new GlobalSearchPage(page);
+    await search.open();
+    await search.search('an');
+    await expect(search.liveRegion).toContainText(/wynik/i);
+  });
+
+  test('@REQ: UI-ACCESSIBILITY - po zamknięciu klawiszem Escape fokus wraca na przycisk wyszukiwarki', async ({ loginPage, page }) => {
+    await loginPage.loginAs('org_admin');
+    await page.goto('/admin');
+    const search = new GlobalSearchPage(page);
+    await search.open();
+    await page.keyboard.press('Escape');
+    await expect(search.dialog).not.toBeVisible();
+    await expect(search.trigger).toBeFocused();
+  });
+
+  test('@REQ: UI-ACCESSIBILITY - na telefonie okno wyszukiwarki zajmuje cały ekran', async ({ loginPage, page }) => {
+    await loginPage.loginAs('org_admin');
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/admin');
+    const search = new GlobalSearchPage(page);
+    await search.open();
+    // Okno animuje wejście (skalowanie), więc rozmiar mierzymy po jej zakończeniu
+    await expect.poll(async () => (await search.dialog.boundingBox())?.width).toBeGreaterThanOrEqual(388);
+    await expect.poll(async () => (await search.dialog.boundingBox())?.height).toBeGreaterThanOrEqual(842);
+  });
+
+  test('@REQ: UI-FOUR-STATES - przy błędzie połączenia jest przycisk „Spróbuj ponownie”, który ponawia zapytanie', async ({ loginPage, page }) => {
+    await loginPage.loginAs('org_admin');
+    await page.goto('/admin');
+    const search = new GlobalSearchPage(page);
+    await search.open();
+
+    // Blokujemy wszystkie wywołania akcji serwerowej (aplikacja sama powtarza przerwane żądanie), aż do kliknięcia „Spróbuj ponownie”
+    let blocking = true;
+    await page.route('**/*', async (route) => {
+      const req = route.request();
+      if (blocking && req.method() === 'POST' && req.headers()['next-action']) {
+        await route.abort('failed');
+      } else {
+        await route.continue();
+      }
+    });
+
+    await search.search('an');
+    await expect(search.retryButton).toBeVisible();
+    blocking = false;
+    await search.retryButton.click();
+    await expect(search.retryButton).not.toBeVisible();
+    await expect(search.options.first()).toBeVisible();
+  });
+});
+
+test.describe('Wyszukiwarka prowadzi do karty podopiecznego według roli (@REQ: UI-TEMPLATE-ALIGNMENT)', () => {
+  test('@REQ: UI-TEMPLATE-ALIGNMENT - pielęgniarka: wynik podopiecznego otwiera kartę personelu, nie stronę kierownika', async ({ loginPage, page }) => {
+    await loginPage.loginAs('nurse');
+    await page.goto('/staff');
+    const search = new GlobalSearchPage(page);
+    await search.open();
+    await search.dialog.getByRole('button', { name: 'Podopieczni' }).click();
+    await search.search('an');
+    await expect(search.options.first()).toBeVisible();
+    await page.keyboard.press('Enter');
+    await page.waitForURL(/\/staff\/residents\/[0-9a-f-]{36}$/);
+  });
+});
+

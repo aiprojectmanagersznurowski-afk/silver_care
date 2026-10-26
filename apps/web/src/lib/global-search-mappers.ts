@@ -4,6 +4,9 @@ import {
   formatFacilitySearchResult,
   formatAgendaSearchResult,
   formatReportSearchResult,
+  rankSearchResults,
+  normalizeForSearch,
+  splitSearchWords,
 } from './global-search-helpers'
 import type {
   RawRoomWithBeds,
@@ -20,7 +23,9 @@ export type { GlobalSearchResponse }
 
 export function mapSearchQueryResults(
   payload: RawSearchResultsPayload,
-  cleanQ: string
+  cleanQ: string,
+  /** Rola z app_metadata — decyduje, dokąd prowadzą wyniki (karta personelu albo kierownika). */
+  role?: string
 ): SearchResultItem[] {
   const results: SearchResultItem[] = []
 
@@ -38,9 +43,12 @@ export function mapSearchQueryResults(
           last_name: r.last_name,
           care_level: r.care_level,
           is_zsn: r.is_zsn,
+          archived_at: r.archived_at,
+          death_date: r.death_date,
+          contract_end_date: r.contract_end_date,
           room_number: activeAssignment?.beds?.rooms?.number || null,
           bed_label: activeAssignment?.beds?.label || null,
-        })
+        }, role)
       )
     }
   }
@@ -63,7 +71,7 @@ export function mapSearchQueryResults(
               sector: r.sector,
               bed_label: null,
               resident_name: null,
-            })
+            }, role)
           )
         }
       } else {
@@ -88,7 +96,8 @@ export function mapSearchQueryResults(
               sector: r.sector,
               bed_label: b.label,
               resident_name: residentName,
-            })
+              resident_id: activeAssignment?.residents?.id ?? null,
+            }, role)
           )
         }
       }
@@ -118,7 +127,8 @@ export function mapSearchQueryResults(
           sector: b.rooms.sector,
           bed_label: b.label,
           resident_name: residentName,
-        })
+          resident_id: activeAssignment?.residents?.id ?? null,
+        }, role)
       )
     }
   }
@@ -149,7 +159,9 @@ export function mapSearchQueryResults(
         ? `${rep.residents.first_name} ${rep.residents.last_name}`
         : null
 
-      const nameMatches = residentName?.toLowerCase().includes(cleanQ.toLowerCase())
+      // Jak w zapytaniu do bazy: każde słowo frazy musi pasować do imienia lub nazwiska (kolejność dowolna)
+      const nameText = normalizeForSearch(residentName ?? '')
+      const nameMatches = Boolean(residentName) && splitSearchWords(cleanQ).every((w) => nameText.includes(normalizeForSearch(w)))
       const dateMatches = dateStr.includes(cleanQ)
       if (!nameMatches && !dateMatches) continue
 
@@ -158,6 +170,7 @@ export function mapSearchQueryResults(
           id: rep.id,
           report_date: dateStr,
           resident_name: residentName,
+          resident_id: rep.residents?.id ?? null,
           status: rep.status,
         })
       )
@@ -170,7 +183,7 @@ export function mapSearchQueryResults(
       results.push({
         id: org.id,
         title: org.name,
-        subtitle: org.city ? `Miasto: ${org.city}` : 'Placówka opiekuńcza',
+        subtitle: org.address || 'Placówka opiekuńcza',
         href: `/admin/organizations/${org.id}`,
         category: 'organizations',
         badge: 'Placówka',
@@ -179,5 +192,5 @@ export function mapSearchQueryResults(
     }
   }
 
-  return results
+  return rankSearchResults(results, cleanQ)
 }

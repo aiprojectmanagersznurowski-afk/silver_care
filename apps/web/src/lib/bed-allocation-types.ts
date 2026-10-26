@@ -19,7 +19,8 @@ export interface OptimizerBed {
 
 export interface OptimizerOccupant {
   residentId: string
-  pseudonym: string
+  /** Nazwisko Imię — kierownik placówki decyduje o przeniesieniu konkretnej osoby */
+  residentName: string
   gender: 'M' | 'F'
   careLevel: 'walking' | 'sitting' | 'bedridden' | 'hospice'
   isZsn: boolean
@@ -54,7 +55,7 @@ export interface FacilityAllocationMetrics {
 export interface RelocationSuggestion {
   id: string
   residentId: string
-  residentPseudonym: string
+  residentName: string
   gender: 'M' | 'F'
   careLevel: string
   fromBedId: string
@@ -99,10 +100,3 @@ export function isGroundFloor(floor: string | number | null | undefined): boolea
   return f === '0' || f === 'parter' || f === 'p' || f === 'ground'
 }
 
-export function pseudonymizeResident(firstName?: string | null, lastName?: string | null): string {
-  const f = (firstName || '').trim()
-  const l = (lastName || '').trim()
-  const fInitial = f.length > 0 ? `${f[0].toUpperCase()}.` : '?'
-  const lInitial = l.length > 0 ? `${l[0].toUpperCase()}.` : '?'
-  return `${fInitial} ${lInitial}`
-}

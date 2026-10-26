@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
   isGroundFloor,
-  pseudonymizeResident,
   analyzeCurrentAllocation,
   generateRelocationSuggestions,
   OptimizerRoom,
@@ -45,7 +44,7 @@ describe('Facility & Bed Management Logic (@REQ: ADM-FACILITY-MANAGE, @REQ: ADM-
     const occupants: OptimizerOccupant[] = [
       {
         residentId: 'res-1',
-        pseudonym: 'J. K.',
+        residentName: 'Kowalski Jan',
         gender: 'M',
         careLevel: 'walking',
         isZsn: false,
@@ -54,7 +53,7 @@ describe('Facility & Bed Management Logic (@REQ: ADM-FACILITY-MANAGE, @REQ: ADM-
       },
       {
         residentId: 'res-2',
-        pseudonym: 'A. N.',
+        residentName: 'Nowak Anna',
         gender: 'F',
         careLevel: 'walking',
         isZsn: false,
@@ -63,7 +62,7 @@ describe('Facility & Bed Management Logic (@REQ: ADM-FACILITY-MANAGE, @REQ: ADM-
       },
       {
         residentId: 'res-3',
-        pseudonym: 'E. S.',
+        residentName: 'Sowa Ewa',
         gender: 'F',
         careLevel: 'bedridden',
         isZsn: true,
@@ -213,7 +212,7 @@ describe('Facility & Bed Management Logic (@REQ: ADM-FACILITY-MANAGE, @REQ: ADM-
     const occupants: OptimizerOccupant[] = [
       {
         residentId: 'res-m',
-        pseudonym: 'J. K.',
+        residentName: 'Kowalski Jan',
         gender: 'M',
         careLevel: 'walking',
         isZsn: false,
@@ -222,7 +221,7 @@ describe('Facility & Bed Management Logic (@REQ: ADM-FACILITY-MANAGE, @REQ: ADM-
       },
       {
         residentId: 'res-f',
-        pseudonym: 'A. N.',
+        residentName: 'Nowak Anna',
         gender: 'F',
         careLevel: 'walking',
         isZsn: false,
@@ -241,19 +240,14 @@ describe('Facility & Bed Management Logic (@REQ: ADM-FACILITY-MANAGE, @REQ: ADM-
   });
 
   it('normalizes sector labels correctly via formatSectorName @REQ: ADM-FACILITY-MANAGE', () => {
-    expect(formatSectorName('A')).toBe('Sektor A');
-    expect(formatSectorName('sektor B')).toBe('sektor B');
-    expect(formatSectorName('Sektor Północ')).toBe('Sektor Północ');
+    // Zmiana wymagania 2026-10-26 (Michał): sektor bez przedrostka „Sektor”
+    expect(formatSectorName('A')).toBe('A');
+    expect(formatSectorName('sektor B')).toBe('B');
+    expect(formatSectorName('Sektor Północ')).toBe('Północ');
     expect(formatSectorName(null)).toBe('—');
     expect(formatSectorName(undefined)).toBe('—');
     expect(formatSectorName('')).toBe('—');
     expect(formatSectorName('   ')).toBe('—');
   });
 
-  it('protects privacy by pseudonymizing resident names @REQ: ADM-FACILITY-OCCUPANCY', () => {
-    expect(pseudonymizeResident('Jan', 'Kowalski')).toBe('J. K.');
-    expect(pseudonymizeResident('Anna', 'Nowak-Zielińska')).toBe('A. N.');
-    expect(pseudonymizeResident('', '')).toBe('? ?');
-    expect(pseudonymizeResident(null, null)).toBe('? ?');
-  });
 });

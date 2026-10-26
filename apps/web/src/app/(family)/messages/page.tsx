@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { FamilyMessageForm } from '@/components/FamilyMessageForm'
 import { redirect } from 'next/navigation'
 import { PageHeader } from '@/components/patterns/PageHeader'
+import { formatPersonName } from '@/lib/person-name'
 
 export default async function FamilyMessagesPage() {
   const supabase = await createClient()
@@ -37,7 +38,7 @@ export default async function FamilyMessagesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`Wiadomości — ${activeResident.first_name} ${activeResident.last_name}`}
+        title={`Wiadomości — ${formatPersonName(activeResident.first_name, activeResident.last_name)}`}
         description="Kontakt z personelem opiekuńczym."
       />
 

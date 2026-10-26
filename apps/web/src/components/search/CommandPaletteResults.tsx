@@ -14,6 +14,7 @@ import {
   SEARCH_CATEGORIES,
 } from '@/lib/global-search-helpers'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 
 const CATEGORY_ICONS: Record<SearchCategoryKey, React.ComponentType<{ className?: string }>> = {
   residents: User,
@@ -32,6 +33,24 @@ interface CommandPaletteResultsProps {
   selectedIndex: number
   onSelectItem: (item: SearchResultItem) => void
   onHoverIndex: (idx: number) => void
+  onRetry: () => void
+  listboxId: string
+  getOptionId: (idx: number) => string
+}
+
+/** Komunikat dla czytnika ekranu: liczba wyników z polską odmianą (1 wynik, 2–4 wyniki, 5+ wyników). */
+export function describeResultCount(count: number): string {
+  if (count === 1) return '1 wynik'
+  const lastTwo = count % 100
+  const last = count % 10
+  return last >= 2 && last <= 4 && !(lastTwo >= 12 && lastTwo <= 14) ? `${count} wyniki` : `${count} wyników`
+}
+
+function announcement(query: string, isPending: boolean, errorMessage: string | null, count: number): string {
+  if (errorMessage) return errorMessage
+  if (query.trim().length < 2) return ''
+  if (isPending) return 'Szukanie…'
+  return count === 0 ? 'Brak wyników' : describeResultCount(count)
 }
 
 export function CommandPaletteResults({
@@ -42,9 +61,16 @@ export function CommandPaletteResults({
   selectedIndex,
   onSelectItem,
   onHoverIndex,
+  onRetry,
+  listboxId,
+  getOptionId,
 }: CommandPaletteResultsProps) {
   return (
-    <div className="max-h-84 overflow-y-auto p-2 divide-y divide-border/60">
+    <div className="min-h-0 flex-1 overflow-y-auto p-2 sm:max-h-84 sm:flex-none">
+      <div role="status" aria-live="polite" className="sr-only">
+        {announcement(query, isPending, errorMessage, results.length)}
+      </div>
+
       {/* Stan 1: Brak zapytania (podpowiedź startowa) */}
       {!query.trim() && (
         <div className="py-8 px-4 text-center space-y-2">
@@ -63,8 +89,11 @@ export function CommandPaletteResults({
 
       {/* Stan 2: Błąd */}
       {errorMessage && (
-        <div className="p-4 text-center text-sm text-destructive">
-          {errorMessage}
+        <div role="alert" className="flex flex-col items-center gap-3 p-4 text-center text-sm text-destructive">
+          <span>{errorMessage}</span>
+          <Button type="button" variant="outline" onClick={onRetry}>
+            Spróbuj ponownie
+          </Button>
         </div>
       )}
 
@@ -76,17 +105,23 @@ export function CommandPaletteResults({
       )}
 
       {/* Stan 4: Lista wyników */}
-      {results.length > 0 &&
-        results.map((item, idx) => {
+      {results.length > 0 && (
+        <div role="listbox" id={listboxId} aria-label="Wyniki wyszukiwania" className="divide-y divide-border/60">
+        {results.map((item, idx) => {
           const isSelected = idx === selectedIndex
           const IconComponent = CATEGORY_ICONS[item.category] || FileText
 
           return (
             <div
               key={`${item.category}-${item.id}`}
+              id={getOptionId(idx)}
+              role="option"
+              aria-selected={isSelected}
+              aria-disabled={item.href ? undefined : true}
+              title={item.href ? undefined : 'Brak karty do otwarcia'}
               onClick={() => onSelectItem(item)}
               onMouseEnter={() => onHoverIndex(idx)}
-              className={`flex items-center justify-between p-2.5 rounded-xl transition-colors cursor-pointer min-h-touch ${
+              className={`flex items-center justify-between p-2.5 rounded-xl transition-colors min-h-touch ${item.href ? 'cursor-pointer' : 'cursor-default'} ${
                 isSelected
                   ? 'bg-primary/10 text-foreground'
                   : 'hover:bg-muted/50 text-foreground'
@@ -120,6 +155,8 @@ export function CommandPaletteResults({
             </div>
           )
         })}
+        </div>
+      )}
     </div>
   )
 }

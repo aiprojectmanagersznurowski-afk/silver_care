@@ -20,6 +20,7 @@ export interface RawRoomWithBeds {
     bed_assignments: Array<{
       unassigned_at: string | null
       residents: {
+        id: string
         first_name: string
         last_name: string
       } | null
@@ -40,6 +41,7 @@ export interface RawBedWithRoom {
   bed_assignments: Array<{
     unassigned_at: string | null
     residents: {
+      id: string
       first_name: string
       last_name: string
     } | null
@@ -52,6 +54,9 @@ export interface RawResidentRow {
   last_name: string
   care_level: string | null
   is_zsn: boolean | null
+  archived_at?: string | null
+  death_date?: string | null
+  contract_end_date?: string | null
   bed_assignments: Array<{
     unassigned_at: string | null
     beds: {
@@ -78,6 +83,7 @@ export interface RawReportRow {
   created_at: string | null
   status: string
   residents: {
+    id: string
     first_name: string
     last_name: string
   } | null
@@ -86,7 +92,7 @@ export interface RawReportRow {
 export interface RawOrgRow {
   id: string
   name: string
-  city: string | null
+  address: string | null
 }
 
 export interface RawSearchResultsPayload {

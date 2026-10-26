@@ -44,9 +44,9 @@ export function StaffBoardTable({ residents, unansweredMessagesMap }: StaffBoard
               <TableRow key={resId}>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-foreground">
+                    <Link href={`/staff/residents/${resId}`} className="font-medium text-foreground hover:text-primary hover:underline">
                       {resident.first_name as string} {resident.last_name as string}
-                    </span>
+                    </Link>
                     <BusinessIdBadge type="resident" id={resId} />
                   </div>
                 </TableCell>

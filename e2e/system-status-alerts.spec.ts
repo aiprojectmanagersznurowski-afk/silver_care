@@ -67,6 +67,30 @@ test.describe('SC-SUP-05: Status systemu i globalne alerty serwisowe (Wariant A)
 
     // Zakończenie konkretnego alertu z testu i przywrócenie stanu stabilnego
     await systemStatusPage.resolveAlertByTitle(alertTitle);
-    await expect(page.locator(`text=${alertTitle}`).first()).toBeVisible();
+    // Czekamy, aż zamknięcie faktycznie się zapisze — inaczej test kończy się przed akcją serwera
+    // i zostawia aktywny alert widoczny dla personelu wszystkich placówek na wspólnej bazie.
+    await expect(page.locator(`[data-testid="system-alert-item"][data-alert-title="${alertTitle}"]`)).toHaveCount(0, { timeout: 15000 });
+    await expect(systemStatusPage.globalAlertBanner.filter({ hasText: alertTitle })).toHaveCount(0);
   });
 });
+
+test.describe('Status systemu: wybór dotkniętych modułów (@REQ: UI-FOUR-STATES)', () => {
+  test('@REQ: UI-FOUR-STATES - kliknięcie kafelka zaznacza moduł, ponowne kliknięcie odznacza (bez publikowania alertu)', async ({ loginPage, page }) => {
+    const systemStatusPage = new SystemStatusPage(page);
+    await loginPage.loginAs('super_admin');
+    await page.goto('/admin/system-status');
+    await systemStatusPage.expectPageLoaded();
+
+    await expect(systemStatusPage.serviceCheckbox('voice_pipeline')).not.toBeChecked();
+    await systemStatusPage.toggleServiceCheckbox('voice_pipeline');
+    await expect(systemStatusPage.serviceCheckbox('voice_pipeline')).toBeChecked();
+
+    await systemStatusPage.toggleServiceCheckbox('notifications');
+    await expect(systemStatusPage.serviceCheckbox('notifications')).toBeChecked();
+    await expect(systemStatusPage.serviceCheckbox('voice_pipeline')).toBeChecked();
+
+    await systemStatusPage.toggleServiceCheckbox('voice_pipeline');
+    await expect(systemStatusPage.serviceCheckbox('voice_pipeline')).not.toBeChecked();
+  });
+});
+

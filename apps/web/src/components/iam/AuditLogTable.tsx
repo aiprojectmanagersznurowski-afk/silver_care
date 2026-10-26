@@ -7,6 +7,8 @@ import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 import { StatusBadge } from '@/components/patterns/StatusBadge'
 import { TableCard } from '@/components/patterns/TableCard'
 import { ListEmpty } from '@/components/patterns/ListState'
+import { useTableSort } from '@/hooks/use-table-sort'
+import { SortableTableHead } from '@/components/patterns/SortableTableHead'
 
 interface AuditLogTableProps {
   auditLogs: AuditLogItem[]
@@ -27,6 +29,22 @@ export function AuditLogTable({
     return <StatusBadge>{roleDef ? roleDef.label : roleId}</StatusBadge>
   }
 
+  const targetEmailOf = (log: AuditLogItem) => {
+    const targetUser = users.find(u => u.id === log.payload?.target_user_id)
+    return targetUser ? targetUser.email : (log.payload?.target_user_id || '—')
+  }
+
+  // Domyślnie najnowsze na górze
+  const { sorted, sort, toggleSort } = useTableSort(
+    auditLogs,
+    {
+      time: (log: AuditLogItem) => (log.created_at ? new Date(log.created_at) : null),
+      action: (log: AuditLogItem) => log.action,
+      target: targetEmailOf,
+    },
+    { key: 'time', direction: 'desc' }
+  )
+
   return (
     <TableCard
       icon={<History />}
@@ -39,17 +57,16 @@ export function AuditLogTable({
             <Table>
               <TableHeader className="font-medium text-muted-foreground">
                 <TableRow>
-                  <TableHead>Czas operacji</TableHead>
-                  <TableHead>Typ zdarzenia</TableHead>
-                  <TableHead>Użytkownik docelowy</TableHead>
+                  <SortableTableHead sortKey="time" sort={sort} onSort={toggleSort}>Czas operacji</SortableTableHead>
+                  <SortableTableHead sortKey="action" sort={sort} onSort={toggleSort}>Typ zdarzenia</SortableTableHead>
+                  <SortableTableHead sortKey="target" sort={sort} onSort={toggleSort}>Użytkownik docelowy</SortableTableHead>
                   <TableHead>Szczegóły zmiany</TableHead>
                   <TableHead>Operator</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {auditLogs.map(log => {
-                  const targetUser = users.find(u => u.id === log.payload?.target_user_id)
-                  const targetEmail = targetUser ? targetUser.email : (log.payload?.target_user_id || '—')
+                {sorted.map(log => {
+                  const targetEmail = targetEmailOf(log)
 
                   return (
                     <TableRow key={log.id} className="hover:bg-muted/30">

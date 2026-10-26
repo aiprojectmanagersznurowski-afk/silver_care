@@ -9,11 +9,11 @@ import {
   RelocationSuggestion,
   RawResidentAssignment,
   RawBedWithRoom,
-  pseudonymizeResident,
   analyzeCurrentAllocation,
   generateRelocationSuggestions,
 } from '@/lib/bed-allocation-optimizer'
 import { requireOrgAdmin } from '@/lib/facility-auth'
+import { formatPersonName } from '@/lib/person-name'
 
 export async function analyzeBedAllocationAction(): Promise<{
   error?: string
@@ -111,7 +111,7 @@ export async function analyzeBedAllocationAction(): Promise<{
 
       occupants.push({
         residentId: res.id,
-        pseudonym: pseudonymizeResident(res.first_name, res.last_name),
+        residentName: formatPersonName(res.first_name, res.last_name),
         gender: res.gender === 'F' ? 'F' : 'M',
         careLevel: careLevelVal,
         isZsn: Boolean(res.is_zsn),

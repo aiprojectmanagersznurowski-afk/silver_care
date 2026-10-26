@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import {
   type SystemAlertRecord,
   type SystemAlertInput,
+  getAlertLifecycle,
 } from '@/lib/system-status-helpers'
 import { publishSystemAlertAction, resolveSystemAlertAction } from '@/actions/system-status'
 import { PublishAlertForm } from './PublishAlertForm'
@@ -21,7 +22,7 @@ export function SystemStatusManagementClient({ initialAlerts }: Props) {
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
-  const activeAlerts = alerts.filter((a) => a.is_active)
+  const activeAlerts = alerts.filter((a) => getAlertLifecycle(a) === 'active')
   const isSystemHealthy = activeAlerts.length === 0
 
   const handlePublish = (input: SystemAlertInput) => {
@@ -44,6 +45,7 @@ export function SystemStatusManagementClient({ initialAlerts }: Props) {
           affected_services: input.affectedServices,
           is_active: true,
           created_at: new Date().toISOString(),
+          expires_at: input.expiresAt ?? null,
         }
         setAlerts((prev) => [newRecord, ...prev])
         if (typeof window !== 'undefined') {

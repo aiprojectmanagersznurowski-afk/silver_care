@@ -86,7 +86,7 @@ Krój: `-apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui, sans-
 
 Bazowy rozmiar 14px · minimalny kontrast 4.5:1 · cel dotykowy 38px
 
-## Wymagania (52)
+## Wymagania (53)
 
 | ID | Domena | Ryzyko | Treść |
 |---|---|---|---|
@@ -99,6 +99,7 @@ Bazowy rozmiar 14px · minimalny kontrast 4.5:1 · cel dotykowy 38px
 | ADM-BED-ASSIGNMENT | facility | HIGH | Jedno łóżko ma co najwyżej jednego aktywnego pensjonariusza; jeden pensjonariusz ma co najwyżej jedno aktywne łóżko. |
 | ADM-FACILITY-OCCUPANCY | facility | MEDIUM | Administrator widzi obłożenie pokoi bez ręcznego liczenia. |
 | ADM-INVITE | residents | HIGH | Zaproszenie dla bliskiego jest bezpieczne i nie ujawnia danych osobowych. |
+| ADM-RESIDENT-CARD-VISIBILITY | residents | HIGH | Wspólna karta podopiecznego dla personelu pokazuje każdej roli wyłącznie sekcje z zasobów, które ta rola może czytać według macierzy uprawnień. |
 | ADM-ARCHIVE | residents | HIGH | Archiwizacja odcina dostęp bliskim bez niszczenia śladu audytowego. |
 | SEC-MFA-STAFF | security | HIGH | Personel loguje się z drugim składnikiem; rodziny bez MFA. |
 | SEC-SESSION | security | MEDIUM | Użytkownik zarządza swoimi sesjami, a sesje personelu wygasają po bezczynności. |

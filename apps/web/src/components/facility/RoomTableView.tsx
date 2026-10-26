@@ -9,6 +9,8 @@ import { RoomRowActions } from './RoomRowActions'
 import { isGroundFloor } from '@/lib/bed-allocation-optimizer'
 import type { RoomItem } from './room-helpers'
 import { getRoomGenderLabel } from './room-helpers'
+import { useTableSort } from '@/hooks/use-table-sort'
+import { SortableTableHead } from '@/components/patterns/SortableTableHead'
 
 interface RoomTableViewProps {
   rooms: RoomItem[]
@@ -18,6 +20,15 @@ interface RoomTableViewProps {
   formatSectorName: (sector?: string | null) => string
 }
 
+const ROOM_SORT_ACCESSORS = {
+  number: (r: RoomItem) => r.number,
+  floor: (r: RoomItem) => r.floor,
+  sector: (r: RoomItem) => r.sector,
+  beds: (r: RoomItem) => r.beds || 0,
+  // Obłożenie sortowane po liczbie wolnych łóżek
+  free: (r: RoomItem) => r.free || 0,
+}
+
 export function RoomTableView({
   rooms,
   expandedRooms,
@@ -25,23 +36,25 @@ export function RoomTableView({
   onUpdate,
   formatSectorName,
 }: RoomTableViewProps) {
+  const { sorted, sort, toggleSort } = useTableSort(rooms, ROOM_SORT_ACCESSORS)
+
   return (
     <div data-testid="room-table">
       <div>
         <Table>
           <TableHeader className="font-semibold text-muted-foreground">
             <TableRow>
-              <TableHead>Pokój</TableHead>
-              <TableHead>Piętro</TableHead>
-              <TableHead>Sektor</TableHead>
-              <TableHead className="text-center">Łóżka</TableHead>
-              <TableHead className="text-center">Obłożenie</TableHead>
+              <SortableTableHead sortKey="number" sort={sort} onSort={toggleSort}>Pokój</SortableTableHead>
+              <SortableTableHead sortKey="floor" sort={sort} onSort={toggleSort}>Piętro</SortableTableHead>
+              <SortableTableHead sortKey="sector" sort={sort} onSort={toggleSort}>Sektor</SortableTableHead>
+              <SortableTableHead sortKey="beds" sort={sort} onSort={toggleSort} className="text-center">Łóżka</SortableTableHead>
+              <SortableTableHead sortKey="free" sort={sort} onSort={toggleSort} className="text-center">Obłożenie</SortableTableHead>
               <TableHead>Reguły alokacji</TableHead>
               <TableHead className="text-right">Akcje</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rooms.map((room) => {
+            {sorted.map((room) => {
               const genderInfo = getRoomGenderLabel(room)
               const isGround = isGroundFloor(room.floor)
               const isExpanded = expandedRooms[room.id]
@@ -54,12 +67,12 @@ export function RoomTableView({
                     <TableCell className="font-semibold text-foreground">
                       <div className="flex items-center gap-2">
                         <DoorOpen className="w-4 h-4 text-primary" />
-                        <span>Pokój {room.number}</span>
+                        <span data-testid="room-number">Pokój {room.number}</span>
                       </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground">{room.floor}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {room.sector ? formatSectorName(room.sector) : '—'}
+                    <TableCell data-testid="room-sector" className="text-muted-foreground">
+                      {formatSectorName(room.sector)}
                     </TableCell>
                     <TableCell className="text-center font-medium">
                       {room.beds || 0}

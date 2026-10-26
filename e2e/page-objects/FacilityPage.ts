@@ -13,11 +13,15 @@ export class FacilityPage {
   readonly searchInput: Locator;
   readonly floorFilter: Locator;
   readonly sectorFilter: Locator;
+  readonly sectorCells: Locator;
   readonly occupancyFilter: Locator;
   readonly roomCards: Locator;
   readonly roomTable: Locator;
   readonly bedsTable: Locator;
   readonly expandedBedRows: Locator;
+  readonly optimizerButton: Locator;
+  readonly optimizerSuggestions: Locator;
+  readonly roomNumbers: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -26,11 +30,33 @@ export class FacilityPage {
     this.searchInput = page.locator('input[placeholder*="Szukaj pokoju"]');
     this.floorFilter = page.locator('select[name="floorFilter"]');
     this.sectorFilter = page.locator('select[name="sectorFilter"]');
+    this.sectorCells = page.locator('[data-testid="room-table"] [data-testid="room-sector"]');
     this.occupancyFilter = page.locator('select[name="occupancyFilter"]');
     this.roomCards = page.locator('[data-testid="room-card"]');
     this.roomTable = page.locator('[data-testid="room-table"]');
     this.bedsTable = page.locator('[data-testid="beds-table"]');
     this.expandedBedRows = page.locator('[data-testid="room-expanded-beds"]');
+    this.optimizerButton = page.getByRole('button', { name: 'Optymalizuj przydział łóżek' });
+    this.optimizerSuggestions = page.locator('[data-testid="bed-optimizer-suggestion"]');
+    this.roomNumbers = page.locator('[data-testid="room-table"] [data-testid="room-number"]');
+  }
+
+  columnHeader(name: string): Locator {
+    return this.roomTable.getByRole('columnheader', { name });
+  }
+
+  /** Otwiera optymalizator i czeka na koniec analizy (propozycje albo brak konfliktów). */
+  async openOptimizer() {
+    await this.optimizerButton.click();
+    const dialog = this.page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+    await expect(dialog.locator('[data-testid="bed-optimizer-result"]')).toBeVisible({ timeout: 20000 });
+  }
+
+  /** Etykiety opcji filtra sektora bez pozycji „Wszystkie sektory”. */
+  async sectorOptionLabels(): Promise<string[]> {
+    const labels = await this.sectorFilter.locator('option:not([value="all"])').allInnerTexts();
+    return labels.map((l) => l.trim());
   }
 
   async goto() {

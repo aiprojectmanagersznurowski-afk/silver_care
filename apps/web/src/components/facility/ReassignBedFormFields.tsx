@@ -4,6 +4,7 @@ import React from 'react'
 import { Label } from '@/components/ui/label'
 import { AlertTriangle, CheckCircle2 } from 'lucide-react'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
+import { formatSectorName } from '@/lib/sector'
 
 export interface AvailableBedOption {
   bedId: string
@@ -94,7 +95,7 @@ export function ReassignBedFormFields({
             <NativeSelectOption value="" disabled>Wybierz wolne łóżko</NativeSelectOption>
             {availableBeds.map((bed) => (
               <NativeSelectOption key={bed.bedId} value={bed.bedId}>
-                Pokój {bed.roomNumber} ({bed.floor}{bed.sector ? `, Sektor ${bed.sector}` : ''}) — Łóżko {bed.bedLabel}
+                Pokój {bed.roomNumber} ({bed.floor}{bed.sector ? `, ${formatSectorName(bed.sector)}` : ''}) — Łóżko {bed.bedLabel}
               </NativeSelectOption>
             ))}
           </NativeSelect>

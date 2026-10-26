@@ -14,6 +14,8 @@ export class StaffBoardPage {
   readonly familyMessagesLinks: Locator;
   readonly buttonsNestedInLinks: Locator;
   readonly dictateLinks: Locator;
+  /** Nazwisko podopiecznego jako link do jego karty w części personelu (SC-ADM-20). */
+  readonly residentCardLinks: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -26,6 +28,7 @@ export class StaffBoardPage {
     this.familyMessagesLinks = page.locator('a[href^="/admin/messages?residentId="]');
     this.buttonsNestedInLinks = page.locator('a button');
     this.dictateLinks = page.locator('a[href^="/voice?resident="]');
+    this.residentCardLinks = page.locator('main a[href^="/staff/residents/"]:visible');
   }
 
   async goto() {

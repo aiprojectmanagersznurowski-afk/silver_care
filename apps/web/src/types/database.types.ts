@@ -1041,6 +1041,7 @@ export interface Database {
           affected_services: unknown[]
           is_active: boolean
           created_by: string | null
+          expires_at: string | null
           created_at: string
           updated_at: string
           resolved_at: string | null
@@ -1054,6 +1055,7 @@ export interface Database {
           affected_services?: unknown[]
           is_active?: boolean
           created_by?: string | null
+          expires_at?: string | null
           created_at?: string
           updated_at?: string
           resolved_at?: string | null
@@ -1067,6 +1069,7 @@ export interface Database {
           affected_services?: unknown[]
           is_active?: boolean
           created_by?: string | null
+          expires_at?: string | null
           created_at?: string
           updated_at?: string
           resolved_at?: string | null

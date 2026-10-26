@@ -7,17 +7,24 @@ import { Page, Locator } from '@playwright/test';
 export class ResidentsListPage {
   readonly page: Page;
   readonly rows: Locator;
+  readonly residentNames: Locator;
   readonly impersonationBanner: Locator;
 
   constructor(page: Page) {
     this.page = page;
     this.rows = page.locator('[data-slot="table-body"] [data-slot="table-row"]');
+    this.residentNames = this.rows.locator('[data-testid="resident-name"]');
     this.impersonationBanner = page.getByText('Działasz w trybie impersonacji');
   }
 
   async plantImpersonationCookie(value: string) {
     const url = new URL(this.page.url() === 'about:blank' ? 'http://localhost:3000' : this.page.url());
     await this.page.context().addCookies([{ name: 'sc_impersonation', value, domain: url.hostname, path: '/' }]);
+  }
+
+  /** Nagłówek kolumny tabeli po nazwie (sortowanie przyciskiem w środku). */
+  columnHeader(name: string): Locator {
+    return this.page.locator('[data-slot="table-header"]').getByRole('columnheader', { name });
   }
 
   async goto() {

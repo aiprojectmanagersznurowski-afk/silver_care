@@ -4,6 +4,7 @@ import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { BedDouble, MapPin, Clock } from 'lucide-react'
 import { ResidentBedAssignment } from './profile-types'
+import { formatSectorName } from '@/lib/sector'
 
 interface ResidentBedInfoCardProps {
   activeAssignment?: ResidentBedAssignment | null
@@ -39,7 +40,7 @@ export function ResidentBedInfoCard({
             </div>
             <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground pt-1">
               <div>Piętro: <strong className="text-foreground">{currentRoom.floor}</strong></div>
-              <div>Sektor: <strong className="text-foreground">{currentRoom.sector || 'Główny'}</strong></div>
+              <div>Sektor: <strong className="text-foreground">{formatSectorName(currentRoom.sector)}</strong></div>
             </div>
           </div>
         ) : (

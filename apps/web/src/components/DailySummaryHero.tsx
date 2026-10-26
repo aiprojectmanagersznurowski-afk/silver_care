@@ -1,33 +1,21 @@
-import { Sparkles, CheckCircle2, Sun, Footprints, Camera, Activity, Heart } from "lucide-react";
+import { CalendarDays, Moon, Footprints, Camera } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { format } from 'date-fns'
 import { pl } from 'date-fns/locale'
 
-export function deriveWellbeing(text?: string) {
-  if (!text) return { sleep: "Brak danych", appetite: "Brak danych", mood: "Brak danych", moodEmoji: "😐" };
-  const lower = text.toLowerCase();
-  let sleep = "W normie";
-  let appetite = "W normie";
-  let mood = "Spokojny";
-  let moodEmoji = "😐";
+type HeroMetrics = { steps?: number; sleep_hours?: number }
 
-  if (lower.includes("sen") || lower.includes("spa") || lower.includes("noc")) {
-    if (lower.match(/(dobrze|spokojnie|przespa|długo)/)) sleep = "Dobry";
-    else if (lower.match(/(wybudza|zły|niespokojny|nie spa|przerwa)/)) sleep = "Przerywany";
-  }
-  if (lower.includes("apetyt") || lower.includes("jad") || lower.includes("posił") || lower.includes("obiad")) {
-    if (lower.match(/(dopisywał|chętnie|cały|smakiem|bardzo dobry|dobry)/)) appetite = "Bardzo dobry";
-    else if (lower.match(/(brak|nie chcia|mało|odmówi|słaby)/)) appetite = "Słaby";
-  }
-  if (lower.match(/(nastr|humor|samopoczucie|czuje)/)) {
-    if (lower.match(/(dobrym|świetnym|pogodny|uśmiechnię|wesoł|dobrze)/)) { mood = "Radosny"; moodEmoji = "😊"; }
-    else if (lower.match(/(smutn|apatyczn|zdenerwowan|zły|niespokojn|pobudzon|napięt|płacz)/)) { mood = "Obniżony"; moodEmoji = "😔"; }
-  } else {
-    if (lower.match(/(pogodny|uśmiechnięt|wesoł|zadowolon)/)) { mood = "Radosny"; moodEmoji = "😊"; }
-    if (lower.match(/(smutn|apatyczn|zdenerwowan|pobudzon)/)) { mood = "Obniżony"; moodEmoji = "😔"; }
-  }
-
-  return { sleep, appetite, mood, moodEmoji };
+/**
+ * Kafelki podsumowania dnia: wyłącznie fakty z metryk widocznych dla rodziny (długość snu, kroki)
+ * albo jawne „Brak danych”. Bez ocen zgadywanych z treści raportu (decyzja Michała 2026-10-26, ADR-005).
+ */
+export function heroFacts(metrics?: HeroMetrics | null): Array<{ label: string; value: string }> {
+  const sleep = typeof metrics?.sleep_hours === "number" ? `${metrics.sleep_hours.toLocaleString("pl-PL")} h` : "Brak danych";
+  const steps = typeof metrics?.steps === "number" ? metrics.steps.toLocaleString("pl-PL") : "Brak danych";
+  return [
+    { label: "Długość snu", value: sleep },
+    { label: "Kroki", value: steps },
+  ];
 }
 
 export function formatHeroDateLabel(targetDate: Date, now = new Date()): string {
@@ -42,20 +30,6 @@ export function formatHeroDateLabel(targetDate: Date, now = new Date()): string 
     : targetDateStr === yesterdayDateStr
     ? `Wczoraj · ${format(targetDate, 'EEEE, d MMMM', { locale: pl })}`
     : format(targetDate, 'EEEE, d MMMM yyyy', { locale: pl });
-}
-
-function WellbeingMoodIndicator({ mood, moodEmoji }: { mood: string; moodEmoji: string }) {
-  return (
-    <div className="relative flex h-[140px] w-[140px] shrink-0 flex-col items-center justify-center rounded-xl bg-card/15 p-4 backdrop-blur-sm border border-white/20 shadow-inner">
-      <span className="text-[3rem] leading-none select-none">{moodEmoji}</span>
-      <span className="mt-2 text-sm font-semibold text-primary-foreground tracking-wide text-center">
-        {mood}
-      </span>
-      <span className="text-sm opacity-80 text-primary-foreground/90 uppercase tracking-wider">
-        Samopoczucie
-      </span>
-    </div>
-  );
 }
 
 interface DailySummaryHeroProps {
@@ -82,7 +56,6 @@ interface DailySummaryHeroProps {
 
 export function DailySummaryHero({ resident, report, selectedDateMedia = [], onOpenGallery, selectedDate }: DailySummaryHeroProps) {
   const reportText = report?.content?.text || 'Brak dzisiejszego raportu od personelu. Czekamy na pierwsze wpisy.';
-  const wb = deriveWellbeing(report?.content?.text);
 
   const targetDate = selectedDate
     ? new Date(selectedDate)
@@ -90,22 +63,22 @@ export function DailySummaryHero({ resident, report, selectedDateMedia = [], onO
 
   const dateLabel = formatHeroDateLabel(targetDate);
 
+  const [sleepFact, stepsFact] = heroFacts(report?.content?.metrics);
   const quickStats = [
-    { icon: CheckCircle2, label: "Sen", value: wb.sleep },
-    { icon: report?.content?.metrics?.steps ? Footprints : Activity, label: "Kroki dzisiaj", value: report?.content?.metrics?.steps ? `${report.content.metrics.steps}` : "Brak opaski" },
-    { icon: Sun, label: "Apetyt", value: wb.appetite },
+    { icon: Moon, ...sleepFact },
+    { icon: Footprints, ...stepsFact },
   ];
 
   return (
     <section className="grid gap-5 lg:grid-cols-[1.6fr_1fr]">
-      {/* Well-being card */}
-      <div className="relative overflow-hidden rounded-[1.75rem] bg-primary p-7 text-primary-foreground">
+      {/* Podsumowanie dnia: fakty z raportu i metryk */}
+      <div data-testid="daily-summary-hero" className="relative overflow-hidden rounded-[1.75rem] bg-primary p-7 text-primary-foreground">
         <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-card/10" />
         <div className="pointer-events-none absolute -bottom-20 right-24 h-40 w-40 rounded-full bg-card/5" />
         <div className="relative">
           <div className="mb-6 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5" />
+              <CalendarDays className="h-5 w-5" aria-hidden="true" />
               <p className="text-[0.95rem] opacity-90 capitalize">{dateLabel}</p>
             </div>
             {report?.created_at && (
@@ -115,8 +88,7 @@ export function DailySummaryHero({ resident, report, selectedDateMedia = [], onO
             )}
           </div>
 
-          <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:items-start sm:text-left">
-            <WellbeingMoodIndicator mood={wb.mood} moodEmoji={wb.moodEmoji} />
+          <div className="flex flex-col gap-6">
             <div className="flex-1 min-w-0">
               <h2 className="text-[1.4rem] leading-tight break-words text-primary-foreground sm:text-[1.6rem]">Podsumowanie Dnia</h2>
               <div className="mt-3 bg-card/10 rounded-xl p-4 border border-white/20 backdrop-blur-sm">

@@ -106,6 +106,7 @@
 - **AC3 (Globalny banner dla placówek — Wariant A):** Gdy w systemie istnieje aktywny alert od Super Admina, w panelach placówki (`/admin` oraz `/staff`) na górze ekranu wyświetla się czytelny `SystemAlertBanner` informujący personel i kierownictwo placówki o trwających pracach i niedostępnych usługach. Gdy system działa bez zakłóceń (brak aktywnych alertów), banner nie jest renderowany.
 - **AC4 (Wycofanie atrapy z pulpitu placówki — Wariant A):** Z głównego pulpitu administratora placówki (`/admin`) zostaje usunięty statyczny kafelek KPI „Status systemu: Stabilny”, a w jego miejsce prezentowany jest rzeczywisty wskaźnik operacyjny ośrodka („Raporty do zatwierdzenia” — liczba raportów w statusie `draft`).
 - **AC5 (Ślad audytowy i 4 stany UI):** Każda publikacja i zakończenie alertu systemowego rejestruje wpis w `audit_logs` (`SYSTEM_ALERT_PUBLISHED` / `SYSTEM_ALERT_RESOLVED`) bez danych osobowych (`SEC-NO-PII-LOGS`). Panel Super Admina obsługuje 4 stany UI (`loading`, `empty`, `success`, `error`).
+- **AC6 (Termin wygaśnięcia — 📝 2026-10-26):** Przy publikacji Super Admin może podać opcjonalny termin wygaśnięcia (`system_alerts.expires_at`, późniejszy niż utworzenie). Po terminie alert znika z banera placówek i z listy aktywnych, a w historii ma status „Wygasł”; wiersz w bazie nie jest zmieniany. Bez terminu alert trwa do ręcznego zakończenia. Termin z przeszłości jest odrzucany przed zapisem.
 
 ---
 
@@ -302,6 +303,7 @@
 - **AC2 (Guardrails):** Aplikacja pod żadnym pozorem nie może renderować powiadomień typu „Push / Alarm" przy spadku liczby kroków. Aplikacja z zasady jest „cicha" dla IoT, a powiadomienia wysyła wyłącznie dla nowego Peace Letter.
 - **AC3 (Brak łączności):** Jeśli w tabeli `polar_connections` pole `last_successful_sync_at` wskazuje czas starszy niż 6 godzin, UI delikatnie informuje: „Urządzenie obecnie poza zasięgiem huba".
 - **AC4 (Empty state komfortu):** Karta Dzienny Komfort (wykresy z opaski) wyświetla się w stanie Empty State z szarym tłem i komunikatem: „Funkcja inteligentnych wskaźników komfortu jest w przygotowaniu", aby zostawić miejsce na przyszłe integracje.
+- **AC5 (Tylko fakty — 📝 2026-10-26):** Podsumowanie dnia pokazuje długość snu i kroki z metryk albo „Brak danych”. Bez ocen samopoczucia, apetytu czy snu zgadywanych z treści raportu i bez emoji (`MDR-NO-INTERPRETATION`); ikony w portalu rodziny pochodzą z biblioteki interfejsu.
 
 > ⚖️ **Rozstrzygnięcie:**
 > - **ADR-001:** ingest Polara **jest w MVP**, więc AC4 (pusty stan „w przygotowaniu") dotyczy tylko pensjonariusza bez połączonego urządzenia lub bez zgody.
@@ -440,8 +442,10 @@
 - **AC1:** Hierarchia organizacja → piętro → pokój → łóżko; numer pokoju unikalny w placówce, etykieta łóżka unikalna w pokoju.
 - **AC2:** Jedno łóżko ma co najwyżej jednego aktywnego pensjonariusza, jeden pensjonariusz — co najwyżej jedno aktywne łóżko (wymuszane na poziomie bazy).
 - **AC3:** Przeniesienie pensjonariusza to jedna transakcja zamykająca stare przypisanie i otwierająca nowe; historia przypisań zachowana (`unassigned_at`).
+- **AC3a (Optymalizacja przydziału — 📝 2026-10-26):** Przycisk „Optymalizuj przydział łóżek” otwiera listę propozycji przeniesień (zgodność płci w pokojach wieloosobowych, osoby o ograniczonej mobilności i ZSN na parterze). Propozycja to pole wyboru z trasą „skąd → dokąd”, pod nią podopieczny („Nazwisko Imię”) i uzasadnienie. Analiza jest deterministyczna, bez modelu AI; przeniesienie wykonuje się dopiero po zatwierdzeniu wybranych propozycji.
 - **AC4:** Liczba wolnych łóżek wyliczana z aktywnych przypisań i aktualna natychmiast po zmianie.
 - **AC5:** Widok kafelków i tabeli z filtrowaniem po piętrze, sektorze, obłożeniu i frazie.
+- **AC6 (Nazwa sektora — 📝 2026-10-26):** Sektor jest pokazywany tak, jak go nazwano (np. „A”, „Skrzydło Północne”), bez dopisywanego przedrostka „Sektor”. Przedrostek wpisany przez użytkownika (formularz, import, polecenie głosowe) jest usuwany przy zapisie; dane zapisane wcześniej porządkuje migracja `20261026160000_rooms_sector_strip_prefix`. Brak sektora to „—”.
 
 #### [SC-ADM-11] Kreator przyjęcia pensjonariusza z sugestią łóżka
 🔗 **Kontrakt:** `ADM-RESIDENT-ADD`, `ADM-BED-ASSIGNMENT`, `SEC-PESEL-HASH` · **WO:** [`ADM-RESIDENT-WIZARD`](workorders/ADM-RESIDENT-WIZARD.md), [`ADM-AI-BED-ALLOCATION`](workorders/ADM-AI-BED-ALLOCATION.md); commit `ADM-RESIDENT-ADMISSION-CARD` · **Status:** ✅ 📝
@@ -542,6 +546,22 @@
 - **AC3 (Automatyczne zwolnienie łóżka):** Zakończenie pobytu atomowo zamyka aktywne przypisanie do łóżka pensjonariusza (`bed_assignments.unassigned_at = now()`), przywracając łóżko do puli wolnych miejsc placówki.
 - **AC4 (Wgląd rodziny read-only — Wariant B):** Wypis i zakończenie umowy nie ustawiają automatycznie `archived_at` — bliscy w Portalu Rodziny zachowują dostęp w trybie tylko do odczytu (read-only) do czasu ręcznej archiwizacji (`ADM-ARCHIVE`). Zdarzenie rejestrowane jest w `resident_events` (`contract_ended` i/lub `death`) na potrzeby modułu BI i wskaźników rotacji.
 - **AC5 (Ślad audytowy i ochrona danych):** Całość operacji jest rejestrowana w `audit_logs` pod akcją `RESIDENT_DISCHARGE` bez wycieku danych wrażliwych. W trybie impersonacji Super Admina akcja jest zablokowana.
+
+#### [SC-ADM-20] Wspólna karta podopiecznego dla personelu (widoczność sekcji według roli)
+🔗 **Kontrakt:** brak REQ (proponowany nowy: `ADM-RESIDENT-CARD-VISIBILITY`; wdraża reguły: `ORG-ISOLATION`, `SEC-PESEL-HASH`, `MDR-NO-INTERPRETATION`, `UI-ACCESSIBILITY`, `UI-TEMPLATE-ALIGNMENT`) · **WO:** [`UI-RESIDENT-CARD`](workorders/UI-RESIDENT-CARD.md) · **Status:** 📝 PROPOZYCJA
+
+> ℹ️ Nowy `@REQ` wymaga zmiany `contracts/` (lista sekcji karty z rolami, w `presentation.contract.mjs`), czyli okna kontraktowego otwartego przez człowieka. Do tego czasu story opiera się na istniejącej macierzy uprawnień (`roles.contract.mjs`).
+
+**User story:** Jako Kierownik Placówki lub Członek Personelu opiekuńczego, chcę z wyszukiwarki globalnej, tablicy dyżuru i listy podopiecznych otwierać jedną, wspólną kartę podopiecznego, w której każdy widzi wyłącznie sekcje i dane, do których kontrakt daje jego roli dostęp do odczytu, aby szybko znaleźć potrzebne informacje bez dostępu do danych, których nie powinien widzieć (kontakty bliskich, umowy i opłaty, zgody), a placówka utrzymywała jeden spójny widok zamiast osobnych ekranów dla każdej roli.
+
+**Kryteria akceptacji:**
+- **AC1 (Jedna karta, dwie trasy):** Ten sam komponent karty jest renderowany pod `/admin/residents/{id}` (kierownik, a także superadmin w trybie impersonacji — tylko do odczytu) i `/staff/residents/{id}` (personel opiekuńczy), każdy w swojej powłoce nawigacyjnej. Konta spoza personelu z kontraktu (rodzina, opiekun prawny, konto bez roli) dostają odmowę **zanim** powstanie zapytanie do bazy.
+- **AC2 (Widoczność sekcji z kontraktu):** Lista sekcji danej roli pochodzi z kontraktu, a nie z komponentu: Przegląd (dane ogólne, poziom opieki, ZSN, status), Łóżko i pokój, metryki behawioralne oraz skróty do raportów i planu dnia — dla kierownika i personelu; Bliscy i kontakty, Umowa i pakiety, Zdarzenia pobytu, zarządzanie Opaską oraz akcje edycji i wypisu — wyłącznie dla kierownika. Walidator kontraktu odrzuca sekcję, której rola nie ma prawa odczytu w macierzy uprawnień.
+- **AC3 (Minimalizacja danych):** Karta pobiera jawną listę kolumn dozwolonych dla roli, nigdy `select('*')`. `pesel_hash` nie trafia do komponentów klienckich ani do odpowiedzi. Sekcje niedostępne dla roli nie są w ogóle pobierane z bazy (obrona w głębi obok RLS).
+- **AC4 (Granica MDR):** Karta podaje fakty, bez ocen stanu zdrowia i bez wykresów sugerujących trend (ADR-005); kolor nie niesie oceny; słowo „pacjent” jest zakazane. Metryki fizjologiczne nie są prezentowane w pierwszej wersji (do decyzji, patrz WO).
+- **AC5 (Podopieczny po zgonie lub w archiwum):** Karta otwiera się tylko do odczytu z neutralną plakietką statusu („Zgon”, „Zarchiwizowany”, „Wypisany”); personel opiekuńczy nie ma na niej żadnych akcji zapisu.
+- **AC6 (Nawigacja według roli):** Wyniki wyszukiwarki, tablica dyżuru i lista podopiecznych prowadzą do trasy właściwej dla roli (kierownik → `/admin/residents/{id}`, personel → `/staff/residents/{id}`).
+- **AC7 (Norma UI i dostępność):** Zakładki obsługiwane klawiaturą, cele dotykowe `min-h-touch`, tekst ≥12px, kolory z tokenów, 4 stany UI (loading, empty, success, error); brak zapisu danych osobowych w logach (`SEC-NO-PII-LOGS`).
 
 ### Domena 2 — Personel
 
@@ -687,6 +707,8 @@
 - **AC2:** Motyw zgodny z paletą „Ciepłe Zaufanie" i tokenami z kontraktu; strona logowania odświeżona.
 - **AC3:** Kompresja zdjęć w przeglądarce i usuwanie metadanych EXIF przed wysłaniem.
 - **AC4:** Brak natywnych `alert()`/`confirm()` — Toast i dostępny `ConfirmDialog`.
+- **AC5 (Nazwisko Imię — 📝 2026-10-26):** Imię i nazwisko podopiecznego jest pokazywane jako „Nazwisko Imię” (`lib/person-name.ts`), a listy są domyślnie ułożone po nazwisku, potem imieniu, z polskim alfabetem. Wyszukiwanie znajduje osobę niezależnie od kolejności wpisanego imienia i nazwiska. Brak danych to „Brak danych”.
+- **AC6 (Sortowanie tabel — 📝 2026-10-26):** Kolumny tabel sortuje się kliknięciem w nagłówek (`SortableTableHead`); ponowne kliknięcie odwraca kierunek, a nagłówek ogłasza go przez `aria-sort`. Polski alfabet, numery jak liczby („9” przed „10”), daty chronologicznie, puste wartości na końcu. Domyślnie: podopieczni po nazwisku, rejestr audytu od najnowszych.
 
 #### [NFR-UI-03] Szablon shadcn-admin, tokeny z kontraktu i jeden akcent
 🔗 **Kontrakt:** `UI-TEMPLATE-ALIGNMENT`, `UI-ACCESSIBILITY`, `MDR-NO-PHYSIO-TO-FAMILY` · **WO:** [`UI-TEMPLATE-ALIGNMENT`](workorders/UI-TEMPLATE-ALIGNMENT.md); PR #51–#54; ADR-014 · **Status:** ✅ 📝
@@ -814,3 +836,4 @@
 | 2026-10-13 | 2.9 | Podbicie statusów `SC-ADM-15` i `SC-ADM-16` do ✅ 📝 po pełnej integracji klastrów Auth/OAuth Art. 9 (`OAUTH-GUARDIAN-CONSENTS`, PR #63), IAM (`ChangeRoleDialog`, PR #75), Caregiver (`SC-ADM-15`, PR #72) oraz potoku notatek głosowych (PR #83). |
 | 2026-10-20 | 2.10 | Ujednolicenie ról pracowników placówki do dwóch poziomów (`org_admin` — Kierownik / Administrator Placówki, `nurse` — Personel opiekuńczy / Wsparcie) oraz ograniczenie dostępu do `family_messages` po stronie placówki wyłącznie do `org_admin` (`/admin/messages`; aktualizacja `SC-FAM-04`, `SC-NUR-07`, `SC-NUR-11`). |
 | 2026-10-22 | 2.11 | Dopisanie `SC-SUP-05` (globalne alerty systemowe i status platformy zarządzane przez `super_admin` oraz wycofanie statycznego kafelka „Status systemu: Stabilny” z pulpitu placówki — Wariant A) ze statusem 📝 PROPOZYCJA. |
+| 2026-10-24 | 2.12 | Dopisanie `SC-ADM-20` (wspólna karta podopiecznego dla personelu z widocznością sekcji według roli) ze statusem 📝 PROPOZYCJA. |

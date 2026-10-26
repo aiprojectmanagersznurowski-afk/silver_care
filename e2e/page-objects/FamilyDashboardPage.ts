@@ -14,6 +14,7 @@ export class FamilyDashboardPage {
   readonly agendaLink: Locator;
   readonly messagesLink: Locator;
   readonly accountDropdown: Locator;
+  readonly summaryHero: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -25,6 +26,7 @@ export class FamilyDashboardPage {
     this.agendaLink = page.locator('header a[href="/agenda"]');
     this.messagesLink = page.locator('header a[href="/messages"]');
     this.accountDropdown = page.locator('header button:has-text("Konto"), header button:has-text("Wyświetlany profil")');
+    this.summaryHero = page.locator('[data-testid="daily-summary-hero"]');
   }
 
 
