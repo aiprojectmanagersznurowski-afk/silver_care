@@ -5,7 +5,9 @@ import { Clock } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/patterns/StatusBadge'
-import { type SystemAlertRecord } from '@/lib/system-status-helpers'
+import { format } from 'date-fns'
+import { pl } from 'date-fns/locale'
+import { type SystemAlertRecord, getAlertLifecycle, ALERT_LIFECYCLE_LABELS } from '@/lib/system-status-helpers'
 
 interface Props {
   alerts: SystemAlertRecord[]
@@ -14,8 +16,8 @@ interface Props {
 }
 
 export function SystemAlertsList({ alerts, isPending, onResolve }: Props) {
-  const activeAlerts = alerts.filter((a) => a.is_active)
-  const resolvedAlerts = alerts.filter((a) => !a.is_active)
+  const activeAlerts = alerts.filter((a) => getAlertLifecycle(a) === 'active')
+  const resolvedAlerts = alerts.filter((a) => getAlertLifecycle(a) !== 'active')
 
   return (
     <Card className="rounded-xl border-none ring-1 ring-border">
@@ -47,6 +49,11 @@ export function SystemAlertsList({ alerts, isPending, onResolve }: Props) {
                       <StatusBadge>{a.severity}</StatusBadge>
                     </div>
                     <p className="text-sm text-foreground/80 mt-1">{a.message}</p>
+                    {a.expires_at && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Wygasa: {format(new Date(a.expires_at), 'd MMMM yyyy, HH:mm', { locale: pl })}
+                      </p>
+                    )}
                   </div>
                   <Button
                     type="button"
@@ -67,12 +74,12 @@ export function SystemAlertsList({ alerts, isPending, onResolve }: Props) {
 
         {resolvedAlerts.length > 0 && (
           <div className="pt-4 border-t border-border space-y-2">
-            <h4 className="text-sm font-medium text-muted-foreground">Ostatnio zakończone</h4>
+            <h4 className="text-sm font-medium text-muted-foreground">Ostatnio zakończone i wygasłe</h4>
             <div className="space-y-2 max-h-48 overflow-y-auto">
               {resolvedAlerts.slice(0, 5).map((a) => (
-                <div key={a.id} className="p-3 rounded-lg bg-muted/20 text-sm flex items-center justify-between">
+                <div key={a.id} data-testid="system-alert-history-item" className="p-3 rounded-lg bg-muted/20 text-sm flex items-center justify-between">
                   <span className="font-medium text-foreground truncate">{a.title}</span>
-                  <span className="text-sm text-muted-foreground shrink-0">Zakończono</span>
+                  <span className="text-sm text-muted-foreground shrink-0">{ALERT_LIFECYCLE_LABELS[getAlertLifecycle(a)]}</span>
                 </div>
               ))}
             </div>
