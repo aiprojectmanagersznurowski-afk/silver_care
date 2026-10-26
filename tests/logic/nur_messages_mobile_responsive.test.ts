@@ -72,7 +72,7 @@ describe('Responsive Master-Detail Messages Inbox (@REQ: FAM-MESSAGES, @REQ: NUR
 
     const filtered = filterThreadsBySearch(threads, 'Jan');
     expect(filtered).toHaveLength(1);
-    expect(filtered[0].residentName).toContain('Jan Kowalski');
+    expect(filtered[0].residentName).toContain('Kowalski Jan');
   });
 
   it('exports valid StaffMessagesInbox and deprecated AdminMessagesInbox components @REQ: FAM-MESSAGES', async () => {

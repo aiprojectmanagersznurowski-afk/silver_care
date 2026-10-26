@@ -25,6 +25,7 @@ import {
 import { LogOut, Loader2, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
 import { DischargeConsequencesAlert } from './residents/DischargeConsequencesAlert'
+import { formatPersonName } from '@/lib/person-name'
 
 export interface DischargeResidentDialogProps {
   resident: {
@@ -78,8 +79,8 @@ export function DischargeResidentDialog({
         }
 
         const successMsg = isDeath
-          ? `Zarejestrowano zgon podopiecznego ${resident.first_name} ${resident.last_name}.`
-          : `Zakończono pobyt podopiecznego ${resident.first_name} ${resident.last_name}.`
+          ? `Zarejestrowano zgon podopiecznego ${formatPersonName(resident.first_name, resident.last_name)}.`
+          : `Zakończono pobyt podopiecznego ${formatPersonName(resident.first_name, resident.last_name)}.`
 
         toast.success(successMsg)
         if (res.unassignedBedLabel) {
@@ -127,7 +128,7 @@ export function DischargeResidentDialog({
                 Zakończenie pobytu podopiecznego
               </DialogTitle>
               <DialogDescription className="text-sm mt-0.5">
-                {resident.first_name} {resident.last_name}
+                {formatPersonName(resident.first_name, resident.last_name)}
               </DialogDescription>
             </div>
           </div>

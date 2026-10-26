@@ -12,6 +12,7 @@ import { MedicationAlertBanner } from '@/components/MedicationAlertBanner'
 
 import type { Json } from '@/types/database.types'
 import { StatusBadge } from '@/components/patterns/StatusBadge'
+import { formatPersonName } from '@/lib/person-name'
 
 export interface ReportItem {
   id: string
@@ -79,7 +80,7 @@ export function ReportCard({ report }: { report: ReportItem }) {
           <div>
             <CardTitle>
               {report.residents 
-                ? `${report.residents.first_name || ''} ${report.residents.last_name || ''}`.trim()
+                ? formatPersonName(report.residents.first_name, report.residents.last_name)
                 : 'Podopieczny'
               }
             </CardTitle>

@@ -14,6 +14,7 @@ import { HealthRingInsight } from './HealthRingInsight'
 import { CommunicationWidget } from './CommunicationWidget'
 import { PhotoGalleryModal } from './PhotoGalleryModal'
 import { getAdjacentDateString } from '@/lib/date-navigation'
+import { formatPersonName } from '@/lib/person-name'
 
 interface Resident {
   id: string
@@ -77,7 +78,7 @@ export function FamilyDashboardClient({ resident, reports, selectedDateMedia = [
               Dzień dobry
             </h1>
             <p className="mt-1 text-[1rem] text-muted-foreground sm:text-[1.05rem]">
-              Oto najnowsze informacje o podopiecznym: {resident.first_name} {resident.last_name}.
+              Oto najnowsze informacje o podopiecznym: {formatPersonName(resident.first_name, resident.last_name)}.
             </p>
           </div>
 

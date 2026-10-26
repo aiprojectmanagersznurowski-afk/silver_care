@@ -19,6 +19,7 @@ import { TableCard } from '@/components/patterns/TableCard'
 import { ObjectGrid } from '@/components/patterns/ObjectCard'
 import { ListEmpty } from '@/components/patterns/ListState'
 import { Button } from '@/components/ui/button'
+import { matchesPersonName } from '@/lib/person-name'
 
 export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {} }: StaffBoardClientProps) {
   const [viewMode, setViewMode] = useViewPreference(
@@ -60,8 +61,7 @@ export function StaffBoardClient({ residents, floors, unansweredMessagesMap = {}
     return residents.filter((r) => {
       const resId = String(r.id || '')
       if (onlyUnansweredFilter && !unansweredMessagesMap[resId]?.hasUnanswered) return false
-      const name = `${r.first_name} ${r.last_name}`.toLowerCase()
-      if (searchFilter.trim() !== '' && !name.includes(searchFilter.toLowerCase().trim())) return false
+      if (!matchesPersonName(String(r.first_name ?? ''), String(r.last_name ?? ''), searchFilter)) return false
       if (floorFilter !== 'all' && getFloorLabel(r) !== floorFilter) return false
       if (roomFilter !== 'all' && getRoomNumber(r) !== roomFilter) return false
       if (statusFilter !== 'all' && getNoteStatus(r) !== statusFilter) return false

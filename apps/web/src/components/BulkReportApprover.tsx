@@ -7,6 +7,7 @@ import { bulkPublishReportsAction } from '@/actions/bulk-reports'
 import { useRouter } from 'next/navigation'
 
 import type { Json } from '@/types/database.types'
+import { formatPersonName } from '@/lib/person-name'
 
 interface DraftReport {
   id: string
@@ -153,7 +154,7 @@ export function BulkReportApprover({ draftReports }: BulkReportApproverProps) {
         {selectableDrafts.map((report) => {
           const isSelected = selectedIds.includes(report.id)
           const name = report.residents
-            ? `${report.residents.first_name || ''} ${report.residents.last_name || ''}`.trim()
+            ? formatPersonName(report.residents.first_name, report.residents.last_name)
             : 'Podopieczny'
 
           return (

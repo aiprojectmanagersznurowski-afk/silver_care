@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { AlertCircle } from 'lucide-react'
 import { AgendaItem, ResidentSummary, ITEM_TYPES } from './agenda-types'
+import { formatPersonName } from '@/lib/person-name'
 
 interface AgendaModalsProps {
   editingItem: AgendaItem | null
@@ -125,7 +126,7 @@ function AgendaEditForm({ item, onClose, onUpdate, residents }: AgendaEditFormPr
         >
           <NativeSelectOption value="">Wszyscy podopieczni (Cała placówka)</NativeSelectOption>
           {residents.map((r) => (
-            <NativeSelectOption key={r.id} value={r.id}>{r.first_name} {r.last_name}</NativeSelectOption>
+            <NativeSelectOption key={r.id} value={r.id}>{formatPersonName(r.first_name, r.last_name)}</NativeSelectOption>
           ))}
         </NativeSelect>
       </div>

@@ -11,6 +11,7 @@ import { type CareLevel } from '@/lib/reporting-constants'
 import { format } from 'date-fns'
 import { pl } from 'date-fns/locale'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
+import { formatPersonName } from '@/lib/person-name'
 
 export interface ResidentMobileItem {
   id: string
@@ -58,7 +59,7 @@ export function ResidentMobileCard({ resident }: ResidentMobileCardProps) {
         <Link href={`/admin/residents/${resident.id}`} className="shrink-0">
           <Avatar className="h-12 w-12 border border-border">
             {resident.avatar_url && (
-              <AvatarImage src={resident.avatar_url} alt={`${resident.first_name} ${resident.last_name}`} />
+              <AvatarImage src={resident.avatar_url} alt={formatPersonName(resident.first_name, resident.last_name)} />
             )}
             <AvatarFallback className="bg-primary/10 text-primary">
               <UserCircle2 className="h-6 w-6" />
@@ -73,7 +74,7 @@ export function ResidentMobileCard({ resident }: ResidentMobileCardProps) {
               href={`/admin/residents/${resident.id}`}
               className="font-medium text-foreground text-base hover:text-primary transition-colors truncate block"
             >
-              {resident.first_name} {resident.last_name}
+              {formatPersonName(resident.first_name, resident.last_name)}
             </Link>
             <BusinessIdBadge type="resident" id={resident.id} />
           </div>
@@ -105,7 +106,7 @@ export function ResidentMobileCard({ resident }: ResidentMobileCardProps) {
             href={`/admin/residents/${resident.id}`}
             className="p-2 text-muted-foreground/50 hover:text-primary transition-colors min-h-touch min-w-touch inline-flex items-center justify-center rounded-lg hover:bg-muted/50"
             title="Profil 360°"
-            aria-label={`Profil 360° ${resident.first_name} ${resident.last_name}`}
+            aria-label={`Profil 360° ${formatPersonName(resident.first_name, resident.last_name)}`}
           >
             <ChevronRight className="h-5 w-5" />
           </Link>

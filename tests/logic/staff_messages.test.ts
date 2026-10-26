@@ -50,11 +50,11 @@ describe('Staff Messages Inbox Logic (@REQ: FAM-MESSAGES, @REQ: NUR-BOARD)', () 
     expect(threads).toHaveLength(2);
     // res-2 ma nowszą wiadomość (09:00 vs 08:30)
     expect(threads[0].residentId).toBe('res-2');
-    expect(threads[0].residentName).toBe('Tadeusz Nowak');
+    expect(threads[0].residentName).toBe('Nowak Tadeusz');
     expect(threads[0].messages).toHaveLength(1);
 
     expect(threads[1].residentId).toBe('res-1');
-    expect(threads[1].residentName).toBe('Janina Kowalska');
+    expect(threads[1].residentName).toBe('Kowalska Janina');
     expect(threads[1].messages).toHaveLength(2);
     expect(threads[1].lastMessage.content).toBe('Tak, zjadła cały posiłek i poszła na krótki spacer.');
   });
@@ -64,11 +64,11 @@ describe('Staff Messages Inbox Logic (@REQ: FAM-MESSAGES, @REQ: NUR-BOARD)', () 
 
     const filteredByName = filterThreadsBySearch(threads, 'Nowak');
     expect(filteredByName).toHaveLength(1);
-    expect(filteredByName[0].residentName).toBe('Tadeusz Nowak');
+    expect(filteredByName[0].residentName).toBe('Nowak Tadeusz');
 
     const filteredByContent = filterThreadsBySearch(threads, 'obiad');
     expect(filteredByContent).toHaveLength(1);
-    expect(filteredByContent[0].residentName).toBe('Janina Kowalska');
+    expect(filteredByContent[0].residentName).toBe('Kowalska Janina');
 
     const emptyMatch = filterThreadsBySearch(threads, 'nieistniejący');
     expect(emptyMatch).toHaveLength(0);

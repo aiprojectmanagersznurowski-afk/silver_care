@@ -704,6 +704,7 @@
 - **AC2:** Motyw zgodny z paletą „Ciepłe Zaufanie" i tokenami z kontraktu; strona logowania odświeżona.
 - **AC3:** Kompresja zdjęć w przeglądarce i usuwanie metadanych EXIF przed wysłaniem.
 - **AC4:** Brak natywnych `alert()`/`confirm()` — Toast i dostępny `ConfirmDialog`.
+- **AC5 (Nazwisko Imię — 📝 2026-10-26):** Imię i nazwisko podopiecznego jest pokazywane jako „Nazwisko Imię” (`lib/person-name.ts`), a listy są domyślnie ułożone po nazwisku, potem imieniu, z polskim alfabetem. Wyszukiwanie znajduje osobę niezależnie od kolejności wpisanego imienia i nazwiska. Brak danych to „Brak danych”.
 
 #### [NFR-UI-03] Szablon shadcn-admin, tokeny z kontraktu i jeden akcent
 🔗 **Kontrakt:** `UI-TEMPLATE-ALIGNMENT`, `UI-ACCESSIBILITY`, `MDR-NO-PHYSIO-TO-FAMILY` · **WO:** [`UI-TEMPLATE-ALIGNMENT`](workorders/UI-TEMPLATE-ALIGNMENT.md); PR #51–#54; ADR-014 · **Status:** ✅ 📝

@@ -9,6 +9,7 @@ import { Mic } from 'lucide-react'
 import { SearchField } from '@/components/patterns/ListToolbar'
 import { ViewToggle, GRID_TABLE_OPTIONS } from '@/components/patterns/ViewToggle'
 import { useViewPreference, VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-preference'
+import { formatPersonName, matchesPersonName } from '@/lib/person-name'
 
 interface ResidentItem {
   id: string
@@ -37,7 +38,7 @@ export function VoiceResidentSelect({
     ['table', 'grid'] as const
   )
   const filteredResidents = residentsList.filter((r) =>
-    `${r.first_name} ${r.last_name}`.toLowerCase().includes(searchQuery.toLowerCase())
+    matchesPersonName(r.first_name, r.last_name, searchQuery)
   )
 
   return (
@@ -81,7 +82,7 @@ export function VoiceResidentSelect({
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-foreground truncate">
-                    {r.first_name} {r.last_name}
+                    {formatPersonName(r.first_name, r.last_name)}
                   </p>
                   <p className="text-sm text-muted-foreground">Kliknij, aby nagrać</p>
                 </div>
@@ -107,7 +108,7 @@ export function VoiceResidentSelect({
                           {r.first_name?.[0]}{r.last_name?.[0]}
                         </div>
                         <span className="font-semibold text-sm text-foreground">
-                          {r.first_name} {r.last_name}
+                          {formatPersonName(r.first_name, r.last_name)}
                         </span>
                       </div>
                     </TableCell>
@@ -115,7 +116,7 @@ export function VoiceResidentSelect({
                       <button
                         type="button"
                         onClick={() => onSelectResident(r)}
-                        aria-label={`Kliknij, aby nagrać notatkę dla: ${r.first_name} ${r.last_name}`}
+                        aria-label={`Kliknij, aby nagrać notatkę dla: ${formatPersonName(r.first_name, r.last_name)}`}
                         className="inline-flex items-center justify-center gap-1.5 min-h-touch px-3 rounded-lg bg-primary text-primary-foreground shadow-xs hover:bg-primary/90 transition-colors text-sm font-medium"
                       >
                         <Mic className="w-4 h-4" />

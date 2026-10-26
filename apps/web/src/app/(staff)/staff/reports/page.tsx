@@ -4,6 +4,7 @@ import { BulkReportApprover } from '@/components/BulkReportApprover'
 import Link from 'next/link'
 import { Mic, FileText } from 'lucide-react'
 import { PageHeader } from '@/components/patterns/PageHeader'
+import { formatPersonName } from '@/lib/person-name'
 
 interface StaffReportsPageProps {
   searchParams: Promise<{ resident?: string }>
@@ -54,7 +55,7 @@ export default async function StaffReportsPage({ searchParams }: StaffReportsPag
     <div className="space-y-6 max-w-4xl mx-auto">
       <PageHeader
         back={{ href: '/staff', label: 'Wróć do listy podopiecznych' }}
-        title={residentInfo ? `Raporty: ${residentInfo.first_name} ${residentInfo.last_name}` : 'Raporty do weryfikacji'}
+        title={residentInfo ? `Raporty: ${formatPersonName(residentInfo.first_name, residentInfo.last_name)}` : 'Raporty do weryfikacji'}
         description={residentInfo
           ? 'Historia oraz bieżące szkice raportów wygenerowane dla tego podopiecznego.'
           : 'Zatwierdź szkice raportów wygenerowane przez AI, aby rodzina mogła je zobaczyć.'}

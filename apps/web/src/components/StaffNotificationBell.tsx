@@ -16,6 +16,7 @@ import {
 import { useStaffUnansweredMessages } from '@/hooks/useStaffUnansweredMessages';
 import { formatResidentInitials } from '@/lib/messages-helper';
 import { Badge } from '@/components/ui/badge';
+import { formatPersonName } from '@/lib/person-name'
 
 /**
  * @REQ: FAM-MESSAGES
@@ -81,7 +82,7 @@ export function StaffNotificationBell() {
               const res = thread.lastMessage.residents;
               const initials = formatResidentInitials(res?.first_name, res?.last_name);
               const residentDisplay = res?.first_name && res?.last_name
-                ? `${res.first_name} ${res.last_name}`
+                ? formatPersonName(res.first_name, res.last_name)
                 : `Inicjały: ${initials}`;
               const timeAgo = formatDistanceToNow(new Date(thread.lastMessage.created_at), {
                 addSuffix: true,

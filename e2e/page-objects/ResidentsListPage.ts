@@ -7,11 +7,13 @@ import { Page, Locator } from '@playwright/test';
 export class ResidentsListPage {
   readonly page: Page;
   readonly rows: Locator;
+  readonly residentNames: Locator;
   readonly impersonationBanner: Locator;
 
   constructor(page: Page) {
     this.page = page;
     this.rows = page.locator('[data-slot="table-body"] [data-slot="table-row"]');
+    this.residentNames = this.rows.locator('[data-testid="resident-name"]');
     this.impersonationBanner = page.getByText('Działasz w trybie impersonacji');
   }
 

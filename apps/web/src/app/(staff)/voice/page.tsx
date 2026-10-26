@@ -10,6 +10,7 @@ import { VoiceResidentSelect } from './VoiceResidentSelect'
 import { VoiceReportReview } from './VoiceReportReview'
 import { VoiceTranscriptionEditor } from './VoiceTranscriptionEditor'
 import { PageHeader } from '@/components/patterns/PageHeader'
+import { formatPersonName } from '@/lib/person-name'
 
 function VoiceNoteContent() {
   const searchParams = useSearchParams()
@@ -146,7 +147,7 @@ function VoiceNoteContent() {
         title="Notatka Głosowa"
         description={resident && (
           <>
-            Dla: <span className="font-semibold text-foreground">{resident.first_name} {resident.last_name}</span>
+            Dla: <span className="font-semibold text-foreground">{formatPersonName(resident.first_name, resident.last_name)}</span>
             <button type="button" onClick={() => { setActiveResidentId(''); setResident(null); resetNote() }} className="ml-2 min-h-touch text-sm text-primary hover:underline">
               (Zmień podopiecznego)
             </button>
