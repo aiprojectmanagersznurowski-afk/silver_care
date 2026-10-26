@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dialog'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { InviteFamilySuccessAlert } from './family/InviteFamilySuccessAlert'
+import { roleLabel } from '@/lib/auth/role-labels'
 
 type Resident = {
   id: string
@@ -153,9 +154,14 @@ export function InviteFamilyDialog({
                 onChange={(e) => setFamilyRole(e.target.value as 'legal_guardian' | 'family')}
                 className="flex w-full items-center justify-between disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <NativeSelectOption value="legal_guardian">Opiekun prawny (pełne uprawnienia, zgody Art. 9)</NativeSelectOption>
-                <NativeSelectOption value="family">Obserwator (tylko wgląd w raporty, brak zgód Art. 9)</NativeSelectOption>
+                <NativeSelectOption value="legal_guardian">{roleLabel('legal_guardian')}</NativeSelectOption>
+                <NativeSelectOption value="family">{roleLabel('family')}</NativeSelectOption>
               </NativeSelect>
+              <p className="text-sm text-muted-foreground">
+                {familyRole === 'legal_guardian'
+                  ? 'Może wyrażać i cofać zgody na przetwarzanie danych o zdrowiu (art. 9 RODO).'
+                  : 'Widzi raporty, nie wyraża ani nie cofa zgód.'}
+              </p>
             </div>
           </div>
           <p className="text-sm text-muted-foreground">

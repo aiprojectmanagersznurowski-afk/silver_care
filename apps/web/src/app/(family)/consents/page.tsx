@@ -7,6 +7,7 @@ import { format } from 'date-fns'
 import { pl } from 'date-fns/locale'
 import { PageHeader } from '@/components/patterns/PageHeader'
 import { StatusBadge } from '@/components/patterns/StatusBadge'
+import { roleLabel } from '@/lib/auth/role-labels'
 
 const PURPOSE_LABELS: Record<string, { title: string; desc: string }> = {
   wellness_data_ingest: {
@@ -84,7 +85,7 @@ export default async function FamilyConsentsPage() {
             <div className="flex items-center gap-2 bg-muted/60 px-4 py-2 rounded-xl border border-border text-sm text-muted-foreground">
               <span>Rola konta:</span>
               <span className="font-semibold text-foreground">
-                {isLegalGuardian ? 'Opiekun prawny (pełne uprawnienia)' : 'Członek rodziny (obserwator)'}
+                {roleLabel(isLegalGuardian ? 'legal_guardian' : 'family')}
               </span>
             </div>
           </>
@@ -97,7 +98,7 @@ export default async function FamilyConsentsPage() {
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
               <ShieldAlert className="w-5 h-5 text-primary shrink-0" />
-              Uprawnienia roli: Członek rodziny
+              Uprawnienia roli: {roleLabel('family')}
             </CardTitle>
             <CardDescription className="text-sm sm:text-sm text-muted-foreground">
               Zgodnie z Art. 9 RODO oraz procedurami placówki, zgody na przetwarzanie danych szczególnych kategorii z urządzeń opiekuńczych może wyrażać wyłącznie Pensjonariusz lub ustanowiony Opiekun Prawny (<code className="font-mono text-sm">legal_guardian</code>).
@@ -161,7 +162,7 @@ export default async function FamilyConsentsPage() {
                         </span>
                         <span>•</span>
                         <span>
-                          Podmiot udzielający: <strong className="text-foreground">{c.granted_by === 'legal_guardian' ? 'Opiekun prawny' : 'Pensjonariusz'}</strong>
+                          Podmiot udzielający: <strong className="text-foreground">{c.granted_by === 'legal_guardian' ? roleLabel('legal_guardian') : 'Pensjonariusz'}</strong>
                         </span>
                         {c.revoked_at && (
                           <>
