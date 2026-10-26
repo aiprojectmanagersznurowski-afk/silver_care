@@ -15,6 +15,8 @@ import { useViewPreference, VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-prefer
 import { UserRowActions } from './UserRowActions'
 import { ListToolbar, SearchField } from '@/components/patterns/ListToolbar'
 import { useState } from 'react'
+import { useTableSort } from '@/hooks/use-table-sort'
+import { SortableTableHead } from '@/components/patterns/SortableTableHead'
 
 interface UserTableProps {
   users: UserItem[]
@@ -37,7 +39,12 @@ export function UserTable({
 }: UserTableProps) {
   const [viewMode, setViewMode] = useViewPreference(VIEW_PREFERENCE_KEYS.iamUsers, 'table', ['table', 'grid'] as const)
   const [query, setQuery] = useState('')
-  const users = allUsers.filter((u) => u.email.toLowerCase().includes(query.trim().toLowerCase()))
+  const filtered = allUsers.filter((u) => u.email.toLowerCase().includes(query.trim().toLowerCase()))
+  const { sorted: users, sort, toggleSort } = useTableSort(
+    filtered,
+    { email: (u: UserItem) => u.email, role: (u: UserItem) => roleLabels[u.role] || u.role },
+    { key: 'email', direction: 'asc' }
+  )
   const badgesFor = (user: UserItem) => (
     <>
       <StatusBadge>{roleLabels[user.role] || user.role}</StatusBadge>
@@ -94,9 +101,9 @@ export function UserTable({
           <Table aria-label="Tabela użytkowników i ról IAM">
             <TableHeader className="text-muted-foreground">
               <TableRow>
-                <TableHead scope="col">Użytkownik</TableHead>
+                <SortableTableHead sortKey="email" sort={sort} onSort={toggleSort}>Użytkownik</SortableTableHead>
                 <TableHead scope="col">Placówka</TableHead>
-                <TableHead scope="col">Rola</TableHead>
+                <SortableTableHead sortKey="role" sort={sort} onSort={toggleSort}>Rola</SortableTableHead>
                 <TableHead scope="col" className="text-right">Akcja</TableHead>
               </TableRow>
             </TableHeader>
