@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { CalendarX } from 'lucide-react'
+import { CalendarX, UtensilsCrossed, Pill, Puzzle, Droplets, BedDouble, Leaf, CalendarDays, type LucideIcon } from 'lucide-react'
 
 interface AgendaItem {
   id: string
@@ -43,15 +43,16 @@ export const getCategory = (item: AgendaItem | string, itemType?: string): Agend
   return 'activity' // default
 }
 
-const getIcon = (category: string) => {
+/** Ikona kategorii z biblioteki interfejsu (bez emoji — decyzja Michała 2026-10-26). */
+export function getCategoryIcon(category: string): LucideIcon {
   switch (category) {
-    case 'meal': return '🍽️'
-    case 'medication': return '💊'
-    case 'therapy': return '🧩'
-    case 'hygiene': return '🧼'
-    case 'rest': return '💤'
-    case 'activity': return '🌿'
-    default: return '📅'
+    case 'meal': return UtensilsCrossed
+    case 'medication': return Pill
+    case 'therapy': return Puzzle
+    case 'hygiene': return Droplets
+    case 'rest': return BedDouble
+    case 'activity': return Leaf
+    default: return CalendarDays
   }
 }
 
@@ -154,7 +155,7 @@ export function AgendaTimelineClient({ items, accentColor = "var(--primary)", vi
             const past = isPast(event.time)
             const cat = getCategory(event)
             const catColor = categoryColors[cat]
-            const icon = getIcon(cat)
+            const CategoryIcon = getCategoryIcon(cat)
 
             return (
               <div
@@ -198,10 +199,10 @@ export function AgendaTimelineClient({ items, accentColor = "var(--primary)", vi
                 >
                   <div className="flex items-center gap-3 p-4">
                     <div
-                      className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
+                      className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                       style={{ background: `color-mix(in oklab, ${catColor} 9%, transparent)` }}
                     >
-                      {icon}
+                      <CategoryIcon className="size-5" style={{ color: catColor }} aria-hidden="true" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">

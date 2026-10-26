@@ -301,6 +301,7 @@
 - **AC2 (Guardrails):** Aplikacja pod żadnym pozorem nie może renderować powiadomień typu „Push / Alarm" przy spadku liczby kroków. Aplikacja z zasady jest „cicha" dla IoT, a powiadomienia wysyła wyłącznie dla nowego Peace Letter.
 - **AC3 (Brak łączności):** Jeśli w tabeli `polar_connections` pole `last_successful_sync_at` wskazuje czas starszy niż 6 godzin, UI delikatnie informuje: „Urządzenie obecnie poza zasięgiem huba".
 - **AC4 (Empty state komfortu):** Karta Dzienny Komfort (wykresy z opaski) wyświetla się w stanie Empty State z szarym tłem i komunikatem: „Funkcja inteligentnych wskaźników komfortu jest w przygotowaniu", aby zostawić miejsce na przyszłe integracje.
+- **AC5 (Tylko fakty — 📝 2026-10-26):** Podsumowanie dnia pokazuje długość snu i kroki z metryk albo „Brak danych”. Bez ocen samopoczucia, apetytu czy snu zgadywanych z treści raportu i bez emoji (`MDR-NO-INTERPRETATION`); ikony w portalu rodziny pochodzą z biblioteki interfejsu.
 
 > ⚖️ **Rozstrzygnięcie:**
 > - **ADR-001:** ingest Polara **jest w MVP**, więc AC4 (pusty stan „w przygotowaniu") dotyczy tylko pensjonariusza bez połączonego urządzenia lub bez zgody.

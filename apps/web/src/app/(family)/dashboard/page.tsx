@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { FamilyDashboardClient } from '@/components/FamilyDashboardClient'
 import { cookies } from 'next/headers'
 import { mergeAndSortAgenda, AgendaItem } from '@/lib/agenda'
+import { Users } from 'lucide-react'
 
 type ResidentType = { id: string; first_name: string; last_name: string };
 
@@ -31,8 +32,8 @@ export default async function FamilyDashboard(props: { searchParams: Promise<{ d
   if (residents.length === 0) {
     return (
       <div className="mx-auto my-12 max-w-lg rounded-xl border border-border bg-card p-8 text-center">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-accent text-2xl text-primary">
-          👥
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-accent text-primary">
+          <Users className="size-7" aria-hidden="true" />
         </div>
         <h2 className="text-xl font-semibold text-foreground font-display">Brak powiązanych podopiecznych</h2>
         <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
