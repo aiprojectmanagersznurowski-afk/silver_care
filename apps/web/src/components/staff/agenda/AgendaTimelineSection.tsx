@@ -12,6 +12,7 @@ import {
   isCurrentSlot,
 } from './agenda-types'
 import { StatusBadge } from '@/components/patterns/StatusBadge'
+import { formatPersonName } from '@/lib/person-name'
 
 interface AgendaTimelineSectionProps {
   items: AgendaItem[]
@@ -144,7 +145,7 @@ export function AgendaTimelineSection({
                                   {resident ? (
                                     <span className="inline-flex items-center gap-1 font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-md">
                                       <Users className="h-3 w-3" />
-                                      {resident.first_name} {resident.last_name}
+                                      {formatPersonName(resident.first_name, resident.last_name)}
                                     </span>
                                   ) : (
                                     <span className="text-muted-foreground">Cała placówka (ogólne)</span>
