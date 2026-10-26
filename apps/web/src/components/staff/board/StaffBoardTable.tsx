@@ -10,7 +10,9 @@ import { StatusBadge } from '@/components/patterns/StatusBadge'
 import { TableStateRow } from '@/components/patterns/TableCard'
 import { RowActions } from '@/components/patterns/RowActions'
 import { getActiveAssignment, getNoteStatus, STATUS_CONFIG, UnansweredInfo } from './staff-board-types'
-import { formatPersonName } from '@/lib/person-name'
+import { formatPersonName, personSortKey } from '@/lib/person-name'
+import { useTableSort } from '@/hooks/use-table-sort'
+import { SortableTableHead } from '@/components/patterns/SortableTableHead'
 
 interface StaffBoardTableProps {
   residents: Record<string, unknown>[]
@@ -20,21 +22,37 @@ interface StaffBoardTableProps {
 const actionLink =
   'inline-flex min-h-touch items-center gap-1.5 rounded-lg px-3 text-sm font-medium transition-colors'
 
+type Row = Record<string, unknown>
+const NOTE_ORDER = { none: 0, draft: 1, ready: 2 } as const
+const roomOf = (r: Row) => ((getActiveAssignment(r)?.beds as Row | undefined)?.rooms as Row | undefined)?.number as string | undefined
+
 /** Tablica dyżuru w widoku tabeli — te same informacje i akcje co karta podopiecznego. */
 export function StaffBoardTable({ residents, unansweredMessagesMap }: StaffBoardTableProps) {
+  const { sorted, sort, toggleSort } = useTableSort(
+    residents,
+    {
+      name: (r: Row) => personSortKey(r.first_name as string, r.last_name as string),
+      room: (r: Row) => roomOf(r) ?? null,
+      note: (r: Row) => NOTE_ORDER[getNoteStatus(r)],
+      // Najpierw wątki czekające na odpowiedź (sortowanie malejące)
+      messages: (r: Row) => Boolean(unansweredMessagesMap[r.id as string]?.hasUnanswered),
+    },
+    { key: 'name', direction: 'asc' }
+  )
+
   return (
     <Table aria-label="Tablica dyżuru — podopieczni">
         <TableHeader className="text-muted-foreground">
           <TableRow>
-            <TableHead scope="col">Podopieczny</TableHead>
-            <TableHead scope="col">Pokój i łóżko</TableHead>
-            <TableHead scope="col">Wpis dnia</TableHead>
-            <TableHead scope="col">Wiadomości</TableHead>
+            <SortableTableHead sortKey="name" sort={sort} onSort={toggleSort}>Podopieczny</SortableTableHead>
+            <SortableTableHead sortKey="room" sort={sort} onSort={toggleSort}>Pokój i łóżko</SortableTableHead>
+            <SortableTableHead sortKey="note" sort={sort} onSort={toggleSort}>Wpis dnia</SortableTableHead>
+            <SortableTableHead sortKey="messages" sort={sort} onSort={toggleSort}>Wiadomości</SortableTableHead>
             <TableHead scope="col" className="text-right">Akcje</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {residents.map((resident) => {
+          {sorted.map((resident) => {
             const resId = resident.id as string
             const beds = getActiveAssignment(resident)?.beds as Record<string, unknown> | undefined
             const roomNumber = (beds?.rooms as Record<string, unknown> | undefined)?.number as string | undefined
