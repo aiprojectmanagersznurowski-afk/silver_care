@@ -10,9 +10,11 @@ import { ChatBubble, ChatDateSeparator, CHAT_SCROLL_AREA } from './patterns/Chat
 interface StaffMessageListProps {
   messages: RawMessage[]
   scrollRef: React.RefObject<HTMLDivElement | null>
+  /** Kto z bliskich pisze w tym wątku (rola z kontraktu) */
+  familyLabel?: string
 }
 
-export function StaffMessageList({ messages, scrollRef }: StaffMessageListProps) {
+export function StaffMessageList({ messages, scrollRef, familyLabel = 'Rodzina / Opiekun' }: StaffMessageListProps) {
   return (
     <div
       ref={scrollRef}
@@ -32,7 +34,7 @@ export function StaffMessageList({ messages, scrollRef }: StaffMessageListProps)
             <ChatBubble
               own={isStaff}
               meta={<>
-                {isStaff ? 'Personel placówki' : 'Rodzina / Opiekun'} · {format(new Date(msg.created_at), 'HH:mm')}
+                {isStaff ? 'Personel placówki' : familyLabel} · {format(new Date(msg.created_at), 'HH:mm')}
                 {isStaff && <CheckCircle2 className="size-3 text-primary" />}
               </>}
             >

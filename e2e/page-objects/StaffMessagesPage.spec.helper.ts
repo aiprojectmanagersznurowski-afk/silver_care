@@ -13,6 +13,10 @@ export class StaffMessagesPage {
   readonly messagesContainer: Locator;
   readonly replyTextarea: Locator;
   readonly sendButton: Locator;
+  readonly threadsToolbar: Locator;
+  readonly refreshButton: Locator;
+  readonly awaitingFilter: Locator;
+  readonly threadItems: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -23,6 +27,10 @@ export class StaffMessagesPage {
     this.messagesContainer = page.locator('[data-testid="messages-scroll-container"]');
     this.replyTextarea = page.locator('textarea[placeholder*="odpowiedź"], textarea[placeholder*="Wpisz"]');
     this.sendButton = page.locator('button:has-text("Wyślij")');
+    this.threadsToolbar = page.locator('[data-testid="message-threads-toolbar"]');
+    this.refreshButton = this.threadsToolbar.getByRole('button', { name: 'Odśwież wiadomości' });
+    this.awaitingFilter = page.getByRole('button', { name: /^Tylko do odpowiedzi/ });
+    this.threadItems = page.locator('[data-testid="thread-item"]');
   }
 
   async goto(residentId?: string) {

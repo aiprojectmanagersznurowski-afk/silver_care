@@ -574,6 +574,9 @@
 - **AC1:** Widok `/admin/messages` z listą wątków per pensjonariusz, dostępny po stronie placówki wyłącznie dla roli `org_admin` w ramach własnej organizacji (`organization_id`). Rola `nurse` nie ma dostępu do odczytu ani wysyłania wiadomości w `family_messages`.
 - **AC2:** Odpowiedź kierownika placówki (`org_admin`) dołącza do wątku; wiadomości pozostają niezmienialne (`append-only`).
 - **AC3:** Wejście do skrzynki z nawigacji panelu administratora (`/admin/messages`, desktop i mobile) oraz z dzwonka powiadomień.
+- **AC4 (Układ skrzynki — 📝 2026-10-26):** Jeden nagłówek strony (bez powtórzonego nagłówka skrzynki); przy wyszukiwarce wątków przycisk „Odśwież wiadomości” i przełącznik „Tylko do odpowiedzi” z licznikiem.
+- **AC5 (Kto pisze — 📝 2026-10-26):** Wątek to para podopieczny + bliski; przy wątku, w nagłówku rozmowy i w dymkach widać rolę bliskiego z kontraktu („Opiekun prawny”, „Członek rodziny”, „główny kontakt”) i identyfikator konta. Brak powiązania to „Brak danych o roli bliskiego”.
+- **AC6 (Odświeżanie — 📝 2026-10-26):** Odświeżanie co 30 s jest ciche, dociąga tylko wiadomości nowsze niż ostatnia (`?since=`) i nie zmienia wybranego wątku. Na ekranie dotykowym Enter tworzy nową linię, a odpowiedź wysyła przycisk.
 
 #### [SC-NUR-08] Redukcja kliknięć: szybki obchód, paleta poleceń, agenda dyżuru
 🔗 **Kontrakt:** `NUR-BOARD`, `NUR-AGENDA`, `REPORT-APPROVAL` · **WO:** [`NUR-CLICK-REDUCTION`](workorders/NUR-CLICK-REDUCTION.md); commit `NUR-STAFF-WORKFLOW-AGENDA` · **Status:** ✅ 📝

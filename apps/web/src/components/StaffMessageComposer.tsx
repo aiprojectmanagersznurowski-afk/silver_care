@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { Textarea } from '@/components/ui/textarea'
 import { useVoiceRecorder } from '@/hooks/useVoiceRecorder'
 import { ChatComposer, ChatSendButton } from './patterns/Chat'
+import { shouldSendOnEnter } from '@/lib/message-threads'
 
 interface StaffMessageComposerProps {
   replyText: string
@@ -106,7 +107,9 @@ export function StaffMessageComposer({
           placeholder="Wpisz lub podyktuj odpowiedź do rodziny podopiecznego..."
           aria-label="Odpowiedź do rodziny"
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
+            // Na ekranie dotykowym Enter to nowa linia — wysyła tylko przycisk
+            const isCoarsePointer = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
+            if (shouldSendOnEnter(e, isCoarsePointer)) {
               e.preventDefault()
               onSendReply()
             }
@@ -116,7 +119,7 @@ export function StaffMessageComposer({
       </ChatComposer>
       <p className="flex items-center gap-1 bg-background px-5 pb-2 text-xs text-muted-foreground">
         <CornerDownRight className="size-3" />
-        Wciśnij Enter, aby wysłać odpowiedź. Shift+Enter tworzy nową linię.
+        Na komputerze Enter wysyła odpowiedź, a Shift+Enter tworzy nową linię. Na telefonie użyj przycisku wysyłania.
       </p>
     </div>
   )
