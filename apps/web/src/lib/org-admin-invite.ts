@@ -109,6 +109,9 @@ export async function executeAdminAssignment(
   let targetUserId = existingUser?.id
 
   if (existingUser) {
+    // Rola i placówka tylko w app_metadata; stare wpisy z user_metadata usuwamy przy zapisie
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { role: _role, organization_id: _orgId, ...userMetadata } = existingUser.user_metadata ?? {}
     const { error: updateErr } = await adminClient.auth.admin.updateUserById(existingUser.id, {
       app_metadata: {
         ...existingUser.app_metadata,
@@ -116,9 +119,7 @@ export async function executeAdminAssignment(
         organization_id: orgId
       },
       user_metadata: {
-        ...existingUser.user_metadata,
-        role: 'org_admin',
-        organization_id: orgId,
+        ...userMetadata,
         ...(adminFullName ? { full_name: adminFullName } : {})
       }
     })
@@ -136,8 +137,6 @@ export async function executeAdminAssignment(
         organization_id: orgId
       },
       user_metadata: {
-        role: 'org_admin',
-        organization_id: orgId,
         full_name: adminFullName || null
       }
     })

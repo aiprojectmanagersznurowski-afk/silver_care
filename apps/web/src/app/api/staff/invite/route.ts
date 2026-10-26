@@ -62,8 +62,6 @@ export async function POST(request: Request) {
         organization_id: orgId
       },
       user_metadata: {
-        role: role,
-        organization_id: orgId,
         avatar_url: avatar_url || null
       }
     })
