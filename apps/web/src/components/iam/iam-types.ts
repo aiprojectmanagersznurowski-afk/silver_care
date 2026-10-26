@@ -34,8 +34,6 @@ export const ROLE_LABELS: Record<string, string> = {
   super_admin: 'Super Admin (Globalny)',
   org_admin: 'Administrator Placówki (Org Admin)',
   nurse: 'Personel Opiekuńczy (Nurse)',
-  caregiver: 'Opiekun (Caregiver)',
-  paramedic: 'Ratownik (Paramedic)',
   legal_guardian: 'Opiekun Prawny (Legal Guardian)',
   family: 'Członek Rodziny (Family)',
 }

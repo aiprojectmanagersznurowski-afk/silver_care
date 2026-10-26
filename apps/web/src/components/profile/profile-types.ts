@@ -17,10 +17,7 @@ export interface ProfileData {
 export const ROLE_LABELS: Record<string, string> = {
   super_admin: 'Super Administrator',
   org_admin: 'Administrator Placówki',
-  admin: 'Administrator Placówki',
   nurse: 'Pielęgniarka / Personel Medyczny',
-  caregiver: 'Opiekun',
-  paramedic: 'Ratownik Medyczny',
   family: 'Bliski / Rodzina',
   legal_guardian: 'Opiekun Prawny',
 }
