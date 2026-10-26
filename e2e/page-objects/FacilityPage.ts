@@ -21,6 +21,7 @@ export class FacilityPage {
   readonly expandedBedRows: Locator;
   readonly optimizerButton: Locator;
   readonly optimizerSuggestions: Locator;
+  readonly roomNumbers: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -37,6 +38,11 @@ export class FacilityPage {
     this.expandedBedRows = page.locator('[data-testid="room-expanded-beds"]');
     this.optimizerButton = page.getByRole('button', { name: 'Optymalizuj przydział łóżek' });
     this.optimizerSuggestions = page.locator('[data-testid="bed-optimizer-suggestion"]');
+    this.roomNumbers = page.locator('[data-testid="room-table"] [data-testid="room-number"]');
+  }
+
+  columnHeader(name: string): Locator {
+    return this.roomTable.getByRole('columnheader', { name });
   }
 
   /** Otwiera optymalizator i czeka na koniec analizy (propozycje albo brak konfliktów). */

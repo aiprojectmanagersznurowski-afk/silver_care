@@ -705,6 +705,7 @@
 - **AC3:** Kompresja zdjęć w przeglądarce i usuwanie metadanych EXIF przed wysłaniem.
 - **AC4:** Brak natywnych `alert()`/`confirm()` — Toast i dostępny `ConfirmDialog`.
 - **AC5 (Nazwisko Imię — 📝 2026-10-26):** Imię i nazwisko podopiecznego jest pokazywane jako „Nazwisko Imię” (`lib/person-name.ts`), a listy są domyślnie ułożone po nazwisku, potem imieniu, z polskim alfabetem. Wyszukiwanie znajduje osobę niezależnie od kolejności wpisanego imienia i nazwiska. Brak danych to „Brak danych”.
+- **AC6 (Sortowanie tabel — 📝 2026-10-26):** Kolumny tabel sortuje się kliknięciem w nagłówek (`SortableTableHead`); ponowne kliknięcie odwraca kierunek, a nagłówek ogłasza go przez `aria-sort`. Polski alfabet, numery jak liczby („9” przed „10”), daty chronologicznie, puste wartości na końcu. Domyślnie: podopieczni po nazwisku, rejestr audytu od najnowszych.
 
 #### [NFR-UI-03] Szablon shadcn-admin, tokeny z kontraktu i jeden akcent
 🔗 **Kontrakt:** `UI-TEMPLATE-ALIGNMENT`, `UI-ACCESSIBILITY`, `MDR-NO-PHYSIO-TO-FAMILY` · **WO:** [`UI-TEMPLATE-ALIGNMENT`](workorders/UI-TEMPLATE-ALIGNMENT.md); PR #51–#54; ADR-014 · **Status:** ✅ 📝

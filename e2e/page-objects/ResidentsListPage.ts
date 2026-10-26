@@ -22,6 +22,11 @@ export class ResidentsListPage {
     await this.page.context().addCookies([{ name: 'sc_impersonation', value, domain: url.hostname, path: '/' }]);
   }
 
+  /** Nagłówek kolumny tabeli po nazwie (sortowanie przyciskiem w środku). */
+  columnHeader(name: string): Locator {
+    return this.page.locator('[data-slot="table-header"]').getByRole('columnheader', { name });
+  }
+
   async goto() {
     await this.page.goto('/admin/residents');
     await this.page.waitForLoadState('networkidle');
