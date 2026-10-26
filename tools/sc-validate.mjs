@@ -429,6 +429,28 @@ else if (Number(m[1]) < 7 || Number(m[2]) > 21) {
   }
 }
 
+// R27 — role mają polskie nazwy biznesowe z kontraktu (SUP-IAM-PANEL, decyzja Michała 2026-10-26).
+// Etykieta bez identyfikatora technicznego w nawiasie i bez angielskich nazw; aplikacja nie wpisuje nazw ról sama.
+// Łagodnie do czasu dodania etykiet w kontrakcie: sprawdzane, gdy choć jedna rola ma etykietę.
+if (ROLES.some((r) => 'label' in r)) {
+  const seen = new Set();
+  const roleIds = ROLES.map((r) => r.id);
+  for (const r of ROLES) {
+    const label = typeof r.label === 'string' ? r.label.trim() : '';
+    if (!label) { err('R27-role-labels', `Rola "${r.id}" bez etykiety — aplikacja pokazałaby identyfikator techniczny.`); continue; }
+    if (/[()]/.test(label)) err('R27-role-labels', `Etykieta roli "${r.id}" zawiera nawias ("${label}"). Nazwa biznesowa bez dopisków technicznych.`);
+    if (roleIds.some((id) => label.toLowerCase().includes(id)) || /admin\b|nurse|guardian|family/i.test(label)) {
+      err('R27-role-labels', `Etykieta roli "${r.id}" zawiera angielską nazwę albo identyfikator ("${label}").`);
+    }
+    for (const t of FORBIDDEN_UI_TERMS) {
+      const term = typeof t === 'string' ? t : t.term;
+      if (term && label.toLowerCase().includes(String(term).toLowerCase())) err('R27-role-labels', `Etykieta roli "${r.id}" zawiera zakazane słowo "${term}".`);
+    }
+    if (seen.has(label.toLowerCase())) err('R27-role-labels', `Etykieta "${label}" powtarza się — dwie role byłyby nie do odróżnienia.`);
+    seen.add(label.toLowerCase());
+  }
+}
+
 // ── raport ────────────────────────────────────────────────────────────────
 console.log(`\n  role: ${ROLES.length} | zasoby: ${RESOURCES.length} | powiadomienia: ${NOTIFICATIONS.length} | wymagania: ${REQUIREMENTS.length}`);
 console.log(`  pokoje: hierarchia ${FACILITY_HIERARCHY.join(' → ')}, guardów obłożenia: ${OCCUPANCY_GUARDS.length}`);
