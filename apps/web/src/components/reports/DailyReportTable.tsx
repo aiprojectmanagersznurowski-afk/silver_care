@@ -83,7 +83,7 @@ export function DailyReportTable({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="sticky left-0 z-10 min-w-48 border-r">
+                  <TableHead className="sticky left-0 z-10 min-w-48 border-r bg-card">
                     MIESIĄC — {MONTH_LABELS_PL[month - 1].toUpperCase()} {year}
                   </TableHead>
                   <TableHead className="text-center min-w-14 border-r">
@@ -128,8 +128,9 @@ export function DailyReportTable({
                     >
                       <TableCell
                         className={`sticky left-0 z-10 px-4 py-2.5 text-left whitespace-nowrap border-r border-border ${
+                          // Pełne tło karty pod spodem, wyróżnienie jako nakładka — inne kolumny nie prześwitują
                           isHighlight
-                            ? 'bg-primary/3 text-foreground font-semibold'
+                            ? 'bg-card text-foreground font-semibold before:pointer-events-none before:absolute before:inset-0 before:bg-primary/3'
                             : 'bg-card text-muted-foreground font-medium'
                         }`}
                       >
