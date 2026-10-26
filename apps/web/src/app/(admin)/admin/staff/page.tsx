@@ -6,6 +6,7 @@ import { InviteStaffDialog } from '@/components/InviteStaffDialog'
 import { PageHeader, PageHeaderNotice } from '@/components/patterns/PageHeader'
 import { StaffListView, type StaffListItem } from '@/components/staff/StaffListView'
 import { redirect } from 'next/navigation'
+import { getAppRole } from '@/lib/auth/app-role'
 
 export default async function AdminStaffPage() {
   const supabase = await createClient()
@@ -15,10 +16,10 @@ export default async function AdminStaffPage() {
     redirect('/')
   }
 
-  const role = user?.app_metadata?.role || user?.user_metadata?.role
+  const role = getAppRole(user)
   const orgId = user?.app_metadata?.organization_id
 
-  if (!user || (role !== 'admin' && role !== 'org_admin' && role !== 'super_admin')) {
+  if (!user || (role !== 'org_admin' && role !== 'super_admin')) {
     redirect('/')
   }
 

@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache'
 import { validateOrganizationUpdate } from '@/lib/org-helpers'
 import { sendAdminInviteEmail, executeAdminAssignment } from '@/lib/org-admin-invite'
 import { findUserByEmail, evaluateAdminAssignment } from '@/lib/admin-assign-safety'
+import { getAppRole } from '@/lib/auth/app-role'
 
 export async function createOrganizationAction(formData: FormData) {
   const orgName = (formData.get('orgName') as string)?.trim()
@@ -34,7 +35,7 @@ export async function createOrganizationAction(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const callerRole = user?.app_metadata?.role || user?.user_metadata?.role
+  const callerRole = getAppRole(user)
   if (!user || callerRole !== 'super_admin') {
     return { error: 'Brak uprawnień. Wymagana rola super_admin.' }
   }
@@ -83,7 +84,7 @@ export async function resendAdminInviteAction(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const callerRole = user?.app_metadata?.role || user?.user_metadata?.role
+  const callerRole = getAppRole(user)
   if (!user || callerRole !== 'super_admin') {
     return { error: 'Brak uprawnień. Wymagana rola super_admin.' }
   }
@@ -129,7 +130,7 @@ export async function addAdminToOrganizationAction(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const callerRole = user?.app_metadata?.role || user?.user_metadata?.role
+  const callerRole = getAppRole(user)
   if (!user || callerRole !== 'super_admin') {
     return { error: 'Brak uprawnień. Wymagana rola super_admin.' }
   }
@@ -198,7 +199,7 @@ export async function updateOrganizationAction(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const callerRole = user?.app_metadata?.role || user?.user_metadata?.role
+  const callerRole = getAppRole(user)
   if (!user || callerRole !== 'super_admin') {
     return { error: 'Brak uprawnień. Wymagana rola super_admin.' }
   }

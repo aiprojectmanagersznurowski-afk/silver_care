@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { handleApiError } from '@/lib/api-errors'
 import { isImpersonationSessionActive, safeGetCookieStore } from '@/lib/impersonation-guards'
+import { getAppRole, getAppOrganizationId } from '@/lib/auth/app-role'
 
 export interface AuthenticatedUser {
   id: string
@@ -67,14 +68,10 @@ export function withAuth(handler: ApiRouteHandler, options: WithAuthOptions = {}
         )
       }
 
-      const role =
-        (rawUser.app_metadata?.role as string) ||
-        (rawUser.user_metadata?.role as string) ||
-        'authenticated'
+      // Rola i placówka wyłącznie z app_metadata (user_metadata użytkownik edytuje sam)
+      const role = getAppRole(rawUser) ?? 'authenticated'
 
-      const organizationId =
-        (rawUser.app_metadata?.organization_id as string) ||
-        (rawUser.user_metadata?.organization_id as string)
+      const organizationId = getAppOrganizationId(rawUser) ?? undefined
 
       const impersonatorId =
         (rawUser.app_metadata?.impersonator_id as string) || undefined

@@ -3,6 +3,7 @@ import { InviteFamilyDialog } from '@/components/InviteFamilyDialog'
 import { InvitationsTable, type InvitationRecord } from '@/components/InvitationsTable'
 import { redirect } from 'next/navigation'
 import { PageHeader } from '@/components/patterns/PageHeader'
+import { getAppRole } from '@/lib/auth/app-role'
 
 export default async function AdminInvitationsPage() {
   const supabase = await createClient()
@@ -12,10 +13,10 @@ export default async function AdminInvitationsPage() {
     redirect('/')
   }
 
-  const role = user?.app_metadata?.role || user?.user_metadata?.role
+  const role = getAppRole(user)
   const orgId = user?.app_metadata?.organization_id
 
-  if (!user || (role !== 'admin' && role !== 'org_admin' && role !== 'super_admin')) {
+  if (!user || (role !== 'org_admin' && role !== 'super_admin')) {
     redirect('/')
   }
 

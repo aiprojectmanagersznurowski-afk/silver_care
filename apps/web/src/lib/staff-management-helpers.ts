@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { cookies } from 'next/headers'
+import { getAppRole, getAppOrganizationId } from '@/lib/auth/app-role'
 
 export interface StaffActionResult {
   success?: boolean
@@ -38,10 +39,10 @@ export async function verifyStaffManagerAndTarget(staffId: string): Promise<Veri
     return { success: false, error: 'Akcje administracyjne są zablokowane w trybie impersonacji.' }
   }
 
-  const callerRole = user.app_metadata?.role || user.user_metadata?.role
-  const callerOrg = user.app_metadata?.organization_id || user.user_metadata?.organization_id
+  const callerRole = getAppRole(user)
+  const callerOrg = getAppOrganizationId(user)
 
-  if (callerRole !== 'org_admin' && callerRole !== 'super_admin' && callerRole !== 'admin') {
+  if (callerRole !== 'org_admin' && callerRole !== 'super_admin') {
     return { success: false, error: 'Brak uprawnień do zarządzania kontami personelu.' }
   }
 
@@ -52,7 +53,7 @@ export async function verifyStaffManagerAndTarget(staffId: string): Promise<Veri
     return { success: false, error: 'Nie znaleziono wskazanego pracownika.' }
   }
 
-  const targetOrg = targetUser.user.app_metadata?.organization_id || targetUser.user.user_metadata?.organization_id
+  const targetOrg = getAppOrganizationId(targetUser.user)
   if (callerRole === 'org_admin' && targetOrg !== callerOrg) {
     return { success: false, error: '403: Nie masz uprawnień do pracownika z innej placówki.' }
   }

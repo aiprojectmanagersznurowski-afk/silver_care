@@ -3,13 +3,14 @@ import { redirect } from 'next/navigation'
 import { ReactNode } from 'react'
 import { FamilyHeader } from '@/components/FamilyHeader'
 import { OnboardingModal } from '@/components/OnboardingModal'
+import { getAppRole } from '@/lib/auth/app-role'
 
 export const dynamic = 'force-dynamic'
 export default async function FamilyLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const role = user?.app_metadata?.role || user?.user_metadata?.role
+  const role = getAppRole(user)
 
   if (!user || (role !== 'family' && role !== 'legal_guardian')) {
     redirect('/')

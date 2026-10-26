@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import { IamManagementClient, UserItem, AuditLogItem } from '@/components/IamManagementClient'
 import { PageHeader } from '@/components/patterns/PageHeader'
+import { getAppRole } from '@/lib/auth/app-role'
 
 export default async function IamPage() {
   const supabase = await createClient()
@@ -14,7 +15,7 @@ export default async function IamPage() {
     redirect('/login')
   }
 
-  const role = user?.app_metadata?.role || user?.user_metadata?.role
+  const role = getAppRole(user)
 
   // AC1: Panel widoczny i dostępny wyłącznie dla konta o roli super_admin
   if (role !== 'super_admin') {

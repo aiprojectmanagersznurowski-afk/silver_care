@@ -11,13 +11,14 @@ import { SystemAlertBanner } from '@/components/SystemAlertBanner'
 import { getActiveImpersonation } from '@/lib/impersonation-guards'
 import { GlobalCommandPalette } from '@/components/GlobalCommandPalette'
 import { StaffNotificationBell } from '@/components/StaffNotificationBell'
+import { getAppRole } from '@/lib/auth/app-role'
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const role = user?.app_metadata?.role || user?.user_metadata?.role
-  if (!user || (role !== 'admin' && role !== 'org_admin' && role !== 'facility_manager' && role !== 'super_admin')) {
+  const role = getAppRole(user)
+  if (!user || (role !== 'org_admin' && role !== 'super_admin')) {
     redirect('/')
   }
 
