@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { formatPersonName } from '@/lib/person-name'
 
 export interface FamilyResident {
   id: string
@@ -35,11 +36,11 @@ export function FamilyAccountMenu({ residents, current, onSelect }: FamilyAccoun
         {current ? (
           <>
             <Avatar className="size-7">
-              <AvatarImage src={current.avatar_url || ''} alt={`${current.first_name} ${current.last_name}`} />
+              <AvatarImage src={current.avatar_url || ''} alt={formatPersonName(current.first_name, current.last_name)} />
               <AvatarFallback>{current.first_name[0]}</AvatarFallback>
             </Avatar>
             <div className="hidden leading-tight sm:block">
-              <p className="text-sm font-medium text-foreground">{current.first_name} {current.last_name}</p>
+              <p className="text-sm font-medium text-foreground">{formatPersonName(current.first_name, current.last_name)}</p>
               <p className="text-xs text-muted-foreground">Wyświetlany profil</p>
             </div>
           </>
@@ -56,10 +57,10 @@ export function FamilyAccountMenu({ residents, current, onSelect }: FamilyAccoun
             {residents.map((s) => (
               <DropdownMenuItem key={s.id} onClick={() => onSelect(s)} className="flex cursor-pointer items-center gap-3">
                 <Avatar className="size-7">
-                  <AvatarImage src={s.avatar_url || ''} alt={`${s.first_name} ${s.last_name}`} />
+                  <AvatarImage src={s.avatar_url || ''} alt={formatPersonName(s.first_name, s.last_name)} />
                   <AvatarFallback>{s.first_name[0]}</AvatarFallback>
                 </Avatar>
-                <span className="flex-1 text-foreground">{s.first_name} {s.last_name}</span>
+                <span className="flex-1 text-foreground">{formatPersonName(s.first_name, s.last_name)}</span>
                 {current.id === s.id && <Check className="size-4 text-primary" />}
               </DropdownMenuItem>
             ))}
