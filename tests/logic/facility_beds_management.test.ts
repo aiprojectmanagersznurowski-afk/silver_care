@@ -241,9 +241,10 @@ describe('Facility & Bed Management Logic (@REQ: ADM-FACILITY-MANAGE, @REQ: ADM-
   });
 
   it('normalizes sector labels correctly via formatSectorName @REQ: ADM-FACILITY-MANAGE', () => {
-    expect(formatSectorName('A')).toBe('Sektor A');
-    expect(formatSectorName('sektor B')).toBe('sektor B');
-    expect(formatSectorName('Sektor Północ')).toBe('Sektor Północ');
+    // Zmiana wymagania 2026-10-26 (Michał): sektor bez przedrostka „Sektor”
+    expect(formatSectorName('A')).toBe('A');
+    expect(formatSectorName('sektor B')).toBe('B');
+    expect(formatSectorName('Sektor Północ')).toBe('Północ');
     expect(formatSectorName(null)).toBe('—');
     expect(formatSectorName(undefined)).toBe('—');
     expect(formatSectorName('')).toBe('—');
