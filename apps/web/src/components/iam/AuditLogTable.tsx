@@ -1,6 +1,7 @@
 'use client'
 
 import { History } from 'lucide-react'
+import { AUDIT_ACTION_DESCRIPTIONS, AUDIT_TONE_CLASS } from './audit-action-descriptions'
 import type { AuditLogItem, UserItem } from '@/components/IamManagementClient'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
@@ -94,23 +95,12 @@ export function AuditLogTable({
                             {getRoleBadge(log.payload.new_role)}
                           </div>
                         )}
-                        {log.action === 'password_reset' && (
-                          <span className="text-muted-foreground">Reset i aktualizacja hasła konta</span>
+                        {AUDIT_ACTION_DESCRIPTIONS[log.action] && (
+                          <span className={AUDIT_TONE_CLASS[AUDIT_ACTION_DESCRIPTIONS[log.action].tone]}>
+                            {AUDIT_ACTION_DESCRIPTIONS[log.action].text}
+                          </span>
                         )}
-                        {log.action === 'USER_DEACTIVATED' && (
-                          <span className="text-muted-foreground font-medium">Blokada konta (deaktywacja)</span>
-                        )}
-                        {log.action === 'USER_ACTIVATED' && (
-                          <span className="text-primary font-medium">Odblokowanie konta (reaktywacja)</span>
-                        )}
-                        {log.action === 'USER_HARD_DELETED' && (
-                          <span className="text-destructive font-medium">Trwałe usunięcie konta z bazy</span>
-                        )}
-                        {log.action !== 'role_change' &&
-                          log.action !== 'password_reset' &&
-                          log.action !== 'USER_DEACTIVATED' &&
-                          log.action !== 'USER_ACTIVATED' &&
-                          log.action !== 'USER_HARD_DELETED' && (
+                        {log.action !== 'role_change' && !AUDIT_ACTION_DESCRIPTIONS[log.action] && (
                           <span className="font-mono text-sm text-muted-foreground">
                             {JSON.stringify(log.payload)}
                           </span>
