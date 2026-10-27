@@ -2,6 +2,7 @@ import { STAFF_ROLES } from '@silvercare/contracts/src/generated/roles'
 import { getResidentStatus } from '@/lib/resident-status'
 import { residentCardHref, facilityHref } from './global-search-links'
 import { formatPersonName } from '@/lib/person-name'
+import { normalizeSectorInput } from '@/lib/sector'
 
 export type SearchCategoryKey =
   | 'residents'
@@ -167,7 +168,7 @@ export function formatFacilitySearchResult(roomBed: {
 
   const floorSector = [
     roomBed.floor !== null && roomBed.floor !== undefined ? `Piętro ${roomBed.floor}` : null,
-    roomBed.sector ? `Sektor ${roomBed.sector}` : null,
+    roomBed.sector ? normalizeSectorInput(roomBed.sector) : null,
   ]
     .filter(Boolean)
     .join(', ')
