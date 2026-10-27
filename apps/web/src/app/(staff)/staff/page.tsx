@@ -1,10 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
 import { StaffBoardClient } from '@/components/StaffBoardClient'
+import { getCurrentShiftStart } from '@/lib/shift'
 
 export const dynamic = 'force-dynamic'
 
 export default async function StaffDashboard() {
   const supabase = await createClient()
+  const currentShiftStart = getCurrentShiftStart().toISOString()
 
   const residentsRes = await supabase
     .from('residents')
@@ -26,7 +28,8 @@ export default async function StaffDashboard() {
       ),
       voice_draft_notes (
         id,
-        status
+        status,
+        created_at
       ),
       daily_reports (
         id,
@@ -34,6 +37,7 @@ export default async function StaffDashboard() {
       )
     `)
     .is('archived_at', null)
+    .gte('voice_draft_notes.created_at', currentShiftStart)
     .order('last_name', { ascending: true })
 
   const residents = residentsRes.data || []

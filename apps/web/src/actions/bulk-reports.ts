@@ -97,15 +97,3 @@ export async function bulkPublishReportsAction(reportIds: string[]): Promise<Bul
   return { success: true, publishedCount: validDraftIds.length }
 }
 
-/**
- * @deprecated Wycofane zgodnie z regułą zakazu fabrykowania danych w fallbackach (NUR-ROUNDS-REMOVE-STABLE).
- */
-export async function quickLogRoutineObservationAction(
-  _residentId: string,
-  _summary: string = 'Stan stabilny, podopieczny spokojny, bez uwag.'
-): Promise<{ success: boolean; error?: string; logId?: string }> {
-  return {
-    success: false,
-    error: 'Rejestracja szablonowych obserwacji została wycofana (zakaz fabrykowania danych w fallbackach).',
-  }
-}

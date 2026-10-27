@@ -7,13 +7,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { getActiveAssignment, UnansweredInfo } from './staff-board-types'
 import { formatPersonName } from '@/lib/person-name'
+import { formatNotesCount } from '@/lib/shift'
 
 interface StaffQuickRoundsCardProps {
   resident: Record<string, unknown>
   unansweredInfo?: UnansweredInfo
-  isLogged?: boolean
-  isSubmitting?: boolean
-  onQuickLog?: (residentId: string) => void
 }
 
 export function StaffQuickRoundsCard({
@@ -29,8 +27,7 @@ export function StaffQuickRoundsCard({
   const hasUnanswered = Boolean(unansweredInfo?.hasUnanswered)
 
   const drafts = (resident.voice_draft_notes || []) as Array<unknown>
-  const logs = (resident.daily_logs || []) as Array<unknown>
-  const notesCount = drafts.length > 0 ? drafts.length : logs.length
+  const notesCount = drafts.length
 
   return (
     <div className="bg-card rounded-xl border border-border p-5 space-y-4 hover:border-primary/40 transition-colors">
@@ -67,8 +64,8 @@ export function StaffQuickRoundsCard({
           data-testid="notes-count-indicator"
           className="inline-flex items-center gap-1 text-sm font-semibold text-foreground bg-muted px-2.5 py-1 rounded-full border border-border"
         >
-          <CheckCircle2 className="h-3.5 w-3.5 text-foreground" />
-          {notesCount > 0 ? (notesCount === 1 ? '1 notatka' : `${notesCount} notatek`) : 'Brak notatek'}
+          {notesCount > 0 && <CheckCircle2 className="h-3.5 w-3.5 text-foreground" />}
+          {formatNotesCount(notesCount)}
         </span>
       </div>
 
