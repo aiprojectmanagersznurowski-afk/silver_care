@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { CalendarX, UtensilsCrossed, Pill, Puzzle, Droplets, BedDouble, Leaf, CalendarDays, type LucideIcon } from 'lucide-react'
+import { CalendarX, UtensilsCrossed, Puzzle, Droplets, BedDouble, Leaf, CalendarDays, type LucideIcon } from 'lucide-react'
 
 interface AgendaItem {
   id: string
@@ -17,7 +17,7 @@ interface AgendaTimelineClientProps {
   viewDateStr: string
 }
 
-export type AgendaCategory = "meal" | "activity" | "medication" | "rest" | "therapy" | "hygiene" | "other"
+export type AgendaCategory = "meal" | "activity" | "rest" | "therapy" | "hygiene" | "other"
 
 export const getCategory = (item: AgendaItem | string, itemType?: string): AgendaCategory => {
   const type = typeof item === 'object' ? item.type : itemType
@@ -30,12 +30,12 @@ export const getCategory = (item: AgendaItem | string, itemType?: string): Agend
     if (raw === 'therapy') return 'therapy'
     if (raw === 'hygiene') return 'hygiene'
     if (raw === 'rest') return 'rest'
-    if (raw === 'medication') return 'medication'
+    // Widok rodziny nie ma kategorii leków (FAM-AGENDA-NO-MEDICAL)
+    if (raw === 'medication') return 'other'
     if (raw === 'other') return 'other'
   }
 
   const t = (title || '').toLowerCase()
-  if (t.includes('leki') || t.includes('zabieg') || t.includes('wizyta') || t.includes('zastrzyk')) return 'medication'
   if (t.includes('terapia') || t.includes('zajęcia')) return 'therapy'
   if (t.includes('higiena') || t.includes('toaleta') || t.includes('kąpiel')) return 'hygiene'
   if (t.includes('śniadanie') || t.includes('obiad') || t.includes('kolacja') || t.includes('posiłek') || t.includes('podwieczorek')) return 'meal'
@@ -47,7 +47,6 @@ export const getCategory = (item: AgendaItem | string, itemType?: string): Agend
 export function getCategoryIcon(category: string): LucideIcon {
   switch (category) {
     case 'meal': return UtensilsCrossed
-    case 'medication': return Pill
     case 'therapy': return Puzzle
     case 'hygiene': return Droplets
     case 'rest': return BedDouble
@@ -59,7 +58,6 @@ export function getCategoryIcon(category: string): LucideIcon {
 const categoryColors: Record<string, string> = {
   meal: "var(--chart-1)",
   activity: "var(--chart-2)",
-  medication: "var(--chart-3)",
   therapy: "var(--chart-4)",
   rest: "var(--chart-5)",
   hygiene: "var(--chart-2)",

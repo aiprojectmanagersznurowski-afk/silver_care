@@ -50,6 +50,10 @@ const MUTATIONS = [
   { rule: 'R27-role-labels', file: 'roles.contract.mjs', from: "label: 'Personel opiekuńczy',", to: "label: 'Nurse',", desc: 'etykieta roli po angielsku' },
   { rule: 'R27-role-labels', file: 'roles.contract.mjs', from: "{ id: 'family', label: 'Członek rodziny',", to: "{ id: 'family',", desc: 'rola bez etykiety' },
   { rule: 'R27-role-labels', file: 'roles.contract.mjs', from: "label: 'Opiekun prawny',", to: "label: 'Członek rodziny',", desc: 'dwie role z tą samą etykietą' },
+  { rule: 'R28-agenda-no-medical', file: 'presentation.contract.mjs', from: "excludedTypes: ['medication'],", to: "excludedTypes: [],", desc: 'typ medication trafia do planu dnia rodziny' },
+  { rule: 'R28-agenda-no-medical', file: 'presentation.contract.mjs', from: "    vital_sign:      ['ciśnieni', 'cukru', 'cukier', 'glukoz', 'glikemi', 'ekg', 'saturacj', 'tętn', 'pomiar'],\n", to: "", desc: 'kategoria MEDICAL (parametry życiowe) bez słów — pomiary trafiłyby do rodziny' },
+  { rule: 'R28-agenda-no-medical', file: 'presentation.contract.mjs', from: "'diagnoz', 'rozpoznani'", to: "'diagnoz', 'le'", desc: 'za krótkie słowo ukrywałoby niemedyczne pozycje' },
+  { rule: 'R28-agenda-no-medical', file: 'requirements.contract.mjs', from: "'Widok rodziny nie ma kategorii leków'], risk: 'HIGH' }),", to: "'Widok rodziny nie ma kategorii leków'], risk: 'MEDIUM' }),", desc: 'granica MDR obniżona do ryzyka MEDIUM' },
   { rule: 'R21-send-window', file: 'notifications.contract.mjs', from: "SMS: '08:00-20:00'", to: "SMS: '00:00-23:59'", desc: 'SMS o raporcie wysyłany w nocy' },
 ];
 

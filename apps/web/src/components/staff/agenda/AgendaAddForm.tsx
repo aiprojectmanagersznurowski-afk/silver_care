@@ -2,10 +2,11 @@
 
 import React, { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
-import { Plus, Clock, Users, X, AlertCircle } from 'lucide-react'
+import { Plus, Clock, Users, X, AlertCircle, EyeOff } from 'lucide-react'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { ITEM_TYPES, ResidentSummary } from './agenda-types'
 import { formatPersonName } from '@/lib/person-name'
+import { isMedicalAgendaItem } from '@/lib/agenda-family-visibility'
 
 interface AgendaAddFormProps {
   residents: ResidentSummary[]
@@ -22,6 +23,8 @@ export function AgendaAddForm({ residents, onAdd }: AgendaAddFormProps) {
   const [title, setTitle] = useState('')
   const [time, setTime] = useState('')
   const [type, setType] = useState('meal')
+  // FAM-AGENDA-NO-MEDICAL: ta sama reguła co baza (family_visible)
+  const hiddenFromFamily = isMedicalAgendaItem({ title, type })
   const [selectedResidentId, setSelectedResidentId] = useState('')
   const [isRecurring, setIsRecurring] = useState(true)
   const [itemDates, setItemDates] = useState<string[]>([new Date().toISOString().slice(0, 10)])
@@ -94,8 +97,15 @@ export function AgendaAddForm({ residents, onAdd }: AgendaAddFormProps) {
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Np. Podwieczorek i herbata"
               required
+              aria-describedby={hiddenFromFamily ? 'agenda-family-hidden-hint' : undefined}
               className="w-full rounded-xl border border-border bg-card px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary min-h-touch"
             />
+            {hiddenFromFamily && (
+              <p id="agenda-family-hidden-hint" data-testid="agenda-family-hidden-hint" className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <EyeOff className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                Ten wpis nie będzie widoczny dla rodziny (treść medyczna).
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">

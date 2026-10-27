@@ -11,6 +11,7 @@ export class StaffAgendaPage {
   readonly timeInput: Locator;
   readonly typeSelect: Locator;
   readonly residentSelect: Locator;
+  readonly familyHiddenHint: Locator;
   readonly submitButton: Locator;
   readonly morningSection: Locator;
   readonly noonSection: Locator;
@@ -25,6 +26,7 @@ export class StaffAgendaPage {
     this.timeInput = page.locator('#agenda-time');
     this.typeSelect = page.locator('#agenda-type');
     this.residentSelect = page.locator('#agenda-resident');
+    this.familyHiddenHint = page.locator('[data-testid="agenda-family-hidden-hint"]');
     this.submitButton = page.locator('button[type="submit"]:has-text("wpis")');
     this.morningSection = page.locator('[data-slot="morning"]');
     this.noonSection = page.locator('[data-slot="noon"]');

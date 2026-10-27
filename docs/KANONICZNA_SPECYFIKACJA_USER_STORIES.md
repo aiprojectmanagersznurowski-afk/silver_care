@@ -331,7 +331,7 @@
 - **AC2:** Zmiana wybranego seniora natychmiast odświeża stan dashboardu, ładując dedykowany widok `family_daily_reports` oraz `family_wearable_comfort` dla wybranego `resident_id`.
 
 ### [SC-FAM-06] Przeglądanie planu dnia i aktywności bliskiego
-🔗 **Kontrakt:** `FAM-AGENDA` · **Status:** ✅
+🔗 **Kontrakt:** `FAM-AGENDA`, `FAM-AGENDA-NO-MEDICAL` · **Status:** ✅
 
 **User story:** Jako Rodzina, chcę widzieć plan dnia mojego bliskiego (menu, aktywności, zaplanowane wizyty), aby czuć większą bliskość z jego codziennym życiem i wiedzieć, czy uczestniczył w zajęciach.
 
@@ -340,6 +340,7 @@
 - **AC2 (Widok zagregowany):** Rodzina widzi w jednym widoku zarówno aktywności indywidualne (np. „Rehabilitacja o 11:00"), jak i wspólne dla placówki (np. „Obiad", „Wspólne czytanie").
 - **AC3 (RLS protection):** Dostęp jest chroniony przez RLS: rodzina może wykonać SELECT na `agenda_items` wyłącznie dla `resident_id` przypisanych do ich profilu w `resident_relative_links`.
 - **AC4 (Empty state):** Jeśli plan dnia nie został uzupełniony przez personel, sekcja wyświetla komunikat: „Plan dnia na dziś jest w przygotowaniu przez zespół opiekunów".
+- **AC (Bez treści medycznych — 📝 2026-10-26, `FAM-AGENDA-NO-MEDICAL`):** Pozycje typu `medication` i pozycje, których tytuł zawiera słowo z `AGENDA_FAMILY_EXCLUSION` (kontrakt prezentacji, po kilka słów dla każdej kategorii `MEDICAL`), nie są zwracane bliskim przez bazę (`agenda_items.family_visible` + RLS). Pozycje niemedyczne o podobnym brzmieniu („Wizyta wnuczki”, „Lekcja tańca”) zostają. Personel widzi przy dodawaniu i edycji wpisu, że pozycja nie będzie widoczna dla rodziny. Widok rodziny nie ma kategorii leków.
 
 ---
 

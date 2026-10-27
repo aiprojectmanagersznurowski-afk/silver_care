@@ -533,6 +533,20 @@ export const REQUIREMENTS = [
     ]
   },
   {
+    "id": "FAM-AGENDA-NO-MEDICAL",
+    "status": "TODO",
+    "risk": "HIGH",
+    "source": "SC-FAM-06",
+    "domain": "family",
+    "statement": "Plan dnia widoczny dla bliskich nie zawiera treści medycznych.",
+    "acceptance": [
+      "Pozycje typu medication i pozycje, których tytuł zawiera słowo z AGENDA_FAMILY_EXCLUSION, nie są zwracane bliskim przez bazę (RLS), nie tylko ukrywane w interfejsie",
+      "Każda kategoria MEDICAL ma słowa na liście; pozycje niemedyczne o podobnym brzmieniu (np. wizyta rodziny) pozostają widoczne",
+      "Personel widzi przy wpisie informację, że pozycja z treścią medyczną nie będzie widoczna dla rodziny",
+      "Widok rodziny nie ma kategorii leków"
+    ]
+  },
+  {
     "id": "NUR-BOARD",
     "status": "TODO",
     "risk": "MEDIUM",
