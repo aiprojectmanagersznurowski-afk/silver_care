@@ -13,6 +13,8 @@ import { ListEmpty, ListError } from '@/components/patterns/ListState'
 import { roleLabel } from '@/lib/auth/role-labels'
 import { ListToolbar, SearchField } from '@/components/patterns/ListToolbar'
 import { useViewPreference, VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-preference'
+import { useTableSort } from '@/hooks/use-table-sort'
+import { SortableTableHead } from '@/components/patterns/SortableTableHead'
 
 export interface StaffListItem {
   id: string
@@ -41,7 +43,8 @@ function StaffAvatar({ item }: { item: StaffListItem }) {
 export function StaffListView({ staff: allStaff, failed }: { staff: StaffListItem[]; failed: boolean }) {
   const [viewMode, setViewMode] = useViewPreference(VIEW_PREFERENCE_KEYS.staff, 'table', ['table', 'grid'] as const)
   const [query, setQuery] = useState('')
-  const staff = allStaff.filter((s) => s.email.toLowerCase().includes(query.trim().toLowerCase()))
+  const filtered = allStaff.filter((s) => s.email.toLowerCase().includes(query.trim().toLowerCase()))
+  const { sorted: staff, sort, toggleSort } = useTableSort(filtered, { email: (s: StaffListItem) => s.email }, { key: 'email', direction: 'asc' })
 
   return (
     <TableCard
@@ -76,7 +79,7 @@ export function StaffListView({ staff: allStaff, failed }: { staff: StaffListIte
           <Table>
             <TableHeader className="text-muted-foreground">
               <TableRow>
-                <TableHead>Pracownik</TableHead>
+                <SortableTableHead sortKey="email" sort={sort} onSort={toggleSort}>Pracownik</SortableTableHead>
                 <TableHead>Rola</TableHead>
                 <TableHead>Ostatnie logowanie</TableHead>
                 <TableHead className="text-right">Akcje</TableHead>
