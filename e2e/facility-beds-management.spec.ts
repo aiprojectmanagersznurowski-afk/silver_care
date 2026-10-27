@@ -69,4 +69,15 @@ test.describe('Zarządzanie strukturą pokoi i łóżek (@REQ: ADM-FACILITY-MANA
       await expect(facilityPage.bedsTable.first()).toBeVisible();
     }
   });
+
+  test('@REQ: ADM-FACILITY-MANAGE - dialog Import / Eksport nie zawiera zakładki Dodaj głosowo', async ({ loginPage, page }) => {
+    await loginPage.loginAs('org_admin');
+    const facilityPage = new FacilityPage(page);
+    await facilityPage.goto();
+
+    await facilityPage.openImportExport();
+    await expect(facilityPage.exportTabButton).toBeVisible();
+    await expect(facilityPage.importTabButton).toBeVisible();
+    await expect(facilityPage.voiceTabButton).not.toBeVisible();
+  });
 });

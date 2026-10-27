@@ -459,15 +459,15 @@
 - **AC4:** Ekran sukcesu prowadzi do karty pensjonariusza; umowa jako załącznik w karcie.
 - **AC5:** Ekran sukcesu kreatora posiada spójny nagłówek podsumowania zakończenia procedury (brak rozjazdu z numeracją „Krok 3 z 3”) oraz przyciski z tokenem `text-primary-foreground` (brak białego tekstu na jasnej mięcie w motywie ciemnym).
 
-#### [SC-ADM-12] Import/eksport struktury placówki i głosowe dyktowanie pokoju
-🔗 **Kontrakt:** `ADM-FACILITY-MANAGE`, `ADM-FACILITY-OCCUPANCY`, `INFRA-EU-REGION` · **WO:** [`ADM-FACILITY-IO-VOICE`](workorders/ADM-FACILITY-IO-VOICE.md) · **Status:** ✅ 📝
+#### [SC-ADM-12] Import/eksport struktury placówki
+🔗 **Kontrakt:** `ADM-FACILITY-MANAGE`, `ADM-FACILITY-OCCUPANCY` · **WO:** [`ADM-FACILITY-IO-VOICE`](workorders/ADM-FACILITY-IO-VOICE.md) · **Status:** ✅ 📝
 
-**User story:** Jako Administrator nowej placówki, chcę zaimportować strukturę pokoi i łóżek z arkusza albo podyktować definicję pokoju głosem, aby nie wpisywać całego budynku ręcznie.
+**User story:** Jako Administrator nowej placówki, chcę wyeksportować strukturę pokoi do arkusza lub zaimportować ją z pliku Excel, aby nie wpisywać całego budynku ręcznie i mieć kopię zapasową konfiguracji.
 
 **Kryteria akceptacji:**
 - **AC1:** Eksport struktury do XLSX (arkusze Pokoje i Łóżka ze statusem zajętości) i JSON; szablon XLSX do pobrania.
 - **AC2:** Import dwuetapowy: dry-run z wykrywaniem kolizji numerów i etykiet, potem atomowy commit.
-- **AC3:** Dyktowanie pokoju: transkrypcja, ekstrakcja parametrów (numer, piętro, sektor, łóżka) przez model w EOG do **edytowalnego podglądu** przed zapisem.
+- **AC3:** Wyłączenie dyktowania głosowego pokoi (ADM-FACILITY-REMOVE-VOICE): ewidencja struktury placówki opiera się wyłącznie o deterministyczne formularze i import Excel.
 
 #### [SC-ADM-13] Masowy import pensjonariuszy z pliku
 🔗 **Kontrakt:** `ADM-RESIDENT-ADD`, `SEC-PESEL-HASH` · **WO:** [`ADM-BULK-IMPORT`](workorders/ADM-BULK-IMPORT.md) · **Status:** ✅ 📝 — zrealizowane w `BulkImportDialog`, testy w `bulk_import.test.ts` oraz E2E w `admin-export-import.spec.ts`

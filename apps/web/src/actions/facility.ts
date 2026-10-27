@@ -1,14 +1,11 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { callEuLlmCompletion } from '@/lib/eu-llm-client'
 import {
   RawFacilityRoomRow,
   ValidatedFacilityRoomRow,
   FacilityDryRunResult,
   FacilityExportRoom,
-  parseFacilityVoiceJson,
-  fallbackExtractFacilityVoiceParams,
 } from '@/lib/facility-helpers'
 import { requireOrgAdmin } from '@/lib/facility-auth'
 import {
@@ -36,59 +33,6 @@ export async function commitFacilityImportAction(
   validRows: ValidatedFacilityRoomRow[]
 ): Promise<{ error?: string; importedRooms?: number; importedBeds?: number }> {
   return commitImpl(validRows)
-}
-
-export async function parseFacilityVoiceNoteAction(
-  transcription: string
-): Promise<{ error?: string; parsed?: ReturnType<typeof parseFacilityVoiceJson> }> {
-  try {
-    await requireOrgAdmin()
-
-    const systemPrompt = `Jesteś asystentem ekstrakcji danych struktury placówki opiekuńczej.
-Z surowego opisu słownego wyodrębnij parametry dodawanego pokoju:
-- number: numer pokoju (np. "101", "204B")
-- floor: oznaczenie piętra (np. "Parter", "1", "2")
-- sector: sektor lub skrzydło (np. "A", "Północ", "Zachodnie") lub null
-- bedCount: liczba łóżek jako liczba całkowita (np. 2)
-- bedLabels: tablica etykiet łóżek (np. ["1", "2"] lub ["A", "B"]) jeśli wymieniono, w przeciwnym razie null
-
-ZASADY:
-1. Zwróć WYŁĄCZNIE poprawny JSON bez formatowania markdown.
-2. Format wyjściowy strictly matching:
-{"number":"101","floor":"Parter","sector":null,"bedCount":2,"bedLabels":["1","2"]}
-3. Jeśli jakaś wartość nie padła w notatce, ustaw null.`
-
-    try {
-      const raw = await callEuLlmCompletion(
-        [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: transcription },
-        ],
-        0.1,
-        400
-      )
-
-      const parsed = parseFacilityVoiceJson(raw)
-      if (!parsed._parseError) {
-        return { parsed }
-      }
-    } catch (llmErr: unknown) {
-      const fallback = fallbackExtractFacilityVoiceParams(transcription)
-      if (fallback.number || fallback.floor || fallback.bedLabels) {
-        return { parsed: fallback }
-      }
-      throw llmErr
-    }
-
-    const fallback = fallbackExtractFacilityVoiceParams(transcription)
-    if (fallback.number || fallback.floor || fallback.bedLabels) {
-      return { parsed: fallback }
-    }
-
-    return { error: 'Nie udało się wyodrębnić parametrów pokoju. Wprowadź dane ręcznie.' }
-  } catch (err: unknown) {
-    return { error: err instanceof Error ? err.message : 'Błąd parsowania notatki głosowej' }
-  }
 }
 
 export async function createRoomWithBedsAction(data: {
