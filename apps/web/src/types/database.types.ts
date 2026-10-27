@@ -1,6 +1,6 @@
 // ==============================================================================
 // Automatycznie wygenerowane typy bazy danych Silver Care (PostgreSQL/Supabase)
-// Wygenerowano: 2026-10-23T11:08:24.627Z
+// Wygenerowano: 2026-10-27T19:17:50.442Z
 // ==============================================================================
 
 export type Json =
@@ -23,9 +23,10 @@ export interface Database {
           time: string
           type: string
           created_at: string
-          family_visible: boolean
           is_template: boolean
           target_date: string | null
+          search_title: string | null
+          family_visible: boolean
         }
         Insert: {
           id?: string
@@ -35,9 +36,10 @@ export interface Database {
           time: string
           type: string
           created_at?: string
-          family_visible?: boolean
           is_template?: boolean
           target_date?: string | null
+          search_title?: string | null
+          family_visible?: boolean
         }
         Update: {
           id?: string
@@ -47,9 +49,10 @@ export interface Database {
           time?: string
           type?: string
           created_at?: string
-          family_visible?: boolean
           is_template?: boolean
           target_date?: string | null
+          search_title?: string | null
+          family_visible?: boolean
         }
         Relationships: [
           {
@@ -410,6 +413,8 @@ export interface Database {
           created_at: string
           address: string | null
           resident_limit: number | null
+          search_name: string | null
+          settings: Json
         }
         Insert: {
           id?: string
@@ -417,6 +422,8 @@ export interface Database {
           created_at?: string
           address?: string | null
           resident_limit?: number | null
+          search_name?: string | null
+          settings?: Json
         }
         Update: {
           id?: string
@@ -424,6 +431,8 @@ export interface Database {
           created_at?: string
           address?: string | null
           resident_limit?: number | null
+          search_name?: string | null
+          settings?: Json
         }
         Relationships: [
         ]
@@ -899,6 +908,7 @@ export interface Database {
           is_zsn: boolean
           contract_document_path: string | null
           contract_document_name: string | null
+          search_name: string | null
         }
         Insert: {
           id?: string
@@ -923,6 +933,7 @@ export interface Database {
           is_zsn?: boolean
           contract_document_path?: string | null
           contract_document_name?: string | null
+          search_name?: string | null
         }
         Update: {
           id?: string
@@ -947,6 +958,7 @@ export interface Database {
           is_zsn?: boolean
           contract_document_path?: string | null
           contract_document_name?: string | null
+          search_name?: string | null
         }
         Relationships: [
           {
@@ -1044,10 +1056,10 @@ export interface Database {
           affected_services: unknown[]
           is_active: boolean
           created_by: string | null
-          expires_at: string | null
           created_at: string
           updated_at: string
           resolved_at: string | null
+          expires_at: string | null
         }
         Insert: {
           id?: string
@@ -1058,10 +1070,10 @@ export interface Database {
           affected_services?: unknown[]
           is_active?: boolean
           created_by?: string | null
-          expires_at?: string | null
           created_at?: string
           updated_at?: string
           resolved_at?: string | null
+          expires_at?: string | null
         }
         Update: {
           id?: string
@@ -1072,10 +1084,10 @@ export interface Database {
           affected_services?: unknown[]
           is_active?: boolean
           created_by?: string | null
-          expires_at?: string | null
           created_at?: string
           updated_at?: string
           resolved_at?: string | null
+          expires_at?: string | null
         }
         Relationships: [
         ]
@@ -1188,6 +1200,12 @@ export interface Database {
           years_to_keep: number
         }
         Returns: undefined
+      }
+      f_unaccent: {
+        Args: {
+          input: string
+        }
+        Returns: string
       }
       fetch_next_voice_job: {
         Args: Record<PropertyKey, never>
@@ -1337,6 +1355,13 @@ export interface Database {
           p_id: string
         }
         Returns: undefined
+      }
+      is_medical_agenda_item: {
+        Args: {
+          p_title: string
+          p_type: string
+        }
+        Returns: boolean
       }
       is_relative_linked: {
         Args: {

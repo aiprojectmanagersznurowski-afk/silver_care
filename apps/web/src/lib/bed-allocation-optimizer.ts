@@ -69,53 +69,53 @@ export function generateRelocationSuggestions(
         const toMove = mList.length <= fList.length ? mList : fList
         const targetGender = toMove[0].gender
 
-      for (const occ of toMove) {
-        const candidateBed = freeBeds.find((b) => {
-          if (claimedTargetBedIds.has(b.id)) return false
-          const targetRoom = roomMap.get(b.roomId)
-          if (!targetRoom || targetRoom.id === room.id) return false
+        for (const occ of toMove) {
+          const candidateBed = freeBeds.find((b) => {
+            if (claimedTargetBedIds.has(b.id)) return false
+            const targetRoom = roomMap.get(b.roomId)
+            if (!targetRoom || targetRoom.id === room.id) return false
 
-          const targetOccupants = occupantsByRoom.get(targetRoom.id) || []
-          const targetGenders = targetOccupants.map((o) => o.gender)
-          const isGenderSafe = targetGenders.length === 0 || targetGenders.every((g) => g === targetGender)
-          if (!isGenderSafe) return false
+            const targetOccupants = occupantsByRoom.get(targetRoom.id) || []
+            const targetGenders = targetOccupants.map((o) => o.gender)
+            const isGenderSafe = targetGenders.length === 0 || targetGenders.every((g) => g === targetGender)
+            if (!isGenderSafe) return false
 
-          if ((occ.careLevel === 'bedridden' || occ.careLevel === 'hospice') && !isGroundFloor(targetRoom.floor)) {
-            return false
-          }
-          return true
-        })
-
-        if (candidateBed) {
-          claimedTargetBedIds.add(candidateBed.id)
-          const fromBed = bedMap.get(occ.currentBedId)
-          const targetRoom = roomMap.get(candidateBed.roomId)!
-
-          suggestions.push({
-            id: `gender-fix-${occ.residentId}`,
-            residentId: occ.residentId,
-            residentName: occ.residentName,
-            gender: occ.gender,
-            careLevel: occ.careLevel,
-            fromBedId: occ.currentBedId,
-            fromBedLabel: fromBed?.label || '-',
-            fromRoomId: room.id,
-            fromRoomNumber: room.number,
-            fromFloor: room.floor,
-            toBedId: candidateBed.id,
-            toBedLabel: candidateBed.label,
-            toRoomId: targetRoom.id,
-            toRoomNumber: targetRoom.number,
-            toFloor: targetRoom.floor,
-            reason: `Rozwiązanie konfliktu płci w pokoju ${room.number}. Przeniesienie do pokoju jednolitego płciowo.`,
-            priority: 'high',
-            scoreImprovement: 35,
+            if ((occ.careLevel === 'bedridden' || occ.careLevel === 'hospice') && !isGroundFloor(targetRoom.floor)) {
+              return false
+            }
+            return true
           })
+
+          if (candidateBed) {
+            claimedTargetBedIds.add(candidateBed.id)
+            const fromBed = bedMap.get(occ.currentBedId)
+            const targetRoom = roomMap.get(candidateBed.roomId)!
+
+            suggestions.push({
+              id: `gender-fix-${occ.residentId}`,
+              residentId: occ.residentId,
+              residentName: occ.residentName,
+              gender: occ.gender,
+              careLevel: occ.careLevel,
+              fromBedId: occ.currentBedId,
+              fromBedLabel: fromBed?.label || '-',
+              fromRoomId: room.id,
+              fromRoomNumber: room.number,
+              fromFloor: room.floor,
+              toBedId: candidateBed.id,
+              toBedLabel: candidateBed.label,
+              toRoomId: targetRoom.id,
+              toRoomNumber: targetRoom.number,
+              toFloor: targetRoom.floor,
+              reason: `Rozwiązanie konfliktu płci w pokoju ${room.number}. Przeniesienie do pokoju jednolitego płciowo.`,
+              priority: 'high',
+              scoreImprovement: 35,
+            })
+          }
         }
       }
     }
   }
-}
 
   // Krok 2: Rozwiązanie bariery mobilności dla leżących/hospicyjnych na piętrach > 0 (Priorytet: HIGH)
   if (preferGround) {

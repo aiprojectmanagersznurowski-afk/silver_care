@@ -17,9 +17,7 @@ import { requireOrgAdmin } from '@/lib/facility-auth'
 import { formatPersonName } from '@/lib/person-name'
 import { getBedOptimizerRulesAction } from './bed-rules'
 
-export async function analyzeBedAllocationAction(
-  customRules?: BedOptimizerRulesConfig
-): Promise<{
+export async function analyzeBedAllocationAction(): Promise<{
   error?: string
   metrics?: FacilityAllocationMetrics
   suggestions?: RelocationSuggestion[]
@@ -124,7 +122,7 @@ export async function analyzeBedAllocationAction(
       })
     }
 
-    const rules = customRules || (await getBedOptimizerRulesAction())
+    const rules = await getBedOptimizerRulesAction()
     const metrics = analyzeCurrentAllocation(rooms, beds, occupants)
     const suggestions = generateRelocationSuggestions(rooms, beds, occupants, rules)
 
