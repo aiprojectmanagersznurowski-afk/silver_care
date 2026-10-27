@@ -8,6 +8,7 @@ import { pl } from 'date-fns/locale'
 import { PageHeader } from '@/components/patterns/PageHeader'
 import { StatusBadge } from '@/components/patterns/StatusBadge'
 import { roleLabel } from '@/lib/auth/role-labels'
+import { formatPersonName } from '@/lib/person-name'
 
 const PURPOSE_LABELS: Record<string, { title: string; desc: string }> = {
   wellness_data_ingest: {
@@ -74,7 +75,7 @@ export default async function FamilyConsentsPage() {
       {/* Nagłówek sekcji */}
       <PageHeader
         title="Zgody i ochrona prywatności"
-        description={<>Podopieczny: <span className="font-semibold text-foreground">{activeResident.first_name} {activeResident.last_name}</span></>}
+        description={<>Podopieczny: <span className="font-semibold text-foreground">{formatPersonName(activeResident.first_name, activeResident.last_name)}</span></>}
         actions={
           <>
             <StatusBadge tone="brand">

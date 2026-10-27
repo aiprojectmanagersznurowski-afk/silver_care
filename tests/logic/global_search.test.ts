@@ -58,7 +58,7 @@ describe('Global Search & Command Palette Logic (@REQ: UI-TEMPLATE-ALIGNMENT, @R
 
     const item = formatResidentSearchResult(rawResident)
     expect(item.id).toBe('res-123')
-    expect(item.title).toBe('Helena Wiśniewska')
+    expect(item.title).toBe('Wiśniewska Helena')
     expect(item.category).toBe('residents')
     expect(item.subtitle).toContain('Pokój 104, łóżko A')
     expect(item.href).toBe('/admin/residents/res-123')

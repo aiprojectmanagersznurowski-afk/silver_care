@@ -8,10 +8,12 @@ import { Page, Locator } from '@playwright/test';
 export class ResidentProfilePage {
   readonly tablist: Locator;
   readonly sidebar: Locator;
+  readonly heading: Locator;
 
   constructor(private readonly page: Page) {
     this.tablist = page.locator('main [role="tablist"]:visible').first();
     this.sidebar = page.locator('main [data-slot="profile-sidebar"]:visible');
+    this.heading = page.locator('main h1').first();
   }
 
   /** Otwiera profil pierwszego podopiecznego z listy. */

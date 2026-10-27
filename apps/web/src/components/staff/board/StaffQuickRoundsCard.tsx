@@ -6,6 +6,7 @@ import { Bed, CheckCircle2, Mic, Loader2, MessageSquare } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { getActiveAssignment, UnansweredInfo } from './staff-board-types'
+import { formatPersonName } from '@/lib/person-name'
 
 interface StaffQuickRoundsCardProps {
   resident: Record<string, unknown>
@@ -38,7 +39,7 @@ export function StaffQuickRoundsCard({
             {(resident.avatar_url as string) && (
               <AvatarImage
                 src={resident.avatar_url as string}
-                alt={`${resident.first_name as string} ${resident.last_name as string}`}
+                alt={formatPersonName(resident.first_name as string, resident.last_name as string)}
               />
             )}
             <AvatarFallback className="bg-primary/10 text-primary font-semibold text-base">
@@ -49,7 +50,7 @@ export function StaffQuickRoundsCard({
           <div>
             <h4 className="font-semibold text-foreground text-base">
               <Link href={`/staff/residents/${resId}`} className="hover:text-primary hover:underline">
-                {resident.first_name as string} {resident.last_name as string}
+                {formatPersonName(resident.first_name as string, resident.last_name as string)}
               </Link>
             </h4>
             <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">

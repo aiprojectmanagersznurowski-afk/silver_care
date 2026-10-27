@@ -14,6 +14,7 @@ import {
   STATUS_CONFIG,
   UnansweredInfo,
 } from './staff-board-types'
+import { formatPersonName } from '@/lib/person-name'
 
 interface StaffStandardCardProps {
   resident: Record<string, unknown>
@@ -40,7 +41,7 @@ export function StaffStandardCard({ resident, unansweredInfo }: StaffStandardCar
               {(resident.avatar_url as string) && (
                 <AvatarImage
                   src={resident.avatar_url as string}
-                  alt={`${resident.first_name as string} ${resident.last_name as string}`}
+                  alt={formatPersonName(resident.first_name as string, resident.last_name as string)}
                 />
               )}
               <AvatarFallback className="bg-primary/10 text-primary font-semibold">
@@ -59,7 +60,7 @@ export function StaffStandardCard({ resident, unansweredInfo }: StaffStandardCar
             <div className="flex items-center justify-between gap-2">
               <h3 className="text-lg font-semibold text-foreground truncate">
                 <Link href={`/staff/residents/${resId}`} className="hover:text-primary hover:underline">
-                  {resident.first_name as string} {resident.last_name as string}
+                  {formatPersonName(resident.first_name as string, resident.last_name as string)}
                 </Link>
               </h3>
               <BusinessIdBadge type="resident" id={resId} />

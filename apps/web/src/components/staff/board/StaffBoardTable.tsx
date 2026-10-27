@@ -10,6 +10,7 @@ import { StatusBadge } from '@/components/patterns/StatusBadge'
 import { TableStateRow } from '@/components/patterns/TableCard'
 import { RowActions } from '@/components/patterns/RowActions'
 import { getActiveAssignment, getNoteStatus, STATUS_CONFIG, UnansweredInfo } from './staff-board-types'
+import { formatPersonName } from '@/lib/person-name'
 
 interface StaffBoardTableProps {
   residents: Record<string, unknown>[]
@@ -45,7 +46,7 @@ export function StaffBoardTable({ residents, unansweredMessagesMap }: StaffBoard
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <Link href={`/staff/residents/${resId}`} className="font-medium text-foreground hover:text-primary hover:underline">
-                      {resident.first_name as string} {resident.last_name as string}
+                      {formatPersonName(resident.first_name as string, resident.last_name as string)}
                     </Link>
                     <BusinessIdBadge type="resident" id={resId} />
                   </div>

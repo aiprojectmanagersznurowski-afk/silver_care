@@ -1,6 +1,7 @@
 import { STAFF_ROLES } from '@silvercare/contracts/src/generated/roles'
 import { getResidentStatus } from '@/lib/resident-status'
 import { residentCardHref, facilityHref } from './global-search-links'
+import { formatPersonName } from '@/lib/person-name'
 
 export type SearchCategoryKey =
   | 'residents'
@@ -134,7 +135,7 @@ export function formatResidentSearchResult(resident: {
 
   return {
     id: resident.id,
-    title: `${resident.first_name} ${resident.last_name}`,
+    title: formatPersonName(resident.first_name, resident.last_name),
     subtitle,
     href: residentCardHref(role, resident.id),
     category: 'residents',

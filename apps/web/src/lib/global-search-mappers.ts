@@ -18,6 +18,7 @@ import type {
   RawSearchResultsPayload,
   GlobalSearchResponse,
 } from './global-search-types'
+import { formatPersonName } from '@/lib/person-name'
 
 export type { GlobalSearchResponse }
 
@@ -84,7 +85,7 @@ export function mapSearchQueryResults(
             : null
 
           const residentName = activeAssignment?.residents
-            ? `${activeAssignment.residents.first_name} ${activeAssignment.residents.last_name}`
+            ? formatPersonName(activeAssignment.residents.first_name, activeAssignment.residents.last_name)
             : null
 
           results.push(
@@ -115,7 +116,7 @@ export function mapSearchQueryResults(
         : null
 
       const residentName = activeAssignment?.residents
-        ? `${activeAssignment.residents.first_name} ${activeAssignment.residents.last_name}`
+        ? formatPersonName(activeAssignment.residents.first_name, activeAssignment.residents.last_name)
         : null
 
       results.push(
@@ -137,7 +138,7 @@ export function mapSearchQueryResults(
     const rows = payload.agendaData as RawAgendaRow[]
     for (const a of rows) {
       const residentName = a.residents
-        ? `${a.residents.first_name} ${a.residents.last_name}`
+        ? formatPersonName(a.residents.first_name, a.residents.last_name)
         : null
 
       results.push(
@@ -156,7 +157,7 @@ export function mapSearchQueryResults(
     for (const rep of rows) {
       const dateStr = rep.created_at ? rep.created_at.slice(0, 10) : ''
       const residentName = rep.residents
-        ? `${rep.residents.first_name} ${rep.residents.last_name}`
+        ? formatPersonName(rep.residents.first_name, rep.residents.last_name)
         : null
 
       // Jak w zapytaniu do bazy: każde słowo frazy musi pasować do imienia lub nazwiska (kolejność dowolna)
