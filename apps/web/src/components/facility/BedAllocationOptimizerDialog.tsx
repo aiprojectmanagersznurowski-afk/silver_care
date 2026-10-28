@@ -18,6 +18,7 @@ import {
   ShieldCheck,
   RefreshCw,
 } from 'lucide-react'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import type {
   FacilityAllocationMetrics,
   RelocationSuggestion,
@@ -126,10 +127,19 @@ export function BedAllocationOptimizerDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger render={<Button variant="outline" className="gap-2 border-border text-foreground" />}>
-        <Shuffle className="w-4 h-4 text-foreground" />
-        Optymalizuj przydział łóżek
-      </DialogTrigger>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <DialogTrigger render={<Button variant="outline" className="gap-2 border-border text-foreground" />}>
+              <Shuffle className="w-4 h-4 text-foreground" />
+              Optymalizuj przydział łóżek
+            </DialogTrigger>
+          }
+        />
+        <TooltipContent>
+          Analizuje obłożenie pod kątem zgodności płciowej i mobilności pensjonariuszy, proponując optymalne zamiany łóżek
+        </TooltipContent>
+      </Tooltip>
       <DialogContent className="max-w-4xl lg:max-w-5xl max-h-[90vh] flex flex-col p-6 overflow-hidden">
         <DialogHeader className="shrink-0 mb-4">
           <div className="flex items-center justify-between">

@@ -14,14 +14,28 @@ import {
 export * from './bed-allocation-types'
 export { analyzeCurrentAllocation } from './bed-allocation-analyzer'
 
+export interface BedOptimizerRulesConfig {
+  enforceGenderSeparation?: boolean
+  preferGroundFloorForReducedMobility?: boolean
+}
+
+export const DEFAULT_BED_OPTIMIZER_RULES: BedOptimizerRulesConfig = {
+  enforceGenderSeparation: true,
+  preferGroundFloorForReducedMobility: true,
+}
+
 /**
  * Generowanie inteligentnych propozycji relokacji rozwiązujących konflikty
  */
 export function generateRelocationSuggestions(
   rooms: OptimizerRoom[],
   beds: OptimizerBed[],
-  occupants: OptimizerOccupant[]
+  occupants: OptimizerOccupant[],
+  rulesConfig: BedOptimizerRulesConfig = DEFAULT_BED_OPTIMIZER_RULES
 ): RelocationSuggestion[] {
+  const enforceGender = rulesConfig.enforceGenderSeparation !== false
+  const preferGround = rulesConfig.preferGroundFloorForReducedMobility !== false
+
   const activeRooms = rooms.filter((r) => r.isActive)
   const activeBeds = beds.filter((b) => b.isActive)
 
@@ -45,149 +59,153 @@ export function generateRelocationSuggestions(
   const claimedTargetBedIds = new Set<string>()
 
   // Krok 1: Rozwiązanie konfliktów płci (Priorytet: HIGH)
-  for (const room of activeRooms) {
-    const roomOccs = occupantsByRoom.get(room.id) || []
-    const mList = roomOccs.filter((o) => o.gender === 'M')
-    const fList = roomOccs.filter((o) => o.gender === 'F')
+  if (enforceGender) {
+    for (const room of activeRooms) {
+      const roomOccs = occupantsByRoom.get(room.id) || []
+      const mList = roomOccs.filter((o) => o.gender === 'M')
+      const fList = roomOccs.filter((o) => o.gender === 'F')
 
-    if (mList.length > 0 && fList.length > 0) {
-      const toMove = mList.length <= fList.length ? mList : fList
-      const targetGender = toMove[0].gender
+      if (mList.length > 0 && fList.length > 0) {
+        const toMove = mList.length <= fList.length ? mList : fList
+        const targetGender = toMove[0].gender
 
-      for (const occ of toMove) {
-        const candidateBed = freeBeds.find((b) => {
-          if (claimedTargetBedIds.has(b.id)) return false
-          const targetRoom = roomMap.get(b.roomId)
-          if (!targetRoom || targetRoom.id === room.id) return false
+        for (const occ of toMove) {
+          const candidateBed = freeBeds.find((b) => {
+            if (claimedTargetBedIds.has(b.id)) return false
+            const targetRoom = roomMap.get(b.roomId)
+            if (!targetRoom || targetRoom.id === room.id) return false
 
-          const targetOccupants = occupantsByRoom.get(targetRoom.id) || []
-          const targetGenders = targetOccupants.map((o) => o.gender)
-          const isGenderSafe = targetGenders.length === 0 || targetGenders.every((g) => g === targetGender)
-          if (!isGenderSafe) return false
+            const targetOccupants = occupantsByRoom.get(targetRoom.id) || []
+            const targetGenders = targetOccupants.map((o) => o.gender)
+            const isGenderSafe = targetGenders.length === 0 || targetGenders.every((g) => g === targetGender)
+            if (!isGenderSafe) return false
 
-          if ((occ.careLevel === 'bedridden' || occ.careLevel === 'hospice') && !isGroundFloor(targetRoom.floor)) {
-            return false
-          }
-          return true
-        })
-
-        if (candidateBed) {
-          claimedTargetBedIds.add(candidateBed.id)
-          const fromBed = bedMap.get(occ.currentBedId)
-          const targetRoom = roomMap.get(candidateBed.roomId)!
-
-          suggestions.push({
-            id: `gender-fix-${occ.residentId}`,
-            residentId: occ.residentId,
-            residentName: occ.residentName,
-            gender: occ.gender,
-            careLevel: occ.careLevel,
-            fromBedId: occ.currentBedId,
-            fromBedLabel: fromBed?.label || '-',
-            fromRoomId: room.id,
-            fromRoomNumber: room.number,
-            fromFloor: room.floor,
-            toBedId: candidateBed.id,
-            toBedLabel: candidateBed.label,
-            toRoomId: targetRoom.id,
-            toRoomNumber: targetRoom.number,
-            toFloor: targetRoom.floor,
-            reason: `Rozwiązanie konfliktu płci w pokoju ${room.number}. Przeniesienie do pokoju jednolitego płciowo.`,
-            priority: 'high',
-            scoreImprovement: 35,
+            if ((occ.careLevel === 'bedridden' || occ.careLevel === 'hospice') && !isGroundFloor(targetRoom.floor)) {
+              return false
+            }
+            return true
           })
+
+          if (candidateBed) {
+            claimedTargetBedIds.add(candidateBed.id)
+            const fromBed = bedMap.get(occ.currentBedId)
+            const targetRoom = roomMap.get(candidateBed.roomId)!
+
+            suggestions.push({
+              id: `gender-fix-${occ.residentId}`,
+              residentId: occ.residentId,
+              residentName: occ.residentName,
+              gender: occ.gender,
+              careLevel: occ.careLevel,
+              fromBedId: occ.currentBedId,
+              fromBedLabel: fromBed?.label || '-',
+              fromRoomId: room.id,
+              fromRoomNumber: room.number,
+              fromFloor: room.floor,
+              toBedId: candidateBed.id,
+              toBedLabel: candidateBed.label,
+              toRoomId: targetRoom.id,
+              toRoomNumber: targetRoom.number,
+              toFloor: targetRoom.floor,
+              reason: `Rozwiązanie konfliktu płci w pokoju ${room.number}. Przeniesienie do pokoju jednolitego płciowo.`,
+              priority: 'high',
+              scoreImprovement: 35,
+            })
+          }
         }
       }
     }
   }
 
   // Krok 2: Rozwiązanie bariery mobilności dla leżących/hospicyjnych na piętrach > 0 (Priorytet: HIGH)
-  for (const occ of occupants) {
-    if (occ.careLevel !== 'bedridden' && occ.careLevel !== 'hospice') continue
-    const currentRoom = roomMap.get(occ.currentRoomId)
-    if (!currentRoom || isGroundFloor(currentRoom.floor)) continue
-    if (suggestions.some((s) => s.residentId === occ.residentId)) continue
+  if (preferGround) {
+    for (const occ of occupants) {
+      if (occ.careLevel !== 'bedridden' && occ.careLevel !== 'hospice') continue
+      const currentRoom = roomMap.get(occ.currentRoomId)
+      if (!currentRoom || isGroundFloor(currentRoom.floor)) continue
+      if (suggestions.some((s) => s.residentId === occ.residentId)) continue
 
-    const groundCandidateBed = freeBeds.find((b) => {
-      if (claimedTargetBedIds.has(b.id)) return false
-      const targetRoom = roomMap.get(b.roomId)
-      if (!targetRoom || !isGroundFloor(targetRoom.floor)) return false
+      const groundCandidateBed = freeBeds.find((b) => {
+        if (claimedTargetBedIds.has(b.id)) return false
+        const targetRoom = roomMap.get(b.roomId)
+        if (!targetRoom || !isGroundFloor(targetRoom.floor)) return false
 
-      const targetOccupants = occupantsByRoom.get(targetRoom.id) || []
-      const targetGenders = targetOccupants.map((o) => o.gender)
-      return targetGenders.length === 0 || targetGenders.every((g) => g === occ.gender)
-    })
-
-    if (groundCandidateBed) {
-      claimedTargetBedIds.add(groundCandidateBed.id)
-      const fromBed = bedMap.get(occ.currentBedId)
-      const targetRoom = roomMap.get(groundCandidateBed.roomId)!
-
-      suggestions.push({
-        id: `mobility-fix-${occ.residentId}`,
-        residentId: occ.residentId,
-        residentName: occ.residentName,
-        gender: occ.gender,
-        careLevel: occ.careLevel,
-        fromBedId: occ.currentBedId,
-        fromBedLabel: fromBed?.label || '-',
-        fromRoomId: currentRoom.id,
-        fromRoomNumber: currentRoom.number,
-        fromFloor: currentRoom.floor,
-        toBedId: groundCandidateBed.id,
-        toBedLabel: groundCandidateBed.label,
-        toRoomId: targetRoom.id,
-        toRoomNumber: targetRoom.number,
-        toFloor: targetRoom.floor,
-        reason: `Alokacja na parter ze względu na poziom opieki (${occ.careLevel === 'bedridden' ? 'leżący' : 'hospicyjny'}). Ułatwia ewakuację i dostęp opieki.`,
-        priority: 'high',
-        scoreImprovement: 25,
+        const targetOccupants = occupantsByRoom.get(targetRoom.id) || []
+        const targetGenders = targetOccupants.map((o) => o.gender)
+        return targetGenders.length === 0 || targetGenders.every((g) => g === occ.gender)
       })
+
+      if (groundCandidateBed) {
+        claimedTargetBedIds.add(groundCandidateBed.id)
+        const fromBed = bedMap.get(occ.currentBedId)
+        const targetRoom = roomMap.get(groundCandidateBed.roomId)!
+
+        suggestions.push({
+          id: `mobility-fix-${occ.residentId}`,
+          residentId: occ.residentId,
+          residentName: occ.residentName,
+          gender: occ.gender,
+          careLevel: occ.careLevel,
+          fromBedId: occ.currentBedId,
+          fromBedLabel: fromBed?.label || '-',
+          fromRoomId: currentRoom.id,
+          fromRoomNumber: currentRoom.number,
+          fromFloor: currentRoom.floor,
+          toBedId: groundCandidateBed.id,
+          toBedLabel: groundCandidateBed.label,
+          toRoomId: targetRoom.id,
+          toRoomNumber: targetRoom.number,
+          toFloor: targetRoom.floor,
+          reason: `Alokacja na parter ze względu na poziom opieki (${occ.careLevel === 'bedridden' ? 'leżący' : 'hospicyjny'}). Ułatwia ewakuację i dostęp opieki.`,
+          priority: 'high',
+          scoreImprovement: 25,
+        })
+      }
     }
-  }
 
-  // Krok 3: Optymalizacja ZSN na parterze jeśli są wolne łóżka (Priorytet: MEDIUM)
-  for (const occ of occupants) {
-    if (!occ.isZsn) continue
-    const currentRoom = roomMap.get(occ.currentRoomId)
-    if (!currentRoom || isGroundFloor(currentRoom.floor)) continue
-    if (suggestions.some((s) => s.residentId === occ.residentId)) continue
+    // Krok 3: Optymalizacja ZSN na parterze jeśli są wolne łóżka (Priorytet: MEDIUM)
+    for (const occ of occupants) {
+      if (!occ.isZsn) continue
+      const currentRoom = roomMap.get(occ.currentRoomId)
+      if (!currentRoom || isGroundFloor(currentRoom.floor)) continue
+      if (suggestions.some((s) => s.residentId === occ.residentId)) continue
 
-    const groundCandidateBed = freeBeds.find((b) => {
-      if (claimedTargetBedIds.has(b.id)) return false
-      const targetRoom = roomMap.get(b.roomId)
-      if (!targetRoom || !isGroundFloor(targetRoom.floor)) return false
+      const groundCandidateBed = freeBeds.find((b) => {
+        if (claimedTargetBedIds.has(b.id)) return false
+        const targetRoom = roomMap.get(b.roomId)
+        if (!targetRoom || !isGroundFloor(targetRoom.floor)) return false
 
-      const targetOccupants = occupantsByRoom.get(targetRoom.id) || []
-      const targetGenders = targetOccupants.map((o) => o.gender)
-      return targetGenders.length === 0 || targetGenders.every((g) => g === occ.gender)
-    })
-
-    if (groundCandidateBed) {
-      claimedTargetBedIds.add(groundCandidateBed.id)
-      const fromBed = bedMap.get(occ.currentBedId)
-      const targetRoom = roomMap.get(groundCandidateBed.roomId)!
-
-      suggestions.push({
-        id: `zsn-ground-${occ.residentId}`,
-        residentId: occ.residentId,
-        residentName: occ.residentName,
-        gender: occ.gender,
-        careLevel: occ.careLevel,
-        fromBedId: occ.currentBedId,
-        fromBedLabel: fromBed?.label || '-',
-        fromRoomId: currentRoom.id,
-        fromRoomNumber: currentRoom.number,
-        fromFloor: currentRoom.floor,
-        toBedId: groundCandidateBed.id,
-        toBedLabel: groundCandidateBed.label,
-        toRoomId: targetRoom.id,
-        toRoomNumber: targetRoom.number,
-        toFloor: targetRoom.floor,
-        reason: 'Pensjonariusz objęty ZSN — przeniesienie na parter bliżej dyżurki personelu.',
-        priority: 'medium',
-        scoreImprovement: 15,
+        const targetOccupants = occupantsByRoom.get(targetRoom.id) || []
+        const targetGenders = targetOccupants.map((o) => o.gender)
+        return targetGenders.length === 0 || targetGenders.every((g) => g === occ.gender)
       })
+
+      if (groundCandidateBed) {
+        claimedTargetBedIds.add(groundCandidateBed.id)
+        const fromBed = bedMap.get(occ.currentBedId)
+        const targetRoom = roomMap.get(groundCandidateBed.roomId)!
+
+        suggestions.push({
+          id: `zsn-ground-${occ.residentId}`,
+          residentId: occ.residentId,
+          residentName: occ.residentName,
+          gender: occ.gender,
+          careLevel: occ.careLevel,
+          fromBedId: occ.currentBedId,
+          fromBedLabel: fromBed?.label || '-',
+          fromRoomId: currentRoom.id,
+          fromRoomNumber: currentRoom.number,
+          fromFloor: currentRoom.floor,
+          toBedId: groundCandidateBed.id,
+          toBedLabel: groundCandidateBed.label,
+          toRoomId: targetRoom.id,
+          toRoomNumber: targetRoom.number,
+          toFloor: targetRoom.floor,
+          reason: 'Pensjonariusz objęty ZSN — przeniesienie na parter bliżej dyżurki personelu.',
+          priority: 'medium',
+          scoreImprovement: 15,
+        })
+      }
     }
   }
 

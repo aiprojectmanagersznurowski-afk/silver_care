@@ -11,9 +11,11 @@ import {
   RawBedWithRoom,
   analyzeCurrentAllocation,
   generateRelocationSuggestions,
+  BedOptimizerRulesConfig,
 } from '@/lib/bed-allocation-optimizer'
 import { requireOrgAdmin } from '@/lib/facility-auth'
 import { formatPersonName } from '@/lib/person-name'
+import { getBedOptimizerRulesAction } from './bed-rules'
 
 export async function analyzeBedAllocationAction(): Promise<{
   error?: string
@@ -120,8 +122,9 @@ export async function analyzeBedAllocationAction(): Promise<{
       })
     }
 
+    const rules = await getBedOptimizerRulesAction()
     const metrics = analyzeCurrentAllocation(rooms, beds, occupants)
-    const suggestions = generateRelocationSuggestions(rooms, beds, occupants)
+    const suggestions = generateRelocationSuggestions(rooms, beds, occupants, rules)
 
     return { metrics, suggestions }
   } catch (err: unknown) {
