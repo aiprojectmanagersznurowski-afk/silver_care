@@ -8,25 +8,48 @@
  */
 
 export function getCurrentShiftStart(now: Date = new Date()): Date {
-  const current = new Date(now)
-  const hours = current.getHours()
-  const start = new Date(current)
-  start.setMinutes(0, 0, 0)
-  start.setSeconds(0, 0)
+  const dtf = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Warsaw',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+  })
 
-  if (hours >= 7 && hours < 19) {
-    // Zmiana dzienna: dzisiaj od 07:00
-    start.setHours(7)
-  } else if (hours >= 19) {
-    // Zmiana nocna przed północą: dzisiaj od 19:00
-    start.setHours(19)
+  const formatted = dtf.format(now)
+  const [datePart, timePart] = formatted.split(', ')
+  const [year, month, day] = datePart.split('-').map(Number)
+  const [hour] = timePart.split(':').map(Number)
+
+  let shiftYear = year
+  let shiftMonth = month
+  let shiftDay = day
+  let shiftHour = 7
+
+  if (hour >= 7 && hour < 19) {
+    shiftHour = 7
+  } else if (hour >= 19) {
+    shiftHour = 19
   } else {
-    // Zmiana nocna po północy: wczoraj od 19:00
-    start.setDate(start.getDate() - 1)
-    start.setHours(19)
+    // Zmiana nocna po północy (przed 07:00): zmiana rozpoczęła się wczoraj o 19:00
+    const prev = new Date(Date.UTC(year, month - 1, day - 1))
+    shiftYear = prev.getUTCFullYear()
+    shiftMonth = prev.getUTCMonth() + 1
+    shiftDay = prev.getUTCDate()
+    shiftHour = 19
   }
 
-  return start
+  const guess = new Date(Date.UTC(shiftYear, shiftMonth - 1, shiftDay, shiftHour, 0, 0))
+  const getWarsawInstant = (d: Date) => {
+    const parts = dtf.formatToParts(d)
+    const m = Object.fromEntries(parts.map((p) => [p.type, p.value]))
+    return new Date(Date.UTC(Number(m.year), Number(m.month) - 1, Number(m.day), Number(m.hour), Number(m.minute), Number(m.second)))
+  }
+  const diffMs = getWarsawInstant(guess).getTime() - guess.getTime()
+  return new Date(guess.getTime() - diffMs)
 }
 
 export function filterCurrentShiftNotes<T extends { created_at?: string | null }>(

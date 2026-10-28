@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { getActiveAssignment, UnansweredInfo } from './staff-board-types'
 import { formatPersonName } from '@/lib/person-name'
-import { formatNotesCount } from '@/lib/shift'
+import { filterCurrentShiftNotes, formatNotesCount } from '@/lib/shift'
 
 interface StaffQuickRoundsCardProps {
   resident: Record<string, unknown>
@@ -26,8 +26,8 @@ export function StaffQuickRoundsCard({
   const roomNumber = rooms?.number as string | undefined
   const hasUnanswered = Boolean(unansweredInfo?.hasUnanswered)
 
-  const drafts = (resident.voice_draft_notes || []) as Array<unknown>
-  const notesCount = drafts.length
+  const drafts = (resident.voice_draft_notes || []) as Array<{ created_at?: string; status?: string }>
+  const notesCount = filterCurrentShiftNotes(drafts).length
 
   return (
     <div className="bg-card rounded-xl border border-border p-5 space-y-4 hover:border-primary/40 transition-colors">

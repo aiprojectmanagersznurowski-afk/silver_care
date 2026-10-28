@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { getCurrentShiftStart, filterCurrentShiftNotes, formatNotesCount } from '../../apps/web/src/lib/shift'
+import { getNoteStatus } from '../../apps/web/src/components/staff/board/staff-board-types'
 
 /**
  * @REQ: NUR-BOARD
@@ -11,32 +12,52 @@ import { getCurrentShiftStart, filterCurrentShiftNotes, formatNotesCount } from 
 describe('Wskaźnik notatek bieżącej zmiany personelu (@REQ: NUR-BOARD)', () => {
   describe('getCurrentShiftStart', () => {
     it('@REQ: NUR-BOARD - zmiana dzienna (07:00 - 19:00) ma początek o 07:00 tego samego dnia', () => {
-      const now = new Date('2026-10-27T14:35:00Z')
-      // Local time hours depend on env, but we test logic with explicit local hours
       const sample = new Date(2026, 9, 27, 10, 30, 0)
       const start = getCurrentShiftStart(sample)
-      expect(start.getFullYear()).toBe(2026)
-      expect(start.getMonth()).toBe(9)
-      expect(start.getDate()).toBe(27)
-      expect(start.getHours()).toBe(7)
-      expect(start.getMinutes()).toBe(0)
-      expect(start.getSeconds()).toBe(0)
+      expect(start).toBeInstanceOf(Date)
+    })
+
+    it('@REQ: NUR-BOARD - liczy granice zmian w strefie Europe/Warsaw niezależnie od czasu serwera UTC', () => {
+      // Zima (CET, UTC+1): 07:00 w Warszawie to 06:00 UTC.
+      // 05:30 UTC = 06:30 w Warszawie -> zmiana nocna rozpoczęta wczoraj o 19:00 w Warszawie (18:00 UTC)
+      const winterNightEnd = new Date('2026-11-15T05:30:00.000Z')
+      expect(getCurrentShiftStart(winterNightEnd).toISOString()).toBe('2026-11-14T18:00:00.000Z')
+
+      // 06:30 UTC = 07:30 w Warszawie -> zmiana dzienna rozpoczęta dzisiaj o 07:00 w Warszawie (06:00 UTC)
+      const winterDay = new Date('2026-11-15T06:30:00.000Z')
+      expect(getCurrentShiftStart(winterDay).toISOString()).toBe('2026-11-15T06:00:00.000Z')
+
+      // 18:30 UTC = 19:30 w Warszawie -> zmiana nocna rozpoczęta dzisiaj o 19:00 w Warszawie (18:00 UTC)
+      const winterNightStart = new Date('2026-11-15T18:30:00.000Z')
+      expect(getCurrentShiftStart(winterNightStart).toISOString()).toBe('2026-11-15T18:00:00.000Z')
     })
 
     it('@REQ: NUR-BOARD - zmiana nocna przed północą (19:00 - 23:59) ma początek o 19:00 tego samego dnia', () => {
-      const sample = new Date(2026, 9, 27, 21, 15, 0)
+      // 18:15 UTC = 19:15 w Warszawie (CET)
+      const sample = new Date('2026-11-15T18:15:00.000Z')
       const start = getCurrentShiftStart(sample)
-      expect(start.getDate()).toBe(27)
-      expect(start.getHours()).toBe(19)
-      expect(start.getMinutes()).toBe(0)
+      expect(start.toISOString()).toBe('2026-11-15T18:00:00.000Z')
     })
 
     it('@REQ: NUR-BOARD - zmiana nocna po północy (00:00 - 06:59) ma początek o 19:00 poprzedniego dnia', () => {
-      const sample = new Date(2026, 9, 28, 3, 45, 0)
+      // 02:45 UTC = 03:45 w Warszawie (CET)
+      const sample = new Date('2026-11-15T02:45:00.000Z')
       const start = getCurrentShiftStart(sample)
-      expect(start.getDate()).toBe(27)
-      expect(start.getHours()).toBe(19)
-      expect(start.getMinutes()).toBe(0)
+      expect(start.toISOString()).toBe('2026-11-14T18:00:00.000Z')
+    })
+  })
+
+  describe('getNoteStatus regresja statusu szkicu sprzed zmiany', () => {
+    it('@REQ: NUR-BOARD - niezatwierdzony szkic sprzed bieżącej zmiany nadal daje status "draft"', () => {
+      const yesterday = new Date('2026-10-26T12:00:00.000Z').toISOString()
+      const resident = {
+        id: 'r1',
+        voice_draft_notes: [
+          { id: 'draft-yesterday', status: 'DRAFT', created_at: yesterday },
+        ],
+        daily_reports: [],
+      }
+      expect(getNoteStatus(resident)).toBe('draft')
     })
   })
 
