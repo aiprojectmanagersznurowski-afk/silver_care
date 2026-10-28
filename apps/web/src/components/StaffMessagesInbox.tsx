@@ -137,6 +137,7 @@ export function StaffMessagesInbox({ initialResidentId }: StaffMessagesInboxProp
             onlyAwaiting={onlyAwaiting}
             onToggleAwaiting={() => setOnlyAwaiting((v) => !v)}
             awaitingCount={countAwaitingReply(threads)}
+            totalThreadCount={threads.length}
             onRefresh={() => void fetchMessages(true)}
             initialLoading={initialLoading}
             refreshing={refreshing}

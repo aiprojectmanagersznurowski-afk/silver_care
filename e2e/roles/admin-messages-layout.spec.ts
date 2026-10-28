@@ -60,4 +60,23 @@ test.describe('Wiadomości kierownika — wątki (@REQ: FAM-MESSAGES)', () => {
     await page.waitForTimeout(1000);
     await expect(messages.conversationHeader).toContainText(chosen);
   });
+
+  test('@REQ: FAM-MESSAGES - dedykowany stan pusty listy wątków przy włączonym filtrze Do odpowiedzi', async ({ loginPage, page }) => {
+    await loginPage.loginAs('org_admin');
+    const messages = new StaffMessagesPage(page);
+    await messages.goto();
+    await messages.expectPageLoaded();
+
+    await messages.searchInput.fill('__brak_takiego_podopiecznego__');
+    await expect(messages.emptyState).toBeVisible();
+    await expect(messages.emptyState).toContainText('Brak wyników wyszukiwania');
+
+    await messages.searchInput.fill('');
+    await messages.awaitingFilter.click();
+    const count = await messages.threadItems.count();
+    if (count === 0) {
+      await expect(messages.emptyState).toBeVisible();
+      await expect(messages.emptyState).toContainText('Wszystkie wiadomości od rodzin zostały obsłużone');
+    }
+  });
 });

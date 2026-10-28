@@ -3,12 +3,14 @@
 import React from 'react'
 import { format } from 'date-fns'
 import { pl } from 'date-fns/locale'
-import { MessageSquare, Clock, AlertCircle, RefreshCw } from 'lucide-react'
+import { MessageSquare, Clock, RefreshCw } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 import { StatusBadge } from '@/components/patterns/StatusBadge'
 import { SearchField } from '@/components/patterns/ListToolbar'
+import { ListEmpty, ListLoading, ListError } from '@/components/patterns/ListState'
 import { isThreadAwaitingReply, type MessageThread } from '@/lib/messages-helper'
+import { threadsEmptyState } from '@/lib/message-threads'
 
 interface StaffMessageThreadListProps {
   threads: MessageThread[]
@@ -20,6 +22,7 @@ interface StaffMessageThreadListProps {
   onlyAwaiting: boolean
   onToggleAwaiting: () => void
   awaitingCount: number
+  totalThreadCount?: number
   onRefresh: () => void
   initialLoading: boolean
   refreshing: boolean
@@ -30,7 +33,12 @@ const initials = (name: string) => name.split(' ').map((n) => n[0]).join('')
 
 /** Lista wątków: wyszukiwanie, filtr „Do odpowiedzi”, odświeżanie; przy wątku rola bliskiego, który pisze. */
 export function StaffMessageThreadList(props: StaffMessageThreadListProps) {
-  const { threads, activeThreadId, onSelect, relativeLabelOf, onlyAwaiting, awaitingCount } = props
+  const { threads, activeThreadId, onSelect, relativeLabelOf, onlyAwaiting, awaitingCount, totalThreadCount } = props
+  const emptyState = threads.length === 0 ? threadsEmptyState({
+    searchQuery: props.searchQuery,
+    onlyAwaiting,
+    totalThreadCount,
+  }) : null
 
   return (
     <>
@@ -66,22 +74,30 @@ export function StaffMessageThreadList(props: StaffMessageThreadListProps) {
 
       <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-border" data-testid="message-threads-list">
         {props.initialLoading && threads.length === 0 ? (
-          <div className="p-6 text-center text-sm text-muted-foreground space-y-2">
-            <RefreshCw className="h-5 w-5 animate-spin text-primary mx-auto" />
-            <p>Ładowanie wątków...</p>
-          </div>
+          <ListLoading label="Ładowanie wątków…" rows={4} />
         ) : props.error && threads.length === 0 ? (
-          <div className="p-6 text-center text-sm text-destructive space-y-2">
-            <AlertCircle className="h-5 w-5 mx-auto" />
-            <p>{props.error}</p>
-            <button onClick={props.onRefresh} className="mt-2 text-sm font-semibold underline text-foreground">Spróbuj ponownie</button>
+          <div className="p-4">
+            <ListError
+              title="Nie udało się pobrać wiadomości"
+              description={props.error}
+              action={
+                <button
+                  type="button"
+                  onClick={props.onRefresh}
+                  className="mt-2 text-sm font-semibold underline text-foreground"
+                >
+                  Spróbuj ponownie
+                </button>
+              }
+            />
           </div>
-        ) : threads.length === 0 ? (
-          <div className="p-8 text-center text-sm text-muted-foreground" data-testid="messages-empty-state">
-            <p className="font-medium text-foreground">Brak wiadomości</p>
-            <p className="mt-1">
-              {props.searchQuery ? 'Brak wyników pasujących do wyszukiwania.' : onlyAwaiting ? 'Wszystkie wątki mają odpowiedź.' : 'Nie ma jeszcze wiadomości od rodzin.'}
-            </p>
+        ) : threads.length === 0 && emptyState ? (
+          <div className="p-4" data-testid="messages-empty-state">
+            <ListEmpty
+              title={emptyState.title}
+              description={emptyState.description}
+              framed={false}
+            />
           </div>
         ) : (
           threads.map((thread) => {

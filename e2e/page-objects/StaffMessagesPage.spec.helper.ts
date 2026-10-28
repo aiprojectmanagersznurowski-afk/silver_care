@@ -22,7 +22,7 @@ export class StaffMessagesPage {
     this.page = page;
     this.searchInput = page.locator('input[placeholder*="Szukaj"]');
     this.threadsList = page.locator('[data-testid="message-threads-list"]');
-    this.emptyState = page.locator('[data-testid="messages-empty-state"]');
+    this.emptyState = this.threadsList.locator('[data-testid="messages-empty-state"]');
     this.conversationHeader = page.locator('[data-testid="conversation-header"]');
     this.messagesContainer = page.locator('[data-testid="messages-scroll-container"]');
     this.replyTextarea = page.locator('textarea[placeholder*="odpowiedź"], textarea[placeholder*="Wpisz"]');

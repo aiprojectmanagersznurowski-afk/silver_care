@@ -8,6 +8,7 @@ import {
   latestCreatedAt,
   shouldSendOnEnter,
   keepSelectedThread,
+  threadsEmptyState,
 } from '../../apps/web/src/lib/message-threads'
 import { groupMessagesIntoThreads, type RawMessage } from '../../apps/web/src/lib/messages-helper'
 
@@ -64,5 +65,24 @@ describe('Wątki wiadomości kierownika (@REQ: FAM-MESSAGES)', () => {
     expect(shouldSendOnEnter({ key: 'Enter', shiftKey: true }, false)).toBe(false)
     expect(shouldSendOnEnter({ key: 'Enter', shiftKey: false }, true)).toBe(false)
     expect(shouldSendOnEnter({ key: 'a', shiftKey: false }, false)).toBe(false)
+  })
+
+  it('@REQ: FAM-MESSAGES - dedykowany stan pusty listy wątków wg UI-FOUR-STATES (AC4)', () => {
+    expect(threadsEmptyState({ searchQuery: '', onlyAwaiting: true, totalThreadCount: 3 })).toEqual({
+      title: 'Wszystkie wiadomości od rodzin zostały obsłużone',
+      description: 'Brak wątków oczekujących na odpowiedź personelu.',
+    })
+    expect(threadsEmptyState({ searchQuery: '', onlyAwaiting: true, totalThreadCount: 0 })).toEqual({
+      title: 'Brak wiadomości',
+      description: 'Nie ma jeszcze wiadomości od rodzin.',
+    })
+    expect(threadsEmptyState({ searchQuery: 'Kowalski', onlyAwaiting: false, totalThreadCount: 3 })).toEqual({
+      title: 'Brak wyników wyszukiwania',
+      description: 'Brak wyników pasujących do wpisanej frazy.',
+    })
+    expect(threadsEmptyState({ searchQuery: '', onlyAwaiting: false, totalThreadCount: 0 })).toEqual({
+      title: 'Brak wiadomości',
+      description: 'Nie ma jeszcze wiadomości od rodzin.',
+    })
   })
 })

@@ -62,3 +62,41 @@ export function keepSelectedThread(
 export function shouldSendOnEnter(event: { key: string; shiftKey: boolean }, isCoarsePointer: boolean): boolean {
   return event.key === 'Enter' && !event.shiftKey && !isCoarsePointer
 }
+
+/**
+ * Komunikat stanu pustego listy wątków (UI-FOUR-STATES, AC4):
+ * - filtr "Do odpowiedzi": dedykowana informacja, że wszystkie wątki zostały obsłużone
+ * - wyszukiwanie: informacja o braku dopasowań
+ * - brak wiadomości: stan początkowy
+ */
+export function threadsEmptyState(options: {
+  searchQuery: string
+  onlyAwaiting: boolean
+  totalThreadCount?: number
+}): {
+  title: string
+  description?: string
+} {
+  if (options.searchQuery.trim()) {
+    return {
+      title: 'Brak wyników wyszukiwania',
+      description: 'Brak wyników pasujących do wpisanej frazy.',
+    }
+  }
+  if (options.totalThreadCount !== undefined && options.totalThreadCount === 0) {
+    return {
+      title: 'Brak wiadomości',
+      description: 'Nie ma jeszcze wiadomości od rodzin.',
+    }
+  }
+  if (options.onlyAwaiting) {
+    return {
+      title: 'Wszystkie wiadomości od rodzin zostały obsłużone',
+      description: 'Brak wątków oczekujących na odpowiedź personelu.',
+    }
+  }
+  return {
+    title: 'Brak wiadomości',
+    description: 'Nie ma jeszcze wiadomości od rodzin.',
+  }
+}
