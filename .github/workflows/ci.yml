@@ -41,3 +41,49 @@ jobs:
 
       - name: Full Verification Gate (10/10 Stages + Linter + Next.js Build)
         run: bash scripts/verify.sh --full
+
+  # Wdrożenie na Vercel tokenem właściciela projektu (VERCEL_TOKEN), niezależnie od autora commita.
+  # Automatyczne wdrożenia z integracji Git są wyłączone w apps/web/vercel.json.
+  # push na main → produkcja; PR z tego repozytorium → podgląd. Tylko po zielonej bramce.
+  deploy:
+    name: Vercel Deploy
+    needs: verify
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      TARGET: ${{ github.event_name == 'push' && 'production' || 'preview' }}
+      PROD_FLAG: ${{ github.event_name == 'push' && '--prod' || '' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Pull Vercel settings and environment
+        run: pnpm dlx vercel@latest pull --yes --environment="$TARGET" --token="$VERCEL_TOKEN"
+
+      - name: Build
+        run: pnpm dlx vercel@latest build $PROD_FLAG --token="$VERCEL_TOKEN"
+
+      - name: Deploy
+        run: |
+          url=$(pnpm dlx vercel@latest deploy --prebuilt $PROD_FLAG --token="$VERCEL_TOKEN")
+          echo "Wdrożenie ($TARGET): $url" >> "$GITHUB_STEP_SUMMARY"
