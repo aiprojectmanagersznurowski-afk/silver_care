@@ -69,7 +69,11 @@ export function shouldSendOnEnter(event: { key: string; shiftKey: boolean }, isC
  * - wyszukiwanie: informacja o braku dopasowań
  * - brak wiadomości: stan początkowy
  */
-export function threadsEmptyState(options: { searchQuery: string; onlyAwaiting: boolean }): {
+export function threadsEmptyState(options: {
+  searchQuery: string
+  onlyAwaiting: boolean
+  totalThreadCount?: number
+}): {
   title: string
   description?: string
 } {
@@ -77,6 +81,12 @@ export function threadsEmptyState(options: { searchQuery: string; onlyAwaiting: 
     return {
       title: 'Brak wyników wyszukiwania',
       description: 'Brak wyników pasujących do wpisanej frazy.',
+    }
+  }
+  if (options.totalThreadCount !== undefined && options.totalThreadCount === 0) {
+    return {
+      title: 'Brak wiadomości',
+      description: 'Nie ma jeszcze wiadomości od rodzin.',
     }
   }
   if (options.onlyAwaiting) {
@@ -90,4 +100,3 @@ export function threadsEmptyState(options: { searchQuery: string; onlyAwaiting: 
     description: 'Nie ma jeszcze wiadomości od rodzin.',
   }
 }
-

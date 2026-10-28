@@ -22,6 +22,7 @@ interface StaffMessageThreadListProps {
   onlyAwaiting: boolean
   onToggleAwaiting: () => void
   awaitingCount: number
+  totalThreadCount?: number
   onRefresh: () => void
   initialLoading: boolean
   refreshing: boolean
@@ -32,7 +33,12 @@ const initials = (name: string) => name.split(' ').map((n) => n[0]).join('')
 
 /** Lista wątków: wyszukiwanie, filtr „Do odpowiedzi”, odświeżanie; przy wątku rola bliskiego, który pisze. */
 export function StaffMessageThreadList(props: StaffMessageThreadListProps) {
-  const { threads, activeThreadId, onSelect, relativeLabelOf, onlyAwaiting, awaitingCount } = props
+  const { threads, activeThreadId, onSelect, relativeLabelOf, onlyAwaiting, awaitingCount, totalThreadCount } = props
+  const emptyState = threads.length === 0 ? threadsEmptyState({
+    searchQuery: props.searchQuery,
+    onlyAwaiting,
+    totalThreadCount,
+  }) : null
 
   return (
     <>
@@ -85,11 +91,11 @@ export function StaffMessageThreadList(props: StaffMessageThreadListProps) {
               }
             />
           </div>
-        ) : threads.length === 0 ? (
+        ) : threads.length === 0 && emptyState ? (
           <div className="p-4" data-testid="messages-empty-state">
             <ListEmpty
-              title={threadsEmptyState({ searchQuery: props.searchQuery, onlyAwaiting }).title}
-              description={threadsEmptyState({ searchQuery: props.searchQuery, onlyAwaiting }).description}
+              title={emptyState.title}
+              description={emptyState.description}
               framed={false}
             />
           </div>

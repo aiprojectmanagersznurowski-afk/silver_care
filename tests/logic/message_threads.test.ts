@@ -68,15 +68,19 @@ describe('Wątki wiadomości kierownika (@REQ: FAM-MESSAGES)', () => {
   })
 
   it('@REQ: FAM-MESSAGES - dedykowany stan pusty listy wątków wg UI-FOUR-STATES (AC4)', () => {
-    expect(threadsEmptyState({ searchQuery: '', onlyAwaiting: true })).toEqual({
+    expect(threadsEmptyState({ searchQuery: '', onlyAwaiting: true, totalThreadCount: 3 })).toEqual({
       title: 'Wszystkie wiadomości od rodzin zostały obsłużone',
       description: 'Brak wątków oczekujących na odpowiedź personelu.',
     })
-    expect(threadsEmptyState({ searchQuery: 'Kowalski', onlyAwaiting: false })).toEqual({
+    expect(threadsEmptyState({ searchQuery: '', onlyAwaiting: true, totalThreadCount: 0 })).toEqual({
+      title: 'Brak wiadomości',
+      description: 'Nie ma jeszcze wiadomości od rodzin.',
+    })
+    expect(threadsEmptyState({ searchQuery: 'Kowalski', onlyAwaiting: false, totalThreadCount: 3 })).toEqual({
       title: 'Brak wyników wyszukiwania',
       description: 'Brak wyników pasujących do wpisanej frazy.',
     })
-    expect(threadsEmptyState({ searchQuery: '', onlyAwaiting: false })).toEqual({
+    expect(threadsEmptyState({ searchQuery: '', onlyAwaiting: false, totalThreadCount: 0 })).toEqual({
       title: 'Brak wiadomości',
       description: 'Nie ma jeszcze wiadomości od rodzin.',
     })
