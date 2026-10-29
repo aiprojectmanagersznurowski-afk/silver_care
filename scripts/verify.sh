@@ -93,7 +93,7 @@ else
 fi
 
 # Standard ekranu (ADR-017, audyt UI): wspólne komponenty i tabela jako widok domyślny
-for SCREEN_RULE in ui-default-view-table ui-own-page-heading ui-own-status-badge ui-own-table-frame; do
+for SCREEN_RULE in ui-default-view-table ui-own-page-heading ui-own-status-badge ui-own-table-frame ui-list-needs-table-view ui-table-cell-size; do
   SCREEN_VIOLATIONS=$(scan_rule "$SCREEN_RULE")
   if [ -n "$SCREEN_VIOLATIONS" ]; then
     printf "%s\n" "$SCREEN_VIOLATIONS"

@@ -93,14 +93,14 @@ export function ResidentsTable({ residents }: { residents: ResidentWithAssignmen
                       <TableCell>
                         <ResidentStatusBadge resident={resident} />
                       </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">
+                      <TableCell className="text-muted-foreground">
                         {activeBed ? (
                           <span>Pok. {activeBed.rooms?.number}, ł. {activeBed.label}</span>
                         ) : (
                           <span className="text-muted-foreground/50">—</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">{admissionLabel(resident)}</TableCell>
+                      <TableCell className="text-muted-foreground">{admissionLabel(resident)}</TableCell>
                       <TableCell className="text-right">
                         <ResidentRowActions resident={resident} />
                       </TableCell>
