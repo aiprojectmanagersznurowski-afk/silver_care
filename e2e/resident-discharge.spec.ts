@@ -18,8 +18,8 @@ test.describe('Zakończenie pobytu pensjonariusza i rejestracja zgonu (@REQ: ADM
     await page.goto('/admin/residents');
     await page.waitForLoadState('domcontentloaded');
 
-    // 3. Wybierz pierwszego aktywnego podopiecznego
-    const firstResidentLink = page.locator('table tbody tr a').first();
+    // 3. Wybierz pierwszego aktywnego podopiecznego (tabela na desktopie lub karta na mobile)
+    const firstResidentLink = page.locator('a[href^="/admin/residents/"]:visible').first();
     await expect(firstResidentLink).toBeVisible({ timeout: 10000 });
     await firstResidentLink.click();
 
@@ -79,7 +79,7 @@ test.describe('Zakończenie pobytu pensjonariusza i rejestracja zgonu (@REQ: ADM
     await page.goto('/staff');
     await page.waitForLoadState('domcontentloaded');
 
-    const firstResidentLink = page.locator('a[href^="/staff/residents/"]').first();
+    const firstResidentLink = page.locator('a[href^="/staff/residents/"]:visible').first();
     await expect(firstResidentLink).toBeVisible({ timeout: 10000 });
     await firstResidentLink.click();
 
