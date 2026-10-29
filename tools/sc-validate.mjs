@@ -14,14 +14,14 @@ const load = (f) => import(`file://${join(ROOT, 'contracts', f)}`);
 const { ROLES, STAFF_ROLES, RELATIVE_ROLES, MFA_REQUIRED_ROLES, CONSENT_GRANTORS, CONSENT_PURPOSES,
         RESOURCES, MATRIX, AUDIT_REQUIREMENTS, DELETE_POLICIES } = await load('roles.contract.mjs');
 const { FAMILY_VISIBLE_METRICS, PHYSIOLOGICAL_FIELDS, FORBIDDEN_UI_TERMS, MDR_GUARDRAILS,
-        REQUIRED_UI_STATES, RESIDENT_CARD_SECTIONS = [], AGENDA_FAMILY_EXCLUSION } = await load('presentation.contract.mjs');
+        REQUIRED_UI_STATES, RESIDENT_CARD_SECTIONS = [], AGENDA_FAMILY_EXCLUSION, UI_TERMINOLOGY } = await load('presentation.contract.mjs');
 const { TRANSCRIPT_STREAMS, MEDICAL_CATEGORIES, PIPELINE_STAGES, VOICE_RETENTION,
         AI_PROVENANCE_FIELDS, AI_FEEDBACK_CATEGORIES } = await load('voice.contract.mjs');
 const { PROVIDERS, WEARABLE_LINK, ORG_LINK, FIELD_MAPPINGS, INGEST_PRECONDITIONS, SYNC_STALENESS } = await load('integration.contract.mjs');
 const { NOTIFICATIONS, FORBIDDEN_TRIGGERS, CHANNELS, RECIPIENTS, QUEUE_POLICY } = await load('notifications.contract.mjs');
 const { REQUIREMENTS, REQUIREMENTS_BY_ID } = await load('requirements.contract.mjs');
 const { DECISION_CLASSES, ESCALATION_TRIGGERS, DEFAULTS, RETRY_POLICY, SESSION_REPORT_SECTIONS } = await load('autonomy.contract.mjs');
-const { FACILITY_HIERARCHY, ROOM_SHAPE, BED_SHAPE, BED_ASSIGNMENT_SHAPE, OCCUPANCY_GUARDS, OCCUPANCY_VIEW } = await load('facility.contract.mjs');
+const { FACILITY_HIERARCHY, ROOM_SHAPE, BED_SHAPE, BED_ASSIGNMENT_SHAPE, OCCUPANCY_GUARDS, OCCUPANCY_VIEW, CAPACITY_POLICY } = await load('facility.contract.mjs');
 const { TYPOGRAPHY, COLORS, SPACING, ACCESSIBILITY, LAYOUT_PRINCIPLES } = await load('design.contract.mjs');
 
 const errors = [];
@@ -496,6 +496,40 @@ else if (Number(m[1]) < 7 || Number(m[2]) > 21) {
   const req = REQUIREMENTS_BY_ID?.['FAM-AGENDA-NO-MEDICAL'] ?? REQUIREMENTS.find((r) => r.id === 'FAM-AGENDA-NO-MEDICAL');
   if (!req) err('R28-agenda-no-medical', 'Brak wymagania FAM-AGENDA-NO-MEDICAL w rejestrze.');
   else if (req.risk !== 'HIGH') err('R28-agenda-no-medical', 'FAM-AGENDA-NO-MEDICAL musi mieć ryzyko HIGH — dotyczy granicy MDR.');
+}
+
+// R29 — limit miejsc jest decyzją super admina (SC-ADM-22, decyzja Michała 2026-10-29).
+// Kierownik może przekroczyć limit tylko jawnie i z powiadomieniem; limit nie rośnie „po cichu”.
+if (CAPACITY_POLICY) {
+  const cp = CAPACITY_POLICY;
+  if ((cp.setBy || []).join() !== 'super_admin') err('R29-capacity-policy', `Limit miejsc może ustawiać wyłącznie super_admin (jest: ${(cp.setBy || []).join(', ') || 'brak'}).`);
+  if (cp.autoRaise !== false) err('R29-capacity-policy', 'Limit miejsc nie może rosnąć automatycznie (autoRaise musi być false) — to nadpisywałoby decyzję super admina.');
+  if ((cp.exceedAllowedFor || []).length && cp.requiresConfirmation !== true) err('R29-capacity-policy', 'Przekroczenie limitu bez wymaganego potwierdzenia.');
+  if (!(cp.checkpoints || []).length) err('R29-capacity-policy', 'Brak punktów kontroli limitu (dodanie łóżek, przyjęcie, import).');
+  const notified = (cp.onExceed?.notify || []).map((id) => NOTIFICATIONS.find((n) => n.id === id));
+  if (notified.some((n) => !n)) err('R29-capacity-policy', 'Powiadomienie o przekroczeniu limitu wskazuje nieistniejący wpis katalogu.');
+  const recipients = new Set(notified.filter(Boolean).map((n) => n.recipient));
+  for (const who of ['ORG_ADMIN', 'SUPER_ADMIN']) {
+    if (!recipients.has(who)) err('R29-capacity-policy', `Przekroczenie limitu nie powiadamia ${who}.`);
+  }
+  if (!cp.onExceed?.auditAction) err('R29-capacity-policy', 'Przekroczenie limitu bez wpisu w audit_logs.');
+  if (cp.presentation?.tone && cp.presentation.tone !== 'brand' && cp.presentation.tone !== 'neutral') err('R29-capacity-policy', `Plakietka „Ponad limit” w tonie "${cp.presentation.tone}" — czerwień tylko dla błędów technicznych.`);
+}
+
+// R30 — słownik terminów UI (NFR-UI-06): termin preferowany nie jest jednocześnie zakazany,
+// a nazwa roli w słowniku zgadza się z ROLES.label.
+if (UI_TERMINOLOGY) {
+  const forbiddenAll = new Set(UI_TERMINOLOGY.flatMap((t) => (t.forbidden || []).map((f) => f.toLowerCase())));
+  for (const t of UI_TERMINOLOGY) {
+    if (!t.preferred || !(t.forbidden || []).length || !t.reason) err('R30-ui-terminology', `Wpis słownika "${t.entity}" bez terminu, zakazanych synonimów albo uzasadnienia.`);
+    if (forbiddenAll.has(String(t.preferred).toLowerCase())) err('R30-ui-terminology', `Termin "${t.preferred}" jest jednocześnie preferowany i zakazany.`);
+    for (const f of t.formalOnly || []) if (!(t.forbidden || []).includes(f)) err('R30-ui-terminology', `"${f}" (tylko dokumenty formalne) musi być też na liście zakazanych w UI.`);
+    if (String(t.entity).startsWith('role:')) {
+      const role = ROLES.find((r) => r.id === t.entity.slice(5));
+      if (!role) err('R30-ui-terminology', `Słownik wskazuje nieistniejącą rolę "${t.entity}".`);
+      else if (role.label !== t.preferred) err('R30-ui-terminology', `Nazwa roli "${role.id}" w słowniku ("${t.preferred}") różni się od ROLES.label ("${role.label}").`);
+    }
+  }
 }
 
 // ── raport ────────────────────────────────────────────────────────────────

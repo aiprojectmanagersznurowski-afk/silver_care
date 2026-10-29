@@ -39,6 +39,7 @@ files['packages/contracts/src/generated/presentation.ts'] = BANNER
   + emit('FAMILY_VISIBLE_METRICS', pres.FAMILY_VISIBLE_METRICS)
   + emit('PHYSIOLOGICAL_FIELDS', pres.PHYSIOLOGICAL_FIELDS)
   + emit('FORBIDDEN_UI_TERMS', pres.FORBIDDEN_UI_TERMS)
+  + (pres.UI_TERMINOLOGY ? emit('UI_TERMINOLOGY', pres.UI_TERMINOLOGY) : '')
   + emit('MDR_GUARDRAILS', pres.MDR_GUARDRAILS)
   + emit('REQUIRED_UI_STATES', pres.REQUIRED_UI_STATES)
   + (pres.RESIDENT_CARD_SECTIONS ? emit('RESIDENT_CARD_SECTIONS', pres.RESIDENT_CARD_SECTIONS)
@@ -124,7 +125,8 @@ files['packages/contracts/src/generated/design.ts'] = BANNER
 files['packages/contracts/src/generated/facility.ts'] = BANNER
   + emit('FACILITY_HIERARCHY', facility.FACILITY_HIERARCHY) + emit('ROOM_SHAPE', facility.ROOM_SHAPE)
   + emit('BED_SHAPE', facility.BED_SHAPE) + emit('BED_ASSIGNMENT_SHAPE', facility.BED_ASSIGNMENT_SHAPE)
-  + emit('OCCUPANCY_GUARDS', facility.OCCUPANCY_GUARDS) + emit('OCCUPANCY_VIEW', facility.OCCUPANCY_VIEW);
+  + emit('OCCUPANCY_GUARDS', facility.OCCUPANCY_GUARDS) + emit('OCCUPANCY_VIEW', facility.OCCUPANCY_VIEW)
+  + (facility.CAPACITY_POLICY ? emit('CAPACITY_POLICY', facility.CAPACITY_POLICY) : '');
 
 // dokument czytelny dla człowieka
 const md = [];

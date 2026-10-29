@@ -153,3 +153,45 @@ export const OCCUPANCY_VIEW = {
   "desc": "Administrator widzi obłożenie bez ręcznego liczenia. Zawsze zgodne z bed_assignments, bo jest z niego wyliczane, nie kopiowane."
 } as const;
 
+export const CAPACITY_POLICY = {
+  "field": "organizations.resident_limit",
+  "unit": "bed",
+  "meaning": "Maksymalna liczba łóżek placówki = maksymalna liczba aktywnych podopiecznych.",
+  "setBy": [
+    "super_admin"
+  ],
+  "autoRaise": false,
+  "exceedAllowedFor": [
+    "org_admin"
+  ],
+  "requiresConfirmation": true,
+  "checkpoints": [
+    {
+      "id": "bed_create",
+      "counts": "beds",
+      "desc": "Dodanie pokoju z łóżkami albo łóżka, po którym liczba łóżek przekracza limit."
+    },
+    {
+      "id": "resident_admit",
+      "counts": "residents",
+      "desc": "Przyjęcie podopiecznego, po którym liczba aktywnych podopiecznych przekracza limit (także bez łóżka)."
+    },
+    {
+      "id": "resident_bulk_import",
+      "counts": "residents",
+      "desc": "Masowy import, po którym liczba aktywnych podopiecznych przekracza limit. Limit się nie zmienia."
+    }
+  ],
+  "onExceed": {
+    "auditAction": "ORGANIZATION_CAPACITY_EXCEEDED",
+    "notify": [
+      "A4",
+      "A5"
+    ]
+  },
+  "presentation": {
+    "badge": "Ponad limit",
+    "tone": "brand"
+  }
+} as const;
+

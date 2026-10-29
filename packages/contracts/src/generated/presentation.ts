@@ -81,6 +81,55 @@ export const FORBIDDEN_UI_TERMS = [
   }
 ] as const;
 
+export const UI_TERMINOLOGY = [
+  {
+    "entity": "residents",
+    "preferred": "podopieczny",
+    "forbidden": [
+      "pensjonariusz",
+      "mieszkaniec",
+      "rezydent"
+    ],
+    "formalOnly": [
+      "pensjonariusz"
+    ],
+    "reason": "Decyzja Michała 2026-10-29: „podopieczny” w UI, „pensjonariusz” tylko w dokumentach formalnych. „Pacjent” blokuje FORBIDDEN_UI_TERMS."
+  },
+  {
+    "entity": "organizations",
+    "preferred": "placówka",
+    "forbidden": [
+      "ośrodek",
+      "dom opieki",
+      "DPS",
+      "zakład opiekuńczy"
+    ],
+    "formalOnly": [],
+    "reason": "Decyzja Michała 2026-10-29: „placówka”, nie „ośrodek”."
+  },
+  {
+    "entity": "role:org_admin",
+    "preferred": "Kierownik placówki",
+    "forbidden": [
+      "Administrator Ośrodka",
+      "administrator placówki",
+      "administrator ośrodka"
+    ],
+    "formalOnly": [],
+    "reason": "Nazwa roli wyłącznie z ROLES.label (decyzja Michała 2026-10-29)."
+  },
+  {
+    "entity": "organizations.resident_limit",
+    "preferred": "limit miejsc",
+    "forbidden": [
+      "pojemność placówki",
+      "limit pensjonariuszy"
+    ],
+    "formalOnly": [],
+    "reason": "Limit miejsc = limit łóżek = maks. liczba podopiecznych (CAPACITY_POLICY)."
+  }
+] as const;
+
 export const MDR_GUARDRAILS = {
   "allowedStatements": [
     "Opis zaobserwowanego zachowania: „spacer w ogrodzie\", „zjadł cały obiad\".",
