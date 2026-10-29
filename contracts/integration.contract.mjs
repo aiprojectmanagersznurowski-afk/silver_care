@@ -53,12 +53,13 @@ export const PROVIDERS = [
   {
     id: 'GROQ_DEMO_LLM', kind: 'LLM_DEMO_INTERIM', status: 'ACTIVE', region: 'US', auth: 'API_KEY',
     transferMechanism: 'BRAK — DPA z Groq na CLASSIFY/GENERATE nie jest podpisane, w trakcie negocjacji (stan 2026-10-06). Patrz docs/REJESTR_PODMIOTOW_PRZETWARZAJACYCH.md.',
-    exceptionApprovedBy: 'Michal, 2026-10-06',
-    exceptionReason: 'Wyjątek wyłącznie na czas demonstracji produktu (Marconi, KIDO) przed podpisaniem DPA. Dotyczy jedynie danych syntetycznych/testowych — zakazane użycie z rzeczywistymi danymi pensjonariuszy do czasu ukończenia DPA. Wymaga jawnej zmiennej ALLOW_DEMO_GROQ_FALLBACK=true, niezależnej od GROQ_API_KEY używanego już do transkrypcji w wpisie GROQ powyżej.',
+    exceptionApprovedBy: 'Michal, 2026-10-06; rozszerzenie na przekazanie zmiany: Michal, 2026-10-29 (ADR-021)',
+    exceptionReason: 'Wyjątek na czas demonstracji i product discovery przed podpisaniem DPA. Od 2026-10-29 (ADR-021) obejmuje także przekazanie zmiany i propozycje zadań (HANDOVER_STRUCTURE, TASK_PROPOSE), łącznie z treścią MEDICAL z nagrania przekazania — wyłącznie ścieżka personelu, nigdy raport dla bliskich. Testy idą tą samą ścieżką kodu co produkcja, bez rozgałęzień „organizacja demo”. Dotyczy jedynie danych syntetycznych/testowych (w produkcyjnej bazie brak prawdziwych pensjonariuszy, potwierdzone 2026-10-29) — zakazane użycie z rzeczywistymi danymi pensjonariuszy do czasu ukończenia DPA albo przełączenia na model w UE. Wymaga jawnej zmiennej ALLOW_DEMO_GROQ_FALLBACK=true, niezależnej od GROQ_API_KEY używanego już do transkrypcji w wpisie GROQ powyżej.',
     requiresManualZeroRetentionToggle: false,
     demoOnly: true,
     dpaStatus: 'PENDING',
-    desc: 'llama-3.3-70b-versatile przez Groq OpenAI-compatible endpoint. Zamiennik CLASSIFY/GENERATE wyłącznie na czas demo, przed podpisaniem DPA (ADR-015). Domyślnie wyłączony — nieaktywny bez ALLOW_DEMO_GROQ_FALLBACK=true.',
+    stages: ['CLASSIFY', 'GENERATE', 'HANDOVER_STRUCTURE', 'TASK_PROPOSE'],
+    desc: 'llama-3.3-70b-versatile przez Groq OpenAI-compatible endpoint. Zamiennik CLASSIFY/GENERATE (ADR-015) oraz etapów przekazania zmiany HANDOVER_STRUCTURE/TASK_PROPOSE (ADR-021) przed podpisaniem DPA. Domyślnie wyłączony — nieaktywny bez ALLOW_DEMO_GROQ_FALLBACK=true. Dostawca wybierany konfiguracją, ta sama ścieżka kodu dla każdej organizacji.',
   },
 ];
 

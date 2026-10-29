@@ -143,4 +143,4 @@ Bazowy rozmiar 14px · minimalny kontrast 4.5:1 · cel dotykowy 38px
 | INFRA-PITR | infra | MEDIUM | Baza produkcyjna ma odtwarzanie do punktu w czasie i rozszerzenie pgAudit. |
 | INFRA-EU-REGION | infra | HIGH | Dane nie opuszczają Europejskiego Obszaru Gospodarczego, poza jawnie udokumentowanymi wyjątkami. |
 | INFRA-GROQ-TRANSCRIPTION | infra | HIGH | Transkrypcja surowego audio odbywa się przez Groq (USA, transfer na bazie SCC) wyłącznie na etapie TRANSCRIBE, przed redakcją danych medycznych. |
-| INFRA-GROQ-DEMO-INTERIM | infra | HIGH | Gdy brak klucza modelu EU, CLASSIFY i GENERATE mogą tymczasowo korzystać z Groq wyłącznie w jawnie włączonym trybie demo (ALLOW_DEMO_GROQ_FALLBACK=true), przed podpisaniem DPA, ograniczone do danych syntetycznych. |
+| INFRA-GROQ-DEMO-INTERIM | infra | HIGH | Gdy brak klucza modelu EU, CLASSIFY, GENERATE oraz etapy przekazania zmiany (HANDOVER_STRUCTURE, TASK_PROPOSE) mogą tymczasowo korzystać z Groq wyłącznie w jawnie włączonym trybie demo (ALLOW_DEMO_GROQ_FALLBACK=true), przed podpisaniem DPA, ograniczone do danych syntetycznych. |

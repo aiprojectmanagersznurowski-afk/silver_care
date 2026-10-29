@@ -59,7 +59,7 @@ const isContractPath = (rel) => (config?.contractProtectedPaths || []).some((p) 
  */
 export function checkWrite(rawPath, content = '', opts = {}) {
   if (typeof opts === 'string' || opts === null) opts = { role: opts, enforceContract: true };
-  const { role = null, enforceContract = false } = opts;
+  const { role = null, enforceContract = false, wholeFile = false } = opts;
   if (!config) return { blocked: false };
   const rel = toRelative(rawPath);
   if (!rel) return { blocked: false };
@@ -78,6 +78,7 @@ export function checkWrite(rawPath, content = '', opts = {}) {
   // 3. Wzorce zakazane w treści
   for (const p of config.forbiddenPatterns || []) {
     if (p.severity === 'warn') continue;
+    if (p.scope === 'file' && !wholeFile) continue;
     if (!new RegExp(p.appliesTo).test(rel)) continue;
     if ((p.allowIn || []).some((a) => rel.includes(a))) continue;
     const m = new RegExp(p.re).exec(content || '');
