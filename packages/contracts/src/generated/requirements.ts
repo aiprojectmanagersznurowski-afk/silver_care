@@ -711,15 +711,17 @@ export const REQUIREMENTS = [
     "id": "INFRA-GROQ-DEMO-INTERIM",
     "status": "TODO",
     "risk": "HIGH",
-    "source": "ADR-015",
+    "source": "ADR-015, ADR-021",
     "domain": "infra",
-    "statement": "Gdy brak klucza modelu EU, CLASSIFY i GENERATE mogą tymczasowo korzystać z Groq wyłącznie w jawnie włączonym trybie demo (ALLOW_DEMO_GROQ_FALLBACK=true), przed podpisaniem DPA, ograniczone do danych syntetycznych.",
+    "statement": "Gdy brak klucza modelu EU, CLASSIFY, GENERATE oraz etapy przekazania zmiany (HANDOVER_STRUCTURE, TASK_PROPOSE) mogą tymczasowo korzystać z Groq wyłącznie w jawnie włączonym trybie demo (ALLOW_DEMO_GROQ_FALLBACK=true), przed podpisaniem DPA, ograniczone do danych syntetycznych.",
     "acceptance": [
       "Sama obecność GROQ_API_KEY nie aktywuje trybu demo — wymagana osobna zmienna ALLOW_DEMO_GROQ_FALLBACK=true",
       "Klucz EU ma pierwszeństwo nad trybem demo, jeśli oba są obecne",
       "Nieprawidłowy EU_LLM_ENDPOINT nadal kończy się błędem [EU-LLM-REGION] niezależnie od trybu demo",
       "Każde użycie trybu demo zostawia ślad w logu serwera bez PII i bez treści promptu",
-      "Wpis GROQ_DEMO_LLM w PROVIDERS ma transferMechanism, exceptionApprovedBy i exceptionReason zgodnie z R22"
+      "Wpis GROQ_DEMO_LLM w PROVIDERS ma transferMechanism, exceptionApprovedBy i exceptionReason zgodnie z R22",
+      "Ta sama ścieżka kodu dla każdej organizacji — dostawca modelu wynika wyłącznie z konfiguracji, bez rozgałęzień „organizacja demo”",
+      "Treść MEDICAL z nagrania przekazania może trafić do modelu tylko na etapach HANDOVER_STRUCTURE i TASK_PROPOSE, nigdy na etapie GENERATE raportu dla bliskich"
     ]
   }
 ] as const;
