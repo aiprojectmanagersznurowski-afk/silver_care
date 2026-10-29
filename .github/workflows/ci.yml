@@ -78,12 +78,12 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Pull Vercel settings and environment
-        run: pnpm dlx vercel@latest pull --yes --environment="$TARGET" --token="$VERCEL_TOKEN"
+        run: pnpm dlx vercel@65.5.0 pull --yes --environment="$TARGET" --token="$VERCEL_TOKEN"
 
       - name: Build
-        run: pnpm dlx vercel@latest build $PROD_FLAG --token="$VERCEL_TOKEN"
+        run: pnpm dlx vercel@65.5.0 build $PROD_FLAG --token="$VERCEL_TOKEN"
 
       - name: Deploy
         run: |
-          url=$(pnpm dlx vercel@latest deploy --prebuilt $PROD_FLAG --token="$VERCEL_TOKEN")
+          url=$(pnpm dlx vercel@65.5.0 deploy --prebuilt $PROD_FLAG --token="$VERCEL_TOKEN")
           echo "Wdrożenie ($TARGET): $url" >> "$GITHUB_STEP_SUMMARY"
