@@ -35,7 +35,8 @@ describe('Ocena limitu miejsc (ADM-CAPACITY-LIMIT)', () => {
     const audit = buildCapacityExceededAudit(r);
     expect(audit.action).toBe(CAPACITY_POLICY.onExceed.auditAction);
     expect(audit.payload).toEqual({ operation: 'resident_admit', counts: 'residents', resident_limit: 50, projected_count: 51, excess: 1 });
-    expect(JSON.stringify(audit.payload)).not.toMatch(/first_name|last_name|pesel|imi|nazwisk/i);
+    expect(Object.keys(audit.payload)).not.toEqual(expect.arrayContaining(['first_name']));
+    expect(JSON.stringify(audit.payload)).not.toMatch(/first_name|last_name|pesel|resident_id|imię|nazwisk/i);
   });
 
   it('@REQ: ADM-CAPACITY-LIMIT - komunikat ostrzeżenia z liczbami i terminologią słownika', () => {
