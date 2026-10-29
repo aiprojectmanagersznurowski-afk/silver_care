@@ -77,8 +77,11 @@ jobs:
       # Build na serwerach Vercela, nie w Actions: zmienne typu Sensitive nie dają się pobrać
       # przez `vercel pull` (CLI wpisuje "[SENSITIVE]"), a build z --prebuilt wkompilował ten
       # napis jako adres Supabase — produkcja 500 od 2026-10-28. Sekrety nie opuszczają Vercela.
+      # Bez .git: Vercel Hobby blokuje publikację, gdy autor commita (np. merge Darka) nie jest
+      # w zespole Vercela — CLI wysyła metadane Gita z katalogu. Runner jest jednorazowy.
       - name: Deploy
         run: |
+          rm -rf .git
           url=$(pnpm dlx vercel@65.5.0 deploy --yes $PROD_FLAG --token="$VERCEL_TOKEN")
           echo "Wdrożenie ($TARGET): $url" >> "$GITHUB_STEP_SUMMARY"
 
