@@ -63,6 +63,8 @@ test.describe('Limit miejsc przy dodawaniu łóżka (@REQ: ADM-CAPACITY-LIMIT)',
 
   test.afterAll(async () => {
     test.setTimeout(120_000); // usuwanie podopiecznego przechodzi przez kaskady i triggery
+    // Powiadomienia A4/A5 założone przez przekroczenia z testu nie mogą wyjść jako prawdziwe e-maile
+    await sql`DELETE FROM public.outbox_notifications WHERE organization_id = ${MAIN_ORG_ID} AND entity_type = 'capacity_exceeded' AND status = 'PENDING'`;
     await removeAdmittedResident();
     await removeImportedRoom();
     await sql`DELETE FROM public.beds b USING public.rooms r WHERE b.room_id = r.id AND r.organization_id = ${MAIN_ORG_ID} AND b.label = ${BED_LABEL}`;
