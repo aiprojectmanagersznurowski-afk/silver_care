@@ -74,16 +74,26 @@ jobs:
           node-version: 22
           cache: 'pnpm'
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Pull Vercel settings and environment
-        run: pnpm dlx vercel@65.5.0 pull --yes --environment="$TARGET" --token="$VERCEL_TOKEN"
-
-      - name: Build
-        run: pnpm dlx vercel@65.5.0 build $PROD_FLAG --token="$VERCEL_TOKEN"
-
+      # Build na serwerach Vercela, nie w Actions: zmienne typu Sensitive nie dają się pobrać
+      # przez `vercel pull` (CLI wpisuje "[SENSITIVE]"), a build z --prebuilt wkompilował ten
+      # napis jako adres Supabase — produkcja 500 od 2026-10-28. Sekrety nie opuszczają Vercela.
       - name: Deploy
         run: |
-          url=$(pnpm dlx vercel@65.5.0 deploy --prebuilt $PROD_FLAG --token="$VERCEL_TOKEN")
+          url=$(pnpm dlx vercel@65.5.0 deploy --yes $PROD_FLAG --token="$VERCEL_TOKEN")
           echo "Wdrożenie ($TARGET): $url" >> "$GITHUB_STEP_SUMMARY"
+
+      # Zielony job ma znaczyć działającą aplikację, nie tylko udaną publikację.
+      # Podglądy są za ochroną Vercela (302), więc sprawdzamy stały adres produkcji.
+      - name: Smoke test produkcji
+        if: github.event_name == 'push'
+        env:
+          SMOKE_URL: https://silver-care-six.vercel.app/login
+        run: |
+          for i in 1 2 3 4 5 6; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" "$SMOKE_URL")
+            echo "próba $i: HTTP $code"
+            [ "$code" = "200" ] && exit 0
+            sleep 10
+          done
+          echo "::error::$SMOKE_URL nie odpowiada 200 po publikacji — przywróć poprzednie wdrożenie (Instant Rollback)"
+          exit 1
