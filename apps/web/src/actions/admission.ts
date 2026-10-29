@@ -6,7 +6,10 @@ import { revalidatePath } from 'next/cache'
 import { parseNationalId, suggestBeds, BedCandidate, BedSuggestion } from '@/lib/admission-helpers'
 import { hashNationalId } from '@/lib/national-id-hash'
 import { isImpersonationSessionActive, assertMutationAllowedDuringImpersonation, safeGetCookieStore } from '@/lib/impersonation-guards'
-import { evaluateCapacity, buildCapacityExceededAudit, capacityWarningMessage } from '@/lib/capacity-limit'
+import {
+  evaluateCapacity, buildCapacityExceededAudit, capacityWarningMessage,
+  countPresentResidents, RESIDENT_PRESENCE_COLUMNS, ResidentPresenceFields,
+} from '@/lib/capacity-limit'
 
 interface ActiveAssignmentRecord {
   bed_id: string
@@ -125,19 +128,19 @@ export async function admitResidentAction(formData: FormData) {
   }
 
   // ADM-CAPACITY-LIMIT: przyjęcie ponad limit miejsc dopiero po świadomym potwierdzeniu (SC-ADM-22/AC3).
-  // Liczymy aktywnych podopiecznych (jak masowy import), bo przyjęcie jest możliwe także bez łóżka.
+  // Liczymy podopiecznych przebywających w placówce, bo przyjęcie jest możliwe także bez łóżka.
   const orgId = user.app_metadata?.organization_id as string | undefined
   let capacity: ReturnType<typeof evaluateCapacity> | null = null
   if (orgId) {
-    const [{ data: org }, { count: activeResidents }] = await Promise.all([
+    const [{ data: org }, { data: residents }] = await Promise.all([
       supabase.from('organizations').select('resident_limit').eq('id', orgId).single(),
-      supabase.from('residents').select('id', { count: 'exact', head: true }).eq('organization_id', orgId).is('archived_at', null),
+      supabase.from('residents').select(RESIDENT_PRESENCE_COLUMNS).eq('organization_id', orgId).is('archived_at', null),
     ])
     capacity = evaluateCapacity({
       operation: 'resident_admit',
       residentLimit: Number(org?.resident_limit ?? 50),
       currentBeds: 0,
-      currentResidents: activeResidents ?? 0,
+      currentResidents: countPresentResidents((residents || []) as ResidentPresenceFields[]),
       added: 1,
     })
     if (capacity.exceeds && formData.get('confirmCapacityExceed') !== 'true') {
