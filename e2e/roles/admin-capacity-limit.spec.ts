@@ -1,14 +1,15 @@
 import postgres from 'postgres';
 import { test, expect } from '../fixtures/base-test';
 import { FacilityPage } from '../page-objects/FacilityPage';
-import { MAIN_ORG_ID } from '../fixtures/test-users';
+import { TEST_USERS } from '../fixtures/test-users';
 
 /**
  * @REQ: ADM-CAPACITY-LIMIT
  *
  * SC-ADM-22, przypadek 1: kierownik dodaje łóżko ponad limit miejsc — widzi ostrzeżenie z liczbami,
  * bez potwierdzenia nic nie jest zapisywane, po potwierdzeniu łóżko powstaje i przekroczenie trafia do audytu.
- * Limit placówki testowej ustawiany bezpośrednio w bazie (bez JWT) na liczbę jej aktywnych łóżek i przywracany po teście.
+ * Limit placówki kierownika testowego ustawiany bezpośrednio w bazie (bez JWT) na liczbę jej aktywnych łóżek
+ * i przywracany po teście. Placówka z app_metadata konta — nie ze stałej, bo konto może należeć do innej placówki.
  */
 const BED_LABEL = 'E2E-LIMIT';
 const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
@@ -16,9 +17,13 @@ const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
 test.describe('Limit miejsc przy dodawaniu łóżka (@REQ: ADM-CAPACITY-LIMIT)', () => {
   let sql: postgres.Sql;
   let previousLimit: number | null = null;
+  let MAIN_ORG_ID = '';
 
   test.beforeAll(async () => {
     sql = postgres(dbUrl!, { prepare: false });
+    const [admin] = await sql`SELECT raw_app_meta_data->>'organization_id' AS org FROM auth.users WHERE email = ${TEST_USERS.org_admin.email}`;
+    MAIN_ORG_ID = admin.org;
+    await sql`DELETE FROM public.beds b USING public.rooms r WHERE b.room_id = r.id AND r.organization_id = ${MAIN_ORG_ID} AND b.label = ${BED_LABEL}`;
     const [org] = await sql`SELECT resident_limit FROM public.organizations WHERE id = ${MAIN_ORG_ID}`;
     previousLimit = org.resident_limit;
     const [beds] = await sql`
