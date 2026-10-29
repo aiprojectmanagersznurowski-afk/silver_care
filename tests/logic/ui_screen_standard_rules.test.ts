@@ -59,4 +59,43 @@ describe('Reguły standardu ekranu (ADR-017)', () => {
     expect(checkWrite('e2e/roles/example.spec.ts', '<h1>x</h1>').blocked).toBe(false);
     expect(checkWrite('apps/web/src/components/ui/card.tsx', "import { Badge } from '@/components/ui/badge'").blocked).toBe(false);
   });
+
+  it('@REQ: UI-TEMPLATE-ALIGNMENT - domyślny widok musi być literałem table, nie zmienną', () => {
+    expect(checkWrite(COMPONENT, 'useViewPreference(VIEW_PREFERENCE_KEYS.beds, defaultMode, MODES)').rule).toBe('ui-default-view-table');
+    expect(checkWrite(COMPONENT, "useViewPreference(KEY,'table', ['table', 'grid'] as const)").blocked).toBe(false);
+  });
+
+  it('@REQ: UI-TEMPLATE-ALIGNMENT - lista kart ma widok tabeli (ListViewFrame albo useViewPreference w pliku)', () => {
+    const cardsOnly = "export function L({ items }) { return <div>{items.map((i) => <ObjectCard key={i.id} title={i.name} />)}</div> }";
+    const withFrame = "import { ListViewFrame } from '@/components/patterns/ListViewFrame'\n" + cardsOnly.replace('<div>', '<ListViewFrame>');
+    expect(checkWrite(COMPONENT, cardsOnly, { wholeFile: true }).rule).toBe('ui-list-needs-table-view');
+    expect(checkWrite(COMPONENT, withFrame, { wholeFile: true }).blocked).toBe(false);
+    expect(checkWrite(COMPONENT, cardsOnly).blocked).toBe(false);
+  });
+
+  it('@REQ: UI-TEMPLATE-ALIGNMENT - komórki tabeli bez własnej wysokości, odstępów pionowych i rozmiaru tekstu', () => {
+    for (const cls of ['py-4', 'h-12', 'text-sm text-muted-foreground', 'p-4 pt-1', 'leading-tight']) {
+      expect(checkWrite(COMPONENT, `<TableCell className="${cls}">x</TableCell>`).rule, cls).toBe('ui-table-cell-size');
+    }
+    expect(checkWrite(COMPONENT, '<TableHead className="px-2 py-3 text-center">x</TableHead>').rule).toBe('ui-table-cell-size');
+    for (const cls of ['font-medium', 'text-right', 'text-muted-foreground whitespace-nowrap', 'w-[120px] px-4']) {
+      expect(checkWrite(COMPONENT, `<TableCell className="${cls}">x</TableCell>`).blocked, cls).toBe(false);
+    }
+  });
+
+  it('@REQ: UI-TEMPLATE-ALIGNMENT - lista wyjątków (dług z 2026-10-29) może tylko maleć', () => {
+    const BASELINE: Record<string, string[]> = {
+      'ui-own-page-heading': ['components/patterns/', 'components/ui/', 'app/login/', 'app/unauthorized/', 'components/FamilyDashboardClient.tsx', 'components/residents/profile/ResidentProfileHeader.tsx'],
+      'ui-own-status-badge': ['components/patterns/', 'components/ui/', 'components/AdminSidebar.tsx', 'components/StaffSidebar.tsx', 'components/StaffNotificationBell.tsx', 'components/ResidentInlineCareLevel.tsx', 'components/admission/AdmissionStepBed.tsx', 'components/profile/ProfileSessionsCard.tsx', 'components/residents/profile/ResidentGeneralInfoCard.tsx', 'components/search/CommandPaletteResults.tsx'],
+      'ui-own-table-frame': ['components/patterns/', 'components/ui/', 'components/facility/RoomTableView.tsx', 'components/residents/ResidentsTable.tsx'],
+      'ui-list-needs-table-view': ['components/patterns/', 'components/ui/', 'components/reports/DailyReportGrid.tsx'],
+      'ui-table-cell-size': ['components/patterns/', 'components/ui/', 'components/InvitationsTable.tsx', 'components/facility/BedTableRow.tsx', 'components/facility/RoomTableView.tsx', 'components/reports/DailyReportTable.tsx'],
+      'ui-default-view-table': [],
+    };
+    for (const [id, allowed] of Object.entries(BASELINE)) {
+      const rule = kkConfig.forbiddenPatterns.find((p: { id: string }) => p.id === id);
+      expect(rule, id).toBeDefined();
+      for (const entry of rule.allowIn || []) expect(allowed, `${id}: nowy wyjątek „${entry}”`).toContain(entry);
+    }
+  });
 });
