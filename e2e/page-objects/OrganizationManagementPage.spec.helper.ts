@@ -21,6 +21,11 @@ export class OrganizationManagementPage {
     this.table = page.locator('table');
   }
 
+  /** Wiersz tabeli placówki o podanej nazwie. */
+  rowFor(organizationName: string): Locator {
+    return this.table.getByRole('row').filter({ hasText: organizationName });
+  }
+
   async goto() {
     await this.page.goto('/admin/organizations');
     await this.page.waitForLoadState('networkidle');
