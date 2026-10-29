@@ -52,6 +52,8 @@ W całym systemie obowiązuje jedna, niesprzeczna norma UI:
 - **Kolor nie niesie oceny**: zakaz czerwieni/zieleni jako oceny stanu zdrowia. Czerwień wyłącznie dla błędów technicznych w panelu personelu.
 - **Metryki prezentujesz jako fakty**, bez wykresów sugerujących trend lub ocenę kondycji (ADR-005).
 - **Wspólne komponenty ekranu (ADR-017)**: nowy lub zmieniany ekran składa się z `apps/web/src/components/patterns/`: `PageHeader` (jedyny `h1` strony), `StatusBadge` (tony `neutral` i `brand`), `TableCard` z `TableStateRow` oraz `ListEmpty` / `ListLoading` / `ListError` (stany list). Nie pisz własnych nagłówków stron, plakietek statusu ani ramek tabel. Surową paletę Tailwind (np. `bg-amber-500`) blokuje reguła `ui-raw-palette`.
+- **Tabela jako widok domyślny**: lista z przełącznikiem widoku (`useViewPreference`) startuje od `'table'`; kafelki są wyborem użytkownika, zapamiętywanym w przeglądarce.
+- **Standard ekranu jest egzekwowany bramką** (`tools/sc.config.mjs`, hooki agentów i `verify.sh` krok 6): `ui-default-view-table`, `ui-own-page-heading` (h1 tylko przez `PageHeader`), `ui-own-status-badge` (tylko `StatusBadge`), `ui-own-table-frame` (tabela tylko w `TableCard`). Wyjątki w `allowIn` to zastany dług z 2026-10-29 — nowych nie dopisujesz, tylko je usuwasz.
 
 ## Potok głosowy
 

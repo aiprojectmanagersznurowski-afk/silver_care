@@ -43,6 +43,8 @@ W całym systemie obowiązuje jedna, niesprzeczna norma UI:
 - Tokeny są generowane z kontraktu do `packages/contracts/src/generated/tokens.css`. Używaj zmiennych CSS.
 - Kolor nie niesie oceny stanu pensjonariusza (brak czerwieni/zieleni jako oceny). Metryki prezentowane jako fakty (ADR-005).
 - Wspólne komponenty ekranu (ADR-017): nowy lub zmieniany ekran składa się z `apps/web/src/components/patterns/`: `PageHeader` (jedyny `h1` strony), `StatusBadge` (tony `neutral` i `brand`), `TableCard` z `TableStateRow` oraz `ListEmpty` / `ListLoading` / `ListError` (stany list). Nie pisz własnych nagłówków stron, plakietek statusu ani ramek tabel. Surową paletę Tailwind (np. `bg-amber-500`) blokuje reguła `ui-raw-palette`.
+- Tabela jako widok domyślny: lista z przełącznikiem widoku (`useViewPreference`) startuje od `'table'`.
+- Standard ekranu egzekwuje bramka (`tools/sc.config.mjs`, hooki i `verify.sh` krok 6): `ui-default-view-table`, `ui-own-page-heading`, `ui-own-status-badge`, `ui-own-table-frame`. Wyjątki w `allowIn` to zastany dług z 2026-10-29 — nowych nie dopisuj.
 
 ## Potok głosowy
 

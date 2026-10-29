@@ -56,10 +56,15 @@ import { kkConfig } from "./tools/guard-core.mjs";
 const id = process.argv[1];
 const rule = kkConfig.forbiddenPatterns.find((p) => p.id === id);
 if (!rule) { console.log(`brak reguły ${id} w tools/sc.config.mjs`); process.exit(0); }
-const re = new RegExp(rule.re), applies = new RegExp(rule.appliesTo);
+const re = new RegExp(rule.re, "g"), applies = new RegExp(rule.appliesTo);
 for (const f of execSync("git ls-files apps/web/src", { encoding: "utf8" }).split("\n").filter(Boolean)) {
   if (!applies.test(f) || (rule.allowIn || []).some((a) => f.includes(a))) continue;
-  readFileSync(f, "utf8").split("\n").forEach((l, i) => { if (re.test(l)) console.log(`${f}:${i + 1}: ${l.trim().slice(0, 120)}`); });
+  // cały plik, nie linia po linii — wzorce wielolinijkowe (useViewPreference) i scope "file" (TableCard)
+  const text = readFileSync(f, "utf8");
+  for (const m of text.matchAll(re)) {
+    const line = text.slice(0, m.index).split("\n").length;
+    console.log(`${f}:${line}: ${text.split("\n")[line - 1].trim().slice(0, 120)}`);
+  }
 }' "$1" 2>&1
 }
 
@@ -86,6 +91,17 @@ if [ -n "$TOUCH_VIOLATIONS" ]; then
 else
   ok "cele dotykowe wyłącznie z tokenu kontraktu (min-h-touch / min-w-touch, 38px)"
 fi
+
+# Standard ekranu (ADR-017, audyt UI): wspólne komponenty i tabela jako widok domyślny
+for SCREEN_RULE in ui-default-view-table ui-own-page-heading ui-own-status-badge ui-own-table-frame; do
+  SCREEN_VIOLATIONS=$(scan_rule "$SCREEN_RULE")
+  if [ -n "$SCREEN_VIOLATIONS" ]; then
+    printf "%s\n" "$SCREEN_VIOLATIONS"
+    bad "naruszenie standardu ekranu [$SCREEN_RULE] w apps/web/src/ (ADR-017)"
+  else
+    ok "standard ekranu [$SCREEN_RULE] spełniony"
+  fi
+done
 
 step "7/10 Limit rozmiaru plików aplikacyjnych (max 250 LOC)"
 LOC_VIOLATIONS=$(find apps/web/src -type f \( -name "*.ts" -o -name "*.tsx" \) \
