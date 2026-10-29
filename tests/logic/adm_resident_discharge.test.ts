@@ -2,7 +2,11 @@ import { describe, it, expect } from 'vitest'
 import {
   validateDischargePayload,
   determineResidentStatus,
-  DischargeValidationResult,
+  validateDeathInitiationPayload,
+  canInitiateDeathProcedure,
+  buildPostMortemSanitizationTasks,
+  formatDeathInitiationNote,
+  hasPendingDeathInitiation,
 } from '../../apps/web/src/lib/discharge-helpers'
 
 /**
@@ -141,4 +145,65 @@ describe('Discharge and Contract Termination Logic (@REQ: ADM-BED-ASSIGNMENT, @R
 
     expect(sampleText.toLowerCase()).not.toMatch(/pacjent/)
   })
+
+  describe('Operacyjna inicjacja zgłoszenia zgonu przez personel (ADM-RESIDENT-LIFECYCLE-DISCHARGE)', () => {
+    it('@REQ: ADM-BED-ASSIGNMENT - uprawnia wyłącznie nurse i org_admin (poza impersonacją) do inicjacji zgłoszenia zgonu', () => {
+      expect(canInitiateDeathProcedure('nurse', false)).toBe(true)
+      expect(canInitiateDeathProcedure('org_admin', false)).toBe(true)
+      expect(canInitiateDeathProcedure('nurse', true)).toBe(false)
+      expect(canInitiateDeathProcedure('super_admin', true)).toBe(false)
+      expect(canInitiateDeathProcedure('family', false)).toBe(false)
+      expect(canInitiateDeathProcedure('legal_guardian', false)).toBe(false)
+      expect(canInitiateDeathProcedure(undefined, false)).toBe(false)
+    })
+
+    it('@REQ: ADM-ARCHIVE - waliduje payload inicjacji zgłoszenia wyłącznie dla zgonu', () => {
+      const valid = validateDeathInitiationPayload({
+        residentId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
+        deathDate: '2026-10-29',
+        notes: 'Zgon odnotowany podczas porannego obchodu.',
+      })
+      expect(valid.isValid).toBe(true)
+      if (valid.isValid) {
+        expect(valid.data.residentId).toBe('a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d')
+        expect(valid.data.deathDate).toBe('2026-10-29')
+        expect(valid.data.notes).toBe('Zgon odnotowany podczas porannego obchodu.')
+      }
+
+      const missingDate = validateDeathInitiationPayload({
+        residentId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
+        deathDate: '',
+      })
+      expect(missingDate.isValid).toBe(false)
+    })
+
+    it('@REQ: ADM-BED-ASSIGNMENT - generuje pakiet zadań sanitarno-porządkowych niewidocznych dla rodziny', () => {
+      const tasks = buildPostMortemSanitizationTasks({
+        residentId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
+        targetDate: '2026-10-29',
+        bedLabel: 'Pokój 102, Łóżko A',
+      })
+
+      expect(tasks.length).toBe(3)
+      expect(tasks.every((t) => t.family_visible === false)).toBe(true)
+      expect(tasks.every((t) => t.resident_id === 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d')).toBe(true)
+      expect(tasks.some((t) => t.title.includes('karty zgonu'))).toBe(true)
+      expect(tasks.some((t) => t.title.includes('depozytu'))).toBe(true)
+      expect(tasks.some((t) => t.title.includes('Pokój 102, Łóżko A'))).toBe(true)
+    })
+
+    it('@REQ: ADM-ARCHIVE - oznacza i wykrywa oczekujące zgłoszenie zgonu do zatwierdzenia przez admina', () => {
+      const note = formatDeathInitiationNote({
+        existingNotes: 'Wcześniejsza notatka.',
+        deathDate: '2026-10-29',
+        unassignedBedLabel: 'Pokój 102, Łóżko A',
+        notes: 'Przekazano do kierownika.',
+      })
+
+      expect(hasPendingDeathInitiation({ notes: note, death_date: null })).toBe(true)
+      // Po formalnym zatwierdzeniu przez admina (ustawieniu death_date) nie jest już "oczekujące"
+      expect(hasPendingDeathInitiation({ notes: note, death_date: '2026-10-29' })).toBe(false)
+    })
+  })
 })
+
