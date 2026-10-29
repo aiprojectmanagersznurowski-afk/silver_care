@@ -140,8 +140,12 @@ test.describe('Limit miejsc przy dodawaniu łóżka (@REQ: ADM-CAPACITY-LIMIT)',
 
   test('@REQ: ADM-CAPACITY-LIMIT - przyjęcie podopiecznego ponad limit: ostrzeżenie, zapis dopiero po potwierdzeniu', async ({ loginPage, page }) => {
     await removeAdmittedResident();
+    // Przebywający w placówce: bez zarchiwizowanych, zmarłych i z zakończoną umową (decyzja Michała 2026-10-29)
     const activeResidents = async () => {
-      const [r] = await sql`SELECT count(*)::int AS n FROM public.residents WHERE organization_id = ${MAIN_ORG_ID} AND archived_at IS NULL`;
+      const [r] = await sql`
+        SELECT count(*)::int AS n FROM public.residents
+        WHERE organization_id = ${MAIN_ORG_ID} AND archived_at IS NULL AND death_date IS NULL
+          AND (contract_end_date IS NULL OR contract_end_date > (now() AT TIME ZONE 'Europe/Warsaw')::date)`;
       return r.n as number;
     };
     await sql`UPDATE public.organizations SET resident_limit = ${await activeResidents()} WHERE id = ${MAIN_ORG_ID}`;

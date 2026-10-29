@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { CAPACITY_POLICY } from '../../packages/contracts/src/generated/facility';
-import { evaluateCapacity, buildCapacityExceededAudit, capacityWarningMessage } from '../../apps/web/src/lib/capacity-limit';
+import { evaluateCapacity, buildCapacityExceededAudit, capacityWarningMessage, isPresentResident, countPresentResidents } from '../../apps/web/src/lib/capacity-limit';
 
 /**
  * @REQ: ADM-CAPACITY-LIMIT
@@ -37,6 +37,18 @@ describe('Ocena limitu miejsc (ADM-CAPACITY-LIMIT)', () => {
     expect(audit.payload).toEqual({ operation: 'resident_admit', counts: 'residents', resident_limit: 50, projected_count: 51, excess: 1 });
     expect(Object.keys(audit.payload)).not.toEqual(expect.arrayContaining(['first_name']));
     expect(JSON.stringify(audit.payload)).not.toMatch(/first_name|last_name|pesel|resident_id|imię|nazwisk/i);
+  });
+
+  it('@REQ: ADM-CAPACITY-LIMIT - miejsce zajmuje tylko podopieczny faktycznie przebywający w placówce (decyzja Michała 2026-10-29)', () => {
+    const today = new Date('2026-10-29T10:00:00Z');
+    const base = { archived_at: null, death_date: null, contract_end_date: null };
+    expect(isPresentResident(base, today)).toBe(true);
+    expect(isPresentResident({ ...base, contract_end_date: '2026-11-30' }, today)).toBe(true);
+    expect(isPresentResident({ ...base, archived_at: '2026-10-01T00:00:00Z' }, today)).toBe(false);
+    expect(isPresentResident({ ...base, death_date: '2026-10-20' }, today)).toBe(false);
+    expect(isPresentResident({ ...base, contract_end_date: '2026-10-29' }, today)).toBe(false);
+    expect(isPresentResident({ ...base, contract_end_date: '2026-10-01' }, today)).toBe(false);
+    expect(countPresentResidents([base, { ...base, death_date: '2026-10-20' }, { ...base, contract_end_date: '2026-12-01' }], today)).toBe(2);
   });
 
   it('@REQ: ADM-CAPACITY-LIMIT - komunikat ostrzeżenia z liczbami i terminologią słownika', () => {
