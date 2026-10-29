@@ -1,6 +1,6 @@
 # 📖 Kanoniczna specyfikacja user stories — Silver Care
 
-> **Wersja:** 2.13 (polskie nazwy ról z kontraktu `ROLES.label`; usunięte dawne role `admin`, `facility_manager`, `caregiver`, `paramedic`) · **Ostatnia aktualizacja:** 2026-10-26
+> **Wersja:** 2.14 (przekazanie zmiany, moduł zadań, raport dobowy z komunikatem o obchodzie — 📝 PROPOZYCJA, ADR-021) · **Ostatnia aktualizacja:** 2026-10-29
 > **Właściciele:** Darek Rink, Michał Sznurowski
 
 ## Jak czytać i utrzymywać ten dokument
@@ -563,6 +563,21 @@
 - **AC6 (Nawigacja według roli):** Wyniki wyszukiwarki, tablica dyżuru i lista podopiecznych prowadzą do trasy właściwej dla roli (kierownik → `/admin/residents/{id}`, personel → `/staff/residents/{id}`).
 - **AC7 (Norma UI i dostępność):** Zakładki obsługiwane klawiaturą, cele dotykowe `min-h-touch`, tekst ≥12px, kolory z tokenów, 4 stany UI (loading, empty, success, error); brak zapisu danych osobowych w logach (`SEC-NO-PII-LOGS`).
 
+#### [SC-ADM-21] Sekcja „Zadania” na karcie podopiecznego i wpływ przekazania zmiany na kartę
+🔗 **Kontrakt:** brak REQ (proponowany nowy: `ADM-RESIDENT-CARD-TASKS`; rozszerza `ADM-RESIDENT-CARD-VISIBILITY`) · **ADR:** ADR-021 · **Status:** 📝 PROPOZYCJA
+
+> ℹ️ Wymaga dopisania sekcji `tasks` do `RESIDENT_CARD_SECTIONS` i zasobu `shift_tasks` w `MATRIX` — okno kontraktowe otwiera człowiek.
+
+**User story:** Jako Członek Personelu opiekuńczego lub Kierownik Placówki, chcę na karcie podopiecznego widzieć jego otwarte zadania, historię wykonanych zadań i ostatnie przekazania zmiany, które go dotyczyły, aby przed podejściem do seniora wiedzieć, co jest do zrobienia i co działo się na poprzednich zmianach.
+
+**Kryteria akceptacji:**
+- **AC1 (Nowa sekcja):** Sekcja „Zadania” dla `nurse` i `org_admin`: otwarte zadania podopiecznego (termin, przypisanie, źródło), wykonane z ostatnich 7 dni, przycisk „Dodaj zadanie” z kontekstem tego podopiecznego. Walidator kontraktu odrzuca sekcję bez prawa odczytu `shift_tasks` w `MATRIX`.
+- **AC2 (Przekazania):** Sekcja pokazuje odcinki przekazań zmiany dotyczące podopiecznego z ostatnich 3 dób, z autorem, zmianą i znacznikiem „wymaga uwagi” (automatycznym przy otwartym zadaniu albo ręcznym, `SC-NUR-12/AC5`).
+- **AC3 (Raporty i plan dnia):** Sekcja „Raporty i plan dnia” pokazuje raport dobowy oraz komunikat o obchodzie z `SC-NUR-14`, gdy raportu z notatek nie było.
+- **AC4 (Nieobecność):** Status nieobecności (szpital, przepustka) widoczny w „Przeglądzie” wyłącznie dla personelu; nie jest przechowywany w tabeli `residents`, którą czytają bliscy.
+- **AC5 (Granica bliskich):** Zadania i przekazania nie są dostępne dla `family` ani `legal_guardian` — ani na karcie, ani w RLS/API, ani w `/family/agenda`.
+- **AC6 (Granica MDR i norma UI):** Fakty bez ocen stanu zdrowia, kolor nie niesie oceny (priorytet zadania w tonach `neutral`/`brand`), wzorce z `components/patterns/`, 4 stany UI.
+
 ### Domena 2 — Personel
 
 #### [SC-NUR-07] Skrzynka wiadomości od rodzin (wyłącznie dla Kierownika / Administratora Placówki)
@@ -624,6 +639,57 @@
 - **AC3 (Szybka odpowiedź głosowa):** W oknie konwersacji (`StaffMessagesInbox` w `/admin/messages`), obok pola tekstowego odpowiedzi, znajduje się przycisk dyktowania (ikona mikrofonu). Kierownik placówki może podyktować odpowiedź, która jest transkrybowana (z możliwością edycji) i wysyłana do rodziny.
 - **AC4 (Automatyczne wygaszenie wskaźnika):** Wysłanie odpowiedzi przez `org_admin` automatycznie oznacza wątek jako obsłużony i zdejmuje wskaźnik oczekującej wiadomości.
 - **AC5 (Ochrona danych i granica MDR):** Wiadomości i odpowiedzi podlegają ścisłej izolacji placówki w RLS (`organization_id`) oraz zasadzie niemutowalności (`append-only` w `family_messages`). Interfejs i transkrypcja rygorystycznie przestrzegają zakazu używania słowa „pacjent” (wyłącznie pensjonariusz / podopieczny).
+
+#### [SC-NUR-12] Głosowe przekazanie zmiany
+🔗 **Kontrakt:** brak REQ (proponowane nowe: `NUR-SHIFT-CONFIG`, `NUR-HANDOVER-VOICE`, `NUR-HANDOVER-ENTITY-SUGGEST`; wdraża: `VOICE-ZERO-GUESSING`, `INFRA-GROQ-DEMO-INTERIM`, `MDR-NO-INTERPRETATION`) · **ADR:** ADR-021 · **Status:** 📝 PROPOZYCJA
+
+**User story:** Jako Członek Personelu opiekuńczego kończący zmianę, chcę nagrać przekazanie zmiany głosem, w swoim języku, i dostać z niego uporządkowany raport przekazania z propozycjami zadań, aby następna zmiana w kilka minut wiedziała, co się działo i co jest do zrobienia, bez pisania notatek.
+
+**Scenariusze:**
+- **Przypadek 1 (Sprawa podopiecznego):** Opiekunka wybiera na liście panią Marię i mówi po ukraińsku: „Pani Maria w nocy dwa razy wstawała, rano zmierzyć temperaturę.”
+  *Then:* Odcinek trafia do pola „Sprawy podopiecznych” pani Marii (po `resident_id` z UI), a model proponuje zadanie „Zmierzyć temperaturę” z cytatem i terminem „rano”.
+- **Przypadek 2 (Sprawa placówki):** W odcinku „Placówka”: „Nie działa winda, zgłoszone do administracji.”
+  *Then:* Wpis trafia do „Spraw placówki”; zadanie ogólne bez podopiecznego tylko po akceptacji.
+- **Przypadek 3 (Imię innej osoby w odcinku):** W odcinku pani Marii pada imię pana Jana.
+  *Then:* Treść zostaje przy pani Marii; model nie przenosi jej do pana Jana i nie tworzy dla niego wpisu.
+- **Przypadek 3a (Sugestia z pokoju):** Opiekun nagrywa bez wyboru: „W dwunastce, łóżko B, odmówiła kolacji.”
+  *Then:* Serwer podsuwa podopieczną z pokoju 12, łóżko B; opiekun potwierdza albo wybiera kogoś innego. Bez potwierdzenia odcinek czeka i nie trafia do modelu.
+
+**Kryteria akceptacji:**
+- **AC1 (Konfiguracja zmian):** Kierownik definiuje 2 albo 3 zmiany na dobę (godziny od–do, strefa `Europe/Warsaw`); zmiana nocna przechodzi przez północ.
+- **AC2 (Odcinki z identyfikatorem i sugestią):** Każdy odcinek ma `resident_id` potwierdzony przez człowieka albo jest odcinkiem „Placówka”. Gdy podopiecznego nie wybrano przed nagraniem, serwer (nie model) podsuwa kandydatów na podstawie nazwiska, numeru pokoju lub łóżka z transkryptu, tylko spośród podopiecznych tej placówki. Brak potwierdzenia kończy się odmową; jeden kandydat nie jest przyjmowany automatycznie.
+- **AC2a (Maskowanie przed modelem):** Nazwiska, numery pokoi i łóżek są maskowane w transkrypcie przed wysłaniem do modelu.
+- **AC3 (Języki):** Nagranie po polsku, angielsku lub ukraińsku; raport przekazania zawsze po polsku, z cytatem w języku oryginału przy każdej propozycji zadania.
+- **AC4 (Stały szablon):** Pola: sprawy per podopieczny, sprawy placówki, osoby wymagające uwagi, ważne zdarzenia, zadania. Treść tylko z nagrania; puste pole to „Brak informacji w nagraniu”, nigdy treść dopisana przez model.
+- **AC5 („Wymaga uwagi” z zadań, nie z oceny modelu):** Znacznik włącza się automatycznie, gdy podopieczny ma otwarte zaakceptowane zadanie (`TODO`), i gaśnie, gdy otwartych zadań już nie ma. Propozycja AI (`PROPOSED`) go nie włącza. Osoba przekazująca może włączyć znacznik ręcznie i tylko ona go zdejmuje. Model nigdy nie zaznacza podopiecznego sam.
+- **AC6 (Przegląd i odbiór):** Osoba przekazująca poprawia i zatwierdza raport; następna zmiana potwierdza odbiór (kto, kiedy). Raport przekazania jest tylko dla personelu i nigdy nie trafia do bliskich.
+- **AC7 (Jedna ścieżka, dane syntetyczne):** Kod przekazania jest identyczny dla każdej organizacji — bez rozgałęzień „demo”. Dostawca modelu wynika z konfiguracji. Do czasu DPA z Groq na przetwarzanie tekstu albo przełączenia na model w UE w systemie są wyłącznie dane syntetyczne (procedura, ADR-015/ADR-021).
+- **AC8 (Audyt i logi):** Zatwierdzenie i odbiór zapisują wpis w `audit_logs`; w logach serwera brak treści nagrań i imion (`SEC-NO-PII-LOGS`).
+
+#### [SC-NUR-13] Moduł zadań z backlogiem i propozycjami AI
+🔗 **Kontrakt:** brak REQ (proponowane nowe: `NUR-TASKS`, `NUR-TASKS-AI-PROPOSAL`) · **ADR:** ADR-021 · **Status:** 📝 PROPOZYCJA
+
+**User story:** Jako Członek Personelu opiekuńczego lub Kierownik Placówki, chcę mieć jedną listę zadań — przypiętych do podopiecznego albo ogólnych dla placówki, przypisanych do konkretnej osoby albo do zmiany — do której zadania trafiają z przekazania zmiany i ręcznie, aby nic nie ginęło między zmianami.
+
+**Kryteria akceptacji:**
+- **AC1 (Model zadania):** Zadanie ma: tytuł, opcjonalnie podopiecznego (brak = zadanie placówki), przypisanie do osoby albo do zmiany, termin (dzień i opcjonalnie godzina), źródło (`MANUAL` albo `AI_HANDOVER`), status `PROPOSED` / `TODO` / `DONE` / `CANCELLED`.
+- **AC2 (Propozycje AI):** Zadanie z modelu ma status `PROPOSED` i obowiązkowy cytat źródłowy; staje się `TODO` dopiero po akceptacji człowieka, który może je też poprawić albo odrzucić. Model nie tworzy zadań, których nie ma w nagraniu.
+- **AC3 (Backlog):** Niewykonane zadanie po końcu zmiany nie znika ani nie jest odrzucane: przechodzi do backlogu i jest widoczne dla następnej zmiany z oznaczeniem „z poprzedniej zmiany”.
+- **AC4 (Widoki):** `/staff/agenda` pokazuje zadania bieżącej zmiany obok planu dnia z wyraźnym rozróżnieniem; widok „Moje zadania” dla przypisanych do osoby; sekcja na karcie podopiecznego (`SC-ADM-21`).
+- **AC5 (Wykonanie):** Oznaczenie „Wykonane” zapisuje kto i kiedy; anulowanie wymaga powodu. Zmiany statusu w `audit_logs`.
+- **AC6 (Granica bliskich i MDR):** Zadania tylko dla `nurse` i `org_admin` (RLS i `MATRIX`); zadania są poleceniami personelu, nie zaleceniami systemu — model nie proponuje dawek, leków ani działań, których nie wypowiedziała osoba przekazująca.
+
+#### [SC-NUR-14] Raport dobowy dla bliskich z jawnym komunikatem o obchodzie
+🔗 **Kontrakt:** `REPORT-APPROVAL`, `NTF-REPORT-READY`; proponowany nowy: `REPORT-ROUNDS-NOTICE` · **ADR:** ADR-021 · **Status:** 📝 PROPOZYCJA
+
+**User story:** Jako bliski podopiecznego, chcę dostawać raz dziennie jeden raport zatwierdzony przez personel, a w dniu bez notatek uczciwą informację, że obchód się odbył i notatek nie było, aby wiedzieć, co jest faktem, a czego placówka nie odnotowała.
+
+**Kryteria akceptacji:**
+- **AC1 (Raz na dobę):** Notatki ze wszystkich zmian doby składają się na jeden szkic `daily_reports`; personel publikuje każdy raport osobno, bez publikacji hurtowej przy zamknięciu zmiany.
+- **AC2 (Komunikat o obchodzie):** Gdy w dobie nie było notatki, a personel potwierdził obchód, bliscy widzą: „Personel potwierdził obchód. Brak notatek z tego dnia.” Bez opisu nastroju, posiłków ani samopoczucia.
+- **AC3 (Koniec gotowego tekstu):** Tekst „Stan stabilny, podopieczny spokojny, bez uwag.” (`bulk-reports.ts`, `StaffBoardClient.tsx`) zostaje usunięty z raportów i obchodu.
+- **AC4 (Nieobecność):** Podopieczny ze statusem nieobecności (szpital, przepustka) nie dostaje komunikatu o obchodzie.
+- **AC5 (Jedno powiadomienie):** Najwyżej jedno powiadomienie `F1` na dobę na bliskiego.
 
 #### [SC-USR-01] Własny profil i bezpieczeństwo konta
 🔗 **Kontrakt:** `SEC-SESSION`, `SEC-MFA-STAFF` · **WO:** [`NUR-PROFILE-SECURITY`](workorders/NUR-PROFILE-SECURITY.md) · **Status:** ✅ 📝
@@ -840,3 +906,4 @@
 | 2026-10-20 | 2.10 | Ujednolicenie ról pracowników placówki do dwóch poziomów (`org_admin` — Kierownik / Administrator Placówki, `nurse` — Personel opiekuńczy / Wsparcie) oraz ograniczenie dostępu do `family_messages` po stronie placówki wyłącznie do `org_admin` (`/admin/messages`; aktualizacja `SC-FAM-04`, `SC-NUR-07`, `SC-NUR-11`). |
 | 2026-10-22 | 2.11 | Dopisanie `SC-SUP-05` (globalne alerty systemowe i status platformy zarządzane przez `super_admin` oraz wycofanie statycznego kafelka „Status systemu: Stabilny” z pulpitu placówki — Wariant A) ze statusem 📝 PROPOZYCJA. |
 | 2026-10-24 | 2.12 | Dopisanie `SC-ADM-20` (wspólna karta podopiecznego dla personelu z widocznością sekcji według roli) ze statusem 📝 PROPOZYCJA. |
+| 2026-10-29 | 2.14 | Dopisanie `SC-NUR-12` (głosowe przekazanie zmiany), `SC-NUR-13` (moduł zadań z backlogiem i propozycjami AI), `SC-NUR-14` (raport dobowy z komunikatem o obchodzie) i `SC-ADM-21` (sekcja „Zadania” na karcie podopiecznego) ze statusem 📝 PROPOZYCJA, na podstawie decyzji Michała z ADR-021. |
