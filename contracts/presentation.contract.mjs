@@ -45,6 +45,21 @@ export const FORBIDDEN_UI_TERMS = [
 ];
 
 /**
+ * Słownik terminów widocznych dla użytkownika (NFR-UI-06, decyzja Michała 2026-10-29).
+ * Jedna rzecz = jedna nazwa w całym UI. Zakaz dotyczy tekstów widocznych dla użytkownika,
+ * nie nazw tabel i zmiennych (residents, organizations zostają).
+ * Egzekwowanie w tekstach UI przyjdzie razem z ujednoliceniem zastanych miejsc (osobny PR),
+ * dlatego słownik nie jest jeszcze częścią FORBIDDEN_UI_TERMS.
+ * formalOnly: termin dozwolony wyłącznie w dokumentach formalnych (umowa, klauzule RODO, rejestr zgód).
+ */
+export const UI_TERMINOLOGY = [
+  { entity: 'residents',     preferred: 'podopieczny',          forbidden: ['pensjonariusz', 'mieszkaniec', 'rezydent'], formalOnly: ['pensjonariusz'], reason: 'Decyzja Michała 2026-10-29: „podopieczny” w UI, „pensjonariusz” tylko w dokumentach formalnych. „Pacjent” blokuje FORBIDDEN_UI_TERMS.' },
+  { entity: 'organizations', preferred: 'placówka',             forbidden: ['ośrodek', 'dom opieki', 'DPS', 'zakład opiekuńczy'], formalOnly: [], reason: 'Decyzja Michała 2026-10-29: „placówka”, nie „ośrodek”.' },
+  { entity: 'role:org_admin', preferred: 'Kierownik placówki',  forbidden: ['Administrator Ośrodka', 'administrator placówki', 'administrator ośrodka'], formalOnly: [], reason: 'Nazwa roli wyłącznie z ROLES.label (decyzja Michała 2026-10-29).' },
+  { entity: 'organizations.resident_limit', preferred: 'limit miejsc', forbidden: ['pojemność placówki', 'limit pensjonariuszy'], formalOnly: [], reason: 'Limit miejsc = limit łóżek = maks. liczba podopiecznych (CAPACITY_POLICY).' },
+];
+
+/**
  * Guardrail MDR dla warstwy AI i powiadomień (ADR-005).
  * System opisuje FAKTY o zachowaniu. Nie ocenia stanu zdrowia i nie alarmuje.
  */

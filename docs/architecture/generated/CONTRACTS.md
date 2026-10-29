@@ -40,7 +40,7 @@ Dane są zbierane i dostępne personelowi. Zakaz dotyczy prezentacji bliskim, ni
 | REJOIN | edge_function | draft + resident_id | daily_reports (draft) |
 | APPROVE | nurse | draft | daily_reports (published) |
 
-## Powiadomienia (10)
+## Powiadomienia (12)
 
 | ID | Wyzwalacz | Odbiorca | Kanały |
 |---|---|---|---|
@@ -52,6 +52,8 @@ Dane są zbierane i dostępne personelowi. Zakaz dotyczy prezentacji bliskim, ni
 | S3 | `family_message_received` | ORG_ADMIN | IN_APP |
 | A1 | `device_sync_stale` | ORG_ADMIN | IN_APP, EMAIL |
 | A2 | `consent_expiring` | ORG_ADMIN | EMAIL |
+| A4 | `capacity_limit_exceeded` | ORG_ADMIN | IN_APP, EMAIL |
+| A5 | `capacity_limit_exceeded` | SUPER_ADMIN | IN_APP, EMAIL |
 | A3 | `ingest_rejected_repeatedly` | ORG_ADMIN | EMAIL |
 | X1 | `access_denied_threshold` | SUPER_ADMIN | EMAIL |
 
@@ -86,7 +88,7 @@ Krój: `-apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui, sans-
 
 Bazowy rozmiar 14px · minimalny kontrast 4.5:1 · cel dotykowy 38px
 
-## Wymagania (54)
+## Wymagania (56)
 
 | ID | Domena | Ryzyko | Treść |
 |---|---|---|---|
@@ -99,6 +101,7 @@ Bazowy rozmiar 14px · minimalny kontrast 4.5:1 · cel dotykowy 38px
 | ADM-BED-ASSIGNMENT | facility | HIGH | Jedno łóżko ma co najwyżej jednego aktywnego pensjonariusza; jeden pensjonariusz ma co najwyżej jedno aktywne łóżko. |
 | ADM-FACILITY-OCCUPANCY | facility | MEDIUM | Administrator widzi obłożenie pokoi bez ręcznego liczenia. |
 | ADM-INVITE | residents | HIGH | Zaproszenie dla bliskiego jest bezpieczne i nie ujawnia danych osobowych. |
+| ADM-CAPACITY-LIMIT | facility | HIGH | Limit miejsc placówki (liczba łóżek = maks. liczba aktywnych podopiecznych) ustala wyłącznie super admin; kierownik może go przekroczyć po potwierdzeniu, a przekroczenie powiadamia kierownika i super admina. |
 | ADM-RESIDENT-CARD-VISIBILITY | residents | HIGH | Wspólna karta podopiecznego dla personelu pokazuje każdej roli wyłącznie sekcje z zasobów, które ta rola może czytać według macierzy uprawnień. |
 | ADM-ARCHIVE | residents | HIGH | Archiwizacja odcina dostęp bliskim bez niszczenia śladu audytowego. |
 | SEC-MFA-STAFF | security | HIGH | Personel loguje się z drugim składnikiem; rodziny bez MFA. |
@@ -112,6 +115,7 @@ Bazowy rozmiar 14px · minimalny kontrast 4.5:1 · cel dotykowy 38px
 | MDR-VOCABULARY | presentation | MEDIUM | W warstwie widocznej dla użytkownika nie występuje słowo „pacjent" ani język kliniczny. |
 | UI-FOUR-STATES | presentation | MEDIUM | Każdy komponent prezentujący dane ma cztery stany. |
 | UI-ACCESSIBILITY | presentation | MEDIUM | Interfejs spełnia WCAG 2.1 na poziomie AA. |
+| UI-TERMINOLOGY | presentation | MEDIUM | Ta sama rzecz nazywa się w całym interfejsie tak samo, według słownika UI_TERMINOLOGY. |
 | UI-TEMPLATE-ALIGNMENT | presentation | MEDIUM | Interfejs używa komponentów, układu i wygladu szablonu shadcn-admin (styl nova) — promień, cień, odstępy, jeden styl przycisków i filtrów — z tekstem min. 14px i celem dotykowym 38px (ADR-016, ADR-018), z tokenami generowanymi z kontraktu. |
 | VOICE-ZERO-GUESSING | voice | HIGH | Model nigdy nie ustala tożsamości pensjonariusza z nagrania. |
 | VOICE-MEDICAL-STRIP | voice | HIGH | Dane medyczne są usuwane z transkryptu przed wysłaniem do modelu. |
