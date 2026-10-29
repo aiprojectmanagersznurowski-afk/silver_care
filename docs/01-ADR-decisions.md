@@ -341,3 +341,78 @@ Przed prezentacjami i demo dla potencjalnych klientów (Marconi, KIDO) potrzebny
 **Konsekwencje.**
 - Raporty dla bliskich czytane są mniejszym tekstem niż dotąd. Jeśli pilotaż pokaże problem z czytelnością, powrót do 16px dla treści raportu jest zmianą jednego tokenu w kontrakcie.
 - Do potwierdzenia przez Darka status pozostaje PROPOZYCJA; w razie sporu wraca ADR-016.
+
+---
+
+## ADR-021 — Głosowe przekazanie zmiany i zadania z propozycji AI, w fazie discovery na Groq i danych syntetycznych (Status: PROPOZYCJA — wymaga potwierdzenia Darka) 📝
+
+**Kontekst.** Projekt Darka `ARCH-VOICE-PIPELINE` v2.0 (2026-10-24) wprowadzał raporty dla bliskich co zmianę, gotowy tekst raportu rutynowego, przekazanie zmiany generowane ze strumienia `MEDICAL` oraz zadania wyłącznie jako dodatek do zamknięcia zmiany. Audyt z 2026-10-29 wskazał sprzeczności z kontraktem: zmyślona treść w fallbacku, hurtowa publikacja bez przejrzenia, dane medyczne w modelu (`MEDICAL reachesLLM: false` w `voice.contract.mjs`) i brak modułu zadań powiązanego z kartą podopiecznego.
+
+**Decyzja (Michał, 2026-10-29; Darek: do potwierdzenia).**
+1. **Raport dla bliskich raz dziennie, zbiorczo.** `daily_reports` pozostaje raportem dobowym, publikowanym pojedynczo przez personel (`REPORT-APPROVAL`). Jedno powiadomienie `F1` na dobę. Zmiany istnieją wyłącznie po stronie personelu.
+2. **Brak notatki = jawny komunikat o obchodzie.** Gdy w ciągu doby nie powstała żadna notatka, a personel potwierdził obchód, bliscy widzą: „Personel potwierdził obchód. Brak notatek z tego dnia.” Bez opisu nastroju, posiłków ani samopoczucia. Zastępuje to obecny tekst „Stan stabilny, podopieczny spokojny, bez uwag.”
+3. **Przekazanie zmiany z nagrania głosowego.** Osoba przekazująca nagrywa przekazanie po polsku, angielsku albo ukraińsku. Raport przekazania ma stały szablon: sprawy per podopieczny, sprawy placówki, osoby wymagające uwagi, ważne zdarzenia, zadania. Treść pochodzi wyłącznie z nagrania; szablon składa system, model jedynie porządkuje wypowiedź w pola szablonu i proponuje zadania.
+4. **Odcinki z sugestią podopiecznego, potwierdzaną przez człowieka (zmiana ADR-006).** Nagranie przekazania jest dzielone na odcinki: o konkretnym podopiecznym albo „Placówka”. Osoba przekazująca może wybrać podopiecznego przed nagraniem albo nagrać odcinek bez wyboru — wtedy **serwer, nie model**, porównuje nazwisko, numer pokoju lub łóżka z transkryptu z rejestrem tej placówki (`residents`, `rooms`, `beds`) i podsuwa kandydatów. Odcinek nie przechodzi dalej bez potwierdzenia człowieka; brak potwierdzenia kończy się odmową. Do modelu trafia transkrypt z zamaskowanymi nazwiskami, numerami pokoi i łóżek; `resident_id` dołączany jest dopiero przy zapisie. Model nadal nigdy nie ustala tożsamości (Michał, 2026-10-29; wymaga korekty kryteriów `VOICE-ZERO-GUESSING` w oknie kontraktowym).
+5. **„Wymaga uwagi” nie pochodzi z oceny modelu.** Model nie ocenia, kto wymaga uwagi (granica MDR, `MDR-NO-INTERPRETATION`). Znacznik włącza się automatycznie, gdy podopieczny ma otwarte zadanie zaakceptowane przez człowieka (`TODO`); sama propozycja AI (`PROPOSED`) go nie włącza. Osoba przekazująca może go też włączyć ręcznie. Znacznik automatyczny gaśnie, gdy podopieczny nie ma już otwartych zadań; ręczny zdejmuje człowiek (Michał, 2026-10-29).
+6. **Zadania od razu z propozycjami AI.** Model proponuje zadania z obowiązkowym cytatem źródłowym; każde zadanie wymaga akceptacji człowieka. Zadania można też dodawać ręcznie. Niewykonane zadanie zostaje w backlogu, nie jest automatycznie odrzucane.
+7. **Discovery na Groq, tylko dane syntetyczne, jedna ścieżka kodu.** Etap porządkowania przekazania i propozycji zadań korzysta z Groq (`GROQ_DEMO_LLM`, ADR-015) — także dla treści medycznych z nagrania. Kod nie rozróżnia organizacji demonstracyjnych i produkcyjnych: testujemy dokładnie to, co pojedzie na produkcję (Michał, 2026-10-29). Ograniczenie do danych syntetycznych jest operacyjne, jak w ADR-015: do czasu podpisania DPA z Groq na przetwarzanie tekstu albo przełączenia dostawcy na model w UE w systemie nie ma prawdziwych pensjonariuszy. Zmiana dostawcy to konfiguracja, nie osobna ścieżka kodu.
+
+**Przebieg.**
+
+```mermaid
+flowchart TD
+    subgraph ZMIANA["W trakcie zmiany"]
+        N1["Notatka głosowa o podopiecznym<br/>(resident_id z UI)"] --> P1["Istniejący potok:<br/>TRANSCRIBE → CLASSIFY → REDACT → GENERATE"]
+        P1 --> L1[("daily_logs<br/>MEDICAL + oryginały")]
+        P1 --> D1[("daily_reports<br/>szkic dobowy")]
+        T0["Zadanie dodane ręcznie"] --> TB
+    end
+
+    subgraph PRZEKAZANIE["Koniec zmiany: przekazanie"]
+        H1["Osoba przekazująca nagrywa odcinek<br/>o podopiecznym albo „Placówka”<br/>(PL / EN / UK)"] --> H2["Groq Whisper: transkrypcja"]
+        H2 --> H3["Serwer podsuwa podopiecznego<br/>(nazwisko / pokój / łóżko),<br/>człowiek potwierdza; maskowanie"]
+        H3 --> H4["Groq LLM: porządkuje odcinek w pola szablonu<br/>i proponuje zadania z cytatem"]
+        H4 --> H5["Przegląd przez osobę przekazującą:<br/>poprawki, „wymaga uwagi”,<br/>akceptacja lub odrzucenie zadań"]
+        H5 --> H6[("shift_handover_reports<br/>tylko personel")]
+        H5 --> TB[("Zadania: backlog<br/>podopieczny albo placówka,<br/>osoba albo zmiana, termin")]
+        H6 --> H7["Następna zmiana potwierdza odbiór"]
+    end
+
+    subgraph BLISCY["Raz dziennie: bliscy"]
+        D1 --> R1{"Są notatki z doby?"}
+        R1 -- tak --> R2["Personel przegląda i publikuje<br/>każdy raport osobno"]
+        R1 -- nie --> R3["Personel potwierdza obchód<br/>→ komunikat bez opisu stanu"]
+        R2 --> F1["Jedno powiadomienie F1 na dobę"]
+        R3 --> F1
+    end
+
+    TB --> K1["Karta podopiecznego: sekcja „Zadania”"]
+    TB --> K2["/staff/agenda: zadania zmiany"]
+    H6 -. nigdy .-> BLISCY
+    TB -. nigdy .-> BLISCY
+```
+
+**Rejestr promptów.** Treść promptów mieszka w `packages/contracts/src/prompts.ts` i `apps/web/src/lib/voice-redactor.ts`; tu tylko nazwy i rola. Wersja potoku: `PROMPT_VERSION` z `voice.contract.mjs` (obecnie `v2.1.0-mdr-eu-dpa`), zapisywana przy każdym raporcie jako `ai_prompt_version`.
+
+| Nazwa | Stan | Etap | Wejście → wyjście | Gdzie |
+|---|---|---|---|---|
+| `ZERO_GUESSING_DIRECTIVE` | istnieje | fragment wspólny | dopisywany do każdego promptu: zakaz zgadywania tożsamości i faktów | `prompts.ts` |
+| `VOICE_CLASSIFIER` | istnieje | CLASSIFY | transkrypt po maskowaniu → strumienie MEDICAL / DISCOMFORT / BEHAVIORAL, `medication_event`, `followup_question` | `VOICE_PROCESSING_PROMPT` + `buildClassifierSystemPrompt()` |
+| `FAMILY_REPORT` | istnieje, do zmiany | GENERATE | BEHAVIORAL + ogólny DISCOMFORT → tekst raportu dla bliskich. Zmiana: wejściem są wszystkie fakty z doby, a nie jedna notatka (`SC-NUR-14`) | `FAMILY_REPORT_PROMPT` + `buildFamilyReportSystemPrompt()` |
+| `HANDOVER_STRUCTURE` | nowy | przekazanie | odcinek przekazania po maskowaniu → pola szablonu (sprawy, ważne zdarzenia), tłumaczenie z EN / UK na polski | do utworzenia |
+| `TASK_PROPOSE` | nowy | przekazanie | odcinek przekazania po maskowaniu → propozycje zadań z cytatem i terminem, bez zadań spoza nagrania | do utworzenia |
+
+Transkrypcja (Groq Whisper) i sugestia podopiecznego nie używają promptu: pierwsza to model mowy, druga to dopasowanie po stronie serwera.
+
+**Co wymaga okna kontraktowego (otwiera człowiek).**
+- `voice.contract.mjs`: nowe etapy przekazania (`HANDOVER_CAPTURE`, `HANDOVER_STRUCTURE`, `TASK_PROPOSE`) z jawnym wyjątkiem `MEDICAL` dla ścieżki przekazania (wyłącznie personel, nigdy raport dla bliskich).
+- `integration.contract.mjs`: rozszerzenie `GROQ_DEMO_LLM` o etapy przekazania.
+- `roles.contract.mjs`: zasoby `facility_shifts`, `shift_handover_reports`, `shift_tasks` w `MATRIX` — personel i kierownik, nigdy bliscy.
+- `presentation.contract.mjs`: sekcja karty `tasks` w `RESIDENT_CARD_SECTIONS`; komunikat o obchodzie jako jawny stan braku danych.
+- `requirements.contract.mjs`: nowe wymagania ze `source` wskazującym `SC-NUR-12`, `SC-NUR-13`, `SC-NUR-14`, `SC-ADM-21`.
+
+**Konsekwencje.**
+- Przed pracą z prawdziwymi pensjonariuszami potrzebne jest DPA z Groq na przetwarzanie tekstu albo przeniesienie etapu do modelu w UE (Mistral, `eu-llm-client.ts`) — oraz osobna decyzja, czy treść `MEDICAL` może trafić do modelu w ścieżce przekazania. Do tego czasu w systemie są wyłącznie dane syntetyczne — tak samo jak w ADR-015 pilnuje tego procedura, nie kod.
+- Zgody aktorów na nagranie i przetwarzanie głosu: świadomie odłożone przez Michała (2026-10-29), do uzupełnienia przed szerszym użyciem nagrań.
+- Z projektu Darka zostają: konfiguracja zmian w strefie `Europe/Warsaw`, `daily_logs` jako rejestr faktów tylko do dopisywania, oddzielenie zadań od `agenda_items`, złożone klucze `(id, organization_id)`, nieobecność podopiecznego — ale w tabeli tylko dla personelu, nie w `residents`.
+- Odpadają: raporty dla bliskich co zmianę, gotowy tekst raportu rutynowego, hurtowa publikacja przy zamknięciu zmiany, automatyczne odrzucanie niewybranych zadań.
