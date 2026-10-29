@@ -1,12 +1,21 @@
 import { createClient } from '@/lib/supabase/server'
 import { FamilyDashboardClient } from '@/components/FamilyDashboardClient'
+import { FamilyOffboardingView } from '@/components/family/FamilyOffboardingView'
+import { evaluateFamilyOffboardingState } from '@/lib/family-offboarding'
 import { cookies } from 'next/headers'
 import { mergeAndSortAgenda, AgendaItem } from '@/lib/agenda'
 import { Users } from 'lucide-react'
 import { isMedicalAgendaItem } from '@/lib/agenda-family-visibility'
 import { getCurrentUser } from '@/lib/supabase/current-user'
 
-type ResidentType = { id: string; first_name: string; last_name: string };
+type ResidentType = {
+  id: string
+  first_name: string
+  last_name: string
+  death_date?: string | null
+  contract_end_date?: string | null
+  archived_at?: string | null
+};
 
 export default async function FamilyDashboard(props: { searchParams: Promise<{ date?: string }> }) {
   const searchParams = await props.searchParams;
@@ -23,7 +32,10 @@ export default async function FamilyDashboard(props: { searchParams: Promise<{ d
       residents (
         id,
         first_name,
-        last_name
+        last_name,
+        death_date,
+        contract_end_date,
+        archived_at
       )`)
     .eq('relative_user_id', user.id)
 
@@ -61,6 +73,17 @@ export default async function FamilyDashboard(props: { searchParams: Promise<{ d
   const cookieResidentId = cookieStore.get('family_resident_id')?.value
   const activeResident = residents.find(r => r.id === cookieResidentId) || residents[0]
 
+  const offboardingState = evaluateFamilyOffboardingState(activeResident)
+  if (offboardingState.mode === 'retention_expired') {
+    return (
+      <FamilyOffboardingView
+        resident={activeResident}
+        state={offboardingState}
+        reports={[]}
+      />
+    )
+  }
+
   // Pobieramy raporty tylko dla wybranego pensjonariusza
   const { data: reports } = await supabase
     .from('daily_reports')
@@ -80,6 +103,16 @@ export default async function FamilyDashboard(props: { searchParams: Promise<{ d
         sleep_hours?: number
       }
     }
+  }
+
+  if (offboardingState.mode === 'memorial_window') {
+    return (
+      <FamilyOffboardingView
+        resident={activeResident}
+        state={offboardingState}
+        reports={(reports || []) as Report[]}
+      />
+    )
   }
 
   // Pobieramy zdjęcia pensjonariusza z wybranego dnia
