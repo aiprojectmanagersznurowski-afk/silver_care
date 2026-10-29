@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache'
 import { parseNationalId, suggestBeds, BedCandidate, BedSuggestion } from '@/lib/admission-helpers'
 import { hashNationalId } from '@/lib/national-id-hash'
 import { isImpersonationSessionActive, assertMutationAllowedDuringImpersonation, safeGetCookieStore } from '@/lib/impersonation-guards'
+import { evaluateCapacity, buildCapacityExceededAudit, capacityWarningMessage } from '@/lib/capacity-limit'
 
 interface ActiveAssignmentRecord {
   bed_id: string
@@ -123,6 +124,28 @@ export async function admitResidentAction(formData: FormData) {
     return { error: 'Tylko administrator placówki może przyjmować pensjonariuszy.' }
   }
 
+  // ADM-CAPACITY-LIMIT: przyjęcie ponad limit miejsc dopiero po świadomym potwierdzeniu (SC-ADM-22/AC3).
+  // Liczymy aktywnych podopiecznych (jak masowy import), bo przyjęcie jest możliwe także bez łóżka.
+  const orgId = user.app_metadata?.organization_id as string | undefined
+  let capacity: ReturnType<typeof evaluateCapacity> | null = null
+  if (orgId) {
+    const [{ data: org }, { count: activeResidents }] = await Promise.all([
+      supabase.from('organizations').select('resident_limit').eq('id', orgId).single(),
+      supabase.from('residents').select('id', { count: 'exact', head: true }).eq('organization_id', orgId).is('archived_at', null),
+    ])
+    capacity = evaluateCapacity({
+      operation: 'resident_admit',
+      residentLimit: Number(org?.resident_limit ?? 50),
+      currentBeds: 0,
+      currentResidents: activeResidents ?? 0,
+      added: 1,
+    })
+    if (capacity.exceeds && formData.get('confirmCapacityExceed') !== 'true') {
+      const warning = capacityWarningMessage(capacity)
+      return { error: warning, capacityWarning: warning }
+    }
+  }
+
   const computedHash = hashNationalId(idValue)
 
   const { data, error } = await supabase.rpc('admit_resident_with_bed', {
@@ -145,6 +168,18 @@ export async function admitResidentAction(formData: FormData) {
       return { error: 'Pensjonariusz o tym numerze PESEL jest już zarejestrowany w placówce.' }
     }
     return { error: 'Błąd przyjęcia pensjonariusza: ' + error.message }
+  }
+
+  if (capacity?.exceeds && orgId) {
+    const audit = buildCapacityExceededAudit(capacity)
+    const { error: auditErr } = await supabase.from('audit_logs').insert({
+      organization_id: orgId,
+      resident_id: null,
+      action: audit.action,
+      performed_by: user.id,
+      payload: audit.payload,
+    })
+    if (auditErr) console.error('[CAPACITY_AUDIT_FAIL]', auditErr.code)
   }
 
   revalidatePath('/admin/residents')
