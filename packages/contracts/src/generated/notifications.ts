@@ -159,6 +159,53 @@ export const NOTIFICATIONS = [
     "note": "Przypomnienie o zgodach wymagających odnowienia."
   },
   {
+    "id": "A4",
+    "domain": "ADMIN",
+    "trigger": "capacity_limit_exceeded",
+    "channels": [
+      "IN_APP",
+      "EMAIL"
+    ],
+    "recipient": "ORG_ADMIN",
+    "vars": [
+      "resident_limit",
+      "bed_count",
+      "active_resident_count",
+      "operation"
+    ],
+    "containsPersonalData": false,
+    "templateKey": "admin.capacity_exceeded",
+    "req": [
+      "ADM-CAPACITY-LIMIT"
+    ],
+    "status": "PLANNED",
+    "note": "Potwierdzenie dla kierownika, że placówka przekroczyła limit miejsc. Liczby i rodzaj operacji, bez danych podopiecznych (SC-ADM-22)."
+  },
+  {
+    "id": "A5",
+    "domain": "ADMIN",
+    "trigger": "capacity_limit_exceeded",
+    "channels": [
+      "IN_APP",
+      "EMAIL"
+    ],
+    "recipient": "SUPER_ADMIN",
+    "vars": [
+      "organization_name",
+      "resident_limit",
+      "bed_count",
+      "active_resident_count",
+      "operation"
+    ],
+    "containsPersonalData": false,
+    "templateKey": "super.capacity_exceeded",
+    "req": [
+      "ADM-CAPACITY-LIMIT"
+    ],
+    "status": "PLANNED",
+    "note": "Informacja dla super admina, że placówka przekroczyła ustalony przez niego limit miejsc. Nazwa placówki i liczby, bez danych podopiecznych (SC-ADM-22)."
+  },
+  {
     "id": "A3",
     "domain": "ADMIN",
     "trigger": "ingest_rejected_repeatedly",

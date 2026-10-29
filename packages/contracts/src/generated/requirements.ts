@@ -123,6 +123,22 @@ export const REQUIREMENTS = [
     ]
   },
   {
+    "id": "ADM-CAPACITY-LIMIT",
+    "status": "TODO",
+    "risk": "HIGH",
+    "source": "SC-ADM-22",
+    "domain": "facility",
+    "statement": "Limit miejsc placówki (liczba łóżek = maks. liczba aktywnych podopiecznych) ustala wyłącznie super admin; kierownik może go przekroczyć po potwierdzeniu, a przekroczenie powiadamia kierownika i super admina.",
+    "acceptance": [
+      "Zmianę resident_limit przez rolę inną niż super_admin odrzuca baza, także przy bezpośrednim zapytaniu przez API",
+      "Masowy import nie zmienia resident_limit, nawet gdy liczba podopiecznych przekracza limit",
+      "Dodanie łóżek, przyjęcie albo import ponad limit wymaga potwierdzenia po ostrzeżeniu z liczbami; bez potwierdzenia nic nie jest zapisywane",
+      "Zatwierdzone przekroczenie zapisuje ORGANIZATION_CAPACITY_EXCEEDED w audit_logs bez danych osobowych",
+      "Zatwierdzone przekroczenie wysyła powiadomienia A4 do kierownika placówki i A5 do super admina, bez danych podopiecznych",
+      "Lista placówek super admina oznacza placówkę ponad limitem plakietką w tonie brand, nie czerwienią"
+    ]
+  },
+  {
     "id": "ADM-RESIDENT-CARD-VISIBILITY",
     "status": "TODO",
     "risk": "HIGH",
@@ -291,6 +307,20 @@ export const REQUIREMENTS = [
       "Kontrast tekstu spełnia próg AA",
       "Interfejs działa przy powiększeniu tekstu do 200%",
       "Nawigacja klawiaturą obejmuje wszystkie akcje"
+    ]
+  },
+  {
+    "id": "UI-TERMINOLOGY",
+    "status": "TODO",
+    "risk": "MEDIUM",
+    "source": "NFR-UI-06",
+    "domain": "presentation",
+    "statement": "Ta sama rzecz nazywa się w całym interfejsie tak samo, według słownika UI_TERMINOLOGY.",
+    "acceptance": [
+      "Teksty widoczne dla użytkownika nie zawierają zakazanych synonimów z UI_TERMINOLOGY (np. ośrodek, Administrator Ośrodka)",
+      "Termin formalOnly (pensjonariusz) występuje wyłącznie w dokumentach formalnych z jawnej listy",
+      "Nazwy ról w interfejsie pochodzą z ROLES.label, a nie z tekstu wpisanego w komponencie",
+      "Tytuły i etykiety pisane są zdaniowo (Struktura placówki, nie Struktura Placówki)"
     ]
   },
   {
