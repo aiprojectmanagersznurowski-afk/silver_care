@@ -10,6 +10,7 @@ import { EditResidentDialog } from '@/components/EditResidentDialog'
 import { DischargeResidentDialog } from '@/components/DischargeResidentDialog'
 import { FullResidentData, ResidentBedAssignment } from './profile-types'
 import { formatPersonName } from '@/lib/person-name'
+import { hasPendingDeathInitiation } from '@/lib/discharge-helpers'
 
 interface ResidentProfileHeaderProps {
   resident: FullResidentData
@@ -33,6 +34,8 @@ export function ResidentProfileHeader({
   const activeBedLabel = activeAssignment?.beds
     ? `Pokój ${activeAssignment.beds.rooms?.number || '?'}, Łóżko ${activeAssignment.beds.label}`
     : null
+  const pendingDeath = hasPendingDeathInitiation(resident)
+  const canNurseInitiateDeath = !canManage && isActive && !pendingDeath && backHref.startsWith('/staff')
 
   return (
     <div className="space-y-2">
@@ -64,7 +67,9 @@ export function ResidentProfileHeader({
                 {formatPersonName(resident.first_name, resident.last_name)}
               </h1>
               <BusinessIdBadge type="resident" id={resident.id} />
-              {isActive ? (
+              {pendingDeath ? (
+                <StatusBadge>Zgłoszono zgon — do zatwierdzenia</StatusBadge>
+              ) : isActive ? (
                 <StatusBadge tone="brand">Aktywny pobyt</StatusBadge>
               ) : resident.death_date ? (
                 <StatusBadge>Zmarły ({resident.death_date})</StatusBadge>
@@ -73,28 +78,42 @@ export function ResidentProfileHeader({
               )}
             </div>
             <p className="text-sm text-muted-foreground mt-1">
-              {activeBedLabel ?? 'Brak przypisanego łóżka'}
+              {activeBedLabel ?? (pendingDeath ? 'Łóżko zwolnione do dezynfekcji' : 'Brak przypisanego łóżka')}
             </p>
           </div>
         </div>
 
-        {canManage && (
-        <div className="flex flex-wrap items-center gap-2">
-          <EditResidentDialog resident={resident} />
+        {(canManage || canNurseInitiateDeath) && (
+          <div className="flex flex-wrap items-center gap-2">
+            {canManage && <EditResidentDialog resident={resident} />}
 
-          {isActive && (
-            <DischargeResidentDialog
-              resident={{
-                id: resident.id,
-                first_name: resident.first_name,
-                last_name: resident.last_name,
-              }}
-              activeBedLabel={activeBedLabel}
-            />
-          )}
-        </div>
+            {canManage && isActive && (
+              <DischargeResidentDialog
+                resident={{
+                  id: resident.id,
+                  first_name: resident.first_name,
+                  last_name: resident.last_name,
+                }}
+                activeBedLabel={activeBedLabel}
+                mode="full"
+              />
+            )}
+
+            {canNurseInitiateDeath && (
+              <DischargeResidentDialog
+                resident={{
+                  id: resident.id,
+                  first_name: resident.first_name,
+                  last_name: resident.last_name,
+                }}
+                activeBedLabel={activeBedLabel}
+                mode="nurse_death_init"
+              />
+            )}
+          </div>
         )}
       </div>
     </div>
   )
 }
+
