@@ -12,7 +12,7 @@ const ROOT = process.env.SC_PROJECT_DIR || join(dirname(fileURLToPath(import.met
 const load = (f) => import(`file://${join(ROOT, 'contracts', f)}`);
 
 const { ROLES, STAFF_ROLES, RELATIVE_ROLES, MFA_REQUIRED_ROLES, CONSENT_GRANTORS, CONSENT_PURPOSES,
-        RESOURCES, MATRIX, AUDIT_REQUIREMENTS, DELETE_POLICIES } = await load('roles.contract.mjs');
+        RESOURCES, MATRIX, AUDIT_REQUIREMENTS, DELETE_POLICIES, SHIFT_LEAD_SCOPE } = await load('roles.contract.mjs');
 const { FAMILY_VISIBLE_METRICS, PHYSIOLOGICAL_FIELDS, FORBIDDEN_UI_TERMS, MDR_GUARDRAILS,
         REQUIRED_UI_STATES, RESIDENT_CARD_SECTIONS = [], AGENDA_FAMILY_EXCLUSION, UI_TERMINOLOGY } = await load('presentation.contract.mjs');
 const { TRANSCRIPT_STREAMS, MEDICAL_CATEGORIES, PIPELINE_STAGES, VOICE_RETENTION,
@@ -21,7 +21,7 @@ const { PROVIDERS, WEARABLE_LINK, ORG_LINK, FIELD_MAPPINGS, INGEST_PRECONDITIONS
 const { NOTIFICATIONS, FORBIDDEN_TRIGGERS, CHANNELS, RECIPIENTS, QUEUE_POLICY } = await load('notifications.contract.mjs');
 const { REQUIREMENTS, REQUIREMENTS_BY_ID } = await load('requirements.contract.mjs');
 const { DECISION_CLASSES, ESCALATION_TRIGGERS, DEFAULTS, RETRY_POLICY, SESSION_REPORT_SECTIONS } = await load('autonomy.contract.mjs');
-const { FACILITY_HIERARCHY, ROOM_SHAPE, BED_SHAPE, BED_ASSIGNMENT_SHAPE, OCCUPANCY_GUARDS, OCCUPANCY_VIEW, CAPACITY_POLICY } = await load('facility.contract.mjs');
+const { FACILITY_HIERARCHY, ROOM_SHAPE, BED_SHAPE, BED_ASSIGNMENT_SHAPE, OCCUPANCY_GUARDS, OCCUPANCY_VIEW, CAPACITY_POLICY, SHIFT_POLICY, SHIFT_TASK_POLICY } = await load('facility.contract.mjs');
 const { TYPOGRAPHY, COLORS, SPACING, ACCESSIBILITY, LAYOUT_PRINCIPLES } = await load('design.contract.mjs');
 
 const errors = [];
@@ -530,6 +530,54 @@ if (UI_TERMINOLOGY) {
       else if (role.label !== t.preferred) err('R30-ui-terminology', `Nazwa roli "${role.id}" w słowniku ("${t.preferred}") różni się od ROLES.label ("${role.label}").`);
     }
   }
+}
+
+// R31 — zakres „kierownik zmiany” (SC-NUR-12/AC1a, decyzja Michała 2026-10-30): uprawnienia na swojej zmianie,
+// nigdy odczyt, tylko dla zasobów z kluczem zmiany i tylko dla roli wskazanej w kontrakcie.
+if (SHIFT_LEAD_SCOPE) {
+  const sc = SHIFT_LEAD_SCOPE;
+  if (!roleIds.includes(sc.role)) err('R31-shift-lead', `Zakres ${sc.qualifier} wskazuje nieistniejącą rolę "${sc.role}".`);
+  if (!RESOURCES.includes(sc.derivedFrom?.resource)) err('R31-shift-lead', 'Grafik, z którego wynika kierownik zmiany, nie jest zasobem w macierzy.');
+  if (sc.leadsPerShift !== 1) err('R31-shift-lead', `Na zmianę musi przypadać dokładnie jeden kierownik (jest: ${sc.leadsPerShift}).`);
+  for (const row of MATRIX) {
+    for (const cap of ['read', 'create', 'update', 'delete']) {
+      for (const entry of row[cap] || []) {
+        const [role, qualifier] = entry.split(':');
+        if (qualifier !== sc.qualifier) continue;
+        if (role !== sc.role) err('R31-shift-lead', `MATRIX ${row.resource}.${cap}: zakres ${sc.qualifier} tylko dla roli "${sc.role}" (jest "${role}").`);
+        if (!sc.resources.includes(row.resource)) err('R31-shift-lead', `MATRIX ${row.resource}.${cap}: zakres ${sc.qualifier} poza zasobami z kluczem zmiany (${sc.resources.join(', ')}).`);
+        if (!sc.capabilities.includes(cap)) err('R31-shift-lead', `MATRIX ${row.resource}.${cap}: zakres ${sc.qualifier} nie obejmuje "${cap}" — odczyt ma każdy personel placówki.`);
+      }
+    }
+  }
+}
+
+// R32 — zmiany i zadania zmiany (SC-NUR-13): tylko personel, anulowanie z powodem, niewykonane nie znika.
+if (SHIFT_POLICY && SHIFT_TASK_POLICY) {
+  const p = SHIFT_POLICY;
+  const t = SHIFT_TASK_POLICY;
+  if (p.timezone !== 'Europe/Warsaw') err('R32-shift-tasks', `Strefa zmian "${p.timezone}" — grafik liczy się w Europe/Warsaw.`);
+  if (!(p.shiftsPerDay?.min === 2 && p.shiftsPerDay?.max === 3)) err('R32-shift-tasks', 'Placówka ma mieć 2 albo 3 zmiany na dobę.');
+  if (t.cancelRequiresReason !== true) err('R32-shift-tasks', 'Anulowanie zadania bez wymaganego powodu.');
+  if (t.visibleToRelatives !== false) err('R32-shift-tasks', 'Zadania zmiany nie mogą być widoczne dla bliskich.');
+  for (const path of ['DONE', 'CANCELLED', 'CARRIED']) {
+    if (!(t.settlementPaths || []).includes(path)) err('R32-shift-tasks', `Brak ścieżki rozliczenia "${path}" — zadanie mogłoby zniknąć bez śladu.`);
+  }
+  for (const src of ['MANUAL', 'HANDOVER', 'CARE_PLAN']) {
+    if (!(t.sources || []).includes(src)) err('R32-shift-tasks', `Brak źródła zadania "${src}" — źródło musi być zawsze widoczne.`);
+  }
+  for (const forbidden of ['pesel', 'pesel_hash', 'phone', 'email', 'birth_date']) {
+    if ((t.printFields || []).includes(forbidden)) err('R32-shift-tasks', `Wydruk planu zawiera pole "${forbidden}" — minimalizacja danych (art. 9 RODO).`);
+  }
+  for (const res of ['shift_definitions', 'shift_roster', 'shift_tasks', 'shift_plan_approvals']) {
+    const row = MATRIX.find((m) => m.resource === res);
+    for (const cap of ['read', 'create', 'update', 'delete']) {
+      for (const entry of row?.[cap] || []) {
+        if (RELATIVE_ROLES.includes(entry.split(':')[0])) err('R32-shift-tasks', `${res}.${cap}: dostępne dla roli bliskich "${entry}".`);
+      }
+    }
+  }
+  if ((MATRIX.find((m) => m.resource === 'shift_tasks')?.delete || []).length) err('R32-shift-tasks', 'Zadania nie są usuwane — anuluje się je z powodem.');
 }
 
 // ── raport ────────────────────────────────────────────────────────────────

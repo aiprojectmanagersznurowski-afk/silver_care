@@ -123,6 +123,89 @@ export const REQUIREMENTS = [
     ]
   },
   {
+    "id": "NUR-SHIFT-CONFIG",
+    "status": "TODO",
+    "risk": "MEDIUM",
+    "source": "SC-NUR-12/AC1",
+    "domain": "staff",
+    "statement": "Kierownik placówki definiuje 2 albo 3 zmiany na dobę w strefie Europe/Warsaw i układa grafik: kto pracuje na zmianie.",
+    "acceptance": [
+      "Placówka ma od 2 do 3 aktywnych definicji zmian; zmiana nocna może przechodzić przez północ",
+      "Zmiana jest kluczem (definicja, data), nie wierszem tworzonym z wyprzedzeniem",
+      "Definicje i grafik zmienia wyłącznie kierownik placówki, personel opiekuńczy ma odczyt",
+      "Dane zmian są odizolowane między placówkami"
+    ]
+  },
+  {
+    "id": "NUR-SHIFT-LEAD",
+    "status": "TODO",
+    "risk": "HIGH",
+    "source": "SC-NUR-12/AC1a",
+    "domain": "staff",
+    "statement": "Kierownik zmiany to osoba z personelu opiekuńczego wyznaczona w grafiku, z dodatkowymi uprawnieniami wyłącznie na swojej zmianie.",
+    "acceptance": [
+      "Na jedną zmianę przypada najwyżej jeden kierownik zmiany",
+      "Uprawnienia kierownika zmiany (akceptacja planu, rozliczenie) dotyczą tylko zadań jego zmiany, a poza nią działa jak zwykły personel",
+      "Tożsamość i placówka kierownika zmiany pochodzą z sesji i app_metadata, nigdy z parametrów żądania",
+      "Zakres shift_lead w macierzy dotyczy wyłącznie zasobów z kluczem zmiany i nigdy odczytu"
+    ]
+  },
+  {
+    "id": "NUR-TASKS",
+    "status": "TODO",
+    "risk": "HIGH",
+    "source": "SC-NUR-13",
+    "domain": "staff",
+    "statement": "Zadania zmiany (dla podopiecznego albo placówki) przechodzą akceptację planu przez kierownika zmiany i są rozliczane jako wykonane, anulowane z powodem albo przeniesione na kolejną zmianę.",
+    "acceptance": [
+      "Każde zadanie ma źródło widoczne dla użytkownika: z przekazania, standardowe (plan opieki), ręczne albo przeniesione z poprzedniej zmiany",
+      "Anulowanie zadania wymaga powodu, a niewykonane zadanie przechodzi na kolejną zmianę zamiast znikać",
+      "Lista jest grupowana per pokój albo per podopieczny",
+      "Zadania są niedostępne dla ról bliskich i nie trafiają do planu dnia współdzielonego z rodziną",
+      "Każda zmiana statusu zadania zapisuje wpis w audit_logs bez treści zadania"
+    ]
+  },
+  {
+    "id": "NUR-SHIFT-PLAN-PRINT",
+    "status": "TODO",
+    "risk": "HIGH",
+    "source": "SC-NUR-15",
+    "domain": "staff",
+    "statement": "Kierownik zmiany drukuje zaakceptowany plan pracy zmiany, aby opiekunki pracowały bez obsługi komputera.",
+    "acceptance": [
+      "Wydruk jest dostępny dopiero po akceptacji planu i niesie wersję planu",
+      "Wydruk zawiera wyłącznie pola z SHIFT_TASK_POLICY.printFields, bez PESEL i kontaktów",
+      "Każdy wydruk zapisuje wpis w audit_logs: kto, kiedy i którą wersję planu wydrukował"
+    ]
+  },
+  {
+    "id": "ADM-RESIDENT-CARD-TASKS",
+    "status": "TODO",
+    "risk": "MEDIUM",
+    "source": "SC-ADM-21",
+    "domain": "residents",
+    "statement": "Karta podopiecznego ma sekcję „Zadania” z otwartymi i niedawno wykonanymi zadaniami podopiecznego.",
+    "acceptance": [
+      "Sekcja „Zadania” jest w RESIDENT_CARD_SECTIONS i widoczna dla ról z odczytem shift_tasks",
+      "Sekcja nie jest dostępna dla ról bliskich",
+      "Podopieczny z otwartym zaakceptowanym zadaniem ma znacznik „wymaga uwagi”, który gaśnie po rozliczeniu zadań"
+    ]
+  },
+  {
+    "id": "ADM-CARE-PLAN-TASKS",
+    "status": "TODO",
+    "risk": "HIGH",
+    "source": "SC-ADM-23",
+    "domain": "residents",
+    "statement": "Zadania standardowe pochodzą z szablonów planu opieki definiowanych przez placówkę, a nie z rekomendacji systemu.",
+    "acceptance": [
+      "Szablon zadania standardowego tworzy i zmienia wyłącznie kierownik placówki",
+      "System nie podpowiada czynności opiekuńczych na podstawie stanu zdrowia",
+      "Zmiana albo wyłączenie szablonu działa od kolejnych zmian i nie modyfikuje rozliczonych zadań",
+      "Zalecenia lekarza i harmonogram leków są osobnym źródłem planu opieki i nie są włączone bez osobnego ADR"
+    ]
+  },
+  {
     "id": "ADM-CAPACITY-LIMIT",
     "status": "TODO",
     "risk": "HIGH",
