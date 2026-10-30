@@ -87,7 +87,7 @@ export function groupTasks(tasks: TaskView[], mode: TaskGroupMode): TaskGroup[] 
       key = `resident:${t.residentId}`
       const place = [t.room ? `pokój ${t.room}` : null, t.bed ? `łóżko ${t.bed}` : null].filter(Boolean).join(', ')
       label = `${t.residentName ?? 'Podopieczny'}${place ? ` · ${place}` : ''}`
-      sort = (t.residentName ?? '').split(' ').reverse().join(' ') // nazwisko przed imieniem
+      sort = t.residentName ?? '' // nazwa podopiecznego jest już w formacie „Nazwisko Imię”
     }
     const bucket = buckets.get(key) ?? { key, label, tasks: [], sort }
     bucket.tasks.push(t)

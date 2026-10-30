@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/supabase/current-user'
 import { getAppRole } from '@/lib/auth/app-role'
+import { formatPersonName } from '@/lib/person-name'
 import { PageHeader } from '@/components/patterns/PageHeader'
 import { ListEmpty } from '@/components/patterns/ListState'
 import { ShiftTaskForm, type TaskResidentOption } from '@/components/shifts/ShiftTaskForm'
@@ -86,7 +87,7 @@ async function TasksSection({ shiftId, date, group }: { shiftId: string; date: s
     const active = (r.bed_assignments ?? []).find((a) => a.unassigned_at === null)
     const room = active?.beds?.rooms?.number ?? null
     const bed = active?.beds?.label ?? null
-    const name = `${r.first_name} ${r.last_name}`
+    const name = formatPersonName(r.first_name, r.last_name)
     places.set(r.id, { name, room: room === null ? null : String(room), bed })
     options.push({ id: r.id, label: room === null ? name : `${name} · pokój ${room}` })
   }
