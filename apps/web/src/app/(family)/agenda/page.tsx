@@ -10,6 +10,17 @@ import { PageHeader } from '@/components/patterns/PageHeader'
 import { formatPersonName } from '@/lib/person-name'
 import { isMedicalAgendaItem } from '@/lib/agenda-family-visibility'
 import { getCurrentUser } from '@/lib/supabase/current-user'
+import { evaluateFamilyOffboardingState } from '@/lib/family-offboarding'
+
+type AgendaResident = {
+  id: string
+  first_name: string
+  last_name: string
+  death_date?: string | null
+  contract_end_date?: string | null
+  archived_at?: string | null
+  death_reported_at?: string | null
+}
 
 export default async function FamilyAgendaPage(props: { searchParams: Promise<{ date?: string }> }) {
   const supabase = await createClient()
@@ -19,12 +30,12 @@ export default async function FamilyAgendaPage(props: { searchParams: Promise<{ 
   // Read linked residents
   const { data: links } = await supabase
     .from('resident_relative_links')
-    .select('resident_id, residents(id, first_name, last_name)')
+    .select('resident_id, residents(id, first_name, last_name, death_date, contract_end_date, archived_at, death_reported_at)')
     .eq('relative_user_id', user.id)
 
   const residents = (links || []).map(link => 
     Array.isArray(link.residents) ? link.residents[0] : link.residents
-  ).filter(Boolean) as { id: string; first_name: string; last_name: string }[]
+  ).filter(Boolean) as AgendaResident[]
 
   if (residents.length === 0) {
     return (
@@ -45,6 +56,10 @@ export default async function FamilyAgendaPage(props: { searchParams: Promise<{ 
   const cookieStore = await cookies()
   const cookieResidentId = cookieStore.get('family_resident_id')?.value
   const activeResident = residents.find(r => r.id === cookieResidentId) || residents[0]
+
+  if (evaluateFamilyOffboardingState(activeResident).mode !== 'active') {
+    return redirect('/dashboard')
+  }
 
   // Resolve searchParams (Next.js 15 compatible)
   const resolvedParams = await Promise.resolve(props.searchParams)

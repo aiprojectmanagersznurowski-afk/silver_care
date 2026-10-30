@@ -33,6 +33,8 @@ files['packages/contracts/src/generated/roles.ts'] = BANNER
   + emit('CONSENT_GRANTORS', roles.CONSENT_GRANTORS) + emit('CONSENT_PURPOSES', roles.CONSENT_PURPOSES)
   + emit('RESOURCES', roles.RESOURCES) + emit('MATRIX', roles.MATRIX)
   + emit('AUDIT_REQUIREMENTS', roles.AUDIT_REQUIREMENTS)
+  + (roles.DELETE_POLICIES ? emit('DELETE_POLICIES', roles.DELETE_POLICIES) : '')
+  + (roles.OFFBOARDING_RETENTION_DAYS ? emit('OFFBOARDING_RETENTION_DAYS', roles.OFFBOARDING_RETENTION_DAYS) : '')
   + `export type Role = typeof ROLES[number]['id'];\nexport type Resource = typeof RESOURCES[number];\n`;
 
 files['packages/contracts/src/generated/presentation.ts'] = BANNER
