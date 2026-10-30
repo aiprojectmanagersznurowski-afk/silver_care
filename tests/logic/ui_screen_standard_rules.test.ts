@@ -55,6 +55,21 @@ describe('Reguły standardu ekranu (ADR-017)', () => {
     expect(checkWrite(COMPONENT, "import { TableBody } from '@/components/ui/table'").blocked).toBe(false);
   });
 
+  it('@REQ: UI-TEMPLATE-ALIGNMENT - reguły całego pliku działają także z flagą multiline (hook agentów używa „gm”)', () => {
+    // Hook guard-forbidden wykonuje wzorce z flagami 'gm' — ^ zaczynałoby dopasowanie w każdej linii,
+    // więc plik z TableCard tylko w imporcie byłby fałszywie blokowany.
+    const framed = "import { TableStateRow } from '@/components/patterns/TableCard'\nimport { Table } from '@/components/ui/table'\nexport function X() {\n  return <Table><TableBody /></Table>\n}\n";
+    const rawTable = "import { Table } from '@/components/ui/table'\nexport function X() {\n  return <Table><TableBody /></Table>\n}\n";
+    const listWithFrame = "import { ListViewFrame } from '@/components/patterns/ListViewFrame'\nexport function L({ items }) {\n  return <div>{items.map((i) => <ObjectCard key={i.id} />)}</div>\n}\n";
+    for (const id of ['ui-own-table-frame', 'ui-list-needs-table-view']) {
+      const rule = kkConfig.forbiddenPatterns.find((p: { id: string }) => p.id === id);
+      const re = new RegExp(rule.re, 'gm');
+      expect(re.test(id === 'ui-own-table-frame' ? framed : listWithFrame), `${id}: plik z ramą w importach nie jest naruszeniem`).toBe(false);
+    }
+    const tableRule = kkConfig.forbiddenPatterns.find((p: { id: string }) => p.id === 'ui-own-table-frame');
+    expect(new RegExp(tableRule.re, 'gm').test(rawTable), 'tabela bez TableCard nadal jest naruszeniem').toBe(true);
+  });
+
   it('@REQ: UI-TEMPLATE-ALIGNMENT - nie dotyczy testów ani komponentów ui', () => {
     expect(checkWrite('e2e/roles/example.spec.ts', '<h1>x</h1>').blocked).toBe(false);
     expect(checkWrite('apps/web/src/components/ui/card.tsx', "import { Badge } from '@/components/ui/badge'").blocked).toBe(false);
