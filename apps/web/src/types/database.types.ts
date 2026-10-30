@@ -1,6 +1,6 @@
 // ==============================================================================
 // Automatycznie wygenerowane typy bazy danych Silver Care (PostgreSQL/Supabase)
-// Wygenerowano: 2026-10-27T19:17:50.442Z
+// Wygenerowano: 2026-10-30T15:55:30.206Z
 // ==============================================================================
 
 export type Json =
@@ -909,6 +909,7 @@ export interface Database {
           contract_document_path: string | null
           contract_document_name: string | null
           search_name: string | null
+          death_reported_at: string | null
         }
         Insert: {
           id?: string
@@ -934,6 +935,7 @@ export interface Database {
           contract_document_path?: string | null
           contract_document_name?: string | null
           search_name?: string | null
+          death_reported_at?: string | null
         }
         Update: {
           id?: string
@@ -959,6 +961,7 @@ export interface Database {
           contract_document_path?: string | null
           contract_document_name?: string | null
           search_name?: string | null
+          death_reported_at?: string | null
         }
         Relationships: [
           {
@@ -1039,6 +1042,122 @@ export interface Database {
         Relationships: [
           {
             foreignKeyName: "security_access_logs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shift_definitions: {
+        Row: {
+          id: string
+          organization_id: string
+          code: string
+          name: string
+          start_time: string
+          end_time: string
+          crosses_midnight: boolean | null
+          order_index: number
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          code: string
+          name: string
+          start_time: string
+          end_time: string
+          crosses_midnight?: boolean | null
+          order_index?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          code?: string
+          name?: string
+          start_time?: string
+          end_time?: string
+          crosses_midnight?: boolean | null
+          order_index?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shift_definitions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shift_roster: {
+        Row: {
+          id: string
+          organization_id: string
+          shift_definition_id: string
+          shift_date: string
+          user_id: string
+          is_shift_lead: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          shift_definition_id: string
+          shift_date: string
+          user_id: string
+          is_shift_lead?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          shift_definition_id?: string
+          shift_date?: string
+          user_id?: string
+          is_shift_lead?: boolean
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_shift_roster_definition"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "shift_definitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_shift_roster_definition"
+            columns: ["shift_definition_id"]
+            isOneToOne: false
+            referencedRelation: "shift_definitions"
+            referencedColumns: ["organization_id"]
+          },
+          {
+            foreignKeyName: "fk_shift_roster_definition"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "shift_definitions"
+            referencedColumns: ["organization_id"]
+          },
+          {
+            foreignKeyName: "fk_shift_roster_definition"
+            columns: ["shift_definition_id"]
+            isOneToOne: false
+            referencedRelation: "shift_definitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shift_roster_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -1340,6 +1459,8 @@ export interface Database {
           active_resident_count: number
           staff_count: number
           administrator_count: number
+          active_bed_count: number
+          over_capacity_limit: boolean
         }[]
       }
       handle_outbox_notification_attempt: {
@@ -1366,6 +1487,13 @@ export interface Database {
       is_relative_linked: {
         Args: {
           target_resident_id: string
+        }
+        Returns: boolean
+      }
+      is_shift_lead: {
+        Args: {
+          p_shift_definition_id: string
+          p_shift_date: string
         }
         Returns: boolean
       }
