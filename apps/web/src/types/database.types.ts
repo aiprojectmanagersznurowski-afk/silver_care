@@ -1,6 +1,6 @@
 // ==============================================================================
 // Automatycznie wygenerowane typy bazy danych Silver Care (PostgreSQL/Supabase)
-// Wygenerowano: 2026-10-27T19:17:50.442Z
+// Wygenerowano: 2026-10-30T14:58:00.864Z
 // ==============================================================================
 
 export type Json =
@@ -909,6 +909,7 @@ export interface Database {
           contract_document_path: string | null
           contract_document_name: string | null
           search_name: string | null
+          death_reported_at: string | null
         }
         Insert: {
           id?: string
@@ -934,6 +935,7 @@ export interface Database {
           contract_document_path?: string | null
           contract_document_name?: string | null
           search_name?: string | null
+          death_reported_at?: string | null
         }
         Update: {
           id?: string
@@ -959,6 +961,7 @@ export interface Database {
           contract_document_path?: string | null
           contract_document_name?: string | null
           search_name?: string | null
+          death_reported_at?: string | null
         }
         Relationships: [
           {
@@ -1340,6 +1343,8 @@ export interface Database {
           active_resident_count: number
           staff_count: number
           administrator_count: number
+          active_bed_count: number
+          over_capacity_limit: boolean
         }[]
       }
       handle_outbox_notification_attempt: {
