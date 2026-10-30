@@ -634,7 +634,7 @@
 - **AC2:** Paleta poleceń (Cmd/Ctrl+K) — wyszukanie pensjonariusza i start dyktowania w < 2 s.
 - **AC3:** Masowe zatwierdzanie raportów (do 10 naraz) — każdy raport nadal przechodzi `REPORT-APPROVAL`.
 - **AC4:** Widok „Agenda na dziś" z porami dnia i edycją.
-- **AC5:** Rejestracja rutynowej obserwacji 1-kliknięciem („Stan stabilny”) poprawnie utrwala rekord w `daily_logs` z `resident_id`, `nurse_id` oraz ustrukturyzowanym obiektem `data` (typ `ROUTINE_OBSERVATION`), natychmiast aktualizując stan kafelka w widoku obchodu dyżuru.
+- **AC5:** Wycofanie przycisku „Stan stabilny” z widoku obchodu dyżuru (zgodnie z regułą zakazu fabrykowania danych w fallbackach). Kafelek pensjonariusza eksponuje bezpośredni start dyktowania notatki oraz wskaźnik liczby notatek w bieżącej zmianie personelu (domyślny cykl dwóch 12-godzinnych zmian w strefie `Europe/Warsaw`: dzienna 07:00–19:00, nocna 19:00–07:00). Raport końcowy przy braku indywidualnych notatek transparentnie informuje o braku zarejestrowanych zdarzeń.
 
 #### [SC-NUR-09] Strażnik kompletności raportu przed publikacją
 🔗 **Kontrakt:** `REPORT-AI-FEEDBACK`, `REPORT-APPROVAL`, `MDR-VOCABULARY` · **WO:** [`NUR-REPORT-COMPLETENESS-GATE`](workorders/NUR-REPORT-COMPLETENESS-GATE.md) · **Status:** ✅ 📝 — zrealizowane w `completeness-gate.ts`, `ReportCard.tsx`, testy w `completeness_gate.test.ts` oraz E2E w `staff-portal.spec.ts`
@@ -952,5 +952,6 @@
 | 2026-10-20 | 2.10 | Ujednolicenie ról pracowników placówki do dwóch poziomów (`org_admin` — Kierownik / Administrator Placówki, `nurse` — Personel opiekuńczy / Wsparcie) oraz ograniczenie dostępu do `family_messages` po stronie placówki wyłącznie do `org_admin` (`/admin/messages`; aktualizacja `SC-FAM-04`, `SC-NUR-07`, `SC-NUR-11`). |
 | 2026-10-22 | 2.11 | Dopisanie `SC-SUP-05` (globalne alerty systemowe i status platformy zarządzane przez `super_admin` oraz wycofanie statycznego kafelka „Status systemu: Stabilny” z pulpitu placówki — Wariant A) ze statusem 📝 PROPOZYCJA. |
 | 2026-10-24 | 2.12 | Dopisanie `SC-ADM-20` (wspólna karta podopiecznego dla personelu z widocznością sekcji według roli) ze statusem 📝 PROPOZYCJA. |
+| 2026-10-28 | 2.13 | Doprecyzowanie godzin 12-godzinnych zmian personelu (07:00–19:00 i 19:00–07:00 Europe/Warsaw) w AC5 SC-NUR-08 (PR #153). |
 | 2026-10-29 | 2.14 | Dopisanie `SC-NUR-12` (głosowe przekazanie zmiany), `SC-NUR-13` (moduł zadań z backlogiem i propozycjami AI), `SC-NUR-14` (raport dobowy z komunikatem o obchodzie) i `SC-ADM-21` (sekcja „Zadania” na karcie podopiecznego) ze statusem 📝 PROPOZYCJA, na podstawie decyzji Michała z ADR-021. |
 | 2026-10-29 | 2.15 | Dopisanie `SC-ADM-22` (limit miejsc placówki: przekroczenie z ostrzeżeniem dla kierownika i super admina) i `NFR-UI-06` (spójna terminologia interfejsu) ze statusem 📝 PROPOZYCJA, na podstawie decyzji Michała z 2026-10-29; `MASTER_DATA_STANDARD.md` w wersji 2.0. |
