@@ -7,7 +7,8 @@ import { TableCard } from '@/components/patterns/TableCard'
 import { ObjectGrid } from '@/components/patterns/ObjectCard'
 import { ListEmpty } from '@/components/patterns/ListState'
 import { ResidentGridCard } from '@/components/residents/ResidentGridCard'
-import { ResidentsTable } from '@/components/residents/ResidentsTable'
+import { ResidentsTable, RESIDENTS_PAGE_SIZE } from '@/components/residents/ResidentsTable'
+import { ListPagination, usePagination } from '@/components/patterns/ListPagination'
 import { useViewPreference, VIEW_PREFERENCE_KEYS } from '@/hooks/use-view-preference'
 import type { ResidentWithAssignments } from '@/components/residents/resident-list-types'
 import { matchesPersonName, sortByPersonName } from '@/lib/person-name'
@@ -32,6 +33,8 @@ export function AdminResidentsClient({ residents }: AdminResidentsClientProps) {
     const q = searchQuery.toLowerCase()
     return matchesPersonName(r.first_name, r.last_name, searchQuery) || r.id.toLowerCase().includes(q)
   })
+  // Kafelki: ta sama wielkość strony co tabela; zmiana frazy albo widoku wraca na stronę 1
+  const gridPagination = usePagination(filteredResidents.length, RESIDENTS_PAGE_SIZE, `${searchQuery}|${viewMode}`)
 
   return (
     <TableCard
@@ -50,13 +53,22 @@ export function AdminResidentsClient({ residents }: AdminResidentsClientProps) {
       ) : viewMode === 'grid' ? (
         <div className="p-4">
           <ObjectGrid>
-            {filteredResidents.map((resident) => (
+            {gridPagination.slice(filteredResidents).map((resident) => (
               <ResidentGridCard key={resident.id} resident={resident} />
             ))}
           </ObjectGrid>
+          <ListPagination
+            total={filteredResidents.length}
+            from={gridPagination.from}
+            to={gridPagination.to}
+            page={gridPagination.page}
+            totalPages={gridPagination.totalPages}
+            onPrev={gridPagination.prev}
+            onNext={gridPagination.next}
+          />
         </div>
       ) : (
-        <ResidentsTable residents={filteredResidents} />
+        <ResidentsTable residents={filteredResidents} resetKey={searchQuery} />
       )}
     </TableCard>
   )
