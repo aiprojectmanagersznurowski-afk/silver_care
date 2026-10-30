@@ -64,8 +64,7 @@ export async function analyzeBulkImportAction(rows: RawResidentRow[]): Promise<{
 export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[]): Promise<{
   error?: string
   importedCount?: number
-  capacityUpdated?: boolean
-  newCapacity?: number
+  capacityExceeded?: { residentLimit: number; activeResidents: number }
 }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -123,7 +122,8 @@ export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[
     totalImported += (inserted || []).length
   }
 
-  // Sprawdzenie i aktualizacja pojemności placówki w razie przekroczenia limitu
+  // Limit miejsc zmienia wyłącznie super admin (CAPACITY_POLICY, ADM-CAPACITY-LIMIT) — import go nie podnosi,
+  // tylko odnotowuje przekroczenie w audycie
   const { count: totalActiveCount } = await adminClient
     .from('residents')
     .select('*', { count: 'exact', head: true })
@@ -134,33 +134,25 @@ export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[
 
   const { data: orgRecord } = await adminClient
     .from('organizations')
-    .select('resident_limit, name')
+    .select('resident_limit')
     .eq('id', orgId)
     .single()
 
   const currentLimit = Number(orgRecord?.resident_limit || 50)
-  let capacityUpdated = false
-  let newCapacity = currentLimit
+  const capacityExceeded = activeTotal > currentLimit
+    ? { residentLimit: currentLimit, activeResidents: activeTotal }
+    : undefined
 
-  if (activeTotal > currentLimit) {
-    newCapacity = activeTotal
-    capacityUpdated = true
-
-    await adminClient
-      .from('organizations')
-      .update({ resident_limit: newCapacity })
-      .eq('id', orgId)
-
+  if (capacityExceeded) {
     await adminClient.from('audit_logs').insert({
       organization_id: orgId,
       resident_id: null,
-      action: 'ORGANIZATION_CAPACITY_UPDATED',
+      action: 'ORGANIZATION_CAPACITY_EXCEEDED',
       performed_by: user.id,
       payload: {
-        previous_limit: currentLimit,
-        new_limit: newCapacity,
-        reason: 'bulk_import_capacity_exceeded',
-        total_active_residents: activeTotal,
+        operation: 'resident_bulk_import',
+        resident_limit: currentLimit,
+        active_resident_count: activeTotal,
       },
     })
   }
@@ -174,8 +166,7 @@ export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[
     payload: {
       imported_count: totalImported,
       source: 'excel_csv_import',
-      capacity_updated: capacityUpdated,
-      new_capacity: newCapacity,
+      capacity_exceeded: Boolean(capacityExceeded),
     },
   })
 
@@ -185,7 +176,6 @@ export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[
 
   return {
     importedCount: totalImported,
-    capacityUpdated,
-    newCapacity,
+    capacityExceeded,
   }
 }
