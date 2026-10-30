@@ -56,7 +56,7 @@ export function FamilyOffboardingView({
         </div>
         <PageHeader
           title="Okres retencji dostępu wygasł"
-          description={`30-dniowe okno pamiątkowego dostępu do historii pobytu podopiecznego (${fullName}) dobiegło końca zgodnie z polityką ochrony danych placówki.`}
+          description={`30-dniowe okno dostępu do historii pobytu podopiecznego (${fullName}) dobiegło końca zgodnie z polityką ochrony danych placówki.`}
         />
         <form action="/auth/signout" method="post" className="pt-2">
           <Button type="submit" variant="outline" className="min-h-touch">
@@ -68,6 +68,8 @@ export function FamilyOffboardingView({
   }
 
   const isDeceased = state.reason === 'deceased'
+  const archiveLabel = isDeceased ? 'pamiątkowe archiwum pobytu' : 'archiwum raportów z pobytu'
+  const downloadButtonText = isDeceased ? 'Pobierz pamiątkowe archiwum pobytu' : 'Pobierz archiwum raportów z pobytu'
 
   return (
     <div className="min-h-screen w-full bg-background text-foreground">
@@ -77,7 +79,7 @@ export function FamilyOffboardingView({
           description={
             isDeceased
               ? 'Wyciszony widok pamiątkowy dla bliskich. Poniżej znajdują się zgromadzone wspomnienia i opublikowane raporty z okresu pobytu w placówce.'
-              : 'Pobyt podopiecznego w placówce został zakończony. Poniżej udostępniamy pamiątkowe archiwum raportów z okresu pobytu.'
+              : 'Pobyt podopiecznego w placówce został zakończony. Poniżej udostępniamy archiwum raportów z okresu pobytu.'
           }
           actions={
             <StatusBadge>
@@ -99,7 +101,7 @@ export function FamilyOffboardingView({
                 </span>
               </div>
               <p className="text-xs text-muted-foreground">
-                Przez 30 dni od daty zakończenia pobytu mogą Państwo przeglądać i pobrać pamiątkowe archiwum raportów. Po tym terminie dostęp konta zostanie automatycznie wygaszony.
+                Przez 30 dni od daty zakończenia pobytu mogą Państwo przeglądać i pobrać {archiveLabel}. Po upływie tego terminu dostęp konta do danych podopiecznego wygasa.
               </p>
             </div>
 
@@ -110,7 +112,7 @@ export function FamilyOffboardingView({
               className="min-h-touch shrink-0"
             >
               <Download className="size-4 mr-2" aria-hidden="true" />
-              Pobierz pamiątkowe archiwum pobytu
+              {downloadButtonText}
             </Button>
           </div>
         </section>

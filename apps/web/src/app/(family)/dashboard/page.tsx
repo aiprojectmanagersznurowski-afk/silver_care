@@ -15,6 +15,7 @@ type ResidentType = {
   death_date?: string | null
   contract_end_date?: string | null
   archived_at?: string | null
+  death_reported_at?: string | null
 };
 
 export default async function FamilyDashboard(props: { searchParams: Promise<{ date?: string }> }) {
@@ -35,7 +36,8 @@ export default async function FamilyDashboard(props: { searchParams: Promise<{ d
         last_name,
         death_date,
         contract_end_date,
-        archived_at
+        archived_at,
+        death_reported_at
       )`)
     .eq('relative_user_id', user.id)
 
@@ -87,7 +89,7 @@ export default async function FamilyDashboard(props: { searchParams: Promise<{ d
   // Pobieramy raporty tylko dla wybranego pensjonariusza
   const { data: reports } = await supabase
     .from('daily_reports')
-    .select('*')
+    .select('id, resident_id, created_at, content')
     .eq('resident_id', activeResident.id)
     .eq('status', 'PUBLISHED')
     .order('created_at', { ascending: false })

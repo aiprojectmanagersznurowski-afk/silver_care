@@ -1,6 +1,7 @@
+import { OFFBOARDING_RETENTION_DAYS } from '@silvercare/contracts/src/generated/roles'
 import { formatPersonName } from './person-name'
 
-export const OFFBOARDING_RETENTION_DAYS = 30
+export { OFFBOARDING_RETENTION_DAYS }
 
 export type FamilyOffboardingState =
   | { mode: 'active' }
@@ -17,26 +18,41 @@ export type FamilyOffboardingState =
       endDate: string | null
     }
 
-const MS_PER_DAY = 24 * 60 * 60 * 1000
-
-function parseUtcDay(isoDate: string): Date {
-  const day = isoDate.slice(0, 10)
-  return new Date(`${day}T00:00:00Z`)
+function getWarsawDateString(date: Date): string {
+  const dtf = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Warsaw',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  })
+  return dtf.format(date)
 }
 
-function formatUtcDay(date: Date): string {
-  return date.toISOString().slice(0, 10)
+function addDaysToDateString(dateStr: string, days: number): string {
+  const [y, m, d] = dateStr.slice(0, 10).split('-').map(Number)
+  const dt = new Date(Date.UTC(y, m - 1, d + days))
+  return dt.toISOString().slice(0, 10)
+}
+
+function diffCalendarDays(dateStrA: string, dateStrB: string): number {
+  const [yA, mA, dA] = dateStrA.slice(0, 10).split('-').map(Number)
+  const [yB, mB, dB] = dateStrB.slice(0, 10).split('-').map(Number)
+  const utcA = Date.UTC(yA, mA - 1, dA)
+  const utcB = Date.UTC(yB, mB - 1, dB)
+  return Math.round((utcA - utcB) / (24 * 60 * 60 * 1000))
 }
 
 /**
  * Wyznacza stan widoku portalu rodziny z uwzględnieniem 30-dniowego okna retencji
  * po zgonie lub wypisie podopiecznego (SC-FAM-07, FAM-RESIDENT-OFFBOARDING).
+ * Obliczenia kalendarzowe wykonywane w strefie Europe/Warsaw.
  */
 export function evaluateFamilyOffboardingState(
   resident: {
     death_date?: string | null
     contract_end_date?: string | null
     archived_at?: string | null
+    death_reported_at?: string | null
   },
   now: Date = new Date()
 ): FamilyOffboardingState {
@@ -48,35 +64,35 @@ export function evaluateFamilyOffboardingState(
     }
   }
 
-  const todayUtc = parseUtcDay(now.toISOString())
+  const todayStr = getWarsawDateString(now)
   const endDate = resident.death_date ?? resident.contract_end_date ?? null
 
   if (!endDate) {
     return { mode: 'active' }
   }
 
-  const endUtc = parseUtcDay(endDate)
-  if (!resident.death_date && endUtc.getTime() > todayUtc.getTime()) {
+  const endDateStr = endDate.slice(0, 10)
+  if (!resident.death_date && diffCalendarDays(endDateStr, todayStr) > 0) {
     return { mode: 'active' }
   }
 
   const reason: 'deceased' | 'discharged' = resident.death_date ? 'deceased' : 'discharged'
-  const expiryUtc = new Date(endUtc.getTime() + OFFBOARDING_RETENTION_DAYS * MS_PER_DAY)
-  const diffDays = Math.round((expiryUtc.getTime() - todayUtc.getTime()) / MS_PER_DAY)
+  const expiryDate = addDaysToDateString(endDateStr, OFFBOARDING_RETENTION_DAYS)
+  const diffDays = diffCalendarDays(expiryDate, todayStr)
 
   if (diffDays <= 0) {
     return {
       mode: 'retention_expired',
       reason,
-      endDate: endDate.slice(0, 10),
+      endDate: endDateStr,
     }
   }
 
   return {
     mode: 'memorial_window',
     reason,
-    endDate: endDate.slice(0, 10),
-    expiryDate: formatUtcDay(expiryUtc),
+    endDate: endDateStr,
+    expiryDate,
     daysRemaining: diffDays,
   }
 }
@@ -105,8 +121,9 @@ export interface MemorialReportEntry {
 }
 
 /**
- * Buduje pamiątkowe archiwum pobytu podopiecznego do pobrania przez bliskich (AC2).
- * Zachowuje granice MDR (wyłącznie metryki behawioralne i zatwierdzone raporty).
+ * Buduje archiwum pobytu podopiecznego do pobrania przez bliskich (AC2).
+ * Dzieli nazewnictwo: pamiątkowe (po zgonie) vs raporty z pobytu (po wypisie).
+ * Zachowuje granice MDR (wyłącznie metryki behawioralne i opublikowane raporty).
  */
 export function buildMemorialArchiveDocument(params: {
   resident: {
@@ -118,15 +135,21 @@ export function buildMemorialArchiveDocument(params: {
   reports: MemorialReportEntry[]
   generatedAt?: string
 }): { fileName: string; content: string } {
+  const isDeceased = Boolean(params.resident.death_date)
   const fullName = formatPersonName(params.resident.first_name, params.resident.last_name)
   const slug = slugifyAscii(`${params.resident.last_name}-${params.resident.first_name}`)
-  const fileName = `archiwum-pamiatkowe-${slug || 'podopieczny'}.txt`
+  const fileName = isDeceased
+    ? `archiwum-pamiatkowe-${slug || 'podopieczny'}.txt`
+    : `archiwum-pobytu-${slug || 'podopieczny'}.txt`
   const genDate = params.generatedAt ?? new Date().toISOString().slice(0, 10)
   const endDate = params.resident.death_date ?? params.resident.contract_end_date ?? '—'
+  const title = isDeceased
+    ? 'SILVER CARE — PAMIĄTKOWE ARCHIWUM POBYTU PODOPIECZNEGO'
+    : 'SILVER CARE — ARCHIWUM RAPORTÓW Z POBYTU PODOPIECZNEGO'
 
   const headerLines = [
     '============================================================',
-    'SILVER CARE — PAMIĄTKOWE ARCHIWUM POBYTU PODOPIECZNEGO',
+    title,
     '============================================================',
     `Podopieczny: ${fullName}`,
     `Data zakończenia pobytu: ${endDate}`,
