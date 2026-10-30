@@ -15,6 +15,9 @@ import { ResidentStatusBadge } from './ResidentStatusBadge'
 import { getActiveBed, type ResidentWithAssignments } from './resident-list-types'
 import { formatPersonName, personSortKey } from '@/lib/person-name'
 import { useTableSort } from '@/hooks/use-table-sort'
+import { useIsMobile } from '@/hooks/use-mobile'
+
+const SM_BREAKPOINT = 640
 import { SortableTableHead } from '@/components/patterns/SortableTableHead'
 
 function admissionLabel(resident: ResidentWithAssignments): string {
@@ -37,15 +40,20 @@ const SORT_ACCESSORS = {
 export function ResidentsTable({ residents }: { residents: ResidentWithAssignments[] }) {
   // Domyślnie po nazwisku rosnąco; kliknięcie w nagłówek zmienia kolumnę lub kierunek
   const { sorted, sort, toggleSort } = useTableSort(residents, SORT_ACCESSORS, { key: 'name', direction: 'asc' })
+  // Karty mobilne tylko na małym ekranie (poniżej sm) — wcześniej powstawały zawsze i były ukrywane CSS-em,
+  // co podwajało HTML listy (WO-NFR-PERF-SCREEN-LOAD).
+  const isSmallScreen = useIsMobile(SM_BREAKPOINT)
 
   return (
     <>
       {/* Mobilny fallback dla małych ekranów */}
-      <div className="block space-y-3 p-4 sm:hidden">
-        {sorted.map((resident) => (
-          <ResidentMobileCard key={resident.id} resident={resident} />
-        ))}
-      </div>
+      {isSmallScreen && (
+        <div className="block space-y-3 p-4 sm:hidden">
+          {sorted.map((resident) => (
+            <ResidentMobileCard key={resident.id} resident={resident} />
+          ))}
+        </div>
+      )}
 
       {/* Pełna tabela na ekranach sm+ */}
       <div className="hidden sm:block">
