@@ -46,6 +46,6 @@ describe('Tydzień grafiku (NUR-SHIFT-CONFIG)', () => {
     expect(formatDayLabel('2026-11-02')).toBe('poniedziałek 2.11');
     expect(formatDayLabel('2026-11-08')).toBe('niedziela 8.11');
     expect(formatWeekLabel('2026-11-02')).toBe('2.11–8.11.2026');
-    expect(formatWeekLabel('2026-12-28')).toBe('28.12.2026–3.01.2027');
+    expect(formatWeekLabel('2026-12-28')).toBe('28.12.2026–3.1.2027');
   });
 });
