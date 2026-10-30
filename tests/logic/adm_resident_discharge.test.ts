@@ -186,6 +186,7 @@ describe('Discharge and Contract Termination Logic (@REQ: ADM-BED-ASSIGNMENT, @R
 
       expect(tasks.length).toBe(3)
       expect(tasks.every((t) => t.family_visible === false)).toBe(true)
+      expect(tasks.every((t) => t.type === 'staff_only')).toBe(true)
       expect(tasks.every((t) => t.resident_id === 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d')).toBe(true)
       expect(tasks.some((t) => t.title.includes('karty zgonu'))).toBe(true)
       expect(tasks.some((t) => t.title.includes('depozytu'))).toBe(true)
@@ -193,16 +194,12 @@ describe('Discharge and Contract Termination Logic (@REQ: ADM-BED-ASSIGNMENT, @R
     })
 
     it('@REQ: ADM-ARCHIVE - oznacza i wykrywa oczekujące zgłoszenie zgonu do zatwierdzenia przez admina', () => {
-      const note = formatDeathInitiationNote({
-        existingNotes: 'Wcześniejsza notatka.',
-        deathDate: '2026-10-29',
-        unassignedBedLabel: 'Pokój 102, Łóżko A',
-        notes: 'Przekazano do kierownika.',
-      })
-
-      expect(hasPendingDeathInitiation({ notes: note, death_date: null })).toBe(true)
+      // Wykrywa oczekujące zgłoszenie na podstawie death_reported_at (bez wycieku danych w notes)
+      expect(hasPendingDeathInitiation({ death_reported_at: '2026-10-29T10:00:00Z', death_date: null })).toBe(true)
       // Po formalnym zatwierdzeniu przez admina (ustawieniu death_date) nie jest już "oczekujące"
-      expect(hasPendingDeathInitiation({ notes: note, death_date: '2026-10-29' })).toBe(false)
+      expect(hasPendingDeathInitiation({ death_reported_at: '2026-10-29T10:00:00Z', death_date: '2026-10-29' })).toBe(false)
+      // Brak zgłoszenia
+      expect(hasPendingDeathInitiation({ death_reported_at: null, death_date: null })).toBe(false)
     })
   })
 })
