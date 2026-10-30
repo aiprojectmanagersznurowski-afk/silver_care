@@ -12,7 +12,6 @@ import {
   DeathInitiationPayloadInput,
   canInitiateDeathProcedure,
   buildPostMortemSanitizationTasks,
-  formatDeathInitiationNote,
 } from '@/lib/discharge-helpers'
 import type { TablesInsert } from '@/types/database.types'
 
@@ -22,52 +21,31 @@ export interface DischargeResidentResult {
   unassignedBedLabel?: string | null
 }
 
-interface BedWithRoomInfo {
-  id: string
-  label: string
-  room_id: string
-  rooms: { number: string } | null
-}
-
 interface BedAssignmentRow {
   id: string
   bed_id: string
-  beds: BedWithRoomInfo | null
+  beds: { label: string; rooms: { number: string } | null } | null
 }
 
-async function releaseActiveBed(
+async function resolveActiveBed(
   adminClient: ReturnType<typeof createAdminClient>,
-  residentId: string
-): Promise<{ activeAssignment: BedAssignmentRow | null; unassignedBedLabel: string | null }> {
-  const { data: activeAssignments } = await adminClient
+  residentId: string,
+  unassign: boolean
+): Promise<{ activeAssignment: BedAssignmentRow | null; bedLabel: string | null }> {
+  const { data } = await adminClient
     .from('bed_assignments')
-    .select('id, bed_id, beds(id, label, room_id, rooms(number))')
+    .select('id, bed_id, beds(label, rooms(number))')
     .eq('resident_id', residentId)
     .is('unassigned_at', null)
 
-  const list = (activeAssignments as unknown as BedAssignmentRow[]) || []
-  const activeAssignment = list.length > 0 ? list[0] : null
-  let unassignedBedLabel: string | null = null
+  const activeAssignment = ((data as unknown as BedAssignmentRow[]) || [])[0] || null
+  const bed = activeAssignment?.beds
+  const bedLabel = bed ? (bed.rooms?.number ? `Pokój ${bed.rooms.number}, Łóżko ${bed.label}` : `Łóżko ${bed.label}`) : null
 
-  if (activeAssignment?.beds) {
-    const bed = activeAssignment.beds
-    const roomNumber = bed.rooms?.number ? `Pokój ${bed.rooms.number}` : ''
-    unassignedBedLabel = roomNumber ? `${roomNumber}, Łóżko ${bed.label}` : `Łóżko ${bed.label}`
+  if (unassign && activeAssignment) {
+    await adminClient.from('bed_assignments').update({ unassigned_at: new Date().toISOString() }).eq('id', activeAssignment.id)
   }
-
-  if (activeAssignment) {
-    const { error: bedErr } = await adminClient
-      .from('bed_assignments')
-      .update({ unassigned_at: new Date().toISOString() })
-      .eq('id', activeAssignment.id)
-      .is('unassigned_at', null)
-
-    if (bedErr) {
-      console.error('[DISCHARGE_BED_UNASSIGN_FAIL]', bedErr.message)
-    }
-  }
-
-  return { activeAssignment, unassignedBedLabel }
+  return { activeAssignment, bedLabel }
 }
 
 /**
@@ -78,9 +56,7 @@ export async function dischargeResidentAction(
   payload: DischargePayloadInput
 ): Promise<DischargeResidentResult> {
   const validation = validateDischargePayload(payload)
-  if (!validation.isValid) {
-    return { success: false, error: validation.errors.join(' ') }
-  }
+  if (!validation.isValid) return { success: false, error: validation.errors.join(' ') }
 
   const { residentId, contractEndDate, contractEndReason, deathDate, notes } = validation.data
   const supabase = await createClient()
@@ -94,7 +70,7 @@ export async function dischargeResidentAction(
   const role = user.app_metadata?.role as string | undefined
   const orgId = user.app_metadata?.organization_id as string | undefined
   if (!role || !['org_admin', 'super_admin'].includes(role)) {
-    return { success: false, error: 'Brak uprawnień do zakończenia pobytu (wymagana rola administratora placówki).' }
+    return { success: false, error: 'Brak uprawnień do zakończenia pobytu (wymagana rola Kierownika placówki).' }
   }
 
   const adminClient = createAdminClient()
@@ -104,17 +80,13 @@ export async function dischargeResidentAction(
     .eq('id', residentId)
     .single()
 
-  if (fetchErr || !currentResident) {
-    return { success: false, error: 'Nie znaleziono wskazanego podopiecznego.' }
-  }
+  if (fetchErr || !currentResident) return { success: false, error: 'Nie znaleziono wskazanego podopiecznego.' }
   if (role !== 'super_admin' && currentResident.organization_id !== orgId) {
     return { success: false, error: 'Brak uprawnień do zasobów innej placówki.' }
   }
-  if (currentResident.death_date) {
-    return { success: false, error: 'Dla tego podopiecznego zarejestrowano już fakt zgonu.' }
-  }
+  if (currentResident.death_date) return { success: false, error: 'Dla tego podopiecznego zarejestrowano już fakt zgonu.' }
 
-  const { activeAssignment, unassignedBedLabel } = await releaseActiveBed(adminClient, residentId)
+  const { activeAssignment, bedLabel } = await resolveActiveBed(adminClient, residentId, true)
 
   let updatedNotes = currentResident.notes || ''
   if (notes) {
@@ -129,6 +101,7 @@ export async function dischargeResidentAction(
       contract_end_date: contractEndDate,
       contract_end_reason: contractEndReason,
       notes: updatedNotes || null,
+      death_reported_at: null,
       ...(deathDate ? { death_date: deathDate } : {}),
     })
     .eq('id', residentId)
@@ -175,7 +148,7 @@ export async function dischargeResidentAction(
   for (const p of ['/admin/residents', `/admin/residents/${residentId}`, '/admin/facility', '/admin']) {
     revalidatePath(p)
   }
-  return { success: true, unassignedBedLabel }
+  return { success: true, unassignedBedLabel: bedLabel }
 }
 
 /**
@@ -206,19 +179,38 @@ export async function initiateDeathDischargeAction(
   const adminClient = createAdminClient()
   const { data: currentResident, error: fetchErr } = await adminClient
     .from('residents')
-    .select('id, organization_id, death_date, archived_at, notes')
+    .select('id, organization_id, death_date, death_reported_at, archived_at')
     .eq('id', residentId)
     .single()
 
   if (fetchErr || !currentResident) return { success: false, error: 'Nie znaleziono wskazanego podopiecznego.' }
   if (currentResident.organization_id !== orgId) return { success: false, error: 'Brak uprawnień do zasobów innej placówki.' }
   if (currentResident.death_date) return { success: false, error: 'Dla tego podopiecznego zarejestrowano już fakt zgonu.' }
+  if (currentResident.death_reported_at) {
+    return { success: false, error: 'Dla tego podopiecznego zarejestrowano już zgłoszenie zgonu (oczekuje na zatwierdzenie przez Kierownika placówki).' }
+  }
 
-  const { activeAssignment, unassignedBedLabel } = await releaseActiveBed(adminClient, residentId)
-  const updatedNotes = formatDeathInitiationNote({ existingNotes: currentResident.notes, deathDate, unassignedBedLabel, notes })
-  await adminClient.from('residents').update({ notes: updatedNotes }).eq('id', residentId)
+  // Ustalamy łóżko pod kątem zadań sanityzacji (nie zwalniamy go — zwolni je Kierownik przy zatwierdzeniu)
+  const { activeAssignment, bedLabel } = await resolveActiveBed(adminClient, residentId, false)
 
-  const tasks = buildPostMortemSanitizationTasks({ residentId, targetDate: deathDate, bedLabel: unassignedBedLabel })
+  const { error: updateErr } = await adminClient
+    .from('residents')
+    .update({ death_reported_at: new Date().toISOString() })
+    .eq('id', residentId)
+
+  if (updateErr) return { success: false, error: `Błąd podczas rejestracji zgłoszenia: ${updateErr.message}` }
+
+  await adminClient.from('resident_events').insert({
+    organization_id: currentResident.organization_id,
+    resident_id: residentId,
+    event_type: 'death_reported',
+    event_date: deathDate,
+    event_reason: 'death_reported',
+    metadata: { notes: notes || null, death_date: deathDate },
+    performed_by: user.id,
+  })
+
+  const tasks = buildPostMortemSanitizationTasks({ residentId, targetDate: deathDate, bedLabel })
   await adminClient.from('agenda_items').insert(
     tasks.map((t) => ({ ...t, organization_id: currentResident.organization_id }))
   )
@@ -226,12 +218,11 @@ export async function initiateDeathDischargeAction(
   await adminClient.from('audit_logs').insert({
     organization_id: currentResident.organization_id,
     performed_by: user.id,
-    action: 'RESIDENT_DEATH_INITIATED',
+    action: 'RESIDENT_DEATH_REPORTED',
     payload: {
       target_table: 'residents',
       target_id: residentId,
-      death_date: deathDate,
-      unassigned_bed_id: activeAssignment?.bed_id || null,
+      has_bed_assignment: Boolean(activeAssignment),
       sanitization_required: true,
     },
   })
@@ -239,6 +230,6 @@ export async function initiateDeathDischargeAction(
   for (const p of [`/staff/residents/${residentId}`, `/admin/residents/${residentId}`, '/admin/facility', '/staff/agenda']) {
     revalidatePath(p)
   }
-  return { success: true, unassignedBedLabel }
+  return { success: true, unassignedBedLabel: bedLabel }
 }
 

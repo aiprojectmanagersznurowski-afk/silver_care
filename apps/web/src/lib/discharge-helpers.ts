@@ -193,7 +193,7 @@ export function buildPostMortemSanitizationTasks(params: {
       resident_id: params.residentId,
       target_date: params.targetDate,
       time: '08:00',
-      type: 'other',
+      type: 'staff_only',
       title: 'Procedura po zgonie: wezwanie lekarza do stwierdzenia zgonu i karty zgonu',
       family_visible: false,
     },
@@ -201,7 +201,7 @@ export function buildPostMortemSanitizationTasks(params: {
       resident_id: params.residentId,
       target_date: params.targetDate,
       time: '09:00',
-      type: 'other',
+      type: 'staff_only',
       title: 'Procedura po zgonie: zabezpieczenie i spis depozytu rzeczy osobistych',
       family_visible: false,
     },
@@ -209,7 +209,7 @@ export function buildPostMortemSanitizationTasks(params: {
       resident_id: params.residentId,
       target_date: params.targetDate,
       time: '10:00',
-      type: 'other',
+      type: 'staff_only',
       title: `Sanityzacja i dezynfekcja zwolnionego miejsca${bedInfo}`,
       family_visible: false,
     },
@@ -234,7 +234,9 @@ export function formatDeathInitiationNote(params: {
 export function hasPendingDeathInitiation(resident: {
   notes?: string | null
   death_date?: string | null
+  death_reported_at?: string | null
 }): boolean {
   if (resident.death_date) return false
+  if (resident.death_reported_at) return true
   return Boolean(resident.notes && resident.notes.includes(DEATH_INITIATION_MARKER))
 }
