@@ -9,10 +9,11 @@ import { Users, Bed, BedDouble, FileText, Building2 } from 'lucide-react'
 import { PageHeader } from '@/components/patterns/PageHeader'
 import { MetricCard, MetricGrid } from '@/components/patterns/MetricCard'
 import { getAppRole } from '@/lib/auth/app-role'
+import { getCurrentUser } from '@/lib/supabase/current-user'
 
 export default async function AdminDashboard() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   const role = getAppRole(user)
   const cookieStore = await cookies()

@@ -5,12 +5,13 @@ import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
 import { getResidentCard } from '@/lib/resident-card/get-resident-card'
 import { ResidentCard } from '@/components/residents/card/ResidentCard'
 import { ListError } from '@/components/patterns/ListState'
+import { getCurrentUser } from '@/lib/supabase/current-user'
 
 /** Karta podopiecznego kierownika (i superadmina w impersonacji, tylko do odczytu) — SC-ADM-20. */
 export default async function ResidentProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
   if (!user) redirect('/login')
 
   const isImpersonating = isImpersonationSessionActive(await cookies(), user)

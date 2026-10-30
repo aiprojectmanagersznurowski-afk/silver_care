@@ -4,10 +4,11 @@ import { InvitationsTable, type InvitationRecord } from '@/components/Invitation
 import { redirect } from 'next/navigation'
 import { PageHeader } from '@/components/patterns/PageHeader'
 import { getAppRole } from '@/lib/auth/app-role'
+import { getCurrentUser } from '@/lib/supabase/current-user'
 
 export default async function AdminInvitationsPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   if (!user) {
     redirect('/')

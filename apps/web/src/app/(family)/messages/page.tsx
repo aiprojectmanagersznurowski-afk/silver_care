@@ -4,10 +4,11 @@ import { FamilyMessageForm } from '@/components/FamilyMessageForm'
 import { redirect } from 'next/navigation'
 import { PageHeader } from '@/components/patterns/PageHeader'
 import { formatPersonName } from '@/lib/person-name'
+import { getCurrentUser } from '@/lib/supabase/current-user'
 
 export default async function FamilyMessagesPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
   if (!user) return redirect('/')
 
   // Read linked residents

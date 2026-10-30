@@ -103,6 +103,15 @@ for SCREEN_RULE in ui-default-view-table ui-own-page-heading ui-own-status-badge
   fi
 done
 
+# WO-NFR-PERF-SCREEN-LOAD etap 2: jedna weryfikacja tożsamości na stronę paneli (getCurrentUser)
+AUTH_VIOLATIONS=$(scan_rule perf-single-auth)
+if [ -n "$AUTH_VIOLATIONS" ]; then
+  printf "%s\n" "$AUTH_VIOLATIONS"
+  bad "layout albo strona panelu woła auth.getUser() bezpośrednio — użyj getCurrentUser() (perf-single-auth)"
+else
+  ok "jedna weryfikacja tożsamości na stronę paneli (getCurrentUser, perf-single-auth)"
+fi
+
 step "7/10 Limit rozmiaru plików aplikacyjnych (max 250 LOC)"
 LOC_VIOLATIONS=$(find apps/web/src -type f \( -name "*.ts" -o -name "*.tsx" \) \
   ! -path "apps/web/src/types/database.types.ts" \

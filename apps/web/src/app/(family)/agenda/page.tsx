@@ -9,10 +9,11 @@ import { AgendaTimelineClient } from '@/components/AgendaTimelineClient'
 import { PageHeader } from '@/components/patterns/PageHeader'
 import { formatPersonName } from '@/lib/person-name'
 import { isMedicalAgendaItem } from '@/lib/agenda-family-visibility'
+import { getCurrentUser } from '@/lib/supabase/current-user'
 
 export default async function FamilyAgendaPage(props: { searchParams: Promise<{ date?: string }> }) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
   if (!user) return redirect('/')
 
   // Read linked residents
