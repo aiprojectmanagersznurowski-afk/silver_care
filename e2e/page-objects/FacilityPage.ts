@@ -31,6 +31,9 @@ export class FacilityPage {
   readonly saveBedButton: Locator;
   readonly capacityWarning: Locator;
   readonly confirmCapacityButton: Locator;
+  readonly importFileInput: Locator;
+  readonly commitImportButton: Locator;
+  readonly confirmImportCapacityCheckbox: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -57,6 +60,16 @@ export class FacilityPage {
     this.saveBedButton = page.getByRole('button', { name: 'Zapisz' });
     this.capacityWarning = page.locator('[data-testid="capacity-limit-warning"]');
     this.confirmCapacityButton = page.getByRole('button', { name: 'Dodaj mimo przekroczenia limitu' });
+    this.importFileInput = page.locator('#facility-import-input');
+    this.commitImportButton = page.getByRole('button', { name: /Zatwierdź import/ });
+    this.confirmImportCapacityCheckbox = page.getByRole('checkbox', { name: /Rozumiem, że import przekroczy limit miejsc/ });
+  }
+
+  /** Otwiera zakładkę importu i wgrywa plik CSV ze strukturą (nagłówek + wiersze: piętro, pokój, sektor, liczba łóżek, etykiety). */
+  async uploadFacilityCsv(fileName: string, csv: string) {
+    await this.openImportExport();
+    await this.importTabButton.click();
+    await this.importFileInput.setInputFiles({ name: fileName, mimeType: 'text/csv', buffer: Buffer.from(csv, 'utf8') });
   }
 
   /** Otwiera dialog „Dodaj łóżko” w pierwszym pokoju widoku kafelków i wpisuje oznaczenie. */
