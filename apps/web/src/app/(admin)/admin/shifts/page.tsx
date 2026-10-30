@@ -8,6 +8,10 @@ import { StatusBadge } from '@/components/patterns/StatusBadge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { AddShiftDialog } from '@/components/shifts/AddShiftDialog'
 import { ShiftActiveToggle } from '@/components/shifts/ShiftActiveToggle'
+import { RosterGrid } from '@/components/shifts/RosterGrid'
+import type { RosterEntry } from '@/components/shifts/RosterCell'
+import { normalizeWeekParam, weekDays } from '@/lib/shifts/roster-week'
+import { listShiftStaff } from '@/lib/shifts/shift-staff'
 import { formatShiftRange, shiftCountMessage, trimSeconds } from '@/lib/shifts/shift-definitions'
 
 export const dynamic = 'force-dynamic'
@@ -16,7 +20,7 @@ export const dynamic = 'force-dynamic'
  * Zmiany i grafik kierownika placówki (NUR-SHIFT-CONFIG, SC-NUR-12/AC1). Konfiguracja tylko dla kierownika placówki;
  * kontrakt nie daje tego zasobu administratorowi platformy ani bliskim.
  */
-export default async function ShiftsPage() {
+export default async function ShiftsPage({ searchParams }: { searchParams: Promise<{ week?: string }> }) {
   const user = await getCurrentUser()
   if (!user || getAppRole(user) !== 'org_admin') redirect('/')
 
@@ -29,11 +33,30 @@ export default async function ShiftsPage() {
   const definitions = data ?? []
   const activeCount = definitions.filter((d) => d.is_active).length
 
+  const weekStart = normalizeWeekParam((await searchParams).week)
+  const days = weekDays(weekStart)
+  const orgId = user.app_metadata?.organization_id as string
+  const [staff, rosterRes] = await Promise.all([
+    listShiftStaff(orgId),
+    supabase
+      .from('shift_roster')
+      .select('id, shift_definition_id, shift_date, user_id, is_shift_lead')
+      .gte('shift_date', days[0])
+      .lte('shift_date', days[6]),
+  ])
+  const entriesByCell: Record<string, RosterEntry[]> = {}
+  for (const r of rosterRes.data ?? []) {
+    const person = staff.find((s) => s.id === r.user_id)
+    const key = `${r.shift_definition_id}|${r.shift_date}`
+    ;(entriesByCell[key] ??= []).push({ id: r.id, userId: r.user_id, label: person?.label ?? 'Osoba spoza listy', role: person?.role ?? '', isLead: r.is_shift_lead })
+  }
+  const activeShifts = definitions.filter((d) => d.is_active)
+
   return (
     <div className="space-y-6 sm:space-y-8">
       <PageHeader
         title="Zmiany i grafik"
-        description="Zdefiniuj 2 albo 3 zmiany na dobę. Grafik personelu i kierowników zmian ułożysz w kolejnym kroku."
+        description="Zdefiniuj 2 albo 3 zmiany na dobę. Poniżej ułożysz grafik tygodnia i wyznaczysz kierownika zmiany."
         actions={<AddShiftDialog />}
       />
 
@@ -69,6 +92,8 @@ export default async function ShiftsPage() {
           </TableBody>
         </Table>
       </TableCard>
+
+      <RosterGrid weekStart={weekStart} shifts={activeShifts} entriesByCell={entriesByCell} staff={staff} />
     </div>
   )
 }
