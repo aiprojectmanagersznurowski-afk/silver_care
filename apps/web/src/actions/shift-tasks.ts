@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/supabase/current-user'
 import { getAppOrganizationId, getAppRole } from '@/lib/auth/app-role'
-import { validateTaskInput } from '@/lib/shifts/shift-tasks-view'
+import { nextPlanVersion, validateCancelReason, validateTaskInput } from '@/lib/shifts/shift-tasks-view'
 
 /**
  * Zadania zmiany (NUR-TASKS, SC-NUR-13/15). Zapis kontem użytkownika — uprawnienia i izolację placówek egzekwuje RLS.
@@ -62,6 +62,98 @@ export async function addShiftTaskAction(input: AddShiftTaskInput): Promise<Shif
     return { error: 'Nie udało się dodać zadania.' }
   }
 
+  revalidatePath('/staff/shift-tasks')
+  return { success: true }
+}
+
+async function requireStaff() {
+  const user = await getCurrentUser()
+  const role = getAppRole(user)
+  const orgId = getAppOrganizationId(user)
+  if (!user || !orgId || (role !== 'nurse' && role !== 'org_admin')) return null
+  return { user, orgId }
+}
+
+/** Zatwierdzenie propozycji: tylko kierownik zmiany albo kierownik placówki (RLS); inni nie zmienią żadnego wiersza. */
+export async function approveShiftTaskAction(taskId: string): Promise<ShiftTaskActionResult> {
+  if (!UUID_RE.test(taskId)) return { error: 'Niepoprawne zadanie.' }
+  if (!(await requireStaff())) return { error: 'Brak uprawnień.' }
+  const supabase = await createClient()
+  const { data, error } = await supabase.from('shift_tasks').update({ status: 'TODO' }).eq('id', taskId).eq('status', 'PROPOSED').select('id')
+  if (error) {
+    console.error('[SHIFT_TASK_APPROVE_FAIL]', error.code)
+    return { error: 'Nie udało się zatwierdzić zadania.' }
+  }
+  if (!data?.length) return { error: 'Zadanie zatwierdza kierownik zmiany.' }
+  revalidatePath('/staff/shift-tasks')
+  return { success: true }
+}
+
+export interface SettleShiftTaskInput {
+  taskId: string
+  path: 'DONE' | 'CANCELLED' | 'CARRIED'
+  reason?: string
+  targetShiftDefinitionId?: string
+  targetDate?: string
+}
+
+/** Rozliczenie zadania trzema ścieżkami przez RPC settle_shift_task (tożsamość i uprawnienia z sesji). */
+export async function settleShiftTaskAction(input: SettleShiftTaskInput): Promise<ShiftTaskActionResult> {
+  if (!UUID_RE.test(input.taskId) || !['DONE', 'CANCELLED', 'CARRIED'].includes(input.path)) return { error: 'Niepoprawne dane rozliczenia.' }
+  if (!(await requireStaff())) return { error: 'Brak uprawnień.' }
+  if (input.path === 'CANCELLED') {
+    const invalid = validateCancelReason(input.reason ?? '')
+    if (invalid) return { error: invalid }
+  }
+  if (input.path === 'CARRIED' && (!input.targetShiftDefinitionId || !UUID_RE.test(input.targetShiftDefinitionId) || !DATE_RE.test(input.targetDate ?? ''))) {
+    return { error: 'Wybierz zmianę i datę docelową.' }
+  }
+
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('settle_shift_task', {
+    p_task_id: input.taskId,
+    p_path: input.path,
+    // typy generowane nie znają argumentów dopuszczających NULL; funkcja SQL przyjmuje NULL dla ścieżek bez celu i powodu
+    p_reason: (input.reason ?? null) as string,
+    p_target_definition_id: (input.targetShiftDefinitionId ?? null) as string,
+    p_target_date: (input.targetDate ?? null) as string,
+  })
+  if (error) {
+    if (error.message.includes('SHIFT_NOT_LEAD')) return { error: 'Zadania rozlicza kierownik zmiany.' }
+    if (error.message.includes('SHIFT_CARRY_TARGET_INVALID')) return { error: 'Wybierz inną zmianę lub datę niż obecna.' }
+    if (error.message.includes('SHIFT_TASK_SETTLED')) return { error: 'To zadanie jest już rozliczone.' }
+    console.error('[SHIFT_TASK_SETTLE_FAIL]', error.code)
+    return { error: 'Nie udało się rozliczyć zadania.' }
+  }
+  revalidatePath('/staff/shift-tasks')
+  return { success: true }
+}
+
+/** Akceptacja planu zmiany: dopisuje kolejną wersję. Uprawnienia egzekwuje RLS (kierownik zmiany, kierownik placówki). */
+export async function approveShiftPlanAction(input: { shiftDefinitionId: string; shiftDate: string }): Promise<ShiftTaskActionResult> {
+  if (!UUID_RE.test(input.shiftDefinitionId) || !DATE_RE.test(input.shiftDate)) return { error: 'Niepoprawne dane planu.' }
+  const session = await requireStaff()
+  if (!session) return { error: 'Brak uprawnień.' }
+
+  const supabase = await createClient()
+  const { data: existing } = await supabase
+    .from('shift_plan_approvals')
+    .select('version')
+    .eq('shift_definition_id', input.shiftDefinitionId)
+    .eq('shift_date', input.shiftDate)
+  const { error } = await supabase.from('shift_plan_approvals').insert({
+    organization_id: session.orgId,
+    shift_definition_id: input.shiftDefinitionId,
+    shift_date: input.shiftDate,
+    version: nextPlanVersion((existing ?? []).map((r) => r.version)),
+    approved_by: session.user.id,
+  })
+  if (error) {
+    if (error.code === '42501') return { error: 'Plan zatwierdza kierownik zmiany.' }
+    if (error.code === '23505') return { error: 'Plan został właśnie zatwierdzony przez kogoś innego. Odśwież stronę.' }
+    console.error('[SHIFT_PLAN_APPROVE_FAIL]', error.code)
+    return { error: 'Nie udało się zatwierdzić planu.' }
+  }
   revalidatePath('/staff/shift-tasks')
   return { success: true }
 }
