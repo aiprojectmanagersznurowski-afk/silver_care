@@ -16,7 +16,7 @@ import { DischargeConsequencesAlert } from './residents/DischargeConsequencesAle
 import { formatPersonName } from '@/lib/person-name'
 
 export interface DischargeResidentDialogProps {
-  resident: { id: string; first_name: string; last_name: string }
+  resident: { id: string; first_name: string; last_name: string; death_reported_at?: string | null }
   activeBedLabel?: string | null
   mode?: 'full' | 'nurse_death_init'
   trigger?: React.ReactNode
@@ -31,9 +31,10 @@ export function DischargeResidentDialog({ resident, activeBedLabel, mode = 'full
 
   const todayStr = new Date().toISOString().slice(0, 10)
   const isNurseInit = mode === 'nurse_death_init'
+  const isPendingDeath = Boolean(resident.death_reported_at)
 
   const [contractEndDate, setContractEndDate] = useState(todayStr)
-  const [contractEndReason, setContractEndReason] = useState<ContractEndReason>('family_request')
+  const [contractEndReason, setContractEndReason] = useState<ContractEndReason>(isPendingDeath ? 'death' : 'family_request')
   const [deathDate, setDeathDate] = useState(todayStr)
   const [notes, setNotes] = useState('')
 
@@ -81,9 +82,9 @@ export function DischargeResidentDialog({ resident, activeBedLabel, mode = 'full
           trigger ? (
             (trigger as React.ReactElement)
           ) : (
-            <Button variant="outline" size="sm" className="min-h-touch">
+            <Button variant={isPendingDeath ? 'default' : 'outline'} size="sm" className="min-h-touch">
               <LogOut className="h-4 w-4 mr-1.5" />
-              {isNurseInit ? 'Zgłoś zgon' : 'Zakończ pobyt'}
+              {isNurseInit ? 'Zgłoś zgon' : isPendingDeath ? 'Zatwierdź zgon i wypis' : 'Zakończ pobyt'}
             </Button>
           )
         }
@@ -97,7 +98,7 @@ export function DischargeResidentDialog({ resident, activeBedLabel, mode = 'full
             </div>
             <div>
               <DialogTitle className="text-xl">
-                {isNurseInit ? 'Zgłoszenie zgonu podopiecznego (inicjacja)' : 'Zakończenie pobytu podopiecznego'}
+                {isNurseInit ? 'Zgłoszenie zgonu podopiecznego (inicjacja)' : isPendingDeath ? 'Zatwierdzenie zgonu i zakończenie pobytu' : 'Zakończenie pobytu podopiecznego'}
               </DialogTitle>
               <DialogDescription className="text-sm mt-0.5">
                 {formatPersonName(resident.first_name, resident.last_name)}
@@ -121,7 +122,7 @@ export function DischargeResidentDialog({ resident, activeBedLabel, mode = 'full
                 <span>Procedura operacyjna personelu dyżurnego</span>
               </div>
               <p>
-                Zgłoszenie natychmiast zwalnia przypisane łóżko ({activeBedLabel ?? 'brak aktywnego łóżka'}) do dezynfekcji, tworzy pakiet zadań rutynowych w agendzie personelu (karta zgonu, depozyt, sanityzacja) i przekazuje zamknięcie umowy do zatwierdzenia przez kierownika placówki.
+                Zgłoszenie odnotowuje fakt zgonu, tworzy pakiet zadań procedury po zgonie i sanityzacji w agendzie personelu ({activeBedLabel ?? 'brak przypisanego łóżka'}) oraz przekazuje zakończenie umowy i zwolnienie łóżka do zatwierdzenia przez kierownika placówki.
               </p>
             </div>
           ) : (
@@ -207,9 +208,9 @@ export function DischargeResidentDialog({ resident, activeBedLabel, mode = 'full
             <Button type="submit" variant="default" disabled={isPending}>
               {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isNurseInit
-                ? 'Zgłoś zgon i zwolnij łóżko do dezynfekcji'
+                ? 'Zgłoś zgon i zleć procedurę'
                 : isDeath
-                  ? 'Potwierdź rejestrację zgonu'
+                  ? (isPendingDeath ? 'Zatwierdź zgon i zwolnij łóżko' : 'Potwierdź rejestrację zgonu')
                   : 'Zatwierdź zakończenie pobytu'}
             </Button>
           </DialogFooter>
