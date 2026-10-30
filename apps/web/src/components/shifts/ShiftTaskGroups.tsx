@@ -1,10 +1,18 @@
 import { TableCard } from '@/components/patterns/TableCard'
 import { StatusBadge } from '@/components/patterns/StatusBadge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { ShiftTaskActions, type CarryTarget } from '@/components/shifts/ShiftTaskActions'
 import { sourceLabel, statusLabel, type TaskGroup } from '@/lib/shifts/shift-tasks-view'
 
+interface ShiftTaskGroupsProps {
+  groups: TaskGroup[]
+  shiftDate: string
+  canSettle: boolean
+  targets: CarryTarget[]
+}
+
 /** Zadania zmiany pogrupowane per pokój albo per podopieczny. Źródło widoczne przy każdym zadaniu. */
-export function ShiftTaskGroups({ groups }: { groups: TaskGroup[] }) {
+export function ShiftTaskGroups({ groups, shiftDate, canSettle, targets }: ShiftTaskGroupsProps) {
   return (
     <div className="space-y-4">
       {groups.map((group) => (
@@ -17,6 +25,7 @@ export function ShiftTaskGroups({ groups }: { groups: TaskGroup[] }) {
                   <TableHead className="w-24">Godzina</TableHead>
                   <TableHead>Źródło</TableHead>
                   <TableHead>Status</TableHead>
+                  {canSettle && <TableHead>Działania</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -31,6 +40,13 @@ export function ShiftTaskGroups({ groups }: { groups: TaskGroup[] }) {
                     <TableCell>
                       <StatusBadge tone={t.status === 'TODO' ? 'brand' : 'neutral'}>{statusLabel(t.status)}</StatusBadge>
                     </TableCell>
+                    {canSettle && (
+                      <TableCell>
+                        {(t.status === 'PROPOSED' || t.status === 'TODO') && (
+                          <ShiftTaskActions taskId={t.id} title={t.title} status={t.status} shiftDate={shiftDate} targets={targets} />
+                        )}
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>

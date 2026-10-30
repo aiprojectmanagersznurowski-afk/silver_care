@@ -7,6 +7,7 @@ import { formatPersonName } from '@/lib/person-name'
 import { PageHeader } from '@/components/patterns/PageHeader'
 import { ListEmpty } from '@/components/patterns/ListState'
 import { ShiftTaskForm, type TaskResidentOption } from '@/components/shifts/ShiftTaskForm'
+import { ShiftPlanApproval } from '@/components/shifts/ShiftPlanApproval'
 import { ShiftTaskGroups } from '@/components/shifts/ShiftTaskGroups'
 import { formatDayLabel, normalizeDateParam, shiftDay } from '@/lib/shifts/roster-week'
 import { formatShiftRange, trimSeconds } from '@/lib/shifts/shift-definitions'
@@ -58,16 +59,24 @@ export default async function ShiftTasksPage({ searchParams }: { searchParams: S
             <Link href={qs({ group: 'room' })} className={group === 'room' ? activeClass : navClass}>Według pokoi</Link>
             <Link href={qs({ group: 'resident' })} className={group === 'resident' ? activeClass : navClass}>Według podopiecznych</Link>
           </nav>
-          <TasksSection shiftId={shift.id} date={date} group={group} />
+          <TasksSection shiftId={shift.id} date={date} group={group} isAdmin={role === 'org_admin'} targets={shifts.map((s) => ({ id: s.id, name: s.name }))} />
         </>
       )}
     </div>
   )
 }
 
-async function TasksSection({ shiftId, date, group }: { shiftId: string; date: string; group: 'room' | 'resident' }) {
+interface TasksSectionProps {
+  shiftId: string
+  date: string
+  group: 'room' | 'resident'
+  isAdmin: boolean
+  targets: { id: string; name: string }[]
+}
+
+async function TasksSection({ shiftId, date, group, isAdmin, targets }: TasksSectionProps) {
   const supabase = await createClient()
-  const [tasksRes, residentsRes] = await Promise.all([
+  const [tasksRes, residentsRes, leadRes, approvalsRes] = await Promise.all([
     supabase
       .from('shift_tasks')
       .select('id, title, due_time, source, status, carried_from_task_id, resident_id, cancel_reason')
@@ -79,7 +88,17 @@ async function TasksSection({ shiftId, date, group }: { shiftId: string; date: s
       .is('archived_at', null)
       .order('last_name', { ascending: true })
       .limit(500),
+    isAdmin ? Promise.resolve({ data: true }) : supabase.rpc('is_shift_lead', { p_shift_definition_id: shiftId, p_shift_date: date }),
+    supabase.from('shift_plan_approvals').select('version').eq('shift_definition_id', shiftId).eq('shift_date', date),
   ])
+  const canSettle = leadRes.data === true
+  const planVersion = Math.max(0, ...(approvalsRes.data ?? []).map((a) => a.version)) || null
+
+  const taskIds = (tasksRes.data ?? []).map((t) => t.id)
+  const { data: copies } = taskIds.length
+    ? await supabase.from('shift_tasks').select('carried_from_task_id').in('carried_from_task_id', taskIds)
+    : { data: [] as { carried_from_task_id: string | null }[] }
+  const carriedOut = (copies ?? []).map((c) => c.carried_from_task_id).filter((id): id is string => !!id)
 
   const places = new Map<string, { name: string; room: string | null; bed: string | null }>()
   const options: TaskResidentOption[] = []
@@ -100,15 +119,16 @@ async function TasksSection({ shiftId, date, group }: { shiftId: string; date: s
       room: p?.room ?? null, bed: p?.bed ?? null, cancelReason: t.cancel_reason,
     }
   })
-  const groups = groupTasks(tasks, group)
+  const groups = groupTasks(tasks, group, carriedOut)
 
   return (
     <>
+      <ShiftPlanApproval shiftDefinitionId={shiftId} shiftDate={date} version={planVersion} canApprove={canSettle} />
       <ShiftTaskForm shiftDefinitionId={shiftId} shiftDate={date} residents={options} />
       {groups.length === 0 ? (
         <ListEmpty title="Brak zadań na tę zmianę" description="Dodaj pierwsze zadanie formularzem powyżej." />
       ) : (
-        <ShiftTaskGroups groups={groups} />
+        <ShiftTaskGroups groups={groups} shiftDate={date} canSettle={canSettle} targets={targets} />
       )}
     </>
   )

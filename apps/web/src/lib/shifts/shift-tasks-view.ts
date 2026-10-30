@@ -62,14 +62,28 @@ export function validateTaskInput(input: { title: string; dueTime: string }): st
   return null
 }
 
+export const CANCEL_REASON_MAX = 500
+
+export function validateCancelReason(reason: string): string | null {
+  const trimmed = reason.trim()
+  if (!trimmed) return 'Podaj powód anulowania.'
+  if (trimmed.length > CANCEL_REASON_MAX) return `Powód może mieć najwyżej ${CANCEL_REASON_MAX} znaków.`
+  return null
+}
+
+/** Kolejna wersja planu zmiany: największa dotychczasowa + 1. */
+export function nextPlanVersion(versions: number[]): number {
+  return versions.length ? Math.max(...versions) + 1 : 1
+}
+
 const byTime = (a: TaskView, b: TaskView) =>
   (a.dueTime ?? '99:99').localeCompare(b.dueTime ?? '99:99') || a.title.localeCompare(b.title, 'pl')
 
 const collator = new Intl.Collator('pl', { numeric: true })
 
 /** Zadanie z przeniesioną kopią zostaje w historii, ale nie wisi drugi raz na liście. */
-export function groupTasks(tasks: TaskView[], mode: TaskGroupMode): TaskGroup[] {
-  const carried = new Set(tasks.map((t) => t.carriedFromTaskId).filter((id): id is string => !!id))
+export function groupTasks(tasks: TaskView[], mode: TaskGroupMode, carriedOutIds: string[] = []): TaskGroup[] {
+  const carried = new Set([...tasks.map((t) => t.carriedFromTaskId).filter((id): id is string => !!id), ...carriedOutIds])
   const visible = tasks.filter((t) => !carried.has(t.id))
 
   const buckets = new Map<string, TaskGroup & { sort: string }>()
