@@ -25,7 +25,7 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
     sql = postgres(dbUrl!, { prepare: false });
     const [admin] = await sql`SELECT raw_app_meta_data->>'organization_id' AS org FROM auth.users WHERE email = ${TEST_USERS.org_admin.email}`;
     orgId = admin.org;
-    const [r] = await sql`SELECT id::text AS id, first_name || ' ' || last_name AS name FROM public.residents
+    const [r] = await sql`SELECT id::text AS id, last_name || ' ' || first_name AS name FROM public.residents
       WHERE organization_id = ${orgId} AND archived_at IS NULL ORDER BY last_name LIMIT 1`;
     resident = { id: r.id, name: r.name };
     await sql`DELETE FROM public.shift_definitions WHERE organization_id = ${orgId} AND name LIKE ${PREFIX + '%'}`;

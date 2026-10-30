@@ -61,3 +61,12 @@ export function formatWeekLabel(weekStart: string): string {
     ? `${short(first)}–${short(last)}.${last.getUTCFullYear()}`
     : `${short(first)}.${first.getUTCFullYear()}–${short(last)}.${last.getUTCFullYear()}`
 }
+
+export function shiftDay(date: string, delta: number): string {
+  return format(new Date(parse(date).getTime() + delta * DAY_MS))
+}
+
+/** Parametr ?date= z adresu: poprawna data albo dzisiaj (Europe/Warsaw). */
+export function normalizeDateParam(value: string | undefined, now: Date = new Date()): string {
+  return value && isValidDate(value) ? value : todayWarsaw(now)
+}

@@ -32,9 +32,9 @@ describe('Widok zadań zmiany (NUR-TASKS)', () => {
 
   it('@REQ: NUR-TASKS - grupowanie per pokój: pokoje po numerze, w pokoju po godzinie, zadania placówki osobno na końcu', () => {
     const groups = groupTasks([
-      task({ id: 'a', residentId: 'r1', residentName: 'Anna Nowak', room: '10', bed: 'A', dueTime: '12:00' }),
-      task({ id: 'b', residentId: 'r2', residentName: 'Jan Kowal', room: '2', bed: 'B', dueTime: '09:00' }),
-      task({ id: 'c', residentId: 'r3', residentName: 'Ewa Lis', room: '2', bed: 'A', dueTime: '08:00' }),
+      task({ id: 'a', residentId: 'r1', residentName: 'Nowak Anna', room: '10', bed: 'A', dueTime: '12:00' }),
+      task({ id: 'b', residentId: 'r2', residentName: 'Kowal Jan', room: '2', bed: 'B', dueTime: '09:00' }),
+      task({ id: 'c', residentId: 'r3', residentName: 'Lis Ewa', room: '2', bed: 'A', dueTime: '08:00' }),
       task({ id: 'd' }),
     ], 'room');
     expect(groups.map((g) => g.label)).toEqual(['Pokój 2', 'Pokój 10', 'Zadania placówki']);
@@ -43,11 +43,11 @@ describe('Widok zadań zmiany (NUR-TASKS)', () => {
 
   it('@REQ: NUR-TASKS - grupowanie per podopieczny: nazwisko, pokój i łóżko w etykiecie grupy', () => {
     const groups = groupTasks([
-      task({ id: 'a', residentId: 'r1', residentName: 'Anna Nowak', room: '10', bed: 'A' }),
-      task({ id: 'b', residentId: 'r1', residentName: 'Anna Nowak', room: '10', bed: 'A' }),
-      task({ id: 'c', residentId: 'r2', residentName: 'Jan Kowal', room: '2', bed: 'B' }),
+      task({ id: 'a', residentId: 'r1', residentName: 'Nowak Anna', room: '10', bed: 'A' }),
+      task({ id: 'b', residentId: 'r1', residentName: 'Nowak Anna', room: '10', bed: 'A' }),
+      task({ id: 'c', residentId: 'r2', residentName: 'Kowal Jan', room: '2', bed: 'B' }),
     ], 'resident');
-    expect(groups.map((g) => g.label)).toEqual(['Jan Kowal · pokój 2, łóżko B', 'Anna Nowak · pokój 10, łóżko A']);
+    expect(groups.map((g) => g.label)).toEqual(['Kowal Jan · pokój 2, łóżko B', 'Nowak Anna · pokój 10, łóżko A']);
     expect(groups[1].tasks).toHaveLength(2);
   });
 
