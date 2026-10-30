@@ -1,13 +1,12 @@
 export const dynamic = 'force-dynamic'
 
-import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { getSystemAlertsAction } from '@/actions/system-status'
 import { SystemStatusManagementClient } from '@/components/system-status/SystemStatusManagementClient'
+import { getCurrentUser } from '@/lib/supabase/current-user'
 
 export default async function SystemStatusPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   if (!user) {
     redirect('/login')

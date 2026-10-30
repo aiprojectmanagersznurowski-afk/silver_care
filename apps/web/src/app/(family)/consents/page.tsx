@@ -9,6 +9,7 @@ import { PageHeader } from '@/components/patterns/PageHeader'
 import { StatusBadge } from '@/components/patterns/StatusBadge'
 import { roleLabel } from '@/lib/auth/role-labels'
 import { formatPersonName } from '@/lib/person-name'
+import { getCurrentUser } from '@/lib/supabase/current-user'
 
 const PURPOSE_LABELS: Record<string, { title: string; desc: string }> = {
   wellness_data_ingest: {
@@ -27,7 +28,7 @@ const PURPOSE_LABELS: Record<string, { title: string; desc: string }> = {
 
 export default async function FamilyConsentsPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
   if (!user) return redirect('/')
 
   // Read linked residents

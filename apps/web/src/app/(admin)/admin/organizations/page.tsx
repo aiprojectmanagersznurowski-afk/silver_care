@@ -6,10 +6,11 @@ import { OrganizationsManagementClient, OrganizationSummaryItem } from '@/compon
 import { CreateOrganizationDialog } from '@/components/CreateOrganizationDialog'
 import { PageHeader } from '@/components/patterns/PageHeader'
 import { getAppRole } from '@/lib/auth/app-role'
+import { getCurrentUser } from '@/lib/supabase/current-user'
 
 export default async function OrganizationsPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   if (!user) {
     redirect('/login')

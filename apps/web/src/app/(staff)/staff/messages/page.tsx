@@ -1,5 +1,5 @@
-import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { getCurrentUser } from '@/lib/supabase/current-user'
 
 export const dynamic = 'force-dynamic'
 
@@ -8,8 +8,7 @@ export default async function StaffMessagesRedirectPage({
 }: {
   searchParams: Promise<{ residentId?: string }>
 }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   if (!user) {
     redirect('/')

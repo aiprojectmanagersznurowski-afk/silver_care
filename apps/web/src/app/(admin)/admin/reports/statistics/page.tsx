@@ -1,10 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { StatisticsDashboardClient } from '@/components/StatisticsDashboardClient'
 import { PageHeader } from '@/components/patterns/PageHeader'
+import { getCurrentUser } from '@/lib/supabase/current-user'
 
 export default async function StatisticsPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
   const orgId = user?.app_metadata?.organization_id
 
   if (!orgId) {

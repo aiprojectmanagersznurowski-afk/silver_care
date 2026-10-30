@@ -4,11 +4,12 @@ import { ReactNode } from 'react'
 import { FamilyHeader } from '@/components/FamilyHeader'
 import { OnboardingModal } from '@/components/OnboardingModal'
 import { getAppRole } from '@/lib/auth/app-role'
+import { getCurrentUser } from '@/lib/supabase/current-user'
 
 export const dynamic = 'force-dynamic'
 export default async function FamilyLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   const role = getAppRole(user)
 

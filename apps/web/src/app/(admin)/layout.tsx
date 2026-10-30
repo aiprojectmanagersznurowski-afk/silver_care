@@ -1,6 +1,5 @@
 export const dynamic = 'force-dynamic'
 import { ReactNode } from 'react'
-import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { AdminSidebar } from '@/components/AdminSidebar'
@@ -12,10 +11,10 @@ import { getActiveImpersonation } from '@/lib/impersonation-guards'
 import { GlobalCommandPalette } from '@/components/GlobalCommandPalette'
 import { StaffNotificationBell } from '@/components/StaffNotificationBell'
 import { getAppRole } from '@/lib/auth/app-role'
+import { getCurrentUser } from '@/lib/supabase/current-user'
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   const role = getAppRole(user)
   if (!user || (role !== 'org_admin' && role !== 'super_admin')) {
