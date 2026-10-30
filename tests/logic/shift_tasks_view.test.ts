@@ -4,7 +4,9 @@ import {
   normalizeGroupParam,
   sourceLabel,
   statusLabel,
+  validateCancelReason,
   validateTaskInput,
+  nextPlanVersion,
   type TaskView,
 } from '../../apps/web/src/lib/shifts/shift-tasks-view';
 
@@ -68,5 +70,21 @@ describe('Widok zadań zmiany (NUR-TASKS)', () => {
     expect(validateTaskInput({ title: 'Podać wodę', dueTime: '25:00' })).toBe('Podaj godzinę w formacie GG:MM.');
     expect(validateTaskInput({ title: 'Podać wodę', dueTime: '' })).toBeNull();
     expect(validateTaskInput({ title: 'Podać wodę', dueTime: '14:30' })).toBeNull();
+  });
+
+  it('@REQ: NUR-TASKS - zadanie przeniesione na inną zmianę znika z listy zmiany źródłowej', () => {
+    const groups = groupTasks([task({ id: 'old' }), task({ id: 'keep' })], 'room', ['old']);
+    expect(groups.flatMap((g) => g.tasks.map((t) => t.id))).toEqual(['keep']);
+  });
+
+  it('@REQ: NUR-TASKS - powód anulowania jest obowiązkowy i ograniczony', () => {
+    expect(validateCancelReason('   ')).toBe('Podaj powód anulowania.');
+    expect(validateCancelReason('x'.repeat(501))).toBe('Powód może mieć najwyżej 500 znaków.');
+    expect(validateCancelReason('Podopieczny odmówił')).toBeNull();
+  });
+
+  it('@REQ: NUR-SHIFT-PLAN-PRINT - kolejna wersja planu to największa dotychczasowa + 1', () => {
+    expect(nextPlanVersion([])).toBe(1);
+    expect(nextPlanVersion([1, 2, 5])).toBe(6);
   });
 });

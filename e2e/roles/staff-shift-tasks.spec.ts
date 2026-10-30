@@ -13,7 +13,9 @@ import { TEST_USERS } from '../fixtures/test-users';
 const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
 const PREFIX = 'E2E ';
 const CODE = 'E2E-ZADANIA';
+const CODE_2 = 'E2E-ZADANIA-N';
 const DATE = '2026-11-09';
+const SETTLE_DATE = '2026-11-10';
 
 test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
   test.describe.configure({ mode: 'serial' });
@@ -30,7 +32,7 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
     resident = { id: r.id, name: r.name };
     await sql`DELETE FROM public.shift_definitions WHERE organization_id = ${orgId} AND name LIKE ${PREFIX + '%'}`;
     await sql`INSERT INTO public.shift_definitions (organization_id, code, name, start_time, end_time, order_index)
-      VALUES (${orgId}, ${CODE}, ${PREFIX + 'Zadania'}, '07:00', '19:00', 903)`;
+      VALUES (${orgId}, ${CODE}, ${PREFIX + 'Zadania'}, '07:00', '19:00', 903), (${orgId}, ${CODE_2}, ${PREFIX + 'Zadania nocna'}, '19:00', '07:00', 904)`;
   });
 
   test.afterAll(async () => {
@@ -71,5 +73,75 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
 
     await tasks.addTask('E2E Pomóc przy kolacji', resident.id);
     await expect(tasks.task('E2E Pomóc przy kolacji')).toContainText('Propozycja');
+  });
+
+  /** Zadania do rozliczenia wstawia baza, żeby test nie zależał od kolejności poprzednich. */
+  async function seedTask(title: string, status: 'PROPOSED' | 'TODO') {
+    const [admin] = await sql`SELECT id FROM auth.users WHERE email = ${TEST_USERS.org_admin.email}`;
+    await sql`INSERT INTO public.shift_tasks (organization_id, shift_definition_id, shift_date, title, source, status, created_by)
+      SELECT ${orgId}, id, ${SETTLE_DATE}, ${title}, 'MANUAL', ${status}, ${admin.id} FROM public.shift_definitions
+      WHERE organization_id = ${orgId} AND code = ${CODE}`;
+  }
+
+  test('@REQ: NUR-TASKS - kierownik zatwierdza propozycję i oznacza zadanie jako wykonane', async ({ loginPage, page }) => {
+    await seedTask('E2E Propozycja do zatwierdzenia', 'PROPOSED');
+    await loginPage.loginAs('org_admin');
+    const tasks = new ShiftTasksPage(page);
+    await tasks.goto(CODE, SETTLE_DATE);
+
+    await expect(tasks.task('E2E Propozycja do zatwierdzenia')).toContainText('Propozycja');
+    await tasks.approveProposal('E2E Propozycja do zatwierdzenia');
+    await expect(tasks.task('E2E Propozycja do zatwierdzenia')).toContainText('Do zrobienia');
+    await tasks.markDone('E2E Propozycja do zatwierdzenia');
+    await expect(tasks.task('E2E Propozycja do zatwierdzenia')).toContainText('Wykonane');
+  });
+
+  test('@REQ: NUR-TASKS - anulowanie wymaga powodu i pokazuje go przy zadaniu', async ({ loginPage, page }) => {
+    await seedTask('E2E Zadanie do anulowania', 'TODO');
+    await loginPage.loginAs('org_admin');
+    const tasks = new ShiftTasksPage(page);
+    await tasks.goto(CODE, SETTLE_DATE);
+
+    await tasks.cancel('E2E Zadanie do anulowania', '');
+    await expect(tasks.task('E2E Zadanie do anulowania').getByRole('alert')).toContainText('Podaj powód anulowania.');
+    await tasks.cancel('E2E Zadanie do anulowania', 'Podopieczny odmówił');
+    await expect(tasks.task('E2E Zadanie do anulowania')).toContainText('Anulowane');
+    await expect(tasks.task('E2E Zadanie do anulowania')).toContainText('Powód: Podopieczny odmówił');
+  });
+
+  test('@REQ: NUR-TASKS - przeniesione zadanie znika ze zmiany źródłowej i wraca na docelowej z oznaczeniem', async ({ loginPage, page }) => {
+    await seedTask('E2E Zadanie do przeniesienia', 'TODO');
+    await loginPage.loginAs('org_admin');
+    const tasks = new ShiftTasksPage(page);
+    await tasks.goto(CODE, SETTLE_DATE);
+
+    await tasks.carry('E2E Zadanie do przeniesienia', PREFIX + 'Zadania nocna', SETTLE_DATE);
+    await expect(tasks.task('E2E Zadanie do przeniesienia')).toHaveCount(0);
+
+    await tasks.goto(CODE_2, SETTLE_DATE);
+    await expect(tasks.task('E2E Zadanie do przeniesienia')).toContainText('Przeniesione z poprzedniej zmiany');
+  });
+
+  test('@REQ: NUR-SHIFT-PLAN-PRINT - kierownik zatwierdza plan zmiany; każde zatwierdzenie podnosi wersję', async ({ loginPage, page }) => {
+    await loginPage.loginAs('org_admin');
+    const tasks = new ShiftTasksPage(page);
+    await tasks.goto(CODE, SETTLE_DATE);
+
+    await expect(tasks.planStatus).toContainText('Plan nie został zatwierdzony');
+    await tasks.approvePlanButton.click();
+    await expect(tasks.planStatus).toContainText('Plan zatwierdzony, wersja 1');
+    await tasks.approvePlanButton.click();
+    await expect(tasks.planStatus).toContainText('Plan zatwierdzony, wersja 2');
+  });
+
+  test('@REQ: NUR-TASKS - personel bez roli kierownika zmiany nie ma przycisków rozliczenia ani zatwierdzenia planu', async ({ loginPage, page }) => {
+    await seedTask('E2E Zadanie widoczne dla personelu', 'TODO');
+    await loginPage.loginAs('nurse');
+    const tasks = new ShiftTasksPage(page);
+    await tasks.goto(CODE, SETTLE_DATE);
+
+    await expect(tasks.task('E2E Zadanie widoczne dla personelu')).toBeVisible();
+    await expect(tasks.task('E2E Zadanie widoczne dla personelu').getByRole('button')).toHaveCount(0);
+    await expect(tasks.approvePlanButton).toHaveCount(0);
   });
 });
