@@ -60,6 +60,14 @@ test.describe('Zmiany placówki (@REQ: NUR-SHIFT-CONFIG)', () => {
     await expect(shifts.rowFor('E2E Popołudniowa')).toContainText('Nieaktywna');
   });
 
+  test('@REQ: NUR-SHIFT-CONFIG - kierownik przechodzi do ekranu zmian z menu bocznego', async ({ loginPage, page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await loginPage.loginAs('org_admin');
+    await page.locator('[data-slot="sidebar"]').getByRole('link', { name: 'Zmiany i grafik' }).click();
+    await expect(page).toHaveURL(/\/admin\/shifts/);
+    await expect(new ShiftsPage(page).heading).toBeVisible();
+  });
+
   test('@REQ: NUR-SHIFT-CONFIG - personel opiekuńczy nie ma dostępu do konfiguracji zmian', async ({ loginPage, page }) => {
     await loginPage.loginAs('nurse');
     await page.goto('/admin/shifts');
