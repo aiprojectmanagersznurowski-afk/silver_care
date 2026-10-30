@@ -9,9 +9,11 @@ export class ResidentsListPage {
   readonly rows: Locator;
   readonly residentNames: Locator;
   readonly impersonationBanner: Locator;
+  readonly mobileCards: Locator;
 
   constructor(page: Page) {
     this.page = page;
+    this.mobileCards = page.locator('[data-testid="resident-mobile-card"]');
     this.rows = page.locator('[data-slot="table-body"] [data-slot="table-row"]');
     this.residentNames = this.rows.locator('[data-testid="resident-name"]');
     this.impersonationBanner = page.getByText('Działasz w trybie impersonacji');
