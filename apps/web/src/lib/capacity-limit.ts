@@ -34,6 +34,34 @@ export function evaluateCapacity(input: {
   return { operation: input.operation, counts, limit: input.residentLimit, projected, excess, exceeds: excess > 0 }
 }
 
+export interface ResidentPresenceFields {
+  archived_at: string | null
+  death_date: string | null
+  contract_end_date: string | null
+}
+
+/** Kolumny potrzebne do ustalenia, czy podopieczny zajmuje miejsce — do .select() w zapytaniach. */
+export const RESIDENT_PRESENCE_COLUMNS = 'archived_at, death_date, contract_end_date'
+
+function warsawToday(now: Date): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Warsaw' }).format(now)
+}
+
+/**
+ * Miejsce zajmuje wyłącznie podopieczny faktycznie przebywający w placówce (decyzja Michała 2026-10-29):
+ * bez zarchiwizowanych, zmarłych i z umową zakończoną dziś lub wcześniej. Hospitalizacja dojdzie
+ * ze statusem nieobecności (ADR-021, SC-ADM-21/AC4).
+ */
+export function isPresentResident(resident: ResidentPresenceFields, now: Date = new Date()): boolean {
+  if (resident.archived_at || resident.death_date) return false
+  if (resident.contract_end_date && resident.contract_end_date.slice(0, 10) <= warsawToday(now)) return false
+  return true
+}
+
+export function countPresentResidents(residents: ResidentPresenceFields[], now: Date = new Date()): number {
+  return residents.filter((r) => isPresentResident(r, now)).length
+}
+
 /** Wpis audytu przekroczenia — wyłącznie liczby i rodzaj operacji, bez danych osobowych. */
 export function buildCapacityExceededAudit(evaluation: CapacityEvaluation) {
   return {

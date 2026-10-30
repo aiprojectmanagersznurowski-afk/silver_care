@@ -1,6 +1,7 @@
 import postgres from 'postgres';
 import { test, expect } from '../fixtures/base-test';
 import { FacilityPage } from '../page-objects/FacilityPage';
+import { AdmissionWizardPage } from '../page-objects/AdmissionWizardPage';
 import { TEST_USERS } from '../fixtures/test-users';
 
 /**
@@ -13,6 +14,16 @@ import { TEST_USERS } from '../fixtures/test-users';
  */
 const BED_LABEL = 'E2E-LIMIT';
 const IMPORT_ROOM = 'E2E-LIM-R';
+const ADMIT_LAST_NAME = 'Limitowa-E2E';
+
+/** Poprawny PESEL kobiety urodzonej w 1950 r. z losowym numerem serii (unikalny między przebiegami). */
+function randomValidPesel(): string {
+  const serial = String(Math.floor(Math.random() * 900) + 100);
+  const base = `500101${serial}2`; // cyfra płci parzysta = kobieta
+  const weights = [1, 3, 7, 9, 1, 3, 7, 9, 1, 3];
+  const sum = base.split('').reduce((s, d, i) => s + Number(d) * weights[i], 0);
+  return base + String((10 - (sum % 10)) % 10);
+}
 const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
 
 test.describe('Limit miejsc przy dodawaniu łóżka (@REQ: ADM-CAPACITY-LIMIT)', () => {
@@ -39,7 +50,20 @@ test.describe('Limit miejsc przy dodawaniu łóżka (@REQ: ADM-CAPACITY-LIMIT)',
     await sql`DELETE FROM public.rooms WHERE organization_id = ${MAIN_ORG_ID} AND number = ${IMPORT_ROOM}`;
   }
 
+  async function removeAdmittedResident() {
+    const rows = await sql`SELECT id FROM public.residents WHERE organization_id = ${MAIN_ORG_ID} AND last_name = ${ADMIT_LAST_NAME}`;
+    for (const r of rows) {
+      await sql`DELETE FROM public.bed_assignments WHERE resident_id = ${r.id}`;
+      await sql`DELETE FROM public.resident_events WHERE resident_id = ${r.id}`;
+      await sql`DELETE FROM public.residents WHERE id = ${r.id}`.catch(async () => {
+        await sql`UPDATE public.residents SET archived_at = now() WHERE id = ${r.id}`;
+      });
+    }
+  }
+
   test.afterAll(async () => {
+    test.setTimeout(120_000); // usuwanie podopiecznego przechodzi przez kaskady i triggery
+    await removeAdmittedResident();
     await removeImportedRoom();
     await sql`DELETE FROM public.beds b USING public.rooms r WHERE b.room_id = r.id AND r.organization_id = ${MAIN_ORG_ID} AND b.label = ${BED_LABEL}`;
     await sql`UPDATE public.organizations SET resident_limit = ${previousLimit} WHERE id = ${MAIN_ORG_ID}`;
@@ -112,5 +136,47 @@ test.describe('Limit miejsc przy dodawaniu łóżka (@REQ: ADM-CAPACITY-LIMIT)',
       WHERE organization_id = ${MAIN_ORG_ID} AND action = 'ORGANIZATION_CAPACITY_EXCEEDED'
       ORDER BY created_at DESC LIMIT 1`;
     expect(audit.payload).toMatchObject({ operation: 'bed_create', counts: 'beds', excess: 2 });
+  });
+
+  test('@REQ: ADM-CAPACITY-LIMIT - przyjęcie podopiecznego ponad limit: ostrzeżenie, zapis dopiero po potwierdzeniu', async ({ loginPage, page }) => {
+    await removeAdmittedResident();
+    // Przebywający w placówce: bez zarchiwizowanych, zmarłych i z zakończoną umową (decyzja Michała 2026-10-29)
+    const activeResidents = async () => {
+      const [r] = await sql`
+        SELECT count(*)::int AS n FROM public.residents
+        WHERE organization_id = ${MAIN_ORG_ID} AND archived_at IS NULL AND death_date IS NULL
+          AND (contract_end_date IS NULL OR contract_end_date > (now() AT TIME ZONE 'Europe/Warsaw')::date)`;
+      return r.n as number;
+    };
+    await sql`UPDATE public.organizations SET resident_limit = ${await activeResidents()} WHERE id = ${MAIN_ORG_ID}`;
+    const admittedCount = async () => {
+      const [r] = await sql`SELECT count(*)::int AS n FROM public.residents WHERE organization_id = ${MAIN_ORG_ID} AND last_name = ${ADMIT_LAST_NAME}`;
+      return r.n as number;
+    };
+
+    await loginPage.loginAs('org_admin');
+    const wizard = new AdmissionWizardPage(page);
+    await wizard.gotoResidents();
+    await wizard.openWizard();
+    await wizard.fillStep1('Anna', ADMIT_LAST_NAME, randomValidPesel());
+    await wizard.goToSummaryWithoutBed();
+
+    // Pierwsza próba: ostrzeżenie z liczbami, nic nie zostaje zapisane
+    await wizard.submitAdmissionButton.click();
+    await expect(wizard.capacityWarning).toBeVisible();
+    await expect(wizard.capacityWarning).toContainText('przy limicie miejsc');
+    await expect(wizard.capacityWarning).toContainText('o 1 więcej');
+    expect(await admittedCount()).toBe(0);
+
+    // Świadome potwierdzenie: przyjęcie i wpis w audycie
+    await wizard.capacityConfirmCheckbox.check();
+    await wizard.submitAdmissionButton.click();
+    await expect.poll(admittedCount).toBe(1);
+
+    const [audit] = await sql`
+      SELECT payload FROM public.audit_logs
+      WHERE organization_id = ${MAIN_ORG_ID} AND action = 'ORGANIZATION_CAPACITY_EXCEEDED'
+      ORDER BY created_at DESC LIMIT 1`;
+    expect(audit.payload).toMatchObject({ operation: 'resident_admit', counts: 'residents', excess: 1 });
   });
 });
