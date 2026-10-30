@@ -1,6 +1,6 @@
 # 📖 Kanoniczna specyfikacja user stories — Silver Care
 
-> **Wersja:** 2.14 (przekazanie zmiany, moduł zadań, raport dobowy z komunikatem o obchodzie — 📝 PROPOZYCJA, ADR-021) · **Ostatnia aktualizacja:** 2026-10-29
+> **Wersja:** 2.15 (limit miejsc z ostrzeżeniem i słownik terminologii UI — 📝 PROPOZYCJA) · **Ostatnia aktualizacja:** 2026-10-29
 > **Właściciele:** Darek Rink, Michał Sznurowski
 
 ## Jak czytać i utrzymywać ten dokument
@@ -578,6 +578,37 @@
 - **AC5 (Granica bliskich):** Zadania i przekazania nie są dostępne dla `family` ani `legal_guardian` — ani na karcie, ani w RLS/API, ani w `/family/agenda`.
 - **AC6 (Granica MDR i norma UI):** Fakty bez ocen stanu zdrowia, kolor nie niesie oceny (priorytet zadania w tonach `neutral`/`brand`), wzorce z `components/patterns/`, 4 stany UI.
 
+#### [SC-ADM-22] Limit miejsc placówki: przekroczenie z ostrzeżeniem dla kierownika i super admina
+🔗 **Kontrakt:** brak REQ (proponowany nowy: `ADM-CAPACITY-LIMIT`; nowe powiadomienie w `notifications.contract.mjs`; wdraża: `ORG-ISOLATION`, `NTF-NO-PII`) · **Status:** 📝 PROPOZYCJA
+
+> ℹ️ Decyzja Michała z 2026-10-29: łóżka określają limit przyjęcia, czyli maksymalną liczbę podopiecznych. Limit ustawia super admin, a kierownik może go przekroczyć z ostrzeżeniem. Nowe powiadomienie wymaga okna kontraktowego otwartego przez człowieka.
+
+**Stan zastany (audyt 2026-10-29):**
+1. Przyjęcie pojedynczego podopiecznego (`admitResidentAction`) nie sprawdza limitu.
+2. Masowy import po przekroczeniu po cichu podnosi `resident_limit` do liczby aktywnych podopiecznych (`bulk-import.ts`). Kierownik nadpisuje w ten sposób decyzję super admina, który o tym nie wie.
+3. Polityka RLS `organizations_update` pozwala `org_admin` zmienić `resident_limit` własnej placówki bezpośrednio przez API.
+4. Dodawanie pokoi i łóżek (`createRoomWithBedsAction`) nie ma związku z limitem.
+
+**User story:** Jako Administrator platformy (super admin), chcę ustalić limit miejsc placówki i wiedzieć, kiedy placówka go przekracza; jako Kierownik placówki chcę móc dodać łóżko albo przyjąć podopiecznego ponad limit, gdy sytuacja tego wymaga, ze świadomym potwierdzeniem, aby limit pozostawał decyzją super admina, a nie blokował pracy placówki.
+
+**Scenariusze:**
+- **Przypadek 1 (Łóżka ponad limit):** Limit 50, placówka ma 49 łóżek. Kierownik dodaje pokój z 4 łóżkami.
+  *Then:* Przed zapisem widzi: „Placówka będzie miała 53 łóżka przy limicie miejsc 50.” Po potwierdzeniu pokój zostaje zapisany, a kierownik i super admin dostają powiadomienie.
+- **Przypadek 2 (Przyjęcie bez łóżka ponad limit):** Limit 50, aktywnych podopiecznych 50. Kierownik przyjmuje kolejną osobę bez przypisania łóżka.
+  *Then:* Ostrzeżenie przed zatwierdzeniem; po potwierdzeniu przyjęcie i powiadomienie.
+- **Przypadek 3 (Masowy import ponad limit):** Import 10 osób przy 5 wolnych miejscach.
+  *Then:* Podgląd importu pokazuje przekroczenie o 5. Po potwierdzeniu import przechodzi, a `resident_limit` **się nie zmienia**.
+- **Przypadek 4 (Próba zmiany limitu przez kierownika):** Kierownik wysyła przez API `UPDATE organizations SET resident_limit = 80`.
+  *Then:* Baza odrzuca zmianę; limit zmienia wyłącznie super admin.
+
+**Kryteria akceptacji:**
+- **AC1 (Limit = łóżka = podopieczni):** `resident_limit` to maksymalna liczba łóżek i maksymalna liczba aktywnych podopiecznych placówki.
+- **AC2 (Tylko super admin zmienia limit):** Zmianę `resident_limit` przez inną rolę odrzuca baza (trigger albo uprawnienia kolumny), niezależnie od polityki RLS na wierszu. Masowy import nie zmienia limitu.
+- **AC3 (Ostrzeżenie przed zatwierdzeniem):** Dodanie łóżek, przyjęcie albo import, po którym liczba łóżek lub aktywnych podopiecznych przekroczy limit, pokazuje kierownikowi ostrzeżenie z liczbami („będzie X przy limicie Y”) i wymaga świadomego potwierdzenia. Bez potwierdzenia nic nie jest zapisywane.
+- **AC4 (Powiadomienie dla obu ról):** Po zatwierdzeniu przekroczenia powstaje wpis w `audit_logs` (`ORGANIZATION_CAPACITY_EXCEEDED`, bez danych osobowych: limit, liczba łóżek, liczba podopiecznych, rodzaj operacji) i powiadomienie do kierownika placówki oraz super admina (nowy wpis w katalogu powiadomień, `containsPersonalData: false`).
+- **AC5 (Widoczność u super admina):** Lista i karta placówek pokazują plakietkę „Ponad limit” (ton `brand`, nie czerwień) i obłożenie „X / Y”.
+- **AC6 (Granice):** Izolacja placówek (`ORG-ISOLATION`); powiadomienie bez imion i nazwisk (`NTF-NO-PII`); E2E dla kierownika (ostrzeżenie i potwierdzenie) i super admina (plakietka, powiadomienie).
+
 ### Domena 2 — Personel
 
 #### [SC-NUR-07] Skrzynka wiadomości od rodzin (wyłącznie dla Kierownika / Administratora Placówki)
@@ -815,6 +846,21 @@
 - **AC2 (Semantyka elementów klikalnych):** Elementy interaktywne są implementowane za pomocą semantycznych znaczników `<button>` / `<Link>` lub posiadają atrybuty `role="button"`, `tabIndex={0}` oraz obsługę klawiatury (`Enter`/`Space`).
 - **AC3 (Kontrast ikon i motywu ciemnego):** Funkcyjne ikony posiadają kontrast co najmniej 3:1 wobec tła. Elementy akcentowe w trybie ciemnym stosują semantyczny token `text-primary-foreground` zamiast sztywnego `text-white`, zapobiegając efektowi „białe na jasnym”.
 
+#### [NFR-UI-06] Spójna terminologia interfejsu (słownik pojęć)
+🔗 **Kontrakt:** brak REQ (proponowany nowy: `UI-TERMINOLOGY`, słownik w `presentation.contract.mjs`; rozszerza `MDR-VOCABULARY`) · **Dokument:** [`MASTER_DATA_STANDARD.md`](MASTER_DATA_STANDARD.md) §2–3 · **Status:** 📝 PROPOZYCJA
+
+**User story:** Jako użytkownik każdej roli, chcę, żeby ta sama rzecz nazywała się w całym systemie tak samo, aby nie zastanawiać się, czy „ośrodek” i „placówka” albo „Administrator Ośrodka” i „Kierownik placówki” to to samo.
+
+**Stan zastany (audyt 2026-10-29):** „ośrodek” w 9 miejscach UI wobec 247 „placówki”, w tym kafel pulpitu „Struktura ośrodka” obok menu „Struktura placówki”. Rola `org_admin` jako „Administrator Ośrodka” (plakietka) i „administrator placówki” (5 komunikatów), podczas gdy kontrakt mówi „Kierownik placówki”. Tytuły pisane wielkimi literami („Struktura Placówki”, „Zarządzanie Placówkami”). „Podopieczny” 197 razy, „pensjonariusz” 101 razy.
+
+**Kryteria akceptacji:**
+- **AC1 (Słownik w kontrakcie):** Lista „termin w UI → zakazane synonimy” w `presentation.contract.mjs`, zgodna z `MASTER_DATA_STANDARD.md` §2.1 i §3.3: podopieczny, placówka, Kierownik placówki, limit miejsc.
+- **AC2 (Reguła bramki):** Teksty widoczne dla użytkownika w `apps/web/src` nie zawierają zakazanych synonimów („ośrodek”, „dom opieki”, „DPS”, „Administrator Ośrodka”, „pensjonariusz” poza dokumentami formalnymi). Reguła działa w hookach agentów i w `verify.sh`, z mutacją w selftest.
+- **AC3 (Role z kontraktu):** Nazwy ról w UI pochodzą z `ROLES.label`, a nie z tekstu wpisanego w komponencie.
+- **AC4 (Pisownia zdaniowa):** Tytuły i etykiety pisane zdaniowo („Struktura placówki”).
+- **AC5 (Wyjątek formalny):** „Pensjonariusz” dozwolony wyłącznie w treści umowy, klauzulach RODO i rejestrze zgód (jawna lista plików).
+- **AC6 (Bez zmian w kodzie domeny):** Nazwy tabel i zmiennych (`residents`, `organizations`) bez zmian — słownik dotyczy wyłącznie warstwy widocznej dla użytkownika.
+
 ---
 
 ## 💡 USER STORIES DO ANALIZY (Backlog / poza MVP)
@@ -907,3 +953,4 @@
 | 2026-10-22 | 2.11 | Dopisanie `SC-SUP-05` (globalne alerty systemowe i status platformy zarządzane przez `super_admin` oraz wycofanie statycznego kafelka „Status systemu: Stabilny” z pulpitu placówki — Wariant A) ze statusem 📝 PROPOZYCJA. |
 | 2026-10-24 | 2.12 | Dopisanie `SC-ADM-20` (wspólna karta podopiecznego dla personelu z widocznością sekcji według roli) ze statusem 📝 PROPOZYCJA. |
 | 2026-10-29 | 2.14 | Dopisanie `SC-NUR-12` (głosowe przekazanie zmiany), `SC-NUR-13` (moduł zadań z backlogiem i propozycjami AI), `SC-NUR-14` (raport dobowy z komunikatem o obchodzie) i `SC-ADM-21` (sekcja „Zadania” na karcie podopiecznego) ze statusem 📝 PROPOZYCJA, na podstawie decyzji Michała z ADR-021. |
+| 2026-10-29 | 2.15 | Dopisanie `SC-ADM-22` (limit miejsc placówki: przekroczenie z ostrzeżeniem dla kierownika i super admina) i `NFR-UI-06` (spójna terminologia interfejsu) ze statusem 📝 PROPOZYCJA, na podstawie decyzji Michała z 2026-10-29; `MASTER_DATA_STANDARD.md` w wersji 2.0. |

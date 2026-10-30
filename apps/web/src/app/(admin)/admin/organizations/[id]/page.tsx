@@ -11,6 +11,7 @@ import { OrganizationAdminsSection } from '@/components/organizations/Organizati
 import { OrganizationStaffSection } from '@/components/organizations/OrganizationStaffSection'
 import { PageHeader } from '@/components/patterns/PageHeader'
 import { getAppRole, getAppOrganizationId } from '@/lib/auth/app-role'
+import { getCurrentUser } from '@/lib/supabase/current-user'
 
 export default async function OrganizationDetailsPage({
   params,
@@ -19,7 +20,7 @@ export default async function OrganizationDetailsPage({
 }) {
   const { id } = await params
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   if (!user) {
     redirect('/login')

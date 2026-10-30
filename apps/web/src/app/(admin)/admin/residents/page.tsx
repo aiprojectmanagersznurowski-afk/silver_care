@@ -9,10 +9,11 @@ import { ShieldAlert } from 'lucide-react'
 import { isImpersonationSessionActive, maskResidentListForImpersonation } from '@/lib/impersonation-guards'
 import { AdminResidentsClient, type ResidentWithAssignments } from '@/components/AdminResidentsClient'
 import { ADMIN_RESIDENT_LIST_SELECT } from '@/lib/admin-resident-columns'
+import { getCurrentUser } from '@/lib/supabase/current-user'
 
 export default async function AdminResidentsPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
   const cookieStore = await cookies()
   const isImpersonating = isImpersonationSessionActive(cookieStore, user)
 
