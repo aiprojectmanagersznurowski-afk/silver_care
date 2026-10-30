@@ -151,7 +151,7 @@ export async function executeBedRelocationAction(
     const residentIds = relocations.map((r) => r.residentId)
     const toBedIds = relocations.map((r) => r.toBedId)
 
-    // Weryfikacja mieszkańców w tej samej organizacji
+    // Weryfikacja podopiecznych w tej samej organizacji
     const { data: validResidents, error: resErr } = await adminClient
       .from('residents')
       .select('id')

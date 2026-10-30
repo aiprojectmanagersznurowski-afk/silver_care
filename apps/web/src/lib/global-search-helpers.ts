@@ -48,7 +48,7 @@ export const SEARCH_CATEGORIES: Record<SearchCategoryKey, SearchCategoryMeta> = 
   organizations: {
     key: 'organizations',
     label: 'Placówki',
-    description: 'Domy opieki i ośrodki w systemie',
+    description: 'Placówki w systemie',
     superAdminOnly: true,
   },
 }

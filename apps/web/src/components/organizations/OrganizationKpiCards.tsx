@@ -17,7 +17,7 @@ export function OrganizationKpiCards({
   return (
     <MetricGrid>
       <MetricCard icon={<Users />} label="Aktywni podopieczni" value={activeResidentCount} description={`Limit placówki: ${residentLimit}`} />
-      <MetricCard icon={<UserCog />} label="Administratorzy placówki" value={administratorsCount} />
+      <MetricCard icon={<UserCog />} label="Kierownicy placówki" value={administratorsCount} />
       <MetricCard icon={<UserCheck />} label="Personel opiekuńczy" value={staffCount} />
     </MetricGrid>
   )

@@ -73,7 +73,7 @@ export async function dischargeResidentAction(
   if (!role || !allowedRoles.includes(role)) {
     return {
       success: false,
-      error: 'Brak uprawnień do zakończenia pobytu (wymagana rola administratora placówki).',
+      error: 'Brak uprawnień do zakończenia pobytu (wymagana rola kierownika placówki).',
     }
   }
 

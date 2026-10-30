@@ -65,8 +65,8 @@ interface SuperadminOrgSummaryRow {
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Zarządzanie Placówkami"
-        description="Rejestr ośrodków, monitorowanie wykorzystania limitów oraz zarządzanie infrastrukturą platformy."
+        title="Zarządzanie placówkami"
+        description="Rejestr placówek, monitorowanie wykorzystania limitów oraz zarządzanie infrastrukturą platformy."
         actions={<CreateOrganizationDialog />}
       />
 

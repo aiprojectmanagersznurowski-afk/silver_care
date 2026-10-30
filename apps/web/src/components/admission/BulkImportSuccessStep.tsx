@@ -17,7 +17,7 @@ export function BulkImportSuccessStep({
       </h3>
       {capacityUpdated?.updated && (
         <p className="text-sm text-foreground font-medium bg-muted p-2 rounded border border-border inline-block">
-          Zadeklarowana pojemność placówki została automatycznie zaktualizowana do{' '}
+          Limit miejsc placówki wynosi{' '}
           <strong>{capacityUpdated.newCapacity}</strong>.
         </p>
       )}
