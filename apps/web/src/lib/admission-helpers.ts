@@ -110,10 +110,10 @@ export function suggestBeds(
     if (resident.careLevel === 'bedridden' || resident.careLevel === 'hospice') {
       if (bed.floorNumber === 0) {
         score += 30
-        reasons.push('Parter — optymalny dla pensjonariusza leżącego.')
+        reasons.push('Parter — optymalny dla podopiecznego leżącego.')
       } else {
         score -= 20
-        reasons.push('Wyższe piętro — pensjonariusz o ograniczonej mobilności.')
+        reasons.push('Wyższe piętro — podopieczny o ograniczonej mobilności.')
       }
     } else {
       reasons.push(`Piętro ${bed.floorNumber}.`)

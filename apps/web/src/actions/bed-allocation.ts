@@ -147,7 +147,7 @@ export async function executeBedRelocationAction(
       return { error: 'Brak relokacji do wykonania' }
     }
 
-    // Walidacja tenant isolation dla każdego pensjonariusza i docelowego łóżka
+    // Walidacja tenant isolation dla każdego podopiecznego i docelowego łóżka
     const residentIds = relocations.map((r) => r.residentId)
     const toBedIds = relocations.map((r) => r.toBedId)
 
@@ -159,7 +159,7 @@ export async function executeBedRelocationAction(
       .in('id', residentIds)
 
     if (resErr || !validResidents || validResidents.length !== residentIds.length) {
-      return { error: 'Część pensjonariuszy nie należy do bieżącej placówki.' }
+      return { error: 'Część podopiecznych nie należy do bieżącej placówki.' }
     }
 
     // Weryfikacja docelowych łóżek w tej samej organizacji (poprzez rooms)
@@ -195,7 +195,7 @@ export async function executeBedRelocationAction(
 
       if (transferErr) {
         return {
-          error: `Błąd podczas przenoszenia pensjonariusza ${rel.residentId}: ${transferErr.message}`,
+          error: `Błąd podczas przenoszenia podopiecznego ${rel.residentId}: ${transferErr.message}`,
         }
       }
       executedCount++

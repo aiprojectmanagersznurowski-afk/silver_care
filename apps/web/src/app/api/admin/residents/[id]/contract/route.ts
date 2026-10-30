@@ -5,7 +5,7 @@ import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
 
 /**
  * @REQ: ADM-RESIDENT-ADD
- * Endpoint zarządzania załącznikiem umowy pensjonariusza (contract_document).
+ * Endpoint zarządzania załącznikiem umowy podopiecznego (contract_document).
  */
 export async function POST(
   request: Request,
@@ -42,7 +42,7 @@ export async function POST(
       return NextResponse.json({ error: 'Brak lub niepoprawna ścieżka do pliku' }, { status: 400 })
     }
 
-    // 1. Sprawdź czy pensjonariusz należy do placówki administratora
+    // 1. Sprawdź czy podopieczny należy do placówki administratora
     const { data: resident, error: fetchErr } = await supabase
       .from('residents')
       .select('id, organization_id')
@@ -50,7 +50,7 @@ export async function POST(
       .single()
 
     if (fetchErr || !resident || resident.organization_id !== orgId) {
-      return NextResponse.json({ error: 'Nie znaleziono pensjonariusza w placówce' }, { status: 404 })
+      return NextResponse.json({ error: 'Nie znaleziono podopiecznego w placówce' }, { status: 404 })
     }
 
     // 2. Aktualizuj dane w tabeli residents
@@ -122,7 +122,7 @@ export async function DELETE(
       .single()
 
     if (fetchErr || !resident || resident.organization_id !== orgId) {
-      return NextResponse.json({ error: 'Nie znaleziono pensjonariusza w placówce' }, { status: 404 })
+      return NextResponse.json({ error: 'Nie znaleziono podopiecznego w placówce' }, { status: 404 })
     }
 
     // Usunięcie powiązania

@@ -124,7 +124,7 @@ export async function admitResidentAction(formData: FormData) {
 
   const role = user.app_metadata?.role
   if (role !== 'org_admin' && role !== 'super_admin') {
-    return { error: 'Tylko kierownik placówki może przyjmować pensjonariuszy.' }
+    return { error: 'Tylko kierownik placówki może przyjmować podopiecznych.' }
   }
 
   // ADM-CAPACITY-LIMIT: przyjęcie ponad limit miejsc dopiero po świadomym potwierdzeniu (SC-ADM-22/AC3).
@@ -165,12 +165,12 @@ export async function admitResidentAction(formData: FormData) {
 
   if (error) {
     if (error.message.includes('already occupied')) {
-      return { error: 'Wybrane łóżko jest już zajęte przez innego pensjonariusza.' }
+      return { error: 'Wybrane łóżko jest już zajęte przez innego podopiecznego.' }
     }
     if (error.message.includes('already exists')) {
-      return { error: 'Pensjonariusz o tym numerze PESEL jest już zarejestrowany w placówce.' }
+      return { error: 'Podopieczny o tym numerze PESEL jest już zarejestrowany w placówce.' }
     }
-    return { error: 'Błąd przyjęcia pensjonariusza: ' + error.message }
+    return { error: 'Błąd przyjęcia podopiecznego: ' + error.message }
   }
 
   if (capacity?.exceeds && orgId) {
@@ -194,6 +194,6 @@ export async function admitResidentAction(formData: FormData) {
     success: true,
     residentId: resData?.resident_id,
     bedAssignmentId: resData?.bed_assignment_id,
-    message: `Pomyślnie przyjęto pensjonariusza ${firstName} ${lastName}${bedId ? ' i przypisano łóżko' : ''}.`,
+    message: `Pomyślnie przyjęto podopiecznego ${firstName} ${lastName}${bedId ? ' i przypisano łóżko' : ''}.`,
   }
 }

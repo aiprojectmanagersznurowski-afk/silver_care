@@ -113,7 +113,7 @@ export async function GET(request: Request) {
         }
       }
 
-      // 3. Przypisanie do pensjonariusza
+      // 3. Przypisanie do podopiecznego
       const assignedLinkRole = resolveRelativeRole(invitation.role)
       const { error: linkError } = await adminClient
         .from('resident_relative_links')
@@ -125,7 +125,7 @@ export async function GET(request: Request) {
         })
 
       if (linkError && linkError.code !== '23505') {
-        throw new Error('Błąd przypisywania do pensjonariusza.')
+        throw new Error('Błąd przypisywania do podopiecznego.')
       }
 
       // 4. Rejestracja zgód Art. 9 RODO w consent_ledger dla opiekuna prawnego (CONSENT-GRANTOR)

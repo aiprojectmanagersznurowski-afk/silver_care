@@ -25,7 +25,7 @@ export const GET = withAuth(async (request, { supabase }) => {
   const { data: beds, error } = await query
   if (error) throw error
 
-  // Tylko aktywne przypisania, z polami pensjonariusza potrzebnymi widokowi (bez pesel_hash)
+  // Tylko aktywne przypisania, z polami podopiecznego potrzebnymi widokowi (bez pesel_hash)
   const formattedBeds = mapBedsWithActiveAssignment(beds || [])
 
   return NextResponse.json({ beds: formattedBeds })

@@ -107,10 +107,10 @@ export function BulkImportDialog() {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileSpreadsheet className="w-5 h-5 text-foreground" />
-            Masowy import pensjonariuszy
+            Masowy import podopiecznych
           </DialogTitle>
           <DialogDescription>
-            {step === 'upload' && 'Wgraj plik arkusza kalkulacyjnego (.xlsx lub .csv) z listą pensjonariuszy.'}
+            {step === 'upload' && 'Wgraj plik arkusza kalkulacyjnego (.xlsx lub .csv) z listą podopiecznych.'}
             {step === 'preview' && 'Podgląd i weryfikacja poprawności wierszy przed zapisem do bazy.'}
             {step === 'success' && 'Import zakończony sukcesem.'}
           </DialogDescription>

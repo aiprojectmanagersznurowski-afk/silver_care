@@ -17,7 +17,7 @@ export async function deleteResidentAction(formData: FormData) {
   // AC4: Blokada akcji destrukcyjnych w trakcie impersonacji (403)
   const cookieStore = await cookies()
   if (isImpersonationSessionActive(cookieStore, user)) {
-    console.warn('Blokada usuwania pensjonariusza w trakcie impersonacji')
+    console.warn('Blokada usuwania podopiecznego w trakcie impersonacji')
     return { error: '403: Operacja niedozwolona w trybie impersonacji.' }
   }
   if (user.app_metadata?.role !== 'org_admin') return
