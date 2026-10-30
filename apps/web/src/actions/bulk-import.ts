@@ -38,7 +38,7 @@ export async function analyzeBulkImportAction(rows: RawResidentRow[]): Promise<{
     return { error: 'Błąd sprawdzania bazy danych: ' + existingErr.message }
   }
 
-  // Pobierz zadeklarowaną pojemność placówki
+  // Pobierz limit miejsc placówki
   const { data: orgData } = await adminClient
     .from('organizations')
     .select('resident_limit')
@@ -83,7 +83,7 @@ export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[
 
   const role = user.app_metadata?.role
   if (role !== 'org_admin' && role !== 'super_admin') {
-    return { error: 'Tylko administrator placówki może wykonywać masowy import.' }
+    return { error: 'Tylko kierownik placówki może wykonywać masowy import.' }
   }
 
   const validRows = rowsToImport.filter((r) => r.isValid)

@@ -124,7 +124,7 @@ export async function admitResidentAction(formData: FormData) {
 
   const role = user.app_metadata?.role
   if (role !== 'org_admin' && role !== 'super_admin') {
-    return { error: 'Tylko administrator placówki może przyjmować pensjonariuszy.' }
+    return { error: 'Tylko kierownik placówki może przyjmować pensjonariuszy.' }
   }
 
   // ADM-CAPACITY-LIMIT: przyjęcie ponad limit miejsc dopiero po świadomym potwierdzeniu (SC-ADM-22/AC3).

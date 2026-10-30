@@ -45,6 +45,7 @@ W całym systemie obowiązuje jedna, niesprzeczna norma UI:
 - Wspólne komponenty ekranu (ADR-017): nowy lub zmieniany ekran składa się z `apps/web/src/components/patterns/`: `PageHeader` (jedyny `h1` strony), `StatusBadge` (tony `neutral` i `brand`), `TableCard` z `TableStateRow` oraz `ListEmpty` / `ListLoading` / `ListError` (stany list). Nie pisz własnych nagłówków stron, plakietek statusu ani ramek tabel. Surową paletę Tailwind (np. `bg-amber-500`) blokuje reguła `ui-raw-palette`.
 - Tabela jako widok domyślny: lista z przełącznikiem widoku (`useViewPreference`) startuje od `'table'`.
 - Standard ekranu egzekwuje bramka (`tools/sc.config.mjs`, hooki i `verify.sh` krok 6): `ui-default-view-table`, `ui-own-page-heading`, `ui-own-status-badge`, `ui-own-table-frame`, `ui-list-needs-table-view`, `ui-table-cell-size`. Wyjątki w `allowIn` to zastany dług z 2026-10-29 — test `ui_screen_standard_rules` pozwala tej liście tylko maleć.
+- Terminologia UI (NFR-UI-06, `UI_TERMINOLOGY`, reguła `ui-terminology`): placówka (nie ośrodek), Kierownik placówki (nie „administrator placówki”), limit miejsc (nie pojemność), pisownia zdaniowa tytułów.
 
 ## Potok głosowy
 

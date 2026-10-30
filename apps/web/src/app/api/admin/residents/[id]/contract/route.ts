@@ -27,7 +27,7 @@ export async function POST(
 
     const role = user.app_metadata?.role
     if (role !== 'org_admin' && role !== 'super_admin') {
-      return NextResponse.json({ error: 'Brak uprawnień. Tylko administrator placówki może zarządzać umowami.' }, { status: 403 })
+      return NextResponse.json({ error: 'Brak uprawnień. Tylko kierownik placówki może zarządzać umowami.' }, { status: 403 })
     }
 
     const orgId = user.app_metadata?.organization_id

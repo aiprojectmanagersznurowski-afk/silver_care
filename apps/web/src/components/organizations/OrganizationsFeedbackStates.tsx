@@ -46,7 +46,7 @@ export function OrganizationsEmptyState({ renderActionSlot }: { renderActionSlot
       </div>
       <h3 className="text-xl font-semibold text-foreground mb-2">Brak zarejestrowanych placówek</h3>
       <p className="text-muted-foreground max-w-md mx-auto mb-6">
-        W systemie nie zarejestrowano jeszcze żadnego ośrodka. Utwórz pierwszą placówkę, aby rozpocząć konfigurację platformy.
+        W systemie nie zarejestrowano jeszcze żadnej placówki. Utwórz pierwszą placówkę, aby rozpocząć konfigurację platformy.
       </p>
       {renderActionSlot && (
         <div className="flex justify-center">

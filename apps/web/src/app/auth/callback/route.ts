@@ -198,7 +198,7 @@ export async function GET(request: Request) {
     // Użytkownik zalogował się kontem Google, które nie jest zarejestrowane w systemie
     await supabase.auth.signOut()
     return NextResponse.redirect(
-      `${origin}/login?error=${encodeURIComponent('Konto Google nie jest powiązane z żadnym profilem w systemie. Skontaktuj się z administratorem placówki.')}`
+      `${origin}/login?error=${encodeURIComponent('Konto Google nie jest powiązane z żadnym profilem w systemie. Skontaktuj się z kierownikiem placówki.')}`
     )
   }
 

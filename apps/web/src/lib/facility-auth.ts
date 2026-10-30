@@ -18,7 +18,7 @@ export async function requireOrgAdmin(options?: { allowImpersonation?: boolean }
   if (!orgId) throw new Error('Brak przypisanej placówki')
   const role = user.app_metadata?.role as string | undefined
   if (!['org_admin', 'super_admin'].includes(role || '')) {
-    throw new Error('Brak uprawnień administratora placówki')
+    throw new Error('Brak uprawnień kierownika placówki')
   }
   return { user, orgId, supabase, adminClient: createAdminClient() }
 }
