@@ -57,7 +57,7 @@ export async function POST(req: Request) {
       .single()
 
     if (linkErr || !link) {
-      return NextResponse.json({ error: 'Pensjonariusz nie ma aktywnego powiązania z opaską Polar' }, { status: 404 })
+      return NextResponse.json({ error: 'Podopieczny nie ma aktywnego powiązania z opaską Polar' }, { status: 404 })
     }
 
     // 2. Pobierz token autoryzacyjny

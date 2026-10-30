@@ -20,7 +20,7 @@ Praktyczne konsekwencje w kodzie:
 - **Bliscy nie widzą parametrów fizjologicznych**: tętna, HRV, tętna spoczynkowego, wyniku snu. Te dane są zbierane i dostępne personelowi — zakaz dotyczy prezentacji, nie przechowywania.
 - **System nie ocenia stanu zdrowia.** Wolno napisać „brak aktywności od czterech godzin". Nie wolno napisać „podejrzenie omdlenia".
 - **Żadna metryka nie wyzwala powiadomienia.** Jedynym wyzwalaczem jest publikacja raportu zatwierdzonego przez personel.
-- **Słowo „pacjent" jest zakazane w warstwie widocznej dla użytkownika**, łącznie z odmianą („o pacjencie"). Używaj: podopieczny, senior, pensjonariusz.
+- **Słowo „pacjent" jest zakazane w warstwie widocznej dla użytkownika**, łącznie z odmianą („o pacjencie"). Używaj: **podopieczny** (termin główny w UI), „senior” w tekstach opisowych dla bliskich. „Pensjonariusz” wyłącznie w dokumentach formalnych (umowa, klauzule i zgody RODO) — decyzja Michała 2026-10-29, reguła `ui-terminology`.
 
 ## Dane osobowe, zdrowotne i bezpieczeństwo (Security & GDPR/MDR)
 
@@ -54,7 +54,7 @@ W całym systemie obowiązuje jedna, niesprzeczna norma UI:
 - **Wspólne komponenty ekranu (ADR-017)**: nowy lub zmieniany ekran składa się z `apps/web/src/components/patterns/`: `PageHeader` (jedyny `h1` strony), `StatusBadge` (tony `neutral` i `brand`), `TableCard` z `TableStateRow` oraz `ListEmpty` / `ListLoading` / `ListError` (stany list). Nie pisz własnych nagłówków stron, plakietek statusu ani ramek tabel. Surową paletę Tailwind (np. `bg-amber-500`) blokuje reguła `ui-raw-palette`.
 - **Tabela jako widok domyślny**: lista z przełącznikiem widoku (`useViewPreference`) startuje od `'table'`; kafelki są wyborem użytkownika, zapamiętywanym w przeglądarce.
 - **Standard ekranu jest egzekwowany bramką** (`tools/sc.config.mjs`, hooki agentów i `verify.sh` krok 6): `ui-default-view-table`, `ui-own-page-heading` (h1 tylko przez `PageHeader`), `ui-own-status-badge` (tylko `StatusBadge`), `ui-own-table-frame` (tabela tylko w `TableCard`), `ui-list-needs-table-view` (lista kart ma widok tabeli przez `ListViewFrame`), `ui-table-cell-size` (wysokość wiersza, odstępy pionowe i rozmiar tekstu komórek tylko z `components/ui/table`). Wyjątki w `allowIn` to zastany dług z 2026-10-29 — test `ui_screen_standard_rules` pozwala tej liście tylko maleć.
-- **Terminologia UI** (NFR-UI-06, słownik `UI_TERMINOLOGY` w kontrakcie, reguła `ui-terminology`): **placówka** (nie ośrodek, dom opieki, DPS), rola `org_admin` to **Kierownik placówki** (nie „administrator placówki”), **limit miejsc** (nie pojemność), tytuły i etykiety pisane zdaniowo („Struktura placówki”).
+- **Terminologia UI** (NFR-UI-06, słownik `UI_TERMINOLOGY` w kontrakcie, reguła `ui-terminology`): **podopieczny** („pensjonariusz” tylko w dokumentach RODO), **placówka** (nie ośrodek, dom opieki, DPS), rola `org_admin` to **Kierownik placówki** (nie „administrator placówki”), **limit miejsc** (nie pojemność), tytuły i etykiety pisane zdaniowo („Struktura placówki”).
 
 ## Potok głosowy
 
