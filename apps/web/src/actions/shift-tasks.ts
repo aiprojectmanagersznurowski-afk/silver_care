@@ -157,3 +157,19 @@ export async function approveShiftPlanAction(input: { shiftDefinitionId: string;
   revalidatePath('/staff/shift-tasks')
   return { success: true }
 }
+
+/** Zapis wydruku planu: ślad w audycie i printed_at. RPC sprawdza rolę, akceptację i aktualność planu. */
+export async function recordShiftPlanPrintAction(input: { shiftDefinitionId: string; shiftDate: string }): Promise<ShiftTaskActionResult> {
+  if (!UUID_RE.test(input.shiftDefinitionId) || !DATE_RE.test(input.shiftDate)) return { error: 'Niepoprawne dane planu.' }
+  if (!(await requireStaff())) return { error: 'Brak uprawnień.' }
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('record_shift_plan_print', { p_shift_definition_id: input.shiftDefinitionId, p_shift_date: input.shiftDate })
+  if (error) {
+    if (error.message.includes('SHIFT_PLAN_NOT_APPROVED')) return { error: 'Najpierw zatwierdź plan zmiany.' }
+    if (error.message.includes('SHIFT_PLAN_STALE')) return { error: 'Zadania zmieniły się po akceptacji. Zatwierdź plan ponownie.' }
+    if (error.message.includes('SHIFT_NOT_LEAD')) return { error: 'Plan drukuje kierownik zmiany.' }
+    console.error('[SHIFT_PLAN_PRINT_FAIL]', error.code)
+    return { error: 'Nie udało się zapisać wydruku.' }
+  }
+  return { success: true }
+}
