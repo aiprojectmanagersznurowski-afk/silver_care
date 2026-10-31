@@ -42,7 +42,7 @@ export function FacilityExportTab({ handleDownloadTemplate }: FacilityExportTabP
           'ID Łóżka': '-',
           'Etykieta łóżka': '-',
           'Status łóżka': '-',
-          'Aktualny mieszkaniec': '-',
+          'Aktualny podopieczny': '-',
         })
       } else {
         for (const b of r.beds) {
@@ -55,7 +55,7 @@ export function FacilityExportTab({ handleDownloadTemplate }: FacilityExportTabP
             'ID Łóżka': b.id,
             'Etykieta łóżka': b.label,
             'Status łóżka': b.occupied ? 'Zajęte' : 'Wolne',
-            'Aktualny mieszkaniec': b.resident_name || '-',
+            'Aktualny podopieczny': b.resident_name || '-',
           })
         }
       }
@@ -63,7 +63,7 @@ export function FacilityExportTab({ handleDownloadTemplate }: FacilityExportTabP
 
     const wb = XLSX.utils.book_new()
     const ws = XLSX.utils.json_to_sheet(flatRows)
-    XLSX.utils.book_append_sheet(wb, ws, 'Struktura Placówki')
+    XLSX.utils.book_append_sheet(wb, ws, 'Struktura placówki')
     const dateStr = new Date().toISOString().split('T')[0]
     XLSX.writeFile(wb, `struktura_placowki_${dateStr}.xlsx`)
 

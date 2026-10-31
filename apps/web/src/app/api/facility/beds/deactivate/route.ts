@@ -13,7 +13,7 @@ export async function POST(request: Request) {
 
     const role = user.app_metadata?.role as string | undefined
     if (!['org_admin', 'super_admin'].includes(role || '')) {
-      return NextResponse.json({ error: 'Brak uprawnień administratora placówki' }, { status: 403 })
+      return NextResponse.json({ error: 'Brak uprawnień kierownika placówki' }, { status: 403 })
     }
 
     const cookieStore = await cookies()
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
       console.error('Failed to update bed status:', updateError)
       // Check for trigger error when deactivating active bed
       if (updateError.message?.includes('Cannot deactivate a bed that has an active assignment')) {
-        return NextResponse.json({ error: 'Nie można dezaktywować łóżka z przypisanym pensjonariuszem' }, { status: 400 })
+        return NextResponse.json({ error: 'Nie można dezaktywować łóżka z przypisanym podopiecznym' }, { status: 400 })
       }
       return NextResponse.json({ error: 'Błąd podczas zmiany statusu łóżka: ' + updateError.message }, { status: 500 })
     }

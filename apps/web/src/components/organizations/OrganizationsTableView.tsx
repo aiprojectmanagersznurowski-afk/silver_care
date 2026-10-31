@@ -3,6 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
+import { StatusBadge } from '@/components/patterns/StatusBadge'
 import { OrganizationRowActions } from './OrganizationRowActions'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { TableCard } from '@/components/patterns/TableCard'
@@ -59,6 +60,7 @@ export function OrganizationsTableView({
                       {org.organization_name}
                     </Link>
                     <BusinessIdBadge type="organization" id={org.organization_id} />
+                    {org.over_capacity_limit && <StatusBadge tone="brand">Ponad limit</StatusBadge>}
                   </div>
                 </TableCell>
                 <TableCell className="text-muted-foreground max-w-[220px] truncate">
@@ -72,6 +74,7 @@ export function OrganizationsTableView({
                     {org.active_resident_count} / {org.resident_limit}
                   </span>
                   <span className="ml-1 text-sm text-muted-foreground">({occupancyPercent}%)</span>
+                  <div className="text-sm text-muted-foreground">łóżka: {org.active_bed_count}</div>
                 </TableCell>
                 <TableCell className="text-center">
                   <span className="font-medium text-foreground">{org.staff_count}</span>

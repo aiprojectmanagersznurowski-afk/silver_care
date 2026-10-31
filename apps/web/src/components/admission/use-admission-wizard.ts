@@ -28,6 +28,9 @@ export function useAdmissionWizard() {
   const [submitting, setSubmitting] = useState(false)
   const [createdResidentId, setCreatedResidentId] = useState<string | null>(null)
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  // ADM-CAPACITY-LIMIT: ostrzeżenie o przekroczeniu limitu miejsc i świadome potwierdzenie
+  const [capacityWarning, setCapacityWarning] = useState<string | null>(null)
+  const [capacityConfirmed, setCapacityConfirmed] = useState(false)
 
   const handleIdChange = (val: string) => {
     setIdValue(val)
@@ -94,6 +97,8 @@ export function useAdmissionWizard() {
     setSelectedBedInfo(null)
     setStatusMessage(null)
     setCreatedResidentId(null)
+    setCapacityWarning(null)
+    setCapacityConfirmed(false)
   }
 
   const handleSubmitAdmission = async () => {
@@ -108,11 +113,14 @@ export function useAdmissionWizard() {
     formData.append('isZsn', isZsn ? 'true' : 'false')
     if (selectedBedId) formData.append('bedId', selectedBedId)
     if (notes.trim()) formData.append('notes', notes.trim())
+    if (capacityConfirmed) formData.append('confirmCapacityExceed', 'true')
 
     const res = await admitResidentAction(formData)
     setSubmitting(false)
 
-    if (res.error) {
+    if (res.capacityWarning) {
+      setCapacityWarning(res.capacityWarning)
+    } else if (res.error) {
       setStatusMessage({ type: 'error', text: res.error })
     } else {
       setCreatedResidentId(res.residentId || null)
@@ -134,6 +142,7 @@ export function useAdmissionWizard() {
     selectedBedInfo, setSelectedBedInfo, loadingSuggestions,
     handleFetchSuggestions, handleNextToStep2,
     submitting, createdResidentId, statusMessage, setStatusMessage,
+    capacityWarning, capacityConfirmed, setCapacityConfirmed,
     resetForm, handleSubmitAdmission,
   }
 }

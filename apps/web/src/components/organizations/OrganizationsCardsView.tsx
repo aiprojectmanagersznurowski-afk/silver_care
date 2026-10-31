@@ -11,6 +11,7 @@ import {
   MapPin,
 } from 'lucide-react'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
+import { StatusBadge } from '@/components/patterns/StatusBadge'
 import { OrganizationRowActions } from './OrganizationRowActions'
 import { OrganizationSummaryItem } from './organizations-types'
 
@@ -44,6 +45,7 @@ export function OrganizationsCardsView({
                     {org.organization_name}
                   </Link>
                   <BusinessIdBadge type="organization" id={org.organization_id} />
+                  {org.over_capacity_limit && <StatusBadge tone="brand">Ponad limit</StatusBadge>}
                 </div>
                 <div className="flex items-center gap-1.5 text-sm text-muted-foreground pl-11 truncate">
                   <MapPin className="h-3.5 w-3.5 shrink-0" />

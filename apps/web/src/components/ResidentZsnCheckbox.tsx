@@ -130,7 +130,7 @@ export function ResidentZsnCheckbox({
           )}
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
-          Orzeczenie o znacznym stopniu niepełnosprawności. Pensjonariusz jest automatycznie uwzględniany w dobowych raportach dziennych oraz analizach BI placówki.
+          Orzeczenie o znacznym stopniu niepełnosprawności. Podopieczny jest automatycznie uwzględniany w dobowych raportach dziennych oraz analizach BI placówki.
         </p>
         {savedMessage && (
           <span className="mt-1.5 inline-block text-sm font-medium text-foreground">

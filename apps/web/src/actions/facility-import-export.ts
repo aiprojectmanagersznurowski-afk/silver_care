@@ -10,6 +10,33 @@ import {
 } from '@/lib/facility-helpers'
 import { requireOrgAdmin } from '@/lib/facility-auth'
 import { formatPersonName } from '@/lib/person-name'
+import { evaluateCapacity, buildCapacityExceededAudit, capacityWarningMessage, CapacityEvaluation } from '@/lib/capacity-limit'
+
+type FacilityAdminClient = Awaited<ReturnType<typeof requireOrgAdmin>>['adminClient']
+
+/** ADM-CAPACITY-LIMIT: łóżka z importu (tylko poprawne wiersze) wobec limitu miejsc placówki. */
+async function evaluateImportCapacity(
+  adminClient: FacilityAdminClient,
+  orgId: string,
+  rows: ValidatedFacilityRoomRow[]
+): Promise<CapacityEvaluation> {
+  const [{ data: org }, { count: activeBeds }] = await Promise.all([
+    adminClient.from('organizations').select('resident_limit').eq('id', orgId).single(),
+    adminClient
+      .from('beds')
+      .select('id, rooms!inner(organization_id)', { count: 'exact', head: true })
+      .eq('rooms.organization_id', orgId)
+      .eq('is_active', true),
+  ])
+  const added = rows.filter((r) => r.isValid).reduce((sum, r) => sum + (r.bedLabels?.length || 0), 0)
+  return evaluateCapacity({
+    operation: 'bed_create',
+    residentLimit: Number(org?.resident_limit ?? 50),
+    currentBeds: activeBeds ?? 0,
+    currentResidents: 0,
+    added,
+  })
+}
 
 interface BedAssignmentRecord {
   unassigned_at: string | null
@@ -96,9 +123,9 @@ export async function exportFacilityStructureAction(): Promise<{
 
 export async function analyzeFacilityImportAction(
   rawRows: RawFacilityRoomRow[]
-): Promise<{ error?: string; result?: FacilityDryRunResult }> {
+): Promise<{ error?: string; result?: FacilityDryRunResult; capacityWarning?: string }> {
   try {
-    const { orgId, supabase } = await requireOrgAdmin()
+    const { orgId, supabase, adminClient } = await requireOrgAdmin()
 
     // Pobierz istniejące numery pokoi w tej placówce
     const { data: existing, error: existErr } = await supabase
@@ -112,18 +139,29 @@ export async function analyzeFacilityImportAction(
 
     const existingNumbers = new Set<string>((existing || []).map((r) => r.number))
     const result = validateFacilityRows(rawRows, existingNumbers)
+    const capacity = await evaluateImportCapacity(adminClient, orgId, result.rows)
 
-    return { result }
+    return { result, capacityWarning: capacity.exceeds ? capacityWarningMessage(capacity) : undefined }
   } catch (err: unknown) {
     return { error: err instanceof Error ? err.message : 'Wystąpił błąd analizy pliku' }
   }
 }
 
 export async function commitFacilityImportAction(
-  validRows: ValidatedFacilityRoomRow[]
-): Promise<{ error?: string; importedRooms?: number; importedBeds?: number }> {
+  validRows: ValidatedFacilityRoomRow[],
+  confirmCapacityExceed = false
+): Promise<{ error?: string; importedRooms?: number; importedBeds?: number; capacityExceeded?: boolean }> {
   try {
     const { user, orgId, adminClient } = await requireOrgAdmin()
+
+    // ADM-CAPACITY-LIMIT: ponowna ocena po stronie serwera — bez potwierdzenia nic nie jest zapisywane
+    const capacity = await evaluateImportCapacity(adminClient, orgId, validRows)
+    if (capacity.exceeds && !confirmCapacityExceed) {
+      return {
+        error: `${capacityWarningMessage(capacity)} Zaznacz potwierdzenie przekroczenia limitu, aby zaimportować.`,
+        capacityExceeded: true,
+      }
+    }
 
     let importedRooms = 0
     let importedBeds = 0
@@ -180,6 +218,17 @@ export async function commitFacilityImportAction(
         imported_beds: importedBeds,
       },
     })
+
+    if (capacity.exceeds) {
+      const audit = buildCapacityExceededAudit(capacity)
+      await adminClient.from('audit_logs').insert({
+        organization_id: orgId,
+        resident_id: null,
+        action: audit.action,
+        performed_by: user.id,
+        payload: audit.payload,
+      })
+    }
 
     revalidatePath('/admin/facility')
     return { importedRooms, importedBeds }
