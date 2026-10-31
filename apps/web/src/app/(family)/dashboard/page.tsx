@@ -61,7 +61,7 @@ export default async function FamilyDashboard(props: { searchParams: Promise<{ d
   const cookieResidentId = cookieStore.get('family_resident_id')?.value
   const activeResident = residents.find(r => r.id === cookieResidentId) || residents[0]
 
-  // Pobieramy raporty tylko dla wybranego pensjonariusza
+  // Pobieramy raporty tylko dla wybranego podopiecznego
   const { data: reports } = await supabase
     .from('daily_reports')
     .select('*')
@@ -82,7 +82,7 @@ export default async function FamilyDashboard(props: { searchParams: Promise<{ d
     }
   }
 
-  // Pobieramy zdjęcia pensjonariusza z wybranego dnia
+  // Pobieramy zdjęcia podopiecznego z wybranego dnia
   const selectedDate = searchParams?.date || new Date().toISOString().split('T')[0]
   const { data: media } = await supabase
     .from('resident_media')

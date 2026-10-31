@@ -39,7 +39,7 @@ export default function FacilityManagementPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Struktura Placówki"
+        title="Struktura placówki"
         description="Zarządzaj pokojami i łóżkami w twojej placówce."
         actions={
           <>

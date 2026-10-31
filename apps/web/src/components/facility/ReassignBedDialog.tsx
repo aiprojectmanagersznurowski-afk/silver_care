@@ -125,13 +125,13 @@ export default function ReassignBedDialog({
   if (selectedOption && residentGender) {
     const conflictingGender = residentGender === 'M' ? 'F' : 'M'
     if (selectedOption.existingGenders.includes(conflictingGender)) {
-      genderWarning = `W wybranym pokoju przebywa już pensjonariusz odmiennej płci (${selectedOption.existingGenders.join(', ')}). Wskazana zgodność płciowa.`
+      genderWarning = `W wybranym pokoju przebywa już podopieczny odmiennej płci (${selectedOption.existingGenders.join(', ')}). Wskazana zgodność płciowa.`
     }
   }
 
   if (selectedOption && (residentIsZsn || residentCareLevel === 'bedridden' || residentCareLevel === 'hospice')) {
     if (!isGroundFloor(selectedOption.floor)) {
-      mobilityWarning = `Wybrane łóżko znajduje się na piętrze (${selectedOption.floor}). Dla pensjonariuszy z ZSN lub ograniczoną mobilnością rekomendowany jest parter.`
+      mobilityWarning = `Wybrane łóżko znajduje się na piętrze (${selectedOption.floor}). Dla podopiecznych z ZSN lub ograniczoną mobilnością rekomendowany jest parter.`
     }
   }
 
@@ -158,7 +158,7 @@ export default function ReassignBedDialog({
 
       const data = await res.json()
       if (!res.ok) {
-        throw new Error(data.error || 'Nie udało się przenieść pensjonariusza')
+        throw new Error(data.error || 'Nie udało się przenieść podopiecznego')
       }
 
       toast.success(`Pomyślnie przeniesiono podopiecznego do pokoju ${selectedOption?.roomNumber}, łóżko ${selectedOption?.bedLabel}`)
@@ -190,7 +190,7 @@ export default function ReassignBedDialog({
       <DialogContent className="sm:max-w-xl md:max-w-2xl p-6">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Przenieś pensjonariusza</DialogTitle>
+            <DialogTitle>Przenieś podopiecznego</DialogTitle>
             <DialogDescription>
               Wskaż nowe wolne miejsce dla podopiecznego. Poprzednie przypisanie zostanie
               automatycznie zamknięte z zachowaniem historii i audytu.

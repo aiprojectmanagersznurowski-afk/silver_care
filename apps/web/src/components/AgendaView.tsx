@@ -65,7 +65,7 @@ export function AgendaView({ residents }: AgendaViewProps) {
                     </div>
                     {resident ? (
                       <div className="text-sm text-text-tertiary mt-1 font-medium">
-                        Pensjonariusz: {formatPersonName(resident.first_name as string, resident.last_name as string)}
+                        Podopieczny: {formatPersonName(resident.first_name as string, resident.last_name as string)}
                       </div>
                     ) : (
                       <div className="text-sm text-text-tertiary mt-1">

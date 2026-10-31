@@ -33,7 +33,7 @@ interface BedAssignmentRow {
 }
 
 /**
- * Akcja serwerowa zakończenia pobytu / rejestracji zgonu pensjonariusza
+ * Akcja serwerowa zakończenia pobytu / rejestracji zgonu podopiecznego
  * Zgodnie z @REQ: ADM-BED-ASSIGNMENT, @REQ: ADM-ARCHIVE (Wariant B) oraz [SC-ADM-19]
  */
 export async function dischargeResidentAction(
@@ -73,7 +73,7 @@ export async function dischargeResidentAction(
   if (!role || !allowedRoles.includes(role)) {
     return {
       success: false,
-      error: 'Brak uprawnień do zakończenia pobytu (wymagana rola administratora placówki).',
+      error: 'Brak uprawnień do zakończenia pobytu (wymagana rola kierownika placówki).',
     }
   }
 
@@ -95,7 +95,7 @@ export async function dischargeResidentAction(
     return { success: false, error: 'Brak uprawnień do zasobów innej placówki.' }
   }
 
-  // Sprawdzenie czy pensjonariusz nie ma już zarejestrowanego zgonu
+  // Sprawdzenie czy podopieczny nie ma już zarejestrowanego zgonu
   if (currentResident.death_date) {
     return { success: false, error: 'Dla tego podopiecznego zarejestrowano już fakt zgonu.' }
   }

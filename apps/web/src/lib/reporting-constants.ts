@@ -80,7 +80,7 @@ export type ContractEndReason = typeof CONTRACT_END_REASONS[number]
 export const CONTRACT_END_REASON_LABELS: Record<ContractEndReason | 'Nieznany', string> = {
   death: 'Zgon',
   family_request: 'Wypis na życzenie rodziny',
-  transfer: 'Przeniesienie do innego ośrodka',
+  transfer: 'Przeniesienie do innej placówki',
   non_payment: 'Brak płatności',
   health_improvement: 'Poprawa stanu zdrowia',
   other: 'Inne',

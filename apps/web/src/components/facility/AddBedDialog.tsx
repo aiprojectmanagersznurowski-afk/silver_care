@@ -31,9 +31,10 @@ export default function AddBedDialog({ roomId, onBedAdded, open: openProp, onOpe
   const [label, setLabel] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // ADM-CAPACITY-LIMIT: ostrzeżenie o przekroczeniu limitu miejsc, zapis dopiero po potwierdzeniu
+  const [capacityWarning, setCapacityWarning] = useState<string | null>(null)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const submitBed = async (confirmCapacityExceed: boolean) => {
     setIsLoading(true)
     setError(null)
 
@@ -43,16 +44,21 @@ export default function AddBedDialog({ roomId, onBedAdded, open: openProp, onOpe
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ room_id: roomId, label }),
+        body: JSON.stringify({ room_id: roomId, label, confirm_capacity_exceed: confirmCapacityExceed }),
       })
 
       const data = await res.json()
 
+      if (res.status === 409 && data.code === 'CAPACITY_LIMIT_EXCEEDED') {
+        setCapacityWarning(data.error)
+        return
+      }
       if (!res.ok) {
         throw new Error(data.error || 'Nie udało się dodać łóżka')
       }
 
       setLabel('')
+      setCapacityWarning(null)
       setOpen(false)
       onBedAdded()
     } catch (err: unknown) {
@@ -60,6 +66,11 @@ export default function AddBedDialog({ roomId, onBedAdded, open: openProp, onOpe
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    void submitBed(false)
   }
 
   return (
@@ -81,6 +92,22 @@ export default function AddBedDialog({ roomId, onBedAdded, open: openProp, onOpe
           <div className="space-y-4 py-4">
             {error && (
               <div className="text-sm font-medium text-destructive">{error}</div>
+            )}
+            {capacityWarning && (
+              <div
+                data-testid="capacity-limit-warning"
+                role="alert"
+                className="rounded-lg border border-border bg-muted p-3 text-sm text-foreground space-y-2"
+              >
+                <p className="font-semibold">Przekroczenie limitu miejsc</p>
+                <p className="text-muted-foreground">{capacityWarning}</p>
+                <p className="text-muted-foreground">
+                  Limit ustala Administrator platformy. Po zatwierdzeniu przekroczenie zostanie odnotowane w rejestrze audytowym.
+                </p>
+                <Button type="button" variant="outline" disabled={isLoading} onClick={() => void submitBed(true)}>
+                  Dodaj mimo przekroczenia limitu
+                </Button>
+              </div>
             )}
             <div className="space-y-1.5">
               <Label htmlFor="label">Oznaczenie łóżka</Label>

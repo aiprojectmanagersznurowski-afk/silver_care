@@ -105,7 +105,7 @@ export function validateResidentRows(
 
         const hash = hashNationalId(idVal)
         if (existingHashes.has(hash)) {
-          errors.push('Pensjonariusz o tym numerze PESEL już istnieje w bazie placówki.')
+          errors.push('Podopieczny o tym numerze PESEL już istnieje w bazie placówki.')
         }
       }
     }

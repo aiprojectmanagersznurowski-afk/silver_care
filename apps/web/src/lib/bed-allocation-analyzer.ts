@@ -61,7 +61,7 @@ export function analyzeCurrentAllocation(
         roomMobilityMismatch = true
         mobilityMismatchCount += immobileOccupants.length
         conflicts.push(
-          `${immobileOccupants.length} pensjonariusz(y) leżący/hospicyjny na piętrze ${room.floor}. Wymagany parter.`
+          `Podopieczni leżący lub w opiece hospicyjnej na piętrze ${room.floor}: ${immobileOccupants.length}. Wymagany parter.`
         )
       }
     }
