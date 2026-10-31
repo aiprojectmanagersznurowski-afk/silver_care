@@ -15,6 +15,9 @@ export class ShiftsPage {
   readonly saveButton: Locator;
   readonly formError: Locator;
   readonly countHint: Locator;
+  readonly weekLabel: Locator;
+  readonly nextWeekLink: Locator;
+  readonly prevWeekLink: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -27,6 +30,9 @@ export class ShiftsPage {
     this.saveButton = page.getByRole('button', { name: 'Zapisz zmianę' });
     this.formError = page.locator('[data-testid="shift-form-error"]');
     this.countHint = page.locator('[data-testid="shift-count-hint"]');
+    this.weekLabel = page.locator('[data-testid="roster-week-label"]');
+    this.nextWeekLink = page.getByRole('link', { name: 'Następny tydzień' });
+    this.prevWeekLink = page.getByRole('link', { name: 'Poprzedni tydzień' });
   }
 
   async goto() {
@@ -48,6 +54,21 @@ export class ShiftsPage {
 
   async toggleActive(name: string) {
     await this.rowFor(name).getByRole('button', { name: /Dezaktywuj|Aktywuj/ }).click();
+  }
+
+  /** Komórka grafiku: dzień (RRRR-MM-DD) i kod zmiany. */
+  cell(date: string, shiftCode: string): Locator {
+    return this.page.locator(`[data-testid="roster-cell-${date}-${shiftCode}"]`);
+  }
+
+  entry(date: string, shiftCode: string, who: string): Locator {
+    return this.cell(date, shiftCode).locator('[data-testid="roster-entry"]').filter({ hasText: who });
+  }
+
+  async addToRoster(date: string, shiftCode: string, userId: string) {
+    const cell = this.cell(date, shiftCode);
+    await cell.getByLabel('Dodaj osobę do grafiku').selectOption(userId);
+    await cell.getByRole('button', { name: 'Dodaj do grafiku' }).click();
   }
 
   async expectLoaded() {
