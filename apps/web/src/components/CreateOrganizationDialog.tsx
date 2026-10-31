@@ -143,7 +143,7 @@ export function CreateOrganizationDialog() {
 
             <div className="pt-2 border-t border-border space-y-3">
               <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider block">
-                Dane pierwszego administratora placówki
+                Dane pierwszego kierownika placówki
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">

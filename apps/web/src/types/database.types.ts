@@ -1,6 +1,6 @@
 // ==============================================================================
 // Automatycznie wygenerowane typy bazy danych Silver Care (PostgreSQL/Supabase)
-// Wygenerowano: 2026-10-30T14:58:00.864Z
+// Wygenerowano: 2026-10-31T17:31:34.066Z
 // ==============================================================================
 
 export type Json =
@@ -1049,6 +1049,310 @@ export interface Database {
           },
         ]
       }
+      shift_definitions: {
+        Row: {
+          id: string
+          organization_id: string
+          code: string
+          name: string
+          start_time: string
+          end_time: string
+          crosses_midnight: boolean | null
+          order_index: number
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          code: string
+          name: string
+          start_time: string
+          end_time: string
+          crosses_midnight?: boolean | null
+          order_index?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          code?: string
+          name?: string
+          start_time?: string
+          end_time?: string
+          crosses_midnight?: boolean | null
+          order_index?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shift_definitions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shift_plan_approvals: {
+        Row: {
+          id: string
+          organization_id: string
+          shift_definition_id: string
+          shift_date: string
+          version: number
+          approved_by: string
+          approved_at: string
+          printed_at: string | null
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          shift_definition_id: string
+          shift_date: string
+          version: number
+          approved_by: string
+          approved_at?: string
+          printed_at?: string | null
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          shift_definition_id?: string
+          shift_date?: string
+          version?: number
+          approved_by?: string
+          approved_at?: string
+          printed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_shift_plan_approvals_definition"
+            columns: ["shift_definition_id"]
+            isOneToOne: false
+            referencedRelation: "shift_definitions"
+            referencedColumns: ["organization_id"]
+          },
+          {
+            foreignKeyName: "fk_shift_plan_approvals_definition"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "shift_definitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_shift_plan_approvals_definition"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "shift_definitions"
+            referencedColumns: ["organization_id"]
+          },
+          {
+            foreignKeyName: "fk_shift_plan_approvals_definition"
+            columns: ["shift_definition_id"]
+            isOneToOne: false
+            referencedRelation: "shift_definitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shift_plan_approvals_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shift_roster: {
+        Row: {
+          id: string
+          organization_id: string
+          shift_definition_id: string
+          shift_date: string
+          user_id: string
+          is_shift_lead: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          shift_definition_id: string
+          shift_date: string
+          user_id: string
+          is_shift_lead?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          shift_definition_id?: string
+          shift_date?: string
+          user_id?: string
+          is_shift_lead?: boolean
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_shift_roster_definition"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "shift_definitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_shift_roster_definition"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "shift_definitions"
+            referencedColumns: ["organization_id"]
+          },
+          {
+            foreignKeyName: "fk_shift_roster_definition"
+            columns: ["shift_definition_id"]
+            isOneToOne: false
+            referencedRelation: "shift_definitions"
+            referencedColumns: ["organization_id"]
+          },
+          {
+            foreignKeyName: "fk_shift_roster_definition"
+            columns: ["shift_definition_id"]
+            isOneToOne: false
+            referencedRelation: "shift_definitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shift_roster_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shift_tasks: {
+        Row: {
+          id: string
+          organization_id: string
+          shift_definition_id: string
+          shift_date: string
+          resident_id: string | null
+          assignee_user_id: string | null
+          title: string
+          due_time: string | null
+          source: string
+          source_ref: string | null
+          source_quote: string | null
+          carried_from_task_id: string | null
+          status: string
+          cancel_reason: string | null
+          created_by: string
+          settled_by: string | null
+          settled_at: string | null
+          plan_version: number | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          shift_definition_id: string
+          shift_date: string
+          resident_id?: string | null
+          assignee_user_id?: string | null
+          title: string
+          due_time?: string | null
+          source?: string
+          source_ref?: string | null
+          source_quote?: string | null
+          carried_from_task_id?: string | null
+          status?: string
+          cancel_reason?: string | null
+          created_by: string
+          settled_by?: string | null
+          settled_at?: string | null
+          plan_version?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          shift_definition_id?: string
+          shift_date?: string
+          resident_id?: string | null
+          assignee_user_id?: string | null
+          title?: string
+          due_time?: string | null
+          source?: string
+          source_ref?: string | null
+          source_quote?: string | null
+          carried_from_task_id?: string | null
+          status?: string
+          cancel_reason?: string | null
+          created_by?: string
+          settled_by?: string | null
+          settled_at?: string | null
+          plan_version?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_shift_tasks_definition"
+            columns: ["shift_definition_id"]
+            isOneToOne: false
+            referencedRelation: "shift_definitions"
+            referencedColumns: ["organization_id"]
+          },
+          {
+            foreignKeyName: "fk_shift_tasks_definition"
+            columns: ["shift_definition_id"]
+            isOneToOne: false
+            referencedRelation: "shift_definitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_shift_tasks_definition"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "shift_definitions"
+            referencedColumns: ["organization_id"]
+          },
+          {
+            foreignKeyName: "fk_shift_tasks_definition"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "shift_definitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shift_tasks_carried_from_task_id_fkey"
+            columns: ["carried_from_task_id"]
+            isOneToOne: false
+            referencedRelation: "shift_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shift_tasks_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shift_tasks_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: false
+            referencedRelation: "residents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       system_alerts: {
         Row: {
           id: string
@@ -1368,9 +1672,22 @@ export interface Database {
         }
         Returns: boolean
       }
+      is_relative_active_or_retained: {
+        Args: {
+          target_resident_id: string
+        }
+        Returns: boolean
+      }
       is_relative_linked: {
         Args: {
           target_resident_id: string
+        }
+        Returns: boolean
+      }
+      is_shift_lead: {
+        Args: {
+          p_shift_definition_id: string
+          p_shift_date: string
         }
         Returns: boolean
       }
@@ -1493,6 +1810,13 @@ export interface Database {
         }
         Returns: string
       }
+      record_shift_plan_print: {
+        Args: {
+          p_shift_definition_id: string
+          p_shift_date: string
+        }
+        Returns: number
+      }
       revoke_consent: {
         Args: {
           p_id: string
@@ -1504,6 +1828,16 @@ export interface Database {
           p_invitation_id: string
         }
         Returns: undefined
+      }
+      settle_shift_task: {
+        Args: {
+          p_task_id: string
+          p_path: string
+          p_reason: string
+          p_target_definition_id: string
+          p_target_date: string
+        }
+        Returns: string
       }
       transfer_resident_bed: {
         Args: {

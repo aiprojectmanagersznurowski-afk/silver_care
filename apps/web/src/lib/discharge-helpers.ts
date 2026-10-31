@@ -34,7 +34,7 @@ function isValidIsoDate(str: string): boolean {
 }
 
 /**
- * Waliduje dane wejściowe operacji zakończenia pobytu / wypisu pensjonariusza
+ * Waliduje dane wejściowe operacji zakończenia pobytu / wypisu podopiecznego
  * Zgodnie z @REQ: ADM-BED-ASSIGNMENT i @REQ: ADM-ARCHIVE
  */
 export function validateDischargePayload(input: unknown): DischargeValidationResult {
@@ -48,7 +48,7 @@ export function validateDischargePayload(input: unknown): DischargeValidationRes
 
   // 1. Walidacja residentId
   if (!raw.residentId || typeof raw.residentId !== 'string' || !UUID_REGEX.test(raw.residentId)) {
-    errors.push('Niepoprawny identyfikator pensjonariusza (wymagany UUID).')
+    errors.push('Niepoprawny identyfikator podopiecznego (wymagany UUID).')
   }
 
   // 2. Walidacja daty zakończenia umowy (contractEndDate)
@@ -101,7 +101,7 @@ export function validateDischargePayload(input: unknown): DischargeValidationRes
 export type ResidentStatusKey = 'active' | 'discharged' | 'deceased' | 'archived'
 
 /**
- * Wyznacza status pensjonariusza z uwzględnieniem Wariantu B
+ * Wyznacza status podopiecznego z uwzględnieniem Wariantu B
  * (wypisanie lub zgon nie ustawia natychmiast archived_at, rodzina ma wgląd read-only)
  */
 export function determineResidentStatus(resident: {

@@ -29,7 +29,6 @@ export function BulkImportDialog() {
   const [dryRunResult, setDryRunResult] = useState<DryRunResult | null>(null)
   const [importCount, setImportCount] = useState<number>(0)
   const [onlyValid, setOnlyValid] = useState(true)
-  const [capacityUpdated, setCapacityUpdated] = useState<{ updated: boolean; newCapacity: number } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleDownloadTemplate = () => {
@@ -80,9 +79,6 @@ export function BulkImportDialog() {
       setError(res.error)
     } else {
       setImportCount(res.importedCount || 0)
-      if (res.capacityUpdated && res.newCapacity) {
-        setCapacityUpdated({ updated: true, newCapacity: res.newCapacity })
-      }
       setStep('success')
       setTimeout(() => {
         setOpen(false)
@@ -99,7 +95,6 @@ export function BulkImportDialog() {
     setDryRunResult(null)
     setImportCount(0)
     setOnlyValid(true)
-    setCapacityUpdated(null)
   }
 
   return (
@@ -112,10 +107,10 @@ export function BulkImportDialog() {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileSpreadsheet className="w-5 h-5 text-foreground" />
-            Masowy import pensjonariuszy
+            Masowy import podopiecznych
           </DialogTitle>
           <DialogDescription>
-            {step === 'upload' && 'Wgraj plik arkusza kalkulacyjnego (.xlsx lub .csv) z listą pensjonariuszy.'}
+            {step === 'upload' && 'Wgraj plik arkusza kalkulacyjnego (.xlsx lub .csv) z listą podopiecznych.'}
             {step === 'preview' && 'Podgląd i weryfikacja poprawności wierszy przed zapisem do bazy.'}
             {step === 'success' && 'Import zakończony sukcesem.'}
           </DialogDescription>
@@ -165,14 +160,14 @@ export function BulkImportDialog() {
                 <AlertTriangle className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                 <div className="space-y-1">
                   <div className="font-semibold text-foreground flex items-center gap-2">
-                    <span>Ostrzeżenie: Przekroczenie zadeklarowanej pojemności placówki</span>
+                    <span>Ostrzeżenie: import przekroczy limit miejsc placówki</span>
                   </div>
                   <p className="text-muted-foreground leading-relaxed">
-                    Liczba pensjonariuszy po zaimportowaniu ({dryRunResult.projectedTotal}) przekroczy zadeklarowaną pojemność placówki ({dryRunResult.residentLimit}) o{' '}
+                    Liczba podopiecznych po zaimportowaniu ({dryRunResult.projectedTotal}) przekroczy limit miejsc placówki ({dryRunResult.residentLimit}) o{' '}
                     <strong className="text-foreground">{dryRunResult.excessCount}</strong>.
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Po zatwierdzeniu importu zadeklarowany limit pojemności placówki zostanie automatycznie powiększony do <strong>{dryRunResult.projectedTotal}</strong>, co odzwierciedli się w widoku placówek u Super Administratora.
+                    Limit miejsc pozostanie bez zmian — zmienia go wyłącznie Administrator platformy. Przekroczenie zostanie odnotowane w rejestrze audytowym.
                   </p>
                 </div>
               </div>
@@ -198,7 +193,7 @@ export function BulkImportDialog() {
         {step === 'success' && (
           <BulkImportSuccessStep
             importCount={importCount}
-            capacityUpdated={capacityUpdated}
+            capacityUpdated={null}
           />
         )}
 

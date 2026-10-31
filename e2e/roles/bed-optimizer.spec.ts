@@ -38,7 +38,7 @@ test.describe('Optymalizator przydziału łóżek (@REQ: ADM-BED-ASSIGNMENT)', (
     await facility.optimizerButton.hover();
     const tooltip = page.getByRole('tooltip');
     await expect(tooltip).toBeVisible();
-    await expect(tooltip).toContainText('Analizuje obłożenie pod kątem zgodności płciowej i mobilności pensjonariuszy');
+    await expect(tooltip).toContainText('Analizuje obłożenie pod kątem zgodności płciowej i mobilności podopiecznych');
   });
 
   test('@REQ: ADM-BED-ASSIGNMENT - panel ustawień placówki posiada przełączniki reguł przydziału łóżek', async ({ loginPage, page }) => {

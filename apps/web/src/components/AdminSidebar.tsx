@@ -4,6 +4,7 @@ import {
   Activity,
   BarChart3,
   Building2,
+  CalendarClock,
   CalendarDays,
   LayoutDashboard,
   Mail,
@@ -51,6 +52,8 @@ function facilityGroup(isImpersonating: boolean, unansweredCount = 0): SidebarNa
     items: [
       { href: '/admin', label: 'Pulpit placówki', icon: LayoutDashboard, exact: true },
       { href: '/admin/facility', label: 'Struktura placówki', icon: Building2 },
+      // Konfiguracja zmian tylko dla kierownika placówki — administrator platformy w podglądzie jej nie ma (kontrakt)
+      ...(isImpersonating ? [] : [{ href: '/admin/shifts', label: 'Zmiany i grafik', icon: CalendarClock }]),
       { href: '/admin/residents', label: 'Podopieczni', icon: Users },
       { href: '/admin/staff', label: 'Personel', icon: UserPlus },
       { href: '/admin/invitations', label: 'Zaproszenia', icon: Mail },

@@ -49,7 +49,7 @@ async function resolveActiveBed(
 }
 
 /**
- * Akcja serwerowa zakończenia pobytu / rejestracji zgonu pensjonariusza (org_admin / super_admin)
+ * Akcja serwerowa zakończenia pobytu / rejestracji zgonu podopiecznego (org_admin / super_admin)
  * Zgodnie z @REQ: ADM-BED-ASSIGNMENT, @REQ: ADM-ARCHIVE (Wariant B) oraz [SC-ADM-19]
  */
 export async function dischargeResidentAction(

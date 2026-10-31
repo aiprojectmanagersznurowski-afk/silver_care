@@ -12,7 +12,7 @@ import type { User } from '@supabase/supabase-js'
 import { StatusBadge } from '@/components/patterns/StatusBadge'
 
 const lastSignIn = (u: User) => (u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleString('pl-PL') : 'Nigdy')
-const EMPTY_TITLE = 'Brak przypisanych administratorów placówki'
+const EMPTY_TITLE = 'Brak przypisanych kierowników placówki'
 
 interface OrganizationAdminsSectionProps {
   organizationId: string
@@ -42,7 +42,7 @@ export function OrganizationAdminsSection({
         <ObjectCard
           key={admin.id}
           title={admin.email}
-          badges={<StatusBadge tone="brand">Administrator Ośrodka</StatusBadge>}
+          badges={<StatusBadge tone="brand">Kierownik placówki</StatusBadge>}
           meta={[
             { label: 'Identyfikator', value: <BusinessIdBadge type="user" id={admin.id} /> },
             { label: 'Data rejestracji', value: new Date(admin.created_at).toLocaleDateString('pl-PL') },
@@ -75,7 +75,7 @@ export function OrganizationAdminsSection({
                     </div>
                   </TableCell>
                   <TableCell>
-                    <StatusBadge tone="brand">Administrator Ośrodka</StatusBadge>
+                    <StatusBadge tone="brand">Kierownik placówki</StatusBadge>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {new Date(admin.created_at).toLocaleDateString('pl-PL')}

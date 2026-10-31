@@ -134,7 +134,7 @@ export function ReassignBedFormFields({
           className="flex w-full"
         >
           <NativeSelectOption value="Dostosowanie do stanu zdrowia">Dostosowanie do stanu zdrowia / mobilności</NativeSelectOption>
-          <NativeSelectOption value="Prośba pensjonariusza lub rodziny">Prośba pensjonariusza lub rodziny</NativeSelectOption>
+          <NativeSelectOption value="Prośba podopiecznego lub rodziny">Prośba podopiecznego lub rodziny</NativeSelectOption>
           <NativeSelectOption value="Optymalizacja struktury pokoi">Optymalizacja struktury placówki / zgodność płci</NativeSelectOption>
           <NativeSelectOption value="Remont lub reorganizacja pokoju">Remont lub reorganizacja pokoju</NativeSelectOption>
           <NativeSelectOption value="Inny powód">Inny powód...</NativeSelectOption>
