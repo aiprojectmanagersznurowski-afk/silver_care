@@ -25,14 +25,15 @@ export async function exportFacilityStructureAction(): Promise<{
 
 export async function analyzeFacilityImportAction(
   rawRows: RawFacilityRoomRow[]
-): Promise<{ error?: string; result?: FacilityDryRunResult }> {
+): Promise<{ error?: string; result?: FacilityDryRunResult; capacityWarning?: string }> {
   return analyzeImpl(rawRows)
 }
 
 export async function commitFacilityImportAction(
-  validRows: ValidatedFacilityRoomRow[]
-): Promise<{ error?: string; importedRooms?: number; importedBeds?: number }> {
-  return commitImpl(validRows)
+  validRows: ValidatedFacilityRoomRow[],
+  confirmCapacityExceed = false
+): Promise<{ error?: string; importedRooms?: number; importedBeds?: number; capacityExceeded?: boolean }> {
+  return commitImpl(validRows, confirmCapacityExceed)
 }
 
 export async function createRoomWithBedsAction(data: {

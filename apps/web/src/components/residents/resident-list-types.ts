@@ -28,7 +28,7 @@ export interface ResidentWithAssignments {
   bed_assignments?: BedAssignmentItem[]
 }
 
-/** Aktywne łóżko pensjonariusza albo null, gdy nie ma otwartego przypisania. */
+/** Aktywne łóżko podopiecznego albo null, gdy nie ma otwartego przypisania. */
 export function getActiveBed(resident: ResidentWithAssignments): BedAssignmentItem['beds'] {
   const active = Array.isArray(resident.bed_assignments)
     ? resident.bed_assignments.filter((a) => a.unassigned_at === null)

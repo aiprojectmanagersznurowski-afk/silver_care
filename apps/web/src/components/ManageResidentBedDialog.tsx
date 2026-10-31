@@ -143,7 +143,7 @@ export function ManageResidentBedDialog({ residentId, currentBedLabel, currentRo
               {currentBedLabel ? (
                 <>Obecnie przypisano: <strong>Sala {currentRoomNumber}, łóżko {currentBedLabel}</strong>.</>
               ) : (
-                <>Pensjonariusz nie ma przypisanego łóżka.</>
+                <>Podopieczny nie ma przypisanego łóżka.</>
               )}
             </DialogDescription>
           </DialogHeader>

@@ -416,3 +416,11 @@ Transkrypcja (Groq Whisper) i sugestia podopiecznego nie używają promptu: pier
 - Zgody aktorów na nagranie i przetwarzanie głosu: świadomie odłożone przez Michała (2026-10-29), do uzupełnienia przed szerszym użyciem nagrań.
 - Z projektu Darka zostają: konfiguracja zmian w strefie `Europe/Warsaw`, `daily_logs` jako rejestr faktów tylko do dopisywania, oddzielenie zadań od `agenda_items`, złożone klucze `(id, organization_id)`, nieobecność podopiecznego — ale w tabeli tylko dla personelu, nie w `residents`.
 - Odpadają: raporty dla bliskich co zmianę, gotowy tekst raportu rutynowego, hurtowa publikacja przy zamknięciu zmiany, automatyczne odrzucanie niewybranych zadań.
+
+**Uzupełnienie 2026-10-30 — moduł zadań w realiach placówki (Michał; Darek: do potwierdzenia).**
+Personel ma trudności z obsługą komputera, więc praca opiekunek odbywa się na wydruku, a obsługę systemu przejmuje kierownik zmiany.
+1. **Najpierw konfiguracja zmian**, potem zadania przypisywane do zmiany (`SC-NUR-12/AC1`).
+2. **Kierownik zmiany (wariant B):** osoba z rolą `nurse` wyznaczona w grafiku jako lider danej zmiany, z dodatkowymi uprawnieniami wyłącznie na swojej zmianie (akceptacja planu, wydruk, rozliczenie). Kontrakt potrzebuje uprawnienia zależnego od grafiku — dziś `MATRIX` zna tylko role i zakres `own` placówki.
+3. **Cykl zmiany:** przegląd → akceptacja planu → wydruk (`SC-NUR-15`) → praca na wydruku → notatki głosowe „co wykonano” → podpowiedzi „wykonane?” (`SC-NUR-16`, decyduje człowiek) → rozliczenie każdego zadania: wykonane / anulowane z powodem / przechodzi na kolejną zmianę.
+4. **Źródło zadania widoczne zawsze** (ekran i wydruk): z przekazania, standardowe (plan opieki), ręczne, przeniesione z poprzedniej zmiany. Lista grupowana per pokój albo per podopieczny.
+5. **Plan opieki jako osobny komponent** (`SC-ADM-23`): rejestr źródeł zadań standardowych z typem źródła. Pierwszy etap: szablony placówki per profil opieki albo per podopieczny. **Zalecenia lekarza i harmonogram leków** są zarezerwowane jako kolejne typy źródła, ale wymagają osobnego ADR i oceny prawnej (dane art. 9, granica MDR): system tylko odwzorowuje zalecenia wprowadzone przez uprawnioną osobę, bez wyliczania dawek, sprawdzania interakcji i alertów.

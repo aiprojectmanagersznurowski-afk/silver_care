@@ -122,7 +122,7 @@ export function StaffQuickRoundsCard({
             </Link>
           </TooltipTrigger>
           <TooltipContent>
-            Nagraj notatkę głosową dla tego pensjonariusza
+            Nagraj notatkę głosową dla tego podopiecznego
           </TooltipContent>
         </Tooltip>
 

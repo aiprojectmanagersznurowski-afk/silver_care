@@ -67,7 +67,7 @@ export function ProfileSessionsCard() {
             <div>
               <h4 className="font-medium text-foreground">Uwierzytelnianie dwuskładnikowe (MFA / TOTP)</h4>
               <p className="text-sm text-muted-foreground mt-0.5">
-                Drugi składnik logowania zapewnia najwyższy poziom ochrony danych pensjonariuszy zgodnie z normami RODO Art. 9.
+                Drugi składnik logowania zapewnia najwyższy poziom ochrony danych podopiecznych zgodnie z normami RODO Art. 9.
               </p>
             </div>
             <Badge variant="outline" className="w-fit text-sm border-border bg-card text-muted-foreground whitespace-nowrap">

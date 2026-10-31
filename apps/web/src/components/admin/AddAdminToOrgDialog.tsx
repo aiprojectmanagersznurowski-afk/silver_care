@@ -88,9 +88,9 @@ export function AddAdminToOrgDialog({
       </DialogTrigger>
       <DialogContent className="sm:max-w-xl md:max-w-2xl p-6">
         <DialogHeader>
-          <DialogTitle>Dodaj administratora placówki</DialogTitle>
+          <DialogTitle>Dodaj kierownika placówki</DialogTitle>
           <DialogDescription>
-            Nadaj uprawnienia org_admin dla ośrodka „{organizationName}” i wyślij zaproszenie.
+            Nadaj uprawnienia org_admin dla placówki „{organizationName}” i wyślij zaproszenie.
           </DialogDescription>
         </DialogHeader>
 

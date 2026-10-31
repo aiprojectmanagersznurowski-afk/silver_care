@@ -3,7 +3,7 @@
  * @REQ: SUP-IAM-PANEL
  * @REQ: ORG-ISOLATION
  *
- * Bezpieczne przypisanie administratora placówki:
+ * Bezpieczne przypisanie kierownika placówki:
  * 1. Paginowane wyszukiwanie użytkownika w Supabase Auth po adresie e-mail.
  * 2. Walidacja roli — ochrona przed degradacją super_admin oraz zachowanie izolacji placówek.
  */
@@ -101,7 +101,7 @@ export function evaluateAdminAssignment(input: AdminAssignmentInput): AdminAssig
     return {
       allowed: false,
       errorCode: 'SUPER_ADMIN_CONFLICT',
-      error: 'Nie można przypisać roli administratora placówki do konta operatora platformy (super_admin).',
+      error: 'Nie można przypisać roli kierownika placówki do konta operatora platformy (super_admin).',
     };
   }
 

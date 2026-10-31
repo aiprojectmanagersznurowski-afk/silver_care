@@ -137,7 +137,7 @@ export function BedAllocationOptimizerDialog({
           }
         />
         <TooltipContent>
-          Analizuje obłożenie pod kątem zgodności płciowej i mobilności pensjonariuszy, proponując optymalne zamiany łóżek
+          Analizuje obłożenie pod kątem zgodności płciowej i mobilności podopiecznych, proponując optymalne zamiany łóżek
         </TooltipContent>
       </Tooltip>
       <DialogContent className="max-w-4xl lg:max-w-5xl max-h-[90vh] flex flex-col p-6 overflow-hidden">
@@ -167,7 +167,7 @@ export function BedAllocationOptimizerDialog({
           <div className="flex-1 flex flex-col items-center justify-center p-12 space-y-3">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
             <p className="text-sm text-muted-foreground">
-              Analizowanie struktury placówki, obłożenia i parametrów pensjonariuszy...
+              Analizowanie struktury placówki, obłożenia i parametrów podopiecznych...
             </p>
           </div>
         ) : (
@@ -195,7 +195,7 @@ export function BedAllocationOptimizerDialog({
                   Brak konfliktów alokacji
                 </h4>
                 <p className="text-sm text-foreground max-w-md mx-auto">
-                  Wszystkie pokoje wieloosobowe są zgodne płciowo, a pensjonariusze o ograniczonej mobilności przebywają na parterze.
+                  Wszystkie pokoje wieloosobowe są zgodne płciowo, a podopieczni o ograniczonej mobilności przebywają na parterze.
                 </p>
               </div>
             )}

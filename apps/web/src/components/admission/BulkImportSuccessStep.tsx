@@ -13,11 +13,11 @@ export function BulkImportSuccessStep({
         <Check className="w-6 h-6" />
       </div>
       <h3 className="text-base font-semibold text-foreground">
-        Pomyślnie zaimportowano {importCount} pensjonariuszy!
+        Pomyślnie zaimportowano {importCount} podopiecznych!
       </h3>
       {capacityUpdated?.updated && (
         <p className="text-sm text-foreground font-medium bg-muted p-2 rounded border border-border inline-block">
-          Zadeklarowana pojemność placówki została automatycznie zaktualizowana do{' '}
+          Limit miejsc placówki wynosi{' '}
           <strong>{capacityUpdated.newCapacity}</strong>.
         </p>
       )}

@@ -113,7 +113,7 @@ export async function GET(request: Request) {
         }
       }
 
-      // 3. Przypisanie do pensjonariusza
+      // 3. Przypisanie do podopiecznego
       const assignedLinkRole = resolveRelativeRole(invitation.role)
       const { error: linkError } = await adminClient
         .from('resident_relative_links')
@@ -125,7 +125,7 @@ export async function GET(request: Request) {
         })
 
       if (linkError && linkError.code !== '23505') {
-        throw new Error('Błąd przypisywania do pensjonariusza.')
+        throw new Error('Błąd przypisywania do podopiecznego.')
       }
 
       // 4. Rejestracja zgód Art. 9 RODO w consent_ledger dla opiekuna prawnego (CONSENT-GRANTOR)
@@ -198,7 +198,7 @@ export async function GET(request: Request) {
     // Użytkownik zalogował się kontem Google, które nie jest zarejestrowane w systemie
     await supabase.auth.signOut()
     return NextResponse.redirect(
-      `${origin}/login?error=${encodeURIComponent('Konto Google nie jest powiązane z żadnym profilem w systemie. Skontaktuj się z administratorem placówki.')}`
+      `${origin}/login?error=${encodeURIComponent('Konto Google nie jest powiązane z żadnym profilem w systemie. Skontaktuj się z kierownikiem placówki.')}`
     )
   }
 

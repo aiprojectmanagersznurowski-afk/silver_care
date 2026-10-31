@@ -42,7 +42,7 @@ export default async function OrganizationDetailsPage({
     notFound()
   }
 
-  // 2. Pobierz liczbę pensjonariuszy (agregacja COUNT — zero PII)
+  // 2. Pobierz liczbę podopiecznych (agregacja COUNT — zero PII)
   const adminClient = createAdminClient()
   const { count: activeResidentCount } = await adminClient
     .from('residents')

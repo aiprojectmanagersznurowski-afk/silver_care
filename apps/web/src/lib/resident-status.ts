@@ -13,7 +13,7 @@ const LABELS: Record<ResidentStatusKind, string> = {
   active: 'Aktywny',
 }
 
-/** Jeden status pensjonariusza dla tabeli, kafelków i karty mobilnej (ADR-017). Fakt, nie ocena. */
+/** Jeden status podopiecznego dla tabeli, kafelków i karty mobilnej (ADR-017). Fakt, nie ocena. */
 export function getResidentStatus(resident: ResidentStatusFields, now: Date = new Date()) {
   const kind: ResidentStatusKind = resident.archived_at
     ? 'archived'
