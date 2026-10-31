@@ -17,7 +17,7 @@ export default async function AdminResidentsPage() {
   const cookieStore = await cookies()
   const isImpersonating = isImpersonationSessionActive(cookieStore, user)
 
-  // Pobieramy pensjonariuszy z organizacji tego admina — tylko kolumny potrzebne widokowi
+  // Pobieramy podopiecznych z organizacji tego admina — tylko kolumny potrzebne widokowi
   const { data: rawResidents } = await supabase
     .from('residents')
     .select(ADMIN_RESIDENT_LIST_SELECT)

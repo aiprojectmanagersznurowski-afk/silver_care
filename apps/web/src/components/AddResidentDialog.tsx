@@ -111,11 +111,11 @@ export function AddResidentDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={<Button />}>
-        Dodaj pensjonariusza
+        Dodaj podopiecznego
       </DialogTrigger>
       <DialogContent className="sm:max-w-xl md:max-w-2xl p-6">
         <DialogHeader>
-          <DialogTitle>Nowy pensjonariusz</DialogTitle>
+          <DialogTitle>Nowy podopieczny</DialogTitle>
           <DialogDescription>
             Wpisz dane nowego podopiecznego. Zostanie dodany do Twojej placówki.
           </DialogDescription>
