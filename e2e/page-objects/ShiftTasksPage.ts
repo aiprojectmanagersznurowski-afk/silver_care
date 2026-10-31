@@ -15,6 +15,8 @@ export class ShiftTasksPage {
   readonly byResidentLink: Locator;
   readonly planStatus: Locator;
   readonly approvePlanButton: Locator;
+  readonly printLink: Locator;
+  readonly printButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -26,6 +28,8 @@ export class ShiftTasksPage {
     this.byRoomLink = page.getByRole('link', { name: 'Według pokoi' });
     this.byResidentLink = page.getByRole('link', { name: 'Według podopiecznych' });
     this.planStatus = page.locator('[data-testid="plan-approval-status"]');
+    this.printLink = page.getByRole('link', { name: 'Drukuj plan' });
+    this.printButton = page.getByRole('button', { name: 'Drukuj plan' });
     this.approvePlanButton = page.getByRole('button', { name: 'Zatwierdź plan' });
   }
 
