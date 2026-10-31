@@ -1,6 +1,6 @@
 # 📖 Kanoniczna specyfikacja user stories — Silver Care
 
-> **Wersja:** 2.15 (limit miejsc z ostrzeżeniem i słownik terminologii UI — 📝 PROPOZYCJA) · **Ostatnia aktualizacja:** 2026-10-29
+> **Wersja:** 2.16 (moduł zadań: kierownik zmiany, wydruk planu, rozliczenie z notatek głosowych, plan opieki — 📝 PROPOZYCJA) · **Ostatnia aktualizacja:** 2026-10-30
 > **Właściciele:** Darek Rink, Michał Sznurowski
 
 ## Jak czytać i utrzymywać ten dokument
@@ -620,6 +620,21 @@
 - **AC5 (Widoczność u super admina):** Lista i karta placówek pokazują plakietkę „Ponad limit” (ton `brand`, nie czerwień) i obłożenie „X / Y”.
 - **AC6 (Granice):** Izolacja placówek (`ORG-ISOLATION`); powiadomienie bez imion i nazwisk (`NTF-NO-PII`); E2E dla kierownika (ostrzeżenie i potwierdzenie) i super admina (plakietka, powiadomienie).
 
+#### [SC-ADM-23] Plan opieki podopiecznego — rejestr zadań standardowych (komponent rozwojowy)
+🔗 **Kontrakt:** brak REQ (proponowany nowy: `ADM-CARE-PLAN-TASKS`) · **ADR:** ADR-021 (uzupełnienie 2026-10-30) · **Status:** 📝 PROPOZYCJA
+
+> ℹ️ Decyzja Michała z 2026-10-30: zadania standardowe wynikające ze stanu podopiecznego, zaleceń lekarza i harmonogramu przyjmowania leków będą definiowane i standaryzowane przy rozbudowie karty podopiecznego. Ten komponent jest **wydzielony** jako rejestr źródeł zadań, żeby kolejne rodzaje dołączać bez przebudowy modułu zadań. Pierwszy etap obejmuje tylko szablony zadań per profil opieki; zalecenia lekarza i harmonogram leków wymagają osobnej decyzji (patrz AC6).
+
+**User story:** Jako kierownik placówki chcę zdefiniować zadania standardowe — dla profilu opieki (np. „osoba leżąca: zmiana pozycji co 2 godziny”) albo dla konkretnego podopiecznego — aby system sam umieszczał je w planie każdej zmiany i nic nie zależało od pamięci personelu.
+
+**Kryteria akceptacji:**
+- **AC1 (Rejestr źródeł):** Zadania standardowe pochodzą z jawnego rejestru źródeł planu opieki; każde źródło ma typ (`CARE_PROFILE_TEMPLATE` w pierwszym etapie; zarezerwowane na później: `RESIDENT_CARE_ITEM`, `MEDICAL_ORDER`, `MEDICATION_SCHEDULE`), właściciela (kto zdefiniował) i datę obowiązywania.
+- **AC2 (Szablony placówki):** Kierownik placówki definiuje szablon: treść, profil opieki (`walking`/`sitting`/`bedridden`/`hospice`) albo konkretny podopieczny, harmonogram (które zmiany, godziny albo „co N godzin”), okres obowiązywania. **Szablony definiuje placówka — system nie podpowiada czynności opiekuńczych na podstawie stanu zdrowia** (granica MDR).
+- **AC3 (Generowanie planu):** Przy tworzeniu planu zmiany (`SC-NUR-13`) system tworzy instancje zadań z obowiązujących szablonów dla obecnych podopiecznych (bez hospitalizowanych i nieobecnych — `SC-ADM-21/AC4`), ze źródłem `CARE_PLAN` i odwołaniem do szablonu. Instancje podlegają akceptacji kierownika zmiany jak każde zadanie.
+- **AC4 (Zmiana szablonu):** Zmiana albo wyłączenie szablonu działa od kolejnych zmian; już zaplanowane i rozliczone zadania nie są modyfikowane. Każda zmiana szablonu w `audit_logs`.
+- **AC5 (Karta podopiecznego):** Sekcja „Zadania” na karcie (`SC-ADM-21`) pokazuje obowiązujące zadania standardowe podopiecznego (z profilu i indywidualne) z informacją o źródle.
+- **AC6 (Źródła medyczne — osobna decyzja):** `MEDICAL_ORDER` (zalecenia lekarza) i `MEDICATION_SCHEDULE` (harmonogram przyjmowania leków) to dane art. 9 i obszar bliski granicy MDR. Przed włączeniem wymagają osobnego ADR i oceny prawnej: system wyłącznie **odwzorowuje** zalecenia wprowadzone przez uprawnioną osobę, nie wylicza dawek, nie sprawdza interakcji, nie generuje alertów na podstawie metryk i nie pokazuje tych danych bliskim.
+
 ### Domena 2 — Personel
 
 #### [SC-NUR-07] Skrzynka wiadomości od rodzin (wyłącznie dla Kierownika / Administratora Placówki)
@@ -699,6 +714,7 @@
 
 **Kryteria akceptacji:**
 - **AC1 (Konfiguracja zmian):** Kierownik definiuje 2 albo 3 zmiany na dobę (godziny od–do, strefa `Europe/Warsaw`); zmiana nocna przechodzi przez północ.
+- **AC1a (Grafik i kierownik zmiany — 📝 2026-10-30):** Kierownik placówki układa grafik: kto z personelu opiekuńczego pracuje na danej zmianie i kto jest **kierownikiem zmiany** (jeden na zmianę). Kierownik zmiany to osoba z rolą `nurse` z dodatkowymi uprawnieniami **wyłącznie na swojej zmianie** (akceptacja planu, wydruk, potwierdzanie wykonania — `SC-NUR-13`, `SC-NUR-15`, `SC-NUR-16`); poza nią działa jak zwykły personel. Decyzja Michała 2026-10-30 (wariant B).
 - **AC2 (Odcinki z identyfikatorem i sugestią):** Każdy odcinek ma `resident_id` potwierdzony przez człowieka albo jest odcinkiem „Placówka”. Gdy podopiecznego nie wybrano przed nagraniem, serwer (nie model) podsuwa kandydatów na podstawie nazwiska, numeru pokoju lub łóżka z transkryptu, tylko spośród podopiecznych tej placówki. Brak potwierdzenia kończy się odmową; jeden kandydat nie jest przyjmowany automatycznie.
 - **AC2a (Maskowanie przed modelem):** Nazwiska, numery pokoi i łóżek są maskowane w transkrypcie przed wysłaniem do modelu.
 - **AC3 (Języki):** Nagranie po polsku, angielsku lub ukraińsku; raport przekazania zawsze po polsku, z cytatem w języku oryginału przy każdej propozycji zadania.
@@ -708,18 +724,49 @@
 - **AC7 (Jedna ścieżka, dane syntetyczne):** Kod przekazania jest identyczny dla każdej organizacji — bez rozgałęzień „demo”. Dostawca modelu wynika z konfiguracji. Do czasu DPA z Groq na przetwarzanie tekstu albo przełączenia na model w UE w systemie są wyłącznie dane syntetyczne (procedura, ADR-015/ADR-021).
 - **AC8 (Audyt i logi):** Zatwierdzenie i odbiór zapisują wpis w `audit_logs`; w logach serwera brak treści nagrań i imion (`SEC-NO-PII-LOGS`).
 
-#### [SC-NUR-13] Moduł zadań z backlogiem i propozycjami AI
-🔗 **Kontrakt:** brak REQ (proponowane nowe: `NUR-TASKS`, `NUR-TASKS-AI-PROPOSAL`) · **ADR:** ADR-021 · **Status:** 📝 PROPOZYCJA
+#### [SC-NUR-13] Moduł zadań zmiany: plan, akceptacja kierownika zmiany, rozliczenie
+🔗 **Kontrakt:** brak REQ (proponowane nowe: `NUR-TASKS`, `NUR-TASKS-AI-PROPOSAL`, `NUR-SHIFT-LEAD`) · **ADR:** ADR-021 (uzupełnienie 2026-10-30) · **Status:** 📝 PROPOZYCJA
 
-**User story:** Jako Członek Personelu opiekuńczego lub Kierownik Placówki, chcę mieć jedną listę zadań — przypiętych do podopiecznego albo ogólnych dla placówki, przypisanych do konkretnej osoby albo do zmiany — do której zadania trafiają z przekazania zmiany i ręcznie, aby nic nie ginęło między zmianami.
+> ℹ️ Zakres zaktualizowany decyzjami Michała z 2026-10-30: najpierw konfiguracja zmian (`SC-NUR-12/AC1`), kierownik zmiany jako lider w grafiku (wariant B), wydruk planu (`SC-NUR-15`), rozliczenie z notatek głosowych (`SC-NUR-16`), zadania standardowe z planu opieki (`SC-ADM-23`). Personel ma trudności z obsługą komputera — praca opiekunek odbywa się na wydruku, obsługę systemu przejmuje kierownik zmiany.
+
+**User story:** Jako kierownik zmiany chcę przed zmianą zobaczyć wszystkie zadania tej zmiany — z przekazania, standardowe z planu opieki, przeniesione z poprzedniej zmiany i dodane ręcznie — zaakceptować plan, wydrukować go dla opiekunek, a po zmianie rozliczyć, co zostało zrobione, aby nic nie ginęło między zmianami, a opiekunki nie musiały obsługiwać systemu.
+
+**Cykl zmiany:** przegląd zadań → akceptacja planu → wydruk (`SC-NUR-15`) → praca na wydruku → notatki głosowe „co zostało wykonane” → podpowiedzi „wykonane?” (`SC-NUR-16`) → kierownik zmiany rozlicza każde zadanie: **wykonane**, **anulowane z powodem** albo **przechodzi na kolejną zmianę** → plan kolejnej zmiany.
 
 **Kryteria akceptacji:**
-- **AC1 (Model zadania):** Zadanie ma: tytuł, opcjonalnie podopiecznego (brak = zadanie placówki), przypisanie do osoby albo do zmiany, termin (dzień i opcjonalnie godzina), źródło (`MANUAL` albo `AI_HANDOVER`), status `PROPOSED` / `TODO` / `DONE` / `CANCELLED`.
-- **AC2 (Propozycje AI):** Zadanie z modelu ma status `PROPOSED` i obowiązkowy cytat źródłowy; staje się `TODO` dopiero po akceptacji człowieka, który może je też poprawić albo odrzucić. Model nie tworzy zadań, których nie ma w nagraniu.
-- **AC3 (Backlog):** Niewykonane zadanie po końcu zmiany nie znika ani nie jest odrzucane: przechodzi do backlogu i jest widoczne dla następnej zmiany z oznaczeniem „z poprzedniej zmiany”.
-- **AC4 (Widoki):** `/staff/agenda` pokazuje zadania bieżącej zmiany obok planu dnia z wyraźnym rozróżnieniem; widok „Moje zadania” dla przypisanych do osoby; sekcja na karcie podopiecznego (`SC-ADM-21`).
-- **AC5 (Wykonanie):** Oznaczenie „Wykonane” zapisuje kto i kiedy; anulowanie wymaga powodu. Zmiany statusu w `audit_logs`.
-- **AC6 (Granica bliskich i MDR):** Zadania tylko dla `nurse` i `org_admin` (RLS i `MATRIX`); zadania są poleceniami personelu, nie zaleceniami systemu — model nie proponuje dawek, leków ani działań, których nie wypowiedziała osoba przekazująca.
+- **AC1 (Model zadania):** Zadanie ma: treść, opcjonalnie podopiecznego (brak = zadanie placówki), zmianę (obowiązkowo) i opcjonalnie osobę, termin (godzina w ramach zmiany, opcjonalnie), **źródło**, status `PROPOSED` / `TODO` / `DONE` / `CANCELLED`, a przy anulowaniu — powód.
+- **AC2 (Źródło widoczne przy każdym zadaniu):** Rodzaje źródła: **z przekazania zmiany** (`HANDOVER`, z cytatem z nagrania), **standardowe** (`CARE_PLAN`, z planu opieki podopiecznego — `SC-ADM-23`), **ręczne** (`MANUAL`) i **przeniesione z poprzedniej zmiany** (znacznik niezależny od źródła). Oznaczenie słowne i ikoną, bez koloru niosącego ocenę — na ekranie i na wydruku.
+- **AC3 (Propozycje AI):** Zadanie z modelu ma status `PROPOSED` i obowiązkowy cytat źródłowy; staje się `TODO` dopiero po akceptacji kierownika zmiany, który może je poprawić albo odrzucić. Model nie tworzy zadań, których nie ma w nagraniu.
+- **AC4 (Akceptacja planu):** Kierownik zmiany akceptuje plan swojej zmiany (kto, kiedy); dopiero zaakceptowany plan można wydrukować jako obowiązujący. Zmiany po akceptacji wymagają ponownej akceptacji i nowego wydruku.
+- **AC5 (Rozliczenie — trzy ścieżki):** Każde zadanie zmiany kończy się jednym z: **Wykonane** (kto potwierdził, kiedy), **Anulowane** (obowiązkowy powód, np. „podopieczny w szpitalu”, „zadanie nieaktualne”), **Przechodzi na kolejną zmianę** (domyślne dla nierozliczonych — nic nie znika). Każda zmiana statusu w `audit_logs`.
+- **AC6 (Sortowanie i grupowanie):** Lista zadań grupowana **per pokój** albo **per podopieczny** (wybór użytkownika, zapamiętany), w grupie sortowana po godzinie; zadania placówki w osobnej grupie „Placówka”. Ten sam układ na ekranie i na wydruku.
+- **AC7 (Uprawnienia — wariant B):** Kierownik zmiany (`nurse` wyznaczony w grafiku) akceptuje, drukuje i rozlicza **tylko zadania swojej zmiany**; personel opiekuńczy widzi zadania swojej zmiany i może dodawać zadania ręczne do akceptacji; kierownik placówki (`org_admin`) ma pełny dostęp we własnej placówce. Wymaga zmiany kontraktu (uprawnienie zależne od grafiku zmiany).
+- **AC8 (Widoki):** `/staff/agenda` — zadania bieżącej zmiany obok planu dnia z wyraźnym rozróżnieniem; sekcja na karcie podopiecznego (`SC-ADM-21`).
+- **AC9 (Granica bliskich i MDR):** Zadania tylko dla personelu (RLS i `MATRIX`), nigdy dla `family` ani `legal_guardian`, osobna tabela (nie `agenda_items`). Zadania są poleceniami personelu i planu opieki ustalonego przez placówkę, nie zaleceniami systemu — model nie proponuje dawek, leków ani działań, których nie wypowiedziała osoba przekazująca.
+
+#### [SC-NUR-15] Wydruk planu pracy zmiany
+🔗 **Kontrakt:** brak REQ (proponowany nowy: `NUR-SHIFT-PLAN-PRINT`) · **ADR:** ADR-021 (uzupełnienie 2026-10-30) · **Status:** 📝 PROPOZYCJA
+
+**User story:** Jako kierownik zmiany chcę wydrukować zaakceptowany plan pracy zmiany, pogrupowany per pokój albo per podopieczny, aby opiekunki pracowały z kartką, bez obsługi komputera.
+
+**Kryteria akceptacji:**
+- **AC1 (Format):** A4, czytelny wydruk (bez tła i elementów nawigacji), nagłówek: placówka, data, zmiana (godziny), kierownik zmiany, data i godzina wydruku, wersja planu (po każdej ponownej akceptacji nowa).
+- **AC2 (Treść):** Grupy per pokój albo per podopieczny (jak `SC-NUR-13/AC6`); przy każdym zadaniu: pole ☐ do odhaczenia długopisem, godzina, treść, rodzaj źródła (słownie: „z przekazania”, „standardowe”, „przeniesione”, „ręczne”), osoba (jeśli przypisana). Na dole miejsce na podpis kierownika zmiany.
+- **AC3 (Minimalizacja danych):** Na wydruku imię, nazwisko i pokój podopiecznego oraz treść zadania — bez PESEL, bez danych kontaktowych, bez innych danych z karty. Wydruk zawiera dopisek „Dokument wewnętrzny placówki — nie przekazywać osobom trzecim”.
+- **AC4 (Ślad):** Każdy wydruk zapisuje w `audit_logs` kto, kiedy i którą wersję planu wydrukował (bez treści planu).
+- **AC5 (Dostęp):** Wydruk dostępny dla kierownika zmiany (swojej zmiany) i kierownika placówki.
+
+#### [SC-NUR-16] Rozliczenie zadań zmiany z notatek głosowych
+🔗 **Kontrakt:** brak REQ (proponowany nowy: `NUR-TASKS-VOICE-COMPLETION`; wdraża: `VOICE-ZERO-GUESSING`, `INFRA-GROQ-DEMO-INTERIM`) · **ADR:** ADR-021 (uzupełnienie 2026-10-30) · **Status:** 📝 PROPOZYCJA
+
+**User story:** Jako kierownik zmiany chcę, żeby system po zmianie zestawił notatki głosowe personelu („co zostało wykonane”) z otwartymi zadaniami i podsunął, które wyglądają na wykonane, aby rozliczenie zmiany zajęło kilka minut, a opiekunki tylko mówiły, zamiast klikać.
+
+**Kryteria akceptacji:**
+- **AC1 (Źródło):** Notatki głosowe z danej zmiany (odcinki z `resident_id` potwierdzonym przez człowieka albo „Placówka” — jak `SC-NUR-12/AC2`) są dopasowywane wyłącznie do otwartych zadań tej zmiany i tego samego podopiecznego (albo placówki).
+- **AC2 (Podpowiedź, nie decyzja):** Przy zadaniu pojawia się „wykonane?” z cytatem z notatki; status zmienia się dopiero po potwierdzeniu kierownika zmiany. Model nie oznacza niczego sam i nie tworzy zadań.
+- **AC3 (Brak dopasowania):** Zadanie bez wzmianki w notatkach nie dostaje podpowiedzi; kierownik zmiany rozlicza je ręcznie (`SC-NUR-13/AC5`).
+- **AC4 (Wzmianka o odmowie):** Gdy notatka mówi o niewykonaniu (np. „odmówiła kolacji”), podpowiedź brzmi „niewykonane — przenieść albo anulować?”, z cytatem.
+- **AC5 (Granice danych):** Te same zasady co w potoku głosowym: maskowanie przed modelem, model nie ustala tożsamości, w discovery wyłącznie dane syntetyczne (ADR-015, ADR-021).
 
 #### [SC-NUR-14] Raport dobowy dla bliskich z jawnym komunikatem o obchodzie
 🔗 **Kontrakt:** `REPORT-APPROVAL`, `NTF-REPORT-READY`; proponowany nowy: `REPORT-ROUNDS-NOTICE` · **ADR:** ADR-021 · **Status:** 📝 PROPOZYCJA
@@ -965,3 +1012,4 @@
 | 2026-10-24 | 2.12 | Dopisanie `SC-ADM-20` (wspólna karta podopiecznego dla personelu z widocznością sekcji według roli) ze statusem 📝 PROPOZYCJA. |
 | 2026-10-29 | 2.14 | Dopisanie `SC-NUR-12` (głosowe przekazanie zmiany), `SC-NUR-13` (moduł zadań z backlogiem i propozycjami AI), `SC-NUR-14` (raport dobowy z komunikatem o obchodzie) i `SC-ADM-21` (sekcja „Zadania” na karcie podopiecznego) ze statusem 📝 PROPOZYCJA, na podstawie decyzji Michała z ADR-021. |
 | 2026-10-29 | 2.15 | Dopisanie `SC-ADM-22` (limit miejsc placówki: przekroczenie z ostrzeżeniem dla kierownika i super admina) i `NFR-UI-06` (spójna terminologia interfejsu) ze statusem 📝 PROPOZYCJA, na podstawie decyzji Michała z 2026-10-29; `MASTER_DATA_STANDARD.md` w wersji 2.0. |
+| 2026-10-30 | 2.16 | Moduł zadań wg decyzji Michała z 2026-10-30: przebudowa `SC-NUR-13` (cykl zmiany, kierownik zmiany w grafiku — wariant B, źródło zadania, grupowanie per pokój/podopieczny, rozliczenie: wykonane / anulowane z powodem / przeniesione), `SC-NUR-12/AC1a` (grafik i kierownik zmiany), nowe `SC-NUR-15` (wydruk planu pracy), `SC-NUR-16` (rozliczenie z notatek głosowych) i `SC-ADM-23` (plan opieki — rejestr zadań standardowych, komponent rozwojowy) ze statusem 📝 PROPOZYCJA.

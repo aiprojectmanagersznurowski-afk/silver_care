@@ -13,7 +13,7 @@ interface OrgAdminRowActionsProps {
   organizationName: string
 }
 
-/** Akcje administratora placówki w menu „⋯": ponowienie zaproszenia i wejście w tryb podglądu. */
+/** Akcje kierownika placówki w menu „⋯": ponowienie zaproszenia i wejście w tryb podglądu. */
 export function OrgAdminRowActions({ adminId, adminEmail, organizationId, organizationName }: OrgAdminRowActionsProps) {
   const invite = useResendAdminInvite({ adminEmail, organizationId, organizationName })
   const impersonateForm = useRef<HTMLFormElement>(null)
@@ -32,7 +32,7 @@ export function OrgAdminRowActions({ adminId, adminEmail, organizationId, organi
         {
           label: 'Zaloguj jako',
           icon: LogIn,
-          hint: 'Zaloguj jako ten administrator placówki',
+          hint: 'Zaloguj jako ten kierownik placówki',
           onSelect: () => impersonateForm.current?.requestSubmit(),
         },
       ]}

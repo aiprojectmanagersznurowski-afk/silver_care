@@ -118,7 +118,7 @@ export function StaffCommandPalette({ residents = [] }: StaffCommandPaletteProps
         onClick={() => setIsOpen(true)}
         className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-border bg-card/80 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-colors min-h-touch"
         title="Otwórz paletę poleceń (Cmd+K)"
-        aria-label="Otwórz szybkie polecenia i wyszukiwanie pensjonariuszy"
+        aria-label="Otwórz szybkie polecenia i wyszukiwanie podopiecznych"
       >
         <Search className="h-4 w-4 text-muted-foreground" />
         <span className="hidden sm:inline">Szybkie polecenia</span>

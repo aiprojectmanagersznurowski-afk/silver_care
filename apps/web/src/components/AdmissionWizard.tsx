@@ -34,6 +34,7 @@ export function AdmissionWizard() {
     selectedBedInfo, setSelectedBedInfo, loadingSuggestions,
     handleFetchSuggestions, handleNextToStep2,
     submitting, createdResidentId, statusMessage, setStatusMessage,
+    capacityWarning, capacityConfirmed, setCapacityConfirmed,
     resetForm, handleSubmitAdmission,
   } = useAdmissionWizard()
 
@@ -123,6 +124,17 @@ export function AdmissionWizard() {
                 careLevel={careLevel} isZsn={isZsn}
                 selectedBedInfo={selectedBedInfo} notes={notes}
               />
+            )}
+
+            {step === 3 && capacityWarning && (
+              <div data-testid="capacity-limit-warning" role="alert" className="rounded-lg border border-border bg-muted p-3 text-sm text-foreground space-y-2">
+                <p className="font-semibold">Przekroczenie limitu miejsc</p>
+                <p className="text-muted-foreground">{capacityWarning}</p>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={capacityConfirmed} onChange={(e) => setCapacityConfirmed(e.target.checked)} className="rounded border-border text-primary focus:ring-primary" />
+                  <span>Rozumiem, że przyjęcie przekroczy limit miejsc ustalony przez Administratora platformy</span>
+                </label>
+              </div>
             )}
 
             <DialogFooter className="flex justify-between sm:justify-between items-center gap-2">

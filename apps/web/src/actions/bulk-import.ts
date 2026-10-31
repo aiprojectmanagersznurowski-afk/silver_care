@@ -13,6 +13,7 @@ import {
   evaluateCapacityExceeded,
 } from '@/lib/bulk-import-helpers'
 import { hashNationalId } from '@/lib/national-id-hash'
+import { countPresentResidents, RESIDENT_PRESENCE_COLUMNS, ResidentPresenceFields } from '@/lib/capacity-limit'
 
 export async function analyzeBulkImportAction(rows: RawResidentRow[]): Promise<{
   error?: string
@@ -30,14 +31,14 @@ export async function analyzeBulkImportAction(rows: RawResidentRow[]): Promise<{
   // Pobierz wszystkie istniejące pesel_hash z tej placówki oraz status archiwizacji
   const { data: existing, error: existingErr } = await adminClient
     .from('residents')
-    .select('pesel_hash, archived_at')
+    .select(`pesel_hash, ${RESIDENT_PRESENCE_COLUMNS}`)
     .eq('organization_id', orgId)
 
   if (existingErr) {
     return { error: 'Błąd sprawdzania bazy danych: ' + existingErr.message }
   }
 
-  // Pobierz zadeklarowaną pojemność placówki
+  // Pobierz limit miejsc placówki
   const { data: orgData } = await adminClient
     .from('organizations')
     .select('resident_limit')
@@ -45,7 +46,8 @@ export async function analyzeBulkImportAction(rows: RawResidentRow[]): Promise<{
     .single()
 
   const residentLimit = Number(orgData?.resident_limit || 50)
-  const currentActiveCount = (existing || []).filter((r) => !r.archived_at).length
+  // Miejsce zajmują tylko podopieczni przebywający w placówce (ADM-CAPACITY-LIMIT, decyzja Michała 2026-10-29)
+  const currentActiveCount = countPresentResidents((existing || []) as unknown as ResidentPresenceFields[])
   const existingHashes = new Set<string>(
     (existing || []).map((r) => r.pesel_hash).filter((h): h is string => Boolean(h))
   )
@@ -64,8 +66,7 @@ export async function analyzeBulkImportAction(rows: RawResidentRow[]): Promise<{
 export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[]): Promise<{
   error?: string
   importedCount?: number
-  capacityUpdated?: boolean
-  newCapacity?: number
+  capacityExceeded?: { residentLimit: number; activeResidents: number }
 }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -82,7 +83,7 @@ export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[
 
   const role = user.app_metadata?.role
   if (role !== 'org_admin' && role !== 'super_admin') {
-    return { error: 'Tylko administrator placówki może wykonywać masowy import.' }
+    return { error: 'Tylko kierownik placówki może wykonywać masowy import.' }
   }
 
   const validRows = rowsToImport.filter((r) => r.isValid)
@@ -123,44 +124,37 @@ export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[
     totalImported += (inserted || []).length
   }
 
-  // Sprawdzenie i aktualizacja pojemności placówki w razie przekroczenia limitu
-  const { count: totalActiveCount } = await adminClient
+  // Limit miejsc zmienia wyłącznie super admin (CAPACITY_POLICY, ADM-CAPACITY-LIMIT) — import go nie podnosi,
+  // tylko odnotowuje przekroczenie w audycie
+  const { data: presentRows } = await adminClient
     .from('residents')
-    .select('*', { count: 'exact', head: true })
+    .select(RESIDENT_PRESENCE_COLUMNS)
     .eq('organization_id', orgId)
     .is('archived_at', null)
 
-  const activeTotal = totalActiveCount || totalImported
+  const activeTotal = countPresentResidents((presentRows || []) as ResidentPresenceFields[]) || totalImported
 
   const { data: orgRecord } = await adminClient
     .from('organizations')
-    .select('resident_limit, name')
+    .select('resident_limit')
     .eq('id', orgId)
     .single()
 
   const currentLimit = Number(orgRecord?.resident_limit || 50)
-  let capacityUpdated = false
-  let newCapacity = currentLimit
+  const capacityExceeded = activeTotal > currentLimit
+    ? { residentLimit: currentLimit, activeResidents: activeTotal }
+    : undefined
 
-  if (activeTotal > currentLimit) {
-    newCapacity = activeTotal
-    capacityUpdated = true
-
-    await adminClient
-      .from('organizations')
-      .update({ resident_limit: newCapacity })
-      .eq('id', orgId)
-
+  if (capacityExceeded) {
     await adminClient.from('audit_logs').insert({
       organization_id: orgId,
       resident_id: null,
-      action: 'ORGANIZATION_CAPACITY_UPDATED',
+      action: 'ORGANIZATION_CAPACITY_EXCEEDED',
       performed_by: user.id,
       payload: {
-        previous_limit: currentLimit,
-        new_limit: newCapacity,
-        reason: 'bulk_import_capacity_exceeded',
-        total_active_residents: activeTotal,
+        operation: 'resident_bulk_import',
+        resident_limit: currentLimit,
+        active_resident_count: activeTotal,
       },
     })
   }
@@ -174,8 +168,7 @@ export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[
     payload: {
       imported_count: totalImported,
       source: 'excel_csv_import',
-      capacity_updated: capacityUpdated,
-      new_capacity: newCapacity,
+      capacity_exceeded: Boolean(capacityExceeded),
     },
   })
 
@@ -185,7 +178,6 @@ export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[
 
   return {
     importedCount: totalImported,
-    capacityUpdated,
-    newCapacity,
+    capacityExceeded,
   }
 }

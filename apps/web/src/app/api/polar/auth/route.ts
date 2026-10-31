@@ -31,7 +31,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Brak parametru residentId' }, { status: 400 })
     }
 
-    // Pobierz dane pensjonariusza i upewnij się, że należy do organizacji
+    // Pobierz dane podopiecznego i upewnij się, że należy do organizacji
     const { data: resident, error: resError } = await supabase
       .from('residents')
       .select('id, organization_id, archived_at')
@@ -39,11 +39,11 @@ export async function GET(req: Request) {
       .single()
 
     if (resError || !resident) {
-      return NextResponse.json({ error: 'Nie znaleziono pensjonariusza' }, { status: 404 })
+      return NextResponse.json({ error: 'Nie znaleziono podopiecznego' }, { status: 404 })
     }
 
     if (resident.archived_at) {
-      return NextResponse.json({ error: 'Pensjonariusz jest zarchiwizowany' }, { status: 400 })
+      return NextResponse.json({ error: 'Podopieczny jest zarchiwizowany' }, { status: 400 })
     }
 
     const authUrl = buildPolarAuthUrl(resident.id, resident.organization_id)

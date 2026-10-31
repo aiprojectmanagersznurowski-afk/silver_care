@@ -35,6 +35,7 @@ files['packages/contracts/src/generated/roles.ts'] = BANNER
   + emit('AUDIT_REQUIREMENTS', roles.AUDIT_REQUIREMENTS)
   + (roles.DELETE_POLICIES ? emit('DELETE_POLICIES', roles.DELETE_POLICIES) : '')
   + (roles.OFFBOARDING_RETENTION_DAYS ? emit('OFFBOARDING_RETENTION_DAYS', roles.OFFBOARDING_RETENTION_DAYS) : '')
+  + (roles.SHIFT_LEAD_SCOPE ? emit('SHIFT_LEAD_SCOPE', roles.SHIFT_LEAD_SCOPE) : '')
   + `export type Role = typeof ROLES[number]['id'];\nexport type Resource = typeof RESOURCES[number];\n`;
 
 files['packages/contracts/src/generated/presentation.ts'] = BANNER
@@ -128,7 +129,9 @@ files['packages/contracts/src/generated/facility.ts'] = BANNER
   + emit('FACILITY_HIERARCHY', facility.FACILITY_HIERARCHY) + emit('ROOM_SHAPE', facility.ROOM_SHAPE)
   + emit('BED_SHAPE', facility.BED_SHAPE) + emit('BED_ASSIGNMENT_SHAPE', facility.BED_ASSIGNMENT_SHAPE)
   + emit('OCCUPANCY_GUARDS', facility.OCCUPANCY_GUARDS) + emit('OCCUPANCY_VIEW', facility.OCCUPANCY_VIEW)
-  + (facility.CAPACITY_POLICY ? emit('CAPACITY_POLICY', facility.CAPACITY_POLICY) : '');
+  + (facility.CAPACITY_POLICY ? emit('CAPACITY_POLICY', facility.CAPACITY_POLICY) : '')
+  + (facility.SHIFT_POLICY ? emit('SHIFT_POLICY', facility.SHIFT_POLICY) : '')
+  + (facility.SHIFT_TASK_POLICY ? emit('SHIFT_TASK_POLICY', facility.SHIFT_TASK_POLICY) : '');
 
 // dokument czytelny dla człowieka
 const md = [];

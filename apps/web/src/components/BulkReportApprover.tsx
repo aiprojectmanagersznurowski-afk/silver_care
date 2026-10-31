@@ -144,7 +144,7 @@ export function BulkReportApprover({ draftReports }: BulkReportApproverProps) {
         >
           <CheckCircle2 className="h-4 w-4 shrink-0 text-foreground" />
           <span>
-            Pomyślnie opublikowano <strong>{successCount}</strong> raportów dla rodzin pensjonariuszy!
+            Pomyślnie opublikowano <strong>{successCount}</strong> raportów dla rodzin podopiecznych!
           </span>
         </div>
       )}

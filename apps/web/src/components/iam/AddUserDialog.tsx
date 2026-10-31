@@ -108,7 +108,7 @@ export function AddUserDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="new-user-org">ID Placówki / Organizacji (opcjonalne)</Label>
+            <Label htmlFor="new-user-org">ID placówki / organizacji (opcjonalne)</Label>
             <Input
               id="new-user-org"
               type="text"
