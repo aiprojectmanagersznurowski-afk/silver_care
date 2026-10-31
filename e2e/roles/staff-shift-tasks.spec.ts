@@ -16,6 +16,7 @@ const CODE = 'E2E-ZADANIA';
 const CODE_2 = 'E2E-ZADANIA-N';
 const DATE = '2026-11-09';
 const SETTLE_DATE = '2026-11-10';
+const PRINT_DATE = SETTLE_DATE;
 
 test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
   test.describe.configure({ mode: 'serial' });
@@ -143,5 +144,30 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
     await expect(tasks.task('E2E Zadanie widoczne dla personelu')).toBeVisible();
     await expect(tasks.task('E2E Zadanie widoczne dla personelu').getByRole('button')).toHaveCount(0);
     await expect(tasks.approvePlanButton).toHaveCount(0);
+  });
+
+  test('@REQ: NUR-SHIFT-PLAN-PRINT - wydruk planu wymaga akceptacji, pokazuje tylko zadania do zrobienia i zostawia ślad w audycie', async ({ loginPage, page }) => {
+    await seedTask('E2E Zadanie na wydruk', 'TODO');
+    await seedTask('E2E Propozycja poza wydrukiem', 'PROPOSED');
+    await sql`DELETE FROM public.shift_plan_approvals WHERE organization_id = ${orgId} AND shift_date = ${PRINT_DATE}`;
+    await loginPage.loginAs('org_admin');
+    await page.addInitScript(() => { (window as unknown as { __printed: number }).__printed = 0; window.print = () => { (window as unknown as { __printed: number }).__printed++; }; });
+    const tasks = new ShiftTasksPage(page);
+
+    await page.goto(`/staff/shift-plan/print?shift=${CODE}&date=${SETTLE_DATE}`);
+    await expect(page.getByText('Najpierw zatwierdź plan zmiany')).toBeVisible();
+
+    await tasks.goto(CODE, SETTLE_DATE);
+    await tasks.approvePlanButton.click();
+    await expect(tasks.planStatus).toContainText('Plan zatwierdzony');
+    await tasks.printLink.click();
+
+    await expect(page).toHaveURL(/shift-plan\/print/);
+    await expect(page.getByText('E2E Zadanie na wydruk')).toBeVisible();
+    await expect(page.getByText('E2E Propozycja poza wydrukiem')).toHaveCount(0);
+    await tasks.printButton.click();
+    await expect.poll(() => page.evaluate(() => (window as unknown as { __printed: number }).__printed)).toBe(1);
+    const [row] = await sql`SELECT count(*)::int AS n FROM public.audit_logs WHERE organization_id = ${orgId} AND action = 'SHIFT_PLAN_PRINTED'`;
+    expect(row.n).toBeGreaterThan(0);
   });
 });
