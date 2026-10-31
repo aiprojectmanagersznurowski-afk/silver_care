@@ -130,7 +130,7 @@ export function StaffStandardCard({ resident, unansweredInfo }: StaffStandardCar
               </Link>
             </TooltipTrigger>
             <TooltipContent>
-              Otwórz potok głosowy i nagraj obserwację dla pensjonariusza
+              Otwórz potok głosowy i nagraj obserwację dla podopiecznego
             </TooltipContent>
           </Tooltip>
 

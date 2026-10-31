@@ -30,6 +30,9 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
   const [dryRunResult, setDryRunResult] = useState<FacilityDryRunResult | null>(null)
   const [importSuccess, setImportSuccess] = useState<string | null>(null)
   const [onlyValid, setOnlyValid] = useState(false)
+  // ADM-CAPACITY-LIMIT: ostrzeżenie o przekroczeniu limitu miejsc i świadome potwierdzenie przed zapisem
+  const [capacityWarning, setCapacityWarning] = useState<string | null>(null)
+  const [capacityConfirmed, setCapacityConfirmed] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleDownloadTemplate = () => {
@@ -70,6 +73,8 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
         return
       }
       const res = await analyzeFacilityImportAction(rows)
+      setCapacityWarning(res.capacityWarning ?? null)
+      setCapacityConfirmed(false)
       if (res.error) setImportError(res.error)
       else if (res.result) setDryRunResult(res.result)
     } catch (err: unknown) {
@@ -90,13 +95,14 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
       setImportLoading(false)
       return
     }
-    const res = await commitFacilityImportAction(rowsToProcess)
+    const res = await commitFacilityImportAction(rowsToProcess, capacityConfirmed)
     setImportLoading(false)
     if (res.error) {
       setImportError(res.error)
     } else {
       setImportSuccess(`Zaimportowano pomyślnie ${res.importedRooms} pokoi oraz ${res.importedBeds} łóżek.`)
       setDryRunResult(null)
+      setCapacityWarning(null)
       onStructureChanged?.()
     }
   }
@@ -175,6 +181,22 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
                   </div>
                 </div>
               ) : (
+                <>
+                {capacityWarning && (
+                  <div data-testid="capacity-limit-warning" role="alert" className="rounded-lg border border-border bg-muted p-3 text-sm text-foreground space-y-2">
+                    <p className="font-semibold">Przekroczenie limitu miejsc</p>
+                    <p className="text-muted-foreground">{capacityWarning}</p>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={capacityConfirmed}
+                        onChange={(e) => setCapacityConfirmed(e.target.checked)}
+                        className="rounded border-border text-primary focus:ring-primary"
+                      />
+                      <span>Rozumiem, że import przekroczy limit miejsc ustalony przez Administratora platformy</span>
+                    </label>
+                  </div>
+                )}
                 <FacilityDryRunTable
                   dryRunResult={dryRunResult}
                   onlyValid={onlyValid}
@@ -182,8 +204,9 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
                   handleCommitImport={handleCommitImport}
                   importLoading={importLoading}
                   handleDownloadTemplate={handleDownloadTemplate}
-                  onResetFile={() => setDryRunResult(null)}
+                  onResetFile={() => { setDryRunResult(null); setCapacityWarning(null) }}
                 />
+                </>
               )}
 
               {importError && (

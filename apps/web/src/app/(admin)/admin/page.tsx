@@ -58,7 +58,7 @@ export default async function AdminDashboard() {
           </Link>
           <Link href="/admin/facility" className={buttonVariants({ variant: 'outline' })}>
             <Building2 />
-            Struktura ośrodka
+            Struktura placówki
           </Link>
         </CardContent>
       </Card>

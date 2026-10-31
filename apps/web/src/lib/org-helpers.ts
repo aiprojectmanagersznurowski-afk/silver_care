@@ -50,7 +50,7 @@ export function validateOrganizationUpdate(input: OrganizationUpdateInput): Orga
   if (isNaN(limitNum) || limitNum <= 0 || !Number.isInteger(limitNum)) {
     return {
       valid: false,
-      error: 'Limit pensjonariuszy musi być dodatnią liczbą całkowitą.'
+      error: 'Limit miejsc musi być dodatnią liczbą całkowitą.'
     };
   }
 

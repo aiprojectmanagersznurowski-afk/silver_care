@@ -46,7 +46,7 @@ export function maskEmail(email?: string | null): string {
 
 /**
  * Walidacja stanu zaproszenia w oparciu o cykl życia (ADM-INVITE, FAM-ONBOARDING).
- * Komunikaty posługują się terminologią opiekuńczą (podopieczny / pensjonariusz).
+ * Komunikaty posługują się terminologią opiekuńczą (podopieczny).
  */
 export function validateInvitationState(
   invitation: InvitationRecord | null | undefined
