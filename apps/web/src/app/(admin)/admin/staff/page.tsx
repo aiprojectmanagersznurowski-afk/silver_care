@@ -1,5 +1,4 @@
 import { createAdminClient } from '@/lib/supabase/admin'
-import { createClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
 import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
 import { InviteStaffDialog } from '@/components/InviteStaffDialog'
@@ -7,10 +6,10 @@ import { PageHeader, PageHeaderNotice } from '@/components/patterns/PageHeader'
 import { StaffListView, type StaffListItem } from '@/components/staff/StaffListView'
 import { redirect } from 'next/navigation'
 import { getAppRole } from '@/lib/auth/app-role'
+import { getCurrentUser } from '@/lib/supabase/current-user'
 
 export default async function AdminStaffPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   if (!user) {
     redirect('/')

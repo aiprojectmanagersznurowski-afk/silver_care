@@ -100,7 +100,7 @@ export interface ResidentUnansweredStatus {
 }
 
 /**
- * Wylicza mapę statusu oczekujących wiadomości od rodzin per pensjonariusz.
+ * Wylicza mapę statusu oczekujących wiadomości od rodzin per podopieczny.
  */
 export function calculateUnansweredMessagesPerResident(
   messages: RawMessage[]
@@ -184,7 +184,7 @@ export function countAwaitingThreads(messages: RawMessage[]): number {
 }
 
 /**
- * Zgodnie z S3 notifications.contract.mjs — formatuje inicjały pensjonariusza
+ * Zgodnie z S3 notifications.contract.mjs — formatuje inicjały podopiecznego
  * dla powiadomień in-app bez ujawniania pełnego nazwiska.
  */
 export function formatResidentInitials(firstName?: string, lastName?: string): string {

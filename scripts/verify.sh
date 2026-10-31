@@ -93,7 +93,7 @@ else
 fi
 
 # Standard ekranu (ADR-017, audyt UI): wspólne komponenty i tabela jako widok domyślny
-for SCREEN_RULE in ui-default-view-table ui-own-page-heading ui-own-status-badge ui-own-table-frame ui-list-needs-table-view ui-table-cell-size; do
+for SCREEN_RULE in ui-default-view-table ui-own-page-heading ui-own-status-badge ui-own-table-frame ui-list-needs-table-view ui-table-cell-size ui-terminology; do
   SCREEN_VIOLATIONS=$(scan_rule "$SCREEN_RULE")
   if [ -n "$SCREEN_VIOLATIONS" ]; then
     printf "%s\n" "$SCREEN_VIOLATIONS"
@@ -102,6 +102,15 @@ for SCREEN_RULE in ui-default-view-table ui-own-page-heading ui-own-status-badge
     ok "standard ekranu [$SCREEN_RULE] spełniony"
   fi
 done
+
+# WO-NFR-PERF-SCREEN-LOAD etap 2: jedna weryfikacja tożsamości na stronę paneli (getCurrentUser)
+AUTH_VIOLATIONS=$(scan_rule perf-single-auth)
+if [ -n "$AUTH_VIOLATIONS" ]; then
+  printf "%s\n" "$AUTH_VIOLATIONS"
+  bad "layout albo strona panelu woła auth.getUser() bezpośrednio — użyj getCurrentUser() (perf-single-auth)"
+else
+  ok "jedna weryfikacja tożsamości na stronę paneli (getCurrentUser, perf-single-auth)"
+fi
 
 step "7/10 Limit rozmiaru plików aplikacyjnych (max 250 LOC)"
 LOC_VIOLATIONS=$(find apps/web/src -type f \( -name "*.ts" -o -name "*.tsx" \) \

@@ -9,6 +9,7 @@ import { PageHeader } from '@/components/patterns/PageHeader'
 import { StatusBadge } from '@/components/patterns/StatusBadge'
 import { roleLabel } from '@/lib/auth/role-labels'
 import { formatPersonName } from '@/lib/person-name'
+import { getCurrentUser } from '@/lib/supabase/current-user'
 
 const PURPOSE_LABELS: Record<string, { title: string; desc: string }> = {
   wellness_data_ingest: {
@@ -21,13 +22,13 @@ const PURPOSE_LABELS: Record<string, { title: string; desc: string }> = {
   },
   medical_records_access: {
     title: 'Dokumentacja opiekuńcza w placówce',
-    desc: 'Dostęp personelu do notatek i procedur opiekuńczych na terenie ośrodka.',
+    desc: 'Dostęp personelu do notatek i procedur opiekuńczych na terenie placówki.',
   },
 }
 
 export default async function FamilyConsentsPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
   if (!user) return redirect('/')
 
   // Read linked residents
@@ -108,7 +109,7 @@ export default async function FamilyConsentsPage() {
           <CardContent className="text-sm sm:text-sm text-muted-foreground space-y-2">
             <p>
               Twoje konto posiada bezpieczny dostęp wglądu do publikowanych przez personel raportów dobowych oraz planu dnia.
-              Jeśli jesteś formalnym opiekunem prawnym, skontaktuj się z administratorem placówki w celu aktualizacji statusu konta.
+              Jeśli jesteś formalnym opiekunem prawnym, skontaktuj się z kierownikiem placówki w celu aktualizacji statusu konta.
             </p>
           </CardContent>
         </Card>

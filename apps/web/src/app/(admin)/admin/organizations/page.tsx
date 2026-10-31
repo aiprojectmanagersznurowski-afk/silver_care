@@ -6,10 +6,11 @@ import { OrganizationsManagementClient, OrganizationSummaryItem } from '@/compon
 import { CreateOrganizationDialog } from '@/components/CreateOrganizationDialog'
 import { PageHeader } from '@/components/patterns/PageHeader'
 import { getAppRole } from '@/lib/auth/app-role'
+import { getCurrentUser } from '@/lib/supabase/current-user'
 
 export default async function OrganizationsPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   if (!user) {
     redirect('/login')
@@ -31,6 +32,8 @@ interface SuperadminOrgSummaryRow {
   active_resident_count?: number | string | null
   staff_count?: number | string | null
   administrator_count?: number | string | null
+  active_bed_count?: number | string | null
+  over_capacity_limit?: boolean | null
 }
 
   let organizations: OrganizationSummaryItem[] = []
@@ -50,7 +53,9 @@ interface SuperadminOrgSummaryRow {
         created_at: row.created_at,
         active_resident_count: Number(row.active_resident_count || 0),
         staff_count: Number(row.staff_count || 0),
-        administrator_count: Number(row.administrator_count || 0)
+        administrator_count: Number(row.administrator_count || 0),
+        active_bed_count: Number(row.active_bed_count || 0),
+        over_capacity_limit: row.over_capacity_limit === true,
       }))
     }
   } catch (err: unknown) {
@@ -60,8 +65,8 @@ interface SuperadminOrgSummaryRow {
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Zarządzanie Placówkami"
-        description="Rejestr ośrodków, monitorowanie wykorzystania limitów oraz zarządzanie infrastrukturą platformy."
+        title="Zarządzanie placówkami"
+        description="Rejestr placówek, monitorowanie wykorzystania limitów oraz zarządzanie infrastrukturą platformy."
         actions={<CreateOrganizationDialog />}
       />
 

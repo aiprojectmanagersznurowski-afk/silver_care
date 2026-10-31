@@ -138,7 +138,7 @@ export function ExportDataDialog() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-foreground block">Status pensjonariuszy</label>
+            <label className="text-sm font-semibold text-foreground block">Status podopiecznych</label>
             <NativeSelect
               data-testid="export-status-select"
               value={statusFilter}
@@ -160,7 +160,7 @@ export function ExportDataDialog() {
               className="rounded border-border text-primary focus:ring-primary"
             />
             <label htmlFor="export-zsn-only" className="text-sm text-foreground cursor-pointer">
-              Eksportuj wyłącznie pensjonariuszy z pakietem ZSN
+              Eksportuj wyłącznie podopiecznych z pakietem ZSN
             </label>
           </div>
 

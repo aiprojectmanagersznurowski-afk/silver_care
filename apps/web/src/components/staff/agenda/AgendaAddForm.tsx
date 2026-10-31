@@ -156,7 +156,7 @@ export function AgendaAddForm({ residents, onAdd }: AgendaAddFormProps) {
               ))}
             </NativeSelect>
             <p className="text-sm text-muted-foreground">
-              Zadanie ogólne lub skierowane do konkretnego pensjonariusza.
+              Zadanie ogólne lub skierowane do konkretnego podopiecznego.
             </p>
           </div>
 

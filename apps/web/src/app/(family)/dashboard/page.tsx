@@ -4,13 +4,14 @@ import { cookies } from 'next/headers'
 import { mergeAndSortAgenda, AgendaItem } from '@/lib/agenda'
 import { Users } from 'lucide-react'
 import { isMedicalAgendaItem } from '@/lib/agenda-family-visibility'
+import { getCurrentUser } from '@/lib/supabase/current-user'
 
 type ResidentType = { id: string; first_name: string; last_name: string };
 
 export default async function FamilyDashboard(props: { searchParams: Promise<{ date?: string }> }) {
   const searchParams = await props.searchParams;
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   if (!user) return null
 
@@ -60,7 +61,7 @@ export default async function FamilyDashboard(props: { searchParams: Promise<{ d
   const cookieResidentId = cookieStore.get('family_resident_id')?.value
   const activeResident = residents.find(r => r.id === cookieResidentId) || residents[0]
 
-  // Pobieramy raporty tylko dla wybranego pensjonariusza
+  // Pobieramy raporty tylko dla wybranego podopiecznego
   const { data: reports } = await supabase
     .from('daily_reports')
     .select('*')
@@ -81,7 +82,7 @@ export default async function FamilyDashboard(props: { searchParams: Promise<{ d
     }
   }
 
-  // Pobieramy zdjęcia pensjonariusza z wybranego dnia
+  // Pobieramy zdjęcia podopiecznego z wybranego dnia
   const selectedDate = searchParams?.date || new Date().toISOString().split('T')[0]
   const { data: media } = await supabase
     .from('resident_media')

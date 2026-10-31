@@ -1,6 +1,5 @@
 export const dynamic = 'force-dynamic'
 import { ReactNode } from 'react'
-import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { StaffSidebar } from '@/components/StaffSidebar'
 import { cookies } from 'next/headers'
@@ -10,10 +9,10 @@ import { AppHeader } from '@/components/patterns/AppHeader'
 import { StaffVoiceSyncListener } from '@/components/staff/StaffVoiceSyncListener'
 import { SystemAlertBanner } from '@/components/SystemAlertBanner'
 import { getAppRole } from '@/lib/auth/app-role'
+import { getCurrentUser } from '@/lib/supabase/current-user'
 
 export default async function StaffLayout({ children }: { children: ReactNode }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   const role = getAppRole(user)
   if (!user || (role !== 'nurse' && role !== 'org_admin' && role !== 'super_admin')) {

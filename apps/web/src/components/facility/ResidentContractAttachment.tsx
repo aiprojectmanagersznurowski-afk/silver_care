@@ -232,7 +232,7 @@ export function ResidentContractAttachment({
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         title="Usuwanie załącznika umowy"
-        description="Czy na pewno chcesz usunąć załączony dokument umowy tego pensjonariusza? Operacja usunie powiązanie pliku z kartą podopiecznego."
+        description="Czy na pewno chcesz usunąć załączony dokument umowy tego podopiecznego? Operacja usunie powiązanie pliku z kartą podopiecznego."
         confirmLabel="Usuń załącznik"
         cancelLabel="Anuluj"
         variant="destructive"

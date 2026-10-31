@@ -6,10 +6,11 @@ import { redirect } from 'next/navigation'
 import { IamManagementClient, UserItem, AuditLogItem } from '@/components/IamManagementClient'
 import { PageHeader } from '@/components/patterns/PageHeader'
 import { getAppRole } from '@/lib/auth/app-role'
+import { getCurrentUser } from '@/lib/supabase/current-user'
 
 export default async function IamPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   if (!user) {
     redirect('/login')

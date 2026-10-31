@@ -1,12 +1,11 @@
-import { createClient } from '@/lib/supabase/server'
 import { DailyReportClient } from '@/components/DailyReportClient'
 import { PageHeader } from '@/components/patterns/PageHeader'
+import { getCurrentUser } from '@/lib/supabase/current-user'
 
 export default async function DailyReportPage() {
-  const supabase = await createClient()
 
   // Get organization_id from current user
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
   const orgId = user?.app_metadata?.organization_id
 
   return (

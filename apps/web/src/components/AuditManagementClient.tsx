@@ -172,7 +172,7 @@ export function AuditManagementClient({
           </div>
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-            <span>Niezmienialny rejestr zdarzeń (RODO Append-Only) — bez danych wrażliwych pensjonariuszy</span>
+            <span>Niezmienialny rejestr zdarzeń (RODO Append-Only) — bez danych wrażliwych podopiecznych</span>
           </div>
         </div>
       </Card>

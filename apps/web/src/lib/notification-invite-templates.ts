@@ -5,7 +5,7 @@ import {
 } from './notification-base'
 
 /**
- * Szablon e-mail zaproszenia administratora placówki.
+ * Szablon e-mail zaproszenia kierownika placówki.
  */
 export function renderAdminInviteEmail(params: {
   inviteUrl: string
@@ -17,14 +17,14 @@ export function renderAdminInviteEmail(params: {
   const bodyHtml = `
     <p style="margin: 0 0 14px 0;">Dzień dobry,</p>
     <p style="margin: 0 0 14px 0;">
-      Zostałeś mianowany administratorem placówki <strong>„${organizationName}”</strong> w systemie Silver Care.
+      Zostałeś mianowany kierownikiem placówki <strong>„${organizationName}”</strong> w systemie Silver Care.
     </p>
     <p style="margin: 0 0 14px 0;">
       Aby aktywować swoje konto i uzyskać dostęp do panelu zarządzania placówką, kliknij w poniższy przycisk. Link jest aktywny przez <strong>7 dni</strong>.
     </p>
   `
 
-  const text = `Dzień dobry,\n\nZostałeś mianowany administratorem placówki „${organizationName}” w systemie Silver Care.\n\nAby aktywować swoje konto i uzyskać dostęp do panelu zarządzania placówką, przejdź pod poniższy link:\n\n${inviteUrl}\n\nLink jest aktywny przez 7 dni.\n\nPozdrawiamy,\nZespół Silver Care`
+  const text = `Dzień dobry,\n\nZostałeś mianowany kierownikiem placówki „${organizationName}” w systemie Silver Care.\n\nAby aktywować swoje konto i uzyskać dostęp do panelu zarządzania placówką, przejdź pod poniższy link:\n\n${inviteUrl}\n\nLink jest aktywny przez 7 dni.\n\nPozdrawiamy,\nZespół Silver Care`
 
   const html = buildHtmlEmail({
     title: `Zarządzanie placówką ${organizationName}`,
@@ -171,7 +171,7 @@ export function renderAccessRevokedEmail(params: {
   const bodyHtml = `
     <p style="margin: 0 0 14px 0;">Dzień dobry,</p>
     <p style="margin: 0 0 14px 0;">
-      Informujemy, że Twój dostęp do portalu rodziny${orgNote} wygasł lub został cofnięty przez administratora placówki.
+      Informujemy, że Twój dostęp do portalu rodziny${orgNote} wygasł lub został cofnięty przez kierownika placówki.
     </p>
     <p style="margin: 0 0 14px 0;">
       W przypadku pytań prosimy o bezpośredni kontakt z personelem lub dyrekcją placówki.

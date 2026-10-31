@@ -195,3 +195,69 @@ export const CAPACITY_POLICY = {
   }
 } as const;
 
+export const SHIFT_POLICY = {
+  "timezone": "Europe/Warsaw",
+  "shiftsPerDay": {
+    "min": 2,
+    "max": 3
+  },
+  "shiftKey": [
+    "shift_definition_id",
+    "shift_date"
+  ],
+  "crossesMidnightAllowed": true,
+  "leadsPerShift": 1,
+  "rosterSetBy": [
+    "org_admin"
+  ]
+} as const;
+
+export const SHIFT_TASK_POLICY = {
+  "statuses": [
+    "PROPOSED",
+    "TODO",
+    "DONE",
+    "CANCELLED"
+  ],
+  "sources": [
+    "MANUAL",
+    "HANDOVER",
+    "CARE_PLAN"
+  ],
+  "settlementPaths": [
+    "DONE",
+    "CANCELLED",
+    "CARRIED"
+  ],
+  "cancelRequiresReason": true,
+  "carriedOverMarker": "z poprzedniej zmiany",
+  "residentOptional": true,
+  "groupBy": [
+    "room",
+    "resident"
+  ],
+  "visibleToRelatives": false,
+  "planApproval": {
+    "requiredBeforePrint": true,
+    "byRoles": [
+      "nurse:shift_lead",
+      "org_admin"
+    ],
+    "reapprovalOnChange": true
+  },
+  "printFields": [
+    "resident_name",
+    "room",
+    "bed",
+    "task_title",
+    "due_time",
+    "source_label",
+    "assignee"
+  ],
+  "audit": [
+    "SHIFT_TASK_STATUS_CHANGED",
+    "SHIFT_PLAN_APPROVED",
+    "SHIFT_PLAN_PRINTED"
+  ]
+} as const;
+
