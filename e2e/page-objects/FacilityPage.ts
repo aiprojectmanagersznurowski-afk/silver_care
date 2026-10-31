@@ -26,6 +26,14 @@ export class FacilityPage {
   readonly voiceTabButton: Locator;
   readonly exportTabButton: Locator;
   readonly importTabButton: Locator;
+  readonly addBedButtons: Locator;
+  readonly bedLabelInput: Locator;
+  readonly saveBedButton: Locator;
+  readonly capacityWarning: Locator;
+  readonly confirmCapacityButton: Locator;
+  readonly importFileInput: Locator;
+  readonly commitImportButton: Locator;
+  readonly confirmImportCapacityCheckbox: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -47,6 +55,29 @@ export class FacilityPage {
     this.voiceTabButton = page.getByRole('button', { name: 'Dodaj głosowo' });
     this.exportTabButton = page.getByRole('button', { name: 'Eksport' });
     this.importTabButton = page.getByRole('button', { name: 'Import Excel (.xlsx)' });
+    this.addBedButtons = page.locator('[data-testid="room-card"]').getByRole('button', { name: 'Dodaj łóżko' });
+    this.bedLabelInput = page.locator('#label');
+    this.saveBedButton = page.getByRole('button', { name: 'Zapisz' });
+    this.capacityWarning = page.locator('[data-testid="capacity-limit-warning"]');
+    this.confirmCapacityButton = page.getByRole('button', { name: 'Dodaj mimo przekroczenia limitu' });
+    this.importFileInput = page.locator('#facility-import-input');
+    this.commitImportButton = page.getByRole('button', { name: /Zatwierdź import/ });
+    this.confirmImportCapacityCheckbox = page.getByRole('checkbox', { name: /Rozumiem, że import przekroczy limit miejsc/ });
+  }
+
+  /** Otwiera zakładkę importu i wgrywa plik CSV ze strukturą (nagłówek + wiersze: piętro, pokój, sektor, liczba łóżek, etykiety). */
+  async uploadFacilityCsv(fileName: string, csv: string) {
+    await this.openImportExport();
+    await this.importTabButton.click();
+    await this.importFileInput.setInputFiles({ name: fileName, mimeType: 'text/csv', buffer: Buffer.from(csv, 'utf8') });
+  }
+
+  /** Otwiera dialog „Dodaj łóżko” w pierwszym pokoju widoku kafelków i wpisuje oznaczenie. */
+  async startAddingBed(label: string) {
+    await this.switchToGrid();
+    await this.addBedButtons.first().click();
+    await this.bedLabelInput.fill(label);
+    await this.saveBedButton.click();
   }
 
   /** Otwiera dialog Import / Eksport struktury placówki. */

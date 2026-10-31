@@ -42,7 +42,7 @@ export async function POST(req: Request) {
     const audioUrl = body.audio_url || 'local-pending-storage'
 
     if (!residentId) {
-      return NextResponse.json({ error: 'Brak identyfikatora pensjonariusza' }, { status: 400 })
+      return NextResponse.json({ error: 'Brak identyfikatora podopiecznego' }, { status: 400 })
     }
 
     const adminClient = createAdminClient()

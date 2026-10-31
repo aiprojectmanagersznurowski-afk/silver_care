@@ -30,7 +30,7 @@ export function BedStatusBadge({ bed }: { bed: BedItem }) {
 
 const CARE_LABEL: Record<string, string> = { bedridden: 'Leżący', sitting: 'Na wózku' }
 
-/** Pensjonariusz przypisany do łóżka — fakty (płeć, ZSN, poziom opieki), bez oceny. */
+/** Podopieczny przypisany do łóżka — fakty (płeć, ZSN, poziom opieki), bez oceny. */
 export function BedResident({ bed }: { bed: BedItem }) {
   const r = bed.active_assignment?.resident
   if (!r) return <span className="text-sm text-muted-foreground">Brak przypisania</span>
@@ -65,7 +65,7 @@ export function BedRowActions({ bed, roomNumber, floor, onDeactivate, onUnassign
               {
                 label: 'Wypisz',
                 icon: LogOut,
-                hint: 'Zwolnij to łóżko i usuń bieżące przypisanie pensjonariusza',
+                hint: 'Zwolnij to łóżko i usuń bieżące przypisanie podopiecznego',
                 onSelect: () => onUnassignClick({ bedId: bed.id, residentId: resident.id, residentName }),
               },
             ]
@@ -76,7 +76,7 @@ export function BedRowActions({ bed, roomNumber, floor, onDeactivate, onUnassign
           separated: true,
           disabled: !!resident,
           hint: resident
-            ? 'Nie można dezaktywować zajętego łóżka — najpierw wypisz pensjonariusza'
+            ? 'Nie można dezaktywować zajętego łóżka — najpierw wypisz podopiecznego'
             : 'Wyłącz łóżko z puli dostępnych w placówce',
           onSelect: () => onDeactivate(bed.id, false),
         },

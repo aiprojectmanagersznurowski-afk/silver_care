@@ -59,7 +59,7 @@ export function isEuEndpoint(endpoint: string): boolean {
  * przed podpisaniem DPA z Groq na te etapy (PROVIDERS.GROQ_DEMO_LLM w
  * integration.contract.mjs). Wymaga jawnej, osobnej od GROQ_API_KEY zmiennej —
  * sama obecność klucza transkrypcji nic nie aktywuje. Wyłącznie dane syntetyczne/
- * demonstracyjne: zakaz użycia z rzeczywistymi danymi pensjonariuszy do czasu
+ * demonstracyjne: zakaz użycia z rzeczywistymi danymi podopiecznych do czasu
  * podpisania DPA (operacyjne, nie wymuszone tu technicznie — tak jak zerowa
  * retencja Groq dla TRANSCRIBE w ADR-009 jest przełącznikiem w panelu, nie kodem).
  */
@@ -106,7 +106,7 @@ function ensureEnvLoaded() {
  * przed podpisaniem DPA z Groq na te etapy (PROVIDERS.GROQ_DEMO_LLM w
  * integration.contract.mjs). Wymaga jawnej, osobnej od GROQ_API_KEY zmiennej —
  * sama obecność klucza transkrypcji nic nie aktywuje. Wyłącznie dane syntetyczne/
- * demonstracyjne: zakaz użycia z rzeczywistymi danymi pensjonariuszy do czasu
+ * demonstracyjne: zakaz użycia z rzeczywistymi danymi podopiecznych do czasu
  * podpisania DPA (operacyjne, nie wymuszone tu technicznie — tak jak zerowa
  * retencja Groq dla TRANSCRIBE w ADR-009 jest przełącznikiem w panelu, nie kodem).
  */

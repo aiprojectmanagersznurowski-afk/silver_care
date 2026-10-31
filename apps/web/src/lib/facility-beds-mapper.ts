@@ -2,7 +2,7 @@
  * Zapytanie i mapowanie łóżek z aktywnym przypisaniem (GET /api/facility/beds).
  *
  * Widok łóżek renderuje BusinessIdBadge z bed.active_assignment.resident.id, więc trasa musi
- * zwracać id pensjonariusza (bez niego formatBusinessId robi undefined.replace i panel się
+ * zwracać id podopiecznego (bez niego formatBusinessId robi undefined.replace i panel się
  * wywraca). Do przeglądarki trafiają wyłącznie pola potrzebne widokowi — bez pesel_hash.
  *
  * @REQ: ADM-FACILITY-OCCUPANCY
@@ -52,7 +52,7 @@ function pickResident(resident: RawResident, residentId: string) {
   }
 }
 
-/** Zostawia tylko aktywne przypisanie (bez zwolnionych) i whitelistuje pola pensjonariusza. */
+/** Zostawia tylko aktywne przypisanie (bez zwolnionych) i whitelistuje pola podopiecznego. */
 export function mapBedsWithActiveAssignment(beds: RawBed[]) {
   return beds.map((bed) => {
     const active = bed.assignments?.find((a) => !a.unassigned_at)

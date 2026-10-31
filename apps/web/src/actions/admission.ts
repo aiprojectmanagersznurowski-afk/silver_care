@@ -6,6 +6,10 @@ import { revalidatePath } from 'next/cache'
 import { parseNationalId, suggestBeds, BedCandidate, BedSuggestion } from '@/lib/admission-helpers'
 import { hashNationalId } from '@/lib/national-id-hash'
 import { isImpersonationSessionActive, assertMutationAllowedDuringImpersonation, safeGetCookieStore } from '@/lib/impersonation-guards'
+import {
+  evaluateCapacity, buildCapacityExceededAudit, capacityWarningMessage,
+  countPresentResidents, RESIDENT_PRESENCE_COLUMNS, ResidentPresenceFields,
+} from '@/lib/capacity-limit'
 
 interface ActiveAssignmentRecord {
   bed_id: string
@@ -120,7 +124,29 @@ export async function admitResidentAction(formData: FormData) {
 
   const role = user.app_metadata?.role
   if (role !== 'org_admin' && role !== 'super_admin') {
-    return { error: 'Tylko administrator placówki może przyjmować pensjonariuszy.' }
+    return { error: 'Tylko kierownik placówki może przyjmować podopiecznych.' }
+  }
+
+  // ADM-CAPACITY-LIMIT: przyjęcie ponad limit miejsc dopiero po świadomym potwierdzeniu (SC-ADM-22/AC3).
+  // Liczymy podopiecznych przebywających w placówce, bo przyjęcie jest możliwe także bez łóżka.
+  const orgId = user.app_metadata?.organization_id as string | undefined
+  let capacity: ReturnType<typeof evaluateCapacity> | null = null
+  if (orgId) {
+    const [{ data: org }, { data: residents }] = await Promise.all([
+      supabase.from('organizations').select('resident_limit').eq('id', orgId).single(),
+      supabase.from('residents').select(RESIDENT_PRESENCE_COLUMNS).eq('organization_id', orgId).is('archived_at', null),
+    ])
+    capacity = evaluateCapacity({
+      operation: 'resident_admit',
+      residentLimit: Number(org?.resident_limit ?? 50),
+      currentBeds: 0,
+      currentResidents: countPresentResidents((residents || []) as ResidentPresenceFields[]),
+      added: 1,
+    })
+    if (capacity.exceeds && formData.get('confirmCapacityExceed') !== 'true') {
+      const warning = capacityWarningMessage(capacity)
+      return { error: warning, capacityWarning: warning }
+    }
   }
 
   const computedHash = hashNationalId(idValue)
@@ -139,12 +165,24 @@ export async function admitResidentAction(formData: FormData) {
 
   if (error) {
     if (error.message.includes('already occupied')) {
-      return { error: 'Wybrane łóżko jest już zajęte przez innego pensjonariusza.' }
+      return { error: 'Wybrane łóżko jest już zajęte przez innego podopiecznego.' }
     }
     if (error.message.includes('already exists')) {
-      return { error: 'Pensjonariusz o tym numerze PESEL jest już zarejestrowany w placówce.' }
+      return { error: 'Podopieczny o tym numerze PESEL jest już zarejestrowany w placówce.' }
     }
-    return { error: 'Błąd przyjęcia pensjonariusza: ' + error.message }
+    return { error: 'Błąd przyjęcia podopiecznego: ' + error.message }
+  }
+
+  if (capacity?.exceeds && orgId) {
+    const audit = buildCapacityExceededAudit(capacity)
+    const { error: auditErr } = await supabase.from('audit_logs').insert({
+      organization_id: orgId,
+      resident_id: null,
+      action: audit.action,
+      performed_by: user.id,
+      payload: audit.payload,
+    })
+    if (auditErr) console.error('[CAPACITY_AUDIT_FAIL]', auditErr.code)
   }
 
   revalidatePath('/admin/residents')
@@ -156,6 +194,6 @@ export async function admitResidentAction(formData: FormData) {
     success: true,
     residentId: resData?.resident_id,
     bedAssignmentId: resData?.bed_assignment_id,
-    message: `Pomyślnie przyjęto pensjonariusza ${firstName} ${lastName}${bedId ? ' i przypisano łóżko' : ''}.`,
+    message: `Pomyślnie przyjęto podopiecznego ${firstName} ${lastName}${bedId ? ' i przypisano łóżko' : ''}.`,
   }
 }

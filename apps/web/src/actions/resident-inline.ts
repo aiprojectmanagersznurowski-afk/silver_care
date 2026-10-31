@@ -51,7 +51,7 @@ export async function updateResidentInlineAction(
   if (!role || !allowedRoles.includes(role)) {
     return {
       success: false,
-      error: 'Brak uprawnień do edycji podopiecznego (wymagana rola administratora placówki).',
+      error: 'Brak uprawnień do edycji podopiecznego (wymagana rola kierownika placówki).',
     }
   }
 

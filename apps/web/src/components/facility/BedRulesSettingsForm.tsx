@@ -65,7 +65,7 @@ export function BedRulesSettingsForm({ initialRules }: BedRulesSettingsFormProps
             Preferuj parter dla osób leżących i ZSN
           </Label>
           <p className="text-xs text-muted-foreground">
-            Sugeruje przeniesienie pensjonariuszy z ograniczoną mobilnością i ZSN na parter.
+            Sugeruje przeniesienie podopiecznych z ograniczoną mobilnością i ZSN na parter.
           </p>
         </div>
         <Switch
