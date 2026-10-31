@@ -2,8 +2,8 @@
  * @REQ: ORG-ISOLATION
  * @REQ: ADM-INVITE
  *
- * Autoryzacja celu zaproszenia bliskiego: pensjonariusz musi należeć do placówki
- * z tokenu wywołującego. Nieistniejący i obcy pensjonariusz dają tę samą odpowiedź,
+ * Autoryzacja celu zaproszenia bliskiego: podopieczny musi należeć do placówki
+ * z tokenu wywołującego. Nieistniejący i obcy podopieczny dają tę samą odpowiedź,
  * żeby endpoint nie był wyrocznią istnienia rekordów innych placówek.
  */
 
@@ -20,7 +20,7 @@ export type InviteTargetDecision =
 export function authorizeInviteTarget({ appRole, tokenOrgId, residentOrgId }: InviteTargetInput): InviteTargetDecision {
   if (!residentOrgId) return { ok: false, status: 404 };
 
-  // super_admin bez przypisanej placówki działa globalnie i dziedziczy placówkę pensjonariusza
+  // super_admin bez przypisanej placówki działa globalnie i dziedziczy placówkę podopiecznego
   if (appRole === 'super_admin' && !tokenOrgId) {
     return { ok: true, organizationId: residentOrgId };
   }

@@ -84,13 +84,13 @@ export default function BedList({ roomId, roomNumber, floor, onUpdate }: BedList
         body: JSON.stringify({ bed_id: unassignTarget.bedId, resident_id: unassignTarget.residentId }),
       })
       if (res.ok) {
-        toast.success('Pensjonariusz został pomyślnie wypisany z łóżka')
+        toast.success('Podopieczny został pomyślnie wypisany z łóżka')
         setUnassignTarget(null)
         fetchBeds()
         onUpdate()
       } else {
         const data = await res.json()
-        toast.error(data.error || 'Nie udało się wypisać pensjonariusza')
+        toast.error(data.error || 'Nie udało się wypisać podopiecznego')
       }
     } catch (error) {
       console.error(error)
@@ -129,7 +129,7 @@ export default function BedList({ roomId, roomNumber, floor, onUpdate }: BedList
               key={bed.id}
               title={bedDisplayLabel(bed)}
               badges={<BedStatusBadge bed={bed} />}
-              meta={[{ label: 'Pensjonariusz', value: <BedResident bed={bed} /> }]}
+              meta={[{ label: 'Podopieczny', value: <BedResident bed={bed} /> }]}
               actions={<BedRowActions bed={bed} roomNumber={roomNumber} floor={floor} onDeactivate={handleDeactivate} onUnassignClick={setUnassignTarget} onRefresh={refresh} />}
             />
           ))}
@@ -142,7 +142,7 @@ export default function BedList({ roomId, roomNumber, floor, onUpdate }: BedList
             <TableRow>
               <TableHead className="w-[120px]">Łóżko</TableHead>
               <TableHead className="w-[100px]">Status</TableHead>
-              <TableHead>Pensjonariusz</TableHead>
+              <TableHead>Podopieczny</TableHead>
               <TableHead className="text-right">Akcje</TableHead>
             </TableRow>
           </TableHeader>
@@ -167,8 +167,8 @@ export default function BedList({ roomId, roomNumber, floor, onUpdate }: BedList
       <ConfirmDialog
         open={!!unassignTarget}
         onOpenChange={(open) => { if (!open) setUnassignTarget(null) }}
-        title="Wypisanie pensjonariusza z łóżka"
-        description={unassignTarget ? `Czy na pewno chcesz wypisać pensjonariusza (${unassignTarget.residentName}) z tego łóżka? Miejsce w pokoju zostanie natychmiast zwolnione.` : undefined}
+        title="Wypisanie podopiecznego z łóżka"
+        description={unassignTarget ? `Czy na pewno chcesz wypisać podopiecznego (${unassignTarget.residentName}) z tego łóżka? Miejsce w pokoju zostanie natychmiast zwolnione.` : undefined}
         confirmLabel="Wypisz z łóżka"
         cancelLabel="Anuluj"
         variant="destructive"

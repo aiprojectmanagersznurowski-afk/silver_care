@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { renderReportPublishedEmail, renderReportPublishedSms } from '@/lib/notification-templates'
+import { renderCapacityExceededEmail, selectCapacityRecipients, CapacityNotificationId } from '@/lib/capacity-notifications'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,7 +10,14 @@ interface OutboxRecord {
   organization_id: string
   entity_type: string
   entity_id: string
-  payload: { message?: string }
+  payload: {
+    message?: string
+    notification_id?: CapacityNotificationId
+    counts?: 'beds' | 'residents'
+    resident_limit?: number
+    projected_count?: number
+    excess?: number
+  }
   status: string
   attempts: number
   max_attempts: number
@@ -17,6 +25,49 @@ interface OutboxRecord {
 
 interface FamilyLinkRecord {
   relative_user_id: string
+}
+
+/** A4/A5 (ADM-CAPACITY-LIMIT): e-mail do kierowników placówki albo super adminów, bez danych podopiecznych. */
+async function deliverCapacityExceeded(
+  adminClient: ReturnType<typeof createAdminClient>,
+  notification: OutboxRecord,
+  mailtrapToken: string | undefined,
+  request: Request
+) {
+  const p = notification.payload
+  if (!p.notification_id || !p.counts) throw new Error('Capacity notification without notification_id or counts')
+
+  const { data: usersPage, error: usersErr } = await adminClient.auth.admin.listUsers({ perPage: 1000 })
+  if (usersErr) throw new Error(`listUsers failure: ${usersErr.message}`)
+  const recipients = selectCapacityRecipients(usersPage.users, { notificationId: p.notification_id, organizationId: notification.organization_id })
+
+  const { data: org } = await adminClient.from('organizations').select('name').eq('id', notification.organization_id).maybeSingle()
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || new URL(request.url).origin
+  const template = renderCapacityExceededEmail({
+    notificationId: p.notification_id,
+    residentLimit: Number(p.resident_limit),
+    projected: Number(p.projected_count),
+    excess: Number(p.excess),
+    counts: p.counts,
+    portalUrl: `${baseUrl}/login`,
+    organizationName: p.notification_id === 'A5' ? org?.name ?? undefined : undefined,
+  })
+
+  if (!mailtrapToken || recipients.length === 0) return
+  for (const email of recipients) {
+    const res = await fetch('https://send.api.mailtrap.io/api/send', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${mailtrapToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: [{ email }],
+        from: { email: 'noreply@silvercare.space', name: 'Silver Care' },
+        subject: template.subject,
+        text: template.text,
+        html: template.html,
+      }),
+    })
+    if (!res.ok) throw new Error(`Mailtrap failure code ${res.status}`)
+  }
 }
 
 export async function GET(request: Request) {
@@ -153,6 +204,11 @@ export async function GET(request: Request) {
               }
             }
           }
+        } else if (notification.entity_type === 'capacity_exceeded') {
+          await deliverCapacityExceeded(adminClient, notification, mailtrapToken, request)
+        } else {
+          // Nieznany typ nie może być oznaczony jako wysłany bez wysyłki
+          throw new Error(`Unsupported outbox entity_type: ${notification.entity_type}`)
         }
       } catch (err: unknown) {
         success = false

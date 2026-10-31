@@ -64,7 +64,7 @@ export default function AssignBedDialog({ bedId, onAssigned, open: openProp, onO
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!residentId) {
-      setError('Wybierz pensjonariusza')
+      setError('Wybierz podopiecznego')
       return
     }
 
@@ -83,7 +83,7 @@ export default function AssignBedDialog({ bedId, onAssigned, open: openProp, onO
       const data = await res.json()
 
       if (!res.ok) {
-        throw new Error(data.error || 'Nie udało się przypisać pensjonariusza')
+        throw new Error(data.error || 'Nie udało się przypisać podopiecznego')
       }
 
       setResidentId('')
@@ -107,9 +107,9 @@ export default function AssignBedDialog({ bedId, onAssigned, open: openProp, onO
       <DialogContent className="sm:max-w-lg md:max-w-xl p-6">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Przypisz pensjonariusza</DialogTitle>
+            <DialogTitle>Przypisz podopiecznego</DialogTitle>
             <DialogDescription>
-              Wybierz pensjonariusza z listy, aby przypisać go do tego łóżka.
+              Wybierz podopiecznego z listy, aby przypisać go do tego łóżka.
               Jeżeli ma on przypisanie do innego łóżka, zostanie przeniesiony.
             </DialogDescription>
           </DialogHeader>
@@ -119,11 +119,11 @@ export default function AssignBedDialog({ bedId, onAssigned, open: openProp, onO
             )}
             <div className="space-y-1.5">
               <Label htmlFor="resident">
-                Pensjonariusz
+                Podopieczny
               </Label>
               <div>
                 {isFetching ? (
-                  <div className="text-sm text-muted-foreground py-2">Ładowanie pensjonariuszy...</div>
+                  <div className="text-sm text-muted-foreground py-2">Ładowanie podopiecznych...</div>
                 ) : (
                   <NativeSelect
                     id="resident" className="flex w-full placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"

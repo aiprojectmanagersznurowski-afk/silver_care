@@ -13,6 +13,7 @@ import {
   evaluateCapacityExceeded,
 } from '@/lib/bulk-import-helpers'
 import { hashNationalId } from '@/lib/national-id-hash'
+import { countPresentResidents, RESIDENT_PRESENCE_COLUMNS, ResidentPresenceFields } from '@/lib/capacity-limit'
 
 export async function analyzeBulkImportAction(rows: RawResidentRow[]): Promise<{
   error?: string
@@ -30,14 +31,14 @@ export async function analyzeBulkImportAction(rows: RawResidentRow[]): Promise<{
   // Pobierz wszystkie istniejące pesel_hash z tej placówki oraz status archiwizacji
   const { data: existing, error: existingErr } = await adminClient
     .from('residents')
-    .select('pesel_hash, archived_at')
+    .select(`pesel_hash, ${RESIDENT_PRESENCE_COLUMNS}`)
     .eq('organization_id', orgId)
 
   if (existingErr) {
     return { error: 'Błąd sprawdzania bazy danych: ' + existingErr.message }
   }
 
-  // Pobierz zadeklarowaną pojemność placówki
+  // Pobierz limit miejsc placówki
   const { data: orgData } = await adminClient
     .from('organizations')
     .select('resident_limit')
@@ -45,7 +46,8 @@ export async function analyzeBulkImportAction(rows: RawResidentRow[]): Promise<{
     .single()
 
   const residentLimit = Number(orgData?.resident_limit || 50)
-  const currentActiveCount = (existing || []).filter((r) => !r.archived_at).length
+  // Miejsce zajmują tylko podopieczni przebywający w placówce (ADM-CAPACITY-LIMIT, decyzja Michała 2026-10-29)
+  const currentActiveCount = countPresentResidents((existing || []) as unknown as ResidentPresenceFields[])
   const existingHashes = new Set<string>(
     (existing || []).map((r) => r.pesel_hash).filter((h): h is string => Boolean(h))
   )
@@ -81,7 +83,7 @@ export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[
 
   const role = user.app_metadata?.role
   if (role !== 'org_admin' && role !== 'super_admin') {
-    return { error: 'Tylko administrator placówki może wykonywać masowy import.' }
+    return { error: 'Tylko kierownik placówki może wykonywać masowy import.' }
   }
 
   const validRows = rowsToImport.filter((r) => r.isValid)
@@ -124,13 +126,13 @@ export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[
 
   // Limit miejsc zmienia wyłącznie super admin (CAPACITY_POLICY, ADM-CAPACITY-LIMIT) — import go nie podnosi,
   // tylko odnotowuje przekroczenie w audycie
-  const { count: totalActiveCount } = await adminClient
+  const { data: presentRows } = await adminClient
     .from('residents')
-    .select('*', { count: 'exact', head: true })
+    .select(RESIDENT_PRESENCE_COLUMNS)
     .eq('organization_id', orgId)
     .is('archived_at', null)
 
-  const activeTotal = totalActiveCount || totalImported
+  const activeTotal = countPresentResidents((presentRows || []) as ResidentPresenceFields[]) || totalImported
 
   const { data: orgRecord } = await adminClient
     .from('organizations')

@@ -13,7 +13,7 @@ export async function POST(req: Request) {
     const eventType = eventPayload.event || eventPayload['event_type'] || 'PING'
 
     if (externalUserId) {
-      // Znajdź powiązanie pensjonariusza
+      // Znajdź powiązanie podopiecznego
       const { data: link } = await supabase
         .from('external_wearable_links')
         .select('id, organization_id, resident_id')

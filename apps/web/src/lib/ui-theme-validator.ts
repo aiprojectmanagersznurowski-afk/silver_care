@@ -11,7 +11,7 @@ import { TYPOGRAPHY, ACCESSIBILITY, COLORS, LAYOUT_PRINCIPLES } from '@silvercar
 
 /**
  * Walidacja neutralności kolorów poziomów opieki (ADR-005, MDR-NO-INTERPRETATION).
- * Poziomy opieki nie mogą używać czerwieni ani oceniania stanu pensjonariusza.
+ * Poziomy opieki nie mogą używać czerwieni ani oceniania stanu podopiecznego.
  */
 export function validateCareLevelNeutrality(
   careLevelColors: Record<string, string>,

@@ -201,7 +201,7 @@ export function generateRelocationSuggestions(
           toRoomId: targetRoom.id,
           toRoomNumber: targetRoom.number,
           toFloor: targetRoom.floor,
-          reason: 'Pensjonariusz objęty ZSN — przeniesienie na parter bliżej dyżurki personelu.',
+          reason: 'Podopieczny objęty ZSN — przeniesienie na parter bliżej dyżurki personelu.',
           priority: 'medium',
           scoreImprovement: 15,
         })
