@@ -132,3 +132,111 @@ export const RESIDENT_STATUS_LABELS: Record<ResidentStatusKey, string> = {
   deceased: 'Zgon',
   archived: 'Zarchiwizowany',
 }
+
+export interface DeathInitiationPayloadInput {
+  residentId: string
+  deathDate: string
+  notes?: string | null
+}
+
+export interface ValidDeathInitiationPayload {
+  residentId: string
+  deathDate: string
+  notes: string | null
+}
+
+export type DeathInitiationValidationResult =
+  | { isValid: true; data: ValidDeathInitiationPayload }
+  | { isValid: false; errors: string[] }
+
+export const DEATH_INITIATION_MARKER = '[Zgłoszenie zgonu — oczekuje na zatwierdzenie umowy]'
+
+export function canInitiateDeathProcedure(
+  role: string | undefined,
+  isImpersonating: boolean
+): boolean {
+  if (isImpersonating) return false
+  return role === 'nurse' || role === 'org_admin'
+}
+
+export function validateDeathInitiationPayload(
+  input: unknown
+): DeathInitiationValidationResult {
+  const res = validateDischargePayload({
+    ...(input && typeof input === 'object' ? input : {}),
+    contractEndDate: (input as Partial<DeathInitiationPayloadInput>)?.deathDate,
+    contractEndReason: 'death',
+  })
+
+  if (!res.isValid) {
+    return { isValid: false, errors: res.errors }
+  }
+
+  return {
+    isValid: true,
+    data: {
+      residentId: res.data.residentId,
+      deathDate: res.data.deathDate!,
+      notes: res.data.notes,
+    },
+  }
+}
+
+export function buildPostMortemSanitizationTasks(params: {
+  residentId: string
+  targetDate: string
+  bedLabel?: string | null
+}) {
+  const bedInfo = params.bedLabel ? ` (${params.bedLabel})` : ''
+  return [
+    {
+      resident_id: params.residentId,
+      target_date: params.targetDate,
+      time: '08:00',
+      type: 'staff_only',
+      title: 'Procedura po zgonie: wezwanie lekarza do stwierdzenia zgonu i karty zgonu',
+      family_visible: false,
+    },
+    {
+      resident_id: params.residentId,
+      target_date: params.targetDate,
+      time: '09:00',
+      type: 'staff_only',
+      title: 'Procedura po zgonie: zabezpieczenie i spis depozytu rzeczy osobistych',
+      family_visible: false,
+    },
+    {
+      resident_id: params.residentId,
+      target_date: params.targetDate,
+      time: '10:00',
+      type: 'staff_only',
+      title: `Sanityzacja i dezynfekcja zwolnionego miejsca${bedInfo}`,
+      family_visible: false,
+    },
+  ]
+}
+
+export function formatDeathInitiationNote(params: {
+  existingNotes?: string | null
+  deathDate: string
+  unassignedBedLabel?: string | null
+  notes?: string | null
+}): string {
+  const bedPart = params.unassignedBedLabel
+    ? ` | Zwolniono do dezynfekcji: ${params.unassignedBedLabel}`
+    : ''
+  const customPart = params.notes ? ` — ${params.notes.trim()}` : ''
+  const line = `${DEATH_INITIATION_MARKER} (data zgonu: ${params.deathDate}${bedPart})${customPart}`
+  const base = params.existingNotes?.trim()
+  return base ? `${base}\n${line}` : line
+}
+
+export function hasPendingDeathInitiation(resident: {
+  notes?: string | null
+  death_date?: string | null
+  death_reported_at?: string | null
+}): boolean {
+  if (resident.death_date) return false
+  if (resident.death_reported_at) return true
+  return Boolean(resident.notes && resident.notes.includes(DEATH_INITIATION_MARKER))
+}

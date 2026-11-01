@@ -18,8 +18,8 @@ test.describe('Zakończenie pobytu pensjonariusza i rejestracja zgonu (@REQ: ADM
     await page.goto('/admin/residents');
     await page.waitForLoadState('domcontentloaded');
 
-    // 3. Wybierz pierwszego aktywnego podopiecznego
-    const firstResidentLink = page.locator('table tbody tr a').first();
+    // 3. Wybierz pierwszego aktywnego podopiecznego (tabela na desktopie lub karta na mobile)
+    const firstResidentLink = page.locator('a[href^="/admin/residents/"]:visible').first();
     await expect(firstResidentLink).toBeVisible({ timeout: 10000 });
     await firstResidentLink.click();
 
@@ -65,6 +65,42 @@ test.describe('Zakończenie pobytu pensjonariusza i rejestracja zgonu (@REQ: ADM
     ).toBeVisible();
 
     // 10. Zamknięcie dialogu przyciskiem Anuluj
+    const cancelButton = page.locator('div[role="dialog"] button:has-text("Anuluj")');
+    await cancelButton.click();
+    await expect(dialogTitle).not.toBeVisible();
+  });
+
+  test('personel opiekuńczy (nurse) ma wyłącznie opcję inicjacji zgłoszenia zgonu bez edycji danych i rozwiązania umowy', async ({
+    loginPage,
+    page,
+  }) => {
+    await loginPage.loginAs('nurse');
+
+    await page.goto('/staff');
+    await page.waitForLoadState('domcontentloaded');
+
+    const firstResidentLink = page.locator('a[href^="/staff/residents/"]:visible').first();
+    await expect(firstResidentLink).toBeVisible({ timeout: 10000 });
+    await firstResidentLink.click();
+
+    await expect(page).toHaveURL(/\/staff\/residents\/[a-f0-9-]+/);
+
+    // Brak pełnej edycji danych i pełnego rozwiązania umowy
+    await expect(page.locator('button:has-text("Edytuj dane")')).not.toBeVisible();
+    await expect(page.locator('button:has-text("Zakończ pobyt")')).not.toBeVisible();
+
+    // Obecny wyłącznie przycisk operacyjnej inicjacji zgłoszenia zgonu
+    const initiateDeathBtn = page.locator('button:has-text("Zgłoś zgon")').first();
+    await expect(initiateDeathBtn).toBeVisible();
+    await initiateDeathBtn.click();
+
+    const dialogTitle = page.locator('div[role="dialog"] h2:has-text("Zgłoszenie zgonu podopiecznego")');
+    await expect(dialogTitle).toBeVisible();
+
+    // Widoczne wyłącznie pole daty zgonu i uwagi (brak wyboru powodów umowy)
+    await expect(page.locator('#death-date')).toBeVisible();
+    await expect(page.locator('#discharge-reason')).not.toBeVisible();
+
     const cancelButton = page.locator('div[role="dialog"] button:has-text("Anuluj")');
     await cancelButton.click();
     await expect(dialogTitle).not.toBeVisible();

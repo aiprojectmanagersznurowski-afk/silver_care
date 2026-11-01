@@ -56,6 +56,7 @@ export interface FullResidentData {
   avatar_url?: string | null
   archived_at?: string | null
   death_date?: string | null
+  death_reported_at?: string | null
   contract_end_date?: string | null
   contract_end_reason?: string | null
   contract_source?: string | null
