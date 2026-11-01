@@ -2,26 +2,21 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { Bed, CheckCircle2, Mic, Loader2, MessageSquare } from 'lucide-react'
+import { Bed, CheckCircle2, Mic, MessageSquare } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { getActiveAssignment, UnansweredInfo } from './staff-board-types'
 import { formatPersonName } from '@/lib/person-name'
+import { filterCurrentShiftNotes, formatNotesCount } from '@/lib/shift'
 
 interface StaffQuickRoundsCardProps {
   resident: Record<string, unknown>
-  isLogged: boolean
-  isSubmitting: boolean
   unansweredInfo?: UnansweredInfo
-  onQuickLog: (residentId: string) => void
 }
 
 export function StaffQuickRoundsCard({
   resident,
-  isLogged,
-  isSubmitting,
   unansweredInfo,
-  onQuickLog,
 }: StaffQuickRoundsCardProps) {
   const resId = resident.id as string
   const active = getActiveAssignment(resident)
@@ -30,6 +25,9 @@ export function StaffQuickRoundsCard({
   const bedLabel = beds?.label as string | undefined
   const roomNumber = rooms?.number as string | undefined
   const hasUnanswered = Boolean(unansweredInfo?.hasUnanswered)
+
+  const drafts = (resident.voice_draft_notes || []) as Array<{ created_at?: string; status?: string }>
+  const notesCount = filterCurrentShiftNotes(drafts).length
 
   return (
     <div className="bg-card rounded-xl border border-border p-5 space-y-4 hover:border-primary/40 transition-colors">
@@ -62,12 +60,13 @@ export function StaffQuickRoundsCard({
           </div>
         </div>
 
-        {isLogged && (
-          <span className="inline-flex items-center gap-1 text-sm font-semibold text-foreground bg-muted px-2.5 py-1 rounded-full border border-border">
-            <CheckCircle2 className="h-3.5 w-3.5 text-foreground" />
-            Odnotowano
-          </span>
-        )}
+        <span
+          data-testid="notes-count-indicator"
+          className="inline-flex items-center gap-1 text-sm font-semibold text-foreground bg-muted px-2.5 py-1 rounded-full border border-border"
+        >
+          {notesCount > 0 && <CheckCircle2 className="h-3.5 w-3.5 text-foreground" />}
+          {formatNotesCount(notesCount)}
+        </span>
       </div>
 
       {hasUnanswered && (
@@ -110,7 +109,7 @@ export function StaffQuickRoundsCard({
         </Tooltip>
       )}
 
-      <div className="grid grid-cols-2 gap-2 pt-1">
+      <div className="pt-1">
         <Tooltip>
           <TooltipTrigger asChild>
             <Link
@@ -122,43 +121,7 @@ export function StaffQuickRoundsCard({
             </Link>
           </TooltipTrigger>
           <TooltipContent>
-            Nagraj notatkę głosową dla tego pensjonariusza
-          </TooltipContent>
-        </Tooltip>
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span>
-              <button
-                type="button"
-                onClick={() => onQuickLog(resId)}
-                disabled={isSubmitting || isLogged}
-                className={`w-full inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-3 text-sm font-semibold transition-colors min-h-touch ${
-                  isLogged
-                    ? 'bg-muted text-foreground border border-border cursor-default'
-                    : 'bg-card border border-border text-foreground hover:bg-muted/50'
-                }`}
-              >
-                {isSubmitting ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                ) : isLogged ? (
-                  <>
-                    <CheckCircle2 className="h-4 w-4 text-foreground" />
-                    Stabilny
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
-                    Stan stabilny
-                  </>
-                )}
-              </button>
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>
-            {isLogged
-              ? 'Obserwacja została już zarejestrowana podczas tego obchodu'
-              : 'Zapisz rutynową obserwację: Stan stabilny, bez uwag'}
+            Nagraj notatkę głosową dla tego podopiecznego
           </TooltipContent>
         </Tooltip>
       </div>

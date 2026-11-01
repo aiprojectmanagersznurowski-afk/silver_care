@@ -32,7 +32,7 @@ export function ResidentMessagesHistory({ residentId }: ResidentMessagesHistoryP
 
   if (state === 'loading') return <div>Ładowanie historii wiadomości...</div>;
   if (state === 'error') return <div className="text-destructive">Błąd podczas pobierania historii.</div>;
-  if (state === 'empty') return <div>Brak historii wiadomości dla tego pensjonariusza.</div>;
+  if (state === 'empty') return <div>Brak historii wiadomości dla tego podopiecznego.</div>;
 
   return (
     <div className="space-y-4">

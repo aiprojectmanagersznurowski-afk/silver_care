@@ -58,12 +58,12 @@ export async function exportResidentsDataAction(options: ExportFilterOptions): P
 
   const role = user.app_metadata?.role
   if (role !== 'org_admin' && role !== 'super_admin') {
-    return { error: 'Tylko administrator placówki ma uprawnienia do eksportu danych.' }
+    return { error: 'Tylko kierownik placówki ma uprawnienia do eksportu danych.' }
   }
 
   const adminClient = createAdminClient()
 
-  // Pobieramy pensjonariuszy z ich przypisaniami do łóżek i pokoi
+  // Pobieramy podopiecznych z ich przypisaniami do łóżek i pokoi
   const { data: residents, error: fetchErr } = await adminClient
     .from('residents')
     .select(`
