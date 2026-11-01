@@ -13,6 +13,7 @@ import { getActiveAssignment, getNoteStatus, STATUS_CONFIG, UnansweredInfo } fro
 import { formatPersonName, personSortKey } from '@/lib/person-name'
 import { useTableSort } from '@/hooks/use-table-sort'
 import { SortableTableHead } from '@/components/patterns/SortableTableHead'
+import { ListPagination, usePagination } from '@/components/patterns/ListPagination'
 
 interface StaffBoardTableProps {
   residents: Record<string, unknown>[]
@@ -22,13 +23,15 @@ interface StaffBoardTableProps {
 const actionLink =
   'inline-flex min-h-touch items-center gap-1.5 rounded-lg px-3 text-sm font-medium transition-colors'
 
+const STAFF_BOARD_PAGE_SIZE = 50
+
 type Row = Record<string, unknown>
 const NOTE_ORDER = { none: 0, draft: 1, ready: 2 } as const
 const roomOf = (r: Row) => ((getActiveAssignment(r)?.beds as Row | undefined)?.rooms as Row | undefined)?.number as string | undefined
 
 /** Tablica dyżuru w widoku tabeli — te same informacje i akcje co karta podopiecznego. */
 export function StaffBoardTable({ residents, unansweredMessagesMap }: StaffBoardTableProps) {
-  const { sorted, sort, toggleSort } = useTableSort(
+  const { sorted: sortedAll, sort, toggleSort } = useTableSort(
     residents,
     {
       name: (r: Row) => personSortKey(r.first_name as string, r.last_name as string),
@@ -39,9 +42,14 @@ export function StaffBoardTable({ residents, unansweredMessagesMap }: StaffBoard
     },
     { key: 'name', direction: 'asc' }
   )
+  // Stronicowanie po sortowaniu całej listy (WO-NFR-PERF-SCREEN-LOAD, decyzja Michała 2026-10-30).
+  // Zmiana zestawu po filtrach (liczba i pierwszy podopieczny) wraca na stronę 1.
+  const pagination = usePagination(sortedAll.length, STAFF_BOARD_PAGE_SIZE, `${residents.length}:${String(residents[0]?.id ?? '')}`)
+  const sorted = pagination.slice(sortedAll)
 
   return (
-    <Table aria-label="Tablica dyżuru — podopieczni">
+    <>
+      <Table aria-label="Tablica dyżuru — podopieczni">
         <TableHeader className="text-muted-foreground">
           <TableRow>
             <SortableTableHead sortKey="name" sort={sort} onSort={toggleSort}>Podopieczny</SortableTableHead>
@@ -119,5 +127,15 @@ export function StaffBoardTable({ residents, unansweredMessagesMap }: StaffBoard
           )}
         </TableBody>
       </Table>
+      <ListPagination
+        total={sortedAll.length}
+        from={pagination.from}
+        to={pagination.to}
+        page={pagination.page}
+        totalPages={pagination.totalPages}
+        onPrev={pagination.prev}
+        onNext={pagination.next}
+      />
+    </>
   )
 }
