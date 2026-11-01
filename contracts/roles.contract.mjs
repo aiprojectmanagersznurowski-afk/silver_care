@@ -122,8 +122,21 @@ export const AUDIT_REQUIREMENTS = {
   status: 'STABLE',
 };
 
+/**
+ * Okres retencji dostępu dla bliskich (w dniach) po zgonie lub wypisie podopiecznego (SC-FAM-07).
+ * Przez ten czas bliscy zachowują wyciszony dostęp do historii raportów i mogą pobrać archiwum.
+ * Po upływie tego terminu dostęp zostaje wygaszony.
+ */
+export const OFFBOARDING_RETENTION_DAYS = 30;
+
 /** Polityki usuwania. Archiwizacja miękka nie kasuje śladu audytowego (SC-ADM-05). */
 export const DELETE_POLICIES = [
-  { entity: 'residents', strategy: 'SOFT_ARCHIVE_THEN_RETENTION', rationale: 'archived_at odcina rodzinę natychmiast; twardy DELETE dopiero po retencji albo na żądanie z art. 17.', cascades: ['daily_logs', 'daily_reports', 'voice_draft_notes', 'wellness_daily'] },
+  {
+    entity: 'residents',
+    strategy: 'SOFT_ARCHIVE_THEN_RETENTION',
+    rationale: 'archived_at odcina rodzinę natychmiast; twardy DELETE dopiero po retencji albo na żądanie z art. 17.',
+    familyOffboardingRetentionDays: OFFBOARDING_RETENTION_DAYS,
+    cascades: ['daily_logs', 'daily_reports', 'voice_draft_notes', 'wellness_daily'],
+  },
   { entity: 'resident_relative_links', strategy: 'REVOKE_NOT_DELETE', rationale: 'Cofnięcie dostępu musi zostawić ślad kto i kiedy — usunięcie wiersza kasuje dowód.', cascades: [] },
 ];
