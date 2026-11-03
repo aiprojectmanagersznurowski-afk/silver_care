@@ -37,8 +37,8 @@ export class LoginPage {
 
   async revealForm() {
     await this.emailInput.waitFor({ state: 'visible', timeout: 5000 });
-    // Czekamy na zakończenie animacji wejściowej (fadeUp 400ms) i pełną hydratację formularza React
-    await this.page.waitForTimeout(500);
+    await expect(this.emailInput).toBeEditable();
+    await expect(this.submitButton).toBeEnabled();
   }
 
   async fillEmail(email: string) {

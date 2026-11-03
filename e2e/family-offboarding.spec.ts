@@ -88,12 +88,12 @@ test.describe('Portal rodziny — widok po zgonie/wypisie i okno retencji (SC-FA
     `;
     expiredResidentId = expired[0].id;
 
-    // 4. Podopieczny ze zgłoszeniem zgonu z #163 oczekujący na zatwierdzenie kierownika
+    // 4. Podopieczny bez zatwierdzonego zgonu (brak death_date)
     const pending = await sql`
       INSERT INTO public.residents (
-        organization_id, first_name, last_name, pesel_hash, death_reported_at
+        organization_id, first_name, last_name, pesel_hash
       ) VALUES (
-        ${orgId}, ${'Marian'}, ${'Oczekujacy'}, ${'hash_e2e_offb_pending'}, now()
+        ${orgId}, ${'Marian'}, ${'Aktywny'}, ${'hash_e2e_offb_pending'}
       ) RETURNING id;
     `;
     pendingDeathResidentId = pending[0].id;
@@ -198,7 +198,7 @@ test.describe('Portal rodziny — widok po zgonie/wypisie i okno retencji (SC-FA
     await offboarding.expectRetentionExpiredVisible();
   });
 
-  test('@REQ: FAM-DASHBOARD - zgłoszenie zgonu ze statusem roboczym (#163) nie przełącza portalu bliskich w tryb po zgonie', async ({
+  test('@REQ: FAM-DASHBOARD - podopieczny bez zatwierdzonego zgonu nie przełącza portalu bliskich w tryb po zgonie', async ({
     loginPage,
     page,
   }) => {
@@ -212,7 +212,7 @@ test.describe('Portal rodziny — widok po zgonie/wypisie i okno retencji (SC-FA
 
     // Rodzina widzi standardowy aktywny pulpit podopiecznego, a nie widok po zgonie
     await expect(page.locator('[data-testid="download-memorial-archive-btn"]')).not.toBeVisible();
-    await expect(page.locator('h1:has-text("Okres retencji dostępu wygasł")')).not.toBeVisible();
+    await expect(page.locator('h1:has-text("Dostęp do historii pobytu dobiegł końca")')).not.toBeVisible();
     await expect(page.locator('text=Pamięci podopiecznego')).not.toBeVisible();
   });
 });

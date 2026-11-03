@@ -18,14 +18,15 @@ export type FamilyOffboardingState =
       endDate: string | null
     }
 
-function getWarsawDateString(date: Date): string {
+export function formatWarsawIsoDate(dateOrIso: string | Date): string {
+  const dt = typeof dateOrIso === 'string' ? new Date(dateOrIso) : dateOrIso
   const dtf = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Europe/Warsaw',
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
   })
-  return dtf.format(date)
+  return dtf.format(dt)
 }
 
 function addDaysToDateString(dateStr: string, days: number): string {
@@ -44,7 +45,7 @@ function diffCalendarDays(dateStrA: string, dateStrB: string): number {
 
 /**
  * Wyznacza stan widoku portalu rodziny z uwzględnieniem 30-dniowego okna retencji
- * po zgonie lub wypisie podopiecznego (SC-FAM-07, FAM-RESIDENT-OFFBOARDING).
+ * po zgonie lub wypisie podopiecznego (SC-FAM-07, FAM-DASHBOARD, ADM-ARCHIVE).
  * Obliczenia kalendarzowe wykonywane w strefie Europe/Warsaw.
  */
 export function evaluateFamilyOffboardingState(
@@ -52,7 +53,6 @@ export function evaluateFamilyOffboardingState(
     death_date?: string | null
     contract_end_date?: string | null
     archived_at?: string | null
-    death_reported_at?: string | null
   },
   now: Date = new Date()
 ): FamilyOffboardingState {
@@ -64,7 +64,7 @@ export function evaluateFamilyOffboardingState(
     }
   }
 
-  const todayStr = getWarsawDateString(now)
+  const todayStr = formatWarsawIsoDate(now)
   const endDate = resident.death_date ?? resident.contract_end_date ?? null
 
   if (!endDate) {
@@ -123,7 +123,7 @@ export interface MemorialReportEntry {
 /**
  * Buduje archiwum pobytu podopiecznego do pobrania przez bliskich (AC2).
  * Dzieli nazewnictwo: pamiątkowe (po zgonie) vs raporty z pobytu (po wypisie).
- * Zachowuje granice MDR (wyłącznie metryki behawioralne i opublikowane raporty).
+ * Daty raportów formatowane w strefie Europe/Warsaw.
  */
 export function buildMemorialArchiveDocument(params: {
   resident: {
@@ -141,7 +141,7 @@ export function buildMemorialArchiveDocument(params: {
   const fileName = isDeceased
     ? `archiwum-pamiatkowe-${slug || 'podopieczny'}.txt`
     : `archiwum-pobytu-${slug || 'podopieczny'}.txt`
-  const genDate = params.generatedAt ?? new Date().toISOString().slice(0, 10)
+  const genDate = params.generatedAt ?? formatWarsawIsoDate(new Date())
   const endDate = params.resident.death_date ?? params.resident.contract_end_date ?? '—'
   const title = isDeceased
     ? 'SILVER CARE — PAMIĄTKOWE ARCHIWUM POBYTU PODOPIECZNEGO'
@@ -163,7 +163,7 @@ export function buildMemorialArchiveDocument(params: {
     params.reports.length === 0
       ? ['Brak opublikowanych raportów dziennych w historii pobytu.']
       : params.reports.map((r) => {
-          const dateStr = r.created_at.slice(0, 10)
+          const dateStr = formatWarsawIsoDate(r.created_at)
           const text = r.content?.text?.trim() || 'Brak treści podsumowania z tego dnia.'
           const stepsVal = r.content?.metrics?.steps
           const sleepVal = r.content?.metrics?.sleep_hours

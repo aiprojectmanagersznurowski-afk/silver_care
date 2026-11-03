@@ -15,35 +15,39 @@ type ResidentType = {
   death_date?: string | null
   contract_end_date?: string | null
   archived_at?: string | null
-  death_reported_at?: string | null
-};
+}
 
 export default async function FamilyDashboard(props: { searchParams: Promise<{ date?: string }> }) {
-  const searchParams = await props.searchParams;
+  const searchParams = await props.searchParams
   const supabase = await createClient()
   const user = await getCurrentUser()
 
   if (!user) return null
 
-  // Pobieramy powiązanych podopiecznych
-  const { data: links } = await supabase
-    .from('resident_relative_links')
-    .select(`
-      resident_id,
-      residents (
-        id,
-        first_name,
-        last_name,
-        death_date,
-        contract_end_date,
-        archived_at,
-        death_reported_at
-      )`)
-    .eq('relative_user_id', user.id)
+  // 1. Pobieramy podopiecznych przez wąskie RPC dla rodziny (ochrona danych po wygaśnięciu)
+  const { data: rpcResidents, error: rpcError } = await supabase.rpc('get_family_resident_overview')
+  let residents: ResidentType[] = (rpcResidents || []) as ResidentType[]
 
-  const residents: ResidentType[] = (links || []).map(link => 
-    Array.isArray(link.residents) ? link.residents[0] : link.residents
-  ).filter(Boolean) as unknown as ResidentType[]
+  // 2. Bezpieczny fallback do resident_relative_links
+  if (rpcError || residents.length === 0) {
+    const { data: links } = await supabase
+      .from('resident_relative_links')
+      .select(`
+        resident_id,
+        residents (
+          id,
+          first_name,
+          last_name,
+          death_date,
+          contract_end_date,
+          archived_at
+        )`)
+      .eq('relative_user_id', user.id)
+
+    residents = (links || [])
+      .map(link => Array.isArray(link.residents) ? link.residents[0] : link.residents)
+      .filter(Boolean) as unknown as ResidentType[]
+  }
 
   if (residents.length === 0) {
     return (

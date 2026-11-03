@@ -16,7 +16,7 @@ export class FamilyOffboardingPage {
     this.page = page;
     this.downloadArchiveBtn = page.locator('[data-testid="download-memorial-archive-btn"]');
     this.expiryNotice = page.locator('text=Dostęp do portalu wygasa:');
-    this.expiredTitle = page.locator('h1:has-text("Okres retencji dostępu wygasł")');
+    this.expiredTitle = page.locator('h1:has-text("Dostęp do historii pobytu dobiegł końca")');
     this.expiredDescription = page.locator('text=30-dniowe okno dostępu do historii pobytu podopiecznego');
     this.logoutButton = page.locator('button:has-text("Wyloguj się")');
     this.reportsHeading = page.locator('h2:has-text("Archiwum opublikowanych raportów")');

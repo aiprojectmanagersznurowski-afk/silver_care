@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { formatPersonName } from '@/lib/person-name'
 import {
   buildMemorialArchiveDocument,
+  formatWarsawIsoDate,
   type FamilyOffboardingState,
   type MemorialReportEntry,
 } from '@/lib/family-offboarding'
@@ -55,8 +56,8 @@ export function FamilyOffboardingView({
           <ShieldCheck className="size-6" aria-hidden="true" />
         </div>
         <PageHeader
-          title="Okres retencji dostępu wygasł"
-          description={`30-dniowe okno dostępu do historii pobytu podopiecznego (${fullName}) dobiegło końca zgodnie z polityką ochrony danych placówki.`}
+          title="Dostęp do historii pobytu dobiegł końca"
+          description={`30-dniowy okres dostępu do historii pobytu podopiecznego (${fullName}) dobiegł końca zgodnie z zasadami ochrony danych placówki.`}
         />
         <form action="/auth/signout" method="post" className="pt-2">
           <Button type="submit" variant="outline" className="min-h-touch">
@@ -133,7 +134,7 @@ export function FamilyOffboardingView({
           ) : (
             <div className="space-y-3">
               {reports.map((report) => {
-                const dateStr = report.created_at.slice(0, 10)
+                const dateStr = formatWarsawIsoDate(report.created_at)
                 const stepsVal = report.content?.metrics?.steps
                 const sleepVal = report.content?.metrics?.sleep_hours
                 return (

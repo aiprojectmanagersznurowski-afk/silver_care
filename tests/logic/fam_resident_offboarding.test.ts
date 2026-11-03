@@ -30,11 +30,10 @@ describe('Portal Rodziny — widok pożegnalny, archiwum pamiątkowe i 30-dniowe
     expect(state.mode).toBe('active')
   })
 
-  it('@REQ: FAM-DASHBOARD - zgłoszenie zgonu przez personel (death_reported_at) przed zatwierdzeniem kierownika nie przełącza portalu rodziny', () => {
+  it('@REQ: FAM-DASHBOARD - brak zatwierdzonego zgonu (brak death_date) utrzymuje aktywny portal rodziny', () => {
     const state = evaluateFamilyOffboardingState(
       {
         death_date: null,
-        death_reported_at: '2026-10-29T10:00:00Z',
         contract_end_date: null,
         archived_at: null,
       },
