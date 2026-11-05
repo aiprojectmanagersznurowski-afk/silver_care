@@ -18,7 +18,7 @@ export const dynamic = 'force-dynamic'
 const navClass = 'inline-flex min-h-touch items-center rounded-lg border border-input px-3 text-sm hover:bg-muted'
 const activeClass = 'inline-flex min-h-touch items-center rounded-lg bg-primary px-3 text-sm text-primary-foreground'
 
-type SearchParams = Promise<{ shift?: string; date?: string; group?: string }>
+type SearchParams = Promise<{ shift?: string; date?: string; group?: string; resident?: string }>
 
 /** Zadania zmiany (NUR-TASKS, SC-NUR-13/15): personel opiekuńczy i kierownik placówki; bliscy nie mają dostępu (RLS). */
 export default async function ShiftTasksPage({ searchParams }: { searchParams: SearchParams }) {
@@ -59,7 +59,7 @@ export default async function ShiftTasksPage({ searchParams }: { searchParams: S
             <Link href={qs({ group: 'room' })} className={group === 'room' ? activeClass : navClass}>Według pokoi</Link>
             <Link href={qs({ group: 'resident' })} className={group === 'resident' ? activeClass : navClass}>Według podopiecznych</Link>
           </nav>
-          <TasksSection shiftId={shift.id} shiftCode={shift.code} date={date} group={group} isAdmin={role === 'org_admin'} targets={shifts.map((s) => ({ id: s.id, name: s.name }))} />
+          <TasksSection shiftId={shift.id} shiftCode={shift.code} date={date} group={group} isAdmin={role === 'org_admin'} targets={shifts.map((s) => ({ id: s.id, name: s.name }))} residentParam={params.resident} />
         </>
       )}
     </div>
@@ -73,9 +73,11 @@ interface TasksSectionProps {
   group: 'room' | 'resident'
   isAdmin: boolean
   targets: { id: string; name: string }[]
+  /** Podopieczny z karty („Dodaj zadanie”, SC-ADM-21); przyjmowany tylko, gdy jest na liście wyboru tej placówki. */
+  residentParam?: string
 }
 
-async function TasksSection({ shiftId, shiftCode, date, group, isAdmin, targets }: TasksSectionProps) {
+async function TasksSection({ shiftId, shiftCode, date, group, isAdmin, targets, residentParam }: TasksSectionProps) {
   const supabase = await createClient()
   const [data, leadRes, approvalsRes] = await Promise.all([
     loadShiftTaskData(supabase, shiftId, date),
@@ -91,7 +93,7 @@ async function TasksSection({ shiftId, shiftCode, date, group, isAdmin, targets 
   return (
     <>
       <ShiftPlanApproval shiftDefinitionId={shiftId} shiftDate={date} version={planVersion} canApprove={canSettle} printHref={canSettle && planVersion ? `/staff/shift-plan/print?shift=${shiftCode}&date=${date}` : null} />
-      <ShiftTaskForm shiftDefinitionId={shiftId} shiftDate={date} residents={options} />
+      <ShiftTaskForm shiftDefinitionId={shiftId} shiftDate={date} residents={options} defaultResidentId={options.some((o) => o.id === residentParam) ? residentParam : undefined} />
       {groups.length === 0 ? (
         <ListEmpty title="Brak zadań na tę zmianę" description="Dodaj pierwsze zadanie formularzem powyżej." />
       ) : (

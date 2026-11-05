@@ -16,14 +16,16 @@ interface ShiftTaskFormProps {
   shiftDefinitionId: string
   shiftDate: string
   residents: TaskResidentOption[]
+  /** Podopieczny wybrany z góry (przejście z karty podopiecznego). */
+  defaultResidentId?: string
 }
 
 /** Dodawanie zadania ręcznego do zmiany. Bez podopiecznego zadanie dotyczy placówki. */
-export function ShiftTaskForm({ shiftDefinitionId, shiftDate, residents }: ShiftTaskFormProps) {
+export function ShiftTaskForm({ shiftDefinitionId, shiftDate, residents, defaultResidentId = '' }: ShiftTaskFormProps) {
   const router = useRouter()
   const [title, setTitle] = useState('')
   const [dueTime, setDueTime] = useState('')
-  const [residentId, setResidentId] = useState('')
+  const [residentId, setResidentId] = useState(defaultResidentId)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -39,7 +41,7 @@ export function ShiftTaskForm({ shiftDefinitionId, shiftDate, residents }: Shift
     }
     setTitle('')
     setDueTime('')
-    setResidentId('')
+    setResidentId(defaultResidentId)
     router.refresh()
   }
 
