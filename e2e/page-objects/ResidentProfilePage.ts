@@ -42,6 +42,26 @@ export class ResidentProfilePage {
     await this.page.waitForLoadState('networkidle');
   }
 
+  /** Otwiera kartę podopiecznego w części kierownika placówki. */
+  async openAdminCard(residentId: string) {
+    await this.page.goto(`/admin/residents/${residentId}`);
+    await this.page.waitForLoadState('networkidle');
+  }
+
+  /** Znacznik „Wymaga uwagi” w nagłówku karty (SC-ADM-21, ADM-RESIDENT-CARD-TASKS). */
+  get attentionBadge(): Locator {
+    return this.page.locator('main [data-testid="resident-attention"]');
+  }
+
+  /** Wiersz zadania w sekcji „Zadania”: lista otwartych albo wykonanych. */
+  taskItem(list: 'open' | 'done', title: string): Locator {
+    return this.page.locator(`main [data-testid="resident-tasks-${list}"] [data-testid="resident-task"]`).filter({ hasText: title });
+  }
+
+  get addTaskLink(): Locator {
+    return this.page.locator('main').getByRole('link', { name: 'Dodaj zadanie' });
+  }
+
   tab(name: string): Locator {
     return this.tablist.getByRole('tab', { name });
   }
