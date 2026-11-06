@@ -16,6 +16,10 @@ export class StaffBoardPage {
   readonly dictateLinks: Locator;
   /** Nazwisko podopiecznego jako link do jego karty w części personelu (SC-ADM-20). */
   readonly residentCardLinks: Locator;
+  readonly tableRows: Locator;
+  readonly paginationSummary: Locator;
+  readonly nextPageButton: Locator;
+  readonly prevPageButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -29,6 +33,10 @@ export class StaffBoardPage {
     this.buttonsNestedInLinks = page.locator('a button');
     this.dictateLinks = page.locator('a[href^="/voice?resident="]');
     this.residentCardLinks = page.locator('main a[href^="/staff/residents/"]:visible');
+    this.tableRows = page.locator('main [data-slot="table-body"] [data-slot="table-row"]');
+    this.paginationSummary = page.locator('[data-testid="list-pagination-summary"]');
+    this.nextPageButton = page.getByRole('button', { name: 'Następna strona' });
+    this.prevPageButton = page.getByRole('button', { name: 'Poprzednia strona' });
   }
 
   async goto() {

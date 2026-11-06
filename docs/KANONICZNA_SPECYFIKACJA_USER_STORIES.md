@@ -342,6 +342,17 @@
 - **AC4 (Empty state):** Jeśli plan dnia nie został uzupełniony przez personel, sekcja wyświetla komunikat: „Plan dnia na dziś jest w przygotowaniu przez zespół opiekunów".
 - **AC (Bez treści medycznych — 📝 2026-10-26, `FAM-AGENDA-NO-MEDICAL`):** Pozycje typu `medication` i pozycje, których tytuł zawiera słowo z `AGENDA_FAMILY_EXCLUSION` (kontrakt prezentacji, po kilka słów dla każdej kategorii `MEDICAL`), nie są zwracane bliskim przez bazę (`agenda_items.family_visible` + RLS). Pozycje niemedyczne o podobnym brzmieniu („Wizyta wnuczki”, „Lekcja tańca”) zostają. Personel widzi przy dodawaniu i edycji wpisu, że pozycja nie będzie widoczna dla rodziny. Widok rodziny nie ma kategorii leków.
 
+### [SC-FAM-07] Dedykowany widok portalu rodziny po zgonie lub wypisie podopiecznego (archiwum pamiątkowe i 30-dniowe okno retencji)
+🔗 **Kontrakt:** `FAM-DASHBOARD`, `ADM-ARCHIVE`, `SEC-RETENTION` · **WO:** `FAM-RESIDENT-OFFBOARDING` · **Status:** 📝 PROPOZYCJA
+
+**User story:** Jako Osoba bliska (`family` / `legal_guardian`) zmarłego lub wypisanego podopiecznego, chcę po zalogowaniu zobaczyć taktowny, wyciszony ekran informacyjny z możliwością pobrania pamiątkowego archiwum raportów i wpisów podopiecznego, aby zachować wspomnienia z pobytu bliskiego w placówce, mając jasną informację o 30-dniowym terminie wygaszenia dostępu do portalu.
+
+**Kryteria akceptacji:**
+- **AC1 (Wyciszony widok informacyjny):** Po zarejestrowaniu zgonu (`death_date`) lub zakończenia pobytu (`contract_end_date`) podopiecznego, portal rodziny (`/dashboard`) prezentuje dedykowany, wyciszony ekran informacyjny zamiast codziennego pulpitu, agendy i czatu.
+- **AC2 (Pamiątkowe archiwum pobytu):** Bliski ma dostęp do przycisku „Pobierz pamiątkowe archiwum pobytu”, generującego zestawienie opublikowanych raportów behawioralnych i wspomnień z okresu pobytu (z zachowaniem granic MDR i zakazu słowa „pacjent”).
+- **AC3 (30-dniowe okno retencji):** Rodzina zachowuje ograniczony dostęp w trybie odczytu przez 30 dni od daty zgonu lub wypisu, z jawną informacją o dacie wygaszenia dostępu i liczbie pozostałych dni.
+- **AC4 (Odcięcie po okresie retencji):** Po upływie 30 dni od daty zgonu/wypisu albo po jawnym ustawieniu `archived_at` dostęp do danych pobytu zostaje automatycznie odcięty zgodnie z polityką `SOFT_ARCHIVE_THEN_RETENTION`.
+
 ---
 
 ## ⚖️ DOMENA 4: COMPLIANCE (Zapewnienie zgodności)
@@ -650,7 +661,7 @@
 - **AC2:** Paleta poleceń (Cmd/Ctrl+K) — wyszukanie pensjonariusza i start dyktowania w < 2 s.
 - **AC3:** Masowe zatwierdzanie raportów (do 10 naraz) — każdy raport nadal przechodzi `REPORT-APPROVAL`.
 - **AC4:** Widok „Agenda na dziś" z porami dnia i edycją.
-- **AC5:** Rejestracja rutynowej obserwacji 1-kliknięciem („Stan stabilny”) poprawnie utrwala rekord w `daily_logs` z `resident_id`, `nurse_id` oraz ustrukturyzowanym obiektem `data` (typ `ROUTINE_OBSERVATION`), natychmiast aktualizując stan kafelka w widoku obchodu dyżuru.
+- **AC5:** Wycofanie przycisku „Stan stabilny” z widoku obchodu dyżuru (zgodnie z regułą zakazu fabrykowania danych w fallbackach). Kafelek pensjonariusza eksponuje bezpośredni start dyktowania notatki oraz wskaźnik liczby notatek w bieżącej zmianie personelu (domyślny cykl dwóch 12-godzinnych zmian w strefie `Europe/Warsaw`: dzienna 07:00–19:00, nocna 19:00–07:00). Raport końcowy przy braku indywidualnych notatek transparentnie informuje o braku zarejestrowanych zdarzeń.
 
 #### [SC-NUR-09] Strażnik kompletności raportu przed publikacją
 🔗 **Kontrakt:** `REPORT-AI-FEEDBACK`, `REPORT-APPROVAL`, `MDR-VOCABULARY` · **WO:** [`NUR-REPORT-COMPLETENESS-GATE`](workorders/NUR-REPORT-COMPLETENESS-GATE.md) · **Status:** ✅ 📝 — zrealizowane w `completeness-gate.ts`, `ReportCard.tsx`, testy w `completeness_gate.test.ts` oraz E2E w `staff-portal.spec.ts`
@@ -1000,6 +1011,7 @@
 | 2026-10-20 | 2.10 | Ujednolicenie ról pracowników placówki do dwóch poziomów (`org_admin` — Kierownik / Administrator Placówki, `nurse` — Personel opiekuńczy / Wsparcie) oraz ograniczenie dostępu do `family_messages` po stronie placówki wyłącznie do `org_admin` (`/admin/messages`; aktualizacja `SC-FAM-04`, `SC-NUR-07`, `SC-NUR-11`). |
 | 2026-10-22 | 2.11 | Dopisanie `SC-SUP-05` (globalne alerty systemowe i status platformy zarządzane przez `super_admin` oraz wycofanie statycznego kafelka „Status systemu: Stabilny” z pulpitu placówki — Wariant A) ze statusem 📝 PROPOZYCJA. |
 | 2026-10-24 | 2.12 | Dopisanie `SC-ADM-20` (wspólna karta podopiecznego dla personelu z widocznością sekcji według roli) ze statusem 📝 PROPOZYCJA. |
+| 2026-10-28 | 2.13 | Doprecyzowanie godzin 12-godzinnych zmian personelu (07:00–19:00 i 19:00–07:00 Europe/Warsaw) w AC5 SC-NUR-08 (PR #153). |
 | 2026-10-29 | 2.14 | Dopisanie `SC-NUR-12` (głosowe przekazanie zmiany), `SC-NUR-13` (moduł zadań z backlogiem i propozycjami AI), `SC-NUR-14` (raport dobowy z komunikatem o obchodzie) i `SC-ADM-21` (sekcja „Zadania” na karcie podopiecznego) ze statusem 📝 PROPOZYCJA, na podstawie decyzji Michała z ADR-021. |
 | 2026-10-29 | 2.15 | Dopisanie `SC-ADM-22` (limit miejsc placówki: przekroczenie z ostrzeżeniem dla kierownika i super admina) i `NFR-UI-06` (spójna terminologia interfejsu) ze statusem 📝 PROPOZYCJA, na podstawie decyzji Michała z 2026-10-29; `MASTER_DATA_STANDARD.md` w wersji 2.0. |
 | 2026-10-30 | 2.16 | Moduł zadań wg decyzji Michała z 2026-10-30: przebudowa `SC-NUR-13` (cykl zmiany, kierownik zmiany w grafiku — wariant B, źródło zadania, grupowanie per pokój/podopieczny, rozliczenie: wykonane / anulowane z powodem / przeniesione), `SC-NUR-12/AC1a` (grafik i kierownik zmiany), nowe `SC-NUR-15` (wydruk planu pracy), `SC-NUR-16` (rozliczenie z notatek głosowych) i `SC-ADM-23` (plan opieki — rejestr zadań standardowych, komponent rozwojowy) ze statusem 📝 PROPOZYCJA.
