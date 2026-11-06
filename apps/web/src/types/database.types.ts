@@ -1672,6 +1672,18 @@ export interface Database {
         }
         Returns: boolean
       }
+      get_family_resident_overview: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          first_name: string
+          last_name: string
+          avatar_url: string | null
+          death_date: string | null
+          contract_end_date: string | null
+          archived_at: string | null
+        }[]
+      }
       is_relative_active_or_retained: {
         Args: {
           target_resident_id: string

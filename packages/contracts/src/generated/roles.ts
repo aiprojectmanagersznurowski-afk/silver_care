@@ -459,6 +459,29 @@ export const AUDIT_REQUIREMENTS = {
   "status": "STABLE"
 } as const;
 
+export const DELETE_POLICIES = [
+  {
+    "entity": "residents",
+    "strategy": "SOFT_ARCHIVE_THEN_RETENTION",
+    "rationale": "archived_at odcina rodzinę natychmiast; twardy DELETE dopiero po retencji albo na żądanie z art. 17.",
+    "familyOffboardingRetentionDays": 30,
+    "cascades": [
+      "daily_logs",
+      "daily_reports",
+      "voice_draft_notes",
+      "wellness_daily"
+    ]
+  },
+  {
+    "entity": "resident_relative_links",
+    "strategy": "REVOKE_NOT_DELETE",
+    "rationale": "Cofnięcie dostępu musi zostawić ślad kto i kiedy — usunięcie wiersza kasuje dowód.",
+    "cascades": []
+  }
+] as const;
+
+export const OFFBOARDING_RETENTION_DAYS = 30 as const;
+
 export const SHIFT_LEAD_SCOPE = {
   "qualifier": "shift_lead",
   "role": "nurse",

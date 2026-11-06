@@ -342,6 +342,17 @@
 - **AC4 (Empty state):** Jeśli plan dnia nie został uzupełniony przez personel, sekcja wyświetla komunikat: „Plan dnia na dziś jest w przygotowaniu przez zespół opiekunów".
 - **AC (Bez treści medycznych — 📝 2026-10-26, `FAM-AGENDA-NO-MEDICAL`):** Pozycje typu `medication` i pozycje, których tytuł zawiera słowo z `AGENDA_FAMILY_EXCLUSION` (kontrakt prezentacji, po kilka słów dla każdej kategorii `MEDICAL`), nie są zwracane bliskim przez bazę (`agenda_items.family_visible` + RLS). Pozycje niemedyczne o podobnym brzmieniu („Wizyta wnuczki”, „Lekcja tańca”) zostają. Personel widzi przy dodawaniu i edycji wpisu, że pozycja nie będzie widoczna dla rodziny. Widok rodziny nie ma kategorii leków.
 
+### [SC-FAM-07] Dedykowany widok portalu rodziny po zgonie lub wypisie podopiecznego (archiwum pamiątkowe i 30-dniowe okno retencji)
+🔗 **Kontrakt:** `FAM-DASHBOARD`, `ADM-ARCHIVE`, `SEC-RETENTION` · **WO:** `FAM-RESIDENT-OFFBOARDING` · **Status:** 📝 PROPOZYCJA
+
+**User story:** Jako Osoba bliska (`family` / `legal_guardian`) zmarłego lub wypisanego podopiecznego, chcę po zalogowaniu zobaczyć taktowny, wyciszony ekran informacyjny z możliwością pobrania pamiątkowego archiwum raportów i wpisów podopiecznego, aby zachować wspomnienia z pobytu bliskiego w placówce, mając jasną informację o 30-dniowym terminie wygaszenia dostępu do portalu.
+
+**Kryteria akceptacji:**
+- **AC1 (Wyciszony widok informacyjny):** Po zarejestrowaniu zgonu (`death_date`) lub zakończenia pobytu (`contract_end_date`) podopiecznego, portal rodziny (`/dashboard`) prezentuje dedykowany, wyciszony ekran informacyjny zamiast codziennego pulpitu, agendy i czatu.
+- **AC2 (Pamiątkowe archiwum pobytu):** Bliski ma dostęp do przycisku „Pobierz pamiątkowe archiwum pobytu”, generującego zestawienie opublikowanych raportów behawioralnych i wspomnień z okresu pobytu (z zachowaniem granic MDR i zakazu słowa „pacjent”).
+- **AC3 (30-dniowe okno retencji):** Rodzina zachowuje ograniczony dostęp w trybie odczytu przez 30 dni od daty zgonu lub wypisu, z jawną informacją o dacie wygaszenia dostępu i liczbie pozostałych dni.
+- **AC4 (Odcięcie po okresie retencji):** Po upływie 30 dni od daty zgonu/wypisu albo po jawnym ustawieniu `archived_at` dostęp do danych pobytu zostaje automatycznie odcięty zgodnie z polityką `SOFT_ARCHIVE_THEN_RETENTION`.
+
 ---
 
 ## ⚖️ DOMENA 4: COMPLIANCE (Zapewnienie zgodności)

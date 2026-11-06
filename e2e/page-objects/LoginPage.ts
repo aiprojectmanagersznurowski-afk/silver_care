@@ -36,13 +36,9 @@ export class LoginPage {
   }
 
   async revealForm() {
-    // Czekamy aż pole email stanie się widoczne lub klikamy w tło, aby przyspieszyć animację
-    try {
-      await this.emailInput.waitFor({ state: 'visible', timeout: 2000 });
-    } catch {
-      await this.page.locator('body').click();
-      await this.emailInput.waitFor({ state: 'visible', timeout: 3000 });
-    }
+    await this.emailInput.waitFor({ state: 'visible', timeout: 5000 });
+    await expect(this.emailInput).toBeEditable();
+    await expect(this.submitButton).toBeEnabled();
   }
 
   async fillEmail(email: string) {
