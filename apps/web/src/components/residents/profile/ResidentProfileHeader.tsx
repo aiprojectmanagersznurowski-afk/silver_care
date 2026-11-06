@@ -20,6 +20,8 @@ interface ResidentProfileHeaderProps {
   backHref: string
   backLabel: string
   activeAssignment?: ResidentBedAssignment | null
+  /** Otwarte zadanie zaakceptowane przez personel (SC-ADM-21); nie jest oceną stanu zdrowia. */
+  needsAttention?: boolean
 }
 
 export function ResidentProfileHeader({
@@ -29,6 +31,7 @@ export function ResidentProfileHeader({
   backHref,
   backLabel,
   activeAssignment,
+  needsAttention = false,
 }: ResidentProfileHeaderProps) {
   const activeBedLabel = activeAssignment?.beds
     ? `Pokój ${activeAssignment.beds.rooms?.number || '?'}, Łóżko ${activeAssignment.beds.label}`
@@ -70,6 +73,11 @@ export function ResidentProfileHeader({
                 <StatusBadge>Zmarły ({resident.death_date})</StatusBadge>
               ) : (
                 <StatusBadge>Zakończony pobyt</StatusBadge>
+              )}
+              {needsAttention && (
+                <StatusBadge tone="brand" data-testid="resident-attention" title="Podopieczny ma otwarte zadanie do zrobienia">
+                  Wymaga uwagi
+                </StatusBadge>
               )}
             </div>
             <p className="text-sm text-muted-foreground mt-1">
