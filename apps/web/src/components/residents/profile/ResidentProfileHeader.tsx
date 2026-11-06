@@ -130,7 +130,7 @@ export function ResidentProfileHeader({
               <Button
                 variant="outline"
                 size="sm"
-                className="min-h-touch text-muted-foreground hover:text-destructive"
+                className="min-h-touch text-muted-foreground hover:text-foreground"
                 disabled={isCancelling}
                 onClick={handleCancelDeathReport}
               >

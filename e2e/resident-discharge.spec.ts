@@ -105,4 +105,18 @@ test.describe('Zakończenie pobytu pensjonariusza i rejestracja zgonu (@REQ: ADM
     await cancelButton.click();
     await expect(dialogTitle).not.toBeVisible();
   });
+
+  test('konto rodziny (family) nie widzi procedur po zgonie ani zgłoszenia zgonu przed zatwierdzeniem', async ({
+    loginPage,
+    page,
+  }) => {
+    await loginPage.loginAs('family');
+    await page.goto('/agenda');
+    await page.waitForLoadState('domcontentloaded');
+
+    // Brak zadań procedury po zgonie w planie dnia rodziny
+    await expect(page.locator('text=Procedura po zgonie')).not.toBeVisible();
+    await expect(page.locator('text=Sanityzacja')).not.toBeVisible();
+    await expect(page.locator('text=Zgłoszono zgon')).not.toBeVisible();
+  });
 });

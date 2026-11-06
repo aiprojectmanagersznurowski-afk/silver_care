@@ -32,10 +32,11 @@ export function DischargeResidentDialog({ resident, activeBedLabel, mode = 'full
   const todayStr = new Date().toISOString().slice(0, 10)
   const isNurseInit = mode === 'nurse_death_init'
   const isPendingDeath = Boolean(resident.death_reported_at)
+  const initialDate = resident.death_reported_at ? resident.death_reported_at.slice(0, 10) : todayStr
 
-  const [contractEndDate, setContractEndDate] = useState(todayStr)
+  const [contractEndDate, setContractEndDate] = useState(initialDate)
   const [contractEndReason, setContractEndReason] = useState<ContractEndReason>(isPendingDeath ? 'death' : 'family_request')
-  const [deathDate, setDeathDate] = useState(todayStr)
+  const [deathDate, setDeathDate] = useState(initialDate)
   const [notes, setNotes] = useState('')
 
   const isDeath = isNurseInit || contractEndReason === 'death'

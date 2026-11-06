@@ -1,8 +1,4 @@
-import {
-  CONTRACT_END_REASONS,
-  CONTRACT_END_REASON_LABELS,
-  ContractEndReason,
-} from './reporting-constants'
+import { CONTRACT_END_REASONS, type ContractEndReason } from './reporting-constants'
 
 export interface DischargePayloadInput {
   residentId: string
@@ -12,7 +8,7 @@ export interface DischargePayloadInput {
   notes?: string | null
 }
 
-export interface ValidDischargePayload {
+export interface ValidatedDischargeData {
   residentId: string
   contractEndDate: string
   contractEndReason: ContractEndReason
@@ -20,8 +16,8 @@ export interface ValidDischargePayload {
   notes: string | null
 }
 
-export type DischargeValidationResult =
-  | { isValid: true; data: ValidDischargePayload }
+export type ValidationResult =
+  | { isValid: true; data: ValidatedDischargeData }
   | { isValid: false; errors: string[] }
 
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/
@@ -33,47 +29,37 @@ function isValidIsoDate(str: string): boolean {
   return !isNaN(d.getTime()) && str === d.toISOString().slice(0, 10)
 }
 
-/**
- * Waliduje dane wejściowe operacji zakończenia pobytu / wypisu podopiecznego
- * Zgodnie z @REQ: ADM-BED-ASSIGNMENT i @REQ: ADM-ARCHIVE
- */
-export function validateDischargePayload(input: unknown): DischargeValidationResult {
+export function validateDischargePayload(input: unknown): ValidationResult {
   const errors: string[] = []
 
   if (!input || typeof input !== 'object') {
-    return { isValid: false, errors: ['Brak poprawnych danych wejściowych.'] }
+    return { isValid: false, errors: ['Nieprawidłowy format danych wejściowych.'] }
   }
 
-  const raw = input as Partial<DischargePayloadInput>
+  const payload = input as Record<string, unknown>
 
-  // 1. Walidacja residentId
-  if (!raw.residentId || typeof raw.residentId !== 'string' || !UUID_REGEX.test(raw.residentId)) {
-    errors.push('Niepoprawny identyfikator podopiecznego (wymagany UUID).')
+  if (!payload.residentId || typeof payload.residentId !== 'string' || !UUID_REGEX.test(payload.residentId)) {
+    errors.push('Identyfikator podopiecznego jest nieprawidłowy.')
   }
 
-  // 2. Walidacja daty zakończenia umowy (contractEndDate)
-  if (!raw.contractEndDate || typeof raw.contractEndDate !== 'string' || !isValidIsoDate(raw.contractEndDate)) {
-    errors.push('Data zakończenia pobytu musi być poprawną datą (wymagany format RRRR-MM-DD).')
+  if (!payload.contractEndDate || typeof payload.contractEndDate !== 'string' || !isValidIsoDate(payload.contractEndDate)) {
+    errors.push('Data zakończenia pobytu/umowy musi mieć format YYYY-MM-DD.')
   }
 
-  // 3. Walidacja powodu zakończenia (contractEndReason)
-  const isReasonValid =
-    typeof raw.contractEndReason === 'string' &&
-    CONTRACT_END_REASONS.includes(raw.contractEndReason as ContractEndReason)
+  const isKnownReason =
+    typeof payload.contractEndReason === 'string' &&
+    CONTRACT_END_REASONS.includes(payload.contractEndReason as ContractEndReason)
 
-  if (!isReasonValid) {
-    errors.push(
-      `Nieznany powód zakończenia pobytu. Dopuszczalne: ${CONTRACT_END_REASONS.join(', ')}`
-    )
+  if (!isKnownReason) {
+    errors.push(`Powód zakończenia pobytu jest nieprawidłowy. Dopuszczalne: ${CONTRACT_END_REASONS.join(', ')}.`)
   }
 
-  // 4. Walidacja zgonu (deathDate)
-  let cleanDeathDate: string | null = null
-  if (raw.contractEndReason === 'death') {
-    if (!raw.deathDate || typeof raw.deathDate !== 'string' || !isValidIsoDate(raw.deathDate)) {
+  let finalDeathDate: string | null = null
+  if (payload.contractEndReason === 'death') {
+    if (!payload.deathDate || typeof payload.deathDate !== 'string' || !isValidIsoDate(payload.deathDate)) {
       errors.push('W przypadku zgonu data zgonu jest wymagana.')
     } else {
-      cleanDeathDate = raw.deathDate
+      finalDeathDate = payload.deathDate
     }
   }
 
@@ -81,75 +67,45 @@ export function validateDischargePayload(input: unknown): DischargeValidationRes
     return { isValid: false, errors }
   }
 
-  const cleanNotes =
-    raw.notes && typeof raw.notes === 'string' && raw.notes.trim().length > 0
-      ? raw.notes.trim()
+  const trimmedNotes =
+    payload.notes && typeof payload.notes === 'string' && payload.notes.trim().length > 0
+      ? payload.notes.trim()
       : null
 
   return {
     isValid: true,
     data: {
-      residentId: raw.residentId!,
-      contractEndDate: raw.contractEndDate!,
-      contractEndReason: raw.contractEndReason as ContractEndReason,
-      deathDate: cleanDeathDate,
-      notes: cleanNotes,
+      residentId: payload.residentId as string,
+      contractEndDate: payload.contractEndDate as string,
+      contractEndReason: payload.contractEndReason as ContractEndReason,
+      deathDate: finalDeathDate,
+      notes: trimmedNotes,
     },
   }
 }
 
-export type ResidentStatusKey = 'active' | 'discharged' | 'deceased' | 'archived'
-
-/**
- * Wyznacza status podopiecznego z uwzględnieniem Wariantu B
- * (wypisanie lub zgon nie ustawia natychmiast archived_at, rodzina ma wgląd read-only)
- */
 export function determineResidentStatus(resident: {
   archived_at?: string | null
   death_date?: string | null
   contract_end_date?: string | null
-}): ResidentStatusKey {
-  if (resident.archived_at) {
-    return 'archived'
-  }
-  if (resident.death_date) {
-    return 'deceased'
-  }
+}): 'active' | 'discharged' | 'deceased' | 'archived' {
+  if (resident.archived_at) return 'archived'
+  if (resident.death_date) return 'deceased'
   if (resident.contract_end_date) {
     const end = new Date(resident.contract_end_date)
-    const now = new Date()
-    // Porównanie z dzisiejszą datą
-    if (end <= now) {
-      return 'discharged'
-    }
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    if (end <= today) return 'discharged'
   }
   return 'active'
 }
 
-export const RESIDENT_STATUS_LABELS: Record<ResidentStatusKey, string> = {
+export const DISCHARGE_STATUS_LABELS: Record<string, string> = {
   active: 'Aktywny',
   discharged: 'Wypisany',
   deceased: 'Zgon',
   archived: 'Zarchiwizowany',
 }
-
-export interface DeathInitiationPayloadInput {
-  residentId: string
-  deathDate: string
-  notes?: string | null
-}
-
-export interface ValidDeathInitiationPayload {
-  residentId: string
-  deathDate: string
-  notes: string | null
-}
-
-export type DeathInitiationValidationResult =
-  | { isValid: true; data: ValidDeathInitiationPayload }
-  | { isValid: false; errors: string[] }
-
-export const DEATH_INITIATION_MARKER = '[Zgłoszenie zgonu — oczekuje na zatwierdzenie umowy]'
 
 export function canInitiateDeathProcedure(
   role: string | undefined,
@@ -159,25 +115,50 @@ export function canInitiateDeathProcedure(
   return role === 'nurse' || role === 'org_admin'
 }
 
-export function validateDeathInitiationPayload(
-  input: unknown
-): DeathInitiationValidationResult {
-  const res = validateDischargePayload({
-    ...(input && typeof input === 'object' ? input : {}),
-    contractEndDate: (input as Partial<DeathInitiationPayloadInput>)?.deathDate,
-    contractEndReason: 'death',
-  })
+export interface DeathInitiationPayloadInput {
+  residentId: string
+  deathDate: string
+  notes?: string | null
+}
 
-  if (!res.isValid) {
-    return { isValid: false, errors: res.errors }
+export interface ValidatedDeathInitiationData {
+  residentId: string
+  deathDate: string
+  notes: string | null
+}
+
+export type DeathInitiationValidationResult =
+  | { isValid: true; data: ValidatedDeathInitiationData }
+  | { isValid: false; errors: string[] }
+
+export function validateDeathInitiationPayload(input: unknown): DeathInitiationValidationResult {
+  const errors: string[] = []
+  if (!input || typeof input !== 'object') {
+    return { isValid: false, errors: ['Nieprawidłowy format danych wejściowych.'] }
   }
+  const payload = input as Record<string, unknown>
+
+  if (!payload.residentId || typeof payload.residentId !== 'string' || !UUID_REGEX.test(payload.residentId)) {
+    errors.push('Identyfikator podopiecznego jest nieprawidłowy.')
+  }
+
+  if (!payload.deathDate || typeof payload.deathDate !== 'string' || !isValidIsoDate(payload.deathDate)) {
+    errors.push('Data zgonu jest wymagana i musi mieć format YYYY-MM-DD.')
+  }
+
+  if (errors.length > 0) return { isValid: false, errors }
+
+  const trimmedNotes =
+    payload.notes && typeof payload.notes === 'string' && payload.notes.trim().length > 0
+      ? payload.notes.trim()
+      : null
 
   return {
     isValid: true,
     data: {
-      residentId: res.data.residentId,
-      deathDate: res.data.deathDate!,
-      notes: res.data.notes,
+      residentId: payload.residentId as string,
+      deathDate: payload.deathDate as string,
+      notes: trimmedNotes,
     },
   }
 }
@@ -186,7 +167,14 @@ export function buildPostMortemSanitizationTasks(params: {
   residentId: string
   targetDate: string
   bedLabel?: string | null
-}) {
+}): Array<{
+  resident_id: string
+  target_date: string
+  time: string
+  type: string
+  title: string
+  family_visible: boolean
+}> {
   const bedInfo = params.bedLabel ? ` (${params.bedLabel})` : ''
   return [
     {
@@ -210,33 +198,16 @@ export function buildPostMortemSanitizationTasks(params: {
       target_date: params.targetDate,
       time: '10:00',
       type: 'staff_only',
-      title: `Sanityzacja i dezynfekcja zwolnionego miejsca${bedInfo}`,
+      title: `Sanityzacja i dezynfekcja miejsca${bedInfo}`,
       family_visible: false,
     },
   ]
 }
 
-export function formatDeathInitiationNote(params: {
-  existingNotes?: string | null
-  deathDate: string
-  unassignedBedLabel?: string | null
-  notes?: string | null
-}): string {
-  const bedPart = params.unassignedBedLabel
-    ? ` | Zwolniono do dezynfekcji: ${params.unassignedBedLabel}`
-    : ''
-  const customPart = params.notes ? ` — ${params.notes.trim()}` : ''
-  const line = `${DEATH_INITIATION_MARKER} (data zgonu: ${params.deathDate}${bedPart})${customPart}`
-  const base = params.existingNotes?.trim()
-  return base ? `${base}\n${line}` : line
-}
-
 export function hasPendingDeathInitiation(resident: {
-  notes?: string | null
   death_date?: string | null
   death_reported_at?: string | null
 }): boolean {
   if (resident.death_date) return false
-  if (resident.death_reported_at) return true
-  return Boolean(resident.notes && resident.notes.includes(DEATH_INITIATION_MARKER))
+  return Boolean(resident.death_reported_at)
 }
