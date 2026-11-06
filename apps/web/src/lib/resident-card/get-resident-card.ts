@@ -1,6 +1,7 @@
 import type { SupabaseClient, User } from '@supabase/supabase-js'
 import type { ResidentCardSection } from '@silvercare/contracts/src/generated/presentation'
 import { resolveCardAccess, sectionsFor, residentSelect, type CardAccess } from './card-access'
+import { RESIDENT_TASK_SELECT, summarizeResidentTasks, type ResidentTaskRow, type ResidentTasksSummary } from './resident-tasks'
 
 type Row = Record<string, unknown>
 type QueryResult = { data: unknown; error: { code?: string } | null }
@@ -16,6 +17,8 @@ export type ResidentCardResult =
       resident: Row
       wearable: Row | null
       daily: { reports: Row[]; agenda: Row[] } | null
+      /** Sekcja „Zadania” (SC-ADM-21); null, gdy rola jej nie ma. */
+      tasks: ResidentTasksSummary | null
       /** Tabela wellness_daily nie istnieje jeszcze w bazie — jawny brak danych, nie zgadywanie. */
       wellness: { available: false }
     }
@@ -40,7 +43,13 @@ export async function getResidentCard(
   let residentQuery = supabase.from('residents').select(residentSelect(sections)).eq('id', residentId)
   if (orgId) residentQuery = residentQuery.eq('organization_id', orgId)
 
-  const [resident, wearable, reports, agenda] = (await Promise.all([
+  const tasksQuery = () => {
+    let query = supabase.from('shift_tasks').select(RESIDENT_TASK_SELECT).eq('resident_id', residentId)
+    if (orgId) query = query.eq('organization_id', orgId)
+    return query.order('shift_date', { ascending: false }).limit(200)
+  }
+
+  const [resident, wearable, reports, agenda, tasks] = (await Promise.all([
     residentQuery.maybeSingle(),
     sections.includes('wearable')
       ? supabase.from('external_wearable_links').select('id, provider, external_user_id, created_at').eq('resident_id', residentId).eq('provider', 'POLAR').maybeSingle()
@@ -51,10 +60,12 @@ export async function getResidentCard(
     sections.includes('daily')
       ? supabase.from('agenda_items').select('id, title, time, type, target_date').eq('resident_id', residentId).order('target_date', { ascending: false }).limit(5)
       : { data: [], error: null },
+    sections.includes('tasks') ? tasksQuery() : { data: [], error: null },
   ])) as QueryResult[]
 
-  if ([resident, wearable, reports, agenda].some(failed)) {
-    const codes = [resident, wearable, reports, agenda].flatMap((r) => (r.error?.code ? [r.error.code] : []))
+  const results = [resident, wearable, reports, agenda, tasks]
+  if (results.some(failed)) {
+    const codes = results.flatMap((r) => (r.error?.code ? [r.error.code] : []))
     console.error('[karta-podopiecznego] błąd zapytania', { codes })
     return { status: 'error' }
   }
@@ -67,6 +78,7 @@ export async function getResidentCard(
     resident: resident.data as Row,
     wearable: (wearable.data as Row | null) ?? null,
     daily: sections.includes('daily') ? { reports: (reports.data as Row[]) ?? [], agenda: (agenda.data as Row[]) ?? [] } : null,
+    tasks: sections.includes('tasks') ? summarizeResidentTasks((tasks.data as ResidentTaskRow[]) ?? [], new Date()) : null,
     wellness: { available: false },
   }
 }
