@@ -101,12 +101,13 @@ export function ResidentCard({ card, backHref, backLabel, reportsHref }: Residen
         backLabel={backLabel}
         activeAssignment={activeAssignment}
         needsAttention={card.tasks?.needsAttention ?? false}
+        voiceNoteHref={card.access.readOnly ? undefined : `/voice?resident=${resident.id}`}
       />
       <ResidentProfileTabs
         overviewLabel={labelOf('overview')}
         overview={
           <>
-            <ResidentGeneralInfoCard resident={resident} age={age} stayDays={stayDays} />
+            <ResidentGeneralInfoCard resident={resident} age={age} stayDays={stayDays} canEditZsn={has('manage')} />
             {has('bed') && <ResidentBedInfoCard activeAssignment={activeAssignment} pastAssignments={pastAssignments} />}
           </>
         }
