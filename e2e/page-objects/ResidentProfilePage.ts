@@ -62,6 +62,21 @@ export class ResidentProfilePage {
     return this.page.locator('main').getByRole('link', { name: 'Dodaj zadanie' });
   }
 
+  /** Status ZSN tylko do odczytu (personel opiekuńczy). */
+  get zsnValue(): Locator {
+    return this.page.locator('main [data-testid="resident-zsn-value"]');
+  }
+
+  /** Przełącznik ZSN (tylko rola z prawem zapisu podopiecznego). */
+  get zsnToggle(): Locator {
+    return this.page.locator('main').getByRole('checkbox', { name: /ZSN/ });
+  }
+
+  /** Nagranie notatki głosowej o tym podopiecznym z nagłówka karty. */
+  get voiceNoteLink(): Locator {
+    return this.page.locator('main').getByRole('link', { name: 'Nagraj notatkę' });
+  }
+
   tab(name: string): Locator {
     return this.tablist.getByRole('tab', { name });
   }
