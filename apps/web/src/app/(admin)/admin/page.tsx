@@ -5,7 +5,8 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { buttonVariants } from '@/components/ui/button'
-import { Users, Bed, BedDouble, FileText, Building2 } from 'lucide-react'
+import { Users, Bed, BedDouble, FileText } from 'lucide-react'
+import { FacilityIcon } from '@/components/icons/FacilityIcon'
 import { PageHeader } from '@/components/patterns/PageHeader'
 import { MetricCard, MetricGrid } from '@/components/patterns/MetricCard'
 import { getAppRole } from '@/lib/auth/app-role'
@@ -57,7 +58,7 @@ export default async function AdminDashboard() {
             Lista podopiecznych
           </Link>
           <Link href="/admin/facility" className={buttonVariants({ variant: 'outline' })}>
-            <Building2 />
+            <FacilityIcon />
             Struktura placówki
           </Link>
         </CardContent>

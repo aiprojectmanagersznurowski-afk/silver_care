@@ -3,7 +3,8 @@
 import React from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Building2, AlertCircle, RefreshCw } from 'lucide-react'
+import { AlertCircle, RefreshCw } from 'lucide-react'
+import { FacilityIcon } from '@/components/icons/FacilityIcon'
 
 export function OrganizationsLoadingState() {
   return (
@@ -42,7 +43,7 @@ export function OrganizationsEmptyState({ renderActionSlot }: { renderActionSlot
   return (
     <Card className="rounded-xl border-none ring-1 ring-border p-12 text-center">
       <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary mb-4">
-        <Building2 className="h-8 w-8" />
+        <FacilityIcon className="h-8 w-8" />
       </div>
       <h3 className="text-xl font-semibold text-foreground mb-2">Brak zarejestrowanych placówek</h3>
       <p className="text-muted-foreground max-w-md mx-auto mb-6">
