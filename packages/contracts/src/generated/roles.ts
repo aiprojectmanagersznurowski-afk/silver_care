@@ -355,7 +355,8 @@ export const MATRIX = [
       "org_admin:own"
     ],
     "create": [
-      "org_admin"
+      "org_admin",
+      "nurse"
     ],
     "update": [],
     "delete": []
