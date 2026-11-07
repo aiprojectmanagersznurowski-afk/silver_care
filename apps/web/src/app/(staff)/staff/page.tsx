@@ -26,7 +26,8 @@ export default async function StaffDashboard() {
       ),
       voice_draft_notes (
         id,
-        status
+        status,
+        created_at
       ),
       daily_reports (
         id,

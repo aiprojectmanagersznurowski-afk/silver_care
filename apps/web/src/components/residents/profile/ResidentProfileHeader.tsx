@@ -2,7 +2,8 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Mic } from 'lucide-react'
+import { buttonVariants } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { StatusBadge } from '@/components/patterns/StatusBadge'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
@@ -20,6 +21,10 @@ interface ResidentProfileHeaderProps {
   backHref: string
   backLabel: string
   activeAssignment?: ResidentBedAssignment | null
+  /** Otwarte zadanie zaakceptowane przez personel (SC-ADM-21); nie jest oceną stanu zdrowia. */
+  needsAttention?: boolean
+  /** Nagranie notatki głosowej o tym podopiecznym (personel, nie w trybie podglądu); identyfikator idzie z UI. */
+  voiceNoteHref?: string
 }
 
 export function ResidentProfileHeader({
@@ -29,6 +34,8 @@ export function ResidentProfileHeader({
   backHref,
   backLabel,
   activeAssignment,
+  needsAttention = false,
+  voiceNoteHref,
 }: ResidentProfileHeaderProps) {
   const activeBedLabel = activeAssignment?.beds
     ? `Pokój ${activeAssignment.beds.rooms?.number || '?'}, Łóżko ${activeAssignment.beds.label}`
@@ -71,6 +78,11 @@ export function ResidentProfileHeader({
               ) : (
                 <StatusBadge>Zakończony pobyt</StatusBadge>
               )}
+              {needsAttention && (
+                <StatusBadge tone="brand" data-testid="resident-attention" title="Podopieczny ma otwarte zadanie do zrobienia">
+                  Wymaga uwagi
+                </StatusBadge>
+              )}
             </div>
             <p className="text-sm text-muted-foreground mt-1">
               {activeBedLabel ?? 'Brak przypisanego łóżka'}
@@ -78,11 +90,18 @@ export function ResidentProfileHeader({
           </div>
         </div>
 
-        {canManage && (
+        {(canManage || voiceNoteHref) && (
         <div className="flex flex-wrap items-center gap-2">
-          <EditResidentDialog resident={resident} />
+          {voiceNoteHref && (
+            <Link href={voiceNoteHref} className={buttonVariants({ className: 'min-h-touch' })}>
+              <Mic className="h-4 w-4" aria-hidden="true" />
+              Nagraj notatkę
+            </Link>
+          )}
 
-          {isActive && (
+          {canManage && <EditResidentDialog resident={resident} />}
+
+          {canManage && isActive && (
             <DischargeResidentDialog
               resident={{
                 id: resident.id,

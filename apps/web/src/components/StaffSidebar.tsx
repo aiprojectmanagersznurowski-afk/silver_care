@@ -1,6 +1,6 @@
 'use client'
 
-import { Calendar, FileText, Users, Mic } from 'lucide-react'
+import { Calendar, ClipboardList, FileText, Users, Mic } from 'lucide-react'
 import Image from 'next/image'
 import { Logo } from '@/components/Logo'
 import Link from 'next/link'
@@ -25,6 +25,7 @@ export function getStaffNavGroups(): SidebarNavGroup[] {
       items: [
         { href: '/staff', label: 'Podopieczni', icon: Users, exact: true },
         { href: '/staff/agenda', label: 'Agenda na dziś', icon: Calendar },
+        { href: '/staff/shift-tasks', label: 'Zadania zmiany', icon: ClipboardList },
         { href: '/voice', label: 'Notatka głosowa', icon: Mic },
         { href: '/staff/reports', label: 'Raporty', icon: FileText },
       ],

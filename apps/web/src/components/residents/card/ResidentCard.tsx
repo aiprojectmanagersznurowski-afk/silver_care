@@ -18,6 +18,7 @@ import { ResidentEventsCard } from '@/components/residents/profile/ResidentEvent
 import { ResidentProfileTabs, type ProfileTab } from '@/components/residents/profile/ResidentProfileTabs'
 import { WellnessSection } from './WellnessSection'
 import { DailySection } from './DailySection'
+import { ResidentTasksSection } from './ResidentTasksSection'
 
 type OkCard = Extract<ResidentCardResult, { status: 'ok' }>
 
@@ -65,6 +66,13 @@ export function ResidentCard({ card, backHref, backLabel, reportsHref }: Residen
       content: <DailySection reports={card.daily?.reports ?? []} agenda={card.daily?.agenda ?? []} reportsHref={reportsHref} />,
     })
   }
+  if (has('tasks') && card.tasks) {
+    tabs.push({
+      id: 'tasks',
+      label: labelOf('tasks'),
+      content: <ResidentTasksSection tasks={card.tasks} addTaskHref={`/staff/shift-tasks?resident=${resident.id}`} />,
+    })
+  }
   if (has('family')) tabs.push({ id: 'family', label: labelOf('family'), content: <ResidentFamilyCard resident={resident} relativeLinks={relativeLinks} /> })
   if (has('events')) tabs.push({ id: 'events', label: labelOf('events'), content: <ResidentEventsCard events={events} /> })
   if (has('wearable')) {
@@ -92,12 +100,14 @@ export function ResidentCard({ card, backHref, backLabel, reportsHref }: Residen
         backHref={backHref}
         backLabel={backLabel}
         activeAssignment={activeAssignment}
+        needsAttention={card.tasks?.needsAttention ?? false}
+        voiceNoteHref={card.access.readOnly ? undefined : `/voice?resident=${resident.id}`}
       />
       <ResidentProfileTabs
         overviewLabel={labelOf('overview')}
         overview={
           <>
-            <ResidentGeneralInfoCard resident={resident} age={age} stayDays={stayDays} />
+            <ResidentGeneralInfoCard resident={resident} age={age} stayDays={stayDays} canEditZsn={has('manage')} />
             {has('bed') && <ResidentBedInfoCard activeAssignment={activeAssignment} pastAssignments={pastAssignments} />}
           </>
         }

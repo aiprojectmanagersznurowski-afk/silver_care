@@ -18,7 +18,7 @@ test.describe('Karta podopiecznego — personel opiekuńczy (@REQ: ADM-RESIDENT-
     const card = new ResidentProfilePage(page);
     await card.openStaffCard(await card.firstResidentIdFromStaffBoard());
 
-    expect(await card.tabNames()).toEqual(['Przegląd', 'Aktywność i sen', 'Raporty i plan dnia']);
+    expect(await card.tabNames()).toEqual(['Przegląd', 'Aktywność i sen', 'Raporty i plan dnia', 'Zadania']);
     await expect(card.sidebar).toHaveCount(0);
     await expect(page.getByTestId('edit-resident-btn')).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Zakończ pobyt' })).toHaveCount(0);

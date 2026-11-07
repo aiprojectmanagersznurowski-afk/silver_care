@@ -95,6 +95,7 @@ export const RESIDENT_CARD_SECTIONS = [
   { id: 'bed',      label: 'Łóżko i pokój',       roles: ['org_admin', 'nurse'], resources: ['bed_assignments', 'beds', 'rooms'] },
   { id: 'wellness', label: 'Aktywność i sen',     roles: ['org_admin', 'nurse'], resources: ['wellness_daily'], metricKind: 'BEHAVIORAL' },
   { id: 'daily',    label: 'Raporty i plan dnia', roles: ['org_admin', 'nurse'], resources: ['daily_reports', 'daily_agenda'] },
+  { id: 'tasks',    label: 'Zadania',             roles: ['org_admin', 'nurse'], resources: ['shift_tasks'] },
   { id: 'family',   label: 'Bliscy i kontakty',   roles: ['org_admin'],          resources: ['resident_relative_links'] },
   { id: 'contract', label: 'Umowa i pakiety',     roles: ['org_admin'],          resources: ['residents', 'resident_packages'] },
   { id: 'events',   label: 'Zdarzenia pobytu',    roles: ['org_admin'],          resources: ['resident_events'] },
