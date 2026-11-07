@@ -1,6 +1,6 @@
 # 📖 Kanoniczna specyfikacja user stories — Silver Care
 
-> **Wersja:** 2.16 (moduł zadań: kierownik zmiany, wydruk planu, rozliczenie z notatek głosowych, plan opieki — 📝 PROPOZYCJA) · **Ostatnia aktualizacja:** 2026-10-30
+> **Wersja:** 2.17 (karta podopiecznego dla personelu: ZSN tylko do odczytu, uwagi przyjęciowe, notatka głosowa z karty — 📝 PROPOZYCJA) · **Ostatnia aktualizacja:** 2026-11-06
 > **Właściciele:** Darek Rink, Michał Sznurowski
 
 ## Jak czytać i utrzymywać ten dokument
@@ -574,6 +574,9 @@
 - **AC5 (Podopieczny po zgonie lub w archiwum):** Karta otwiera się tylko do odczytu z neutralną plakietką statusu („Zgon”, „Zarchiwizowany”, „Wypisany”); personel opiekuńczy nie ma na niej żadnych akcji zapisu.
 - **AC6 (Nawigacja według roli):** Wyniki wyszukiwarki, tablica dyżuru i lista podopiecznych prowadzą do trasy właściwej dla roli (kierownik → `/admin/residents/{id}`, personel → `/staff/residents/{id}`).
 - **AC7 (Norma UI i dostępność):** Zakładki obsługiwane klawiaturą, cele dotykowe `min-h-touch`, tekst ≥12px, kolory z tokenów, 4 stany UI (loading, empty, success, error); brak zapisu danych osobowych w logach (`SEC-NO-PII-LOGS`).
+- **AC8 (ZSN tylko do odczytu dla personelu — 📝 2026-11-06):** Status ZSN wynika z dokumentacji przyjęcia i późniejszych dokumentów potwierdzających, więc zmienia go wyłącznie rola z prawem zapisu podopiecznego (Kierownik placówki). Personel opiekuńczy widzi wartość („Tak”/„Nie”) bez przełącznika, a API odrzuca jego próbę zapisu. Zapis, który nie zmienił wiersza, jest błędem, a nie sukcesem.
+- **AC9 (Uwagi przyjęciowe — 📝 2026-11-06):** Treść wpisana przy przyjęciu („Uwagi przyjęciowe” w kreatorze) ma na karcie tę samą nazwę. Nie pochodzi z notatek głosowych.
+- **AC10 (Notatka głosowa z karty — 📝 2026-11-06):** Personel nagrywa notatkę głosową o podopiecznym prosto z nagłówka karty („Nagraj notatkę”); identyfikator podopiecznego przekazuje interfejs (`VOICE-ZERO-GUESSING`). Przycisku nie ma w trybie podglądu (impersonacja).
 
 #### [SC-ADM-21] Sekcja „Zadania” na karcie podopiecznego i wpływ przekazania zmiany na kartę
 🔗 **Kontrakt:** brak REQ (proponowany nowy: `ADM-RESIDENT-CARD-TASKS`; rozszerza `ADM-RESIDENT-CARD-VISIBILITY`) · **ADR:** ADR-021 · **Status:** 📝 PROPOZYCJA
@@ -1014,4 +1017,5 @@
 | 2026-10-28 | 2.13 | Doprecyzowanie godzin 12-godzinnych zmian personelu (07:00–19:00 i 19:00–07:00 Europe/Warsaw) w AC5 SC-NUR-08 (PR #153). |
 | 2026-10-29 | 2.14 | Dopisanie `SC-NUR-12` (głosowe przekazanie zmiany), `SC-NUR-13` (moduł zadań z backlogiem i propozycjami AI), `SC-NUR-14` (raport dobowy z komunikatem o obchodzie) i `SC-ADM-21` (sekcja „Zadania” na karcie podopiecznego) ze statusem 📝 PROPOZYCJA, na podstawie decyzji Michała z ADR-021. |
 | 2026-10-29 | 2.15 | Dopisanie `SC-ADM-22` (limit miejsc placówki: przekroczenie z ostrzeżeniem dla kierownika i super admina) i `NFR-UI-06` (spójna terminologia interfejsu) ze statusem 📝 PROPOZYCJA, na podstawie decyzji Michała z 2026-10-29; `MASTER_DATA_STANDARD.md` w wersji 2.0. |
-| 2026-10-30 | 2.16 | Moduł zadań wg decyzji Michała z 2026-10-30: przebudowa `SC-NUR-13` (cykl zmiany, kierownik zmiany w grafiku — wariant B, źródło zadania, grupowanie per pokój/podopieczny, rozliczenie: wykonane / anulowane z powodem / przeniesione), `SC-NUR-12/AC1a` (grafik i kierownik zmiany), nowe `SC-NUR-15` (wydruk planu pracy), `SC-NUR-16` (rozliczenie z notatek głosowych) i `SC-ADM-23` (plan opieki — rejestr zadań standardowych, komponent rozwojowy) ze statusem 📝 PROPOZYCJA.
+| 2026-10-30 | 2.16 | Moduł zadań wg decyzji Michała z 2026-10-30: przebudowa `SC-NUR-13` (cykl zmiany, kierownik zmiany w grafiku — wariant B, źródło zadania, grupowanie per pokój/podopieczny, rozliczenie: wykonane / anulowane z powodem / przeniesione), `SC-NUR-12/AC1a` (grafik i kierownik zmiany), nowe `SC-NUR-15` (wydruk planu pracy), `SC-NUR-16` (rozliczenie z notatek głosowych) i `SC-ADM-23` (plan opieki — rejestr zadań standardowych, komponent rozwojowy) ze statusem 📝 PROPOZYCJA. |
+| 2026-11-06 | 2.17 | `SC-ADM-20`: AC8 (ZSN tylko do odczytu dla personelu, decyzja Michała z 2026-11-06), AC9 (etykieta „Uwagi przyjęciowe”), AC10 (nagranie notatki głosowej z karty) ze statusem 📝 PROPOZYCJA. |

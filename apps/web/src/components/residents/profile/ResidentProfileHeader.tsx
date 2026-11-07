@@ -2,7 +2,8 @@
 
 import React, { useTransition } from 'react'
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Mic } from 'lucide-react'
+import { buttonVariants } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/patterns/StatusBadge'
@@ -26,6 +27,8 @@ interface ResidentProfileHeaderProps {
   activeAssignment?: ResidentBedAssignment | null
   /** Otwarte zadanie zaakceptowane przez personel (SC-ADM-21); nie jest oceną stanu zdrowia. */
   needsAttention?: boolean
+  /** Nagranie notatki głosowej o tym podopiecznym (personel, nie w trybie podglądu); identyfikator idzie z UI. */
+  voiceNoteHref?: string
 }
 
 export function ResidentProfileHeader({
@@ -36,6 +39,7 @@ export function ResidentProfileHeader({
   backLabel,
   activeAssignment,
   needsAttention = false,
+  voiceNoteHref,
 }: ResidentProfileHeaderProps) {
   const [isCancelling, startCancelTransition] = useTransition()
   const activeBedLabel = activeAssignment?.beds
@@ -109,8 +113,15 @@ export function ResidentProfileHeader({
           </div>
         </div>
 
-        {(canManage || canNurseInitiateDeath) && (
+        {(canManage || canNurseInitiateDeath || voiceNoteHref) && (
           <div className="flex flex-wrap items-center gap-2">
+            {voiceNoteHref && (
+              <Link href={voiceNoteHref} className={buttonVariants({ className: 'min-h-touch' })}>
+                <Mic className="h-4 w-4" aria-hidden="true" />
+                Nagraj notatkę
+              </Link>
+            )}
+
             {canManage && <EditResidentDialog resident={resident} />}
 
             {canManage && isActive && (

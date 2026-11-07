@@ -11,18 +11,22 @@ import {
   CareLevel,
 } from '@/lib/reporting-constants'
 import { ResidentZsnCheckbox } from '@/components/ResidentZsnCheckbox'
+import { StatusBadge } from '@/components/patterns/StatusBadge'
 import { FullResidentData } from './profile-types'
 
 interface ResidentGeneralInfoCardProps {
   resident: FullResidentData
   age: number | null
   stayDays: number | null
+  /** Zmiana ZSN tylko dla roli z sekcją „Edycja i wypis” (kierownik placówki); personel widzi wartość. */
+  canEditZsn?: boolean
 }
 
 export function ResidentGeneralInfoCard({
   resident,
   age,
   stayDays,
+  canEditZsn = false,
 }: ResidentGeneralInfoCardProps) {
   const careLevel = (resident.care_level || 'unknown') as CareLevel | 'unknown'
   const careLevelBg = CARE_LEVEL_BG_CLASSES[careLevel] || 'bg-muted text-foreground'
@@ -75,10 +79,16 @@ export function ResidentGeneralInfoCard({
 
           <div>
             <span className="text-sm text-muted-foreground block mb-1">Status ZSN</span>
-            <ResidentZsnCheckbox
-              residentId={resident.id}
-              initialValue={Boolean(resident.is_zsn)}
-            />
+            {canEditZsn ? (
+              <ResidentZsnCheckbox
+                residentId={resident.id}
+                initialValue={Boolean(resident.is_zsn)}
+              />
+            ) : (
+              <StatusBadge tone={resident.is_zsn ? 'brand' : 'neutral'} data-testid="resident-zsn-value">
+                {resident.is_zsn ? 'Tak' : 'Nie'}
+              </StatusBadge>
+            )}
           </div>
 
           <div>
@@ -92,7 +102,7 @@ export function ResidentGeneralInfoCard({
 
         {resident.notes && (
           <div className="pt-3 border-t border-border/60">
-            <span className="text-sm text-muted-foreground block mb-1">Uwagi opiekuńcze</span>
+            <span className="text-sm text-muted-foreground block mb-1">Uwagi przyjęciowe</span>
             <p className="text-sm text-foreground italic bg-muted/40 p-3 rounded-lg border border-border/60">
               {resident.notes}
             </p>

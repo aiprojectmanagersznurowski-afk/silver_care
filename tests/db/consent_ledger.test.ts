@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, afterAll } from 'vitest';
 import postgres from 'postgres';
 import * as dotenv from 'dotenv';
 
@@ -7,10 +7,6 @@ dotenv.config({ path: '.env.local' });
 const sql = postgres(process.env.DATABASE_URL!, { prepare: false });
 
 describe('Consent Ledger Constraints (CONSENT-GRANTOR, CONSENT-REVOKE)', () => {
-  beforeAll(async () => {
-    await sql`RESET ROLE`;
-  });
-
   afterAll(async () => {
     await sql.end();
   });
@@ -53,10 +49,16 @@ describe('Consent Ledger Constraints (CONSENT-GRANTOR, CONSENT-REVOKE)', () => {
       const consentId = consent[0].id;
 
       await tx`SET LOCAL ROLE authenticated`;
+      // Personel opiekuńczy nie cofa zgód (CONSENT-GRANTOR, #192)
       const nurseSub = '77777777-7777-7777-7777-777777777777';
       await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "${nurseSub}", "app_metadata": {"role": "nurse", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
+      const nurseResult = await tx.savepoint(async (sp) => { await sp`SELECT public.revoke_consent(${consentId})`; })
+        .then(() => 'cofnięto', (e: Error) => e.message);
+      expect(nurseResult).toMatch(/CONSENT_REVOKE_FORBIDDEN/);
 
-      // invoke RPC
+      // Cofa kierownik placówki
+      const adminSub = '88888888-8888-8888-8888-888888888888';
+      await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "${adminSub}", "app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
       await tx`SELECT public.revoke_consent(${consentId})`;
 
       await tx`SET LOCAL ROLE postgres`;
