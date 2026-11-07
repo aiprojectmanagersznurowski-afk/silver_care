@@ -3,13 +3,13 @@
 import React from 'react'
 import Link from 'next/link'
 import {
-  Building2,
   Users,
   UserCog,
   UserCheck,
   Calendar,
   MapPin,
 } from 'lucide-react'
+import { FacilityIcon } from '@/components/icons/FacilityIcon'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 import { StatusBadge } from '@/components/patterns/StatusBadge'
 import { OrganizationRowActions } from './OrganizationRowActions'
@@ -36,7 +36,7 @@ export function OrganizationsCardsView({
               <div className="space-y-1 min-w-0 flex-1">
                 <div className="flex items-center gap-2 min-w-0 flex-wrap">
                   <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
-                    <Building2 className="h-5 w-5" />
+                    <FacilityIcon className="h-5 w-5" />
                   </span>
                   <Link
                     href={`/admin/organizations/${org.organization_id}`}

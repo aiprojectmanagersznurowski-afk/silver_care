@@ -4,10 +4,10 @@ import {
   BedDouble,
   Calendar,
   FileText,
-  Building2,
   CornerDownLeft,
   Sparkles,
 } from 'lucide-react'
+import { FacilityIcon } from '@/components/icons/FacilityIcon'
 import {
   SearchCategoryKey,
   SearchResultItem,
@@ -22,7 +22,7 @@ const CATEGORY_ICONS: Record<SearchCategoryKey, React.ComponentType<{ className?
   agenda: Calendar,
   reports: FileText,
   staff: User,
-  organizations: Building2,
+  organizations: FacilityIcon,
 }
 
 interface CommandPaletteResultsProps {
