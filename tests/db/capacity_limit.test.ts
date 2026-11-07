@@ -72,6 +72,9 @@ describe('Limit miejsc zmienia wyłącznie super admin (ADM-CAPACITY-LIMIT)', ()
   it('@REQ: ADM-CAPACITY-LIMIT - klucz service_role (dawny masowy import) nie podnosi limitu', async () => {
     await rollback(async (tx) => {
       const orgId = await seedOrg(tx);
+      // Klucz serwisowy działa w roli service_role (omija RLS); sama zmiana tokenu przy roli authenticated
+      // zatrzymałaby zapis na RLS, zanim dotrze do wyzwalacza, i test niczego by nie sprawdzał
+      await tx`SET LOCAL ROLE service_role`;
       await asRole(tx, { role: 'service_role' });
       const attempt = await tx.savepoint(async (sp) => {
         await sp`UPDATE organizations SET resident_limit = 120 WHERE id = ${orgId}`;
