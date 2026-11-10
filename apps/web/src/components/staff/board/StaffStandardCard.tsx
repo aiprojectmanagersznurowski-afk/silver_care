@@ -35,7 +35,7 @@ export function StaffStandardCard({ resident, unansweredInfo }: StaffStandardCar
   return (
     <Card className="group relative overflow-hidden transition-all hover:ring-primary/30 flex flex-col">
       <CardContent className="p-0 flex flex-col h-full">
-        <div className="p-5 flex-grow space-y-4">
+        <div className="p-5 flex-grow space-y-4 min-h-[160px]">
           <div className="flex items-start justify-between">
             <Avatar className="h-12 w-12 border border-border">
               {(resident.avatar_url as string) && (
@@ -134,7 +134,7 @@ export function StaffStandardCard({ resident, unansweredInfo }: StaffStandardCar
             </TooltipContent>
           </Tooltip>
 
-          {noteStatus !== 'none' && (
+          {noteStatus !== 'none' ? (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
@@ -147,6 +147,21 @@ export function StaffStandardCard({ resident, unansweredInfo }: StaffStandardCar
               </TooltipTrigger>
               <TooltipContent>
                 Zobacz wygenerowany raport i historię obserwacji
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-muted/40 px-4 py-2.5 text-sm font-medium text-muted-foreground/60 ring-1 ring-inset ring-border/40 cursor-not-allowed min-h-touch select-none"
+                  aria-disabled="true"
+                >
+                  <FileText className="h-4 w-4 text-muted-foreground/40" />
+                  Brak raportu na dziś
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                Podopieczny nie ma jeszcze raportu na dziś
               </TooltipContent>
             </Tooltip>
           )}

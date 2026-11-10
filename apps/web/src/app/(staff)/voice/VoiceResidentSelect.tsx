@@ -42,7 +42,7 @@ export function VoiceResidentSelect({
   )
 
   return (
-    <Card className="p-6 space-y-4">
+    <Card className="p-4 sm:p-6 space-y-4">
       <div className="space-y-2">
         <label htmlFor="search-resident" className="text-sm font-medium text-foreground">
           Szukaj podopiecznego
@@ -75,16 +75,16 @@ export function VoiceResidentSelect({
                 key={r.id}
                 type="button"
                 onClick={() => onSelectResident(r)}
-                className="flex items-center gap-3 p-3 min-h-touch rounded-xl border border-border bg-background hover:bg-muted/50 hover:border-primary/50 text-left transition-all"
+                className="flex items-center gap-2.5 sm:gap-3 p-3 min-h-touch rounded-xl border border-border bg-background hover:bg-muted/50 hover:border-primary/50 text-left transition-all"
               >
-                <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm shrink-0">
+                <div className="size-9 sm:size-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-xs sm:text-sm shrink-0">
                   {r.first_name?.[0]}{r.last_name?.[0]}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-foreground truncate">
                     {formatPersonName(r.first_name, r.last_name)}
                   </p>
-                  <p className="text-sm text-muted-foreground">Kliknij, aby nagrać</p>
+                  <p className="text-sm text-muted-foreground truncate">Kliknij, aby nagrać</p>
                 </div>
               </button>
             ))}
@@ -96,18 +96,18 @@ export function VoiceResidentSelect({
               <TableHeader>
                 <TableRow>
                   <TableHead>Podopieczny</TableHead>
-                  <TableHead className="w-40 text-right">Akcja</TableHead>
+                  <TableHead className="w-24 sm:w-40 text-right">Akcja</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredResidents.map((r) => (
                   <TableRow key={r.id}>
                     <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm shrink-0">
+                      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                        <div className="size-8 sm:size-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-xs sm:text-sm shrink-0">
                           {r.first_name?.[0]}{r.last_name?.[0]}
                         </div>
-                        <span className="font-semibold text-sm text-foreground">
+                        <span className="font-semibold text-sm text-foreground truncate">
                           {formatPersonName(r.first_name, r.last_name)}
                         </span>
                       </div>
@@ -117,10 +117,11 @@ export function VoiceResidentSelect({
                         type="button"
                         onClick={() => onSelectResident(r)}
                         aria-label={`Kliknij, aby nagrać notatkę dla: ${formatPersonName(r.first_name, r.last_name)}`}
-                        className="inline-flex items-center justify-center gap-1.5 min-h-touch px-3 rounded-lg bg-primary text-primary-foreground shadow-xs hover:bg-primary/90 transition-colors text-sm font-medium"
+                        className="inline-flex items-center justify-center gap-1.5 min-h-touch px-2.5 sm:px-3 rounded-lg bg-primary text-primary-foreground shadow-xs hover:bg-primary/90 transition-colors text-sm font-medium ml-auto"
                       >
-                        <Mic className="w-4 h-4" />
-                        Kliknij, aby nagrać
+                        <Mic className="size-4 shrink-0" />
+                        <span className="hidden sm:inline">Kliknij, aby nagrać</span>
+                        <span className="sm:hidden">Nagraj</span>
                       </button>
                     </TableCell>
                   </TableRow>

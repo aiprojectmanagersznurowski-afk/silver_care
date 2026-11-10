@@ -126,7 +126,7 @@ function VoiceNoteContent() {
       <div className="mx-auto max-w-2xl space-y-6">
         <PageHeader
           back={{ href: '/staff', label: 'Wróć do tablicy dyżuru' }}
-          title="Notatka Głosowa"
+          title="Notatka głosowa"
           description="Wybierz podopiecznego, dla którego chcesz nagrać notatkę ze statusu dnia."
         />
         <VoiceResidentSelect
@@ -144,19 +144,19 @@ function VoiceNoteContent() {
     <div className="mx-auto max-w-2xl space-y-8">
       <PageHeader
         back={{ href: '/staff', label: 'Wróć do tablicy dyżuru' }}
-        title="Notatka Głosowa"
+        title="Notatka głosowa"
         description={resident && (
-          <>
-            Dla: <span className="font-semibold text-foreground">{formatPersonName(resident.first_name, resident.last_name)}</span>
-            <button type="button" onClick={() => { setActiveResidentId(''); setResident(null); resetNote() }} className="ml-2 min-h-touch text-sm text-primary hover:underline">
+          <span className="flex flex-wrap items-center gap-1.5">
+            <span>Dla: <strong className="font-semibold text-foreground">{formatPersonName(resident.first_name, resident.last_name)}</strong></span>
+            <button type="button" onClick={() => { setActiveResidentId(''); setResident(null); resetNote() }} className="min-h-touch text-sm text-primary hover:underline">
               (Zmień podopiecznego)
             </button>
-          </>
+          </span>
         )}
       />
 
       <Card className="overflow-hidden">
-        <CardContent className="p-8 space-y-8 flex flex-col items-center">
+        <CardContent className="p-4 sm:p-8 space-y-6 sm:space-y-8 flex flex-col items-center">
           <div className="text-center space-y-2 max-w-md">
             <h3 className="font-medium text-foreground text-lg">Zaraportuj status</h3>
             <p className="text-sm text-muted-foreground">Nagraj wiadomość, a sztuczna inteligencja ztranskrybuje ją i przygotuje gotowy raport dla rodziny.</p>
@@ -165,16 +165,16 @@ function VoiceNoteContent() {
           {!finalReport && (
             <div className="flex flex-col items-center justify-center w-full mt-4 space-y-3">
               {!recorder.isRecording ? (
-                <button onClick={handleStartRecord} disabled={recorder.isTranscribing || isGenerating} className="group relative flex h-24 w-24 items-center justify-center rounded-full bg-destructive/10 text-destructive transition-all hover:scale-105 disabled:opacity-50">
+                <button onClick={handleStartRecord} disabled={recorder.isTranscribing || isGenerating} className="group relative flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center rounded-full bg-destructive/10 text-destructive transition-all hover:scale-105 disabled:opacity-50">
                   <div className="absolute inset-0 rounded-full ring-4 ring-primary/20 group-hover:animate-ping" />
-                  <Mic className="h-10 w-10 relative z-10" />
+                  <Mic className="h-8 w-8 sm:h-10 sm:w-10 relative z-10" />
                 </button>
               ) : (
-                <button onClick={recorder.stopRecording} className="flex h-24 w-24 items-center justify-center rounded-full bg-primary text-primary-foreground transition-all animate-pulse hover:scale-105">
-                  <Square className="h-8 w-8 fill-current" />
+                <button onClick={recorder.stopRecording} className="flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center rounded-full bg-primary text-primary-foreground transition-all animate-pulse hover:scale-105">
+                  <Square className="h-7 w-7 sm:h-8 sm:w-8 fill-current" />
                 </button>
               )}
-              <span className="text-sm font-medium text-muted-foreground">
+              <span className="text-sm font-medium text-muted-foreground text-center px-2">
                 {recorder.isRecording ? `Nagrywanie (${recorder.duration}s)... Naciśnij kwadrat, aby zatrzymać` : draftId ? (followupQuestion ? 'Naciśnij mikrofon, aby dograć odpowiedź' : 'Naciśnij mikrofon, aby dograć uzupełnienie') : 'Naciśnij mikrofon, aby nagrać notatkę'}
               </span>
             </div>
