@@ -31,8 +31,9 @@ export function ResidentContractCard({
           Umowa i pakiety opiekuńcze
         </CardTitle>
       </CardHeader>
-      <CardContent className="pt-4 space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+      {/* @container: karta stoi w wąskim pasku bocznym na laptopie i w pełnej szerokości na telefonie */}
+      <CardContent className="@container pt-4 space-y-4">
+        <div className="grid grid-cols-1 @xs:grid-cols-2 gap-4">
           <div>
             <span className="text-sm text-muted-foreground block">Źródło finansowania</span>
             <span className="text-sm font-medium text-foreground">
