@@ -116,7 +116,7 @@ export function VoiceResidentSelect({
                       <button
                         type="button"
                         onClick={() => onSelectResident(r)}
-                        aria-label={`Kliknij, aby nagrać notatkę dla: ${formatPersonName(r.first_name, r.last_name)}`}
+                        aria-label={`Nagraj notatkę dla: ${formatPersonName(r.first_name, r.last_name)}`}
                         className="inline-flex items-center justify-center gap-1.5 min-h-touch px-2.5 sm:px-3 rounded-lg bg-primary text-primary-foreground shadow-xs hover:bg-primary/90 transition-colors text-sm font-medium ml-auto"
                       >
                         <Mic className="size-4 shrink-0" />

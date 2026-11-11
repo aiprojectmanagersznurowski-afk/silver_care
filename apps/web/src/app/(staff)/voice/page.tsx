@@ -165,7 +165,7 @@ function VoiceNoteContent() {
           {!finalReport && (
             <div className="flex flex-col items-center justify-center w-full mt-4 space-y-3">
               {!recorder.isRecording ? (
-                <button onClick={handleStartRecord} disabled={recorder.isTranscribing || isGenerating} className="group relative flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center rounded-full bg-destructive/10 text-destructive transition-all hover:scale-105 disabled:opacity-50">
+                <button onClick={handleStartRecord} disabled={recorder.isTranscribing || isGenerating} className="group relative flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center rounded-full bg-primary/10 text-primary transition-all hover:scale-105 disabled:opacity-50">
                   <div className="absolute inset-0 rounded-full ring-4 ring-primary/20 group-hover:animate-ping" />
                   <Mic className="h-8 w-8 sm:h-10 sm:w-10 relative z-10" />
                 </button>
