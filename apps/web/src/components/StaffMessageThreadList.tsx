@@ -46,7 +46,7 @@ export function StaffMessageThreadList(props: StaffMessageThreadListProps) {
       <div data-testid="message-threads-toolbar" className="space-y-2 border-b border-border bg-card p-3">
         <div className="flex items-center gap-2">
           <div className="min-w-0 flex-1">
-            <SearchField value={props.searchQuery} onChange={props.onSearchChange} label="Szukaj wątku" placeholder="Szukaj podopiecznego lub treści..." />
+            <SearchField value={props.searchQuery} onChange={props.onSearchChange} label="Szukaj wątku" placeholder="Szukaj" />
           </div>
           <button
             type="button"
@@ -125,10 +125,7 @@ export function StaffMessageThreadList(props: StaffMessageThreadListProps) {
                     <span data-testid="thread-relative" className="text-sm text-muted-foreground truncate">{relativeLabelOf(thread)}</span>
                     <BusinessIdBadge type="user" id={thread.relativeUserId} />
                   </div>
-                  <p className="text-sm text-muted-foreground truncate">
-                    {lastMsg.is_from_family ? <span className="font-medium text-foreground">Rodzina: </span> : <span className="font-medium text-primary">Personel: </span>}
-                    {lastMsg.content}
-                  </p>
+                  {/* Bez podglądu treści ostatniej wiadomości — treść widać po otwarciu wątku */}
                   <div className="mt-2 flex items-center justify-between">
                     <span className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground">
                       <MessageSquare className="h-3 w-3 text-muted-foreground" />
