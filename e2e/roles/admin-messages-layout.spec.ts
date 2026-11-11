@@ -41,6 +41,22 @@ test.describe('Wiadomości kierownika — wątki (@REQ: FAM-MESSAGES)', () => {
     }
   });
 
+  test('@REQ: FAM-MESSAGES - zwięzła lista wątków: bez treści ostatniej wiadomości, wyszukiwarka „Szukaj”', async ({ loginPage, page }) => {
+    await loginPage.loginAs('org_admin');
+    const messages = new StaffMessagesPage(page);
+    await messages.goto();
+    await expect(messages.threadItems.first()).toBeVisible();
+
+    // Krótki placeholder mieści się w wąskim panelu wątków (decyzja Michała 2026-11-11)
+    await expect(messages.searchInput).toHaveAttribute('placeholder', 'Szukaj');
+
+    // Pozycja wątku: podopieczny, bliski, czas, liczba wiadomości — bez podglądu treści
+    const first = messages.threadItems.first();
+    await expect(first.locator('[data-testid="thread-resident"]')).toBeVisible();
+    await expect(first).not.toContainText('Rodzina:');
+    await expect(first).not.toContainText('Personel:');
+  });
+
   test('@REQ: FAM-MESSAGES - odświeżanie w tle nie zmienia wybranego wątku', async ({ loginPage, page }) => {
     await page.clock.install();
     await loginPage.loginAs('org_admin');
