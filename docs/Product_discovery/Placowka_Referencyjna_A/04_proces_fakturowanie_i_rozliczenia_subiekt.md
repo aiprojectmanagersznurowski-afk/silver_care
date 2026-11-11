@@ -1,6 +1,6 @@
 # Specyfikacja Procesu 3: Miesięczne Fakturowanie i Rozliczanie Zużytych Materiałów i Opieki (ERP Subiekt)
 
-**Lokalizacja obiektu:** Dom Opieki Seniora „Marconi”  
+**Lokalizacja obiektu:** Placówka Referencyjna A  
 **Rola analityczna:** Starszy Analityk Biznesowy & Inżynier Systemowy  
 **Status dokumentu:** Zatwierdzona Specyfikacja Wymagań i Architektury Procesu  
 
@@ -11,7 +11,7 @@
 Celem przeprojektowania procesu jest zastąpienie podatnego na błędy, manualnego arkusza Excel oraz papierowych karteczek od podwykonawców zautomatyzowanym modułem bilingowym zintegrowanym bezpośrednio z systemem ERP **Subiekt GT / Nexo**.
 
 Kluczowe obszary objęte automatyzacją:
-1. **Wielodostępowa ewidencja kontraktów:** Likwidacja blokowania arkusza kalkulacyjnego przy jednoczesnej pracy kierownika Artura, recepcji (Kariny) i księgowości.
+1. **Wielodostępowa ewidencja kontraktów:** Likwidacja blokowania arkusza kalkulacyjnego przy jednoczesnej pracy Kierownika Operacyjnego, Koordynatorki Opieki / recepcji i księgowości.
 2. **Automatyczne rozliczanie materiałów chłonnych (Pampersy >4 szt./doba):** Przejście z ustnych zgłoszeń personelu na precyzyjny, cyfrowy licznik zużycia.
 3. **Cyfryzacja zleceń fizjoterapii zewnętrznej:** Zastąpienie papierowych karteczek pozostawianych na stole cyfrową ewidencją zabiegów przez rehabilitantów.
 4. **Automatyczne uwzględnianie hospitalizacji:** Dynamiczne pomniejszanie opłat za wyżywienie za dni spędzone w szpitalu.
@@ -22,12 +22,12 @@ Kluczowe obszary objęte automatyzacją:
 ## 2. Model Procesu Obecnego (AS IS)
 
 ### 2.1. Charakterystyka Pracy w Excelu i Subiekcie
-* **Plik Excel na dysku współdzielonym:** Kierownik Artur prowadzi arkusz o strukturze kolumn:
-  `PESEL` | `Nazwisko i Imię` | `Opiekun Prawny` | `Kwota za pobyt` | `Pakiet` | `Pobyt od` | `Pobyt do` | `Adres zamieszkania` | `Inny adres` | `Uwagi 1 (materiały i pampersy)` | `Uwagi 2 (od prezesa / księgowości)` | `Uwagi 3 (rehabilitacje)` | `Źródło` | `Typ pobytu` | `Czas trwania` | `Miesiąc przyjęcia`.
-* **Problem blokady pliku:** Gdy recepcjonistka Karina edytuje dane nowo przyjętego seniora, Artur nie może wystawiać faktur (*„Karina mówi: zamknij plik, to ja go uzupełnię”*).
-* **Zasada 4 pampersów i zgłoszenia ustne:** Standardowa umowa gwarantuje 4 pampersy na dobę. Jeżeli senior zużywa 6–8 sztuk, opiekunki po upływie miesiąca przychodzą do Artura i zgłaszają to ustnie z pamięci (*„Dziewczyna przychodzi i mówi: ale tej pani tutaj musisz dołożyć, bo poszło dużo więcej”*). Rodzi to ryzyko pominięcia opłat lub konfliktów z rodzinami, które żądają dowodów.
-* **Papierowe karteczki rehabilitacji:** Zewnętrzna spółka fizjoterapeutów po zakończeniu miesiąca zostawia na biurku odręcznie zapisane kartki (np. *„Pan Kowalski: 12 zabiegów x 60 zł = 720 zł”*). Artur ręcznie przepisuje te kwoty do kolumny `Uwagi 3`.
-* **Manualne fakturowanie w Subiekcie:** Artur otwiera Subiekta, ręcznie wyszukuje kontrahenta, wklepuje pozycje: opłata stała za pobyt, dopłata za pieluchomajtki oraz rehabilitacja, generuje fakturę FS, drukuje ją do wysyłki tradycyjnej lub wysyła PDF mailem, a wiersz w Excelu oznacza kolorem:
+* **Plik Excel na dysku współdzielonym:** Kierownik Operacyjny prowadzi arkusz o strukturze kolumn:
+  `PESEL` | `Nazwisko i Imię` | `Opiekun Prawny` | `Kwota za pobyt` | `Pakiet` | `Pobyt od` | `Pobyt do` | `Adres zamieszkania` | `Inny adres` | `Uwagi 1 (materiały i pampersy)` | `Uwagi 2 (od zarządu / księgowości)` | `Uwagi 3 (rehabilitacje)` | `Źródło` | `Typ pobytu` | `Czas trwania` | `Miesiąc przyjęcia`.
+* **Problem blokady pliku:** Gdy Koordynatorka Opieki / recepcja edytuje dane nowo przyjętego seniora, Kierownik Operacyjny nie może wystawiać faktur z uwagi na blokadę zapisu pliku sieciowego.
+* **Zasada 4 pampersów i zgłoszenia ustne:** Standardowa umowa gwarantuje 4 pampersy na dobę. Jeżeli senior zużywa 6–8 sztuk, opiekunki po upływie miesiąca przychodzą do Kierownika Operacyjnego i zgłaszają to ustnie z pamięci. Rodzi to ryzyko pominięcia opłat lub nieporozumień z rodzinami, które oczekują szczegółowego wykazu zużycia.
+* **Papierowe karteczki rehabilitacji:** Zewnętrzna spółka fizjoterapeutów po zakończeniu miesiąca zostawia na biurku odręcznie zapisane kartki (np. *„Pan Kowalski: 12 zabiegów x 60 zł = 720 zł”*). Kierownik Operacyjny ręcznie przepisuje te kwoty do kolumny `Uwagi 3`.
+* **Manualne fakturowanie w Subiekcie:** Kierownik otwiera Subiekta, ręcznie wyszukuje kontrahenta, przepisuje pozycje: opłata stała za pobyt, dopłata za pieluchomajtki oraz rehabilitacja, generuje fakturę FS, drukuje ją do wysyłki tradycyjnej lub wysyła PDF mailem, a wiersz w Excelu oznacza kolorem:
   * Niebieski – faktura wystawiona,
   * Jasnozielony – w trakcie uzgadniania / wysłana,
   * Zielony – opłacona (wyciąg bankowy sprawdzony ręcznie).
@@ -37,19 +37,19 @@ Kluczowe obszary objęte automatyzacją:
 ```mermaid
 flowchart TD
     subgraph Zrodla_Danych_AS_IS["Rozproszone Dane Miesięczne (AS IS)"]
-        Excel["Plik Excel Artura na dysku współdzielonym<br/>(Blokowany przy edycji przez drugą osobę)"]
-        Pampersy_Ustne["Ustne zgłoszenia opiekunek po miesiącu<br/>('Pani z 12 zużyła więcej pampersów')"]
+        Excel["Plik Excel Kierownika na dysku współdzielonym<br/>(Blokowany przy edycji przez drugą osobę)"]
+        Pampersy_Ustne["Ustne zgłoszenia opiekunek po miesiącu<br/>('Mieszkanka z 12 zużyła więcej pampersów')"]
         Kartki_Fizjo["Papierowe karteczki rehabilitantów na stole<br/>(Np. '12 zabiegów x 60 zł')"]
     end
 
-    subgraph Praca_Manualna["Ręczne Przepisywanie przez Artura"]
-        Przepisanie["Artur ręcznie uzupełnia kolumny Uwagi 1 i Uwagi 3<br/>w arkuszu kalkulacyjnym"]
-        Subiekt_Recznie["Otwarcie Subiekta i ręczne wklepywanie faktur:<br/>- Opłata za pobyt<br/>- Zużyte pampersy<br/>- Zabiegi rehabilitacji"]
+    subgraph Praca_Manualna["Ręczne Przepisywanie przez Kierownika"]
+        Przepisanie["Kierownik ręcznie uzupełnia kolumny Uwagi 1 i Uwagi 3<br/>w arkuszu kalkulacyjnym"]
+        Subiekt_Recznie["Otwarcie Subiekta i ręczne przepisywanie faktur:<br/>- Opłata za pobyt<br/>- Zużyte pampersy<br/>- Zabiegi rehabilitacji"]
     end
 
     subgraph Wynik_I_Ryzyko["Faktury i Wąskie Gardła"]
         Kolory["Kolorowanie wierszy w Excelu<br/>(Niebieski, jasnozielony, zielony)"]
-        Ryzyko_Bledow["Ryzyko pomyłek, utrata przychodów za pampersy,<br/>spory z rodzinami o brak dowodów zużycia"]
+        Ryzyko_Bledow["Ryzyko pomyłek, utrata przychodów za pampersy,<br/>reklamacje rodzin o brak wykazu zużycia"]
     end
 
     Pampersy_Ustne --> Przepisanie
@@ -98,15 +98,15 @@ flowchart TD
 ## 4. Wymagania Funkcjonalne Modułu Finansowego
 
 ### 4.1. Wielodostępowa Baza Danych Kontraktów (Zastąpienie Excela)
-* Jednoczesna edycja przez Artura, Karinę i księgowość bez konfliktów blokad.
+* Jednoczesna edycja przez Kierownika Operacyjnego, Koordynatorkę Opieki i księgowość bez konfliktów blokad.
 * Pełna historia zmian stawek, aneksów umownych i rabatów.
 * Automatyczne powiadomienia o zbliżającym się końcu umów terminowych.
 
 ### 4.2. Automatyczny Licznik Materiałów Chłonnych
-* Każdy pensjonariusz ma w umowie wpisany dobowy limit materiałów (domyślnie **4 sztuki na dobę**).
+* Każdy podopieczny ma w umowie wpisany dobowy limit materiałów (domyślnie **4 sztuki na dobę**).
 * Wymiany odznaczane przez opiekunki w module Grafikowania (Proces 1) sumują się w skali doby.
 * Każda 5., 6. i kolejna sztuka w danej dobie automatycznie trafia do rejestru *„Zużycie ponadnormatywne”*.
-* W przypadku sporu z rodziną system generuje raport: dokładna data, godzina i nazwisko opiekunki, która dokonała wymiany zabrudzonego pampersa.
+* W przypadku pytań ze strony rodziny system generuje raport: dokładna data, godzina i identyfikator pracownika, który dokonał wymiany pampersa.
 
 ### 4.3. Moduł Fizjoterapii Zewnętrznej
 * Zewnętrzni rehabilitanci otrzymują dedykowany, uproszczony dostęp tabletowy (lub logowanie kodem PIN).
@@ -115,7 +115,7 @@ flowchart TD
 * Brak konieczności ręcznego wypisywania papierowych kartek i podliczania na kalkulatorze.
 
 ### 4.4. Korekta za Dni Hospitalizacji
-* Zgodnie z regulaminem placówki, w przypadku pobytu pensjonariusza w szpitalu rodzina zachowuje rezerwację łóżka, lecz placówka odlicza dzienną stawkę żywieniową (tzw. wsad do kotła).
+* Zgodnie z regulaminem placówki, w przypadku pobytu podopiecznego w szpitalu rodzina zachowuje rezerwację łóżka, lecz placówka odlicza dzienną stawkę żywieniową (tzw. wsad do kotła).
 * System automatycznie oblicza liczbę pełnych dni zarejestrowanego statusu `HOSPITALIZACJA` i wprowadza odpowiednią pozycję korygującą *„Odliczenie wyżywienia za pobyt w szpitalu”* na fakturze miesięcznej.
 
 ### 4.5. Dwukierunkowa Integracja z Subiekt GT / Nexo
@@ -125,14 +125,13 @@ flowchart TD
   2. `Materiały chłonne ponadnormatywne (X sztuk)` – stawka 8% VAT.
   3. `Rehabilitacja ruchowa indywidualna (Y zabiegów)` – stawka ZW / 8%.
   4. `Korekta żywieniowa (hospitalizacja Z dni)` – pozycja ujemna.
-* **Rozliczenie kaucji gwarancyjnej:** Automatyczne wystawianie dokumentu rozliczenia kaucji pobranej w dniu przyjęcia w przypadku zgonu pensjonariusza lub rozwiązania umowy.
+* **Rozliczenie kaucji gwarancyjnej:** Automatyczne wystawianie dokumentu rozliczenia kaucji pobranej w dniu przyjęcia w przypadku zgonu podopiecznego lub rozwiązania umowy.
 
 ---
 
 ## 5. Korzyści Biznesowe i Zwrot z Inwestycji (ROI)
 
 1. **Oszczędność czasu kierownictwa:** Skrócenie czasu fakturowania miesięcznego z **2–3 pełnych dni roboczych** do **15 minut** (weryfikacja zestawienia i 1 kliknięcie eksportu do Subiekta).
-2. **Uszczelnienie przychodów za materiały chłonne:** Odzyskanie szacunkowo **3 000 – 5 000 PLN miesięcznie** z tytułu pampersów zużytych ponad limit, które dotychczas nie były zgłaszane przez personel lub były kwestionowane przez rodziny z braku dowodów.
+2. **Uszczelnienie przychodów za materiały chłonne:** Odzyskanie szacunkowo **3 000 – 5 000 PLN miesięcznie** z tytułu pampersów zużytych ponad limit, które dotychczas nie były zgłaszane przez personel lub były pomijane z braku szczegółowej ewidencji.
 3. **Koniec z blokowaniem plików:** Płynna współpraca recepcji i kierownictwa bez konfliktów edycyjnych.
 4. **Transparentność i zaufanie rodzin:** Gotowe zestawienie wykonanych zabiegów fizjoterapii i toalet dołączane do e-faktury eliminuje telefony reklamacyjne i opóźnienia w płatnościach.
-

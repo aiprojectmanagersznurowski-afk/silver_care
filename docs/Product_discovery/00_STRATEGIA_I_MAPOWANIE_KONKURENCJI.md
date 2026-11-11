@@ -1,20 +1,20 @@
 # 🧭 Silver Care — Product Discovery, Mapowanie Konkurencji i Strategia Produktowa
 
 > **Źródła danych:**
-> - [KANONICZNA_SPECYFIKACJA_USER_STORIES.md](file:///Users/michalsznurowski/Developemnt/silver_care/docs/KANONICZNA_SPECYFIKACJA_USER_STORIES.md) (v2.16, 62 wymagania kontraktowe `@REQ`)
-> - Dokumentacja terenowa Product Discovery: [Dom Opieki „Marconi”](file:///Users/michalsznurowski/Developemnt/silver_care/docs/Product_discovery/Marconi/README.md) (`00`–`07`)
-> - [Kompendium wdrożeniowe SilverCare Voice (Zero-UI)](file:///Users/michalsznurowski/Developemnt/silver_care/docs/Product_discovery/kompendium_wdro_eniowe_silvercare_voice_zero_ui.md)
+> - [KANONICZNA_SPECYFIKACJA_USER_STORIES.md](../KANONICZNA_SPECYFIKACJA_USER_STORIES.md) (v2.16, 62 wymagania kontraktowe `@REQ`)
+> - Dokumentacja terenowa Product Discovery: [Placówka Referencyjna A](./Placowka_Referencyjna_A/README.md) (`00`–`07`)
+> - [Kompendium wdrożeniowe SilverCare Voice (Zero-UI)](./kompendium_wdro_eniowe_silvercare_voice_zero_ui.md)
 
 ---
 
 ## 1. Architektura Pozycjonowania: Dlaczego istniejące systemy zawodzą na oddziale?
 
-Analiza wdrożeń na polskim rynku opieki długoterminowej (w tym udokumentowane w [07_struktura_kadrowa_i_analiza_porazki_arisco.md](file:///Users/michalsznurowski/Developemnt/silver_care/docs/Product_discovery/Marconi/07_struktura_kadrowa_i_analiza_porazki_arisco.md) **odrzucone wdrożenie systemu ARISCO w placówce Marconi**) ujawnia fundamentalny podział rynku:
+Analiza wdrożeń na polskim rynku opieki długoterminowej (w tym udokumentowane w [07_struktura_kadrowa_i_analiza_porazki_wdrozenia.md](./Placowka_Referencyjna_A/07_struktura_kadrowa_i_analiza_porazki_wdrozenia.md) **odrzucone wdrożenie dotychczasowego systemu dziedzinowego ERP/Opiekuńczego w Placówce Referencyjnej A**) ujawnia fundamentalny podział rynku:
 
 1. **Kategoria 1 — Systemy administracyjno-urzędnicze (OPS / MOPS / PCPR / DPS):**
    *POMOST Std (Sygnity), Pakiet Pomoc Społeczna ARISCO, TT-Pomoc / TT-PCPR (Asseco), Izyda (Info-R), Rekord DPS (Rekord SI), Emp@tia (MRiPS).*
    - **Do czego powstały:** Do wydawania decyzji administracyjnych, wywiadów środowiskowych, sprawozdawczości ustawowej i rozliczania świadczeń w jednostkach budżetowych.
-   - **Dlaczego przegrywają na oddziale opiekuńczym:** Projektowane z perspektywy urzędnika za biurkiem. Wymagają wpisywania dziesiątek pól z klawiatury w języku polskim, stałego łącza Wi-Fi i dedykowanego „operatora wprowadzania danych”. Dla opiekunki (często z Ukrainy) po 12h dźwigania podopiecznych nie dają żadnej wartości (*zero WIFM — What's In It For Me*).
+   - **Dlaczego przegrywają na oddziale opiekuńczym:** Projektowane z perspektywy urzędnika za biurkiem. Wymagają wpisywania dziesiątek pól z klawiatury w języku polskim, stałego łącza Wi-Fi i dedykowanego „operatora wprowadzania danych”. Dla opiekunki z wielojęzycznego zespołu (PL/UA) po 12h dźwigania podopiecznych nie dają żadnej wartości (*zero WIFM — What's In It For Me*).
 2. **Kategoria 2 — Systemy rozliczeń PFRON, Kadry-Płace i ERP/FK:**
    *SOD-ARIS (ARISCO), SODiR / SOW / e-PFRON2, Comarch ERP Optima, enova365, Symfonia, Asseco WAPRO, InsERT Subiekt GT / Nexo.*
    - **Do czego powstały:** Do księgowości, deklaracji DEK/Wn-D, wyliczania dofinansowań płacowych, JPK, KSeF i wystawiania faktur VAT.
@@ -31,25 +31,25 @@ Analiza wdrożeń na polskim rynku opieki długoterminowej (w tym udokumentowane
 
 ---
 
-## 2. Kompletna Ewidencja Use Case'ów (Kanoniczne Stories + Marconi + Branża)
+## 2. Kompletna Ewidencja Use Case'ów (Kanoniczne Stories + Placówka Referencyjna A + Branża)
 
-Każdy use case z naszego repozytorium, wywiadów w Marconi oraz szeroko pojętej branży został sklasyfikowany do jednego z **4 koszyków strategicznych**:
+Każdy use case z naszego repozytorium, wywiadów w Placówce Referencyjnej A oraz szeroko pojętej branży został sklasyfikowany do jednego z **4 koszyków strategicznych**:
 - 🟢 **CORE MOAT (Nasza Fosa):** Budujemy własne IP — tutaj wygrywamy z całym rynkiem.
 - 🔵 **WORKFLOW LAYER (Warstwa Operacyjna Oddziału):** Budujemy lekki, ergonomiczny proces na oddziale (Zero-UI / One-Touch).
 - 🟠 **INTEGRATE / EXPORT ONLY (Zasilamy cudze systemy):** Zbieramy dane źródłowe na oddziale, ale samą księgowość/telefonię zostawiamy wyspecjalizowanym narzędziom przez eksport/API.
 - 🔴 **OUT OF SCOPE (Świadomie NIE wchodzimy):** Czerwony ocean z wysokim kosztem utrzymania legislacyjnego i zerowym wyróżnikiem.
 
-| ID / Domena | Use Case (Przypadek Użycia) | Źródło (Kanoniczne / Marconi / Branża) | Kto dziś to robi na rynku? | Decyzja Strategiczna Silver Care | Argumentacja (Dlaczego wchodzimy / nie wchodzimy?) |
+| ID / Domena | Use Case (Przypadek Użycia) | Źródło (Kanoniczne / Placówka A / Branża) | Kto dziś to robi na rynku? | Decyzja Strategiczna Silver Care | Argumentacja (Dlaczego wchodzimy / nie wchodzimy?) |
 |---|---|---|---|---|---|
-| **UC-01**<br/>*Voice & Handover* | **Głosowe przekazanie zmiany (PL/UA → PL) + ekstrakcja zadań i incydentów** | `SC-NUR-12`, `SC-NUR-16`, Marconi Proces 2 (`03`), Zero-UI (`M5StickC`) | Nikt (Papierowy zeszyt z niebieskim długopisem; ARISCO wymusza klawiaturę) | 🟢 **CORE MOAT** | Likwiduje barierę językową opiekunek z Ukrainy i 20-minutowe pisanie po 12h dyżuru. Tworzy niezmienialny dowód sądowy z nagraniem i cytatem (`VOICE-ZERO-GUESSING`). |
+| **UC-01**<br/>*Voice & Handover* | **Głosowe przekazanie zmiany (PL/UA → PL) + ekstrakcja zadań i incydentów** | `SC-NUR-12`, `SC-NUR-16`, Placówka A Proces 2 (`03`), Zero-UI (`M5StickC`) | Nikt (Papierowy zeszyt z niebieskim długopisem; systemy biurowe wymuszają klawiaturę) | 🟢 **CORE MOAT** | Likwiduje barierę językową wielojęzycznego personelu (PL/UA) i 20-minutowe pisanie po 12h dyżuru. Tworzy niezmienialny dowód rozliczalności z nagraniem i cytatem (`VOICE-ZERO-GUESSING`). |
 | **UC-02**<br/>*Voice & Family* | **Dyktafon AI → Raport Dobowy (Peace Letter) z separacją 3 strumieni (MDR/RODO)** | `SC-NUR-02`, `SC-NUR-03`, `SC-NUR-09`, `SC-NUR-14`, `NFR-VOICE-01/02` | Nikt (Telefony rodzin na dyżurkę lub prywatny WhatsApp łamiący RODO) | 🟢 **CORE MOAT** | Separacja `MEDICAL` / `DISCOMFORT` / `BEHAVIORAL` przed modelem pozwala dawać rodzinie codzienny spokój („Dignity Translation”) bez wejścia w certyfikację wyrobu medycznego MDR. |
-| **UC-03**<br/>*Tasks & Print* | **Cykl zadań zmiany: Plan → Akceptacja Kierownika Zmiany → Wydruk A4 → Głosowe rozliczenie** | `SC-NUR-13`, `SC-NUR-15`, `SC-NUR-16`, `SC-ADM-21`, `SC-ADM-23`, Marconi Proces 1 (`02`) | Papierowe kartki na ścianie / pamięć personelu | 🟢 **CORE MOAT** | Hybryda *Paper + Voice*: opiekunki nie klikają w komputerze (pracują z wydrukiem A4 ze śladem audytowym `NUR-SHIFT-PLAN-PRINT`), a wykonanie rozliczają głosem. |
-| **UC-04**<br/>*Family & Cost Opt* | **Asynchroniczna skrzynka wiadomości Rodzina ↔ Kierownik (z dyktowaniem głosem)** | `SC-FAM-04`, `SC-NUR-07`, `SC-NUR-11` | Telefony na dyżurkę / prywatne komórki / drogie dyżury telefoniczne lekarza | 🟢 **CORE MOAT** | **Optymalizacja kosztów lekarza wynajmowanego na godziny:** lekarz POZ (np. wtorkowy obchód 10:00–13:00 w Marconi) nie traci płatnych godzin na chaotyczne rozmowy z rodzinami. Pytania rodziny zbiera asynchronicznie `org_admin` (limit 3/h), konsultuje je zbiorczo na obchodzie i odpisuje głosem w 30 sekund. |
+| **UC-03**<br/>*Tasks & Print* | **Cykl zadań zmiany: Plan → Akceptacja Kierownika Zmiany → Wydruk A4 → Głosowe rozliczenie** | `SC-NUR-13`, `SC-NUR-15`, `SC-NUR-16`, `SC-ADM-21`, `SC-ADM-23`, Placówka A Proces 1 (`02`) | Papierowe kartki na ścianie / pamięć personelu | 🟢 **CORE MOAT** | Hybryda *Paper + Voice*: opiekunki nie klikają w komputerze (pracują z wydrukiem A4 ze śladem audytowym `NUR-SHIFT-PLAN-PRINT`), a wykonanie rozliczają głosem. |
+| **UC-04**<br/>*Family & Cost Opt* | **Asynchroniczna skrzynka wiadomości Rodzina ↔ Kierownik (z dyktowaniem głosem)** | `SC-FAM-04`, `SC-NUR-07`, `SC-NUR-11` | Telefony na dyżurkę / prywatne komórki / drogie dyżury telefoniczne lekarza | 🟢 **CORE MOAT** | **Optymalizacja kosztów lekarza wynajmowanego na godziny:** lekarz POZ (np. wtorkowy obchód 10:00–13:00 w Placówce A) nie traci płatnych godzin na chaotyczne rozmowy z rodzinami. Pytania rodziny zbiera asynchronicznie `org_admin` (limit 3/h), konsultuje je zbiorczo na obchodzie i odpisuje głosem w 30 sekund. |
 | **UC-05**<br/>*IoT & Comfort* | **Karta Komfortu z opasek (Polar) — obiektywne fakty o krokach i śnie bez alarmów MDR** | `SC-FAM-03`, `SC-FAM-02`, `NFR-INT-01` | Opaski SOS / Teleopieka (generujące fałszywe alarmy medyczne) | 🟢 **CORE MOAT** | Prezentacja wyłącznie faktów behawioralnych (`MDR-NO-PHYSIO-TO-FAMILY`, `MDR-NO-METRIC-ALARM`) buduje zaufanie rodziny bez stresu i bez klasyfikacji SaMD Klasy IIa. |
-| **UC-06**<br/>*Core & Bed Opt* | **Cyfrowa Karta Podopiecznego (E-Teczka) z widocznością per rola i optymalizacją łóżek** | `SC-ADM-10..22`, Marconi Proces 4 (`01`) | Papierowa teczka w szafie + Excel Artura + częściowo ARISCO/Rekord DPS | 🔵 **WORKFLOW LAYER** | Jedno źródło prawdy na oddziale (`ADM-RESIDENT-CARD-VISIBILITY`). Natychmiastowy dostęp do skanu dowodu, diety, ryzyka zachłyśnięcia i statusu łóżek bez biegania do biura. |
-| **UC-07**<br/>*Death Workflow* | **Procedura obsługi zgonu i ochrona zmiany nocnej przed paraliżem sanityzacji** | `SC-ADM-19` (wypis/zgon) + Marconi Proces 5 (`05`: `ZGN-01..18`) | Ręczna procedura (szukanie ksero dowodu w nocy, wyłączenie 2 z 4 opiekunek na 5h) | 🔵 **WORKFLOW LAYER** | W Marconi jest 15 zgonów/mies. W `SC-ADM-19` mamy już rejestrację zgonu i zwolnienie łóżka; docelowe rozwinięcie o `NIGHT_SHIFT_SANITIZATION_DISPATCH` (przesunięcie mycia/UV na salowe o 07:00) oraz blokadę kontaktu z rodziną przed Kartą Zgonu stanowi potężny argument sprzedażowy dla dużych placówek. |
-| **UC-08**<br/>*Care Schedule* | **Grafikowanie opieki 24h (4 tury toalet/pampersów, blok kąpieli 10–13 vs fizjoterapia) i Grafik Zmian** | `SC-NUR-05`, `SC-NUR-12/AC1a`, `SC-ADM-23`, Marconi Proces 1 (`02`) i `06` | Ścienna kartka kąpieli + „koncert życzeń” na karteczkach | 🔵 **WORKFLOW LAYER** | Lekki grafik zmian (kto pracuje + kto jest `shift_lead`) i szablony planu opieki (`ADM-CARE-PLAN-TASKS`) rozwiązują kolizje kąpieli (2–6 opiekunek) z fizjoterapią zewnętrzną. **Uwaga:** Nie budujemy tu pełnego silnika kadrowo-płacowego RCP/Kodeksu Pracy! |
-| **UC-09**<br/>*Billing Input* | **Zliczanie zużytych materiałów (pampersy >4/doba), sesji rehabilitacji i dni w szpitalu → Eksport do ERP** | Marconi Proces 3 (`04`), częściowo `SC-ADM-14` (eksport danych) | Ustne zgłoszenia opiekunek po miesiącu + karteczki fizjoterapeutów + blokowany Excel → ręczny **Subiekt GT/Nexo** | 🟠 **INTEGRATE / EXPORT ONLY** | **Kluczowa granica:** Silver Care zbiera *wsad ilościowy z oddziału* (bo tylko dyżurka wie, ile poszło pampersów i kto był w szpitalu), co odzyskuje 3–5 tys. zł/mies. utraconych przychodów. Samo wystawianie faktur VAT, KSeF i księgowość zostaje w **Subiekcie / Optimie** (eksport 1 kliknięciem). |
+| **UC-06**<br/>*Core & Bed Opt* | **Cyfrowa Karta Podopiecznego (E-Teczka) z widocznością per rola i optymalizacją łóżek** | `SC-ADM-10..22`, Placówka A Proces 4 (`01`) | Papierowa teczka w szafie + arkusz Excel Kierownika Operacyjnego + częściowo systemy DPS | 🔵 **WORKFLOW LAYER** | Jedno źródło prawdy na oddziale (`ADM-RESIDENT-CARD-VISIBILITY`). Natychmiastowy dostęp do skanu dowodu, diety, ryzyka zachłyśnięcia i statusu łóżek bez biegania do biura. |
+| **UC-07**<br/>*Death Workflow* | **Procedura obsługi zgonu i ochrona zmiany nocnej przed przeciążeniem sanityzacją** | `SC-ADM-19` (wypis/zgon) + Placówka A Proces 5 (`05`: `ZGN-01..18`) | Ręczna procedura (szukanie ksero dowodu w nocy, wyłączenie 2 z 4 opiekunek na 5h) | 🔵 **WORKFLOW LAYER** | W dużej placówce (~140 miejsc) występuje średnio 15 zgonów/mies. W `SC-ADM-19` mamy już rejestrację zgonu i zwolnienie łóżka; docelowe rozwinięcie o `NIGHT_SHIFT_SANITIZATION_DISPATCH` (przesunięcie mycia/UV na salowe o 07:00) oraz blokadę kontaktu z rodziną przed Kartą Zgonu stanowi potężny argument sprzedażowy dla dużych placówek. |
+| **UC-08**<br/>*Care Schedule* | **Grafikowanie opieki 24h (4 tury toalet/pampersów, blok kąpieli 10–13 vs fizjoterapia) i Grafik Zmian** | `SC-NUR-05`, `SC-NUR-12/AC1a`, `SC-ADM-23`, Placówka A Proces 1 (`02`) i `06` | Ścienna kartka kąpieli + ręczne zbieranie dyspozycyjności na karteczkach | 🔵 **WORKFLOW LAYER** | Lekki grafik zmian (kto pracuje + kto jest `shift_lead`) i szablony planu opieki (`ADM-CARE-PLAN-TASKS`) rozwiązują kolizje kąpieli (2–6 opiekunek) z fizjoterapią zewnętrzną. **Uwaga:** Nie budujemy tu pełnego silnika kadrowo-płacowego RCP/Kodeksu Pracy! |
+| **UC-09**<br/>*Billing Input* | **Zliczanie zużytych materiałów (pampersy >4/doba), sesji rehabilitacji i dni w szpitalu → Eksport do ERP** | Placówka A Proces 3 (`04`), częściowo `SC-ADM-14` (eksport danych) | Ustne zgłoszenia opiekunek po miesiącu + karteczki fizjoterapeutów + blokowany Excel → ręczny **Subiekt GT/Nexo** | 🟠 **INTEGRATE / EXPORT ONLY** | **Kluczowa granica:** Silver Care zbiera *wsad ilościowy z oddziału* (bo tylko dyżurka wie, ile poszło pampersów i kto był w szpitalu), co odzyskuje 3–5 tys. zł/mies. utraconych przychodów. Samo wystawianie faktur VAT, KSeF i księgowość zostaje w **Subiekcie / Optimie** (eksport 1 kliknięciem). |
 | **UC-10**<br/>*Intake & Barthel* | **Ofertowanie przedprzyjęciowe (np. wycena pakietu oparta o skalę Barthel / Norton) + CRM z VoIP** | Branża / Proces sprzedażowy placówek komercyjnych | Systemy CRM (Pipedrive, HubSpot, Livespace) + VoIP (Thulium, Zadarma) + arkusze kalkulacyjne | 🟠 **INTEGRATE / LIGHT FORM** | **Dlaczego nie budujemy CRM z VoIP:** Telefonia VoIP, kolejki call-center i lejki sprzedażowe to zatłoczony rynek (Thulium/HubSpot za kilkadziesiąt zł/mies.). Ponadto automatyczna kwalifikacja medyczna i wyliczanie skali klinicznej Barthel przez algorytm rodzi ryzyko Reguły 11 MDR. W Silver Care wystarczy prosty deterministyczny formularz poziomu opieki (`SC-ADM-11`) lub webhook z zewnętrznego CRM przy podpisaniu umowy. |
 | **UC-11**<br/>*Public Sector* | **Rozliczenia z NFZ (ZOL/ZPO, JGP, SWIAD, EDM, e-Zdrowie P1)** | Branża (Podmioty lecznicze / ZOL) | **Kamsoft (KS-SOMED/PPS), Asseco AMMS, Mediporta** | 🔴 **OUT OF SCOPE** | **Twardy argument przeciw:** Wymaga ciągłego śledzenia zarządzeń Prezesa NFZ, integracji z szyną P1 (HL7 CDA / FHIR), słowników ICD-10/ICD-9 i certyfikacji klinicznej. Kamsoft i Asseco mają tu 30-letni monopol. |
 | **UC-12**<br/>*Public Subsidies* | **Rozliczenia PFRON, dofinansowania wynagrodzeń i wnioski (SODiR, SOW, e-PFRON2, Wn-D, DEK)** | Branża (Kategoria 2: Działy kadr i płac, PCPR) | **SOD-ARIS (ARISCO), SODiR, SOW, e-PFRON2, Comarch Optima, enova365, Symfonia** | 🔴 **OUT OF SCOPE** | **Twardy argument przeciw:** To domena czysto kadrowo-płacowa i urzędowa (księgowa wylicza ulgi na niepełnosprawnych pracowników lub PCPR procesuje wnioski o turnusy). Zero synergii z pracą opiekunek przy łóżku seniora i komunikacją z rodziną. |
@@ -82,7 +82,7 @@ xychart-beta
 | **UC-10** | CRM sprzedażowy z VoIP | 5 | 8 | 🔴 Zewnętrzne narzędzia (HubSpot, Thulium) — **nie budujemy** |
 | **UC-09** | Wsad do faktur (pampersy, szpital, fizjo) | 8 | 3 | 🟢 **OGROMNA LUKA** — zasilamy Subiekta danymi z oddziału |
 | **UC-06** | E-Teczka i optymalizacja łóżek | 9 | 3 | 🟢 **OGROMNA LUKA** — likwidacja szaf i papierowych teczek |
-| **UC-07** | Procedura zgonu i ochrona nocy | 9 | 2 | 🟢 **OGROMNA LUKA** — likwidacja nocnego paraliżu 4 opiekunek |
+| **UC-07** | Procedura zgonu i ochrona nocy | 9 | 2 | 🟢 **OGROMNA LUKA** — likwidacja nocnego przeciążenia 4 opiekunek |
 | **UC-08** | Grafik opieki 24h (toalety, kąpiele) | 9 | 2 | 🟢 **OGROMNA LUKA** — koniec kolizji kąpieli z fizjoterapią |
 | **UC-05** | Karta komfortu z opasek (bez alarmów MDR) | 8 | 3 | 🟢 **OGROMNA LUKA** — fakty bez straszenia rodziny |
 | **UC-04** | Czat Rodzina ↔ Kierownik (dyktowany) | 9 | 2 | 🟢 **OGROMNA LUKA** — ochrona drogich godzin lekarza |
@@ -109,7 +109,7 @@ xychart-beta
     line [2, 10, 10, 2, 4, 2, 1, 0, 0, 0]
 ```
 
-| Oś | Czynnik Konkurencji | Silver Care | Kat. 1 (OPS/ARISCO) | Kat. 2 (ERP/PFRON) | Uzasadnienie dywergencji Silver Care |
+| Oś | Czynnik Konkurencji | Silver Care | Kat. 1 (OPS/DPS) | Kat. 2 (ERP/PFRON) | Uzasadnienie dywergencji Silver Care |
 |:---:|:---|:---:|:---:|:---:|:---|
 | **C1** | Rozliczenia OPS / NFZ / Decyzje | **0** | 10 | 2 | Celowe 0 — monopol państwowy, biurokracja urzędowa. |
 | **C2** | PFRON / SODiR / Kadry-Płace | **0** | 4 | 10 | Celowe 0 — domena księgowej w ERP Optima/enova365. |
@@ -130,7 +130,7 @@ flowchart LR
         E1["Rozliczenia NFZ / JGP / SWIAD (monopol Kamsoft/Asseco)"]
         E2["Deklaracje PFRON / SODiR / SOW i kadry-płace"]
         E3["Decyzje administracyjne OPS/PCPR i integrację z Empatia"]
-        E4["Wpisywanie raportów z klawiatury przez opiekunki (grzech ARISCO)"]
+        E4["Wpisywanie raportów z klawiatury przez opiekunki (błąd systemów biurowych)"]
         E5["Diagnozy, predykcje kliniczne i alarmy z metryk (ryzyko MDR Klasa IIa)"]
     end
 
@@ -169,7 +169,7 @@ Mapa Wardleya pokazuje, **gdzie leży nasza unikalna własność intelektualna (
 ```mermaid
 flowchart TB
     subgraph UserValue["WARSTWA WARTOŚCI DLA UŻYTKOWNIKA - Widoczna na górze łańcucha"]
-        V_Dir["Kierownik Placówki (Artur): Ochrona prawna, porządek na zmianach, wsad do faktur, mniej godzin lekarza"]
+        V_Dir["Kierownik Placówki: Ochrona prawna, porządek na zmianach, wsad do faktur, mniej godzin lekarza"]
         V_Staff["Opiekunka (PL/UA) i Kierownik Zmiany: 60s nagrania głosem zamiast 20 min pisania, praca z kartką A4"]
         V_Fam["Rodzina i Opiekun Prawny: Codzienny Peace Letter, kroki i sen z opaski, wiadomość bez dzwonienia"]
     end
@@ -214,22 +214,22 @@ flowchart TB
 > **Wniosek z Mapy Wardleya dla inwestora i klienta:**
 > Konkurent może w 1 dzień kupić dostęp do API OpenAI/Whisper (`Commodity`), ale **nie skopiuje w 1 dzień naszej Fosy (Strefa I i II)**:
 > 1. **Fosy Regulacyjno-Architektonicznej (`M1`, `M4`):** Rozdzielenie strumieni przed modelem, twarde reguły MDR w kontrakcie wykonywalnym i brak zgadywania tożsamości przez AI chronią placówkę przed karami z Ustawy o wyrobach medycznych (do 5 mln zł) i naruszeniem Art. 9 RODO.
-> 2. **Fosy Ergonomiczno-Kulturowej (`M2`, `M3`, `M6`):** Połączenie mowy po ukraińsku/polsku, pagera Push-to-Talk i wydruku A4 dla opiekunek rozwiązuje realny powód, dla którego wdrożenia systemów klasy ARISCO upadają w prywatnych domach opieki.
+> 2. **Fosy Ergonomiczno-Kulturowej (`M2`, `M3`, `M6`):** Połączenie mowy wielojęzycznej (PL/UA), pagera Push-to-Talk i wydruku A4 dla opiekunek rozwiązuje realny powód, dla którego wdrożenia tradycyjnych systemów dziedzinowych upadają w prywatnych domach opieki.
 
 ---
 
 ### Diagram 4: Strategyzer Value Proposition Canvas (VPC) dla 3 Kluczowych Person
 
-Poniższy diagram przekłada wypracowaną przewagę bezpośrednio na język korzyści dla **3 grup interesariuszy**, z uwzględnieniem argumentów finansowych (czas lekarza, uszczelnienie pampersów, ochrona przed sądami).
+Poniższy diagram przekłada wypracowaną przewagę bezpośrednio na język korzyści dla **3 grup interesariuszy**, z uwzględnieniem argumentów finansowych (czas lekarza, uszczelnienie pampersów, ochrona przed roszczeniami).
 
 ```mermaid
 flowchart LR
     subgraph CustomerProfiles["PROFIL KLIENTA - Jobs, Pains, Gains"]
         direction TB
-        subgraph P_Dir["1. Właściciel / Kierownik Placówki (np. Artur w Marconi)"]
-            J_Dir["Zadania: Obłożenie 100+ łóżek, rozliczenie w Subiekcie, obrona w razie sądu, grafik przy 15% rotacji"]
-            Pain_Dir["Bóle: Opiekunki z UA boją się pisać po polsku, ARISCO odrzucone, lekarz traci czas na telefony, ucieka 3-5 tys. zł za pampersy, paraliż nocny przy zgonie"]
-            Gain_Dir["Oczekiwania: Twardy ślad audytowy do sądu, faktury w 15 min zamiast 3 dni w Excelu, spokojna dyżurka"]
+        subgraph P_Dir["1. Właściciel / Kierownik Placówki (np. Placówka Referencyjna A)"]
+            J_Dir["Zadania: Obłożenie 100+ łóżek, rozliczenie w Subiekcie, obrona przed roszczeniami, grafik przy 15% rotacji"]
+            Pain_Dir["Bóle: Wielojęzyczny personel obawia się pisać po polsku, systemy biurowe odrzucone, lekarz traci czas na telefony, ucieka 3-5 tys. zł za pampersy, obciążenie nocy przy zgonie"]
+            Gain_Dir["Oczekiwania: Twardy ślad audytowy i dowodowy, faktury w 15 min zamiast 3 dni w Excelu, spokojna dyżurka"]
         end
 
         subgraph P_Staff["2. Personel Opiekuńczy (PL/UA) i Kierownik Zmiany"]
@@ -249,7 +249,7 @@ flowchart LR
         direction TB
         subgraph V_Dir_Out["Odpowiedź dla Kierownika / Właściciela (B2B Buyer)"]
             VR_Dir["Lekarstwa: Zero etatu data-entry, asynchroniczna skrzynka filtruje pytania rodzin (lekarz bada seniorów zamiast wisieć na telefonie), licznik zużycia do Subiekta, nocny dispatch sanityzacji"]
-            VG_Dir["Korzyści: Niezmienialny Audit Log + audio jako tarcza procesowa, legalność od 1. dnia poza reżimem MDR Klasa IIa"]
+            VG_Dir["Korzyści: Niezmienialny Audit Log + audio jako tarcza dowodowa, legalność od 1. dnia poza reżimem MDR Klasa IIa"]
         end
 
         subgraph V_Staff_Out["Odpowiedź dla Personelu i Kierownika Zmiany (Daily User)"]
@@ -273,12 +273,12 @@ flowchart LR
 ## 4. Podsumowanie — Gotowy Pitch Pozycjonujący (Elevator Pitch & Defensywa Sprzedażowa)
 
 ### Jednozdaniowe Value Proposition
-> **Silver Care** to pierwszy system operacyjny „Ostatniej Mili” dla domów opieki, który zamienia **60-sekundowe notatki głosowe opiekunek (po polsku i ukraińsku) oraz pracę z wydrukiem A4** w **uporządkowane przekazanie zmiany, codzienny raport spokoju dla rodziny i gotowy wsad rozliczeniowy do Subiekta** — bez zmuszania personelu do pisania na klawiaturze i bez wchodzenia w kosztowny reżim wyrobu medycznego (MDR).
+> **Silver Care** to pierwszy system operacyjny „Ostatniej Mili” dla domów opieki, który zamienia **60-sekundowe notatki głosowe opiekunek (w języku ojczystym PL/UA) oraz pracę z wydrukiem A4** w **uporządkowane przekazanie zmiany, codzienny raport spokoju dla rodziny i gotowy wsad rozliczeniowy do Subiekta** — bez zmuszania personelu do pisania na klawiaturze i bez wchodzenia w kosztowny reżim wyrobu medycznego (MDR).
 
 ### Gotowe odpowiedzi na obiekcje („Dlaczego nie macie modułu X?”)
 
-1. **„Dlaczego nie macie rozliczeń NFZ / PFRON / wywiadów OPS (jak Kamsoft, POMOST czy ARISCO)?”**
-   > *„Ponieważ systemy urzędnicze i rozliczeniowe służą księgowej i urzędnikowi za biurkiem, a przy łóżku podopiecznego ponoszą klęskę — co udowodniło odrzucenie systemu ARISCO przez personel. My rozwiązujemy problem tam, gdzie powstają koszty i ryzyko: na oddziale opiekuńczym i w relacji z rodziną, a z systemami klasy Subiekt czy Optima integrujemy się przez gotowy eksport danych.”*
+1. **„Dlaczego nie macie rozliczeń NFZ / PFRON / wywiadów OPS (jak Kamsoft, POMOST czy systemy klasy DPS)?”**
+   > *„Ponieważ systemy urzędnicze i rozliczeniowe służą księgowej i urzędnikowi za biurkiem, a przy łóżku podopiecznego ponoszą klęskę — co potwierdzają odrzucenia tradycyjnych systemów formularzowych przez personel liniowy. My rozwiązujemy problem tam, gdzie powstają koszty i ryzyko: na oddziale opiekuńczym i w relacji z rodziną, a z systemami klasy Subiekt czy Optima integrujemy się przez gotowy eksport danych.”*
 2. **„Dlaczego nie macie pełnego fakturowania FK i KSeF w środku?”**
    > *„Każda placówka ma już program księgowy (np. Subiekt GT/Nexo lub Optimę), do którego przyzwyczajona jest księgowa. Problemem kierownika nie jest samo kliknięcie 'Wystaw fakturę' w Subiekcie, tylko 3 dni ręcznego zbierania z karteczek i ustnych relacji opiekunek, kto zużył ponad 4 pampersy na dobę, kto był w szpitalu i ile miał rehabilitacji. Silver Care automatycznie zbiera ten wsad z oddziału i podaje go do Subiekta na tacy, odzyskując 3–5 tys. zł miesięcznie.”*
 3. **„Dlaczego nie macie rozbudowanego CRM z VoIP i kalkulatora skali Barthel przy ofertowaniu?”**

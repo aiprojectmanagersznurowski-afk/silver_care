@@ -1,6 +1,6 @@
-# Specyfikacja Harmonogramu Dobowego 24h i Organizacji Pracy w Domu Opieki „Marconi”
+# Specyfikacja Harmonogramu Dobowego 24h i Organizacji Pracy w Placówce Referencyjnej A
 
-**Lokalizacja obiektu:** Dom Opieki Seniora „Marconi”  
+**Lokalizacja obiektu:** Placówka Referencyjna A  
 **Rola analityczna:** Starszy Analityk Biznesowy & Inżynier Systemowy  
 **Status dokumentu:** Zatwierdzona Chronologia Doby i Analiza Obciążeń Operacyjnych  
 
@@ -8,7 +8,7 @@
 
 ## 1. Wprowadzenie i Kontekst Operacyjny 24h
 
-Dom Opieki „Marconi” funkcjonuje w systemie ciągłym 24/7/365, w dwóch równych, 12-godzinnych zmianach opiekuńczych:
+Placówka Referencyjna A funkcjonuje w systemie ciągłym 24/7/365, w dwóch równych, 12-godzinnych zmianach opiekuńczych:
 * **Zmiana Dzienna (Dniówka):** 07:00 – 19:00 (Obsada: **10 opiekunek medycznych** + **2 salowe**).
 * **Zmiana Nocna (Nocka):** 19:00 – 07:00 (Obsada: **4 opiekunki medyczne** + **0 salowych**).
 
@@ -41,7 +41,7 @@ gantt
     Poranne Spiętrzenie (Toalety + Leki)   :done, s1, 07:00, 09:30
     Blok Zabiegowy (Kąpiele + Fizjo + POZ) :done, s2, 10:00, 13:00
     Wieczorna Toaleta i Wyciszanie         :done, s3, 18:00, 22:00
-    Czuwanie Nocne ('Luka Operacyjna 6h')  :done, s4, 23:00, 05:00
+    Czuwanie Nocne (Okno Nocne)            :done, s4, 23:00, 05:00
 ```
 
 ---
@@ -66,11 +66,11 @@ gantt
 
 | Przedział Czasowy | Nazwa Czynności | Obsada | Opis Działań i Reguły Biznesowe |
 | :--- | :--- | :--- | :--- |
-| **10:00 – 13:00** | **Blok Zabiegowy: Kąpiele Planowe** | 2–6 Opiekunek | Kąpiele w łazienkach centralnych wg harmonogramu. Pacjenci chodzący: 1 opiekunka. Pacjenci bezwładni/spastyczni: od 2 do 6 opiekunek na pacjenta. |
+| **10:00 – 13:00** | **Blok Zabiegowy: Kąpiele Planowe** | 2–6 Opiekunek | Kąpiele w łazienkach centralnych wg harmonogramu. Mieszkańcy chodzący: 1 opiekunka. Podopieczni bezwładni/spastyczni: od 2 do 6 opiekunek na osobę. |
 | **10:00 – 13:00** | **Rehabilitacja i Fizjoterapia Zewnętrzna** | Zewnętrzni Fizjoterapeuci | Ćwiczenia indywidualne na sali rehabilitacyjnej lub przyłóżkowo (pionizacja, nauka chodu, rotor, masaż). |
-| **10:00 – 13:00** | **Wtorkowy Obchód Lekarza POZ** | Lekarz POZ + Koordynatorka | Cotygodniowa wizyta lekarska: badanie chorych ze zgłoszeń, wypisywanie recept, kwalifikacja leczenia, zmiana zleceń lekowych. |
+| **10:00 – 13:00** | **Wtorkowy Obchód Lekarza POZ** | Lekarz POZ + Koordynatorka | Cotygodniowa wizyta lekarska: badanie osób ze zgłoszeń, wypisywanie recept, kwalifikacja leczenia, zmiana zleceń lekowych. |
 | **10:00 – 13:00** | Sprzątanie Generalne i Pralnia | 2 Salowe | Pranie pościeli, mycie podłóg maszynowe, dezynfekcja łazienek, włączanie lamp bakteriobójczych UV w salach zwolnionych. |
-| **13:00 – 14:00** | **Obiad i Karmienie Poobiednie** | 2 Salowe + Opiekunki | Wydawanie zup i dań mięsnych z cateringu, karmienie pacjentów leżących, rozdanie leków obiadowych przez opiekunki. |
+| **13:00 – 14:00** | **Obiad i Karmienie Poobiednie** | 2 Salowe + Opiekunki | Wydawanie zup i dań mięsnych z cateringu, karmienie podopiecznych leżących, rozdanie leków obiadowych przez opiekunki. |
 
 ---
 
@@ -78,9 +78,9 @@ gantt
 
 | Przedział Czasowy | Nazwa Czynności | Obsada | Opis Działań i Reguły Biznesowe |
 | :--- | :--- | :--- | :--- |
-| **14:00 – 15:00** | **2. Toaleta Dobowa & 2. Wymiana Pampersów** | 10 Opiekunek Dziennych | Druga tura wymiany pampersów, toaleta myjąca, repozycjonowanie pacjentów leżących w łóżkach (profilaktyka odleżyn). |
+| **14:00 – 15:00** | **2. Toaleta Dobowa & 2. Wymiana Pampersów** | 10 Opiekunek Dziennych | Druga tura wymiany pampersów, toaleta myjąca, repozycjonowanie podopiecznych leżących w łóżkach (profilaktyka odleżyn). |
 | **14:30 – 15:30** | **Rozkładanie Leków na 2 Dni Naprzód** | 1 Opiekunka (dyżurka) | Precyzyjne rozkładanie tabletek do kasetek dobowych z kart zleceń lekarskich dla parteru i piętra. |
-| **15:00 – 16:30** | Drzemka Poobiednia / Odwiedziny / Podwieczorek | Pensjonariusze, Salowe | Odpoczynek poobiedni, podwieczorek (kawa, herbata, ciastko, owoce), odwiedziny rodzin w pokojach i ogrodzie. |
+| **15:00 – 16:30** | Drzemka Poobiednia / Odwiedziny / Podwieczorek | Mieszkańcy, Salowe | Odpoczynek poobiedni, podwieczorek (kawa, herbata, ciastko, owoce), odwiedziny rodzin w pokojach i ogrodzie. |
 | **17:00 – 18:00** | **Kolacja i Karmienie Wieczorne** | 2 Salowe + Opiekunki | Wydawanie kolacji, pomoc w jedzeniu, podanie leków wieczornych przez opiekunki. |
 | **18:00 – 19:00** | **3. Toaleta Wieczorna & 3. Wymiana Pampersów** | 10 Opiekunek Dziennych | Trzecia wymiana pampersów, toaleta myjąca, natłuszczanie skóry, przebieranie w piżamy, przygotowanie do spoczynku nocnego. |
 | **18:30 – 19:15** | **Wieczorny Handover (Zdanie Nocce)** | 10 Dniówka + 4 Nocka | Przekazanie dyżuru nocy. Wpis do zeszytu niebieskim długopisem, omówienie stanów podgorączkowych i zleceń na noc. |
@@ -93,9 +93,9 @@ gantt
 | :--- | :--- | :--- | :--- |
 | **19:00 – 22:00** | Dyżur Wieczorny / Leki Nocne / Wyciszanie | 4 Opiekunki Nocne (2 góra / 2 dół) | Podanie leków nasennych, uspokajających (Ketrel), iniekcji przeciwzakrzepowych (Clexane), gaszenie świateł głównych, wyciszanie. |
 | **22:00 – 23:00** | **Wieczorny Obchód Nocny** | 4 Opiekunki Nocne | Kontrola bezpieczeństwa: sprawdzenie barierek łóżkowych, suchości pampersów; bezwzględne zakończenie czynności głośnych do 23:00. |
-| **23:00 – 04:00** | **Czuwanie Nocne („Luka Operacyjna 6h”)** | 4 Opiekunki Nocne | Czuwanie w dyżurkach i na korytarzach, reakcja na dzwonki przywoławcze, lęki demencyjne i próby wspinania się przez barierki. *(W razie zgonu: obsługa procedury i wyłączenie 1–2 opiekunek).* |
-| **04:00 – 05:00** | **Nocny Obchód & 4. Wymiana Pampersów** | 4 Opiekunki Nocne | Czwarta tura pampersów u pacjentów leżących, repozycja ułożeniowa seniorów przed porankiem. |
-| **05:00 – 06:30** | Pomiary Wczesnoporanne & Raport Nocny | 4 Opiekunki Nocne | Kontrola parametrów u pacjentów niestabilnych, doglądanie wstających seniorów, przygotowanie raportu nocnego do handoveru. |
+| **23:00 – 04:00** | **Czuwanie Nocne (Okno Nocne)** | 4 Opiekunki Nocne | Czuwanie w dyżurkach i na korytarzach, reakcja na dzwonki przywoławcze, lęki demencyjne i próby wspinania się przez barierki. *(W razie zgonu: obsługa procedury i zaangażowanie 1–2 opiekunek).* |
+| **04:00 – 05:00** | **Nocny Obchód & 4. Wymiana Pampersów** | 4 Opiekunki Nocne | Czwarta tura pampersów u podopiecznych leżących, repozycja ułożeniowa seniorów przed porankiem. |
+| **05:00 – 06:30** | Pomiary Wczesnoporanne & Raport Nocny | 4 Opiekunki Nocne | Kontrola parametrów u osób wymagających nadzoru, doglądanie wstających seniorów, przygotowanie raportu nocnego do handoveru. |
 
 ---
 
@@ -105,28 +105,27 @@ gantt
 W ciągu zaledwie 2,5 godziny zespół 10 opiekunek musi wykonać:
 * 100 pełnych toalet i wymian pampersów,
 * Pomiary cukru i ciśnienia u kilkudziesięciu osób,
-* Podanie insuliny cukrzycowej przed godz. 09:00,
-* Nakarmień kilkudziesięciu seniorów niesamodzielnych,
+* Podanie insuliny przed godz. 09:00,
+* Nakarmienie kilkudziesięciu seniorów niesamodzielnych,
 * Wydanie porannej porcji leków z kasetek.
-Jakiekolwiek opóźnienie w toaletach paraliżuje wydawanie śniadania, co z kolei blokuje wejście salowych ze sprzątaniem i opóźnia blok zabiegowy.
+Jakiekolwiek opóźnienie w toaletach opóźnia wydawanie śniadania, co z kolei przesuwa wejście salowych ze sprzątaniem i opóźnia blok zabiegowy.
 
 ### 4.2. Konflikt Zasobowy w Bloku Zabiegowym (10:00 – 13:00)
 Głównym problemem jest jednoczesne nakładanie się:
-* Kąpieli planowych pacjentów leżących (angażujących 2–6 opiekunek),
+* Kąpieli planowych osób leżących (angażujących 2–6 opiekunek),
 * Przyjścia zewnętrznych fizjoterapeutów,
 * Obchodu lekarskiego POZ (wtorki).
-Brak centralnego kalendarza w systemie AS IS powoduje, że rehabilitant przychodzi po pacjenta, który właśnie jest w wannie, lub lekarz musi czekać na odnalezienie chorego.
+Brak centralnego kalendarza w systemie AS IS powoduje, że rehabilitant przychodzi po podopiecznego, który właśnie ma kąpiel, lub lekarz musi czekać na zakończenie zabiegów.
 
-### 4.3. Krytyczne Ryzyko Nocne (23:00 – 04:00)
-Przy obsadzie zaledwie **4 opiekunek na 100 mieszkańców i braku salowych**:
-* Wystąpienie pojedynczego zgonu, upadku lub pobudzenia pacjenta demencyjnego wyłącza 1–2 opiekunki, pozostawiając cały obiekt pod opieką zaledwie 2 osób.
-* Wybudzenie jednego seniora demencyjnego powoduje efekt domina na całym oddziale, co przy 2 osobach obsady grozi całkowitą utratą kontroli nad bezpieczeństwem pensjonariuszy.
+### 4.3. Obciążenie Obsady Nocnej (23:00 – 04:00)
+Przy obsadzie **4 opiekunek na 100 mieszkańców i braku salowych**:
+* Wystąpienie pojedynczego zgonu, upadku lub pobudzenia mieszkańca z demencją angażuje 1–2 opiekunki, pozostawiając pozostałą część obiektu pod opieką 2 osób.
+* Wybudzenie jednego seniora z demencją wywołuje efekt domina na oddziale, stanowiąc krytyczne obciążenie obsady nocnej i wąskie gardło operacyjne przy zdarzeniach nagłych.
 
 ---
 
 ## 5. Rekomendacje dla Systemu SilverCare
 
-1. **Dashboard Porannego Spiętrzenia:** Widok w dyżurce z wyraźnym odliczaniem czasu do godz. 09:00 dla toalet i insulin, z alarmem kolorystycznym, jeśli do 08:30 nie odznaczono kluczowych czynności.
+1. **Dashboard Porannego Spiętrzenia:** Widok w dyżurce z wyraźnym odliczaniem czasu do godz. 09:00 dla toalet i insulin, ze wskaźnikiem postępu wykonania kluczowych czynności.
 2. **Wspólny Kalendarz Kąpieli i Rehabilitacji:** Moduł blokujący możliwość zaplanowania sesji fizjoterapii w oknie czasowym, w którym dany podopieczny ma przypisaną kąpiel planową.
 3. **Zasada `NIGHT_SHIFT_SANITIZATION_DISPATCH`:** Automatyczna ochrona 4 opiekunek nocnych poprzez przerzucenie ciężkich prac dezynfekcyjnych po zgonie na poranną zmianę salowych (godz. 07:00).
-
