@@ -97,6 +97,7 @@ export const config = {
       id: 'adr003-consent-mutate',
       re: '(consentLedger|consent_ledger)\\s*\\.\\s*(update|updateMany|delete|deleteMany|upsert)\\b|(UPDATE|DELETE)\\s+(FROM\\s+)?consent_ledger\\b',
       appliesTo: '\\.(ts|tsx|sql)$',
+      allowIn: ['tests/db/'],
       msg: 'ADR-003: rejestr zgód jest niezmienialny. Cofnięcie zgody to zapis revoked_at przez nowy stan, nie edycja historii.',
     },
     {
