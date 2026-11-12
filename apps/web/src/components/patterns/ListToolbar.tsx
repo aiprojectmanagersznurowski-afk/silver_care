@@ -1,10 +1,20 @@
 'use client'
 
-import { Search, X } from 'lucide-react'
+import { ChevronDown, Search, X } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group'
+
+const FILTER_ACTIVE_CLASS =
+  'border-primary bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground dark:border-primary dark:bg-primary dark:hover:bg-primary/90'
 
 /**
  * Pasek nad listą jak w szablonie shadcn-admin (ADR-017): po lewej wyszukiwarka i filtry,
@@ -77,12 +87,74 @@ export function FilterChip({ active, onClick, children, 'data-testid': testId }:
       data-testid={testId}
       aria-pressed={active}
       onClick={onClick}
-      className={`min-h-touch gap-1.5 px-3 ${
-        active ? 'border-primary bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground dark:border-primary dark:bg-primary dark:hover:bg-primary/90' : ''
-      }`}
+      className={`min-h-touch gap-1.5 px-3 ${active ? FILTER_ACTIVE_CLASS : ''}`}
     >
       {children}
     </Button>
+  )
+}
+
+export interface FilterSelectOption {
+  value: string
+  label: string
+}
+
+interface FilterSelectProps {
+  label: string
+  name: string
+  value: string
+  allLabel: string
+  options: FilterSelectOption[]
+  onChange: (value: string) => void
+  allValue?: string
+}
+
+/** Rozwijany filtr w pasku narzędzi listy — dzieli kształt i aktywny styl z FilterChip. */
+export function FilterSelect({
+  label,
+  name,
+  value,
+  allLabel,
+  options,
+  onChange,
+  allValue = 'all',
+}: FilterSelectProps) {
+  const active = value !== allValue
+  const currentLabel = active
+    ? options.find((opt) => opt.value === value)?.label ?? value
+    : 'Wszystkie'
+
+  return (
+    <div data-filter-group={name}>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              type="button"
+              variant="outline"
+              data-slot="filter-chip"
+              className={`min-h-touch gap-1.5 px-3 ${active ? FILTER_ACTIVE_CLASS : ''}`}
+            />
+          }
+        >
+          <span className="text-xs font-normal opacity-80">{label}:</span>
+          <span className="text-sm font-medium">{currentLabel}</span>
+          <ChevronDown className="size-3.5 shrink-0 opacity-70" aria-hidden="true" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="max-h-60 min-w-44 overflow-y-auto">
+          <DropdownMenuRadioGroup value={value} onValueChange={(val) => onChange(String(val))}>
+            <DropdownMenuRadioItem value={allValue} closeOnClick>
+              {allLabel}
+            </DropdownMenuRadioItem>
+            {options.map((opt) => (
+              <DropdownMenuRadioItem key={opt.value} value={opt.value} closeOnClick>
+                {opt.label}
+              </DropdownMenuRadioItem>
+            ))}
+          </DropdownMenuRadioGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   )
 }
 

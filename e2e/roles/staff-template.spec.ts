@@ -41,8 +41,9 @@ test.describe('Panel personelu — tokeny szablonu (@REQ: UI-TEMPLATE-ALIGNMENT)
     await loginPage.loginAs('nurse');
     await staffBoardPage.goto();
     await staffBoardPage.expectStaffBoardLoaded();
-    // Filtry statusu renderują się razem z listą — bez tego test sprawdzałby pusty ekran ładowania
-    await expect(page.getByRole('button', { name: /Brak wpisu/ }).first()).toBeVisible();
+    // Filtry statusu i lista renderują się razem — bez tego test sprawdzałby pusty ekran ładowania
+    await expect(page.getByRole('button', { name: /Status:/ }).first()).toBeVisible();
+    await expect(page.getByText('Brak wpisu').first()).toBeVisible();
 
     const redStatuses = await page.evaluate(() => {
       // Przeglądarka zwraca kolory Tailwinda v4 w oklch() — rozkładamy je na RGB przez canvas.
