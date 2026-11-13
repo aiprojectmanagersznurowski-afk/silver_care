@@ -46,6 +46,7 @@ export const RESOURCES = [
   'external_wearable_links', 'wellness_daily', 'audit_logs', 'security_access_logs',
   'rooms', 'beds', 'bed_assignments',
   'resident_events', 'resident_packages',
+  'shift_definitions', 'shift_roster', 'shift_tasks', 'shift_plan_approvals',
 ];
 
 /**
@@ -82,7 +83,31 @@ export const MATRIX = [
   // Wyłącznie kierownik placówki — decyzja Michała z 2026-10-25. Zdarzenia są historią: bez edycji i usuwania.
   { resource: 'resident_events',         read: ['org_admin:own'],                           create: ['org_admin'],    update: [],                         delete: [] },
   { resource: 'resident_packages',       read: ['org_admin:own'],                           create: ['org_admin'],    update: ['org_admin:own'],          delete: [] },
+
+  // Zmiany, grafik i zadania zmiany (SC-NUR-12, SC-NUR-13, SC-NUR-15; ADR-021, decyzje Michała z 2026-10-30).
+  // Wyłącznie personel — bliscy nie mają do tych zasobów żadnego dostępu (osobne od daily_agenda, która jest współdzielona z rodziną).
+  // `nurse:shift_lead` = personel opiekuńczy wyznaczony w grafiku jako kierownik TEJ zmiany (patrz SHIFT_LEAD_SCOPE).
+  // Zadania nigdy nie są usuwane: niepotrzebne zadanie się anuluje z powodem (SHIFT_TASK_POLICY.cancelRequiresReason).
+  { resource: 'shift_definitions',       read: ['org_admin:own', 'nurse:own'],              create: ['org_admin'],    update: ['org_admin:own'],          delete: [] },
+  { resource: 'shift_roster',            read: ['org_admin:own', 'nurse:own'],              create: ['org_admin'],    update: ['org_admin:own'],          delete: ['org_admin:own'] },
+  { resource: 'shift_tasks',             read: ['org_admin:own', 'nurse:own'],              create: ['org_admin:own', 'nurse:own'], update: ['org_admin:own', 'nurse:shift_lead'], delete: [] },
+  { resource: 'shift_plan_approvals',    read: ['org_admin:own', 'nurse:own'],              create: ['org_admin:own', 'nurse:shift_lead'], update: [], delete: [] },
 ];
+
+/**
+ * Zakres „kierownik zmiany” (wariant B, decyzja Michała 2026-10-30): rola personelu opiekuńczego z dodatkowymi
+ * uprawnieniami wyłącznie na zmianie, na której grafik wskazuje ją jako kierownika. Poza tą zmianą działa jak zwykły
+ * personel. Zakres dotyczy tylko zasobów z kluczem zmiany i nigdy odczytu — odczyt ma każdy personel placówki.
+ */
+export const SHIFT_LEAD_SCOPE = {
+  qualifier: 'shift_lead',
+  role: 'nurse',
+  resources: ['shift_tasks', 'shift_plan_approvals'],
+  capabilities: ['create', 'update'],
+  derivedFrom: { resource: 'shift_roster', field: 'is_shift_lead' },
+  leadsPerShift: 1,
+  identity: 'auth.uid() z sesji i organizacja z app_metadata — nigdy z parametrów żądania',
+};
 
 /**
  * Wymogi audytowe. audit_logs jest append-only — RLS odrzuca UPDATE i DELETE
@@ -97,8 +122,21 @@ export const AUDIT_REQUIREMENTS = {
   status: 'STABLE',
 };
 
+/**
+ * Okres retencji dostępu dla bliskich (w dniach) po zgonie lub wypisie podopiecznego (SC-FAM-07).
+ * Przez ten czas bliscy zachowują wyciszony dostęp do historii raportów i mogą pobrać archiwum.
+ * Po upływie tego terminu dostęp zostaje wygaszony.
+ */
+export const OFFBOARDING_RETENTION_DAYS = 30;
+
 /** Polityki usuwania. Archiwizacja miękka nie kasuje śladu audytowego (SC-ADM-05). */
 export const DELETE_POLICIES = [
-  { entity: 'residents', strategy: 'SOFT_ARCHIVE_THEN_RETENTION', rationale: 'archived_at odcina rodzinę natychmiast; twardy DELETE dopiero po retencji albo na żądanie z art. 17.', cascades: ['daily_logs', 'daily_reports', 'voice_draft_notes', 'wellness_daily'] },
+  {
+    entity: 'residents',
+    strategy: 'SOFT_ARCHIVE_THEN_RETENTION',
+    rationale: 'archived_at odcina rodzinę natychmiast; twardy DELETE dopiero po retencji albo na żądanie z art. 17.',
+    familyOffboardingRetentionDays: OFFBOARDING_RETENTION_DAYS,
+    cascades: ['daily_logs', 'daily_reports', 'voice_draft_notes', 'wellness_daily'],
+  },
   { entity: 'resident_relative_links', strategy: 'REVOKE_NOT_DELETE', rationale: 'Cofnięcie dostępu musi zostawić ślad kto i kiedy — usunięcie wiersza kasuje dowód.', cascades: [] },
 ];

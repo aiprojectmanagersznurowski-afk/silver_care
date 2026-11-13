@@ -3,7 +3,7 @@
 import {
   Activity,
   BarChart3,
-  Building2,
+  CalendarClock,
   CalendarDays,
   LayoutDashboard,
   Mail,
@@ -15,6 +15,7 @@ import {
   UserPlus,
   Users,
 } from 'lucide-react'
+import { FacilityIcon } from '@/components/icons/FacilityIcon'
 import Image from 'next/image'
 import { Logo } from '@/components/Logo'
 import Link from 'next/link'
@@ -37,7 +38,7 @@ import { useStaffUnansweredMessages } from '@/hooks/useStaffUnansweredMessages'
 const PLATFORM_GROUP: SidebarNavGroup = {
   label: 'Zarządzanie platformą',
   items: [
-    { href: '/admin/organizations', label: 'Placówki', icon: Building2 },
+    { href: '/admin/organizations', label: 'Placówki', icon: FacilityIcon },
     { href: '/admin/iam', label: 'Uprawnienia (IAM)', icon: ShieldCheck },
     { href: '/admin/system-status', label: 'Status systemu', icon: Activity },
     { href: '/admin/audit', label: 'Rejestr audytowy', icon: ShieldAlert },
@@ -50,7 +51,9 @@ function facilityGroup(isImpersonating: boolean, unansweredCount = 0): SidebarNa
     label: isImpersonating ? 'Operacje placówki (podgląd)' : 'Placówka',
     items: [
       { href: '/admin', label: 'Pulpit placówki', icon: LayoutDashboard, exact: true },
-      { href: '/admin/facility', label: 'Struktura placówki', icon: Building2 },
+      { href: '/admin/facility', label: 'Struktura placówki', icon: FacilityIcon },
+      // Konfiguracja zmian tylko dla kierownika placówki — administrator platformy w podglądzie jej nie ma (kontrakt)
+      ...(isImpersonating ? [] : [{ href: '/admin/shifts', label: 'Zmiany i grafik', icon: CalendarClock }]),
       { href: '/admin/residents', label: 'Podopieczni', icon: Users },
       { href: '/admin/staff', label: 'Personel', icon: UserPlus },
       { href: '/admin/invitations', label: 'Zaproszenia', icon: Mail },

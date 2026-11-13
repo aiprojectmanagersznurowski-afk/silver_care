@@ -5,21 +5,37 @@ import { redirect } from 'next/navigation'
 import { PageHeader } from '@/components/patterns/PageHeader'
 import { formatPersonName } from '@/lib/person-name'
 import { getCurrentUser } from '@/lib/supabase/current-user'
+import { evaluateFamilyOffboardingState } from '@/lib/family-offboarding'
+
+type MessagesResident = {
+  id: string
+  first_name: string
+  last_name: string
+  death_date?: string | null
+  contract_end_date?: string | null
+  archived_at?: string | null
+}
 
 export default async function FamilyMessagesPage() {
   const supabase = await createClient()
   const user = await getCurrentUser()
   if (!user) return redirect('/')
 
-  // Read linked residents
-  const { data: links } = await supabase
-    .from('resident_relative_links')
-    .select('resident_id, residents(id, first_name, last_name)')
-    .eq('relative_user_id', user.id)
+  // 1. Pobieramy podopiecznych przez wąskie RPC dla rodziny (ochrona danych po wygaśnięciu)
+  const { data: rpcResidents, error: rpcError } = await supabase.rpc('get_family_resident_overview')
+  let residents: MessagesResident[] = (rpcResidents || []) as MessagesResident[]
 
-  const residents = (links || []).map(link => 
-    Array.isArray(link.residents) ? link.residents[0] : link.residents
-  ).filter(Boolean) as { id: string; first_name: string; last_name: string }[]
+  // 2. Bezpieczny fallback do resident_relative_links
+  if (rpcError || residents.length === 0) {
+    const { data: links } = await supabase
+      .from('resident_relative_links')
+      .select('resident_id, residents(id, first_name, last_name, death_date, contract_end_date, archived_at)')
+      .eq('relative_user_id', user.id)
+
+    residents = (links || [])
+      .map(link => Array.isArray(link.residents) ? link.residents[0] : link.residents)
+      .filter(Boolean) as MessagesResident[]
+  }
 
   if (residents.length === 0) {
     return (
@@ -36,14 +52,17 @@ export default async function FamilyMessagesPage() {
   const cookieResidentId = cookieStore.get('family_resident_id')?.value
   const activeResident = residents.find(r => r.id === cookieResidentId) || residents[0]
 
+  if (evaluateFamilyOffboardingState(activeResident).mode !== 'active') {
+    return redirect('/dashboard')
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
         title={`Wiadomości — ${formatPersonName(activeResident.first_name, activeResident.last_name)}`}
         description="Kontakt z personelem opiekuńczym."
       />
-
-      <div className="max-w-3xl mx-auto w-full">
+      <div className="max-w-xl mx-auto">
         <FamilyMessageForm residentId={activeResident.id} />
       </div>
     </div>

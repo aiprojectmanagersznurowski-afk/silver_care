@@ -48,8 +48,8 @@ describe('resolveCardAccess i sectionsFor (@REQ: ADM-RESIDENT-CARD-VISIBILITY)',
   })
 
   it('@REQ: ADM-RESIDENT-CARD-VISIBILITY - sekcje pielęgniarki i kierownika zgodne z kontraktem; tryb tylko do odczytu bez sekcji zapisu', () => {
-    expect(sectionsFor({ role: 'nurse', readOnly: false })).toEqual(['overview', 'bed', 'wellness', 'daily'])
-    expect(sectionsFor({ role: 'org_admin', readOnly: false })).toEqual(['overview', 'bed', 'wellness', 'daily', 'family', 'contract', 'events', 'wearable', 'manage'])
+    expect(sectionsFor({ role: 'nurse', readOnly: false })).toEqual(['overview', 'bed', 'wellness', 'daily', 'tasks'])
+    expect(sectionsFor({ role: 'org_admin', readOnly: false })).toEqual(['overview', 'bed', 'wellness', 'daily', 'tasks', 'family', 'contract', 'events', 'wearable', 'manage'])
     expect(sectionsFor({ role: 'org_admin', readOnly: true })).not.toContain('manage')
   })
 

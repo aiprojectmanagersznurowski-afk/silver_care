@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
@@ -10,21 +10,37 @@ import { PageHeader } from '@/components/patterns/PageHeader'
 import { formatPersonName } from '@/lib/person-name'
 import { isMedicalAgendaItem } from '@/lib/agenda-family-visibility'
 import { getCurrentUser } from '@/lib/supabase/current-user'
+import { evaluateFamilyOffboardingState } from '@/lib/family-offboarding'
+
+type AgendaResident = {
+  id: string
+  first_name: string
+  last_name: string
+  death_date?: string | null
+  contract_end_date?: string | null
+  archived_at?: string | null
+}
 
 export default async function FamilyAgendaPage(props: { searchParams: Promise<{ date?: string }> }) {
   const supabase = await createClient()
   const user = await getCurrentUser()
   if (!user) return redirect('/')
 
-  // Read linked residents
-  const { data: links } = await supabase
-    .from('resident_relative_links')
-    .select('resident_id, residents(id, first_name, last_name)')
-    .eq('relative_user_id', user.id)
+  // 1. Pobieramy podopiecznych przez wąskie RPC dla rodziny (ochrona danych po wygaśnięciu)
+  const { data: rpcResidents, error: rpcError } = await supabase.rpc('get_family_resident_overview')
+  let residents: AgendaResident[] = (rpcResidents || []) as AgendaResident[]
 
-  const residents = (links || []).map(link => 
-    Array.isArray(link.residents) ? link.residents[0] : link.residents
-  ).filter(Boolean) as { id: string; first_name: string; last_name: string }[]
+  // 2. Bezpieczny fallback do resident_relative_links
+  if (rpcError || residents.length === 0) {
+    const { data: links } = await supabase
+      .from('resident_relative_links')
+      .select('resident_id, residents(id, first_name, last_name, death_date, contract_end_date, archived_at)')
+      .eq('relative_user_id', user.id)
+
+    residents = (links || [])
+      .map(link => Array.isArray(link.residents) ? link.residents[0] : link.residents)
+      .filter(Boolean) as AgendaResident[]
+  }
 
   if (residents.length === 0) {
     return (
@@ -46,12 +62,14 @@ export default async function FamilyAgendaPage(props: { searchParams: Promise<{ 
   const cookieResidentId = cookieStore.get('family_resident_id')?.value
   const activeResident = residents.find(r => r.id === cookieResidentId) || residents[0]
 
-  // Resolve searchParams (Next.js 15 compatible)
+  if (evaluateFamilyOffboardingState(activeResident).mode !== 'active') {
+    return redirect('/dashboard')
+  }
+
   const resolvedParams = await Promise.resolve(props.searchParams)
   const dateParam = typeof resolvedParams.date === 'string' ? resolvedParams.date : undefined
   const viewDateStr = dateParam || new Date().toISOString().slice(0, 10)
-  
-  // Calculate prev/next days
+
   const viewDateObj = new Date(viewDateStr)
   const prevDate = new Date(viewDateObj)
   prevDate.setDate(prevDate.getDate() - 1)
@@ -62,12 +80,9 @@ export default async function FamilyAgendaPage(props: { searchParams: Promise<{ 
   const nextDateStr = nextDate.toISOString().slice(0, 10)
   const todayStr = new Date().toISOString().slice(0, 10)
 
-  // Fetch agenda items (facility-wide OR resident-specific) AND (recurring OR specific date)
-  // We need to use nested ORs or just fetch all for resident/null and then filter in memory if PostgREST doesn't support complex AND/OR.
-  // Actually, we can just fetch items where resident matches, and then filter by date in JS to be safe.
   const { data: allItems } = await supabase
     .from('agenda_items')
-    .select('*')
+    .select('id, title, time, type, resident_id, target_date')
     .or(`resident_id.is.null,resident_id.eq.${activeResident.id}`)
     .order('time', { ascending: true })
 
@@ -77,10 +92,10 @@ export default async function FamilyAgendaPage(props: { searchParams: Promise<{ 
   )
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="space-y-6">
       <PageHeader
-        title={`Plan Dnia — ${formatPersonName(activeResident.first_name, activeResident.last_name)}`}
-        description="Przewidywany harmonogram w placówce."
+        title={`Plan dnia — ${formatPersonName(activeResident.first_name, activeResident.last_name)}`}
+        description="Harmonogram aktywności, posiłków i wydarzeń w placówce."
       />
 
       <div className="flex items-center justify-between bg-card border border-border p-2 rounded-lg">

@@ -113,3 +113,40 @@ export const CAPACITY_POLICY = {
   onExceed: { auditAction: 'ORGANIZATION_CAPACITY_EXCEEDED', notify: ['A4', 'A5'] },
   presentation: { badge: 'Ponad limit', tone: 'brand' },
 };
+
+/**
+ * Zmiany i grafik (SC-NUR-12/AC1, AC1a; ADR-021, decyzje Michała z 2026-10-30).
+ *
+ * Zmiana to klucz (definicja zmiany, data) — nie wiersz tworzony z wyprzedzeniem. Placówka definiuje 2 albo 3 zmiany
+ * na dobę; zmiana nocna przechodzi przez północ. Jeden kierownik zmiany na (definicja, data), wyznaczany w grafiku
+ * przez kierownika placówki (uprawnienia: SHIFT_LEAD_SCOPE w roles.contract.mjs).
+ */
+export const SHIFT_POLICY = {
+  timezone: 'Europe/Warsaw',
+  shiftsPerDay: { min: 2, max: 3 },
+  shiftKey: ['shift_definition_id', 'shift_date'],
+  crossesMidnightAllowed: true,
+  leadsPerShift: 1,
+  rosterSetBy: ['org_admin'],
+};
+
+/**
+ * Zadania zmiany (SC-NUR-13, SC-NUR-15, SC-ADM-23). Zadania są poleceniami personelu i planu opieki ustalonego
+ * przez placówkę — nie zaleceniami systemu (granica MDR). Tylko personel; bliscy nie mają dostępu (MATRIX).
+ * Praca opiekunek odbywa się na wydruku planu; obsługę systemu przejmuje kierownik zmiany.
+ */
+export const SHIFT_TASK_POLICY = {
+  statuses: ['PROPOSED', 'TODO', 'DONE', 'CANCELLED'],
+  sources: ['MANUAL', 'HANDOVER', 'CARE_PLAN'],
+  /** Trzy ścieżki rozliczenia zadania po zmianie. Niewykonane przechodzi dalej, nic nie znika. */
+  settlementPaths: ['DONE', 'CANCELLED', 'CARRIED'],
+  cancelRequiresReason: true,
+  carriedOverMarker: 'z poprzedniej zmiany',
+  residentOptional: true,
+  groupBy: ['room', 'resident'],
+  visibleToRelatives: false,
+  planApproval: { requiredBeforePrint: true, byRoles: ['nurse:shift_lead', 'org_admin'], reapprovalOnChange: true },
+  /** Pola, które wolno umieścić na wydruku planu — bez PESEL, kontaktów i danych z karty (minimalizacja danych). */
+  printFields: ['resident_name', 'room', 'bed', 'task_title', 'due_time', 'source_label', 'assignee'],
+  audit: ['SHIFT_TASK_STATUS_CHANGED', 'SHIFT_PLAN_APPROVED', 'SHIFT_PLAN_PRINTED'],
+};

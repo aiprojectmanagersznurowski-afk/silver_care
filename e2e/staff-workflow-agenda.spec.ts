@@ -20,14 +20,32 @@ test.describe('Panel personelu i Agenda na dziś (@REQ: NUR-BOARD, @REQ: NUR-AGE
     const tokenBar = page.locator('[data-testid="filter-token-bar"]').first();
     await expect(tokenBar).toBeVisible();
 
-    // Sprawdzenie tokenów statusu
-    const statusTokens = tokenBar.locator('[data-filter-group="status"] button');
-    await expect(statusTokens.first()).toBeVisible();
+    // Sprawdzenie rozwijanego filtra statusu: otwarcie menu, wybór opcji, zamknięcie menu i oznaczenie aktywnego stanu
+    const statusTrigger = tokenBar.locator('[data-filter-group="status"] button[data-slot="filter-chip"]').first();
+    await expect(statusTrigger).toBeVisible();
+    await expect(statusTrigger).toContainText('Status: Wszystkie');
+    await statusTrigger.click();
+
+    const readyOption = page.getByRole('menuitemradio', { name: 'Raport gotowy' });
+    await expect(readyOption).toBeVisible();
+    await readyOption.click();
+
+    // Menu zamyka się po wyborze opcji, a trigger pokazuje wybrany filtr w kolorze marki
+    await expect(readyOption).toHaveCount(0);
+    await expect(statusTrigger).toContainText('Status: Raport gotowy');
+
+    // Przywrócenie widoku wszystkich statusów przed dalszymi krokami testu
+    await statusTrigger.click();
+    await page.getByRole('menuitemradio', { name: 'Wszystkie statusy' }).click();
+    await expect(statusTrigger).toContainText('Status: Wszystkie');
 
     // Tablica otwiera się w tabeli; szybki obchód (1-klik) jest jednym z widoków kafelkowych
     await page.locator('[data-slot="view-toggle"]:visible button[aria-label="Widok szybkiego obchodu"]').click();
-    const quickLogButtons = page.locator('button:has-text("Stan stabilny"), button:has-text("Stabilny")');
-    await expect(quickLogButtons.first()).toBeVisible();
+    // Przycisk „Stan stabilny” został wycofany (brak pozorowanych wpisów, reguła zakazu fabrykowania danych)
+    await expect(page.locator('button:has-text("Stan stabilny"), button:has-text("Stabilny")')).toHaveCount(0);
+    // Kafelek zawiera przycisk dyktowania notatki oraz wskaźnik liczby notatek
+    await expect(page.locator('a:has-text("Dyktuj")').first()).toBeVisible();
+    await expect(page.locator('[data-testid="notes-count-indicator"]').first()).toBeVisible();
   });
 
   test('@REQ: NUR-AGENDA - Menu personelu zawiera dedykowany link "Agenda na dziś"', async ({ loginPage, page }) => {

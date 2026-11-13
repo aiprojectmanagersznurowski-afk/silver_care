@@ -88,7 +88,7 @@ Krój: `-apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui, sans-
 
 Bazowy rozmiar 14px · minimalny kontrast 4.5:1 · cel dotykowy 38px
 
-## Wymagania (56)
+## Wymagania (62)
 
 | ID | Domena | Ryzyko | Treść |
 |---|---|---|---|
@@ -101,6 +101,12 @@ Bazowy rozmiar 14px · minimalny kontrast 4.5:1 · cel dotykowy 38px
 | ADM-BED-ASSIGNMENT | facility | HIGH | Jedno łóżko ma co najwyżej jednego aktywnego pensjonariusza; jeden pensjonariusz ma co najwyżej jedno aktywne łóżko. |
 | ADM-FACILITY-OCCUPANCY | facility | MEDIUM | Administrator widzi obłożenie pokoi bez ręcznego liczenia. |
 | ADM-INVITE | residents | HIGH | Zaproszenie dla bliskiego jest bezpieczne i nie ujawnia danych osobowych. |
+| NUR-SHIFT-CONFIG | staff | MEDIUM | Kierownik placówki definiuje 2 albo 3 zmiany na dobę w strefie Europe/Warsaw i układa grafik: kto pracuje na zmianie. |
+| NUR-SHIFT-LEAD | staff | HIGH | Kierownik zmiany to osoba z personelu opiekuńczego wyznaczona w grafiku, z dodatkowymi uprawnieniami wyłącznie na swojej zmianie. |
+| NUR-TASKS | staff | HIGH | Zadania zmiany (dla podopiecznego albo placówki) przechodzą akceptację planu przez kierownika zmiany i są rozliczane jako wykonane, anulowane z powodem albo przeniesione na kolejną zmianę. |
+| NUR-SHIFT-PLAN-PRINT | staff | HIGH | Kierownik zmiany drukuje zaakceptowany plan pracy zmiany, aby opiekunki pracowały bez obsługi komputera. |
+| ADM-RESIDENT-CARD-TASKS | residents | MEDIUM | Karta podopiecznego ma sekcję „Zadania” z otwartymi i niedawno wykonanymi zadaniami podopiecznego. |
+| ADM-CARE-PLAN-TASKS | residents | HIGH | Zadania standardowe pochodzą z szablonów planu opieki definiowanych przez placówkę, a nie z rekomendacji systemu. |
 | ADM-CAPACITY-LIMIT | facility | HIGH | Limit miejsc placówki (liczba łóżek = maks. liczba aktywnych podopiecznych) ustala wyłącznie super admin; kierownik może go przekroczyć po potwierdzeniu, a przekroczenie powiadamia kierownika i super admina. |
 | ADM-RESIDENT-CARD-VISIBILITY | residents | HIGH | Wspólna karta podopiecznego dla personelu pokazuje każdej roli wyłącznie sekcje z zasobów, które ta rola może czytać według macierzy uprawnień. |
 | ADM-ARCHIVE | residents | HIGH | Archiwizacja odcina dostęp bliskim bez niszczenia śladu audytowego. |

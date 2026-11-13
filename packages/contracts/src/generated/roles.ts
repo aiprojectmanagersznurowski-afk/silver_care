@@ -93,7 +93,11 @@ export const RESOURCES = [
   "beds",
   "bed_assignments",
   "resident_events",
-  "resident_packages"
+  "resident_packages",
+  "shift_definitions",
+  "shift_roster",
+  "shift_tasks",
+  "shift_plan_approvals"
 ] as const;
 
 export const MATRIX = [
@@ -368,6 +372,65 @@ export const MATRIX = [
       "org_admin:own"
     ],
     "delete": []
+  },
+  {
+    "resource": "shift_definitions",
+    "read": [
+      "org_admin:own",
+      "nurse:own"
+    ],
+    "create": [
+      "org_admin"
+    ],
+    "update": [
+      "org_admin:own"
+    ],
+    "delete": []
+  },
+  {
+    "resource": "shift_roster",
+    "read": [
+      "org_admin:own",
+      "nurse:own"
+    ],
+    "create": [
+      "org_admin"
+    ],
+    "update": [
+      "org_admin:own"
+    ],
+    "delete": [
+      "org_admin:own"
+    ]
+  },
+  {
+    "resource": "shift_tasks",
+    "read": [
+      "org_admin:own",
+      "nurse:own"
+    ],
+    "create": [
+      "org_admin:own",
+      "nurse:own"
+    ],
+    "update": [
+      "org_admin:own",
+      "nurse:shift_lead"
+    ],
+    "delete": []
+  },
+  {
+    "resource": "shift_plan_approvals",
+    "read": [
+      "org_admin:own",
+      "nurse:own"
+    ],
+    "create": [
+      "org_admin:own",
+      "nurse:shift_lead"
+    ],
+    "update": [],
+    "delete": []
   }
 ] as const;
 
@@ -394,6 +457,48 @@ export const AUDIT_REQUIREMENTS = {
   "requiresJustification": true,
   "retentionDays": 1825,
   "status": "STABLE"
+} as const;
+
+export const DELETE_POLICIES = [
+  {
+    "entity": "residents",
+    "strategy": "SOFT_ARCHIVE_THEN_RETENTION",
+    "rationale": "archived_at odcina rodzinę natychmiast; twardy DELETE dopiero po retencji albo na żądanie z art. 17.",
+    "familyOffboardingRetentionDays": 30,
+    "cascades": [
+      "daily_logs",
+      "daily_reports",
+      "voice_draft_notes",
+      "wellness_daily"
+    ]
+  },
+  {
+    "entity": "resident_relative_links",
+    "strategy": "REVOKE_NOT_DELETE",
+    "rationale": "Cofnięcie dostępu musi zostawić ślad kto i kiedy — usunięcie wiersza kasuje dowód.",
+    "cascades": []
+  }
+] as const;
+
+export const OFFBOARDING_RETENTION_DAYS = 30 as const;
+
+export const SHIFT_LEAD_SCOPE = {
+  "qualifier": "shift_lead",
+  "role": "nurse",
+  "resources": [
+    "shift_tasks",
+    "shift_plan_approvals"
+  ],
+  "capabilities": [
+    "create",
+    "update"
+  ],
+  "derivedFrom": {
+    "resource": "shift_roster",
+    "field": "is_shift_lead"
+  },
+  "leadsPerShift": 1,
+  "identity": "auth.uid() z sesji i organizacja z app_metadata — nigdy z parametrów żądania"
 } as const;
 
 export type Role = typeof ROLES[number]['id'];

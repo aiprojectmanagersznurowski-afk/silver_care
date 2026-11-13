@@ -125,4 +125,4 @@ Decyzje techniczne mieszczące się w kontrakcie (odwracalne, bez wpływu na dan
 ## Czego nie robisz sam
 
 Otwarcie okna kontraktowego i publikacja raportu do bliskich należą do człowieka.
-**Zakaz samodzielnego merge do gałęzi głównej (`main`):** Autor nigdy nie wykonuje merge własnego Pull Requesta. Merge'a i przeniesienia karty do 'Done' dokonuje wyłącznie druga osoba z zespołu (Darek lub Michał) po pozytywnym Code Review.
+**Zakaz samodzielnego merge do `staging` ani `main`:** Autor nigdy nie wykonuje merge własnego Pull Requesta. Merge'a i przeniesienia karty do 'Done' dokonuje wyłącznie druga osoba z zespołu (Darek lub Michał) po pozytywnym Code Review.

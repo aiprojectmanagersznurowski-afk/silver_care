@@ -206,6 +206,17 @@ export const RESIDENT_CARD_SECTIONS = [
     ]
   },
   {
+    "id": "tasks",
+    "label": "Zadania",
+    "roles": [
+      "org_admin",
+      "nurse"
+    ],
+    "resources": [
+      "shift_tasks"
+    ]
+  },
+  {
     "id": "family",
     "label": "Bliscy i kontakty",
     "roles": [
