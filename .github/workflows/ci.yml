@@ -82,10 +82,22 @@ jobs:
       # Bez .git: Vercel Hobby blokuje publikację, gdy autor commita (np. merge Darka) nie jest
       # w zespole Vercela — CLI wysyła metadane Gita z katalogu. Runner jest jednorazowy.
       - name: Deploy
+        id: deploy
         run: |
           rm -rf .git
           url=$(pnpm dlx vercel@65.5.0 deploy --yes $PROD_FLAG --token="$VERCEL_TOKEN")
           echo "Wdrożenie ($TARGET): $url" >> "$GITHUB_STEP_SUMMARY"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      # Stały adres stagingu (Site URL i Redirect URLs w Supabase stagingu).
+      # Tylko push na staging; produkcja i podglądy PR zostają bez aliasu.
+      - name: Alias stagingu
+        if: github.event_name == 'push' && github.ref == 'refs/heads/staging'
+        env:
+          DEPLOY_URL: ${{ steps.deploy.outputs.url }}
+        run: |
+          pnpm dlx vercel@65.5.0 alias set "$DEPLOY_URL" silver-care-staging.vercel.app --token="$VERCEL_TOKEN"
+          echo "Alias stagingu: https://silver-care-staging.vercel.app" >> "$GITHUB_STEP_SUMMARY"
 
       # Zielony job ma znaczyć działającą aplikację, nie tylko udaną publikację.
       # Podglądy są za ochroną Vercela (302), więc sprawdzamy stały adres produkcji.
