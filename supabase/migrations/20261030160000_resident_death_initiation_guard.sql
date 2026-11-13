@@ -3,7 +3,7 @@
 ALTER TABLE public.residents
   ADD COLUMN IF NOT EXISTS death_reported_at timestamptz;
 
--- 2. Rozszerzenie dozwolonych typów zdarzeń w resident_events o 'death_reported' i 'death_reported_cancelled'
+-- 2. Rozszerzenie dozwolonych typów zdarzeń w resident_events o 'death_reported'
 ALTER TABLE public.resident_events
   DROP CONSTRAINT IF EXISTS resident_events_event_type_check;
 
@@ -13,7 +13,6 @@ ALTER TABLE public.resident_events
     'contract_ended',
     'death',
     'death_reported',
-    'death_reported_cancelled',
     'care_level_changed',
     'admission',
     'bed_transfer',
@@ -37,14 +36,14 @@ CREATE POLICY "resident_events_insert" ON public.resident_events
   );
 
 -- 4. Ochrona widoczności zadań w planie dnia (agenda_items):
--- Zadania staff_only oraz internal NIE mogą zostać nadpisane na true
+-- Zadania staff_only/internal oraz pozycje jawnie oznaczone jako family_visible = false NIE mogą zostać nadpisane na true
 CREATE OR REPLACE FUNCTION public.set_agenda_family_visible()
  RETURNS trigger
  LANGUAGE plpgsql
  SET search_path TO 'public', 'pg_temp'
 AS $function$
 BEGIN
-  IF lower(coalesce(NEW.type, '')) IN ('staff_only', 'internal') THEN
+  IF NEW.family_visible IS FALSE OR lower(coalesce(NEW.type, '')) IN ('staff_only', 'internal') THEN
     NEW.family_visible := false;
   ELSE
     NEW.family_visible := NOT public.is_medical_agenda_item(NEW.title, NEW.type);
@@ -52,30 +51,3 @@ BEGIN
   RETURN NEW;
 END;
 $function$;
-
--- 5. Atomowa synchronizacja death_reported_at na podopiecznym z resident_events
-CREATE OR REPLACE FUNCTION public.sync_resident_death_reported()
-RETURNS trigger
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path TO 'public', 'pg_temp'
-AS $function$
-BEGIN
-  IF NEW.event_type = 'death_reported' THEN
-    UPDATE public.residents
-    SET death_reported_at = COALESCE(NEW.created_at, now())
-    WHERE id = NEW.resident_id;
-  ELSIF NEW.event_type IN ('death_reported_cancelled', 'death', 'contract_ended') THEN
-    UPDATE public.residents
-    SET death_reported_at = NULL
-    WHERE id = NEW.resident_id;
-  END IF;
-  RETURN NEW;
-END;
-$function$;
-
-DROP TRIGGER IF EXISTS trg_sync_resident_death_reported ON public.resident_events;
-CREATE TRIGGER trg_sync_resident_death_reported
-  AFTER INSERT ON public.resident_events
-  FOR EACH ROW
-  EXECUTE FUNCTION public.sync_resident_death_reported();

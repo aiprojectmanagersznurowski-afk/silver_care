@@ -25,7 +25,8 @@ export function sectionsFor(access: CardAccess): ResidentCardSection[] {
 /** Kolumny przeglądu: wszystko, czego potrzebuje nagłówek i dane ogólne — bez pesel_hash. */
 const OVERVIEW_COLUMNS = [
   'id', 'first_name', 'last_name', 'birth_date', 'gender', 'admission_date', 'care_level', 'is_zsn',
-  'avatar_url', 'notes', 'archived_at', 'death_date', 'death_reported_at', 'contract_end_date',
+  'avatar_url', 'notes', 'archived_at', 'death_date', 'contract_end_date',
+  'resident_death_reports(reported_death_date, reported_at, notes)',
 ]
 
 /** Kolumny umowy (opłaty i dokument) — wyłącznie w sekcji „Umowa i pakiety”. */

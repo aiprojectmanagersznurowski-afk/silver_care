@@ -12,7 +12,7 @@ import { EditResidentDialog } from '@/components/EditResidentDialog'
 import { DischargeResidentDialog } from '@/components/DischargeResidentDialog'
 import { FullResidentData, ResidentBedAssignment } from './profile-types'
 import { formatPersonName } from '@/lib/person-name'
-import { hasPendingDeathInitiation } from '@/lib/discharge-helpers'
+import { extractPendingDeathReport } from '@/lib/discharge-helpers'
 import { cancelDeathReportAction } from '@/actions/resident-lifecycle-cancel'
 import { toast } from 'sonner'
 
@@ -45,8 +45,10 @@ export function ResidentProfileHeader({
   const activeBedLabel = activeAssignment?.beds
     ? `Pokój ${activeAssignment.beds.rooms?.number || '?'}, Łóżko ${activeAssignment.beds.label}`
     : null
-  const pendingDeath = hasPendingDeathInitiation(resident)
-  const canNurseInitiateDeath = !canManage && isActive && !pendingDeath && backHref.startsWith('/staff')
+  const pendingReport = extractPendingDeathReport(resident)
+  const pendingDeath = pendingReport !== null
+  // Widoczność przycisku dla roli nurse wynika z uprawnień karty (!canManage && Boolean(voiceNoteHref) oznacza kartę personelu poza trybem readOnly impersonacji)
+  const canNurseInitiateDeath = Boolean(voiceNoteHref) && !canManage && isActive && !pendingDeath
 
   const handleCancelDeathReport = () => {
     if (!confirm('Czy na pewno chcesz anulować zgłoszenie zgonu? Zadania procedury zostaną usunięte.')) return
@@ -130,7 +132,8 @@ export function ResidentProfileHeader({
                   id: resident.id,
                   first_name: resident.first_name,
                   last_name: resident.last_name,
-                  death_reported_at: resident.death_reported_at,
+                  death_reported_at: pendingReport?.reported_at ?? null,
+                  reported_death_date: pendingReport?.reported_death_date ?? null,
                 }}
                 activeBedLabel={activeBedLabel}
                 mode="full"
@@ -155,7 +158,6 @@ export function ResidentProfileHeader({
                   id: resident.id,
                   first_name: resident.first_name,
                   last_name: resident.last_name,
-                  death_reported_at: resident.death_reported_at,
                 }}
                 activeBedLabel={activeBedLabel}
                 mode="nurse_death_init"

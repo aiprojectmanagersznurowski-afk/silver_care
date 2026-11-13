@@ -16,7 +16,13 @@ import { DischargeConsequencesAlert } from './residents/DischargeConsequencesAle
 import { formatPersonName } from '@/lib/person-name'
 
 export interface DischargeResidentDialogProps {
-  resident: { id: string; first_name: string; last_name: string; death_reported_at?: string | null }
+  resident: {
+    id: string
+    first_name: string
+    last_name: string
+    death_reported_at?: string | null
+    reported_death_date?: string | null
+  }
   activeBedLabel?: string | null
   mode?: 'full' | 'nurse_death_init'
   trigger?: React.ReactNode
@@ -31,8 +37,8 @@ export function DischargeResidentDialog({ resident, activeBedLabel, mode = 'full
 
   const todayStr = new Date().toISOString().slice(0, 10)
   const isNurseInit = mode === 'nurse_death_init'
-  const isPendingDeath = Boolean(resident.death_reported_at)
-  const initialDate = resident.death_reported_at ? resident.death_reported_at.slice(0, 10) : todayStr
+  const isPendingDeath = Boolean(resident.reported_death_date || resident.death_reported_at)
+  const initialDate = resident.reported_death_date || todayStr
 
   const [contractEndDate, setContractEndDate] = useState(initialDate)
   const [contractEndReason, setContractEndReason] = useState<ContractEndReason>(isPendingDeath ? 'death' : 'family_request')

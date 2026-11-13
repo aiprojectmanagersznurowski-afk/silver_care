@@ -13,7 +13,7 @@ import {
   canInitiateDeathProcedure,
   buildPostMortemSanitizationTasks,
 } from '@/lib/discharge-helpers'
-import type { TablesInsert } from '@/types/database.types'
+import type { Json, TablesInsert } from '@/types/database.types'
 
 export interface DischargeResidentResult {
   success: boolean
@@ -29,8 +29,7 @@ interface BedAssignmentRow {
 
 async function resolveActiveBed(
   client: ReturnType<typeof createClient> extends Promise<infer T> ? T : ReturnType<typeof createAdminClient>,
-  residentId: string,
-  unassign: boolean
+  residentId: string
 ): Promise<{ activeAssignment: BedAssignmentRow | null; bedLabel: string | null }> {
   const { data } = await client
     .from('bed_assignments')
@@ -41,10 +40,6 @@ async function resolveActiveBed(
   const activeAssignment = ((data as unknown as BedAssignmentRow[]) || [])[0] || null
   const bed = activeAssignment?.beds
   const bedLabel = bed ? (bed.rooms?.number ? `Pokój ${bed.rooms.number}, Łóżko ${bed.label}` : `Łóżko ${bed.label}`) : null
-
-  if (unassign && activeAssignment) {
-    await client.from('bed_assignments').update({ unassigned_at: new Date().toISOString() }).eq('id', activeAssignment.id).is('unassigned_at', null)
-  }
   return { activeAssignment, bedLabel }
 }
 
@@ -83,7 +78,7 @@ export async function dischargeResidentAction(payload: DischargePayloadInput): P
   }
   if (currentResident.death_date) return { success: false, error: 'Dla tego podopiecznego zarejestrowano już fakt zgonu.' }
 
-  const { activeAssignment, bedLabel } = await resolveActiveBed(adminClient, residentId, false)
+  const { activeAssignment, bedLabel } = await resolveActiveBed(adminClient, residentId)
 
   let updatedNotes = currentResident.notes || ''
   if (notes) {
@@ -96,14 +91,23 @@ export async function dischargeResidentAction(payload: DischargePayloadInput): P
     contract_end_date: contractEndDate,
     contract_end_reason: contractEndReason,
     notes: updatedNotes || null,
-    death_reported_at: null,
     ...(deathDate ? { death_date: deathDate } : {}),
   }).eq('id', residentId)
 
   if (updateErr) return { success: false, error: `Błąd podczas zapisu wypisu: ${updateErr.message}` }
 
+  await adminClient.from('resident_death_reports').delete().eq('resident_id', residentId)
+
   if (activeAssignment) {
-    await adminClient.from('bed_assignments').update({ unassigned_at: new Date().toISOString() }).eq('id', activeAssignment.id).is('unassigned_at', null)
+    const { error: bedErr } = await adminClient
+      .from('bed_assignments')
+      .update({ unassigned_at: new Date().toISOString() })
+      .eq('id', activeAssignment.id)
+      .is('unassigned_at', null)
+    if (bedErr) {
+      console.error('[DISCHARGE_BED_UNASSIGN_FAIL]', bedErr.message)
+      return { success: false, error: `Błąd podczas zwalniania łóżka: ${bedErr.message}` }
+    }
   }
 
   const eventsToInsert: TablesInsert<'resident_events'>[] = [{
@@ -126,7 +130,11 @@ export async function dischargeResidentAction(payload: DischargePayloadInput): P
       performed_by: user.id,
     })
   }
-  await adminClient.from('resident_events').insert(eventsToInsert)
+  const { error: eventsErr } = await adminClient.from('resident_events').insert(eventsToInsert)
+  if (eventsErr) {
+    console.error('[DISCHARGE_EVENTS_INSERT_FAIL]', eventsErr.message)
+    return { success: false, error: `Błąd podczas zapisu zdarzenia pobytu: ${eventsErr.message}` }
+  }
 
   await adminClient.from('audit_logs').insert({
     organization_id: currentResident.organization_id,
@@ -147,7 +155,7 @@ export async function dischargeResidentAction(payload: DischargePayloadInput): P
 
 /**
  * Operacyjna inicjacja zgłoszenia zgonu przez personel opiekuńczy (nurse) [ADM-RESIDENT-LIFECYCLE-DISCHARGE]
- * Wykonywana w kontekście sesji użytkownika (RLS, bez service_role).
+ * Wykonywana atomowo w jednej transakcji RPC w kontekście sesji użytkownika (RLS, bez service_role).
  */
 export async function initiateDeathDischargeAction(payload: DeathInitiationPayloadInput): Promise<DischargeResidentResult> {
   const validation = validateDeathInitiationPayload(payload)
@@ -171,48 +179,38 @@ export async function initiateDeathDischargeAction(payload: DeathInitiationPaylo
 
   const { data: currentResident, error: fetchErr } = await supabase
     .from('residents')
-    .select('id, organization_id, death_date, death_reported_at, archived_at')
+    .select('id, organization_id, death_date, archived_at, resident_death_reports(reported_death_date)')
     .eq('id', residentId)
     .single()
 
   if (fetchErr || !currentResident) return { success: false, error: 'Nie znaleziono wskazanego podopiecznego.' }
   if (currentResident.organization_id !== orgId) return { success: false, error: 'Brak uprawnień do zasobów innej placówki.' }
   if (currentResident.death_date) return { success: false, error: 'Dla tego podopiecznego zarejestrowano już fakt zgonu.' }
-  if (currentResident.death_reported_at) {
+  const existingReport = Array.isArray(currentResident.resident_death_reports)
+    ? currentResident.resident_death_reports[0]
+    : currentResident.resident_death_reports
+  if (existingReport) {
     return { success: false, error: 'Dla tego podopiecznego zarejestrowano już zgłoszenie zgonu (oczekuje na zatwierdzenie przez Kierownika placówki).' }
   }
 
-  const { activeAssignment, bedLabel } = await resolveActiveBed(supabase, residentId, false)
-
-  const { error: eventErr } = await supabase.from('resident_events').insert({
-    organization_id: currentResident.organization_id,
-    resident_id: residentId,
-    event_type: 'death_reported',
-    event_date: deathDate,
-    event_reason: 'death_reported',
-    metadata: { death_date: deathDate, notes: notes || null },
-    performed_by: user.id,
-  })
-  if (eventErr) return { success: false, error: `Błąd podczas rejestracji zgłoszenia: ${eventErr.message}` }
-
+  const { bedLabel } = await resolveActiveBed(supabase, residentId)
   const tasks = buildPostMortemSanitizationTasks({ residentId, targetDate: deathDate, bedLabel })
-  const { error: tasksErr } = await supabase.from('agenda_items').insert(
-    tasks.map((t) => ({ ...t, organization_id: currentResident.organization_id }))
-  )
-  if (tasksErr) return { success: false, error: `Błąd podczas tworzenia zadań procedury: ${tasksErr.message}` }
 
-  const { error: auditErr } = await supabase.from('audit_logs').insert({
-    organization_id: currentResident.organization_id,
-    performed_by: user.id,
-    action: 'RESIDENT_DEATH_REPORTED',
-    payload: {
-      target_table: 'residents',
-      target_id: residentId,
-      has_bed_assignment: Boolean(activeAssignment),
-      sanitization_required: true,
-    },
+  const { error: rpcErr } = await supabase.rpc('report_resident_death_atomic', {
+    p_resident_id: residentId,
+    p_death_date: deathDate,
+    p_notes: notes || null,
+    p_tasks: tasks as unknown as Json,
   })
-  if (auditErr) return { success: false, error: `Błąd zapisu w audycie: ${auditErr.message}` }
+  if (rpcErr) {
+    if (rpcErr.message.includes('DEATH_ALREADY_REPORTED')) {
+      return { success: false, error: 'Dla tego podopiecznego zarejestrowano już zgłoszenie zgonu (oczekuje na zatwierdzenie przez Kierownika placówki).' }
+    }
+    if (rpcErr.message.includes('DEATH_ALREADY_CONFIRMED')) {
+      return { success: false, error: 'Dla tego podopiecznego zarejestrowano już fakt zgonu.' }
+    }
+    return { success: false, error: `Błąd podczas rejestracji zgłoszenia: ${rpcErr.message}` }
+  }
 
   for (const p of [`/staff/residents/${residentId}`, `/admin/residents/${residentId}`, '/admin/facility', '/staff/agenda']) {
     revalidatePath(p)

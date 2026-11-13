@@ -204,10 +204,42 @@ export function buildPostMortemSanitizationTasks(params: {
   ]
 }
 
+export interface PendingDeathReportInfo {
+  reported_death_date: string
+  reported_at: string
+  notes?: string | null
+}
+
+export function extractPendingDeathReport(resident: {
+  death_date?: string | null
+  death_reported_at?: string | null
+  reported_death_date?: string | null
+  resident_death_reports?: PendingDeathReportInfo | PendingDeathReportInfo[] | null
+}): PendingDeathReportInfo | null {
+  if (resident.death_date) return null
+  const rel = resident.resident_death_reports
+  const row = Array.isArray(rel) ? rel[0] : rel
+  if (row?.reported_at || row?.reported_death_date) {
+    return {
+      reported_death_date: row.reported_death_date,
+      reported_at: row.reported_at,
+      notes: row.notes ?? null,
+    }
+  }
+  if (resident.death_reported_at || resident.reported_death_date) {
+    return {
+      reported_death_date: resident.reported_death_date || (resident.death_reported_at ? resident.death_reported_at.slice(0, 10) : ''),
+      reported_at: resident.death_reported_at || resident.reported_death_date || '',
+    }
+  }
+  return null
+}
+
 export function hasPendingDeathInitiation(resident: {
   death_date?: string | null
   death_reported_at?: string | null
+  reported_death_date?: string | null
+  resident_death_reports?: PendingDeathReportInfo | PendingDeathReportInfo[] | null
 }): boolean {
-  if (resident.death_date) return false
-  return Boolean(resident.death_reported_at)
+  return extractPendingDeathReport(resident) !== null
 }

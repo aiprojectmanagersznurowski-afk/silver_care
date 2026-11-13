@@ -5,7 +5,7 @@ import {
   validateDeathInitiationPayload,
   canInitiateDeathProcedure,
   buildPostMortemSanitizationTasks,
-  formatDeathInitiationNote,
+  extractPendingDeathReport,
   hasPendingDeathInitiation,
 } from '../../apps/web/src/lib/discharge-helpers'
 
@@ -193,8 +193,21 @@ describe('Discharge and Contract Termination Logic (@REQ: ADM-BED-ASSIGNMENT, @R
       expect(tasks.some((t) => t.title.includes('Pokój 102, Łóżko A'))).toBe(true)
     })
 
-    it('@REQ: ADM-ARCHIVE - oznacza i wykrywa oczekujące zgłoszenie zgonu do zatwierdzenia przez admina', () => {
-      // Wykrywa oczekujące zgłoszenie na podstawie death_reported_at (bez wycieku danych w notes)
+    it('@REQ: ADM-ARCHIVE - oznacza i wykrywa oczekujące zgłoszenie zgonu oraz przekazuje faktyczną datę zgonu z resident_death_reports', () => {
+      // Wykrywa oczekujące zgłoszenie z relacji resident_death_reports i zachowuje reported_death_date (np. zgon w nocy zgłoszony rano)
+      const pending = extractPendingDeathReport({
+        death_date: null,
+        resident_death_reports: {
+          reported_death_date: '2026-10-28',
+          reported_at: '2026-10-29T07:30:00Z',
+          notes: 'Zgłoszenie poranne',
+        },
+      })
+      expect(pending).toEqual({
+        reported_death_date: '2026-10-28',
+        reported_at: '2026-10-29T07:30:00Z',
+        notes: 'Zgłoszenie poranne',
+      })
       expect(hasPendingDeathInitiation({ death_reported_at: '2026-10-29T10:00:00Z', death_date: null })).toBe(true)
       // Po formalnym zatwierdzeniu przez admina (ustawieniu death_date) nie jest już "oczekujące"
       expect(hasPendingDeathInitiation({ death_reported_at: '2026-10-29T10:00:00Z', death_date: '2026-10-29' })).toBe(false)
