@@ -180,7 +180,7 @@ flowchart TB
         M3["Hybrydowy Cykl Zmiany (Paper + Voice): Akceptacja planu -> Wydruk A4 z audytem -> Głosowe rozliczenie"]
         M4["Strażnik Granicy MDR w Kodzie i Kontrakcie: Bramka CI/CD (62 REQ), filtr słownika, blokada fizjologii"]
         M5["Wspólna Karta Podopiecznego z kontraktu + Optymalizator Przydziału Łóżek + Workflow Zgonu"]
-        M6["Firmware Zero-UI (M5StickC PLUS2): Push-to-Talk, IMA ADPCM, Flash Encryption, Auto-Sync po 5V USB"]
+        M6["Firmware Zero-UI (M5Stack StickS3): Push-to-Talk, ADPCM albo Opus, Flash Encryption, Auto-Sync po 5V USB"]
     end
 
     subgraph ProductLayer["III. PRODUCT / INTEGRATE - Gotowe systemy zewnętrzne (INTEGRUJEMY / EKSPORTUJEMY)"]
@@ -226,19 +226,19 @@ Poniższy diagram przekłada wypracowaną przewagę bezpośrednio na język korz
 flowchart LR
     subgraph CustomerProfiles["PROFIL KLIENTA - Jobs, Pains, Gains"]
         direction TB
-        subgraph P_Dir["1. Właściciel / Kierownik Placówki (np. Artur w Marconi)"]
+        subgraph P_Dir["Właściciel / Kierownik Placówki (np. Artur w Marconi)"]
             J_Dir["Zadania: Obłożenie 100+ łóżek, rozliczenie w Subiekcie, obrona w razie sądu, grafik przy 15% rotacji"]
             Pain_Dir["Bóle: Opiekunki z UA boją się pisać po polsku, ARISCO odrzucone, lekarz traci czas na telefony, ucieka 3-5 tys. zł za pampersy, paraliż nocny przy zgonie"]
             Gain_Dir["Oczekiwania: Twardy ślad audytowy do sądu, faktury w 15 min zamiast 3 dni w Excelu, spokojna dyżurka"]
         end
 
-        subgraph P_Staff["2. Personel Opiekuńczy (PL/UA) i Kierownik Zmiany"]
+        subgraph P_Staff["Personel Opiekuńczy (PL/UA) i Kierownik Zmiany"]
             J_Staff["Zadania: 4 tury toalet, insulina przed 09:00, kąpiele leżących, zdanie zmiany o 07:00 i 19:00"]
             Pain_Staff["Bóle: Zmęczenie po 12h dźwigania, brak PC na oddziałach i martwe strefy Wi-Fi, ustne przekazania ulatują, nocne szukanie ksero dowodu przy zgonie"]
             Gain_Staff["Oczekiwania: Powiedzieć po swojemu (PL/UA) w 60s, dostać rano kartkę A4 z zadaniami, skan dowodu i dieta w 3s"]
         end
 
-        subgraph P_Fam["3. Rodzina i Opiekun Prawny"]
+        subgraph P_Fam["Rodzina i Opiekun Prawny"]
             J_Fam["Zadania: Wiedzieć, że bliski jest zaopiekowany, najedzony i spokojny, bez poczucia winy"]
             Pain_Fam["Bóle: Dzwonienie na dyżurkę przerywa pracę opiekunkom, lakoniczne odpowiedzi lub straszenie alarmami, brak wglądu w plan dnia"]
             Gain_Fam["Oczekiwania: Codzienny godny raport wieczorny (Peace Letter), obiektywne fakty o śnie i krokach, wiadomość bez wiszenia na telefonie"]
