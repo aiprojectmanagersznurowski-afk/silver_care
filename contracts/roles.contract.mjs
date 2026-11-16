@@ -79,9 +79,9 @@ export const MATRIX = [
   { resource: 'beds',                    read: ['org_admin:own', 'nurse:own'],              create: ['org_admin'],    update: ['org_admin:own'],          delete: [] },
   { resource: 'bed_assignments',         read: ['org_admin:own', 'nurse:own'],              create: ['org_admin'],    update: ['org_admin:own'],          delete: [] },
 
-  // Zdarzenia pobytu (wypis, zgon, zakończenie umowy) i pakiety z opłatami (SC-ADM-19, SC-ADM-20).
-  // Wyłącznie kierownik placówki — decyzja Michała z 2026-10-25. Zdarzenia są historią: bez edycji i usuwania.
-  { resource: 'resident_events',         read: ['org_admin:own'],                           create: ['org_admin'],    update: [],                         delete: [] },
+  // Zdarzenia pobytu (wypis, zgon, zakończenie umowy, operacyjne zgłoszenie zgonu).
+  // Odczyt wyłącznie kierownik placówki (SC-ADM-20). Rejestracja zgłoszenia zgonu także przez nurse (decyzja Michała 2026-11-02).
+  { resource: 'resident_events',         read: ['org_admin:own'],                           create: ['org_admin', 'nurse'], update: [],                   delete: [] },
   { resource: 'resident_packages',       read: ['org_admin:own'],                           create: ['org_admin'],    update: ['org_admin:own'],          delete: [] },
 
   // Zmiany, grafik i zadania zmiany (SC-NUR-12, SC-NUR-13, SC-NUR-15; ADR-021, decyzje Michała z 2026-10-30).
