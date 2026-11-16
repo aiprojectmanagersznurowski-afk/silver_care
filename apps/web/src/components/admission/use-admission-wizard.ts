@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { parseNationalId, BedSuggestion } from '@/lib/admission-helpers'
 import { getBedSuggestionsAction, admitResidentAction } from '@/actions/admission'
+import { updateResidentFundingAction } from '@/actions/resident-funding'
 import type { CareLevelType, WizardStep } from './admission-types'
 
 export function useAdmissionWizard() {
@@ -15,6 +16,8 @@ export function useAdmissionWizard() {
   const [careLevel, setCareLevel] = useState<CareLevelType>('walking')
   const [isZsn, setIsZsn] = useState(false)
   const [notes, setNotes] = useState('')
+  // SC-ADM-24: opcjonalne źródło finansowania; puste = „Brak danych” (bez wartości domyślnej)
+  const [fundingSource, setFundingSource] = useState('')
 
   const [calculatedGender, setCalculatedGender] = useState<'M' | 'F' | null>(null)
   const [calculatedBirthDate, setCalculatedBirthDate] = useState<string | null>(null)
@@ -89,6 +92,7 @@ export function useAdmissionWizard() {
     setCareLevel('walking')
     setIsZsn(false)
     setNotes('')
+    setFundingSource('')
     setCalculatedGender(null)
     setCalculatedBirthDate(null)
     setIdError(null)
@@ -124,7 +128,9 @@ export function useAdmissionWizard() {
       setStatusMessage({ type: 'error', text: res.error })
     } else {
       setCreatedResidentId(res.residentId || null)
-      setStatusMessage({ type: 'success', text: res.message || 'Przyjęcie zakończone pomyślnie.' })
+      const funding = res.residentId && fundingSource ? await updateResidentFundingAction(res.residentId, fundingSource) : null
+      const fundingNote = funding && !funding.success ? ' Nie zapisano źródła finansowania — uzupełnij je na karcie podopiecznego.' : ''
+      setStatusMessage({ type: 'success', text: (res.message || 'Przyjęcie zakończone pomyślnie.') + fundingNote })
     }
   }
 
@@ -137,6 +143,7 @@ export function useAdmissionWizard() {
     careLevel, setCareLevel,
     isZsn, setIsZsn,
     notes, setNotes,
+    fundingSource, setFundingSource,
     calculatedGender, calculatedBirthDate, idError,
     suggestions, selectedBedId, setSelectedBedId,
     selectedBedInfo, setSelectedBedInfo, loadingSuggestions,
