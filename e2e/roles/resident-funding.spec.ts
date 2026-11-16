@@ -1,5 +1,6 @@
 import { test, expect } from '../fixtures/base-test';
 import { ResidentProfilePage } from '../page-objects/ResidentProfilePage';
+import { AdmissionWizardPage } from '../page-objects/AdmissionWizardPage';
 
 /**
  * @REQ: ADM-RESIDENT-FUNDING
@@ -46,4 +47,39 @@ test.describe('Źródło finansowania na karcie podopiecznego (@REQ: ADM-RESIDEN
     await page.reload();
     await expect(profile.sidebar.locator('[data-testid="funding-source"] [data-slot="field-value"]')).toHaveText(target);
   });
+
+  test('@REQ: ADM-RESIDENT-FUNDING - kreator przyjęcia zapisuje opcjonalne źródło finansowania', async ({ loginPage, page }) => {
+    await loginPage.loginAs('org_admin');
+    await page.setViewportSize({ width: 1440, height: 900 });
+    const wizard = new AdmissionWizardPage(page);
+    await wizard.gotoResidents();
+    await wizard.openWizard();
+    await wizard.fillStep1('Zofia', 'Finansowa-E2E', randomValidPesel());
+
+    const fundingSelect = page.getByRole('combobox', { name: 'Źródło finansowania (opcjonalnie)' });
+    await expect(fundingSelect).toHaveValue('');
+    await fundingSelect.selectOption({ label: 'Współfinansowanie (prywatnie + gmina)' });
+
+    await wizard.goToSummaryWithoutBed();
+    await wizard.submitAdmissionButton.click();
+    const goToProfile = page.getByRole('link', { name: /Przejdź do profilu podopiecznego/ });
+    await expect(goToProfile.or(wizard.capacityWarning)).toBeVisible();
+    if (await wizard.capacityWarning.isVisible()) {
+      await wizard.capacityConfirmCheckbox.check();
+      await wizard.submitAdmissionButton.click();
+    }
+    await goToProfile.click();
+
+    const profile = new ResidentProfilePage(page);
+    await expect(profile.sidebar.locator('[data-testid="funding-source"] [data-slot="field-value"]')).toHaveText('Współfinansowanie (prywatnie + gmina)');
+  });
 });
+
+/** Poprawny PESEL kobiety urodzonej w 1950 r. z losowym numerem serii (jak w admin-capacity-limit.spec). */
+function randomValidPesel(): string {
+  const serial = String(Math.floor(Math.random() * 900) + 100);
+  const base = `500101${serial}2`;
+  const weights = [1, 3, 7, 9, 1, 3, 7, 9, 1, 3];
+  const sum = base.split('').reduce((s, d, i) => s + Number(d) * weights[i], 0);
+  return base + String((10 - (sum % 10)) % 10);
+}
