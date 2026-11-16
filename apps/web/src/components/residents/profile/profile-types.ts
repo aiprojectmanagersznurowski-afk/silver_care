@@ -68,6 +68,8 @@ export interface FullResidentData {
   contract_end_date?: string | null
   contract_end_reason?: string | null
   contract_source?: string | null
+  /** Źródło finansowania (SC-ADM-24): osadzenie resident_funding, tylko w danych karty kierownika. */
+  resident_funding?: { funding_source: string | null } | { funding_source: string | null }[] | null
   contract_document_url?: string | null
   organization_id?: string
   bed_assignments?: ResidentBedAssignment[]
