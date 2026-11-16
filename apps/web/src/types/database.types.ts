@@ -929,6 +929,45 @@ export interface Database {
           },
         ]
       }
+      resident_funding: {
+        Row: {
+          resident_id: string
+          organization_id: string
+          funding_source: string
+          updated_by: string
+          updated_at: string
+        }
+        Insert: {
+          resident_id: string
+          organization_id: string
+          funding_source: string
+          updated_by: string
+          updated_at?: string
+        }
+        Update: {
+          resident_id?: string
+          organization_id?: string
+          funding_source?: string
+          updated_by?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resident_funding_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resident_funding_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: true
+            referencedRelation: "residents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       residents: {
         Row: {
           id: string
