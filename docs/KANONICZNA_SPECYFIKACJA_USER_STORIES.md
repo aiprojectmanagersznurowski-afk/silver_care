@@ -1,6 +1,6 @@
 # 📖 Kanoniczna specyfikacja user stories — Silver Care
 
-> **Wersja:** 2.18 (źródło finansowania pobytu podopiecznego — 📝 PROPOZYCJA) · **Ostatnia aktualizacja:** 2026-11-16
+> **Wersja:** 2.19 (minimalny zakres danych podopiecznego dla bliskich — 📝 PROPOZYCJA) · **Ostatnia aktualizacja:** 2026-11-16
 > **Właściciele:** Darek Rink, Michał Sznurowski
 
 ## Jak czytać i utrzymywać ten dokument
@@ -352,6 +352,20 @@
 - **AC2 (Pamiątkowe archiwum pobytu):** Bliski ma dostęp do przycisku „Pobierz pamiątkowe archiwum pobytu”, generującego zestawienie opublikowanych raportów behawioralnych i wspomnień z okresu pobytu (z zachowaniem granic MDR i zakazu słowa „pacjent”).
 - **AC3 (30-dniowe okno retencji):** Rodzina zachowuje ograniczony dostęp w trybie odczytu przez 30 dni od daty zgonu lub wypisu, z jawną informacją o dacie wygaszenia dostępu i liczbie pozostałych dni.
 - **AC4 (Odcięcie po okresie retencji):** Po upływie 30 dni od daty zgonu/wypisu albo po jawnym ustawieniu `archived_at` dostęp do danych pobytu zostaje automatycznie odcięty zgodnie z polityką `SOFT_ARCHIVE_THEN_RETENTION`.
+
+### [SC-FAM-08] Minimalny zakres danych podopiecznego dla bliskich
+🔗 **Kontrakt:** `FAM-RESIDENT-DATA-MINIMIZATION` · **Status:** 📝 PROPOZYCJA
+
+> ℹ️ Decyzja Michała z 2026-11-16: przegląd przy `SC-ADM-24` wykazał, że polityka `residents_family_select` daje bliskim cały wiersz `residents` powiązanego podopiecznego. Przez API bliski odczyta skrót PESEL, orzeczenie o niepełnosprawności (`is_zsn`), poziom opieki, uwagi przyjęciowe personelu, stawkę i ścieżkę pliku umowy — choć portal rodziny żadnej z tych danych nie pokazuje.
+
+**User story:** Jako placówka chcę, aby bliscy mieli dostęp wyłącznie do danych podopiecznego potrzebnych w portalu rodziny, aby dane szczególnej kategorii (art. 9 RODO) i dane umowy nie były dostępne poza personelem, nawet przez bezpośrednie zapytanie do API.
+
+**Kryteria akceptacji:**
+- **AC1 (Brak odczytu tabeli):** Role `family` i `legal_guardian` nie mają polityki `SELECT` na `residents`. Zapytanie bliskiego do tabeli zwraca zero wierszy (test na poziomie bazy).
+- **AC2 (Jawna lista kolumn):** Jedyną ścieżką odczytu jest `get_family_resident_overview()`: identyfikator, imię, nazwisko, zdjęcie, data zgonu, data końca umowy, data archiwizacji.
+- **AC3 (Plan dnia placówki):** Pozycje planu dnia bez podopiecznego (`resident_id IS NULL`) nadal są widoczne dla bliskich z aktywnym powiązaniem w placówce (`SC-FAM-06`), bez odczytu `residents` w kontekście bliskiego.
+- **AC4 (Portal bez zmian dla użytkownika):** Nagłówek z wyborem podopiecznego, pulpit, plan dnia, wiadomości i zgody działają jak dotąd; błąd RPC to jawny komunikat, nie ciche przejście na odczyt tabeli.
+- **AC5 (Kolejność wdrożenia):** Kod portalu przestaje czytać `residents` przed migracją, która zdejmuje politykę (wspólna baza `staging` i produkcji).
 
 ---
 
@@ -1034,3 +1048,4 @@
 | 2026-10-30 | 2.16 | Moduł zadań wg decyzji Michała z 2026-10-30: przebudowa `SC-NUR-13` (cykl zmiany, kierownik zmiany w grafiku — wariant B, źródło zadania, grupowanie per pokój/podopieczny, rozliczenie: wykonane / anulowane z powodem / przeniesione), `SC-NUR-12/AC1a` (grafik i kierownik zmiany), nowe `SC-NUR-15` (wydruk planu pracy), `SC-NUR-16` (rozliczenie z notatek głosowych) i `SC-ADM-23` (plan opieki — rejestr zadań standardowych, komponent rozwojowy) ze statusem 📝 PROPOZYCJA. |
 | 2026-11-06 | 2.17 | `SC-ADM-20`: AC8 (ZSN tylko do odczytu dla personelu, decyzja Michała z 2026-11-06), AC9 (etykieta „Uwagi przyjęciowe”), AC10 (nagranie notatki głosowej z karty) ze statusem 📝 PROPOZYCJA. |
 | 2026-11-16 | 2.18 | Nowe `SC-ADM-24` (źródło finansowania pobytu podopiecznego, oddzielnie od źródła pozyskania; decyzja Michała z 2026-11-16) ze statusem 📝 PROPOZYCJA. |
+| 2026-11-16 | 2.19 | Nowe `SC-FAM-08` (minimalny zakres danych podopiecznego dla bliskich, bez odczytu tabeli `residents`; decyzja Michała z 2026-11-16) ze statusem 📝 PROPOZYCJA. |
