@@ -57,7 +57,8 @@ export const RESOURCES = [
 export const MATRIX = [
   { resource: 'organizations',           read: ['super_admin', 'org_admin:own'],            create: ['super_admin'],  update: ['super_admin'],            delete: [] },
   { resource: 'profiles',                read: ['super_admin', 'org_admin:own'],            create: ['org_admin'],    update: ['org_admin'],              delete: [] },
-  { resource: 'residents',               read: ['org_admin:own', 'nurse:own', 'legal_guardian:own', 'family:own'], create: ['org_admin'], update: ['org_admin'], delete: [] },
+  // SC-FAM-08 (FAM-RESIDENT-DATA-MINIMIZATION): bliscy bez odczytu tabeli — dane podopiecznego tylko przez RPC get_family_resident_overview
+  { resource: 'residents',               read: ['org_admin:own', 'nurse:own'],              create: ['org_admin'],    update: ['org_admin'],              delete: [] },
   { resource: 'resident_relative_links', read: ['org_admin:own', 'legal_guardian:own'],     create: ['org_admin'],    update: ['org_admin'],              delete: [] },
   { resource: 'consent_ledger',          read: ['org_admin:own', 'legal_guardian:own'],     create: ['org_admin'],    update: [],                         delete: [] },
   { resource: 'daily_logs',              read: ['nurse:own', 'org_admin:own'],              create: ['nurse'],        update: ['nurse:own'],              delete: [] },
