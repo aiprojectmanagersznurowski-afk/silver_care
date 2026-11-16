@@ -1,6 +1,6 @@
 # 📖 Kanoniczna specyfikacja user stories — Silver Care
 
-> **Wersja:** 2.17 (karta podopiecznego dla personelu: ZSN tylko do odczytu, uwagi przyjęciowe, notatka głosowa z karty — 📝 PROPOZYCJA) · **Ostatnia aktualizacja:** 2026-11-06
+> **Wersja:** 2.18 (źródło finansowania pobytu podopiecznego — 📝 PROPOZYCJA) · **Ostatnia aktualizacja:** 2026-11-16
 > **Właściciele:** Darek Rink, Michał Sznurowski
 
 ## Jak czytać i utrzymywać ten dokument
@@ -639,6 +639,20 @@
 - **AC5 (Karta podopiecznego):** Sekcja „Zadania” na karcie (`SC-ADM-21`) pokazuje obowiązujące zadania standardowe podopiecznego (z profilu i indywidualne) z informacją o źródle.
 - **AC6 (Źródła medyczne — osobna decyzja):** `MEDICAL_ORDER` (zalecenia lekarza) i `MEDICATION_SCHEDULE` (harmonogram przyjmowania leków) to dane art. 9 i obszar bliski granicy MDR. Przed włączeniem wymagają osobnego ADR i oceny prawnej: system wyłącznie **odwzorowuje** zalecenia wprowadzone przez uprawnioną osobę, nie wylicza dawek, nie sprawdza interakcji, nie generuje alertów na podstawie metryk i nie pokazuje tych danych bliskim.
 
+#### [SC-ADM-24] Źródło finansowania pobytu podopiecznego
+🔗 **Kontrakt:** `ADM-RESIDENT-FUNDING` · **Status:** 📝 PROPOZYCJA
+
+> ℹ️ Decyzja Michała z 2026-11-16: dotychczasowe pole `contract_source` (Internet, Polecenie, Szpital, MOPS, Polecenie rodziny, Inne) to **kanał pozyskania**, a karta podpisywała je „Źródło finansowania” i przy braku danych pokazywała zmyślone „private”. Finansowanie pobytu to osobna informacja i dostaje osobne pole.
+
+**User story:** Jako kierownik placówki chcę zapisać, kto finansuje pobyt podopiecznego (prywatnie, gmina, współfinansowanie), oddzielnie od tego, skąd podopieczny do nas trafił, aby rozliczenia i statystyki umów nie mieszały dwóch różnych informacji.
+
+**Kryteria akceptacji:**
+- **AC1 (Wartości):** Źródło finansowania przyjmuje wyłącznie: **Prywatnie (podopieczny lub rodzina)**, **Gmina / MOPS**, **Współfinansowanie (prywatnie + gmina)**, **Inne**. Inną wartość odrzuca baza (ograniczenie `CHECK`).
+- **AC2 (Brak danych):** Puste pole jest pokazywane jako „Brak danych”, nigdy jako wartość domyślna ani zgadywana. Migracja nie nadaje wartości istniejącym podopiecznym.
+- **AC3 (Dostęp):** Pole czyta i zmienia wyłącznie kierownik placówki — w sekcji karty „Umowa i pakiety” (`RESIDENT_CARD_SECTIONS.contract`) i w kreatorze przyjęcia. Pielęgniarka, rodzina i opiekun prawny go nie widzą; kolumna nie trafia do jawnej listy kolumn innych ról (`SC-ADM-20`).
+- **AC4 (Źródło pozyskania):** Dotychczasowe `contract_source` jest podpisane w interfejsie „Źródło pozyskania”; przy braku danych „Brak danych” zamiast „private”.
+- **AC5 (Ślad):** Zmiana źródła finansowania na istniejącym podopiecznym zapisuje wpis w `audit_logs` bez danych osobowych (identyfikator podopiecznego, stara i nowa wartość kodu).
+
 ### Domena 2 — Personel
 
 #### [SC-NUR-07] Skrzynka wiadomości od rodzin (wyłącznie dla Kierownika / Administratora Placówki)
@@ -1019,3 +1033,4 @@
 | 2026-10-29 | 2.15 | Dopisanie `SC-ADM-22` (limit miejsc placówki: przekroczenie z ostrzeżeniem dla kierownika i super admina) i `NFR-UI-06` (spójna terminologia interfejsu) ze statusem 📝 PROPOZYCJA, na podstawie decyzji Michała z 2026-10-29; `MASTER_DATA_STANDARD.md` w wersji 2.0. |
 | 2026-10-30 | 2.16 | Moduł zadań wg decyzji Michała z 2026-10-30: przebudowa `SC-NUR-13` (cykl zmiany, kierownik zmiany w grafiku — wariant B, źródło zadania, grupowanie per pokój/podopieczny, rozliczenie: wykonane / anulowane z powodem / przeniesione), `SC-NUR-12/AC1a` (grafik i kierownik zmiany), nowe `SC-NUR-15` (wydruk planu pracy), `SC-NUR-16` (rozliczenie z notatek głosowych) i `SC-ADM-23` (plan opieki — rejestr zadań standardowych, komponent rozwojowy) ze statusem 📝 PROPOZYCJA. |
 | 2026-11-06 | 2.17 | `SC-ADM-20`: AC8 (ZSN tylko do odczytu dla personelu, decyzja Michała z 2026-11-06), AC9 (etykieta „Uwagi przyjęciowe”), AC10 (nagranie notatki głosowej z karty) ze statusem 📝 PROPOZYCJA. |
+| 2026-11-16 | 2.18 | Nowe `SC-ADM-24` (źródło finansowania pobytu podopiecznego, oddzielnie od źródła pozyskania; decyzja Michała z 2026-11-16) ze statusem 📝 PROPOZYCJA. |
