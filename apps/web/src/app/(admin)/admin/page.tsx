@@ -38,7 +38,7 @@ export default async function AdminDashboard() {
 
   return (
     <div className="flex flex-col gap-4 md:gap-6">
-      <PageHeader title="Pulpit Główny" description="Szybki podgląd stanu placówki i obłożenia." />
+      <PageHeader title="Pulpit główny" description="Szybki podgląd stanu placówki i obłożenia." />
 
       <MetricGrid>
         <MetricCard icon={<Users />} label="Aktywni podopieczni" value={residentsCount || 0} description="Podopieczni bez archiwizacji." />

@@ -42,7 +42,7 @@ export function AdmissionWizard() {
     <Dialog open={open} onOpenChange={(val) => { setOpen(val); if (!val) resetForm(); }}>
       <DialogTrigger render={<Button className="min-h-touch px-4 bg-primary hover:bg-primary/90 text-primary-foreground gap-2" />}>
         <UserPlus className="w-4 h-4" />
-        Nowe Przyjęcie (Kreator)
+        Nowe przyjęcie (kreator)
       </DialogTrigger>
       <DialogContent className="max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
