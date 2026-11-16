@@ -11,6 +11,8 @@ const migrationSql = readFileSync(
   join(process.cwd(), 'supabase/migrations/20261113090000_resident_death_report_staff_only.sql'),
   'utf8'
 );
+// SC-FAM-08: bliscy bez odczytu tabeli residents (stosowana po migracji zgłoszenia zgonu)
+const minimizationSql = readFileSync(join(process.cwd(), 'supabase/migrations/20261116210000_family_residents_no_table_read.sql'), 'utf8');
 
 /**
  * @REQ: ADM-BED-ASSIGNMENT
@@ -38,6 +40,7 @@ const asRole = (tx: Tx, role: string, orgId: string, sub: string) =>
 async function rollback(fn: (tx: Tx) => Promise<void>) {
   await sql.begin(async (tx) => {
     await tx.unsafe(migrationSql);
+    await tx.unsafe(minimizationSql);
     await fn(tx);
     throw new Error('ROLLBACK');
   }).catch((e) => {
@@ -140,10 +143,12 @@ describe('Zgłoszenie zgonu przez personel — izolacja od rodziny, blokada cros
         expect(reports[0].n).toBe(3);
       }
 
-      // Rodzina i opiekun prawny widzą podopiecznego (wciąż bez death_date), ale NIE widzą resident_death_reports ani zadań procedury
+      // Rodzina i opiekun prawny widzą podopiecznego tylko przez RPC (SC-FAM-08, wciąż bez death_date),
+      // a NIE widzą resident_death_reports ani zadań procedury
       for (const [role, uid] of [['family', s.familyA], ['legal_guardian', s.guardianA]] as const) {
         await asRole(tx, role, s.orgA, uid);
-        const resRows = await tx`SELECT id, death_date FROM residents WHERE id = ${s.resA}`;
+        expect(await tx`SELECT id FROM residents WHERE id = ${s.resA}`, `${role}: brak odczytu tabeli residents`).toHaveLength(0);
+        const resRows = await tx`SELECT id, death_date FROM public.get_family_resident_overview() WHERE id = ${s.resA}`;
         expect(resRows).toHaveLength(1);
         expect(resRows[0].death_date).toBeNull();
 
