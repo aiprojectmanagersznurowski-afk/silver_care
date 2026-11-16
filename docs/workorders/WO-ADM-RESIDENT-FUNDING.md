@@ -28,8 +28,8 @@ Decyzja Michała z 2026-11-16 (pamięć projektu: `contract-source-funding-decis
 |---|---|---|
 | **1** | Migracja `resident_funding` + RLS + typy (`database.types.ts`) | `tests/db/resident_funding_access.test.ts` (`@REQ: ADM-RESIDENT-FUNDING`): kierownik zapisuje i czyta; pielęgniarka, rodzina, opiekun prawny dostają 0 wierszy i odmowę zapisu; wartość spoza listy odrzucona; zapis dla podopiecznego innej placówki odrzucony |
 | **2** | Karta „Umowa i pakiety”: etykieta „Źródło pozyskania”, „Brak danych” zamiast `private`, nowy wiersz „Źródło finansowania” (odczyt `resident_funding` tylko w ścieżce danych karty dla `org_admin`, `card-access.ts`) | E2E w `e2e/roles/resident-profile-layout.spec.ts` lub nowy spec: kierownik widzi obie etykiety i „Brak danych” dla podopiecznego bez wartości; karta pielęgniarki nie pobiera `resident_funding` (jak test `nurse-resident-card.spec.ts`) |
-| **3** | Edycja źródła finansowania (miejsce wg decyzji 1) + Server Action z audytem | E2E: kierownik wybiera wartość, karta pokazuje etykietę; `tests/logic`: akcja odrzuca rolę inną niż `org_admin`, audyt bez PII |
-| **4** *(opcjonalny, decyzja 2)* | Statystyki: rozkład źródeł finansowania obok źródeł pozyskania (RPC tylko `org_admin`, „Brak danych” jako osobna kategoria) | E2E statystyk |
+| **3a** | Edycja na karcie: „Zmień” w sekcji „Umowa i pakiety” + Server Action z audytem | E2E: kierownik wybiera wartość, karta pokazuje etykietę; `tests/logic`: akcja odrzuca rolę inną niż `org_admin`, audyt bez PII |
+| **3b** | Opcjonalne pole w kreatorze przyjęcia (krok danych), zapis po utworzeniu podopiecznego | E2E kreatora: z wyborem → wartość na karcie; bez wyboru → „Brak danych” |
 
 Kolejność migracji: krok 1 scalony i zastosowany na wspólnej bazie **przed** krokiem 2 (kod czyta nową tabelę). Migrację stosuje człowiek po scaleniu.
 
@@ -42,7 +42,7 @@ Kolejność migracji: krok 1 scalony i zastosowany na wspólnej bazie **przed** 
 ## Weryfikacja
 Każdy krok: RED, GREEN, `node tools/sc-phase.mjs red|green`, `bash scripts/verify.sh --full`, dla UI testy E2E (Page Object, `@REQ: ADM-RESIDENT-FUNDING`), na końcu `pnpm test:db` i `pnpm test:e2e`.
 
-## WYMAGA DECYZJI
-1. **Gdzie kierownik wpisuje źródło finansowania?** Dziś nie ma żadnego edytora danych umowy. Propozycja: (a) edycja w sekcji karty „Umowa i pakiety” (przycisk „Zmień” przy polu) **oraz** (b) pole w kroku 1 kreatora przyjęcia (opcjonalne, puste = „Brak danych”). Wariant minimalny: tylko (a).
-2. **Czy statystyki mają pokazywać rozkład źródeł finansowania** (krok 4), czy na razie tylko karta?
-3. **Poza zakresem, do osobnego zadania (bezpieczeństwo):** rodzina odczytuje przez API pełny wiersz `residents` swojego podopiecznego, w tym `contract_monthly_rate`, `contract_source`, `notes` (uwagi przyjęciowe personelu). Czy zakładamy kartę `SEC`/`ORG-ISOLATION` na ograniczenie kolumn dla ról bliskich (np. widok lub RPC jak `get_family_resident_overview`)?
+## Decyzje (Michał, 2026-11-16)
+1. **Miejsce edycji:** przycisk „Zmień” przy polu w sekcji karty „Umowa i pakiety” **oraz** opcjonalne pole w kreatorze przyjęcia (puste = „Brak danych”). Krok 3 dzieli się na 3a (karta) i 3b (kreator: zapis do `resident_funding` po `admit_resident_with_bed`, w tej samej akcji, bez wartości domyślnej).
+2. **Statystyki:** nie — krok 4 odpada.
+3. **Odczyt `residents` przez bliskich:** tak, osobny Work Order `WO-FAM-RESIDENT-DATA-MINIMIZATION` (nowe wymaganie w kontrakcie, osobne okno kontraktowe). Nie blokuje tego WO — `resident_funding` i tak jest tabelą tylko dla kierownika.
