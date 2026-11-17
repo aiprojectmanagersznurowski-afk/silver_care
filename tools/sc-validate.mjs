@@ -303,6 +303,31 @@ for (const must of ['active_consent', 'resident_active', 'idempotency']) {
 // R17 — retencja i TTL zadeklarowane
 if (!VOICE_RETENTION.ttlDays) err('R17-retention', 'Brak TTL dla surowych nagrań głosowych.');
 if (VOICE_RETENTION.ttlDays > 90) warn('R17-retention', `TTL nagrań ${VOICE_RETENTION.ttlDays} dni — długo jak na surowe audio z danymi wrażliwymi.`);
+// Retencja ustawiana per placówka (SC-NUR-02/AC4): domyślna w zakresie, ustawia tylko kierownik placówki albo super admin.
+{
+  const vr = VOICE_RETENTION;
+  if (vr.minDays !== undefined || vr.maxDays !== undefined || vr.setBy) {
+    if (!(vr.minDays >= 1 && vr.minDays <= vr.ttlDays && vr.ttlDays <= vr.maxDays)) {
+      err('R17-retention', `Domyślna retencja ${vr.ttlDays} dni poza zakresem ${vr.minDays}–${vr.maxDays} (minimum 1 dzień).`);
+    }
+    if (vr.maxDays > 90) warn('R17-retention', `Placówka może ustawić retencję do ${vr.maxDays} dni — długo jak na surowe audio z danymi wrażliwymi.`);
+    if (!vr.storageBucket) err('R17-retention', 'Retencja nie obejmuje plików nagrań w Storage.');
+    for (const e of vr.setBy || []) {
+      if (!['org_admin', 'super_admin'].includes(e.split(':')[0])) err('R17-retention', `Retencję nagrań ustawia "${e}". Wyłącznie kierownik placówki albo super admin.`);
+    }
+    const row = MATRIX.find((m) => m.resource === vr.settingsResource);
+    if (!row) err('R17-retention', `Brak wiersza macierzy dla ustawień retencji "${vr.settingsResource}".`);
+    else {
+      for (const cap of ['create', 'update']) {
+        for (const e of row[cap] || []) if (!(vr.setBy || []).includes(e)) err('R17-retention', `${vr.settingsResource}.${cap}: "${e}" spoza VOICE_RETENTION.setBy.`);
+      }
+      for (const cap of ['read', 'create', 'update', 'delete']) {
+        for (const e of row[cap] || []) if (RELATIVE_ROLES.includes(e.split(':')[0])) err('R17-retention', `${vr.settingsResource}.${cap} dostępne roli "${e}".`);
+      }
+      if ((row.delete || []).length) err('R17-retention', `${vr.settingsResource}: usuwanie ustawienia zamiast zmiany z wpisem w audit_logs.`);
+    }
+  }
+}
 
 // R18 — słownictwo i stany interfejsu
 if (!FORBIDDEN_UI_TERMS.find((t) => t.term === 'pacjent')) {
