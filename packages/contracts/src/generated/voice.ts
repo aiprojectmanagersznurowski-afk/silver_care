@@ -125,7 +125,26 @@ export const PIPELINE_STAGES = [
 
 export const VOICE_RETENTION = {
   "table": "voice_draft_notes",
+  "storageBucket": "voice-recordings",
   "ttlDays": 30,
+  "minDays": 7,
+  "maxDays": 90,
+  "scope": "organization",
+  "settingsResource": "voice_retention_settings",
+  "setBy": [
+    "org_admin:own",
+    "super_admin"
+  ],
+  "deletes": [
+    "plik nagrania w voice-recordings",
+    "wiersz voice_draft_notes",
+    "pozycja voice_assignment_queue tego nagrania"
+  ],
+  "keeps": [
+    "daily_reports",
+    "daily_logs"
+  ],
+  "auditChange": true,
   "enforcedBy": "cron bazodanowy",
   "status": "STABLE"
 } as const;

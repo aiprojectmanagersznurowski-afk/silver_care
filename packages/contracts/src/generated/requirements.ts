@@ -466,12 +466,17 @@ export const REQUIREMENTS = [
     "id": "VOICE-RETENTION",
     "status": "TODO",
     "risk": "MEDIUM",
-    "source": "SC-NUR-02/AC3",
+    "source": "SC-NUR-02/AC3, SC-NUR-02/AC4",
     "domain": "voice",
-    "statement": "Surowe nagrania są usuwane po trzydziestu dniach.",
+    "statement": "Surowe nagrania są usuwane po terminie retencji placówki, domyślnie po trzydziestu dniach.",
     "acceptance": [
       "Zadanie bazodanowe usuwa wpisy starsze niż TTL",
-      "Usunięcie nie kasuje zatwierdzonego raportu"
+      "Usunięcie nie kasuje zatwierdzonego raportu",
+      "Placówka bez własnego ustawienia ma retencję 30 dni",
+      "Ustawienie spoza zakresu 7–90 dni jest odrzucane",
+      "Retencję zmienia wyłącznie kierownik swojej placówki albo super admin",
+      "Po terminie znika także plik nagrania w voice-recordings",
+      "Zmiana retencji trafia do audit_logs"
     ]
   },
   {

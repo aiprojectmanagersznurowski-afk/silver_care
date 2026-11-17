@@ -109,8 +109,26 @@ export const RESIDENT_ASSIGNMENT = {
   status: 'STABLE',
 };
 
-/** Retencja surowych nagrań (SC-NUR-02/AC3). */
-export const VOICE_RETENTION = { table: 'voice_draft_notes', ttlDays: 30, enforcedBy: 'cron bazodanowy', status: 'STABLE' };
+/**
+ * Retencja surowych nagrań (SC-NUR-02/AC3 i AC4, decyzja Michała z 2026-11-17).
+ * ttlDays to wartość domyślna. Placówka może ją zmienić w zakresie minDays–maxDays.
+ * Po terminie znika plik i wiersz nagrania; zatwierdzone raporty i fakty w daily_logs zostają.
+ */
+export const VOICE_RETENTION = {
+  table: 'voice_draft_notes',
+  storageBucket: 'voice-recordings',
+  ttlDays: 30,
+  minDays: 7,
+  maxDays: 90,
+  scope: 'organization',
+  settingsResource: 'voice_retention_settings',
+  setBy: ['org_admin:own', 'super_admin'],
+  deletes: ['plik nagrania w voice-recordings', 'wiersz voice_draft_notes', 'pozycja voice_assignment_queue tego nagrania'],
+  keeps: ['daily_reports', 'daily_logs'],
+  auditChange: true,
+  enforcedBy: 'cron bazodanowy',
+  status: 'STABLE',
+};
 
 /** Metadane pochodzenia treści AI, wymagane do audytu (SC-NUR-03/AC1). */
 export const AI_PROVENANCE_FIELDS = ['ai_model', 'ai_prompt_version', 'ai_generated_at', 'approved_by', 'approved_at'];

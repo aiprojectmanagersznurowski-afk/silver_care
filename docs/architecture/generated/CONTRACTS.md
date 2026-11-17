@@ -127,7 +127,7 @@ Bazowy rozmiar 14px · minimalny kontrast 4.5:1 · cel dotykowy 38px
 | VOICE-ZERO-GUESSING | voice | HIGH | Model nigdy nie ustala tożsamości pensjonariusza z nagrania. |
 | VOICE-MEDICAL-STRIP | voice | HIGH | Dane medyczne są usuwane z transkryptu przed wysłaniem do modelu. |
 | VOICE-DRAFT-ISOLATION | voice | HIGH | Brudnopis personelu jest niedostępny dla bliskich. |
-| VOICE-RETENTION | voice | MEDIUM | Surowe nagrania są usuwane po trzydziestu dniach. |
+| VOICE-RETENTION | voice | MEDIUM | Surowe nagrania są usuwane po terminie retencji placówki, domyślnie po trzydziestu dniach. |
 | VOICE-OFFLINE | voice | MEDIUM | Dyktafon działa bez łączności i synchronizuje się po jej odzyskaniu. |
 | VOICE-FOLLOWUP | voice | MEDIUM | Przy zbyt ubogiej notatce asystent dopytuje zamiast uzupełniać treść samodzielnie. |
 | VOICE-DEVICE-INGEST | voice | HIGH | Urządzenie bez ekranu przekazuje nagrania przez uwierzytelniony, idempotentny protokół z potwierdzeniem odbioru. |

@@ -100,7 +100,8 @@ export const RESOURCES = [
   "shift_plan_approvals",
   "voice_devices",
   "voice_device_assignments",
-  "voice_assignment_queue"
+  "voice_assignment_queue",
+  "voice_retention_settings"
 ] as const;
 
 export const MATRIX = [
@@ -475,6 +476,22 @@ export const MATRIX = [
     "update": [
       "org_admin:own",
       "nurse:shift_lead"
+    ],
+    "delete": []
+  },
+  {
+    "resource": "voice_retention_settings",
+    "read": [
+      "org_admin:own",
+      "super_admin"
+    ],
+    "create": [
+      "org_admin:own",
+      "super_admin"
+    ],
+    "update": [
+      "org_admin:own",
+      "super_admin"
     ],
     "delete": []
   }

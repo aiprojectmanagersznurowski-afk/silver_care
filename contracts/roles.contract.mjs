@@ -47,7 +47,7 @@ export const RESOURCES = [
   'rooms', 'beds', 'bed_assignments',
   'resident_events', 'resident_packages',
   'shift_definitions', 'shift_roster', 'shift_tasks', 'shift_plan_approvals',
-  'voice_devices', 'voice_device_assignments', 'voice_assignment_queue',
+  'voice_devices', 'voice_device_assignments', 'voice_assignment_queue', 'voice_retention_settings',
 ];
 
 /**
@@ -101,6 +101,8 @@ export const MATRIX = [
   { resource: 'voice_devices',           read: ['org_admin:own', 'nurse:own'],              create: ['org_admin'],    update: ['org_admin:own'],          delete: [] },
   { resource: 'voice_device_assignments', read: ['org_admin:own', 'nurse:own'],             create: ['org_admin:own', 'nurse:shift_lead'], update: ['org_admin:own', 'nurse:shift_lead'], delete: [] },
   { resource: 'voice_assignment_queue',  read: ['org_admin:own', 'nurse:shift_lead'],       create: [],               update: ['org_admin:own', 'nurse:shift_lead'], delete: [] },
+  // Retencja nagrań placówki (SC-NUR-02/AC4, VOICE_RETENTION.setBy). Osobny zasób, bo kierownik placówki nie edytuje organizations.
+  { resource: 'voice_retention_settings', read: ['org_admin:own', 'super_admin'],           create: ['org_admin:own', 'super_admin'], update: ['org_admin:own', 'super_admin'], delete: [] },
 ];
 
 /**
