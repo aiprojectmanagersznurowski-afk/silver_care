@@ -1,6 +1,6 @@
 # 📖 Kanoniczna specyfikacja user stories — Silver Care
 
-> **Wersja:** 2.18 (kanał urządzeń Zero-UI: nagrywanie na urządzeniu, kolejka „Do przypisania”, rejestr i przydział urządzeń — 📝 PROPOZYCJA) · **Ostatnia aktualizacja:** 2026-11-17
+> **Wersja:** 2.19 (kanał urządzeń Zero-UI, stałe przypisanie urządzeń, konfigurowalna retencja nagrań — 📝 PROPOZYCJA) · **Ostatnia aktualizacja:** 2026-11-17
 > **Właściciele:** Darek Rink, Michał Sznurowski
 
 ## Jak czytać i utrzymywać ten dokument
@@ -220,6 +220,7 @@
 - **AC1 (Izolacja brudnopisów):** Tabela `daily_logs` jest niedostępna dla rodziny. Zredagowane podsumowanie trafia do draftu raportu dla rodziny (`daily_reports`).
 - **AC2 (Zero-guessing entity resolution — kluczowe!):** Model AI ma absolutny zakaz zgadywania tożsamości seniora na podstawie samego nagrania. Aplikacja frontendowa (Next.js) musi przy inicjacji nagrania wysłać twardy UUID (`resident_id`) w payloadzie POST. Transkrypt wysyłany do LLM jest anonimowy, a ponowne złączenie notatki z tożsamością następuje dopiero w pamięci RAM funkcji brzegowej przed zapisem do bazy.
 - **AC3 (Retencja):** Surowe zapisy w tabelach `voice_draft_notes` mają ustawiony TTL (czas życia) na 30 dni, po czym są automatycznie usuwane przez bazodanowego Crona.
+- **AC4 (Retencja konfigurowalna i pliki audio — 📝 2026-11-17):** Nagrania z aplikacji i z urządzeń są zapisywane w prywatnym buckecie `voice-recordings` (UE). Retencję ustawia kierownik placówki albo super admin dla danej placówki, w zakresie 7–90 dni, domyślnie 30 dni. Cron usuwa po terminie i plik, i wiersz `voice_draft_notes`; zatwierdzone raporty zostają. Zmiana retencji trafia do `audit_logs`. Decyzja Michała z 2026-11-17, wymaga zmiany `VOICE_RETENTION` w oknie kontraktowym.
 
 > ⚖️ **Rozstrzygnięcie (ADR-006, ADR-007):** trzy strumienie `MEDICAL` / `DISCOMFORT` / `BEHAVIORAL` rozdzielane **przed** wejściem do modelu generującego; dane medyczne nigdy nie trafiają do promptu raportu dla bliskich.
 
@@ -641,13 +642,13 @@
 #### [SC-ADM-24] Rejestr urządzeń nagrywających i przydział przy wydaniu
 🔗 **Kontrakt:** brak REQ (proponowany nowy: `VOICE-DEVICE-REGISTRY`) · **ADR:** ADR-022 · **Status:** 📝 PROPOZYCJA
 
-**User story:** Jako kierownik placówki chcę zarejestrować urządzenia nagrywające placówki i unieważnić zgubione, a jako kierownik zmiany chcę przy wydaniu przypisać urządzenie osobie, aby każde nagranie miało znanego autora.
+**User story:** Jako kierownik placówki chcę zarejestrować urządzenia nagrywające placówki i unieważnić zgubione, a pracownikowi przypisać urządzenie na stałe, aby każde nagranie miało znanego autora.
 
 **Kryteria akceptacji:**
 - **AC1 (Rejestracja):** Kierownik placówki dodaje urządzenie z numerem z obudowy (np. „Stick 04”). System tworzy token urządzenia i pokazuje go raz, do wgrania na urządzenie. W bazie zostaje tylko skrót tokenu.
 - **AC2 (Unieważnienie):** Kierownik placówki unieważnia token zgubionego albo wymienianego urządzenia. Historia zostaje: unieważnienie to `revoked_at`, nie usunięcie wiersza.
-- **AC3 (Przydział przy wydaniu):** Kierownik zmiany albo kierownik placówki przypisuje urządzenie osobie z personelu zmiany. Przydział ma początek i koniec. Jedno urządzenie ma w danej chwili najwyżej jedną osobę. Grafik może tylko podpowiadać (ADR-022 pkt 4).
-- **AC4 (Koniec przydziału):** Przydział zamyka zwrot urządzenia albo kolejny przydział tego urządzenia. Do potwierdzenia: czy zamykać go automatycznie z końcem zmiany.
+- **AC3 (Stałe przypisanie):** Kierownik placówki albo kierownik zmiany przypisuje urządzenie pracownikowi na stałe. Przydział ma początek i koniec. Jedno urządzenie ma w danej chwili najwyżej jedną osobę (ADR-022 pkt 4, decyzja Michała z 2026-11-17).
+- **AC4 (Koniec przydziału):** Przydział zamyka wyłącznie zwrot urządzenia (np. odejście pracownika, wymiana, zgubienie). Koniec zmiany go nie zamyka.
 - **AC5 (Stan urządzeń):** Kierownik placówki widzi przy urządzeniu ostatni zrzut i liczbę przyjętych nagrań, opisowo i bez alarmów. Personel widzi własne przydziały. Bliscy nie mają dostępu.
 - **AC6 (Audyt):** Rejestracja, unieważnienie i każdy przydział trafiają do `audit_logs`.
 
@@ -1063,3 +1064,4 @@
 | 2026-10-30 | 2.16 | Moduł zadań wg decyzji Michała z 2026-10-30: przebudowa `SC-NUR-13` (cykl zmiany, kierownik zmiany w grafiku — wariant B, źródło zadania, grupowanie per pokój/podopieczny, rozliczenie: wykonane / anulowane z powodem / przeniesione), `SC-NUR-12/AC1a` (grafik i kierownik zmiany), nowe `SC-NUR-15` (wydruk planu pracy), `SC-NUR-16` (rozliczenie z notatek głosowych) i `SC-ADM-23` (plan opieki — rejestr zadań standardowych, komponent rozwojowy) ze statusem 📝 PROPOZYCJA. |
 | 2026-11-06 | 2.17 | `SC-ADM-20`: AC8 (ZSN tylko do odczytu dla personelu, decyzja Michała z 2026-11-06), AC9 (etykieta „Uwagi przyjęciowe”), AC10 (nagranie notatki głosowej z karty) ze statusem 📝 PROPOZYCJA. |
 | 2026-11-17 | 2.18 | Kanał urządzeń Zero-UI wg ADR-022 (decyzje Michała z 2026-11-16 i 2026-11-17): nowe `SC-NUR-17` (nagrywanie na urządzeniu i zrzut w stacji), `SC-NUR-18` (kolejka „Do przypisania” z podpowiedzią serwera i potwierdzeniem człowieka) i `SC-ADM-24` (rejestr urządzeń i przydział przy wydaniu) ze statusem 📝 PROPOZYCJA. |
+| 2026-11-17 | 2.19 | Decyzje Michała z 2026-11-17: `SC-ADM-24` — stałe przypisanie urządzenia, zamykane tylko zwrotem; `SC-NUR-02/AC4` — audio z obu kanałów w `voice-recordings`, retencja ustawiana przez kierownika placówki albo super admina (7–90 dni, domyślnie 30), 📝 PROPOZYCJA. |

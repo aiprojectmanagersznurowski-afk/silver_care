@@ -18,10 +18,11 @@ Decyzje Michała z 2026-11-16 i 2026-11-17 (ADR-022): urządzenie M5Stack StickS
 | Obiekt | Rola | Kluczowe kolumny i ograniczenia |
 |---|---|---|
 | `voice_devices` | rejestr urządzeń placówki | `organization_id`, `label` („Stick 04”, unikalny w placówce), `token_hash` (SHA-256 z 32 losowych bajtów, unikalny), `revoked_at`, `last_sync_at`, `firmware_version`, `created_by` |
-| `voice_device_assignments` | przydział przy wydaniu | `organization_id`, `device_id`, `user_id`, `started_at`, `ended_at`, `assigned_by`; **bez nakładania się przedziałów na jednym urządzeniu** (`EXCLUDE USING gist`, wymaga `btree_gist`) |
+| `voice_device_assignments` | stałe przypisanie do pracownika, zamykane zwrotem | `organization_id`, `device_id`, `user_id`, `started_at`, `ended_at`, `assigned_by`; **bez nakładania się przedziałów na jednym urządzeniu** (`EXCLUDE USING gist`, wymaga `btree_gist`) |
 | `voice_draft_notes` (rozszerzenie) | jeden model nagrania | `source` (`APP`/`DEVICE`, domyślnie `APP`), `device_id`, `client_capture_id`, `recorded_at`, `time_uncertain`, `audio_sha256`; `resident_id` i `nurse_id` NULL tylko dla `DEVICE` (`CHECK`); unikalne `(device_id, client_capture_id)` |
 | `voice_assignment_queue` | pozycje czekające na decyzję | `organization_id`, `note_id`, `shift_definition_id`, `shift_date`, `candidates` (tylko identyfikatory i powód dopasowania, bez imion), `status` (`PENDING`/`DECIDED`), `outcome` (`RESIDENT`/`FACILITY`/`UNASSIGNABLE`), `resident_id`, `decided_by`, `decided_at` |
-| bucket `voice-recordings` | pliki nagrań | prywatny, bez polityk dla klienta, region UE, ścieżka `{organization_id}/{device_id}/{client_capture_id}` |
+| bucket `voice-recordings` | pliki nagrań z obu kanałów | prywatny, bez polityk dla klienta, region UE, ścieżka `{organization_id}/{source}/{id}` |
+| retencja placówki | `VOICE_RETENTION` per placówka | kolumna na `organizations` albo osobna tabela ustawień; 7–90 dni, domyślnie 30; zmienia `org_admin` swojej placówki i `super_admin`; zmiana w `audit_logs` |
 
 - RLS kolejki: odczyt i decyzja dla `org_admin` swojej placówki oraz `nurse` tylko gdy `is_shift_lead` dla zmiany pozycji. Bliscy: zero wierszy. Po decyzji pozycja przestaje być widoczna (`status = 'DECIDED'`).
 - Decyzja w kolejce to RPC (SECURITY DEFINER, `auth.uid()` z JWT): zapisuje decyzję, ustawia `resident_id` na notatce, pisze `audit_logs` (kandydaci i wybór, bez treści nagrania) i dopiero wtedy przekazuje notatkę do istniejącego potoku.
@@ -42,7 +43,8 @@ Decyzje Michała z 2026-11-16 i 2026-11-17 (ADR-022): urządzenie M5Stack StickS
 | **3** | Migracja: rozszerzenie `voice_draft_notes`, `voice_assignment_queue`, bucket `voice-recordings`, RLS | `tests/db`: `APP` bez `resident_id` odrzucone, duplikat `(device_id, client_capture_id)` odrzucony, kierownik placówki nadal nie czyta `voice_draft_notes`, kolejka czytelna tylko dla kierowników |
 | **4** | Biblioteka `device-auth.ts` (skrót, weryfikacja tokenu) i `device-ingest.ts` (logika INIT/COMMIT) | `tests/logic`: każdy kod z `DEVICE_INGEST_PROTOCOL.responses`, `deviceMayDelete` tylko dla `ACCEPTED`/`DUPLICATE` |
 | **5** | Trasa `/api/voice/device` | `tests/logic`: unieważniony token → 401, `resident_id` w żądaniu → 422 |
-| **6** | Retencja plików: cron `VOICE_RETENTION` usuwa także obiekty z `voice-recordings` | `tests/db`: plik i wiersz znikają po TTL |
+| **5a** | Aplikacja zapisuje audio w `voice-recordings` (zamiast `'local-pending-storage'`) | `tests/logic`: notatka z aplikacji ma `audio_url` w buckecie |
+| **6** | Retencja per placówka: ustawienie 7–90 dni (domyślnie 30), cron usuwa plik i wiersz po terminie placówki | `tests/db`: plik i wiersz znikają po terminie, wartość spoza zakresu odrzucona, bliscy i `nurse` nie zmieniają retencji |
 | **7** | `/admin`: rejestr urządzeń, token pokazany raz, unieważnienie, przydział przy wydaniu (`SC-ADM-24`) | E2E (Page Object, `@REQ: VOICE-DEVICE-REGISTRY`) |
 | **8** | Kolejka „Do przypisania”: transkrypcja, dopasowanie serwera, decyzja, przekazanie do potoku (`SC-NUR-18`) | E2E i `tests/logic` (`@REQ: VOICE-RESIDENT-ASSIGN`) |
 | **9** | `silver-care-devices`: reguły repo, makieta serwera z `device-protocol.json`, firmware | osobne repozytorium |
@@ -59,6 +61,10 @@ Kroki 2–6 dają działające przyjęcie nagrań bez UI: da się je sprawdzić 
 ## Weryfikacja
 Każdy krok: test RED, GREEN, `node tools/sc-phase.mjs`, `bash scripts/verify.sh --full`, a dla UI testy E2E (Page Object, `@REQ`). Migracje stosowane po scaleniu, wspólna baza dla stagingu i produkcji.
 
+## Rozstrzygnięte (Michał, 2026-11-17)
+1. **Przydział:** urządzenie przypisane pracownikowi na stałe, przydział zamyka wyłącznie zwrot.
+2. **Audio z aplikacji:** zapisywane w `voice-recordings`, jak z urządzeń.
+3. **Retencja:** konfigurowalna per placówka przez kierownika placówki i super admina, 7–90 dni, domyślnie 30. **Wymaga okna kontraktowego** (`VOICE_RETENTION`, `VOICE-RETENTION`) przed krokiem 6.
+
 ## WYMAGA DECYZJI
-1. **Przydział a koniec zmiany** (`SC-ADM-24/AC4`): zamykać przydział automatycznie z końcem zmiany, czy tylko przy zwrocie albo kolejnym przydziale?
-2. **Audio z aplikacji:** czy przy okazji kroku 3 aplikacja też zaczyna zapisywać pliki w `voice-recordings` (jeden model nagrania), czy zostaje bez przechowywania audio jak dziś?
+1. **Format nagrań na urządzeniu** (repo `silver-care-devices`): rekomendacja Opus 16 kb/s w Ogg, ok. 34 min z aktualizacjami przez Wi-Fi wobec ok. 8 min dla IMA ADPCM. Do potwierdzenia pomiarem na egzemplarzu.
