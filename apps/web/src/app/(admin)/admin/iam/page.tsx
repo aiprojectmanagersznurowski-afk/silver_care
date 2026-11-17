@@ -70,7 +70,7 @@ export default async function IamPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Zarządzanie Dostępem i Tożsamością (IAM)"
+        title="Zarządzanie dostępem i tożsamością (IAM)"
         description="Kontrola ról systemowych, zarządzanie dostępami użytkowników oraz rejestr audytowy zmian uprawnień."
       />
 

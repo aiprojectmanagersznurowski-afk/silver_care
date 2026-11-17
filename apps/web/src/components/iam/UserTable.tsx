@@ -70,7 +70,7 @@ export function UserTable({
   return (
     <TableCard
       icon={<Shield />}
-      title="Użytkownicy i Role"
+      title="Użytkownicy i role"
       description="Zarządzaj kontami użytkowników, przydziałem ról i uprawnień dostępowych."
       actions={<AddUserDialog {...addUserProps} />}
       toolbar={

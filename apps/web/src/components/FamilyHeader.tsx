@@ -13,7 +13,7 @@ import { FamilyNotificationsDropdownContent } from "./family/FamilyNotifications
 
 const navItems = [
   { label: "Pulpit", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Plan Dnia", href: "/agenda", icon: Calendar },
+  { label: "Plan dnia", href: "/agenda", icon: Calendar },
   { label: "Wiadomości", href: "/messages", icon: MessageSquare },
   { label: "Zgody", href: "/consents", icon: ShieldCheck },
 ];
