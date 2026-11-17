@@ -133,9 +133,7 @@ export const MATRIX = [
     "resource": "residents",
     "read": [
       "org_admin:own",
-      "nurse:own",
-      "legal_guardian:own",
-      "family:own"
+      "nurse:own"
     ],
     "create": [
       "org_admin"

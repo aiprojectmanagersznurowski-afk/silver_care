@@ -675,6 +675,20 @@ export const REQUIREMENTS = [
     ]
   },
   {
+    "id": "FAM-RESIDENT-DATA-MINIMIZATION",
+    "status": "TODO",
+    "risk": "HIGH",
+    "source": "SC-FAM-08",
+    "domain": "family",
+    "statement": "Bliscy odczytują dane podopiecznego wyłącznie przez wąskie RPC z jawną listą kolumn, bez dostępu do tabeli residents.",
+    "acceptance": [
+      "Tabela residents nie ma polityki odczytu dla ról family i legal_guardian; zapytanie bliskiego do residents zwraca zero wierszy, także przez API",
+      "Bliski otrzymuje wyłącznie: identyfikator, imię, nazwisko, zdjęcie, datę zgonu, datę końca umowy i datę archiwizacji (get_family_resident_overview); pesel_hash, is_zsn, care_level, notes, dane umowy i ścieżka dokumentu umowy nie mają ścieżki do portalu rodziny",
+      "Plan dnia placówki dla bliskich działa bez odczytu residents w kontekście bliskiego",
+      "Portal rodziny nie osadza residents w zapytaniach; błąd RPC jest jawnym błędem, nie cichym odczytem tabeli"
+    ]
+  },
+  {
     "id": "NUR-BOARD",
     "status": "TODO",
     "risk": "MEDIUM",

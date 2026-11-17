@@ -88,7 +88,7 @@ Krój: `-apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui, sans-
 
 Bazowy rozmiar 14px · minimalny kontrast 4.5:1 · cel dotykowy 38px
 
-## Wymagania (63)
+## Wymagania (64)
 
 | ID | Domena | Ryzyko | Treść |
 |---|---|---|---|
@@ -142,6 +142,7 @@ Bazowy rozmiar 14px · minimalny kontrast 4.5:1 · cel dotykowy 38px
 | FAM-MESSAGES | family | MEDIUM | Bliski zostawia wiadomość dla kierownika / administratora placówki bez dzwonienia na dyżurkę. |
 | FAM-AGENDA | family | MEDIUM | Bliski widzi plan dnia pensjonariusza. |
 | FAM-AGENDA-NO-MEDICAL | family | HIGH | Plan dnia widoczny dla bliskich nie zawiera treści medycznych. |
+| FAM-RESIDENT-DATA-MINIMIZATION | family | HIGH | Bliscy odczytują dane podopiecznego wyłącznie przez wąskie RPC z jawną listą kolumn, bez dostępu do tabeli residents. |
 | NUR-BOARD | staff | MEDIUM | Personel widzi tablicę pensjonariuszy ze statusem notatek. |
 | NUR-AGENDA | staff | MEDIUM | Personel zarządza planem dnia placówki. |
 | NTF-REPORT-READY | notifications | MEDIUM | Bliscy otrzymują powiadomienie o dostępności raportu. |
