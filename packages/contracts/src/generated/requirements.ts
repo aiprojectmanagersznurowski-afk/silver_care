@@ -222,6 +222,21 @@ export const REQUIREMENTS = [
     ]
   },
   {
+    "id": "ADM-RESIDENT-FUNDING",
+    "status": "TODO",
+    "risk": "HIGH",
+    "source": "SC-ADM-24",
+    "domain": "residents",
+    "statement": "Kierownik placówki zapisuje źródło finansowania pobytu podopiecznego, oddzielnie od źródła pozyskania.",
+    "acceptance": [
+      "Źródło finansowania przyjmuje wyłącznie wartości: Prywatnie (podopieczny lub rodzina), Gmina / MOPS, Współfinansowanie (prywatnie + gmina), Inne; inną wartość odrzuca baza",
+      "Brak wartości jest pokazywany jako „Brak danych”, nigdy jako wartość domyślna ani zgadywana",
+      "Źródło finansowania czyta i zmienia wyłącznie kierownik placówki (sekcja karty „Umowa i pakiety”); pielęgniarka, rodzina i opiekun prawny go nie widzą",
+      "Dotychczasowe contract_source jest podpisane w interfejsie jako „Źródło pozyskania”",
+      "Migracja nie nadaje wartości istniejącym podopiecznym — pole zostaje puste do uzupełnienia przez kierownika"
+    ]
+  },
+  {
     "id": "ADM-RESIDENT-CARD-VISIBILITY",
     "status": "TODO",
     "risk": "HIGH",
