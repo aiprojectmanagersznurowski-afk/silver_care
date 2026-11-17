@@ -107,11 +107,12 @@ Etap oznaczony jako POMINIĘTY to brak dowodu, a nie sukces. Jeżeli bramka nie 
 
 2. Przekazanie do review (Handoff):
 ```bash
-node tools/sc-pr-handoff.mjs <CARD-ID>
+node tools/sc-pr-handoff.mjs <NUMER-ISSUE> --pr <NUMER-PR>
 ```
-Zawsze na koniec pracy:
-- Przenieś kartę na Trello do listy **PR Created / In Review** i przypisz ją do drugiej osoby (Darek ↔ Michał).
-- Otwórz lub zaktualizuj Pull Request na GitHubie i przypisz partnera jako recenzenta.
+Zadania żyją w **GitHub Issues** i na tablicy GitHub Projects **„Silver Care”** (od 2026-11-17; Trello tylko do odczytu). Zawsze na koniec pracy:
+- Issue ma status **PR Created / In Review** na tablicy i jest przypisane do drugiej osoby (Darek ↔ Michał) — robi to `sc-pr-handoff`.
+- Pull Request ma partnera jako recenzenta i `Closes #<issue>` w opisie, żeby scalenie zamknęło issue.
+- Praca bez issue: najpierw załóż issue (`gh issue create`, etykieta `domena:*`), potem PR.
 
 ## Zasada pytań i obsługa sprzeczności (Koniec zasady „Zero Pytań”)
 
@@ -124,7 +125,7 @@ Decyzje techniczne mieszczące się w kontrakcie (odwracalne, bez wpływu na dan
 ## Czego nie robisz sam
 
 Otwarcie okna kontraktowego i publikacja raportu do bliskich należą do człowieka.
-**Zakaz samodzielnego merge do `staging` ani `main`:** Autor nigdy nie wykonuje merge własnego Pull Requesta. Merge'a i przeniesienia karty do 'Done' dokonuje wyłącznie druga osoba z zespołu (Darek lub Michał) po pozytywnym Code Review.
+**Zakaz samodzielnego merge do `staging` ani `main`:** Autor nigdy nie wykonuje merge własnego Pull Requesta. Merge'a (który przez `Closes #…` zamyka issue i przenosi je do „Done”) dokonuje wyłącznie druga osoba z zespołu (Darek lub Michał) po pozytywnym Code Review.
 
 ## Gałęzie i wdrożenia
 
