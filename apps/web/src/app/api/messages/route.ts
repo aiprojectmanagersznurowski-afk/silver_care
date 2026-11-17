@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { isSpamLimitExceeded } from '@/lib/messages';
+import { getFamilyResidents } from '@/lib/family-residents';
 
 export async function GET(request: Request) {
   const supabase = await createClient();
@@ -67,23 +68,21 @@ export async function POST(request: Request) {
       );
     }
 
-    // Insert message. RLS policy will ensure resident_id is linked to relative_user_id
-    // We must pass organization_id. Usually this is obtained from the token or the linked resident.
-    // Let's get organization_id from the resident directly since RLS requires it.
-    const { data: resData, error: resError } = await supabase
-      .from('residents')
-      .select('organization_id')
-      .eq('id', resident_id)
-      .single();
-      
-    if (resError || !resData) {
+    // SC-FAM-08: bez odczytu tabeli residents. Podopieczny musi być na liście bliskiego
+    // (get_family_resident_overview filtruje po placówce z JWT), więc placówka pochodzi z JWT.
+    const organizationId = user.app_metadata?.organization_id as string | undefined;
+    const overview = await getFamilyResidents(supabase);
+    if (overview.status === 'error') {
+      return NextResponse.json({ error: 'Failed to load residents' }, { status: 500 });
+    }
+    if (!organizationId || !overview.residents.some((r) => r.id === resident_id)) {
       return NextResponse.json({ error: 'Resident not found' }, { status: 404 });
     }
 
     const { error: insertError } = await supabase
       .from('family_messages')
       .insert({
-        organization_id: resData.organization_id,
+        organization_id: organizationId,
         resident_id,
         relative_user_id: user.id,
         content
