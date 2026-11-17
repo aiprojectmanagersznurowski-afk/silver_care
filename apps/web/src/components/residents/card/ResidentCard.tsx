@@ -111,7 +111,7 @@ export function ResidentCard({ card, backHref, backLabel, reportsHref }: Residen
             {has('bed') && <ResidentBedInfoCard activeAssignment={activeAssignment} pastAssignments={pastAssignments} />}
           </>
         }
-        sidebar={has('contract') ? <ResidentContractCard resident={resident} activePackages={activePackages} /> : undefined}
+        sidebar={has('contract') ? <ResidentContractCard resident={resident} activePackages={activePackages} canEdit={has('manage')} /> : undefined}
         tabs={tabs}
       />
     </div>
