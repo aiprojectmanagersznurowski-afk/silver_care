@@ -40,5 +40,10 @@ test.describe('Zdjęcie podopiecznego w oknie „Edytuj” (@REQ: ADM-RESIDENT-P
     const photo = page.locator('main img').first();
     await expect(photo).toHaveAttribute('src', /\/storage\/v1\/object\/sign\/resident-photos\//);
     expect(await photo.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
+
+    // Lista podopiecznych kierownika też pokazuje zdjęcie z podpisanego linku
+    await page.goto('/admin/residents');
+    const rowPhoto = page.locator(`main a[href$="/admin/residents/${residentId}"]`).first().locator('xpath=ancestor::tr').locator('img').first();
+    await expect(rowPhoto).toHaveAttribute('src', /\/storage\/v1\/object\/sign\/resident-photos\//);
   });
 });
