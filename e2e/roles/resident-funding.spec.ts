@@ -1,5 +1,6 @@
 import { test, expect } from '../fixtures/base-test';
 import { ResidentProfilePage } from '../page-objects/ResidentProfilePage';
+import { AdmissionWizardPage } from '../page-objects/AdmissionWizardPage';
 
 /**
  * @REQ: ADM-RESIDENT-FUNDING
@@ -45,5 +46,27 @@ test.describe('Źródło finansowania na karcie podopiecznego (@REQ: ADM-RESIDEN
     await expect(funding.locator('[data-slot="field-value"]')).toHaveText(target);
     await page.reload();
     await expect(profile.sidebar.locator('[data-testid="funding-source"] [data-slot="field-value"]')).toHaveText(target);
+  });
+
+  // Kreator nie kończy przyjęcia: przyjęcie zmienia liczbę podopiecznych placówki testowej, na której
+  // opiera się admin-capacity-limit.spec (wyścig przy równoległych workerach). Zapis po przyjęciu idzie przez
+  // updateResidentFundingAction (tests/logic/resident_funding_action.test.ts), a zapis z UI pokrywa test „Zmień”.
+  test('@REQ: ADM-RESIDENT-FUNDING - kreator przyjęcia ma opcjonalne źródło finansowania bez wartości domyślnej', async ({ loginPage, page }) => {
+    await loginPage.loginAs('org_admin');
+    const wizard = new AdmissionWizardPage(page);
+    await wizard.gotoResidents();
+    await wizard.openWizard();
+
+    const fundingSelect = page.getByRole('combobox', { name: 'Źródło finansowania (opcjonalnie)' });
+    await expect(fundingSelect).toHaveValue('');
+    expect((await fundingSelect.locator('option').allInnerTexts()).map((t) => t.trim())).toEqual([
+      'Brak danych — uzupełnię później',
+      'Prywatnie (podopieczny lub rodzina)',
+      'Gmina / MOPS',
+      'Współfinansowanie (prywatnie + gmina)',
+      'Inne',
+    ]);
+    await fundingSelect.selectOption({ label: 'Gmina / MOPS' });
+    await expect(fundingSelect).toHaveValue('municipality');
   });
 });

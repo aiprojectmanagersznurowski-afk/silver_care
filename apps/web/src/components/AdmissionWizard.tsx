@@ -14,6 +14,9 @@ import {
 import { UserPlus, Check, AlertCircle, Loader2 } from 'lucide-react'
 import type { WizardStep } from './admission/admission-types'
 import { useAdmissionWizard } from './admission/use-admission-wizard'
+import { Label } from '@/components/ui/label'
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
+import { FUNDING_SOURCES, FUNDING_SOURCE_LABELS } from '@/lib/reporting-constants'
 import { AdmissionStepPersonal } from './admission/AdmissionStepPersonal'
 import { AdmissionStepBed } from './admission/AdmissionStepBed'
 import { AdmissionStepSummary } from './admission/AdmissionStepSummary'
@@ -29,6 +32,7 @@ export function AdmissionWizard() {
     careLevel, setCareLevel,
     isZsn, setIsZsn,
     notes, setNotes,
+    fundingSource, setFundingSource,
     calculatedGender, calculatedBirthDate, idError,
     suggestions, selectedBedId, setSelectedBedId,
     selectedBedInfo, setSelectedBedInfo, loadingSuggestions,
@@ -104,6 +108,18 @@ export function AdmissionWizard() {
                 isZsn={isZsn} setIsZsn={setIsZsn}
                 notes={notes} setNotes={setNotes}
               />
+            )}
+
+            {step === 1 && (
+              <div className="space-y-1.5">
+                <Label htmlFor="wiz-funding">Źródło finansowania (opcjonalnie)</Label>
+                <NativeSelect id="wiz-funding" value={fundingSource} onChange={(e) => setFundingSource(e.target.value)} className="w-full">
+                  <NativeSelectOption value="">Brak danych — uzupełnię później</NativeSelectOption>
+                  {FUNDING_SOURCES.map((key) => (
+                    <NativeSelectOption key={key} value={key}>{FUNDING_SOURCE_LABELS[key]}</NativeSelectOption>
+                  ))}
+                </NativeSelect>
+              </div>
             )}
 
             {step === 2 && (
