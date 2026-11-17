@@ -45,5 +45,13 @@ test.describe('Zdjęcie podopiecznego w oknie „Edytuj” (@REQ: ADM-RESIDENT-P
     await page.goto('/admin/residents');
     const rowPhoto = page.locator(`main a[href$="/admin/residents/${residentId}"]`).first().locator('xpath=ancestor::tr').locator('img').first();
     await expect(rowPhoto).toHaveAttribute('src', /\/storage\/v1\/object\/sign\/resident-photos\//);
+
+    // Tablica dyżuru pielęgniarki tej placówki pokazuje to samo zdjęcie (odczyt personelu z RLS storage)
+    await page.context().clearCookies();
+    await loginPage.loginAs('nurse');
+    await page.goto('/staff');
+    // Zdjęcia są w widokach kafelkowych tablicy (tabela ich nie pokazuje)
+    await page.locator('[data-slot="view-toggle"]:visible button[aria-label="Widok szybkiego obchodu"]').click();
+    await expect(page.locator(`main img[src*="/storage/v1/object/sign/resident-photos/"][src*="${residentId}"]`).first()).toBeVisible();
   });
 });
