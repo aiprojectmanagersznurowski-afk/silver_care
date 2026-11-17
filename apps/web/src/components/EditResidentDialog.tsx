@@ -17,6 +17,7 @@ import { Pencil, Loader2, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { CareLevel } from '@/lib/reporting-constants'
 import { EditResidentFormFields, type EditResidentFormData } from './residents/EditResidentFormFields'
+import { ResidentPhotoField } from './residents/ResidentPhotoField'
 
 export interface EditResidentDialogProps {
   resident: {
@@ -142,6 +143,9 @@ export function EditResidentDialog({
             Wprowadź zmiany w profilu podopiecznego. Zmiany zostaną natychmiast odnotowane w rejestrze audytowym placówki.
           </DialogDescription>
         </DialogHeader>
+
+        {/* Zdjęcie zapisuje się od razu po wybraniu pliku (prywatny bucket, SC-ADM-25) */}
+        <ResidentPhotoField residentId={resident.id} />
 
         <form id="edit-resident-dialog-form" onSubmit={handleSubmit} className="space-y-4 py-2">
           {errorMessage && (
