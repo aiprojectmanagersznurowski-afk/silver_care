@@ -39,13 +39,14 @@ export function BusinessIdBadge({
     setTimeout(() => setCopied(false), 2000)
   }
 
+  // Rozmiar plakietki statusu (StatusBadge: text-xs, py-0.5, rounded-md) i stała szerokość na ID + kopiowanie
   return (
     <span
       data-slot="business-id-badge"
       title={`Techniczny UUID: ${id}`}
-      className={`inline-flex items-center gap-1.5 rounded-lg bg-muted/50 px-2 py-1 text-sm font-mono font-medium text-foreground border border-border transition-colors hover:bg-muted ${className}`}
+      className={`inline-flex w-28 shrink-0 items-center justify-between gap-1 whitespace-nowrap rounded-md bg-muted px-2 py-0.5 text-xs font-mono font-medium text-foreground transition-colors hover:bg-muted/70 ${className}`}
     >
-      <span>{businessId}</span>
+      <span className="truncate">{businessId}</span>
       {showCopy && (
         <Tooltip>
           <TooltipTrigger asChild>
