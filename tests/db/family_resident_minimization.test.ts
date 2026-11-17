@@ -11,11 +11,14 @@ const migrationSql = readFileSync(
   join(process.cwd(), 'supabase/migrations/20261116210000_family_residents_no_table_read.sql'),
   'utf8'
 );
+// SC-ADM-25: RPC rodziny zwraca ścieżkę zdjęcia z prywatnego bucketu zamiast publicznego avatar_url
+const photoRpcSql = readFileSync(join(process.cwd(), 'supabase/migrations/20261117130000_family_overview_photo_path.sql'), 'utf8');
 
 /**
  * @REQ: FAM-RESIDENT-DATA-MINIMIZATION
  * @REQ: FAM-AGENDA
  * @REQ: ORG-ISOLATION
+ * @REQ: ADM-RESIDENT-PHOTO
  *
  * SC-FAM-08: bliscy nie odczytują tabeli residents (pesel_hash, is_zsn, notes, dane umowy);
  * jedyną ścieżką jest get_family_resident_overview z jawną listą 7 kolumn. Plan dnia placówki
@@ -35,6 +38,7 @@ const asRole = (tx: Tx, role: string, orgId: string, sub: string) =>
 async function rollback(fn: (tx: Tx) => Promise<void>) {
   await sql.begin(async (tx) => {
     await tx.unsafe(migrationSql);
+    await tx.unsafe(photoRpcSql);
     await fn(tx);
     throw new Error('ROLLBACK');
   }).catch((e) => {
@@ -87,7 +91,7 @@ describe('Bliscy bez odczytu tabeli residents (@REQ: FAM-RESIDENT-DATA-MINIMIZAT
       await asRole(tx, 'family', s.org, s.family);
       const rows = await tx`SELECT * FROM public.get_family_resident_overview()`;
       expect(rows).toHaveLength(1);
-      expect(Object.keys(rows[0]).sort()).toEqual(['archived_at', 'avatar_url', 'contract_end_date', 'death_date', 'first_name', 'id', 'last_name']);
+      expect(Object.keys(rows[0]).sort()).toEqual(['archived_at', 'contract_end_date', 'death_date', 'first_name', 'id', 'last_name', 'photo_path']);
       expect(rows[0].id).toBe(s.res);
     });
   });
