@@ -22,7 +22,7 @@ Decyzje Michała z 2026-11-16 i 2026-11-17 (ADR-022): urządzenie M5Stack StickS
 | `voice_draft_notes` (rozszerzenie) | jeden model nagrania | `source` (`APP`/`DEVICE`, domyślnie `APP`), `device_id`, `client_capture_id`, `recorded_at`, `time_uncertain`, `audio_sha256`; `resident_id` i `nurse_id` NULL tylko dla `DEVICE` (`CHECK`); unikalne `(device_id, client_capture_id)` |
 | `voice_assignment_queue` | pozycje czekające na decyzję | `organization_id`, `note_id`, `shift_definition_id`, `shift_date`, `candidates` (tylko identyfikatory i powód dopasowania, bez imion), `status` (`PENDING`/`DECIDED`), `outcome` (`RESIDENT`/`FACILITY`/`UNASSIGNABLE`), `resident_id`, `decided_by`, `decided_at` |
 | bucket `voice-recordings` | pliki nagrań z obu kanałów | prywatny, bez polityk dla klienta, region UE, ścieżka `{organization_id}/{source}/{id}` |
-| retencja placówki | `VOICE_RETENTION` per placówka | kolumna na `organizations` albo osobna tabela ustawień; 7–90 dni, domyślnie 30; zmienia `org_admin` swojej placówki i `super_admin`; zmiana w `audit_logs` |
+| `voice_retention_settings` | retencja nagrań placówki (`VOICE_RETENTION`) | jeden wiersz na placówkę, 7–90 dni, brak wiersza = 30; zmienia `org_admin` swojej placówki i `super_admin`; zmiana w `audit_logs`; osobny zasób, bo `org_admin` nie edytuje `organizations` |
 
 - RLS kolejki: odczyt i decyzja dla `org_admin` swojej placówki oraz `nurse` tylko gdy `is_shift_lead` dla zmiany pozycji. Bliscy: zero wierszy. Po decyzji pozycja przestaje być widoczna (`status = 'DECIDED'`).
 - Decyzja w kolejce to RPC (SECURITY DEFINER, `auth.uid()` z JWT): zapisuje decyzję, ustawia `resident_id` na notatce, pisze `audit_logs` (kandydaci i wybór, bez treści nagrania) i dopiero wtedy przekazuje notatkę do istniejącego potoku.
@@ -64,7 +64,7 @@ Każdy krok: test RED, GREEN, `node tools/sc-phase.mjs`, `bash scripts/verify.sh
 ## Rozstrzygnięte (Michał, 2026-11-17)
 1. **Przydział:** urządzenie przypisane pracownikowi na stałe, przydział zamyka wyłącznie zwrot.
 2. **Audio z aplikacji:** zapisywane w `voice-recordings`, jak z urządzeń.
-3. **Retencja:** konfigurowalna per placówka przez kierownika placówki i super admina, 7–90 dni, domyślnie 30. **Wymaga okna kontraktowego** (`VOICE_RETENTION`, `VOICE-RETENTION`) przed krokiem 6.
+3. **Retencja:** konfigurowalna per placówka przez kierownika placówki i super admina, 7–90 dni, domyślnie 30. Kontrakt zmieniony w oknie kontraktowym 2026-11-17 (commit `91800ab`, reguła R17).
 
 ## WYMAGA DECYZJI
 1. **Format nagrań na urządzeniu** (repo `silver-care-devices`): rekomendacja Opus 16 kb/s w Ogg, ok. 34 min z aktualizacjami przez Wi-Fi wobec ok. 8 min dla IMA ADPCM. Do potwierdzenia pomiarem na egzemplarzu.
