@@ -33,5 +33,12 @@ test.describe('Zdjęcie podopiecznego w oknie „Edytuj” (@REQ: ADM-RESIDENT-P
     } finally {
       await sql.end();
     }
+
+    // SC-ADM-25/AC3: karta pokazuje zdjęcie z prywatnego bucketu przez krótkotrwały podpisany link
+    await page.keyboard.press('Escape');
+    await page.reload();
+    const photo = page.locator('main img').first();
+    await expect(photo).toHaveAttribute('src', /\/storage\/v1\/object\/sign\/resident-photos\//);
+    expect(await photo.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
   });
 });
