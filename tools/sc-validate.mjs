@@ -16,8 +16,9 @@ const { ROLES, STAFF_ROLES, RELATIVE_ROLES, MFA_REQUIRED_ROLES, CONSENT_GRANTORS
 const { FAMILY_VISIBLE_METRICS, PHYSIOLOGICAL_FIELDS, FORBIDDEN_UI_TERMS, MDR_GUARDRAILS,
         REQUIRED_UI_STATES, RESIDENT_CARD_SECTIONS = [], AGENDA_FAMILY_EXCLUSION, UI_TERMINOLOGY } = await load('presentation.contract.mjs');
 const { TRANSCRIPT_STREAMS, MEDICAL_CATEGORIES, PIPELINE_STAGES, VOICE_RETENTION,
-        AI_PROVENANCE_FIELDS, AI_FEEDBACK_CATEGORIES } = await load('voice.contract.mjs');
-const { PROVIDERS, WEARABLE_LINK, ORG_LINK, FIELD_MAPPINGS, INGEST_PRECONDITIONS, SYNC_STALENESS } = await load('integration.contract.mjs');
+        AI_PROVENANCE_FIELDS, AI_FEEDBACK_CATEGORIES, CAPTURE_SOURCES = [], RESIDENT_ASSIGNMENT } = await load('voice.contract.mjs');
+const { PROVIDERS, WEARABLE_LINK, ORG_LINK, FIELD_MAPPINGS, INGEST_PRECONDITIONS, SYNC_STALENESS,
+        DEVICE_AUTH, DEVICE_INGEST_PROTOCOL } = await load('integration.contract.mjs');
 const { NOTIFICATIONS, FORBIDDEN_TRIGGERS, CHANNELS, RECIPIENTS, QUEUE_POLICY } = await load('notifications.contract.mjs');
 const { REQUIREMENTS, REQUIREMENTS_BY_ID } = await load('requirements.contract.mjs');
 const { DECISION_CLASSES, ESCALATION_TRIGGERS, DEFAULTS, RETRY_POLICY, SESSION_REPORT_SECTIONS } = await load('autonomy.contract.mjs');
@@ -157,6 +158,34 @@ if (generate && !/anonim/i.test(generate.input)) {
 const rejoin = PIPELINE_STAGES.find((s) => s.id === 'REJOIN');
 if (rejoin && stageOrder.indexOf('REJOIN') < iGenerate) {
   err('R08-zero-guessing', 'Złączenie z tożsamością następuje przed generowaniem — transkrypt nie byłby anonimowy.');
+}
+// ADR-022: źródło bez resident_id przy nagraniu wymaga potwierdzenia człowieka przed CLASSIFY.
+const RESIDENT_ID_MODES = ['AT_CAPTURE', 'AT_ASSIGN'];
+for (const src of CAPTURE_SOURCES) {
+  if (!RESIDENT_ID_MODES.includes(src.residentId)) {
+    err('R08-zero-guessing', `Źródło nagrań "${src.id}" ustala podopiecznego sposobem "${src.residentId}". Dozwolone: ${RESIDENT_ID_MODES.join(', ')} — nigdy z treści nagrania.`);
+  }
+}
+const deferredSources = CAPTURE_SOURCES.filter((s) => s.residentId === 'AT_ASSIGN');
+if (deferredSources.length) {
+  const assign = PIPELINE_STAGES.find((s) => s.id === 'ASSIGN');
+  const iAssign = stageOrder.indexOf('ASSIGN');
+  const ra = RESIDENT_ASSIGNMENT;
+  if (!assign) err('R08-zero-guessing', `Źródła ${deferredSources.map((s) => s.id).join(', ')} nie mają resident_id, a potok nie ma etapu ASSIGN.`);
+  else {
+    if (iClassify !== -1 && iAssign > iClassify) err('R08-zero-guessing', 'Etap ASSIGN występuje po CLASSIFY — nagranie bez podopiecznego trafiłoby do klasyfikacji.');
+    if (assign.actor !== 'nurse' && assign.actor !== 'org_admin') err('R08-zero-guessing', `Etap ASSIGN wykonuje "${assign.actor}". Podopiecznego potwierdza człowiek.`);
+  }
+  if (!ra) err('R08-zero-guessing', 'Brak RESIDENT_ASSIGNMENT dla nagrań bez resident_id.');
+  else {
+    if (ra.llmIdentifies !== false || ra.suggestedBy !== 'server') err('R08-zero-guessing', 'Kandydatów na podopiecznego wyznacza serwer, nigdy model.');
+    if (ra.onUnconfirmed !== 'HOLD_BEFORE_CLASSIFY') err('R08-zero-guessing', `Nagranie bez potwierdzenia: "${ra.onUnconfirmed}". Ma czekać przed CLASSIFY.`);
+    for (const s of deferredSources) if (!(ra.appliesTo || []).includes(s.id)) err('R08-zero-guessing', `RESIDENT_ASSIGNMENT nie obejmuje źródła "${s.id}".`);
+    for (const c of ra.confirmedBy || []) {
+      if (!STAFF_ROLES.includes(c.split(':')[0])) err('R08-zero-guessing', `Przypisanie potwierdza "${c}" — tylko personel.`);
+    }
+    if (!(ra.confirmedBy || []).length) err('R08-zero-guessing', 'Nikt nie potwierdza przypisania podopiecznego.');
+  }
 }
 
 // R09 — publikacja raportu wymaga człowieka
@@ -539,6 +568,10 @@ if (SHIFT_LEAD_SCOPE) {
   if (!roleIds.includes(sc.role)) err('R31-shift-lead', `Zakres ${sc.qualifier} wskazuje nieistniejącą rolę "${sc.role}".`);
   if (!RESOURCES.includes(sc.derivedFrom?.resource)) err('R31-shift-lead', 'Grafik, z którego wynika kierownik zmiany, nie jest zasobem w macierzy.');
   if (sc.leadsPerShift !== 1) err('R31-shift-lead', `Na zmianę musi przypadać dokładnie jeden kierownik (jest: ${sc.leadsPerShift}).`);
+  // Jedyny dozwolony odczyt kierownika zmiany to kolejka przypisania nagrań (ADR-022).
+  for (const r of sc.readResources || []) {
+    if (r !== RESIDENT_ASSIGNMENT?.queueResource) err('R31-shift-lead', `Odczyt z zakresem ${sc.qualifier} dla "${r}". Dozwolony wyłącznie dla kolejki przypisania nagrań.`);
+  }
   for (const row of MATRIX) {
     for (const cap of ['read', 'create', 'update', 'delete']) {
       for (const entry of row[cap] || []) {
@@ -546,7 +579,8 @@ if (SHIFT_LEAD_SCOPE) {
         if (qualifier !== sc.qualifier) continue;
         if (role !== sc.role) err('R31-shift-lead', `MATRIX ${row.resource}.${cap}: zakres ${sc.qualifier} tylko dla roli "${sc.role}" (jest "${role}").`);
         if (!sc.resources.includes(row.resource)) err('R31-shift-lead', `MATRIX ${row.resource}.${cap}: zakres ${sc.qualifier} poza zasobami z kluczem zmiany (${sc.resources.join(', ')}).`);
-        if (!sc.capabilities.includes(cap)) err('R31-shift-lead', `MATRIX ${row.resource}.${cap}: zakres ${sc.qualifier} nie obejmuje "${cap}" — odczyt ma każdy personel placówki.`);
+        const capAllowed = cap === 'read' ? (sc.readResources || []).includes(row.resource) : sc.capabilities.includes(cap);
+        if (!capAllowed) err('R31-shift-lead', `MATRIX ${row.resource}.${cap}: zakres ${sc.qualifier} nie obejmuje "${cap}" — odczyt ma każdy personel placówki.`);
       }
     }
   }
@@ -581,6 +615,59 @@ if (SHIFT_POLICY && SHIFT_TASK_POLICY) {
 }
 
 // ── raport ────────────────────────────────────────────────────────────────
+// R33 — kanał urządzeń (ADR-022): bliscy bez dostępu, nic nie jest usuwane, brudnopis zostaje prywatny dla autora,
+// kolejkę przypisania czytają i rozstrzygają wyłącznie osoby z RESIDENT_ASSIGNMENT.confirmedBy.
+if (RESIDENT_ASSIGNMENT) {
+  const ra = RESIDENT_ASSIGNMENT;
+  for (const res of ['voice_devices', 'voice_device_assignments', ra.queueResource]) {
+    const row = MATRIX.find((m) => m.resource === res);
+    if (!row) { err('R33-voice-devices', `Brak wiersza macierzy dla "${res}".`); continue; }
+    for (const cap of ['read', 'create', 'update', 'delete']) {
+      for (const entry of row[cap] || []) {
+        if (RELATIVE_ROLES.includes(entry.split(':')[0])) err('R33-voice-devices', `${res}.${cap} dostępne roli "${entry}". Kanał urządzeń jest wyłącznie dla personelu.`);
+      }
+    }
+    if ((row.delete || []).length) err('R33-voice-devices', `${res}: usuwanie zamiast revoked_at / ended_at kasuje historię.`);
+  }
+  const devRow = MATRIX.find((m) => m.resource === 'voice_devices');
+  if (devRow && (devRow.create || []).some((e) => e.split(':')[0] !== 'org_admin')) err('R33-voice-devices', 'Urządzenia rejestruje wyłącznie kierownik placówki.');
+  const qRow = MATRIX.find((m) => m.resource === ra.queueResource);
+  if (qRow) {
+    const allowedQ = new Set(ra.confirmedBy || []);
+    for (const cap of ['read', 'update']) {
+      for (const entry of qRow[cap] || []) if (!allowedQ.has(entry)) err('R33-voice-devices', `${ra.queueResource}.${cap}: "${entry}" spoza RESIDENT_ASSIGNMENT.confirmedBy.`);
+    }
+    for (const c of ra.confirmedBy || []) if (!(qRow.update || []).includes(c)) err('R33-voice-devices', `"${c}" potwierdza przypisanie według kontraktu, a macierz nie daje mu update kolejki.`);
+  }
+  const vRow = MATRIX.find((m) => m.resource === 'voice_draft_notes');
+  if (vRow) {
+    for (const entry of vRow.read || []) {
+      if (entry !== 'nurse:own') err('R33-voice-devices', `voice_draft_notes czytelne dla "${entry}". Brudnopis czyta tylko autor; kierownicy widzą wyłącznie kolejkę przypisania.`);
+    }
+  }
+}
+
+// R34 — protokół urządzeń (SC-NUR-17): skrót tokenu, brak tożsamości w żądaniu, kasowanie tylko po przyjęciu.
+if (DEVICE_INGEST_PROTOCOL) {
+  const pr = DEVICE_INGEST_PROTOCOL;
+  if (!DEVICE_AUTH || DEVICE_AUTH.storedAs !== 'token_hash') err('R34-device-ingest', 'Token urządzenia musi być przechowywany wyłącznie jako skrót (token_hash).');
+  if (DEVICE_AUTH && (DEVICE_AUTH.sessionAccess !== false || DEVICE_AUTH.serviceRoleOnDevice !== false)) err('R34-device-ingest', 'Token urządzenia nie może dawać sesji użytkownika ani klucza service_role.');
+  for (const f of ['resident_id', 'pesel']) {
+    if (!(pr.fields?.forbidden || []).includes(f)) err('R34-device-ingest', `Pole "${f}" nie jest zakazane w żądaniu urządzenia — urządzenie nie zna podopiecznego (ADR-022).`);
+  }
+  for (const f of pr.fields?.required || []) {
+    if ((pr.fields?.forbidden || []).includes(f)) err('R34-device-ingest', `Pole "${f}" jest jednocześnie wymagane i zakazane.`);
+  }
+  for (const k of ['device_id', 'client_capture_id']) {
+    if (!(pr.idempotencyKey || []).includes(k)) err('R34-device-ingest', `Klucz idempotencji bez "${k}" — ponowna wysyłka utworzyłaby drugi wpis.`);
+  }
+  if (pr.storageRegion !== 'EU') err('R34-device-ingest', `Nagrania w regionie "${pr.storageRegion}". Storage musi być w UE.`);
+  const mayDelete = (pr.responses || []).filter((r) => r.deviceMayDelete).map((r) => r.code);
+  for (const c of mayDelete) {
+    if (!['ACCEPTED', 'DUPLICATE'].includes(c)) err('R34-device-ingest', `Urządzenie kasuje nagranie po "${c}". Wolno wyłącznie po ACCEPTED albo DUPLICATE.`);
+  }
+}
+
 console.log(`\n  role: ${ROLES.length} | zasoby: ${RESOURCES.length} | powiadomienia: ${NOTIFICATIONS.length} | wymagania: ${REQUIREMENTS.length}`);
 console.log(`  pokoje: hierarchia ${FACILITY_HIERARCHY.join(' → ')}, guardów obłożenia: ${OCCUPANCY_GUARDS.length}`);
 console.log(`  klasy decyzji: ${DECISION_CLASSES.length} | wyzwalacze eskalacji: ${ESCALATION_TRIGGERS.length} | domyślne: ${DEFAULTS.length}`);

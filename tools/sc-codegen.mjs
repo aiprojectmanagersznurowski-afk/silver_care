@@ -61,12 +61,26 @@ files['packages/contracts/src/generated/voice.ts'] = BANNER
   + emit('TRANSCRIPT_STREAMS', voice.TRANSCRIPT_STREAMS) + emit('MEDICAL_CATEGORIES', voice.MEDICAL_CATEGORIES)
   + emit('PIPELINE_STAGES', voice.PIPELINE_STAGES) + emit('VOICE_RETENTION', voice.VOICE_RETENTION)
   + emit('AI_PROVENANCE_FIELDS', voice.AI_PROVENANCE_FIELDS) + emit('AI_FEEDBACK_CATEGORIES', voice.AI_FEEDBACK_CATEGORIES)
-  + emit('PROMPT_VERSION', voice.PROMPT_VERSION);
+  + emit('PROMPT_VERSION', voice.PROMPT_VERSION)
+  + (voice.CAPTURE_SOURCES ? emit('CAPTURE_SOURCES', voice.CAPTURE_SOURCES) : '')
+  + (voice.RESIDENT_ASSIGNMENT ? emit('RESIDENT_ASSIGNMENT', voice.RESIDENT_ASSIGNMENT) : '');
 
 files['packages/contracts/src/generated/integration.ts'] = BANNER
   + emit('PROVIDERS', integ.PROVIDERS) + emit('WEARABLE_LINK', integ.WEARABLE_LINK)
   + emit('ORG_LINK', integ.ORG_LINK) + emit('FIELD_MAPPINGS', integ.FIELD_MAPPINGS)
-  + emit('INGEST_PRECONDITIONS', integ.INGEST_PRECONDITIONS) + emit('SYNC_STALENESS', integ.SYNC_STALENESS);
+  + emit('INGEST_PRECONDITIONS', integ.INGEST_PRECONDITIONS) + emit('SYNC_STALENESS', integ.SYNC_STALENESS)
+  + (integ.DEVICE_AUTH ? emit('DEVICE_AUTH', integ.DEVICE_AUTH) : '')
+  + (integ.DEVICE_INGEST_PROTOCOL ? emit('DEVICE_INGEST_PROTOCOL', integ.DEVICE_INGEST_PROTOCOL) : '');
+
+// Protokół urządzeń jako JSON dla repozytorium silver-care-devices (ADR-022 pkt 6).
+// Firmware przypina wersję tego pliku zamiast przepisywać wartości z kontraktu.
+if (integ.DEVICE_INGEST_PROTOCOL) {
+  files['packages/contracts/src/generated/device-protocol.json'] = JSON.stringify({
+    $comment: 'WYGENEROWANE z contracts/integration.contract.mjs przez tools/sc-codegen.mjs — nie edytuj ręcznie.',
+    auth: integ.DEVICE_AUTH,
+    protocol: integ.DEVICE_INGEST_PROTOCOL,
+  }, null, 2) + '\n';
+}
 
 files['packages/contracts/src/generated/notifications.ts'] = BANNER
   + emit('NOTIFICATIONS', notif.NOTIFICATIONS) + emit('FORBIDDEN_TRIGGERS', notif.FORBIDDEN_TRIGGERS)
