@@ -47,6 +47,7 @@ export const RESOURCES = [
   'rooms', 'beds', 'bed_assignments',
   'resident_events', 'resident_packages',
   'shift_definitions', 'shift_roster', 'shift_tasks', 'shift_plan_approvals',
+  'voice_devices', 'voice_device_assignments', 'voice_assignment_queue',
 ];
 
 /**
@@ -92,6 +93,14 @@ export const MATRIX = [
   { resource: 'shift_roster',            read: ['org_admin:own', 'nurse:own'],              create: ['org_admin'],    update: ['org_admin:own'],          delete: ['org_admin:own'] },
   { resource: 'shift_tasks',             read: ['org_admin:own', 'nurse:own'],              create: ['org_admin:own', 'nurse:own'], update: ['org_admin:own', 'nurse:shift_lead'], delete: [] },
   { resource: 'shift_plan_approvals',    read: ['org_admin:own', 'nurse:own'],              create: ['org_admin:own', 'nurse:shift_lead'], update: [], delete: [] },
+
+  // Kanał urządzeń Zero-UI (ADR-022, SC-ADM-24, SC-NUR-18). Bliscy bez dostępu. Nic nie jest usuwane:
+  // urządzenie unieważnia się przez revoked_at, przydział zamyka przez ended_at.
+  // Kolejka „Do przypisania” to jedyne miejsce, w którym kierownicy czytają cudze nagranie, i tylko do czasu decyzji.
+  // voice_draft_notes zostaje prywatne dla autora (decyzja Michała z 2026-11-17).
+  { resource: 'voice_devices',           read: ['org_admin:own', 'nurse:own'],              create: ['org_admin'],    update: ['org_admin:own'],          delete: [] },
+  { resource: 'voice_device_assignments', read: ['org_admin:own', 'nurse:own'],             create: ['org_admin:own', 'nurse:shift_lead'], update: ['org_admin:own', 'nurse:shift_lead'], delete: [] },
+  { resource: 'voice_assignment_queue',  read: ['org_admin:own', 'nurse:shift_lead'],       create: [],               update: ['org_admin:own', 'nurse:shift_lead'], delete: [] },
 ];
 
 /**
@@ -102,8 +111,11 @@ export const MATRIX = [
 export const SHIFT_LEAD_SCOPE = {
   qualifier: 'shift_lead',
   role: 'nurse',
-  resources: ['shift_tasks', 'shift_plan_approvals'],
+  resources: ['shift_tasks', 'shift_plan_approvals', 'voice_device_assignments', 'voice_assignment_queue'],
   capabilities: ['create', 'update'],
+  // Jedyny wyjątek od zasady „bez odczytu”: kolejka przypisania nagrań (ADR-022). Kierownik zmiany czyta
+  // tylko nagrania ze swojej zmiany czekające na decyzję, nie brudnopisy personelu.
+  readResources: ['voice_assignment_queue'],
   derivedFrom: { resource: 'shift_roster', field: 'is_shift_lead' },
   leadsPerShift: 1,
   identity: 'auth.uid() z sesji i organizacja z app_metadata — nigdy z parametrów żądania',
@@ -136,7 +148,7 @@ export const DELETE_POLICIES = [
     strategy: 'SOFT_ARCHIVE_THEN_RETENTION',
     rationale: 'archived_at odcina rodzinę natychmiast; twardy DELETE dopiero po retencji albo na żądanie z art. 17.',
     familyOffboardingRetentionDays: OFFBOARDING_RETENTION_DAYS,
-    cascades: ['daily_logs', 'daily_reports', 'voice_draft_notes', 'wellness_daily'],
+    cascades: ['daily_logs', 'daily_reports', 'voice_draft_notes', 'voice_assignment_queue', 'wellness_daily'],
   },
   { entity: 'resident_relative_links', strategy: 'REVOKE_NOT_DELETE', rationale: 'Cofnięcie dostępu musi zostawić ślad kto i kiedy — usunięcie wiersza kasuje dowód.', cascades: [] },
 ];

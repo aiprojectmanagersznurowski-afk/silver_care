@@ -185,3 +185,117 @@ export const SYNC_STALENESS = {
   "status": "STABLE"
 } as const;
 
+export const DEVICE_AUTH = {
+  "device": "M5Stack StickS3 (SKU K150)",
+  "credential": "Token per urządzenie, pokazywany jeden raz przy rejestracji",
+  "header": "X-Device-Token",
+  "storedAs": "token_hash",
+  "revocation": "voice_devices.revoked_at — unieważniony token dostaje odmowę, nagrania zostają zaszyfrowane na urządzeniu",
+  "grants": [
+    "voice_upload"
+  ],
+  "sessionAccess": false,
+  "serviceRoleOnDevice": false,
+  "status": "STABLE"
+} as const;
+
+export const DEVICE_INGEST_PROTOCOL = {
+  "version": "1.0.0",
+  "endpoint": "/api/voice/device",
+  "runtime": "Next.js, Vercel fra1",
+  "storageRegion": "EU",
+  "steps": [
+    {
+      "id": "INIT",
+      "desc": "Urządzenie wysyła token i metadane nagrania. Serwer zwraca podpisany adres zapisu w Storage albo DUPLICATE, jeśli nagranie już przyjęto."
+    },
+    {
+      "id": "UPLOAD",
+      "desc": "Urządzenie wysyła plik prosto do Storage pod podpisany adres."
+    },
+    {
+      "id": "COMMIT",
+      "desc": "Urządzenie potwierdza zapis. Serwer sprawdza skrót pliku i tworzy voice_draft_notes ze źródłem DEVICE, bez resident_id, z pozycją w kolejce przypisania."
+    }
+  ],
+  "idempotencyKey": [
+    "device_id",
+    "client_capture_id"
+  ],
+  "fields": {
+    "required": [
+      "client_capture_id",
+      "recorded_at",
+      "duration_ms",
+      "sha256",
+      "size_bytes",
+      "codec",
+      "firmware_version"
+    ],
+    "forbidden": [
+      "resident_id",
+      "resident_name",
+      "pesel",
+      "transcript"
+    ]
+  },
+  "codecs": [
+    "IMA_ADPCM_WAV",
+    "OPUS"
+  ],
+  "clock": {
+    "marker": "TIME_UNCERTAIN",
+    "when": "recorded_at w przyszłości albo wcześniejszy niż ostatnia synchronizacja zegara urządzenia minus 24 godziny",
+    "effect": "Kierownik zmiany przypisuje nagranie do zmiany ręcznie."
+  },
+  "authorship": {
+    "source": "voice_device_assignments w chwili recorded_at",
+    "whenMissing": "NO_AUTHOR — nagranie przyjęte, w kolejce z oznaczeniem „brak autora”"
+  },
+  "responses": [
+    {
+      "code": "UPLOAD_URL",
+      "http": 200,
+      "deviceMayDelete": false,
+      "desc": "Podpisany adres zapisu. Urządzenie wysyła plik i robi COMMIT."
+    },
+    {
+      "code": "ACCEPTED",
+      "http": 200,
+      "deviceMayDelete": true,
+      "desc": "Nagranie przyjęte po COMMIT."
+    },
+    {
+      "code": "DUPLICATE",
+      "http": 200,
+      "deviceMayDelete": true,
+      "desc": "To nagranie przyjęto już wcześniej."
+    },
+    {
+      "code": "DEVICE_REVOKED",
+      "http": 401,
+      "deviceMayDelete": false,
+      "desc": "Token nieznany albo unieważniony."
+    },
+    {
+      "code": "FORBIDDEN_FIELD",
+      "http": 422,
+      "deviceMayDelete": false,
+      "desc": "Żądanie zawiera pole z listy fields.forbidden."
+    },
+    {
+      "code": "HASH_MISMATCH",
+      "http": 422,
+      "deviceMayDelete": false,
+      "desc": "Skrót pliku w Storage nie zgadza się z INIT. Wysyłka do powtórzenia."
+    },
+    {
+      "code": "RETRY_LATER",
+      "http": 503,
+      "deviceMayDelete": false,
+      "desc": "Chwilowa niedostępność. Urządzenie ponawia przy kolejnym zrzucie."
+    }
+  ],
+  "status": "STABLE"
+} as const;
+
