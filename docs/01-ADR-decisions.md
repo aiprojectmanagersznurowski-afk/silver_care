@@ -424,3 +424,50 @@ Personel ma trudności z obsługą komputera, więc praca opiekunek odbywa się 
 3. **Cykl zmiany:** przegląd → akceptacja planu → wydruk (`SC-NUR-15`) → praca na wydruku → notatki głosowe „co wykonano” → podpowiedzi „wykonane?” (`SC-NUR-16`, decyduje człowiek) → rozliczenie każdego zadania: wykonane / anulowane z powodem / przechodzi na kolejną zmianę.
 4. **Źródło zadania widoczne zawsze** (ekran i wydruk): z przekazania, standardowe (plan opieki), ręczne, przeniesione z poprzedniej zmiany. Lista grupowana per pokój albo per podopieczny.
 5. **Plan opieki jako osobny komponent** (`SC-ADM-23`): rejestr źródeł zadań standardowych z typem źródła. Pierwszy etap: szablony placówki per profil opieki albo per podopieczny. **Zalecenia lekarza i harmonogram leków** są zarezerwowane jako kolejne typy źródła, ale wymagają osobnego ADR i oceny prawnej (dane art. 9, granica MDR): system tylko odwzorowuje zalecenia wprowadzone przez uprawnioną osobę, bez wyliczania dawek, sprawdzania interakcji i alertów.
+
+---
+
+## ADR-022 — Kanał urządzeń Zero-UI: StickS3, nagrania bez `resident_id` i kolejka przypisania (Status: PROPOZYCJA — wymaga potwierdzenia Darka) 📝
+
+**Kontekst.** Architektura potoku (`docs/architecture/VOICE_SHIFT_REPORTING_PIPELINE.md`) dodaje drugi kanał wejścia: urządzenie bez ekranu przypięte do fartucha. Urządzenie nie zna podopiecznego w chwili nagrania, a ADR-006 i reguła `R08-zero-guessing` każą odrzucić żądanie bez `resident_id`. ADR-021 pkt 4 rozwiązał to samo dla odcinków przekazania zmiany. Brakowało decyzji dla notatek z urządzeń.
+
+**Decyzja (Michał, 2026-11-16 i 2026-11-17; Darek: do potwierdzenia).**
+1. **Urządzenie: M5Stack StickS3** (SKU `K150`, ESP32-S3) zamiast M5StickC PLUS2. PLUS2 zostaje wariantem zapasowym (kompendium §1).
+2. **Rozszerzenie ADR-006 na kanał urządzeń: serwer podsuwa, człowiek potwierdza.** Nagranie z urządzenia przychodzi bez `resident_id` i trafia do kolejki „Do przypisania”. Po transkrypcji **serwer, nie model**, porównuje nazwisko, numer pokoju i łóżka z rejestrem tej placówki i podsuwa kandydatów. Kierownik zmiany albo kierownik placówki potwierdza osobę, wybiera „Sprawa placówki” albo „Nie do przypisania”. Bez potwierdzenia nagranie nie przechodzi do maskowania, klasyfikacji ani modelu. Model nadal nigdy nie ustala tożsamości.
+3. **Endpoint w Next.js, plik prosto do Storage.** `/api/voice/device` (Vercel `fra1`) uwierzytelnia token urządzenia i wydaje podpisany adres zapisu w Supabase Storage (UE). Urządzenie wysyła plik bezpośrednio do Storage i potwierdza zapis. Nagranie kasuje się z urządzenia dopiero po potwierdzeniu przyjęcia. Jeden stos z `/api/voice/*`, bez limitu rozmiaru żądania funkcji.
+4. **Przydział urządzenia ręcznie przy wydaniu.** Kierownik zmiany przypisuje urządzenie osobie. Autorem nagrania jest osoba przydzielona w chwili `recorded_at`. Grafik może tylko podpowiadać.
+5. **Jeden model nagrania.** Rozszerzamy `voice_draft_notes` o źródło (`APP`, `DEVICE`), urządzenie i opcjonalny `resident_id`. Zostają obecna idempotencja, RLS i retencja `VOICE_RETENTION`.
+6. **Firmware i stacja w osobnym repozytorium** `silver-care-devices`. Protokół (token urządzenia, idempotencja, potwierdzenie, kody błędów) mieszka w `integration.contract.mjs`. Repo urządzeń przypina wygenerowaną wersję schematu i nie przepisuje wartości.
+
+**Przebieg.**
+
+```mermaid
+sequenceDiagram
+    participant U as StickS3
+    participant A as /api/voice/device
+    participant S as Storage (UE)
+    participant Q as Kolejka „Do przypisania”
+    actor K as Kierownik zmiany
+
+    U->>A: Token urządzenia, recorded_at, skrót pliku
+    A->>A: Weryfikacja tokenu i idempotencja
+    A-->>U: Podpisany adres zapisu
+    U->>S: Plik nagrania
+    U->>A: Potwierdzenie zapisu
+    A-->>U: ACK, urządzenie kasuje nagranie
+    A->>Q: voice_draft_notes (DEVICE, bez resident_id)
+    Q->>Q: Transkrypcja i podpowiedź serwera
+    K->>Q: Potwierdza osobę albo „Sprawa placówki”
+    Note over Q,K: Dopiero teraz maskowanie, klasyfikacja i model
+```
+
+**Co wymaga okna kontraktowego (otwiera człowiek).**
+- `voice.contract.mjs`: etap `CAPTURE` z dwoma źródłami (`APP` z `resident_id`, `DEVICE` bez niego) i nowy etap `ASSIGN` przed `CLASSIFY`. Reguła `R08-zero-guessing` w `tools/sc-validate.mjs` sprawdza wtedy, że `resident_id` jest znany przed `CLASSIFY`, a nie na wejściu `CAPTURE`.
+- `roles.contract.mjs`: zasoby `voice_devices` i `voice_device_assignments`. Rejestr urządzeń prowadzi kierownik placówki, przydział robi kierownik zmiany albo kierownik placówki, potwierdzenie przypisania nagrania należy do `nurse:shift_lead` i `org_admin`. Bliscy bez dostępu.
+- `integration.contract.mjs`: uwierzytelnienie urządzenia (token per urządzenie, w bazie tylko skrót, unieważnienie przez `revoked_at`) i protokół przyjęcia nagrania.
+- `requirements.contract.mjs`: `VOICE-DEVICE-INGEST`, `VOICE-RESIDENT-ASSIGN`, `VOICE-DEVICE-REGISTRY` ze `source` wskazującym `SC-NUR-17`, `SC-NUR-18`, `SC-ADM-24`. Korekta kryteriów `VOICE-ZERO-GUESSING`.
+
+**Konsekwencje.**
+- Transkrypcja nagrania bez przypisania idzie przez Groq (ADR-009) tak samo jak dziś: surowe audio przed maskowaniem. Zasięg wyjątku z ADR-009 się nie zmienia, ale obejmuje więcej nagrań.
+- Kierownik zmiany dostaje pracę przy kolejce. Okno rozliczenia (architektura, pytanie 9) trzeba sprawdzić w pilotażu.
+- Otwarte: dzielenie jednego nagrania na kilka osób (pytanie 8), zegar RTC w StickS3 (kompendium §1) i zgody personelu na nagrywanie głosu (odłożone w ADR-021).
