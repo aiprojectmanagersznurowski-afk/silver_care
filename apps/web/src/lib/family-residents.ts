@@ -5,7 +5,10 @@ export interface FamilyResidentOverview {
   id: string
   first_name: string
   last_name: string
+  /** Adres zdjęcia do wyświetlenia: podpisany link z prywatnego bucketu (SC-ADM-25) albo dawny publiczny adres. */
   avatar_url: string | null
+  /** Ścieżka w prywatnym buckecie resident-photos (RPC od migracji 20261117130000). */
+  photo_path?: string | null
   death_date: string | null
   contract_end_date: string | null
   archived_at: string | null
