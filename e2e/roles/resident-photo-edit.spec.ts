@@ -53,5 +53,12 @@ test.describe('Zdjęcie podopiecznego w oknie „Edytuj” (@REQ: ADM-RESIDENT-P
     // Zdjęcia są w widokach kafelkowych tablicy (tabela ich nie pokazuje)
     await page.locator('[data-slot="view-toggle"]:visible button[aria-label="Widok szybkiego obchodu"]').click();
     await expect(page.locator(`main img[src*="/storage/v1/object/sign/resident-photos/"][src*="${residentId}"]`).first()).toBeVisible();
+
+    // Portal rodziny: powiązany bliski widzi zdjęcie w nagłówku (RPC zwraca photo_path, portal podpisuje link)
+    await page.context().clearCookies();
+    await loginPage.loginAs('family');
+    await page.context().addCookies([{ name: 'family_resident_id', value: residentId, url: page.url() }]);
+    await page.goto('/dashboard');
+    await expect(page.locator(`header img[src*="/storage/v1/object/sign/resident-photos/"][src*="${residentId}"]`).first()).toBeAttached();
   });
 });
