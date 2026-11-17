@@ -237,6 +237,21 @@ export const REQUIREMENTS = [
     ]
   },
   {
+    "id": "ADM-RESIDENT-PHOTO",
+    "status": "TODO",
+    "risk": "HIGH",
+    "source": "SC-ADM-25",
+    "domain": "residents",
+    "statement": "Zdjęcie podopiecznego jest przechowywane prywatnie i dostępne wyłącznie osobom uprawnionym do danych tego podopiecznego.",
+    "acceptance": [
+      "Zdjęcia podopiecznych leżą w prywatnym buckecie; bez zalogowania i uprawnienia plik nie jest dostępny pod żadnym adresem",
+      "Wgrywa, zmienia i usuwa zdjęcie wyłącznie kierownik placówki, tylko dla podopiecznego swojej placówki; ścieżka pliku zaczyna się od identyfikatora placówki i podopiecznego",
+      "Czyta personel placówki podopiecznego oraz bliscy z aktywnym powiązaniem lub w oknie retencji; aplikacja pokazuje zdjęcie przez krótkotrwały podpisany link",
+      "Zdjęcie dodaje się i zmienia w oknie „Edytuj” karty podopiecznego oraz w kreatorze przyjęcia, nie w widoku karty",
+      "Istniejące zdjęcia z publicznego bucketu są przeniesione, a publiczne kopie usunięte; publiczny bucket nie przyjmuje nowych zdjęć podopiecznych"
+    ]
+  },
+  {
     "id": "ADM-RESIDENT-CARD-VISIBILITY",
     "status": "TODO",
     "risk": "HIGH",
