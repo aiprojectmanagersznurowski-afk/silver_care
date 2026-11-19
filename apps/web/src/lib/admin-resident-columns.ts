@@ -8,7 +8,7 @@
  * Zapytanie musi być literałem: klient Supabase wyprowadza z niego typ wiersza.
  */
 export const ADMIN_RESIDENT_LIST_SELECT =
-  'id, first_name, last_name, avatar_url, care_level, is_zsn, archived_at, death_date, admission_date, birth_date, notes, contract_end_date, contract_end_reason, created_at, bed_assignments(id, unassigned_at, beds(id, label, rooms(number)))' as const
+  'id, first_name, last_name, avatar_url, photo_path, care_level, is_zsn, archived_at, death_date, admission_date, birth_date, notes, contract_end_date, contract_end_reason, created_at, bed_assignments(id, unassigned_at, beds(id, label, rooms(number)))' as const
 
 /** Kolumny najwyższego poziomu wyprowadzone z zapytania (bez zagnieżdżonych relacji). */
 export const ADMIN_RESIDENT_LIST_COLUMNS: readonly string[] = splitTopLevel(ADMIN_RESIDENT_LIST_SELECT)
