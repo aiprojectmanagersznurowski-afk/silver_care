@@ -132,7 +132,7 @@ export const DEVICE_AUTH = {
  * Urządzenie kasuje nagranie wyłącznie po odpowiedzi z deviceMayDelete: true.
  */
 export const DEVICE_INGEST_PROTOCOL = {
-  version: '1.1.0',
+  version: '1.2.0',
   endpoint: '/api/voice/device',
   runtime: 'Next.js, Vercel fra1',
   storageRegion: 'EU',
@@ -143,7 +143,7 @@ export const DEVICE_INGEST_PROTOCOL = {
   ],
   idempotencyKey: ['device_id', 'client_capture_id'],
   fields: {
-    required: ['client_capture_id', 'recorded_at', 'duration_ms', 'sha256', 'size_bytes', 'codec', 'firmware_version'],
+    required: ['client_capture_id', 'recorded_at', 'clock_state', 'age_ms', 'duration_ms', 'sha256', 'size_bytes', 'codec', 'firmware_version'],
     forbidden: ['resident_id', 'resident_name', 'pesel', 'transcript'],
   },
   codecs: ['IMA_ADPCM_WAV', 'OPUS'],
@@ -152,7 +152,7 @@ export const DEVICE_INGEST_PROTOCOL = {
   wire: {
     contentType: 'application/json',
     requests: [
-      { step: 'INIT',   method: 'POST', path: '/api/voice/device',        body: ['client_capture_id', 'recorded_at', 'duration_ms', 'sha256', 'size_bytes', 'codec', 'firmware_version'], responses: ['UPLOAD_URL', 'DUPLICATE', 'DEVICE_REVOKED', 'FORBIDDEN_FIELD', 'RETRY_LATER'] },
+      { step: 'INIT',   method: 'POST', path: '/api/voice/device',        body: ['client_capture_id', 'recorded_at', 'clock_state', 'age_ms', 'duration_ms', 'sha256', 'size_bytes', 'codec', 'firmware_version'], responses: ['UPLOAD_URL', 'DUPLICATE', 'DEVICE_REVOKED', 'FORBIDDEN_FIELD', 'RETRY_LATER'] },
       { step: 'COMMIT', method: 'POST', path: '/api/voice/device/commit', body: ['client_capture_id', 'sha256'], responses: ['ACCEPTED', 'DUPLICATE', 'DEVICE_REVOKED', 'HASH_MISMATCH', 'RETRY_LATER'] },
     ],
     upload: {
@@ -162,14 +162,24 @@ export const DEVICE_INGEST_PROTOCOL = {
       success: 'HTTP 200 z Storage; urządzenie robi wtedy COMMIT',
     },
     responseBody: {
-      always: ['code'],
+      always: ['code', 'server_time'],
       UPLOAD_URL: ['upload_url', 'upload_expires_at'],
       RETRY_LATER: ['retry_after_s'],
     },
   },
+  // Zegar (1.2.0, decyzja Michała z 2026-11-19): StickS3 nie ma układu RTC (pomiar devices#4). Czas przetrwa
+  // restart, ginie po wyłączeniu. Urządzenie ustawia zegar z server_time każdej odpowiedzi w stacji.
   clock: {
     marker: 'TIME_UNCERTAIN',
-    when: 'recorded_at w przyszłości albo wcześniejszy niż ostatnia synchronizacja zegara urządzenia minus 24 godziny',
+    serverTime: 'server_time w każdej odpowiedzi: UTC, ISO 8601 z milisekundami',
+    ageMs: 'Czas od nagrania do wysłania INIT według licznika urządzenia, w milisekundach; 0 przy UNKNOWN',
+    states: [
+      { id: 'SYNCED',   recordedAt: 'recorded_at z urządzenia', desc: 'Zegar był ustawiony z server_time i urządzenie nie straciło od tego czasu zasilania.' },
+      { id: 'RELATIVE', recordedAt: 'chwila przyjęcia INIT minus age_ms', desc: 'Zegar nie był ustawiony, ale urządzenie nie straciło zasilania od nagrania, więc licznik jest ciągły.' },
+      { id: 'UNKNOWN',  recordedAt: 'recorded_at z urządzenia, niewiarygodny', desc: 'Urządzenie straciło zasilanie między nagraniem a synchronizacją.' },
+    ],
+    uncertainStates: ['UNKNOWN'],
+    when: 'clock_state UNKNOWN albo wyliczony recorded_at w przyszłości względem server_time albo wcześniejszy niż ostatnia synchronizacja zegara urządzenia minus 24 godziny',
     effect: 'Kierownik zmiany przypisuje nagranie do zmiany ręcznie.',
   },
   authorship: { source: 'voice_device_assignments w chwili recorded_at', whenMissing: 'NO_AUTHOR — nagranie przyjęte, w kolejce z oznaczeniem „brak autora”' },

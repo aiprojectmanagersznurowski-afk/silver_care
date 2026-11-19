@@ -14,7 +14,7 @@
  * nazwy leku. To zaostrzenie wobec pierwotnych user stories, które mówiły tylko,
  * że lek „ląduje w brudnopisie".
  *
- * ADR-022 (kanał urządzeń, 2026-11-17): nagranie z urządzenia bez ekranu przychodzi
+ * ADR-022 (kanał urządzeń, 2026-11-17): nagranie z urządzenia (ekran tylko ze stanem) przychodzi
  * bez resident_id. Tożsamość nadal nie pochodzi z modelu: serwer podsuwa kandydatów
  * z rejestru placówki, człowiek potwierdza na etapie ASSIGN, a bez potwierdzenia
  * nagranie nie przechodzi do CLASSIFY.
@@ -83,7 +83,7 @@ export const PIPELINE_STAGES = [
  */
 export const CAPTURE_SOURCES = [
   { id: 'APP',    residentId: 'AT_CAPTURE', author: 'Sesja zalogowanego użytkownika', desc: 'Aplikacja: podopieczny wybrany przed nagraniem (SC-NUR-02).' },
-  { id: 'DEVICE', residentId: 'AT_ASSIGN',  author: 'Osoba przydzielona do urządzenia w chwili recorded_at (voice_device_assignments)', desc: 'Urządzenie bez ekranu, M5Stack StickS3 (SC-NUR-17).' },
+  { id: 'DEVICE', residentId: 'AT_ASSIGN',  author: 'Osoba przydzielona do urządzenia w chwili recorded_at (voice_device_assignments)', desc: 'Urządzenie z ekranem tylko ze stanem, bez treści nagrań i nazwisk, M5Stack StickS3 (SC-NUR-17).' },
 ];
 
 /**

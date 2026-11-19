@@ -542,7 +542,7 @@ export const REQUIREMENTS = [
     "risk": "HIGH",
     "source": "SC-NUR-17, ADR-022",
     "domain": "voice",
-    "statement": "Urządzenie bez ekranu przekazuje nagrania przez uwierzytelniony, idempotentny protokół z potwierdzeniem odbioru.",
+    "statement": "Urządzenie z ekranem tylko ze stanem (bez treści nagrań i nazwisk) przekazuje nagrania przez uwierzytelniony, idempotentny protokół z potwierdzeniem odbioru i czasem serwera.",
     "acceptance": [
       "Żądanie bez ważnego tokenu albo z tokenem unieważnionym dostaje DEVICE_REVOKED",
       "Token urządzenia jest przechowywany wyłącznie jako skrót token_hash",
@@ -550,7 +550,10 @@ export const REQUIREMENTS = [
       "Urządzenie kasuje nagranie wyłącznie po ACCEPTED albo DUPLICATE",
       "Żądanie z resident_id, imieniem, PESEL albo transkryptem jest odrzucane jako FORBIDDEN_FIELD",
       "Autorem nagrania jest osoba przydzielona do urządzenia w chwili recorded_at",
-      "Nagranie z czasem spoza okna synchronizacji dostaje oznaczenie TIME_UNCERTAIN"
+      "Nagranie z czasem spoza okna synchronizacji dostaje oznaczenie TIME_UNCERTAIN",
+      "Każda odpowiedź protokołu niesie server_time, z którego urządzenie bez RTC ustawia zegar",
+      "Nagranie z clock_state RELATIVE dostaje recorded_at równe chwili przyjęcia INIT minus age_ms",
+      "Nagranie z clock_state UNKNOWN dostaje oznaczenie TIME_UNCERTAIN"
     ]
   },
   {

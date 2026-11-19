@@ -200,7 +200,7 @@ export const DEVICE_AUTH = {
 } as const;
 
 export const DEVICE_INGEST_PROTOCOL = {
-  "version": "1.1.0",
+  "version": "1.2.0",
   "endpoint": "/api/voice/device",
   "runtime": "Next.js, Vercel fra1",
   "storageRegion": "EU",
@@ -226,6 +226,8 @@ export const DEVICE_INGEST_PROTOCOL = {
     "required": [
       "client_capture_id",
       "recorded_at",
+      "clock_state",
+      "age_ms",
       "duration_ms",
       "sha256",
       "size_bytes",
@@ -253,6 +255,8 @@ export const DEVICE_INGEST_PROTOCOL = {
         "body": [
           "client_capture_id",
           "recorded_at",
+          "clock_state",
+          "age_ms",
           "duration_ms",
           "sha256",
           "size_bytes",
@@ -295,7 +299,8 @@ export const DEVICE_INGEST_PROTOCOL = {
     },
     "responseBody": {
       "always": [
-        "code"
+        "code",
+        "server_time"
       ],
       "UPLOAD_URL": [
         "upload_url",
@@ -308,7 +313,29 @@ export const DEVICE_INGEST_PROTOCOL = {
   },
   "clock": {
     "marker": "TIME_UNCERTAIN",
-    "when": "recorded_at w przyszłości albo wcześniejszy niż ostatnia synchronizacja zegara urządzenia minus 24 godziny",
+    "serverTime": "server_time w każdej odpowiedzi: UTC, ISO 8601 z milisekundami",
+    "ageMs": "Czas od nagrania do wysłania INIT według licznika urządzenia, w milisekundach; 0 przy UNKNOWN",
+    "states": [
+      {
+        "id": "SYNCED",
+        "recordedAt": "recorded_at z urządzenia",
+        "desc": "Zegar był ustawiony z server_time i urządzenie nie straciło od tego czasu zasilania."
+      },
+      {
+        "id": "RELATIVE",
+        "recordedAt": "chwila przyjęcia INIT minus age_ms",
+        "desc": "Zegar nie był ustawiony, ale urządzenie nie straciło zasilania od nagrania, więc licznik jest ciągły."
+      },
+      {
+        "id": "UNKNOWN",
+        "recordedAt": "recorded_at z urządzenia, niewiarygodny",
+        "desc": "Urządzenie straciło zasilanie między nagraniem a synchronizacją."
+      }
+    ],
+    "uncertainStates": [
+      "UNKNOWN"
+    ],
+    "when": "clock_state UNKNOWN albo wyliczony recorded_at w przyszłości względem server_time albo wcześniejszy niż ostatnia synchronizacja zegara urządzenia minus 24 godziny",
     "effect": "Kierownik zmiany przypisuje nagranie do zmiany ręcznie."
   },
   "authorship": {

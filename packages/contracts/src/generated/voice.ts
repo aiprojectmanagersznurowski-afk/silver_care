@@ -178,7 +178,7 @@ export const CAPTURE_SOURCES = [
     "id": "DEVICE",
     "residentId": "AT_ASSIGN",
     "author": "Osoba przydzielona do urządzenia w chwili recorded_at (voice_device_assignments)",
-    "desc": "Urządzenie bez ekranu, M5Stack StickS3 (SC-NUR-17)."
+    "desc": "Urządzenie z ekranem tylko ze stanem, bez treści nagrań i nazwisk, M5Stack StickS3 (SC-NUR-17)."
   }
 ] as const;
 
