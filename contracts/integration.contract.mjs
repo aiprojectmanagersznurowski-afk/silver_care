@@ -143,7 +143,7 @@ export const DEVICE_INGEST_PROTOCOL = {
   ],
   idempotencyKey: ['device_id', 'client_capture_id'],
   fields: {
-    required: ['client_capture_id', 'recorded_at', 'clock_state', 'age_ms', 'duration_ms', 'sha256', 'size_bytes', 'codec', 'firmware_version'],
+    required: ['client_capture_id', 'session_id', 'session_seq', 'recorded_at', 'clock_state', 'age_ms', 'duration_ms', 'sha256', 'size_bytes', 'codec', 'firmware_version'],
     forbidden: ['resident_id', 'resident_name', 'pesel', 'transcript'],
   },
   codecs: ['IMA_ADPCM_WAV', 'OPUS'],
@@ -152,7 +152,7 @@ export const DEVICE_INGEST_PROTOCOL = {
   wire: {
     contentType: 'application/json',
     requests: [
-      { step: 'INIT',   method: 'POST', path: '/api/voice/device',        body: ['client_capture_id', 'recorded_at', 'clock_state', 'age_ms', 'duration_ms', 'sha256', 'size_bytes', 'codec', 'firmware_version'], responses: ['UPLOAD_URL', 'DUPLICATE', 'DEVICE_REVOKED', 'FORBIDDEN_FIELD', 'RETRY_LATER'] },
+      { step: 'INIT',   method: 'POST', path: '/api/voice/device',        body: ['client_capture_id', 'session_id', 'session_seq', 'recorded_at', 'clock_state', 'age_ms', 'duration_ms', 'sha256', 'size_bytes', 'codec', 'firmware_version'], responses: ['UPLOAD_URL', 'DUPLICATE', 'DEVICE_REVOKED', 'FORBIDDEN_FIELD', 'RETRY_LATER'] },
       { step: 'COMMIT', method: 'POST', path: '/api/voice/device/commit', body: ['client_capture_id', 'sha256'], responses: ['ACCEPTED', 'DUPLICATE', 'DEVICE_REVOKED', 'HASH_MISMATCH', 'RETRY_LATER'] },
     ],
     upload: {
@@ -182,7 +182,20 @@ export const DEVICE_INGEST_PROTOCOL = {
     when: 'clock_state UNKNOWN albo wyliczony recorded_at w przyszłości względem server_time albo wcześniejszy niż ostatnia synchronizacja zegara urządzenia minus 24 godziny',
     effect: 'Kierownik zmiany przypisuje nagranie do zmiany ręcznie.',
   },
-  authorship: { source: 'voice_device_assignments w chwili recorded_at', whenMissing: 'NO_AUTHOR — nagranie przyjęte, w kolejce z oznaczeniem „brak autora”' },
+  // Autorstwo (1.2.0, decyzja Michała z 2026-11-19): urządzenia są wspólne. Opiekunka bierze dowolne
+  // i przedstawia się w pierwszym nagraniu sesji. Zastępuje stały przydział z 2026-11-17.
+  authorship: {
+    source: 'SELF_INTRODUCTION',
+    rule: 'Autorem wszystkich nagrań sesji (session_id) jest osoba, która przedstawiła się w nagraniu z session_seq 1, np. „Jestem Gabriela Kowalska”.',
+    sessionStart: ['Opróżnienie urządzenia w stacji (wszystkie nagrania potwierdzone ACCEPTED albo DUPLICATE)', 'Gest „Nowa osoba” na urządzeniu (przytrzymanie bocznego przycisku przez 3 s)'],
+    matchedBy: 'server',
+    llmIdentifies: false,
+    matchOn: ['imię i nazwisko z transkryptu nagrania session_seq 1, porównane z personelem placówki urządzenia'],
+    whenUnique: 'Autor ustawiany automatycznie, zapis w audit_logs',
+    ambiguousResolvedBy: ['nurse:shift_lead', 'org_admin:own'],
+    whenMissing: 'NO_AUTHOR — brak przedstawienia, brak dopasowania albo kilka osób; nagranie przyjęte, kierownik zmiany wybiera autora sesji w kolejce',
+    deviceRegistry: 'voice_device_assignments to opcjonalna ewidencja wydania sprzętu i nie wyznacza autora',
+  },
   responses: [
     { code: 'UPLOAD_URL',     http: 200, deviceMayDelete: false, desc: 'Podpisany adres zapisu. Urządzenie wysyła plik i robi COMMIT.' },
     { code: 'ACCEPTED',       http: 200, deviceMayDelete: true,  desc: 'Nagranie przyjęte po COMMIT.' },

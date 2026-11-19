@@ -83,7 +83,7 @@ export const PIPELINE_STAGES = [
  */
 export const CAPTURE_SOURCES = [
   { id: 'APP',    residentId: 'AT_CAPTURE', author: 'Sesja zalogowanego użytkownika', desc: 'Aplikacja: podopieczny wybrany przed nagraniem (SC-NUR-02).' },
-  { id: 'DEVICE', residentId: 'AT_ASSIGN',  author: 'Osoba przydzielona do urządzenia w chwili recorded_at (voice_device_assignments)', desc: 'Urządzenie z ekranem tylko ze stanem, bez treści nagrań i nazwisk, M5Stack StickS3 (SC-NUR-17).' },
+  { id: 'DEVICE', residentId: 'AT_ASSIGN',  author: 'Osoba z przedstawienia w pierwszym nagraniu sesji urządzenia (DEVICE_INGEST_PROTOCOL.authorship)', desc: 'Urządzenie z ekranem tylko ze stanem, bez treści nagrań i nazwisk, M5Stack StickS3 (SC-NUR-17).' },
 ];
 
 /**

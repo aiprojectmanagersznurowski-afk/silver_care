@@ -39,6 +39,8 @@
     "fields": {
       "required": [
         "client_capture_id",
+        "session_id",
+        "session_seq",
         "recorded_at",
         "clock_state",
         "age_ms",
@@ -68,6 +70,8 @@
           "path": "/api/voice/device",
           "body": [
             "client_capture_id",
+            "session_id",
+            "session_seq",
             "recorded_at",
             "clock_state",
             "age_ms",
@@ -153,8 +157,24 @@
       "effect": "Kierownik zmiany przypisuje nagranie do zmiany ręcznie."
     },
     "authorship": {
-      "source": "voice_device_assignments w chwili recorded_at",
-      "whenMissing": "NO_AUTHOR — nagranie przyjęte, w kolejce z oznaczeniem „brak autora”"
+      "source": "SELF_INTRODUCTION",
+      "rule": "Autorem wszystkich nagrań sesji (session_id) jest osoba, która przedstawiła się w nagraniu z session_seq 1, np. „Jestem Gabriela Kowalska”.",
+      "sessionStart": [
+        "Opróżnienie urządzenia w stacji (wszystkie nagrania potwierdzone ACCEPTED albo DUPLICATE)",
+        "Gest „Nowa osoba” na urządzeniu (przytrzymanie bocznego przycisku przez 3 s)"
+      ],
+      "matchedBy": "server",
+      "llmIdentifies": false,
+      "matchOn": [
+        "imię i nazwisko z transkryptu nagrania session_seq 1, porównane z personelem placówki urządzenia"
+      ],
+      "whenUnique": "Autor ustawiany automatycznie, zapis w audit_logs",
+      "ambiguousResolvedBy": [
+        "nurse:shift_lead",
+        "org_admin:own"
+      ],
+      "whenMissing": "NO_AUTHOR — brak przedstawienia, brak dopasowania albo kilka osób; nagranie przyjęte, kierownik zmiany wybiera autora sesji w kolejce",
+      "deviceRegistry": "voice_device_assignments to opcjonalna ewidencja wydania sprzętu i nie wyznacza autora"
     },
     "responses": [
       {

@@ -549,7 +549,8 @@ export const REQUIREMENTS = [
       "Ponowna wysyłka tej samej pary device_id i client_capture_id zwraca DUPLICATE bez drugiego wpisu",
       "Urządzenie kasuje nagranie wyłącznie po ACCEPTED albo DUPLICATE",
       "Żądanie z resident_id, imieniem, PESEL albo transkryptem jest odrzucane jako FORBIDDEN_FIELD",
-      "Autorem nagrania jest osoba przydzielona do urządzenia w chwili recorded_at",
+      "Autorem nagrań sesji jest osoba, która przedstawiła się w pierwszym nagraniu sesji",
+      "Przedstawienie dopasowuje serwer bez modelu do personelu placówki; brak albo kilka dopasowań wybiera kierownik zmiany",
       "Nagranie z czasem spoza okna synchronizacji dostaje oznaczenie TIME_UNCERTAIN",
       "Każda odpowiedź protokołu niesie server_time, z którego urządzenie bez RTC ustawia zegar",
       "Nagranie z clock_state RELATIVE dostaje recorded_at równe chwili przyjęcia INIT minus age_ms",
@@ -579,12 +580,12 @@ export const REQUIREMENTS = [
     "risk": "MEDIUM",
     "source": "SC-ADM-24, ADR-022",
     "domain": "voice",
-    "statement": "Kierownik placówki prowadzi rejestr urządzeń, a kierownik zmiany przydziela je osobom przy wydaniu.",
+    "statement": "Kierownik placówki prowadzi rejestr urządzeń placówki. Urządzenia są wspólne: autora nagrań ustala przedstawienie w sesji, a wpis wydania jest opcjonalną ewidencją sprzętu.",
     "acceptance": [
       "Token urządzenia jest pokazywany jeden raz przy rejestracji",
       "Unieważnienie ustawia revoked_at zamiast usuwać wiersz",
-      "Jedno urządzenie ma w danej chwili najwyżej jeden aktywny przydział",
-      "Przydział tworzy kierownik zmiany albo kierownik placówki",
+      "Jedno urządzenie ma w danej chwili najwyżej jeden aktywny wpis wydania",
+      "Wpis wydania tworzy kierownik zmiany albo kierownik placówki i nie wyznacza autora nagrań",
       "Rejestracja, unieważnienie i przydział trafiają do audit_logs",
       "Konto bliskiego nie widzi urządzeń ani przydziałów"
     ]
