@@ -705,6 +705,16 @@ if (DEVICE_INGEST_PROTOCOL) {
   for (const f of ['clock_state', 'age_ms']) {
     if (initReq && !(initReq.body || []).includes(f)) err('R34-device-ingest', `INIT bez pola "${f}" — serwer nie oceni wiarygodności czasu nagrania.`);
   }
+  // Autorstwo (1.2.0): wspólne urządzenia, autor z przedstawienia w sesji — serwer dopasowuje, człowiek rozstrzyga.
+  const au = pr.authorship || {};
+  if (au.source === 'SELF_INTRODUCTION') {
+    for (const f of ['session_id', 'session_seq']) {
+      if (initReq && !(initReq.body || []).includes(f)) err('R34-device-ingest', `INIT bez pola "${f}" — bez sesji nie da się ustalić autora z przedstawienia.`);
+    }
+    if (au.llmIdentifies !== false || au.matchedBy !== 'server') err('R34-device-ingest', 'Autora z przedstawienia dopasowuje serwer, nigdy model AI.');
+    const resolvers = au.ambiguousResolvedBy || [];
+    if (!resolvers.length || resolvers.some((r) => !String(r).includes(':') && r !== 'super_admin')) err('R34-device-ingest', 'Niejednoznacznego autora wybiera człowiek (rola:zakres), nie system.');
+  }
   const mayDelete = (pr.responses || []).filter((r) => r.deviceMayDelete).map((r) => r.code);
   for (const c of mayDelete) {
     if (!['ACCEPTED', 'DUPLICATE'].includes(c)) err('R34-device-ingest', `Urządzenie kasuje nagranie po "${c}". Wolno wyłącznie po ACCEPTED albo DUPLICATE.`);
