@@ -1,6 +1,6 @@
 # 📖 Kanoniczna specyfikacja user stories — Silver Care
 
-> **Wersja:** 2.19 (minimalny zakres danych podopiecznego dla bliskich — 📝 PROPOZYCJA) · **Ostatnia aktualizacja:** 2026-11-16
+> **Wersja:** 2.20 (prywatne zdjęcie podopiecznego, edycja karty w oknie „Edytuj” — 📝 PROPOZYCJA) · **Ostatnia aktualizacja:** 2026-11-17
 > **Właściciele:** Darek Rink, Michał Sznurowski
 
 ## Jak czytać i utrzymywać ten dokument
@@ -591,6 +591,7 @@
 - **AC8 (ZSN tylko do odczytu dla personelu — 📝 2026-11-06):** Status ZSN wynika z dokumentacji przyjęcia i późniejszych dokumentów potwierdzających, więc zmienia go wyłącznie rola z prawem zapisu podopiecznego (Kierownik placówki). Personel opiekuńczy widzi wartość („Tak”/„Nie”) bez przełącznika, a API odrzuca jego próbę zapisu. Zapis, który nie zmienił wiersza, jest błędem, a nie sukcesem.
 - **AC9 (Uwagi przyjęciowe — 📝 2026-11-06):** Treść wpisana przy przyjęciu („Uwagi przyjęciowe” w kreatorze) ma na karcie tę samą nazwę. Nie pochodzi z notatek głosowych.
 - **AC10 (Notatka głosowa z karty — 📝 2026-11-06):** Personel nagrywa notatkę głosową o podopiecznym prosto z nagłówka karty („Nagraj notatkę”); identyfikator podopiecznego przekazuje interfejs (`VOICE-ZERO-GUESSING`). Przycisku nie ma w trybie podglądu (impersonacja).
+- **AC11 (Edycja tylko w oknie „Edytuj” — 📝 2026-11-17):** Pola karty podopiecznego (dane ogólne, ZSN, poziom opieki, źródło pozyskania, źródło finansowania, zdjęcie, uwagi) zmienia się w oknie „Edytuj”. Widok karty tylko wyświetla dane — bez przycisków „Zmień” i przełączników przy pojedynczych polach (decyzja Michała z 2026-11-17).
 
 #### [SC-ADM-21] Sekcja „Zadania” na karcie podopiecznego i wpływ przekazania zmiany na kartę
 🔗 **Kontrakt:** brak REQ (proponowany nowy: `ADM-RESIDENT-CARD-TASKS`; rozszerza `ADM-RESIDENT-CARD-VISIBILITY`) · **ADR:** ADR-021 · **Status:** 📝 PROPOZYCJA
@@ -666,6 +667,21 @@
 - **AC3 (Dostęp):** Pole czyta i zmienia wyłącznie kierownik placówki — w sekcji karty „Umowa i pakiety” (`RESIDENT_CARD_SECTIONS.contract`) i w kreatorze przyjęcia. Pielęgniarka, rodzina i opiekun prawny go nie widzą; kolumna nie trafia do jawnej listy kolumn innych ról (`SC-ADM-20`).
 - **AC4 (Źródło pozyskania):** Dotychczasowe `contract_source` jest podpisane w interfejsie „Źródło pozyskania”; przy braku danych „Brak danych” zamiast „private”.
 - **AC5 (Ślad):** Zmiana źródła finansowania na istniejącym podopiecznym zapisuje wpis w `audit_logs` bez danych osobowych (identyfikator podopiecznego, stara i nowa wartość kodu).
+
+#### [SC-ADM-25] Prywatne zdjęcie podopiecznego
+🔗 **Kontrakt:** `ADM-RESIDENT-PHOTO` · **Status:** 📝 PROPOZYCJA
+
+> ℹ️ Decyzja Michała z 2026-11-17: zdjęcia podopiecznych trafiały do publicznego bucketu `avatars` (plik widoczny dla każdego, kto zna adres), a polityki pozwalały każdemu zalogowanemu kontu — także bliskim — wgrać, nadpisać lub usunąć dowolne zdjęcie. Zdjęcia przechodzą do prywatnego bucketu z dostępem według roli i placówki.
+
+**User story:** Jako kierownik placówki chcę dodać lub zmienić zdjęcie podopiecznego w oknie „Edytuj”, a jako placówka chcemy, żeby zdjęcie widzieli tylko personel i powiązani bliscy, aby wizerunek podopiecznego nie był dostępny publicznie.
+
+**Kryteria akceptacji:**
+- **AC1 (Prywatny bucket):** Zdjęcia leżą w prywatnym buckecie; publiczny adres nie zwraca pliku. Ścieżka: `<organization_id>/<resident_id>/<plik>`.
+- **AC2 (Zapis):** Wgrywa, zmienia i usuwa zdjęcie wyłącznie kierownik placówki, tylko dla podopiecznego swojej placówki (polityki `storage.objects` sprawdzają rolę z `app_metadata` i placówkę ze ścieżki).
+- **AC3 (Odczyt):** Personel placówki i bliscy z aktywnym powiązaniem lub w oknie retencji (`SC-FAM-07`) widzą zdjęcie przez krótkotrwały podpisany link; brak zdjęcia = inicjał, bez zdjęcia zastępczego udającego podopiecznego.
+- **AC4 (Gdzie się zmienia):** Okno „Edytuj” karty (`SC-ADM-20/AC11`) i kreator przyjęcia; widok karty tylko wyświetla.
+- **AC5 (Migracja):** Istniejące zdjęcia z bucketu `avatars` przeniesione do prywatnego, publiczne kopie usunięte; `avatars` nie przyjmuje nowych zdjęć podopiecznych (zdjęcia personelu — osobna decyzja).
+
 
 ### Domena 2 — Personel
 
@@ -1049,3 +1065,4 @@
 | 2026-11-06 | 2.17 | `SC-ADM-20`: AC8 (ZSN tylko do odczytu dla personelu, decyzja Michała z 2026-11-06), AC9 (etykieta „Uwagi przyjęciowe”), AC10 (nagranie notatki głosowej z karty) ze statusem 📝 PROPOZYCJA. |
 | 2026-11-16 | 2.18 | Nowe `SC-ADM-24` (źródło finansowania pobytu podopiecznego, oddzielnie od źródła pozyskania; decyzja Michała z 2026-11-16) ze statusem 📝 PROPOZYCJA. |
 | 2026-11-16 | 2.19 | Nowe `SC-FAM-08` (minimalny zakres danych podopiecznego dla bliskich, bez odczytu tabeli `residents`; decyzja Michała z 2026-11-16) ze statusem 📝 PROPOZYCJA. |
+| 2026-11-17 | 2.20 | Nowe `SC-ADM-25` (prywatne zdjęcie podopiecznego) i `SC-ADM-20/AC11` (pola karty edytuje się w oknie „Edytuj”) — decyzje Michała z 2026-11-17, 📝 PROPOZYCJA. |
