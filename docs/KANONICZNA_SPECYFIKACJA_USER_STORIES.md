@@ -1,6 +1,6 @@
 # 📖 Kanoniczna specyfikacja user stories — Silver Care
 
-> **Wersja:** 2.23 (ekran stanu urządzenia i notatki odporne na restart, prywatne zdjęcie podopiecznego, edycja karty w oknie „Edytuj”, kanał urządzeń Zero-UI — 📝 PROPOZYCJA) · **Ostatnia aktualizacja:** 2026-11-19
+> **Wersja:** 2.24 (urządzenia wspólne z autorem z przedstawienia, ekran stanu urządzenia, notatki odporne na restart, prywatne zdjęcie podopiecznego, edycja karty w oknie „Edytuj” — 📝 PROPOZYCJA) · **Ostatnia aktualizacja:** 2026-11-19
 > **Właściciele:** Darek Rink, Michał Sznurowski
 
 ## Jak czytać i utrzymywać ten dokument
@@ -683,18 +683,18 @@
 - **AC4 (Gdzie się zmienia):** Okno „Edytuj” karty (`SC-ADM-20/AC11`) i kreator przyjęcia; widok karty tylko wyświetla.
 - **AC5 (Migracja):** Istniejące zdjęcia z bucketu `avatars` przeniesione do prywatnego, publiczne kopie usunięte; `avatars` nie przyjmuje nowych zdjęć podopiecznych (zdjęcia personelu — osobna decyzja).
 
-#### [SC-ADM-24] Rejestr urządzeń nagrywających i przydział przy wydaniu
+#### [SC-ADM-24] Rejestr urządzeń nagrywających
 🔗 **Kontrakt:** `VOICE-DEVICE-REGISTRY` · **ADR:** ADR-022 · **Status:** 📝 PROPOZYCJA
 
-**User story:** Jako kierownik placówki chcę zarejestrować urządzenia nagrywające placówki i unieważnić zgubione, a pracownikowi przypisać urządzenie na stałe, aby każde nagranie miało znanego autora.
+**User story:** Jako kierownik placówki chcę zarejestrować urządzenia nagrywające placówki i unieważnić zgubione, aby do serwera trafiały nagrania wyłącznie z naszego sprzętu. Urządzenia są wspólne: autora nagrań ustala przedstawienie w sesji (`SC-NUR-17/AC5`).
 
 **Kryteria akceptacji:**
 - **AC1 (Rejestracja):** Kierownik placówki dodaje urządzenie z numerem z obudowy (np. „Stick 04”). System tworzy token urządzenia i pokazuje go raz, do wgrania na urządzenie. W bazie zostaje tylko skrót tokenu.
 - **AC2 (Unieważnienie):** Kierownik placówki unieważnia token zgubionego albo wymienianego urządzenia. Historia zostaje: unieważnienie to `revoked_at`, nie usunięcie wiersza.
-- **AC3 (Stałe przypisanie):** Kierownik placówki albo kierownik zmiany przypisuje urządzenie pracownikowi na stałe. Przydział ma początek i koniec. Jedno urządzenie ma w danej chwili najwyżej jedną osobę (ADR-022 pkt 4, decyzja Michała z 2026-11-17).
-- **AC4 (Koniec przydziału):** Przydział zamyka wyłącznie zwrot urządzenia (np. odejście pracownika, wymiana, zgubienie). Koniec zmiany go nie zamyka.
-- **AC5 (Stan urządzeń):** Kierownik placówki widzi przy urządzeniu ostatni zrzut i liczbę przyjętych nagrań, opisowo i bez alarmów. Personel widzi własne przydziały. Bliscy nie mają dostępu.
-- **AC6 (Audyt):** Rejestracja, unieważnienie i każdy przydział trafiają do `audit_logs`.
+- **AC3 (Ewidencja wydania, opcjonalna):** Kierownik placówki albo kierownik zmiany może zapisać, komu wydał urządzenie, np. przy wydaniu na dłużej. Wpis ma początek i koniec, a jedno urządzenie ma w danej chwili najwyżej jeden aktywny wpis. Wpis nie wyznacza autora nagrań (ADR-022 pkt 4, decyzja Michała z 2026-11-19, zastępuje stały przydział z 2026-11-17).
+- **AC4 (Urządzenia wspólne):** Urządzenia leżą w stacji. Każda osoba z personelu może wziąć dowolne, bez rejestrowania tego w systemie.
+- **AC5 (Stan urządzeń):** Kierownik placówki widzi przy urządzeniu ostatni zrzut i liczbę przyjętych nagrań, opisowo i bez alarmów. Personel widzi własne wpisy wydania. Bliscy nie mają dostępu.
+- **AC6 (Audyt):** Rejestracja, unieważnienie i każdy wpis wydania trafiają do `audit_logs`.
 
 ### Domena 2 — Personel
 
@@ -851,7 +851,7 @@
 - **AC2 (Ekran stanu):** Ekran pokazuje wyłącznie stan: nagrywanie z czasem i poziomem dźwięku, „Zapisano”, liczbę notatek czekających na wysłanie, baterię, wysyłanie w stacji, ostrzeżenia (słaba bateria, pełna pamięć) i usterki z kodem. Ekran gaśnie po 15 s. Urządzenie nie wyświetla ani nie odtwarza treści nagrań ani nazwisk. Czerwień tylko dla usterki urządzenia.
 - **AC3 (Zrzut w stacji):** Po odłożeniu do stacji (wykryte ładowanie) urządzenie wysyła nagrania. Endpoint uwierzytelnia token urządzenia i wydaje podpisany adres zapisu w Storage (UE). Urządzenie kasuje nagranie dopiero po potwierdzeniu przyjęcia.
 - **AC4 (Idempotencja):** Ponowna wysyłka tego samego nagrania nie tworzy drugiego wpisu.
-- **AC5 (Autor z przydziału):** Autorem jest osoba, której urządzenie było przydzielone w chwili `recorded_at` (`SC-ADM-24`). Nagranie z chwili bez przydziału trafia do kolejki z oznaczeniem „brak autora”.
+- **AC5 (Autor z przedstawienia):** Opiekunka bierze dowolne urządzenie, np. gdy na swoim nie ma już miejsca. Sesja zaczyna się po opróżnieniu urządzenia w stacji albo po geście „Nowa osoba” (przytrzymanie bocznego przycisku przez 3 s). Ekran prosi wtedy: „Przedstaw się w pierwszej notatce”. Pierwsza notatka sesji zaczyna się od „Jestem …” (np. „Jestem Gabriela Kowalska”). Serwer, bez modelu AI, dopasowuje imię i nazwisko do personelu placówki i przypisuje tej osobie wszystkie notatki sesji. Brak przedstawienia, brak dopasowania albo kilka osób: notatki trafiają do kolejki z oznaczeniem „brak autora”, a kierownik zmiany wybiera autora sesji.
 - **AC6 (Bez podopiecznego w żądaniu):** Żądanie nie zawiera `resident_id`. Nagranie trafia do kolejki „Do przypisania” (`SC-NUR-18`) i bez potwierdzenia człowieka nie przechodzi do klasyfikacji ani do modelu (ADR-022).
 - **AC7 (Czas niepewny):** Gdy `recorded_at` jest w przyszłości albo wcześniejszy niż ostatnia synchronizacja zegara minus doba, nagranie dostaje oznaczenie „czas niepewny”, a kierownik zmiany przypisuje je do zmiany ręcznie.
 - **AC8 (Unieważnione urządzenie):** Urządzenie z unieważnionym tokenem dostaje odmowę, a nagrania zostają zaszyfrowane na urządzeniu.
@@ -1115,3 +1115,4 @@
 | 2026-11-17 | 2.21 | Kanał urządzeń Zero-UI wg ADR-022 (decyzje Michała z 2026-11-16 i 2026-11-17): nowe `SC-NUR-17` (nagrywanie na urządzeniu i zrzut w stacji), `SC-NUR-18` (kolejka „Do przypisania” z podpowiedzią serwera i potwierdzeniem człowieka) i `SC-ADM-24` (rejestr urządzeń i przydział przy wydaniu) ze statusem 📝 PROPOZYCJA. |
 | 2026-11-17 | 2.22 | Decyzje Michała z 2026-11-17: `SC-ADM-24` — stałe przypisanie urządzenia, zamykane tylko zwrotem; `SC-NUR-02/AC4` — audio z obu kanałów w `voice-recordings`, retencja ustawiana przez kierownika placówki albo super admina (7–90 dni, domyślnie 30), 📝 PROPOZYCJA. |
 | 2026-11-19 | 2.23 | Decyzja Michała z 2026-11-19 po pomiarach na StickS3: `SC-NUR-17` dostaje ekran stanu zamiast samych sygnałów dźwiękowych (AC2, bez treści nagrań), `AC9` — restart ani wyłączenie nie kasują notatek, `AC10` — kliknięcie przycisku zasilania nie restartuje. 📝 PROPOZYCJA. |
+| 2026-11-19 | 2.24 | Decyzja Michała z 2026-11-19: urządzenia są wspólne, autora ustala przedstawienie w pierwszej notatce sesji (`SC-NUR-17/AC5`, kontrakt `DEVICE_INGEST_PROTOCOL.authorship` 1.2.0). `SC-ADM-24` (rejestr urządzeń): stały przydział zastąpiony opcjonalną ewidencją wydania. 📝 PROPOZYCJA. |

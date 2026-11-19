@@ -68,7 +68,7 @@ Każdy krok: test RED, GREEN, `node tools/sc-phase.mjs`, `bash scripts/verify.sh
 4. **Wykrycie stacji po napięciu USB** (> 4,5 V), nie po `isCharging()`, które na StickS3 skacze między 0 a 1.
 
 ## Rozstrzygnięte (Michał, 2026-11-17)
-1. **Przydział:** urządzenie przypisane pracownikowi na stałe, przydział zamyka wyłącznie zwrot.
+1. **Przydział:** ~~urządzenie przypisane pracownikowi na stałe~~ — zastąpione 2026-11-19: urządzenia wspólne, autor z przedstawienia w pierwszej notatce sesji (protokół 1.2.0, `authorship`). `voice_device_assignments` zostaje opcjonalną ewidencją wydania; krok 7 nie wymaga przydziału przy wydaniu, a krok 8 dostaje dopasowanie autora sesji.
 2. **Audio z aplikacji:** zapisywane w `voice-recordings`, jak z urządzeń.
 3. **Retencja:** konfigurowalna per placówka przez kierownika placówki i super admina, 7–90 dni, domyślnie 30. Kontrakt zmieniony w oknie kontraktowym 2026-11-17 (commit `91800ab`, reguła R17).
 
