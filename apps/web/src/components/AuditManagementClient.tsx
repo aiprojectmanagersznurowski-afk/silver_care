@@ -179,7 +179,7 @@ export function AuditManagementClient({
 
       {/* Tabela zdarzeń audytowych */}
       <TableCard
-        title="Zdarzenia Audytowe"
+        title="Zdarzenia audytowe"
         description={`Wyświetlono ${filteredLogs.length} wpisów${appliedStartDate || appliedEndDate ? ' dla wybranego zakresu dat' : ''}.`}
       >
             <Table aria-label="Tabela rejestru audytowego">

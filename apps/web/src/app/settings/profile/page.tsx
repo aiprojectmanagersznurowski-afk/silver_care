@@ -5,7 +5,7 @@ import { ProfileSecurityClient } from './profile-client'
 import { PageHeader } from '@/components/patterns/PageHeader'
 
 export const metadata: Metadata = {
-  title: 'Ustawienia Profilu i Bezpieczeństwa | Silver Care',
+  title: 'Ustawienia profilu i bezpieczeństwa | Silver Care',
   description: 'Zarządzaj swoim profilem, hasłem, sesjami i zabezpieczeniami konta.',
 }
 
@@ -33,7 +33,7 @@ export default async function ProfileSettingsPage() {
       <div className="max-w-4xl mx-auto space-y-6">
         <PageHeader
           back={{ href: backHref, label: 'Wróć do panelu' }}
-          title="Profil i Bezpieczeństwo Konta"
+          title="Profil i bezpieczeństwo konta"
           description="Zarządzaj swoimi danymi uwierzytelniającymi, aktywnymi sesjami i poziomem zabezpieczeń."
         />
 

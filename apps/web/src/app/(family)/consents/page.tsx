@@ -10,6 +10,7 @@ import { StatusBadge } from '@/components/patterns/StatusBadge'
 import { roleLabel } from '@/lib/auth/role-labels'
 import { formatPersonName } from '@/lib/person-name'
 import { getCurrentUser } from '@/lib/supabase/current-user'
+import { getFamilyResidents } from '@/lib/family-residents'
 
 const PURPOSE_LABELS: Record<string, { title: string; desc: string }> = {
   wellness_data_ingest: {
@@ -31,15 +32,23 @@ export default async function FamilyConsentsPage() {
   const user = await getCurrentUser()
   if (!user) return redirect('/')
 
-  // Read linked residents
-  const { data: links } = await supabase
-    .from('resident_relative_links')
-    .select('resident_id, role, relationship_code, residents(id, first_name, last_name)')
-    .eq('relative_user_id', user.id)
+  // SC-FAM-08: podopieczni wyłącznie z get_family_resident_overview; rola z powiązania bez osadzania residents
+  const [overview, { data: links }] = await Promise.all([
+    getFamilyResidents(supabase),
+    supabase.from('resident_relative_links').select('resident_id, role').eq('relative_user_id', user.id),
+  ])
 
-  const residents = (links || []).map(link => 
-    Array.isArray(link.residents) ? link.residents[0] : link.residents
-  ).filter(Boolean) as { id: string; first_name: string; last_name: string }[]
+  if (overview.status === 'error') {
+    return (
+      <Card className="max-w-md mx-auto my-12 text-center">
+        <CardContent className="py-12 space-y-3">
+          <h3 className="text-lg font-semibold text-foreground">Nie udało się wczytać danych podopiecznego</h3>
+          <p className="text-sm text-muted-foreground max-w-xs mx-auto">Odśwież stronę. Jeśli błąd się powtarza, skontaktuj się z placówką.</p>
+        </CardContent>
+      </Card>
+    )
+  }
+  const residents = overview.residents
 
   if (residents.length === 0) {
     return (

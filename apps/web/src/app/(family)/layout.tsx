@@ -5,6 +5,8 @@ import { FamilyHeader } from '@/components/FamilyHeader'
 import { OnboardingModal } from '@/components/OnboardingModal'
 import { getAppRole } from '@/lib/auth/app-role'
 import { getCurrentUser } from '@/lib/supabase/current-user'
+import { getFamilyResidents } from '@/lib/family-residents'
+import { residentPhotoUrls } from '@/lib/resident-photo'
 
 export const dynamic = 'force-dynamic'
 export default async function FamilyLayout({ children }: { children: ReactNode }) {
@@ -17,22 +19,14 @@ export default async function FamilyLayout({ children }: { children: ReactNode }
     redirect('/')
   }
 
-  // Fetch linked residents for the user
-  const { data: links } = await supabase
-    .from('resident_relative_links')
-    .select(`
-      resident_id,
-      residents (
-        id,
-        first_name,
-        last_name,
-        avatar_url
-      )`)
-    .eq('relative_user_id', user.id)
-
-  const residents = (links || []).map(link => 
-    Array.isArray(link.residents) ? link.residents[0] : link.residents
-  ).filter(Boolean) as { id: string; first_name: string; last_name: string; avatar_url: string | null }[]
+  // SC-FAM-08: podopieczni wyłącznie z get_family_resident_overview (bez odczytu tabeli residents).
+  // Przy błędzie nagłówek pokazuje „Konto”; strony portalu zgłaszają błąd jawnie.
+  const overview = await getFamilyResidents(supabase)
+  const listed = overview.status === 'ok' ? overview.residents : []
+  // SC-ADM-25: zdjęcie z prywatnego bucketu przez podpisany link (o odczycie bliskiego decyduje RLS storage).
+  // RPC przed migracją 20261117130000 zwraca jeszcze avatar_url — wtedy zostaje dotychczasowy adres.
+  const photoUrls = await residentPhotoUrls(supabase, listed.map((r) => r.photo_path))
+  const residents = listed.map((r) => ({ ...r, avatar_url: r.photo_path ? photoUrls[r.photo_path] ?? null : r.avatar_url ?? null }))
 
   return (
     <div className="flex min-h-screen flex-col bg-background">

@@ -134,7 +134,7 @@ export function StaffStandardCard({ resident, unansweredInfo }: StaffStandardCar
             </TooltipContent>
           </Tooltip>
 
-          {noteStatus !== 'none' && (
+          {noteStatus !== 'none' ? (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
@@ -149,6 +149,11 @@ export function StaffStandardCard({ resident, unansweredInfo }: StaffStandardCar
                 Zobacz wygenerowany raport i historię obserwacji
               </TooltipContent>
             </Tooltip>
+          ) : (
+            <span className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-muted/40 px-4 py-2.5 text-sm font-medium text-muted-foreground ring-1 ring-inset ring-border/40 min-h-touch select-none">
+              <FileText className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+              Brak raportu
+            </span>
           )}
 
           <div className="mt-1">

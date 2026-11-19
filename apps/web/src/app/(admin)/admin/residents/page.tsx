@@ -10,6 +10,7 @@ import { isImpersonationSessionActive, maskResidentListForImpersonation } from '
 import { AdminResidentsClient, type ResidentWithAssignments } from '@/components/AdminResidentsClient'
 import { ADMIN_RESIDENT_LIST_SELECT } from '@/lib/admin-resident-columns'
 import { getCurrentUser } from '@/lib/supabase/current-user'
+import { residentPhotoUrls } from '@/lib/resident-photo'
 
 export default async function AdminResidentsPage() {
   const supabase = await createClient()
@@ -23,8 +24,12 @@ export default async function AdminResidentsPage() {
     .select(ADMIN_RESIDENT_LIST_SELECT)
     .order('created_at', { ascending: false })
 
+  // SC-ADM-25: zdjęcia z prywatnego bucketu przez podpisane linki (jedno zapytanie); bez photo_path zostaje dotychczasowe zdjęcie
+  const photoUrls = await residentPhotoUrls(supabase, (rawResidents || []).map((r) => r.photo_path))
+  const withPhotos = (rawResidents || []).map((r) => (r.photo_path ? { ...r, avatar_url: photoUrls[r.photo_path] ?? null } : r))
+
   const { residents, masked, count } = maskResidentListForImpersonation(
-    rawResidents || [],
+    withPhotos,
     isImpersonating
   )
 

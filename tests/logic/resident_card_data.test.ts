@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { resolveCardAccess, sectionsFor, residentSelect } from '../../apps/web/src/lib/resident-card/card-access'
 import { getResidentCard } from '../../apps/web/src/lib/resident-card/get-resident-card'
+import { FUNDING_SOURCES, FUNDING_SOURCE_LABELS, fundingSourceLabel, contractSourceLabel } from '../../apps/web/src/lib/reporting-constants'
 
 /**
  * @REQ: ADM-RESIDENT-CARD-VISIBILITY
@@ -115,5 +116,34 @@ describe('getResidentCard (@REQ: ADM-RESIDENT-CARD-VISIBILITY, @REQ: ORG-ISOLATI
     expect(res).toEqual({ status: 'error' })
     expect(JSON.stringify(spy.mock.calls)).not.toMatch(/Kowalski|90010112345/)
     spy.mockRestore()
+  })
+})
+
+describe('Źródło finansowania na karcie (@REQ: ADM-RESIDENT-FUNDING)', () => {
+  it('@REQ: ADM-RESIDENT-FUNDING - resident_funding tylko w sekcji umowy kierownika, nie u pielęgniarki', () => {
+    const nurse = residentSelect(sectionsFor({ role: 'nurse', readOnly: false }))
+    const admin = residentSelect(sectionsFor({ role: 'org_admin', readOnly: false }))
+    expect(admin).toContain('resident_funding(funding_source)')
+    expect(nurse).not.toContain('resident_funding')
+  })
+
+  it('@REQ: ADM-RESIDENT-FUNDING - cztery wartości finansowania z etykietami; brak danych nie jest wartością', () => {
+    expect(FUNDING_SOURCES).toEqual(['private', 'municipality', 'co_financed', 'other'])
+    expect(FUNDING_SOURCE_LABELS).toEqual({
+      private: 'Prywatnie (podopieczny lub rodzina)',
+      municipality: 'Gmina / MOPS',
+      co_financed: 'Współfinansowanie (prywatnie + gmina)',
+      other: 'Inne',
+    })
+    expect(fundingSourceLabel(null)).toBe('Brak danych')
+    expect(fundingSourceLabel(undefined)).toBe('Brak danych')
+    expect(fundingSourceLabel('nfz')).toBe('Brak danych')
+    expect(fundingSourceLabel('municipality')).toBe('Gmina / MOPS')
+  })
+
+  it('@REQ: ADM-RESIDENT-FUNDING - źródło pozyskania bez wartości to „Brak danych”, nie zmyślone „private”', () => {
+    expect(contractSourceLabel(null)).toBe('Brak danych')
+    expect(contractSourceLabel('private')).toBe('Brak danych')
+    expect(contractSourceLabel('hospital')).toBe('Szpital')
   })
 })

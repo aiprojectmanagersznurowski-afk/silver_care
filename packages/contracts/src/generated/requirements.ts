@@ -222,6 +222,36 @@ export const REQUIREMENTS = [
     ]
   },
   {
+    "id": "ADM-RESIDENT-FUNDING",
+    "status": "TODO",
+    "risk": "HIGH",
+    "source": "SC-ADM-24",
+    "domain": "residents",
+    "statement": "Kierownik placówki zapisuje źródło finansowania pobytu podopiecznego, oddzielnie od źródła pozyskania.",
+    "acceptance": [
+      "Źródło finansowania przyjmuje wyłącznie wartości: Prywatnie (podopieczny lub rodzina), Gmina / MOPS, Współfinansowanie (prywatnie + gmina), Inne; inną wartość odrzuca baza",
+      "Brak wartości jest pokazywany jako „Brak danych”, nigdy jako wartość domyślna ani zgadywana",
+      "Źródło finansowania czyta i zmienia wyłącznie kierownik placówki (sekcja karty „Umowa i pakiety”); pielęgniarka, rodzina i opiekun prawny go nie widzą",
+      "Dotychczasowe contract_source jest podpisane w interfejsie jako „Źródło pozyskania”",
+      "Migracja nie nadaje wartości istniejącym podopiecznym — pole zostaje puste do uzupełnienia przez kierownika"
+    ]
+  },
+  {
+    "id": "ADM-RESIDENT-PHOTO",
+    "status": "TODO",
+    "risk": "HIGH",
+    "source": "SC-ADM-25",
+    "domain": "residents",
+    "statement": "Zdjęcie podopiecznego jest przechowywane prywatnie i dostępne wyłącznie osobom uprawnionym do danych tego podopiecznego.",
+    "acceptance": [
+      "Zdjęcia podopiecznych leżą w prywatnym buckecie; bez zalogowania i uprawnienia plik nie jest dostępny pod żadnym adresem",
+      "Wgrywa, zmienia i usuwa zdjęcie wyłącznie kierownik placówki, tylko dla podopiecznego swojej placówki; ścieżka pliku zaczyna się od identyfikatora placówki i podopiecznego",
+      "Czyta personel placówki podopiecznego oraz bliscy z aktywnym powiązaniem lub w oknie retencji; aplikacja pokazuje zdjęcie przez krótkotrwały podpisany link",
+      "Zdjęcie dodaje się i zmienia w oknie „Edytuj” karty podopiecznego oraz w kreatorze przyjęcia, nie w widoku karty",
+      "Istniejące zdjęcia z publicznego bucketu są przeniesione, a publiczne kopie usunięte; publiczny bucket nie przyjmuje nowych zdjęć podopiecznych"
+    ]
+  },
+  {
     "id": "ADM-RESIDENT-CARD-VISIBILITY",
     "status": "TODO",
     "risk": "HIGH",
@@ -713,6 +743,20 @@ export const REQUIREMENTS = [
       "Każda kategoria MEDICAL ma słowa na liście; pozycje niemedyczne o podobnym brzmieniu (np. wizyta rodziny) pozostają widoczne",
       "Personel widzi przy wpisie informację, że pozycja z treścią medyczną nie będzie widoczna dla rodziny",
       "Widok rodziny nie ma kategorii leków"
+    ]
+  },
+  {
+    "id": "FAM-RESIDENT-DATA-MINIMIZATION",
+    "status": "TODO",
+    "risk": "HIGH",
+    "source": "SC-FAM-08",
+    "domain": "family",
+    "statement": "Bliscy odczytują dane podopiecznego wyłącznie przez wąskie RPC z jawną listą kolumn, bez dostępu do tabeli residents.",
+    "acceptance": [
+      "Tabela residents nie ma polityki odczytu dla ról family i legal_guardian; zapytanie bliskiego do residents zwraca zero wierszy, także przez API",
+      "Bliski otrzymuje wyłącznie: identyfikator, imię, nazwisko, zdjęcie, datę zgonu, datę końca umowy i datę archiwizacji (get_family_resident_overview); pesel_hash, is_zsn, care_level, notes, dane umowy i ścieżka dokumentu umowy nie mają ścieżki do portalu rodziny",
+      "Plan dnia placówki dla bliskich działa bez odczytu residents w kontekście bliskiego",
+      "Portal rodziny nie osadza residents w zapytaniach; błąd RPC jest jawnym błędem, nie cichym odczytem tabeli"
     ]
   },
   {

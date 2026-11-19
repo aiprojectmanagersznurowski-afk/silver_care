@@ -4,10 +4,10 @@ import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { FileText, ShieldCheck } from 'lucide-react'
 import {
-  CONTRACT_SOURCE_LABELS,
   PACKAGE_TYPE_LABELS,
-  ContractSource,
   PackageType,
+  contractSourceLabel,
+  fundingSourceLabel,
 } from '@/lib/reporting-constants'
 import { ResidentContractAttachment } from '@/components/facility/ResidentContractAttachment'
 import { FullResidentData, ResidentPackageItem } from './profile-types'
@@ -21,7 +21,8 @@ export function ResidentContractCard({
   resident,
   activePackages,
 }: ResidentContractCardProps) {
-  const contractSource = (resident.contract_source || 'private') as ContractSource
+  // Brak wartości = „Brak danych” (zakaz fabrykowania w fallbackach)
+  const funding = Array.isArray(resident.resident_funding) ? resident.resident_funding[0] : resident.resident_funding
 
   return (
     <Card>
@@ -31,14 +32,12 @@ export function ResidentContractCard({
           Umowa i pakiety opiekuńcze
         </CardTitle>
       </CardHeader>
-      <CardContent className="pt-4 space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <span className="text-sm text-muted-foreground block">Źródło finansowania</span>
-            <span className="text-sm font-medium text-foreground">
-              {CONTRACT_SOURCE_LABELS[contractSource] || contractSource}
-            </span>
-          </div>
+      {/* @container: karta stoi w wąskim pasku bocznym na laptopie i w pełnej szerokości na telefonie */}
+      <CardContent className="@container pt-4 space-y-4">
+        <div className="grid grid-cols-1 @xs:grid-cols-2 gap-4">
+          {/* Edycja w oknie „Edytuj” (decyzja Michała 2026-11-17) — widok karty tylko wyświetla */}
+          <ContractField testId="funding-source" label="Źródło finansowania" value={fundingSourceLabel(funding?.funding_source)} />
+          <ContractField testId="contract-source" label="Źródło pozyskania" value={contractSourceLabel(resident.contract_source)} />
 
           <div>
             <span className="text-sm text-muted-foreground block">Aktywny pakiet</span>
@@ -61,5 +60,14 @@ export function ResidentContractCard({
         </div>
       </CardContent>
     </Card>
+  )
+}
+
+function ContractField({ testId, label, value }: { testId: string; label: string; value: string }) {
+  return (
+    <div data-testid={testId}>
+      <span data-slot="field-label" className="text-sm text-muted-foreground block">{label}</span>
+      <span data-slot="field-value" className="text-sm font-medium text-foreground">{value}</span>
+    </div>
   )
 }

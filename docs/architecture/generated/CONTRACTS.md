@@ -89,7 +89,7 @@ Krój: `-apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui, sans-
 
 Bazowy rozmiar 14px · minimalny kontrast 4.5:1 · cel dotykowy 38px
 
-## Wymagania (65)
+## Wymagania (68)
 
 | ID | Domena | Ryzyko | Treść |
 |---|---|---|---|
@@ -109,6 +109,8 @@ Bazowy rozmiar 14px · minimalny kontrast 4.5:1 · cel dotykowy 38px
 | ADM-RESIDENT-CARD-TASKS | residents | MEDIUM | Karta podopiecznego ma sekcję „Zadania” z otwartymi i niedawno wykonanymi zadaniami podopiecznego. |
 | ADM-CARE-PLAN-TASKS | residents | HIGH | Zadania standardowe pochodzą z szablonów planu opieki definiowanych przez placówkę, a nie z rekomendacji systemu. |
 | ADM-CAPACITY-LIMIT | facility | HIGH | Limit miejsc placówki (liczba łóżek = maks. liczba aktywnych podopiecznych) ustala wyłącznie super admin; kierownik może go przekroczyć po potwierdzeniu, a przekroczenie powiadamia kierownika i super admina. |
+| ADM-RESIDENT-FUNDING | residents | HIGH | Kierownik placówki zapisuje źródło finansowania pobytu podopiecznego, oddzielnie od źródła pozyskania. |
+| ADM-RESIDENT-PHOTO | residents | HIGH | Zdjęcie podopiecznego jest przechowywane prywatnie i dostępne wyłącznie osobom uprawnionym do danych tego podopiecznego. |
 | ADM-RESIDENT-CARD-VISIBILITY | residents | HIGH | Wspólna karta podopiecznego dla personelu pokazuje każdej roli wyłącznie sekcje z zasobów, które ta rola może czytać według macierzy uprawnień. |
 | ADM-ARCHIVE | residents | HIGH | Archiwizacja odcina dostęp bliskim bez niszczenia śladu audytowego. |
 | SEC-MFA-STAFF | security | HIGH | Personel loguje się z drugim składnikiem; rodziny bez MFA. |
@@ -145,6 +147,7 @@ Bazowy rozmiar 14px · minimalny kontrast 4.5:1 · cel dotykowy 38px
 | FAM-MESSAGES | family | MEDIUM | Bliski zostawia wiadomość dla kierownika / administratora placówki bez dzwonienia na dyżurkę. |
 | FAM-AGENDA | family | MEDIUM | Bliski widzi plan dnia pensjonariusza. |
 | FAM-AGENDA-NO-MEDICAL | family | HIGH | Plan dnia widoczny dla bliskich nie zawiera treści medycznych. |
+| FAM-RESIDENT-DATA-MINIMIZATION | family | HIGH | Bliscy odczytują dane podopiecznego wyłącznie przez wąskie RPC z jawną listą kolumn, bez dostępu do tabeli residents. |
 | NUR-BOARD | staff | MEDIUM | Personel widzi tablicę pensjonariuszy ze statusem notatek. |
 | NUR-AGENDA | staff | MEDIUM | Personel zarządza planem dnia placówki. |
 | NTF-REPORT-READY | notifications | MEDIUM | Bliscy otrzymują powiadomienie o dostępności raportu. |

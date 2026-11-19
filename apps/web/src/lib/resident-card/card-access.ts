@@ -25,7 +25,8 @@ export function sectionsFor(access: CardAccess): ResidentCardSection[] {
 /** Kolumny przeglądu: wszystko, czego potrzebuje nagłówek i dane ogólne — bez pesel_hash. */
 const OVERVIEW_COLUMNS = [
   'id', 'first_name', 'last_name', 'birth_date', 'gender', 'admission_date', 'care_level', 'is_zsn',
-  'avatar_url', 'notes', 'archived_at', 'death_date', 'contract_end_date',
+  'avatar_url', 'photo_path', 'notes', 'archived_at', 'death_date', 'contract_end_date',
+  'resident_death_reports(reported_death_date, reported_at, notes)',
 ]
 
 /** Kolumny umowy (opłaty i dokument) — wyłącznie w sekcji „Umowa i pakiety”. */
@@ -37,7 +38,8 @@ const CONTRACT_COLUMNS = [
 const RELATIONS: Partial<Record<ResidentCardSection, string>> = {
   bed: 'bed_assignments(id, assigned_at, unassigned_at, beds(id, label, rooms(number, floor, sector)))',
   family: 'resident_relative_links(id, relative_user_id, relationship_code, role, is_primary_contact, created_at)',
-  contract: 'resident_packages(id, package_type, package_name, monthly_rate, started_at, ended_at)',
+  // resident_funding: RLS tylko org_admin (SC-ADM-24); osadzenie jak pakiety, by karta nie robiła osobnego zapytania
+  contract: 'resident_packages(id, package_type, package_name, monthly_rate, started_at, ended_at), resident_funding(funding_source)',
   events: 'resident_events(id, event_type, event_date, event_reason, metadata, created_at)',
 }
 

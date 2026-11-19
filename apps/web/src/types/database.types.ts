@@ -884,6 +884,90 @@ export interface Database {
           },
         ]
       }
+      resident_death_reports: {
+        Row: {
+          resident_id: string
+          organization_id: string
+          reported_death_date: string
+          notes: string | null
+          task_ids: string[]
+          reported_at: string
+          reported_by: string
+        }
+        Insert: {
+          resident_id: string
+          organization_id: string
+          reported_death_date: string
+          notes?: string | null
+          task_ids?: string[]
+          reported_at?: string
+          reported_by: string
+        }
+        Update: {
+          resident_id?: string
+          organization_id?: string
+          reported_death_date?: string
+          notes?: string | null
+          task_ids?: string[]
+          reported_at?: string
+          reported_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resident_death_reports_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resident_death_reports_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: true
+            referencedRelation: "residents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resident_funding: {
+        Row: {
+          resident_id: string
+          organization_id: string
+          funding_source: string
+          updated_by: string
+          updated_at: string
+        }
+        Insert: {
+          resident_id: string
+          organization_id: string
+          funding_source: string
+          updated_by: string
+          updated_at?: string
+        }
+        Update: {
+          resident_id?: string
+          organization_id?: string
+          funding_source?: string
+          updated_by?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resident_funding_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resident_funding_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: true
+            referencedRelation: "residents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       residents: {
         Row: {
           id: string
@@ -894,6 +978,7 @@ export interface Database {
           created_at: string
           archived_at: string | null
           avatar_url: string | null
+          photo_path: string | null
           birth_date: string | null
           gender: string | null
           admission_date: string | null
@@ -909,7 +994,6 @@ export interface Database {
           contract_document_path: string | null
           contract_document_name: string | null
           search_name: string | null
-          death_reported_at: string | null
         }
         Insert: {
           id?: string
@@ -920,6 +1004,7 @@ export interface Database {
           created_at?: string
           archived_at?: string | null
           avatar_url?: string | null
+          photo_path?: string | null
           birth_date?: string | null
           gender?: string | null
           admission_date?: string | null
@@ -935,7 +1020,6 @@ export interface Database {
           contract_document_path?: string | null
           contract_document_name?: string | null
           search_name?: string | null
-          death_reported_at?: string | null
         }
         Update: {
           id?: string
@@ -946,6 +1030,7 @@ export interface Database {
           created_at?: string
           archived_at?: string | null
           avatar_url?: string | null
+          photo_path?: string | null
           birth_date?: string | null
           gender?: string | null
           admission_date?: string | null
@@ -961,7 +1046,6 @@ export interface Database {
           contract_document_path?: string | null
           contract_document_name?: string | null
           search_name?: string | null
-          death_reported_at?: string | null
         }
         Relationships: [
           {
@@ -1828,6 +1912,21 @@ export interface Database {
           p_shift_date: string
         }
         Returns: number
+      }
+      report_resident_death_atomic: {
+        Args: {
+          p_resident_id: string
+          p_death_date: string
+          p_notes?: string | null
+          p_tasks?: Json
+        }
+        Returns: undefined
+      }
+      cancel_resident_death_report_atomic: {
+        Args: {
+          p_resident_id: string
+        }
+        Returns: undefined
       }
       revoke_consent: {
         Args: {

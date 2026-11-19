@@ -10,7 +10,7 @@ export default async function DailyReportPage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader title="Dane Dzienne" description="Dzienny raport obłożenia, umów i zdarzeń w placówce." />
+      <PageHeader title="Dane dzienne" description="Dzienny raport obłożenia, umów i zdarzeń w placówce." />
 
       <DailyReportClient organizationId={orgId} />
     </div>

@@ -49,7 +49,7 @@ export function AuditLogTable({
   return (
     <TableCard
       icon={<History />}
-      title="Dziennik Audytowy Zmian Uprawnień"
+      title="Dziennik audytowy zmian uprawnień"
       description="Historia wszystkich modyfikacji ról, uprawnień i kont personelu."
     >
         {auditLogs.length === 0 ? (

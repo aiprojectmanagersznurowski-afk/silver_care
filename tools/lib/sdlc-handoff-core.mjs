@@ -1,48 +1,49 @@
 /**
  * Core logic for SDLC PR handoff between Darek and Michał
  * Rule: INFRA-SDLC-WORKFLOW
+ *
+ * Od 2026-11-17 zadania żyją w GitHub Issues i tablicy GitHub Projects „Silver Care”
+ * (decyzja Michała i Darka), a nie w Trello.
  */
 
-export const IN_REVIEW_LIST_ID = '6aa420f641a1300e6a97a10f';
+export const BOARD = {
+  owner: 'aiprojectmanagersznurowski-afk',
+  repo: 'aiprojectmanagersznurowski-afk/silver_care',
+  projectNumber: 1,
+  statusField: 'Status',
+  inReview: 'PR Created / In Review',
+};
 
 export const MEMBERS = {
   DAREK: {
-    id: '5ce666443ecfaa7f62756e43',
     name: 'Darek Rink',
-    username: 'darekrink',
-    github: 'darkov89'
+    github: 'darkov89',
   },
   MICHAL: {
-    id: '6a1e8bee5edd0ea47730152c',
     name: 'Michał Sznurowski',
-    username: 'michalsznurowski',
-    github: 'aiprojectmanagersznurowski-afk'
-  }
+    github: 'aiprojectmanagersznurowski-afk',
+  },
 };
 
+const isDarek = (v) => ['darek', MEMBERS.DAREK.github].includes(v);
+const isMichal = (v) => ['michal', 'michał', MEMBERS.MICHAL.github].includes(v);
+
 /**
- * Wyznacza recenzenta zadania na podstawie obecnego przypisania i opcjonalnego wskazania
+ * Wyznacza recenzenta: druga osoba niż obecnie przypisana do issue (loginy GitHub),
+ * chyba że wskazano ją flagą --to.
  */
-export function determineReviewer(currentMemberIds = [], forcedTarget = null) {
+export function determineReviewer(currentAssignees = [], forcedTarget = null) {
   if (forcedTarget) {
     const norm = forcedTarget.toLowerCase();
-    if (norm === 'darek' || norm === MEMBERS.DAREK.id || norm === MEMBERS.DAREK.username) {
-      return MEMBERS.DAREK;
-    }
-    if (norm === 'michal' || norm === 'michał' || norm === MEMBERS.MICHAL.id || norm === MEMBERS.MICHAL.username) {
-      return MEMBERS.MICHAL;
-    }
+    if (isDarek(norm)) return MEMBERS.DAREK;
+    if (isMichal(norm)) return MEMBERS.MICHAL;
   }
 
-  const hasDarek = currentMemberIds.includes(MEMBERS.DAREK.id);
-  const hasMichal = currentMemberIds.includes(MEMBERS.MICHAL.id);
+  const hasDarek = currentAssignees.includes(MEMBERS.DAREK.github);
+  const hasMichal = currentAssignees.includes(MEMBERS.MICHAL.github);
 
-  if (hasDarek && !hasMichal) {
-    return MEMBERS.MICHAL;
-  }
-  if (hasMichal && !hasDarek) {
-    return MEMBERS.DAREK;
-  }
+  if (hasDarek && !hasMichal) return MEMBERS.MICHAL;
+  if (hasMichal && !hasDarek) return MEMBERS.DAREK;
 
   // W przypadku obu lub żadnego, domyślnym recenzentem dla Darka jest Michał
   return MEMBERS.MICHAL;
@@ -52,11 +53,20 @@ export function determineReviewer(currentMemberIds = [], forcedTarget = null) {
  * Wyznacza autora (drugą osobę niż recenzent)
  */
 export function determineAuthor(reviewer) {
-  return reviewer.id === MEMBERS.DAREK.id ? MEMBERS.MICHAL : MEMBERS.DAREK;
+  return reviewer.github === MEMBERS.DAREK.github ? MEMBERS.MICHAL : MEMBERS.DAREK;
 }
 
 /**
- * Formatuje komentarz audytowy na Trello
+ * Dopisuje „Closes #N” do opisu PR, żeby scalenie zamknęło issue. Nie dubluje słowa kluczowego.
+ */
+export function ensureClosesKeyword(body = '', issueNumber) {
+  const already = new RegExp(`\\b(close[sd]?|fix(e[sd])?|resolve[sd]?)\\s+#${issueNumber}\\b`, 'i');
+  if (already.test(body)) return body;
+  return body.trim() ? `${body.trimEnd()}\n\nCloses #${issueNumber}` : `Closes #${issueNumber}`;
+}
+
+/**
+ * Formatuje komentarz przekazania na issue
  */
 export function formatHandoffComment({ author, reviewer, commits = [], verifyPassed = true, prUrl = null, notes = null }) {
   const commitLines = commits.length > 0
@@ -66,18 +76,18 @@ export function formatHandoffComment({ author, reviewer, commits = [], verifyPas
   const lines = [
     '🚀 **Zadanie ukończone — zgłoszenie do Code Review (SDLC Hand-off)**',
     '',
-    `- **Autor wdrożenia:** ${author.name} (@${author.username})`,
-    `- **Przypisany recenzent:** ${reviewer.name} (@${reviewer.username})`,
-    `- **Bramka Jakościowa:** \`bash scripts/verify.sh --full\` — ${verifyPassed ? '**100% PASS (10/10 etapów)**' : '⚠️ WYMAGA WERYFIKACJI'}`,
-    prUrl ? `- **Pull Request:** [${prUrl}](${prUrl})` : '- **Pull Request:** Do otwarcia / przypisania na GitHubie do @' + reviewer.github,
+    `- **Autor wdrożenia:** ${author.name} (@${author.github})`,
+    `- **Przypisany recenzent:** ${reviewer.name} (@${reviewer.github})`,
+    `- **Bramka Jakościowa:** \`bash scripts/verify.sh --full\` — ${verifyPassed ? '**zielona**' : '⚠️ WYMAGA WERYFIKACJI'}`,
+    prUrl ? `- **Pull Request:** ${prUrl}` : `- **Pull Request:** do otwarcia i przypisania recenzenta @${reviewer.github}`,
     '',
     '**Ostatnie commity na gałęzi:**',
     commitLines,
     '',
     notes ? `**Uwagi od autora:**\n${notes}\n` : '',
     '🔒 **Zasada INFRA-SDLC-WORKFLOW:**',
-    `Autor nie merguje własnego kodu do \`main\`. Karta oczekuje na weryfikację i zatwierdzenie przez **${reviewer.name}**. Dopiero po akceptacji recenzent wykonuje merge i zamyka zadanie do kolumny 'Done'.`
-  ].filter(line => line !== null);
+    `Autor nie scala własnego PR. Issue czeka na review i zatwierdzenie przez **${reviewer.name}**; po akceptacji recenzent scala PR, a „Closes #…” zamyka issue i przenosi je do „Done”.`,
+  ];
 
   return lines.join('\n');
 }

@@ -40,7 +40,7 @@ export const metricRows: MetricRow[] = [
   { key: 'deaths', label: 'Zgony', summaryKey: 'total_deaths' },
   { key: 'contracts_signed', label: 'Podpisane umowy', summaryKey: 'total_contracts_signed' },
   { key: 'contracts_ended', label: 'Zakończone umowy', summaryKey: 'total_contracts_ended' },
-  { key: 'delta_change', label: 'Delta Zmiany', summaryKey: 'net_change' },
+  { key: 'delta_change', label: 'Delta zmiany', summaryKey: 'net_change' },
   { key: 'available_beds', label: 'DOSTĘPNE MIEJSCA', summaryKey: null },
   { key: 'occupied_beds', label: 'OGÓŁEM DZIEŃ', summaryKey: null },
 ]
