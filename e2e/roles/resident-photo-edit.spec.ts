@@ -1,0 +1,37 @@
+import { test, expect } from '../fixtures/base-test';
+import { ResidentProfilePage } from '../page-objects/ResidentProfilePage';
+import postgres from 'postgres';
+
+/**
+ * @REQ: ADM-RESIDENT-PHOTO
+ *
+ * SC-ADM-25/AC4: kierownik placówki dodaje zdjęcie podopiecznego w oknie „Edytuj”; plik trafia do prywatnego
+ * bucketu resident-photos w folderze <placówka>/<podopieczny>, a residents.photo_path wskazuje ten plik.
+ */
+const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+// Najmniejszy poprawny PNG (1×1 px)
+const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+
+test.describe('Zdjęcie podopiecznego w oknie „Edytuj” (@REQ: ADM-RESIDENT-PHOTO)', () => {
+  test('@REQ: ADM-RESIDENT-PHOTO - kierownik dodaje zdjęcie, plik w prywatnym folderze placówki i podopiecznego', async ({ loginPage, page }) => {
+    await loginPage.loginAs('org_admin');
+    const profile = new ResidentProfilePage(page);
+    await profile.openFirstFromList();
+    const residentId = page.url().split('/').pop() as string;
+
+    await page.getByTestId('edit-resident-btn').click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByLabel('Zdjęcie podopiecznego').setInputFiles({ name: 'zdjecie.png', mimeType: 'image/png', buffer: PNG });
+    await expect(dialog.getByText('Zapisano zdjęcie')).toBeVisible({ timeout: 15000 });
+
+    const sql = postgres(dbUrl!, { prepare: false });
+    try {
+      const [row] = await sql`SELECT organization_id::text AS org, photo_path FROM public.residents WHERE id = ${residentId}`;
+      expect(row.photo_path).toMatch(new RegExp(`^${row.org}/${residentId}/[A-Za-z0-9._-]+\\.(webp|jpe?g|png)$`));
+      const [obj] = await sql`SELECT count(*)::int AS n FROM storage.objects WHERE bucket_id = 'resident-photos' AND name = ${row.photo_path}`;
+      expect(obj.n).toBe(1);
+    } finally {
+      await sql.end();
+    }
+  });
+});
