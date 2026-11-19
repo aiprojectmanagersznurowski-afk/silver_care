@@ -27,11 +27,13 @@ interface ResidentProfileTabsProps {
 export function ResidentProfileTabs({ overviewLabel, overview, sidebar, tabs }: ResidentProfileTabsProps) {
   return (
     <Tabs defaultValue="overview" className="gap-0">
-      <div className="overflow-x-auto border-y border-border">
-        <TabsList variant="line" className="w-max min-w-full justify-start gap-4">
-          <TabsTrigger value="overview">{overviewLabel}</TabsTrigger>
+      {/* Bez kontenera z przewijaniem: podkreślenie aktywnej zakładki wystaje pod listę i dawało pasek przewijania.
+          Zakładki zawijają się do kolejnego wiersza, gdy nie mieszczą się w szerokości. */}
+      <div className="border-y border-border py-1">
+        <TabsList variant="line" className="w-full flex-wrap justify-start gap-x-4 gap-y-1 group-data-horizontal/tabs:h-auto">
+          <TabsTrigger value="overview" className="h-8 flex-none">{overviewLabel}</TabsTrigger>
           {tabs.map((t) => (
-            <TabsTrigger key={t.id} value={t.id}>{t.label}</TabsTrigger>
+            <TabsTrigger key={t.id} value={t.id} className="h-8 flex-none">{t.label}</TabsTrigger>
           ))}
         </TabsList>
       </div>
