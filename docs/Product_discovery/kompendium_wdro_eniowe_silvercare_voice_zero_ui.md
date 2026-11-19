@@ -12,34 +12,49 @@ W branży opiekuńczej wprowadzenie kolejnej aplikacji mobilnej często kończy 
 
 | Rozwiązanie | Typ i forma | Koszt jedn. | Zgrywanie na koniec zmiany | Dostęp do API / Własny backend | 
 | ----- | ----- | ----- | ----- | ----- | 
-| **M5StickC PLUS2** *(Rekomendowane na MVP)* | Moduł IoT (ESP32) w obudowie pagera | \~95–110 PLN | Automatyczne po Wi-Fi (po podłączeniu zasilania) lub USB | **Pełna kontrola** (własny firmware C++ / MicroPython) | 
+| **M5Stack StickS3 (K150)** *(Rekomendowane na MVP, decyzja 2026-11-16)* | Moduł IoT (ESP32-S3) w obudowie pagera | cena do potwierdzenia | Automatyczne po Wi-Fi (po podłączeniu zasilania) lub USB | **Pełna kontrola** (własny firmware C++ / MicroPython) | 
+| **M5StickC PLUS2 (K016-P2)** *(poprzednik, wariant zapasowy)* | Moduł IoT (ESP32) w obudowie pagera | \~95–110 PLN | Automatyczne po Wi-Fi (po podłączeniu zasilania) lub USB | **Pełna kontrola**, ma osobny układ RTC (BM8563) | 
 | **Omi (Based Hardware)** | Open-source AI Wearable (klips / naszyjnik) | \~350–400 PLN | Automatyczne po BLE / Wi-Fi | Otwarte repozytorium (MIT), własny webhook / SDK | 
 | **Klasyczny dyktafon USB + Hub** | Mini-dyktafon z klipsem (np. Sony / Philips / OEM) | \~120–250 PLN | Przez wieloportowy hub USB (jako pamięć masowa) | Pełna kontrola przez lokalny skrypt na stacji bazowej (Raspberry Pi) | 
 | **Plaud NotePin** | Komercyjny klips AI Voice Recorder | \~750 PLN | Automatyczne po Wi-Fi w stacji dokującej | **Brak publicznego API** (zamknięty ekosystem chmurowy) | 
 | **Theatro / Vocera** | Komunikatory Enterprise dla szpitali (USA) | Model subskrypcyjny Enterprise | Stacje dokujące na koniec zmiany | Zamknięty ekosystem (Motorola Solutions), bardzo wysoki koszt wejścia | 
 | **Aplikacja Silver Care** *(wariant bez sprzętu)* | Telefon lub tablet, który placówka już ma | 0 PLN sprzętu | Na bieżąco, a bez sieci z kolejki offline | **Pełna kontrola** (nasza aplikacja i backend) | 
 
-### Dlaczego M5StickC PLUS2 wygrywa na etapie MVP?
+### Dlaczego M5Stack StickS3 na etapie MVP?
 
-1. **Forma i waga:** Wymiary $48 \times 25 \times 13\text{ mm}$ i waga zaledwie $17\text{ g}$ (wielkość małego pagera lub klipsa).
+Decyzja z 2026-11-16: zamiast M5StickC PLUS2 używamy jego następcy, **StickS3** (SKU `K150`). Dane techniczne pochodzą z [dokumentacji M5Stack](https://docs.m5stack.com/en/core/StickS3).
 
-2. **Kompletny zestaw komponentów w obudowie:**
+1. **Forma i waga:** wymiary $48 \times 24 \times 15\text{ mm}$, waga $20\text{ g}$, magnetyczny tył obudowy.
 
-   * Procesor **ESP32-PICO-V3-02** (Wi-Fi + Bluetooth LE, 2 rdzenie).
+2. **Komponenty w obudowie:**
 
-   * Wbudowany cyfrowy mikrofon **MEMS (SPM1423)** na magistrali $\text{I}^2\text{S}$.
+   * Procesor **ESP32-S3-PICO-1-N8R8** (2 rdzenie LX7, 240 MHz, Wi-Fi 2,4 GHz), pamięć **8 MB Flash** i **8 MB PSRAM**.
 
-   * Duży fizyczny przycisk frontowy (`GPIO37`) idealny do funkcji *Push-to-Talk*.
+   * Mikrofon **MEMS** (SNR 65 dB) z kodekiem audio **ES8311** (24-bit, $\text{I}^2\text{S}$).
 
-   * Wbudowany brzęczyk (buzzer) do sygnalizacji dźwiękowej, zegar czasu rzeczywistego **RTC (BM8563)**, akumulator $200\text{ mAh}$ oraz pamięć **8 MB Flash**.
+   * Głośnik 1 W ze wzmacniaczem **AW8737** zamiast brzęczyka: sygnały tonowe albo krótkie komunikaty głosowe. Przy zasilaniu z baterii producent zaleca głośność poniżej 75%, bo inaczej urządzenie może się zrestartować.
+
+   * Przyciski **KEY1** (`G11`) i **KEY2** (`G12`) oraz przycisk zasilania. Który z nich pełni rolę *Push-to-Talk*, ustalimy na egzemplarzu testowym.
+
+   * Akumulator **250 mAh**, układ zarządzania zasilaniem **M5PM1** (stan ładowania na `PYG0_CHG_STAT`, czyli sygnał odłożenia do stacji), akcelerometr i żyroskop **BMI270**.
 
 3. **100% otwartości:** Możliwość całkowitego wyczyszczenia oprogramowania fabrycznego i wgrania własnego firmware'u komunikującego się bezpośrednio z chmurą SilverCare (np. Supabase).
 
+4. **Do sprawdzenia przed zakupem całej partii:**
+
+   * **Zegar RTC.** Dokumentacja nie wymienia osobnego układu RTC, który miał PLUS2 (BM8563). Trzeba sprawdzić w schemacie (v0.6) i w dokumentacji M5PM1, czy czas przetrwa wyłączenie zasilania. Jeśli nie, firmware w trakcie zmiany tylko usypia procesor zamiast wyłączać urządzenie, a nagrania po utracie czasu dostają oznaczenie „czas niepewny” (architektura potoku, §7).
+
+   * **Bateria na pełną zmianę.** Pobór według producenta: $14\text{ µA}$ po wyłączeniu, $52\text{–}102\text{ µA}$ w stanach uśpienia, do $519\text{ mA}$ przy pełnym obciążeniu. Czas pracy na 12-godzinnej zmianie trzeba zmierzyć.
+
+   * **Młody produkt.** Schemat pochodzi z listopada 2025, więc gotowego kodu jest mniej niż dla PLUS2. Trzeba sprawdzić dostępność 11–12 sztuk w Polsce.
+
+   * **Warunki pracy:** $0\text{–}40^{\circ}\text{C}$, brak klasy szczelności.
+
 ### 💡 FAQ – Wybór sprzętu i kwestia pamięci
 
-**P: Czy \~7 MB wolnej pamięci Flash na M5StickC PLUS2 to nie za mało? Czy musimy podpinać zewnętrzny moduł karty microSD?**
+**P: Czy \~7 MB wolnej pamięci Flash na StickS3 to nie za mało? Czy musimy podpinać zewnętrzny moduł karty microSD?**
 
-**O:** **Nie trzeba podpinać żadnego zewnętrznego modułu ani karty microSD.** M5StickC PLUS2 nie ma wbudowanego slotu SD, a dołożenie zewnętrznej nakładki (*SD Card Unit/Hat*) wydłużyłoby urządzenie o prawie $2\text{ cm}$ i stworzyło element podatny na wyłamanie. Problem pamięci rozwiązuje się programowo poprzez kompresję audio w locie:
+**O:** **Nie trzeba podpinać żadnego zewnętrznego modułu ani karty microSD.** Dokumentacja StickS3 nie wymienia slotu microSD, a dołożenie zewnętrznej nakładki (*SD Card Unit/Hat*) wydłużyłoby urządzenie o prawie $2\text{ cm}$ i stworzyło element podatny na wyłamanie. Problem pamięci rozwiązuje się programowo poprzez kompresję audio w locie:
 
 * **Surowy WAV (**$16\text{ kHz}$**, 16-bit, Mono):** zajmuje $32\text{ KB/s}$ ($\sim 1{,}92\text{ MB/min}$). Na wolnych $6{,}5\text{ MB}$ partycji *LittleFS* zmieści się tylko ok. $3{,}4\text{ minuty}$.
 
@@ -47,19 +62,23 @@ W branży opiekuńczej wprowadzenie kolejnej aplikacji mobilnej często kończy 
 
 * **Kodek Opus / Speex (**$16\text{ kbps}$**):** pozwala zmieścić aż $50\text{ minut}$ nagrań na wbudowanym Flashu.
 
+Na StickS3 8 MB PSRAM ułatwia kodowanie Opus na urządzeniu. Wybór kodeka (ADPCM czy Opus) zapada w repozytorium firmware'u.
+
 **P: Te Sticki są chińskiej produkcji – czy możemy ich legalnie i bezpiecznie użyć na etapie MVP w polskich placówkach?**
 
 **O:** **Tak, w 100% legalnie i bezpiecznie.** Producent (M5Stack, wspierany kapitałowo przez Espressif Systems) dostarcza sprzęt przemysłowy posiadający oficjalną europejską **Deklarację Zgodności CE (dyrektywa radiowa RED 2014/53/EU oraz RoHS)**, którą można dołączyć do dokumentacji wdrożeniowej w domu opieki. Co najważniejsze: przed wdrożeniem wykonujesz pełne wymazanie pamięci (`esptool.py erase_flash`) i wgrywasz własny kod C++. Urządzenie nie łączy się z żadną chińską chmurą – w kodzie ma zaszyty wyłącznie adres Twojego serwera w Unii Europejskiej (np. Supabase we Frankfurcie).
 
-**P: Jakie są fizyczne słabości M5StickC PLUS2 w warunkach domu opieki i jak je obejść na etapie MVP?**
+**P: Jakie są fizyczne słabości StickS3 w warunkach domu opieki i jak je obejść na etapie MVP?**
 
-**O:** Urządzenie w fabrycznej obudowie nie jest wodoszczelne (brak normy IP65/IP67), ma odsłonięte górne złącze GPIO, mały boczny przycisk zasilania/resetu (ryzyko przypadkowego wciśnięcia) oraz jaskrawy, „techniczny” kolor. Rozwiązaniem na MVP jest wydrukowanie na drukarce 3D cienkiego **etui ochronnego z elastycznego filamentu TPU** (w kolorach SilverCare, np. białym lub granatowym), które:
+**O:** Urządzenie w fabrycznej obudowie nie jest wodoszczelne (brak normy IP65/IP67), ma odsłonięte górne złącze Hat2 (16 pinów), mały boczny przycisk zasilania/resetu (ryzyko przypadkowego wciśnięcia) oraz jaskrawy, „techniczny” kolor. Rozwiązaniem na MVP jest wydrukowanie na drukarce 3D cienkiego **etui ochronnego z elastycznego filamentu TPU** (w kolorach SilverCare, np. białym lub granatowym), które:
 
 1. Zasłania górne piny GPIO oraz chowa boczne przyciski na płasko.
 
 2. Zostawia odsłonięty wyłącznie główny przycisk frontowy *Push-to-Talk*, otwór mikrofonu i port USB-C.
 
 3. Nadaje urządzeniu profesjonalny, medyczno-opiekuńczy wygląd z logo SilverCare.
+
+Etui projektujemy pod wymiary StickS3 ($48 \times 24 \times 15\text{ mm}$). Projekty pod PLUS2 nie pasują.
 
 ## 1a. Kanał alternatywny: aplikacja zamiast urządzeń
 
@@ -96,24 +115,22 @@ Dla 10-osobowego zespołu rekomendowane jest zamówienie **11–12 sztuk** (1–
 
 | Element zestawu | Ilość | Cena jedn. | Koszt łączny | Rola w systemie SilverCare | 
 | ----- | ----- | ----- | ----- | ----- | 
-| **M5StickC PLUS2 (SKU: K016-P2)** | 11 szt. | \~105 PLN | \~1 155 PLN | Pagery głosowe dla 10 opiekunek + 1 sztuka zapasowa | 
+| **M5Stack StickS3 (SKU: K150)** | 11 szt. | do potwierdzenia | do potwierdzenia | Pagery głosowe dla 10 opiekunek + 1 sztuka zapasowa | 
 | **Stacja ładująca USB (10–12 portów, min. 60W)** | 1 szt. | \~160 PLN | \~160 PLN | Fizyczna „baza” w dyżurce, do której odkłada się sticki po zmianie | 
 | **Krótkie kable USB-C (20–30 cm, magnetyczne)** | 12 szt. | \~15 PLN | \~180 PLN | Wygodne wpinanie jedną ręką (końcówka magnetyczna chroni port) | 
 | **Klipsy do ubrania / smycze z karabińczykiem** | 12 szt. | \~12 PLN | \~144 PLN | Montaż do kieszeni uniformu lub na smyczy | 
-| **RAZEM (Wariant z Wi-Fi w dyżurce)** | **Zestaw** | — | **\~1 639 PLN** | **Kompletny sprzęt gotowy do wdrożenia pilotażowego** | 
+| **RAZEM (Wariant z Wi-Fi w dyżurce)** | **Zestaw** | — | **do przeliczenia** (z PLUS2: \~1 639 PLN) | **Kompletny sprzęt gotowy do wdrożenia pilotażowego** | 
 | *Opcjonalnie: Raspberry Pi 5 (4 GB + zasilacz + SD)* | *1 szt.* | *\~380 PLN* | *\~380 PLN* | *Lokalny hotspot Wi-Fi i bufor, jeśli w dyżurce brak stabilnej sieci* | 
 
-### Sprawdzone linki do zakupu (ważne: szukaj wersji PLUS2, SKU: `K016-P2`)
+### Linki do zakupu (szukaj **StickS3**, SKU: `K150`)
 
-* **Allegro (najszybsza dostawa w Polsce 24–48h):** [Wyszukiwanie M5StickC PLUS2 na Allegro](https://allegro.pl/listing?string=m5stickc%20plus2%20esp32%20mini%20iot%20development%20kit%20zestaw%20rozwojowy%20iot)
+* **Dokumentacja producenta:** [StickS3 w M5Stack Docs](https://docs.m5stack.com/en/core/StickS3)
 
-* **Oficjalny sklep producenta M5Stack:** [M5StickC PLUS2 w M5Stack Store](https://shop.m5stack.com/products/m5stickc-plus2-esp32-mini-iot-development-kit) ($19{,}95\text{ USD}$ netto/szt.)
+* **OpenELAB (sklep w UE):** [M5StickS3 ESP32-S3 Mini IoT Dev Kit](https://openelab.io/products/m5sticks3-esp32s3-mini-iot-dev-kit) (cena do potwierdzenia)
 
-* **AliExpress (zakup hurtowy 10–12 szt.):** [Oferty M5StickC PLUS2 na AliExpress](https://inbusiness.aliexpress.com/wholesale/m5-stick-c-plus-2.html)
+* **Allegro:** [Wyszukiwanie StickS3 na Allegro](https://allegro.pl/listing?string=m5stack%20sticks3)
 
-* **Porównywarka Ceneo:** [Sprawdź dostępność w polskich sklepach na Ceneo](https://www.ceneo.pl/193402983)
-
-> **Uwaga przy zakupie:** Zawsze weryfikuj, czy w koszyku jest wersja **PLUS2** (czarny obrys wokół ekranu, żółto-pomarańczowa obudowa, **8 MB Flash**, bateria $200\text{ mAh}$), a nie starsza wersja *Plus* (4 MB Flash, $120\text{ mAh}$) ani okrojona *Plus SE*.
+> **Uwaga przy zakupie:** sprawdzaj nazwę **StickS3** i SKU `K150`. M5StickC PLUS2 (`K016-P2`) to poprzednik z innym procesorem. Zostaje jako wariant zapasowy, gdyby StickS3 nie spełnił wymagań, np. w sprawie zegara RTC.
 
 ## 3. Architektura Oprogramowania i Przepływ Danych (End-to-End)
 
@@ -125,12 +142,12 @@ System składa się z dwóch części: lekkiego oprogramowania układowego (**Fi
 flowchart TD
     subgraph PRZED["Przed zmianą"]
         direction LR
-        P1["M5StickC PLUS2 podpięty pod USB"] --> P2["Synchronizacja czasu po NTP"] --> P3["Zapis do zegara RTC (BM8563)"]
+        P1["StickS3 podpięty pod USB"] --> P2["Synchronizacja czasu po NTP"] --> P3["Zapis czasu w urządzeniu<br/>(zegar RTC do potwierdzenia)"]
     end
 
     subgraph ZMIANA["Podczas zmiany (offline)"]
         Z1["Deep sleep:<br/>ekran wygaszony,<br/>pobór prądu w µA"]
-        Z1 -->|"przycisk wciśnięty (GPIO37)"| Z2["Wybudzenie w mniej niż 150 ms<br/>i jeden krótki pik"]
+        Z1 -->|"przycisk wciśnięty (KEY1)"| Z2["Wybudzenie w mniej niż 150 ms<br/>i jeden krótki pik"]
         Z2 --> Z3["Mikrofon I2S, kompresja IMA ADPCM w locie"]
         Z3 --> Z4["Zapis na zaszyfrowaną partycję LittleFS:<br/>rec_device_timestamp.wav"]
         Z1 -->|"przycisk puszczony"| Z5["Zamknięcie pliku i dwa ciche piki"]
@@ -207,11 +224,11 @@ Zgodnie z wytycznymi **MDCG 2019-11** oraz **Regułą 11 Załącznika VIII MDR**
 
 Aby legalnie i bezpiecznie uruchomić pilotaż i sprzedaż (nawet poza reżimem MDR), system musi spełniać poniższe wymogi:
 
-#### A. Wymagania sprzętowe i sieciowe (M5StickC PLUS2)
+#### A. Wymagania sprzętowe i sieciowe (StickS3)
 
 1. **Sprzętowe szyfrowanie pamięci (`ESP32 Flash Encryption` & `Secure Boot`):**
 
-   Jeśli opiekunka zgubi sticka na terenie placówki, osoba postronna po podłączeniu go kablem USB do komputera i użyciu narzędzia `esptool.py` nie może odczytać plików `.wav`. Wypalenie klucza szyfrującego w pamięci jednokrotnego zapisu (`eFuse`) procesora ESP32 sprawia, że cała partycja *LittleFS* jest zaszyfrowana sprzętowo (AES-256).
+   Jeśli opiekunka zgubi sticka na terenie placówki, osoba postronna po podłączeniu go kablem USB do komputera i użyciu narzędzia `esptool.py` nie może odczytać plików `.wav`. Wypalenie klucza szyfrującego w pamięci jednokrotnego zapisu (`eFuse`) procesora ESP32-S3 sprawia, że cała partycja *LittleFS* jest zaszyfrowana sprzętowo (AES-256).
 
 2. **Szyfrowana transmisja i autoryzacja urządzenia:**
 
@@ -313,17 +330,17 @@ Poniżej znajduje się lista podmiotów na polskim rynku, do których można zwr
 
 * Tryb dyktafonu w aplikacji i kolejka „Do przypisania” dla kierownika zmiany. Pozwala zacząć pilotaż w placówce bez sprzętu i sprawdzić przepływ Zero-UI na telefonach.
 
-* Zakup zestawu 11–12 sztuk **M5StickC PLUS2**, wieloportowej ładowarki USB i magnetycznych kabli USB-C (budżet $\sim 1\text{ 650 PLN}$).
+* Zakup zestawu 11–12 sztuk **M5Stack StickS3**, wieloportowej ładowarki USB i magnetycznych kabli USB-C (budżet do przeliczenia po potwierdzeniu ceny). Najpierw 1–2 sztuki do sprawdzenia zegara RTC i baterii.
 
-* Napisanie firmware'u obsługującego *Push-to-Talk* z kompresją **IMA ADPCM**, zegarem RTC i automatycznym wysyłaniem plików po wykryciu $5\text{ V}$ na porcie USB.
+* Napisanie firmware'u obsługującego *Push-to-Talk* z kompresją **IMA ADPCM** albo **Opus** (do decyzji), obsługą czasu nagrania i automatycznym wysyłaniem plików po wykryciu ładowania (stan z M5PM1).
 
-* Wydruk 3D ochronnych nakładek TPU (zasłonięcie bocznych przycisków i górnego portu GPIO).
+* Wydruk 3D ochronnych nakładek TPU (zasłonięcie bocznych przycisków i górnego złącza Hat2).
 
 * Podpięcie pipeline'u (Storage -> STT -> przypisanie podopiecznego przez serwer i człowieka -> LLM).
 
 ### Faza 2: Zabezpieczenie Architektury i Formalności (Tygodnie 5–8)
 
-* Włączenie sprzętowego szyfrowania **Flash Encryption & Secure Boot** na procesorach ESP32.
+* Włączenie sprzętowego szyfrowania **Flash Encryption & Secure Boot** na procesorach ESP32-S3.
 
 * Zlecenie zewnętrznej opinii kwalifikacyjnej potwierdzającej status **Non-Medical (poza MDR)** oraz przygotowanie wzoru **DPIA** i umowy powierzenia (**DPA**) dla domów opieki.
 

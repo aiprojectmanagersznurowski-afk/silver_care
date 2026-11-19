@@ -48,7 +48,7 @@ Decyzje 1–8 z v3 obowiązują. Nowe:
 
 | | Kanał A: urządzenie Zero-UI | Kanał B: aplikacja |
 |---|---|---|
-| Sprzęt | M5StickC PLUS2, stacja USB w dyżurce (~1 650 PLN na 10 osób, kompendium §2) | Telefon lub tablet, który placówka już ma. 0 PLN na sprzęt. |
+| Sprzęt | M5Stack StickS3 (K150), stacja USB w dyżurce (koszt do przeliczenia, kompendium §2) | Telefon lub tablet, który placówka już ma. 0 PLN na sprzęt. |
 | Kto mówi | Z przydziału urządzenia do osoby na tę zmianę (`device_id` → `user_id`) | Z sesji zalogowanego użytkownika |
 | O kim | Zawsze bez wyboru: przypisanie przez kolejkę (sekcja 5) | Wybór przed nagraniem (jak dziś) **albo** tryb dyktafonu bez wyboru, który trafia do tej samej kolejki |
 | Kiedy | `recorded_at` z zegara RTC urządzenia | `recorded_at` z telefonu w chwili nagrania |
@@ -172,7 +172,7 @@ Raport przekazania nie jest źródłem raportu dla bliskich. Oba powstają z tyc
 ## 7. Czas: zmiana, zegar i spóźnione nagrania
 
 - **Zmiana z `recorded_at`.** Nagranie z 18:55 należy do zmiany dziennej, nawet jeśli spłynęło o 19:20. Zmiana nocna przechodzi przez północ (`crosses_midnight` w `shift_definitions`).
-- **Zegar urządzenia.** RTC synchronizuje się po NTP w stacji. Gdy `recorded_at` jest w przyszłości albo wcześniej niż ostatnia synchronizacja minus doba, nagranie dostaje oznaczenie „czas niepewny” i kierownik zmiany przypisuje je do zmiany ręcznie. Po rozładowaniu baterii zegar może się wyzerować.
+- **Zegar urządzenia.** RTC synchronizuje się po NTP w stacji. Gdy `recorded_at` jest w przyszłości albo wcześniej niż ostatnia synchronizacja minus doba, nagranie dostaje oznaczenie „czas niepewny” i kierownik zmiany przypisuje je do zmiany ręcznie. Po rozładowaniu baterii zegar może się wyzerować. StickS3 według dokumentacji nie ma osobnego układu RTC (do sprawdzenia w schemacie, kompendium §1), więc ta ścieżka może być częstsza niż przy PLUS2.
 - **Okno rozliczenia.** Zrzut z urządzeń następuje po odłożeniu do stacji, czyli zwykle na końcu zmiany. Kierownik zmiany potrzebuje czasu na kolejkę i rozliczenie. Proponuję procedurę: odkładamy urządzenia 20 minut przed końcem zmiany, a kierownik zmiany ma okno rozliczenia do 30 minut po jej końcu (pytanie 9).
 - **Doba raportu dla bliskich** (decyzja 13). Zamyka ją koniec zmiany dziennej, a obejmuje poprzedzającą zmianę nocną i zmianę dzienną. Notatka z 02:30 w nocy z 4 na 5 listopada należy do raportu z 5 listopada, razem z notatkami dnia. Kierownik zmiany dziennej zatwierdza raport w oknie rozliczenia po zmianie, więc bliscy dostają go wieczorem.
 - **Spóźnione nagranie** (spłynęło po publikacji raportu dla bliskich): v3 pytanie 3 wciąż otwarte. Rekomenduję aneks do raportu, bo `recorded_at` jednoznacznie wskazuje dobę raportu. Do raportu przekazania spóźnione nagranie po jego zatwierdzeniu też trafia jako aneks, widoczny dla następnej zmiany.
@@ -362,7 +362,7 @@ Kroki 1–6 z WO `NUR-TASKS-SHIFTS` są zrobione (sekcja 2). Dalej:
 10. **Wspólny model nagrania i kolejka „Do przypisania”** + **tryb dyktafonu w aplikacji.** Cały przepływ Zero-UI do sprawdzenia bez sprzętu.
 11. **Podpowiedzi „wykonane?” z notatek** (`SC-NUR-16`): kierownik zmiany potwierdza na liście zadań.
 12. **Rejestr i przydział urządzeń** (`/admin`), endpoint przyjmowania nagrań z tokenem, idempotencja, ACK.
-13. **Firmware** (osobne repozytorium, poza bramką aplikacji): push-to-talk, ADPCM, RTC, zrzut w stacji, szyfrowanie Flash, Secure Boot.
+13. **Firmware** (osobne repozytorium [`silver-care-devices`](https://github.com/aiprojectmanagersznurowski-afk/silver-care-devices), poza bramką aplikacji): StickS3 (ESP32-S3), push-to-talk, ADPCM albo Opus, obsługa czasu nagrania, zrzut w stacji, szyfrowanie Flash, Secure Boot.
 14. **Raport przekazania z notatek zmiany** (`HANDOVER_STRUCTURE`, `TASK_PROPOSE`), z opcjonalną notatką kierownika zmiany, po rozszerzeniu `GROQ_DEMO_LLM`.
 15. **Raport dla bliskich z notatek doby raportu** (noc + dzień) z optymistyczną wersją, jedno `F1` na dobę.
 16. **Planista:** okno rozliczenia, przypomnienia, eskalacje.
@@ -371,15 +371,15 @@ Kroki 10–11 działają już w kanale aplikacji i dają wartość placówce, kt
 
 ## 13. Pytania do Ciebie (review)
 
-Z v3 (wciąż otwarte): **1** zmiana ADR-006 (sugestia serwera + potwierdzenie człowieka, teraz dla wszystkich nagrań), **2** kto potwierdza obchód, **3** spóźnione nagrania (rekomendacja: aneks), **4** mechanizm planisty, **5** bramka wydania przy `GROQ_DEMO_LLM`, **6** zgłoszenia usterek a zadania placówki.
+Z v3 (wciąż otwarte): **1** zmiana ADR-006 (sugestia serwera + potwierdzenie człowieka, teraz dla wszystkich nagrań; dla kanału urządzeń rozstrzygnięta 2026-11-17, ADR-022), **2** kto potwierdza obchód, **3** spóźnione nagrania (rekomendacja: aneks), **4** mechanizm planisty, **5** bramka wydania przy `GROQ_DEMO_LLM`, **6** zgłoszenia usterek a zadania placówki.
 
 Nowe:
 
-7. **Model nagrania:** rozszerzamy `voice_draft_notes` czy nowa tabela `voice_captures`, do której `voice_draft_notes` się odwołuje? Rekomenduję rozszerzenie: istniejąca idempotencja, RLS i retencja.
+7. ~~Model nagrania~~ → rozstrzygnięte przez Michała 2026-11-17: rozszerzamy `voice_draft_notes` (ADR-022 pkt 5). Pierwotne pytanie: **Model nagrania:** rozszerzamy `voice_draft_notes` czy nowa tabela `voice_captures`, do której `voice_draft_notes` się odwołuje? Rekomenduję rozszerzenie: istniejąca idempotencja, RLS i retencja.
 8. **„Jedno naciśnięcie, jedna osoba”:** przyjmujemy jako regułę dla personelu, czy kolejka ma pozwalać podzielić nagranie na kilku podopiecznych?
 9. **Okno rozliczenia:** odkładanie urządzeń 20 minut przed końcem zmiany i 30 minut po końcu na rozliczenie. Czy to realne w grafiku placówek, z którymi rozmawiamy?
-10. **Endpoint urządzeń:** Next.js (`/api/voice/device`, Vercel `fra1`, jeden stos) czy Supabase Edge Function (jak w kompendium, bliżej Storage)?
-11. **Przydział urządzeń:** na zmianę z grafiku (automatycznie z `shift_roster`) czy ręcznie przez kierownika zmiany przy wydawaniu urządzeń?
+10. ~~Endpoint urządzeń~~ → rozstrzygnięte przez Michała 2026-11-17: Next.js `/api/voice/device` z podpisanym adresem zapisu w Storage (ADR-022 pkt 3). Pierwotne pytanie: **Endpoint urządzeń:** Next.js (`/api/voice/device`, Vercel `fra1`, jeden stos) czy Supabase Edge Function (jak w kompendium, bliżej Storage)?
+11. ~~Przydział urządzeń~~ → rozstrzygnięte przez Michała 2026-11-17: ręcznie przy wydaniu, grafik tylko podpowiada (ADR-022 pkt 4). Pierwotne pytanie: **Przydział urządzeń:** na zmianę z grafiku (automatycznie z `shift_roster`) czy ręcznie przez kierownika zmiany przy wydawaniu urządzeń?
 12. **Autor przypisania w aplikacji:** w trybie dyktafonu potwierdza autor od razu po nagraniu (jeśli chce) czy zawsze kierownik zmiany?
 13. ~~Źródło raportu przekazania~~ → rozstrzygnięte przez Michała, decyzja 12.
 14. ~~Granica doby dla raportu dla bliskich~~ → rozstrzygnięte przez Michała, decyzja 13.

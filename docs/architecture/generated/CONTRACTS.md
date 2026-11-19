@@ -32,8 +32,9 @@ Dane są zbierane i dostępne personelowi. Zakaz dotyczy prezentacji bliskim, ni
 
 | Etap | Wykonawca | Wejście | Wyjście |
 |---|---|---|---|
-| CAPTURE | nurse | audio + resident_id (UUID) | voice_draft_notes |
+| CAPTURE | nurse | audio + resident_id (UUID) z aplikacji albo audio z urządzenia bez resident_id | voice_draft_notes |
 | TRANSCRIBE | system | audio | transkrypt tekstowy |
+| ASSIGN | nurse | transkrypt + kandydaci z dopasowania serwera | resident_id (UUID) potwierdzony przez człowieka albo zakres placówki |
 | CLASSIFY | system | transkrypt | trzy strumienie |
 | REDACT | system | strumień MEDICAL | transkrypt bez danych medycznych |
 | GENERATE | llm | transkrypt zredagowany, anonimowy | draft raportu |
@@ -88,7 +89,7 @@ Krój: `-apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui, sans-
 
 Bazowy rozmiar 14px · minimalny kontrast 4.5:1 · cel dotykowy 38px
 
-## Wymagania (65)
+## Wymagania (68)
 
 | ID | Domena | Ryzyko | Treść |
 |---|---|---|---|
@@ -128,9 +129,12 @@ Bazowy rozmiar 14px · minimalny kontrast 4.5:1 · cel dotykowy 38px
 | VOICE-ZERO-GUESSING | voice | HIGH | Model nigdy nie ustala tożsamości pensjonariusza z nagrania. |
 | VOICE-MEDICAL-STRIP | voice | HIGH | Dane medyczne są usuwane z transkryptu przed wysłaniem do modelu. |
 | VOICE-DRAFT-ISOLATION | voice | HIGH | Brudnopis personelu jest niedostępny dla bliskich. |
-| VOICE-RETENTION | voice | MEDIUM | Surowe nagrania są usuwane po trzydziestu dniach. |
+| VOICE-RETENTION | voice | MEDIUM | Surowe nagrania są usuwane po terminie retencji placówki, domyślnie po trzydziestu dniach. |
 | VOICE-OFFLINE | voice | MEDIUM | Dyktafon działa bez łączności i synchronizuje się po jej odzyskaniu. |
 | VOICE-FOLLOWUP | voice | MEDIUM | Przy zbyt ubogiej notatce asystent dopytuje zamiast uzupełniać treść samodzielnie. |
+| VOICE-DEVICE-INGEST | voice | HIGH | Urządzenie bez ekranu przekazuje nagrania przez uwierzytelniony, idempotentny protokół z potwierdzeniem odbioru. |
+| VOICE-RESIDENT-ASSIGN | voice | HIGH | Nagranie bez podopiecznego trafia do kolejki, w której serwer podsuwa kandydatów, a człowiek potwierdza. |
+| VOICE-DEVICE-REGISTRY | voice | MEDIUM | Kierownik placówki prowadzi rejestr urządzeń, a kierownik zmiany przydziela je osobom przy wydaniu. |
 | REPORT-APPROVAL | reports | HIGH | Raport trafia do bliskich dopiero po zatwierdzeniu przez personel. |
 | REPORT-AI-FEEDBACK | reports | MEDIUM | Personel może zgłosić błąd w raporcie wygenerowanym przez AI. |
 | INT-CORE-DECOUPLED | integration | HIGH | Identyfikatory zewnętrzne nie występują na tabelach rdzenia. |

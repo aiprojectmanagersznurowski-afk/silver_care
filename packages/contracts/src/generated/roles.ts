@@ -97,7 +97,11 @@ export const RESOURCES = [
   "shift_definitions",
   "shift_roster",
   "shift_tasks",
-  "shift_plan_approvals"
+  "shift_plan_approvals",
+  "voice_devices",
+  "voice_device_assignments",
+  "voice_assignment_queue",
+  "voice_retention_settings"
 ] as const;
 
 export const MATRIX = [
@@ -430,6 +434,65 @@ export const MATRIX = [
     ],
     "update": [],
     "delete": []
+  },
+  {
+    "resource": "voice_devices",
+    "read": [
+      "org_admin:own",
+      "nurse:own"
+    ],
+    "create": [
+      "org_admin"
+    ],
+    "update": [
+      "org_admin:own"
+    ],
+    "delete": []
+  },
+  {
+    "resource": "voice_device_assignments",
+    "read": [
+      "org_admin:own",
+      "nurse:own"
+    ],
+    "create": [
+      "org_admin:own",
+      "nurse:shift_lead"
+    ],
+    "update": [
+      "org_admin:own",
+      "nurse:shift_lead"
+    ],
+    "delete": []
+  },
+  {
+    "resource": "voice_assignment_queue",
+    "read": [
+      "org_admin:own",
+      "nurse:shift_lead"
+    ],
+    "create": [],
+    "update": [
+      "org_admin:own",
+      "nurse:shift_lead"
+    ],
+    "delete": []
+  },
+  {
+    "resource": "voice_retention_settings",
+    "read": [
+      "org_admin:own",
+      "super_admin"
+    ],
+    "create": [
+      "org_admin:own",
+      "super_admin"
+    ],
+    "update": [
+      "org_admin:own",
+      "super_admin"
+    ],
+    "delete": []
   }
 ] as const;
 
@@ -468,6 +531,7 @@ export const DELETE_POLICIES = [
       "daily_logs",
       "daily_reports",
       "voice_draft_notes",
+      "voice_assignment_queue",
       "wellness_daily"
     ]
   },
@@ -486,11 +550,16 @@ export const SHIFT_LEAD_SCOPE = {
   "role": "nurse",
   "resources": [
     "shift_tasks",
-    "shift_plan_approvals"
+    "shift_plan_approvals",
+    "voice_device_assignments",
+    "voice_assignment_queue"
   ],
   "capabilities": [
     "create",
     "update"
+  ],
+  "readResources": [
+    "voice_assignment_queue"
   ],
   "derivedFrom": {
     "resource": "shift_roster",

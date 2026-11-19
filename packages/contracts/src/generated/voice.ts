@@ -68,9 +68,9 @@ export const PIPELINE_STAGES = [
   {
     "id": "CAPTURE",
     "actor": "nurse",
-    "input": "audio + resident_id (UUID)",
+    "input": "audio + resident_id (UUID) z aplikacji albo audio z urządzenia bez resident_id",
     "output": "voice_draft_notes",
-    "desc": "Nagranie z twardym identyfikatorem z frontendu."
+    "desc": "Nagranie z jednego ze źródeł CAPTURE_SOURCES. Tożsamość nigdy nie pochodzi z treści nagrania."
   },
   {
     "id": "TRANSCRIBE",
@@ -78,6 +78,13 @@ export const PIPELINE_STAGES = [
     "input": "audio",
     "output": "transkrypt tekstowy",
     "desc": "Transkrypcja bez kontekstu tożsamości."
+  },
+  {
+    "id": "ASSIGN",
+    "actor": "nurse",
+    "input": "transkrypt + kandydaci z dopasowania serwera",
+    "output": "resident_id (UUID) potwierdzony przez człowieka albo zakres placówki",
+    "desc": "Tylko nagrania bez resident_id (RESIDENT_ASSIGNMENT). Serwer podsuwa, człowiek potwierdza. Bez potwierdzenia brak przejścia do CLASSIFY."
   },
   {
     "id": "CLASSIFY",
@@ -118,7 +125,26 @@ export const PIPELINE_STAGES = [
 
 export const VOICE_RETENTION = {
   "table": "voice_draft_notes",
+  "storageBucket": "voice-recordings",
   "ttlDays": 30,
+  "minDays": 7,
+  "maxDays": 90,
+  "scope": "organization",
+  "settingsResource": "voice_retention_settings",
+  "setBy": [
+    "org_admin:own",
+    "super_admin"
+  ],
+  "deletes": [
+    "plik nagrania w voice-recordings",
+    "wiersz voice_draft_notes",
+    "pozycja voice_assignment_queue tego nagrania"
+  ],
+  "keeps": [
+    "daily_reports",
+    "daily_logs"
+  ],
+  "auditChange": true,
   "enforcedBy": "cron bazodanowy",
   "status": "STABLE"
 } as const;
@@ -140,4 +166,49 @@ export const AI_FEEDBACK_CATEGORIES = [
 ] as const;
 
 export const PROMPT_VERSION = "v2.1.0-mdr-eu-dpa" as const;
+
+export const CAPTURE_SOURCES = [
+  {
+    "id": "APP",
+    "residentId": "AT_CAPTURE",
+    "author": "Sesja zalogowanego użytkownika",
+    "desc": "Aplikacja: podopieczny wybrany przed nagraniem (SC-NUR-02)."
+  },
+  {
+    "id": "DEVICE",
+    "residentId": "AT_ASSIGN",
+    "author": "Osoba przydzielona do urządzenia w chwili recorded_at (voice_device_assignments)",
+    "desc": "Urządzenie bez ekranu, M5Stack StickS3 (SC-NUR-17)."
+  }
+] as const;
+
+export const RESIDENT_ASSIGNMENT = {
+  "appliesTo": [
+    "DEVICE"
+  ],
+  "queueResource": "voice_assignment_queue",
+  "suggestedBy": "server",
+  "llmIdentifies": false,
+  "matchOn": [
+    "nazwisko podopiecznego",
+    "numer pokoju (rooms.number)",
+    "etykieta łóżka (beds.label)"
+  ],
+  "matchScope": "Wyłącznie rejestr placówki, do której należy urządzenie.",
+  "confirmedBy": [
+    "nurse:shift_lead",
+    "org_admin:own"
+  ],
+  "outcomes": [
+    "RESIDENT",
+    "FACILITY",
+    "UNASSIGNABLE"
+  ],
+  "onUnconfirmed": "HOLD_BEFORE_CLASSIFY",
+  "onUnassignable": "Zostaje w brudnopisie personelu, nie trafia do modelu, podlega VOICE_RETENTION.",
+  "afterDecision": "Pozycja znika z kolejki. Nagranie czyta dalej wyłącznie autor (voice_draft_notes, nurse:own).",
+  "oneRecordingOneResident": true,
+  "audit": "audit_logs: kto, kiedy, kandydaci podsunięci przez serwer i wybór człowieka.",
+  "status": "STABLE"
+} as const;
 

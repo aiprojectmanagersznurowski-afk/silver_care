@@ -1,6 +1,6 @@
 # 📖 Kanoniczna specyfikacja user stories — Silver Care
 
-> **Wersja:** 2.20 (prywatne zdjęcie podopiecznego, edycja karty w oknie „Edytuj” — 📝 PROPOZYCJA) · **Ostatnia aktualizacja:** 2026-11-17
+> **Wersja:** 2.22 (prywatne zdjęcie podopiecznego, edycja karty w oknie „Edytuj”, kanał urządzeń Zero-UI, stałe przypisanie urządzeń, konfigurowalna retencja nagrań — 📝 PROPOZYCJA) · **Ostatnia aktualizacja:** 2026-11-17
 > **Właściciele:** Darek Rink, Michał Sznurowski
 
 ## Jak czytać i utrzymywać ten dokument
@@ -220,6 +220,7 @@
 - **AC1 (Izolacja brudnopisów):** Tabela `daily_logs` jest niedostępna dla rodziny. Zredagowane podsumowanie trafia do draftu raportu dla rodziny (`daily_reports`).
 - **AC2 (Zero-guessing entity resolution — kluczowe!):** Model AI ma absolutny zakaz zgadywania tożsamości seniora na podstawie samego nagrania. Aplikacja frontendowa (Next.js) musi przy inicjacji nagrania wysłać twardy UUID (`resident_id`) w payloadzie POST. Transkrypt wysyłany do LLM jest anonimowy, a ponowne złączenie notatki z tożsamością następuje dopiero w pamięci RAM funkcji brzegowej przed zapisem do bazy.
 - **AC3 (Retencja):** Surowe zapisy w tabelach `voice_draft_notes` mają ustawiony TTL (czas życia) na 30 dni, po czym są automatycznie usuwane przez bazodanowego Crona.
+- **AC4 (Retencja konfigurowalna i pliki audio — 📝 2026-11-17):** Nagrania z aplikacji i z urządzeń są zapisywane w prywatnym buckecie `voice-recordings` (UE). Retencję ustawia kierownik placówki albo super admin dla danej placówki, w zakresie 7–90 dni, domyślnie 30 dni. Cron usuwa po terminie i plik, i wiersz `voice_draft_notes`; zatwierdzone raporty zostają. Zmiana retencji trafia do `audit_logs`. Decyzja Michała z 2026-11-17; kontrakt: `VOICE_RETENTION`, zasób `voice_retention_settings`.
 
 > ⚖️ **Rozstrzygnięcie (ADR-006, ADR-007):** trzy strumienie `MEDICAL` / `DISCOMFORT` / `BEHAVIORAL` rozdzielane **przed** wejściem do modelu generującego; dane medyczne nigdy nie trafiają do promptu raportu dla bliskich.
 
@@ -682,6 +683,18 @@
 - **AC4 (Gdzie się zmienia):** Okno „Edytuj” karty (`SC-ADM-20/AC11`) i kreator przyjęcia; widok karty tylko wyświetla.
 - **AC5 (Migracja):** Istniejące zdjęcia z bucketu `avatars` przeniesione do prywatnego, publiczne kopie usunięte; `avatars` nie przyjmuje nowych zdjęć podopiecznych (zdjęcia personelu — osobna decyzja).
 
+#### [SC-ADM-24] Rejestr urządzeń nagrywających i przydział przy wydaniu
+🔗 **Kontrakt:** `VOICE-DEVICE-REGISTRY` · **ADR:** ADR-022 · **Status:** 📝 PROPOZYCJA
+
+**User story:** Jako kierownik placówki chcę zarejestrować urządzenia nagrywające placówki i unieważnić zgubione, a pracownikowi przypisać urządzenie na stałe, aby każde nagranie miało znanego autora.
+
+**Kryteria akceptacji:**
+- **AC1 (Rejestracja):** Kierownik placówki dodaje urządzenie z numerem z obudowy (np. „Stick 04”). System tworzy token urządzenia i pokazuje go raz, do wgrania na urządzenie. W bazie zostaje tylko skrót tokenu.
+- **AC2 (Unieważnienie):** Kierownik placówki unieważnia token zgubionego albo wymienianego urządzenia. Historia zostaje: unieważnienie to `revoked_at`, nie usunięcie wiersza.
+- **AC3 (Stałe przypisanie):** Kierownik placówki albo kierownik zmiany przypisuje urządzenie pracownikowi na stałe. Przydział ma początek i koniec. Jedno urządzenie ma w danej chwili najwyżej jedną osobę (ADR-022 pkt 4, decyzja Michała z 2026-11-17).
+- **AC4 (Koniec przydziału):** Przydział zamyka wyłącznie zwrot urządzenia (np. odejście pracownika, wymiana, zgubienie). Koniec zmiany go nie zamyka.
+- **AC5 (Stan urządzeń):** Kierownik placówki widzi przy urządzeniu ostatni zrzut i liczbę przyjętych nagrań, opisowo i bez alarmów. Personel widzi własne przydziały. Bliscy nie mają dostępu.
+- **AC6 (Audyt):** Rejestracja, unieważnienie i każdy przydział trafiają do `audit_logs`.
 
 ### Domena 2 — Personel
 
@@ -827,6 +840,37 @@
 - **AC3 (Koniec gotowego tekstu):** Tekst „Stan stabilny, podopieczny spokojny, bez uwag.” (`bulk-reports.ts`, `StaffBoardClient.tsx`) zostaje usunięty z raportów i obchodu.
 - **AC4 (Nieobecność):** Podopieczny ze statusem nieobecności (szpital, przepustka) nie dostaje komunikatu o obchodzie.
 - **AC5 (Jedno powiadomienie):** Najwyżej jedno powiadomienie `F1` na dobę na bliskiego.
+
+#### [SC-NUR-17] Notatki na urządzeniu bez ekranu i zrzut w stacji dokującej
+🔗 **Kontrakt:** brak REQ (proponowany nowy: `VOICE-DEVICE-INGEST`; wdraża: `VOICE-RETENTION`, `VOICE-ZERO-GUESSING`) · **ADR:** ADR-022 · **Status:** 📝 PROPOZYCJA
+
+**User story:** Jako opiekunka chcę nacisnąć przycisk na urządzeniu przypiętym do fartucha, powiedzieć notatkę i puścić, a po zmianie odłożyć urządzenie do stacji, aby nie obsługiwać telefonu ani ekranu.
+
+**Kryteria akceptacji:**
+- **AC1 (Nagranie bez sieci):** Wciśnij, powiedz, puść. Nagranie zapisuje się w zaszyfrowanej pamięci urządzenia z czasem nagrania (`recorded_at`) i identyfikatorem urządzenia, także bez sieci.
+- **AC2 (Sygnały):** Krótki ton potwierdza początek i koniec nagrania. Osobny sygnał oznacza niską baterię albo pełną pamięć. Urządzenie nie wyświetla ani nie odtwarza treści nagrań.
+- **AC3 (Zrzut w stacji):** Po odłożeniu do stacji (wykryte ładowanie) urządzenie wysyła nagrania. Endpoint uwierzytelnia token urządzenia i wydaje podpisany adres zapisu w Storage (UE). Urządzenie kasuje nagranie dopiero po potwierdzeniu przyjęcia.
+- **AC4 (Idempotencja):** Ponowna wysyłka tego samego nagrania nie tworzy drugiego wpisu.
+- **AC5 (Autor z przydziału):** Autorem jest osoba, której urządzenie było przydzielone w chwili `recorded_at` (`SC-ADM-24`). Nagranie z chwili bez przydziału trafia do kolejki z oznaczeniem „brak autora”.
+- **AC6 (Bez podopiecznego w żądaniu):** Żądanie nie zawiera `resident_id`. Nagranie trafia do kolejki „Do przypisania” (`SC-NUR-18`) i bez potwierdzenia człowieka nie przechodzi do klasyfikacji ani do modelu (ADR-022).
+- **AC7 (Czas niepewny):** Gdy `recorded_at` jest w przyszłości albo wcześniejszy niż ostatnia synchronizacja zegara minus doba, nagranie dostaje oznaczenie „czas niepewny”, a kierownik zmiany przypisuje je do zmiany ręcznie.
+- **AC8 (Unieważnione urządzenie):** Urządzenie z unieważnionym tokenem dostaje odmowę, a nagrania zostają zaszyfrowane na urządzeniu.
+
+#### [SC-NUR-18] Kolejka „Do przypisania”: kierownik zmiany potwierdza podopiecznego
+🔗 **Kontrakt:** brak REQ (proponowany nowy: `VOICE-RESIDENT-ASSIGN`, rozszerza `VOICE-ZERO-GUESSING`) · **ADR:** ADR-006, ADR-021 pkt 4, ADR-022 · **Status:** 📝 PROPOZYCJA
+
+> ℹ️ Tryb dyktafonu w aplikacji (architektura potoku, §4) zasila tę samą kolejkę. Dostanie osobne story przy Work Orderze tego kroku.
+
+**User story:** Jako kierownik zmiany chcę zobaczyć nagrania bez przypisanego podopiecznego z podpowiedzią systemu i potwierdzić, kogo dotyczą, aby notatki z urządzeń trafiły do właściwej karty bez zgadywania.
+
+**Kryteria akceptacji:**
+- **AC1 (Zawartość):** Kolejka pokazuje nagrania tej placówki bez potwierdzonego podopiecznego: autora, czas nagrania, zmianę, transkrypt i odtwarzanie. Dostęp ma tylko personel, bliscy nie.
+- **AC2 (Podpowiedź serwera):** Po transkrypcji serwer, nie model, porównuje nazwisko, numer pokoju i łóżka z rejestrem tej placówki i pokazuje kandydatów. Podpowiedź nie jest przypisaniem.
+- **AC3 (Decyzja człowieka):** Kierownik potwierdza kandydata, wybiera innego podopiecznego, „Sprawa placówki” albo „Nie do przypisania”. Dopiero potwierdzenie uruchamia maskowanie, klasyfikację i dalszy potok.
+- **AC4 (Nie do przypisania):** Nagranie zostaje w brudnopisie personelu, nie trafia do modelu i podlega retencji `VOICE-RETENTION`.
+- **AC5 (Jedno nagranie, jedna osoba):** Gdy serwer znajdzie kilka osób, kierownik wybiera jedną albo oznacza nagranie do ponownego omówienia. **WYMAGA DECYZJI:** czy kolejka ma pozwalać dzielić nagranie na kilka osób (architektura, pytanie 8).
+- **AC6 (Kto potwierdza):** Kierownik tej zmiany (`nurse:shift_lead`) albo kierownik placówki. Każde przypisanie trafia do `audit_logs`: kto, kiedy, kandydat podsunięty i wybrany.
+- **AC7 (Ten sam potok):** Przypisane nagranie idzie tą samą drogą co nagranie z aplikacji: maskowanie, strumienie MEDICAL / DISCOMFORT / BEHAVIORAL, REDACT przed modelem. Model nigdy nie ustala tożsamości.
 
 #### [SC-USR-01] Własny profil i bezpieczeństwo konta
 🔗 **Kontrakt:** `SEC-SESSION`, `SEC-MFA-STAFF` · **WO:** [`NUR-PROFILE-SECURITY`](workorders/NUR-PROFILE-SECURITY.md) · **Status:** ✅ 📝
@@ -1066,3 +1110,5 @@
 | 2026-11-16 | 2.18 | Nowe `SC-ADM-24` (źródło finansowania pobytu podopiecznego, oddzielnie od źródła pozyskania; decyzja Michała z 2026-11-16) ze statusem 📝 PROPOZYCJA. |
 | 2026-11-16 | 2.19 | Nowe `SC-FAM-08` (minimalny zakres danych podopiecznego dla bliskich, bez odczytu tabeli `residents`; decyzja Michała z 2026-11-16) ze statusem 📝 PROPOZYCJA. |
 | 2026-11-17 | 2.20 | Nowe `SC-ADM-25` (prywatne zdjęcie podopiecznego) i `SC-ADM-20/AC11` (pola karty edytuje się w oknie „Edytuj”) — decyzje Michała z 2026-11-17, 📝 PROPOZYCJA. |
+| 2026-11-17 | 2.21 | Kanał urządzeń Zero-UI wg ADR-022 (decyzje Michała z 2026-11-16 i 2026-11-17): nowe `SC-NUR-17` (nagrywanie na urządzeniu i zrzut w stacji), `SC-NUR-18` (kolejka „Do przypisania” z podpowiedzią serwera i potwierdzeniem człowieka) i `SC-ADM-24` (rejestr urządzeń i przydział przy wydaniu) ze statusem 📝 PROPOZYCJA. |
+| 2026-11-17 | 2.22 | Decyzje Michała z 2026-11-17: `SC-ADM-24` — stałe przypisanie urządzenia, zamykane tylko zwrotem; `SC-NUR-02/AC4` — audio z obu kanałów w `voice-recordings`, retencja ustawiana przez kierownika placówki albo super admina (7–90 dni, domyślnie 30), 📝 PROPOZYCJA. |
