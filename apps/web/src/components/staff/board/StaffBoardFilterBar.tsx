@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { MessageSquare } from 'lucide-react'
-import { FilterChip, FilterGroup, ListToolbar, SearchField } from '@/components/patterns/ListToolbar'
+import { FilterChip, FilterSelect, ListToolbar, SearchField } from '@/components/patterns/ListToolbar'
 import { STATUS_CONFIG, NoteStatus } from './staff-board-types'
 
 interface StaffBoardFilterBarProps {
@@ -43,7 +43,7 @@ export function StaffBoardFilterBar({
   totalUnansweredCount,
 }: StaffBoardFilterBarProps) {
   return (
-    <div data-testid="filter-token-bar" className="space-y-3">
+    <div data-testid="filter-token-bar">
       <ListToolbar
         end={
           <span className="text-sm text-muted-foreground">
@@ -51,50 +51,60 @@ export function StaffBoardFilterBar({
           </span>
         }
       >
-        <SearchField value={searchFilter} onChange={onSearchChange} label="Szukaj podopiecznego" placeholder="Szukaj podopiecznego..." />
-      </ListToolbar>
+        <SearchField
+          value={searchFilter}
+          onChange={onSearchChange}
+          label="Szukaj podopiecznego"
+          placeholder="Szukaj podopiecznego..."
+        />
 
-      <div className="space-y-2">
-        <FilterGroup label="Status" name="status">
-          <FilterChip active={statusFilter === 'all'} onClick={() => onStatusChange('all')}>Wszystkie</FilterChip>
-          {(['none', 'draft', 'ready'] as NoteStatus[]).map((st) => (
-            <FilterChip key={st} active={statusFilter === st} onClick={() => onStatusChange(st)}>
-              {STATUS_CONFIG[st].label}
-            </FilterChip>
-          ))}
-        </FilterGroup>
+        <FilterSelect
+          label="Status"
+          name="status"
+          value={statusFilter}
+          allLabel="Wszystkie statusy"
+          options={(['none', 'draft', 'ready'] as NoteStatus[]).map((st) => ({
+            value: st,
+            label: STATUS_CONFIG[st].label,
+          }))}
+          onChange={onStatusChange}
+        />
 
         {floors.length > 0 && (
-          <FilterGroup label="Piętro" name="floor">
-            <FilterChip active={floorFilter === 'all'} onClick={() => onFloorChange('all')}>Wszystkie</FilterChip>
-            {floors.map((f) => (
-              <FilterChip key={f} active={floorFilter === f} onClick={() => onFloorChange(f)}>
-                Piętro {f}
-              </FilterChip>
-            ))}
-          </FilterGroup>
+          <FilterSelect
+            label="Piętro"
+            name="floor"
+            value={floorFilter}
+            allLabel="Wszystkie piętra"
+            options={floors.map((f) => ({ value: f, label: `Piętro ${f}` }))}
+            onChange={onFloorChange}
+          />
         )}
 
         {floorFilter !== 'all' && roomsForCurrentFloor.length > 0 && (
-          <FilterGroup label="Sala" name="room">
-            <FilterChip active={roomFilter === 'all'} onClick={() => onRoomChange('all')}>Wszystkie</FilterChip>
-            {roomsForCurrentFloor.map((r) => (
-              <FilterChip key={r} active={roomFilter === r} onClick={() => onRoomChange(r)}>
-                Pokój {r}
-              </FilterChip>
-            ))}
-          </FilterGroup>
+          <FilterSelect
+            label="Sala"
+            name="room"
+            value={roomFilter}
+            allLabel="Wszystkie sale"
+            options={roomsForCurrentFloor.map((r) => ({ value: r, label: `Pokój ${r}` }))}
+            onChange={onRoomChange}
+          />
         )}
 
         {(totalUnansweredCount > 0 || onlyUnansweredFilter) && (
-          <FilterGroup label="Kontakt" name="messages">
-            <FilterChip data-testid="filter-unanswered-messages" active={onlyUnansweredFilter} onClick={onToggleOnlyUnanswered}>
-              <MessageSquare />
+          <div data-filter-group="messages">
+            <FilterChip
+              data-testid="filter-unanswered-messages"
+              active={onlyUnansweredFilter}
+              onClick={onToggleOnlyUnanswered}
+            >
+              <MessageSquare className="size-3.5" />
               Oczekujące wiadomości ({totalUnansweredCount})
             </FilterChip>
-          </FilterGroup>
+          </div>
         )}
-      </div>
+      </ListToolbar>
     </div>
   )
 }

@@ -7,6 +7,14 @@ import type { LucideIcon } from 'lucide-react'
 import { ChevronRight } from 'lucide-react'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
@@ -114,10 +122,50 @@ function CollapsibleNavItem({
   )
 }
 
+/**
+ * Pozycja z podmenu przy zwiniętym pasku (tryb ikon, desktop): menu wysuwane obok ikony,
+ * jak w szablonie shadcn-admin (nav-group) — bez rozwijania całego paska.
+ */
+function CollapsedNavItem({ item, pathname }: { item: SidebarNavItem; pathname: string }) {
+  if (!item.children) return null
+  const isAnyChildActive = item.children.some((child) => isActivePath(pathname, child))
+
+  return (
+    <SidebarMenuItem>
+      <DropdownMenu>
+        <DropdownMenuTrigger render={<SidebarMenuButton tooltip={item.label} isActive={isAnyChildActive} />}>
+          <NavIcon icon={item.icon} />
+          <span>{item.label}</span>
+          <ChevronRight className="ml-auto" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent side="right" align="start" sideOffset={4} className="w-auto min-w-48">
+          <DropdownMenuLabel>{item.label}</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {item.children.map((child) => {
+            const active = isActivePath(pathname, child)
+            return (
+              <DropdownMenuItem
+                key={child.href}
+                className={`cursor-pointer ${active ? 'bg-accent font-medium text-accent-foreground' : ''}`}
+                render={<Link href={child.href} aria-current={active ? 'page' : undefined} />}
+              >
+                <NavIcon icon={child.icon} />
+                {child.label}
+              </DropdownMenuItem>
+            )
+          })}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </SidebarMenuItem>
+  )
+}
+
 /** Nawigacja paska bocznego w układzie szablonu shadcn-admin (nav-main). */
 export function SidebarNav({ groups }: { groups: SidebarNavGroup[] }) {
   const pathname = usePathname()
-  const { isMobile, setOpenMobile } = useSidebar()
+  const { isMobile, setOpenMobile, state } = useSidebar()
+  // Zwinięty pasek na desktopie: podmenu wysuwane obok ikony; na telefonie pasek to szuflada z pełnymi etykietami
+  const flyoutSubmenus = state === 'collapsed' && !isMobile
 
   const handleLinkClick = () => {
     if (isMobile) {
@@ -132,7 +180,9 @@ export function SidebarNav({ groups }: { groups: SidebarNavGroup[] }) {
           {group.label && <SidebarGroupLabel>{group.label}</SidebarGroupLabel>}
           <SidebarMenu>
             {group.items.map((item) =>
-              item.children ? (
+              item.children && flyoutSubmenus ? (
+                <CollapsedNavItem key={item.href} item={item} pathname={pathname} />
+              ) : item.children ? (
                 <CollapsibleNavItem
                   key={item.href}
                   item={item}

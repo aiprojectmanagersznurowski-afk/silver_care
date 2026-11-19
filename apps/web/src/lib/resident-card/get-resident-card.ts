@@ -2,6 +2,7 @@ import type { SupabaseClient, User } from '@supabase/supabase-js'
 import type { ResidentCardSection } from '@silvercare/contracts/src/generated/presentation'
 import { resolveCardAccess, sectionsFor, residentSelect, type CardAccess } from './card-access'
 import { RESIDENT_TASK_SELECT, summarizeResidentTasks, type ResidentTaskRow, type ResidentTasksSummary } from './resident-tasks'
+import { residentPhotoUrls } from '@/lib/resident-photo'
 
 type Row = Record<string, unknown>
 type QueryResult = { data: unknown; error: { code?: string } | null }
@@ -71,11 +72,20 @@ export async function getResidentCard(
   }
   if (!resident.data) return { status: 'not_found' }
 
+  // SC-ADM-25: zdjęcie z prywatnego bucketu przez podpisany link (RLS storage decyduje o dostępie).
+  // Pole avatar_url niesie adres do wyświetlenia; bez photo_path zostaje dotychczasowe zdjęcie do czasu przeniesienia plików.
+  const row = resident.data as Row
+  const photoPath = typeof row.photo_path === 'string' ? row.photo_path : null
+  if (photoPath) {
+    const urls = await residentPhotoUrls(supabase, [photoPath])
+    row.avatar_url = urls[photoPath] ?? null
+  }
+
   return {
     status: 'ok',
     access,
     sections,
-    resident: resident.data as Row,
+    resident: row,
     wearable: (wearable.data as Row | null) ?? null,
     daily: sections.includes('daily') ? { reports: (reports.data as Row[]) ?? [], agenda: (agenda.data as Row[]) ?? [] } : null,
     tasks: sections.includes('tasks') ? summarizeResidentTasks((tasks.data as ResidentTaskRow[]) ?? [], new Date()) : null,

@@ -132,7 +132,8 @@ export function ResidentContractAttachment({
   }
 
   return (
-    <div data-testid="contract-attachment" className="pt-2">
+    // @container: układ zależy od szerokości miejsca na karcie (wąski pasek boczny na laptopie), nie od okna
+    <div data-testid="contract-attachment" className="@container pt-2">
       <input
         ref={fileInputRef}
         type="file"
@@ -143,8 +144,8 @@ export function ResidentContractAttachment({
       />
 
       {contractPath ? (
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl border border-primary/30 bg-primary/5">
-          <div className="flex items-center gap-3 min-w-0">
+        <div className="flex flex-col @md:flex-row items-start @md:items-center justify-between gap-3 p-3.5 rounded-xl border border-primary/30 bg-primary/5">
+          <div className="flex items-center gap-3 min-w-0 max-w-full">
             <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0">
               <FileText className="h-5 w-5" />
             </div>
@@ -161,7 +162,7 @@ export function ResidentContractAttachment({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
+          <div className="flex flex-wrap items-center gap-2 shrink-0 w-full @md:w-auto justify-end">
             <Button
               type="button"
               variant="outline"
@@ -200,12 +201,12 @@ export function ResidentContractAttachment({
           </div>
         </div>
       ) : (
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl border border-dashed border-border bg-muted">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col @md:flex-row items-start @md:items-center justify-between gap-3 p-3.5 rounded-xl border border-dashed border-border bg-muted">
+          <div className="flex items-center gap-3 min-w-0">
             <div className="p-2 rounded-lg bg-muted/50 text-muted-foreground shrink-0">
               <AlertCircle className="h-5 w-5" />
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-sm font-medium text-foreground">Brak załącznika umowy</p>
               <p className="text-sm text-muted-foreground">
                 Załącz podpisany skan umowy (PDF, JPG, PNG do 15 MB)
@@ -220,7 +221,7 @@ export function ResidentContractAttachment({
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
             data-testid="contract-upload-button"
-            className="gap-2 text-sm border-primary/40 text-primary hover:bg-primary/10 w-full sm:w-auto"
+            className="gap-2 text-sm border-primary/40 text-primary hover:bg-primary/10 w-full @md:w-auto"
           >
             {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
             {uploading ? 'Wgrywanie dokumentu...' : 'Załącz dokument umowy'}

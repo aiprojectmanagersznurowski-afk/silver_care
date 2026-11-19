@@ -687,6 +687,15 @@ if (DEVICE_INGEST_PROTOCOL) {
     if (!(pr.idempotencyKey || []).includes(k)) err('R34-device-ingest', `Klucz idempotencji bez "${k}" — ponowna wysyłka utworzyłaby drugi wpis.`);
   }
   if (pr.storageRegion !== 'EU') err('R34-device-ingest', `Nagrania w regionie "${pr.storageRegion}". Storage musi być w UE.`);
+  // Format żądań (wire, 1.1.0): kody tylko z responses, żadne pole zakazane w treści żądania.
+  const knownCodes = new Set((pr.responses || []).map((r) => r.code));
+  for (const rq of pr.wire?.requests || []) {
+    for (const c of rq.responses || []) if (!knownCodes.has(c)) err('R34-device-ingest', `Żądanie ${rq.step} zwraca kod "${c}" spoza DEVICE_INGEST_PROTOCOL.responses.`);
+    for (const f of rq.body || []) if ((pr.fields?.forbidden || []).includes(f)) err('R34-device-ingest', `Żądanie ${rq.step} wysyła pole zakazane "${f}".`);
+  }
+  for (const c of Object.keys(pr.wire?.responseBody || {})) {
+    if (c !== 'always' && !knownCodes.has(c)) err('R34-device-ingest', `wire.responseBody opisuje nieznany kod "${c}".`);
+  }
   const mayDelete = (pr.responses || []).filter((r) => r.deviceMayDelete).map((r) => r.code);
   for (const c of mayDelete) {
     if (!['ACCEPTED', 'DUPLICATE'].includes(c)) err('R34-device-ingest', `Urządzenie kasuje nagranie po "${c}". Wolno wyłącznie po ACCEPTED albo DUPLICATE.`);

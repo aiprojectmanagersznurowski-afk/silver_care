@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createRequire } from 'node:module';
-import { ListToolbar, SearchField, FilterChip, FilterGroup } from '../../apps/web/src/components/patterns/ListToolbar';
+import { ListToolbar, SearchField, FilterChip, FilterSelect, FilterGroup } from '../../apps/web/src/components/patterns/ListToolbar';
 
 /**
  * @REQ: UI-TEMPLATE-ALIGNMENT
@@ -52,5 +52,46 @@ describe('ListToolbar — wspólny pasek listy', () => {
     const out = html(h(FilterGroup as never, { label: 'Status', name: 'status' }, h('button', { type: 'button' }, 'x')));
     expect(out).toMatch(/role="group"[^>]*aria-label="Status"|aria-label="Status"[^>]*role="group"/);
     expect(out).toContain('data-filter-group="status"');
+  });
+
+  it('@REQ: UI-ACCESSIBILITY - rozwijany filtr FilterSelect: styl FilterChip z dark:, data-slot="filter-chip", bez aria-pressed na triggerze menu', () => {
+    const options = [
+      { value: 'draft', label: 'Wersja robocza' },
+      { value: 'ready', label: 'Raport gotowy' },
+    ];
+    const off = html(
+      h(FilterSelect as never, {
+        label: 'Status',
+        name: 'status',
+        value: 'all',
+        allLabel: 'Wszystkie statusy',
+        options,
+        onChange: noop,
+      })
+    );
+    const on = html(
+      h(FilterSelect as never, {
+        label: 'Status',
+        name: 'status',
+        value: 'draft',
+        allLabel: 'Wszystkie statusy',
+        options,
+        onChange: noop,
+      })
+    );
+
+    expect(off).toContain('data-filter-group="status"');
+    expect(off).toContain('data-slot="filter-chip"');
+    expect(off).toContain('min-h-touch');
+    expect(off).toContain('Wszystkie');
+    expect(off).not.toContain('bg-primary');
+    expect(off).not.toContain('aria-pressed');
+
+    expect(on).toContain('data-slot="filter-chip"');
+    expect(on).toContain('Wersja robocza');
+    expect(on).toContain('bg-primary');
+    expect(on).toContain('dark:bg-primary');
+    expect(on).toContain('dark:border-primary');
+    expect(on).not.toContain('aria-pressed');
   });
 });

@@ -34,7 +34,7 @@ export function ProfilePasswordCard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Zmiana Hasła</CardTitle>
+        <CardTitle>Zmiana hasła</CardTitle>
         <CardDescription>
           Hasło musi zawierać min. 8 znaków, w tym wielką literę, cyfrę oraz znak specjalny.
         </CardDescription>

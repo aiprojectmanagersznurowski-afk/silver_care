@@ -107,7 +107,7 @@ export function ResidentCard({ card, backHref, backLabel, reportsHref }: Residen
         overviewLabel={labelOf('overview')}
         overview={
           <>
-            <ResidentGeneralInfoCard resident={resident} age={age} stayDays={stayDays} canEditZsn={has('manage')} />
+            <ResidentGeneralInfoCard resident={resident} age={age} stayDays={stayDays} />
             {has('bed') && <ResidentBedInfoCard activeAssignment={activeAssignment} pastAssignments={pastAssignments} />}
           </>
         }

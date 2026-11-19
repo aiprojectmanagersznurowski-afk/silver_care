@@ -132,7 +132,7 @@ export const DEVICE_AUTH = {
  * Urządzenie kasuje nagranie wyłącznie po odpowiedzi z deviceMayDelete: true.
  */
 export const DEVICE_INGEST_PROTOCOL = {
-  version: '1.0.0',
+  version: '1.1.0',
   endpoint: '/api/voice/device',
   runtime: 'Next.js, Vercel fra1',
   storageRegion: 'EU',
@@ -147,6 +147,26 @@ export const DEVICE_INGEST_PROTOCOL = {
     forbidden: ['resident_id', 'resident_name', 'pesel', 'transcript'],
   },
   codecs: ['IMA_ADPCM_WAV', 'OPUS'],
+  // Format żądań (1.1.0, decyzja Michała z 2026-11-17): jeden plik dla makiety, firmware'u i endpointu Next.js.
+  // device_id serwer bierze z tokenu w nagłówku DEVICE_AUTH.header — nie jest polem żądania.
+  wire: {
+    contentType: 'application/json',
+    requests: [
+      { step: 'INIT',   method: 'POST', path: '/api/voice/device',        body: ['client_capture_id', 'recorded_at', 'duration_ms', 'sha256', 'size_bytes', 'codec', 'firmware_version'], responses: ['UPLOAD_URL', 'DUPLICATE', 'DEVICE_REVOKED', 'FORBIDDEN_FIELD', 'RETRY_LATER'] },
+      { step: 'COMMIT', method: 'POST', path: '/api/voice/device/commit', body: ['client_capture_id', 'sha256'], responses: ['ACCEPTED', 'DUPLICATE', 'DEVICE_REVOKED', 'HASH_MISMATCH', 'RETRY_LATER'] },
+    ],
+    upload: {
+      method: 'PUT',
+      url: 'upload_url z odpowiedzi UPLOAD_URL (podpisany adres Storage, ważny do upload_expires_at)',
+      contentTypes: { IMA_ADPCM_WAV: 'audio/wav', OPUS: 'audio/ogg' },
+      success: 'HTTP 200 z Storage; urządzenie robi wtedy COMMIT',
+    },
+    responseBody: {
+      always: ['code'],
+      UPLOAD_URL: ['upload_url', 'upload_expires_at'],
+      RETRY_LATER: ['retry_after_s'],
+    },
+  },
   clock: {
     marker: 'TIME_UNCERTAIN',
     when: 'recorded_at w przyszłości albo wcześniejszy niż ostatnia synchronizacja zegara urządzenia minus 24 godziny',

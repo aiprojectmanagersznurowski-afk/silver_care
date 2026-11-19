@@ -1,5 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/server'
+import { getFamilyResidents } from '@/lib/family-residents'
+import { ListError } from '@/components/patterns/ListState'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -26,21 +28,13 @@ export default async function FamilyAgendaPage(props: { searchParams: Promise<{ 
   const user = await getCurrentUser()
   if (!user) return redirect('/')
 
-  // 1. Pobieramy podopiecznych przez wąskie RPC dla rodziny (ochrona danych po wygaśnięciu)
-  const { data: rpcResidents, error: rpcError } = await supabase.rpc('get_family_resident_overview')
-  let residents: AgendaResident[] = (rpcResidents || []) as AgendaResident[]
-
-  // 2. Bezpieczny fallback do resident_relative_links
-  if (rpcError || residents.length === 0) {
-    const { data: links } = await supabase
-      .from('resident_relative_links')
-      .select('resident_id, residents(id, first_name, last_name, death_date, contract_end_date, archived_at)')
-      .eq('relative_user_id', user.id)
-
-    residents = (links || [])
-      .map(link => Array.isArray(link.residents) ? link.residents[0] : link.residents)
-      .filter(Boolean) as AgendaResident[]
+  // SC-FAM-08: podopieczni wyłącznie z get_family_resident_overview; błąd to jawny komunikat,
+  // bez cichego przejścia na odczyt tabeli residents (rola bliskiego nie ma do niej dostępu)
+  const overview = await getFamilyResidents(supabase)
+  if (overview.status === 'error') {
+    return <ListError description="Odśwież stronę. Jeśli błąd się powtarza, skontaktuj się z placówką." />
   }
+  const residents: AgendaResident[] = overview.residents
 
   if (residents.length === 0) {
     return (

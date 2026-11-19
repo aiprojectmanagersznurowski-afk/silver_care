@@ -25,7 +25,8 @@ test.describe('Karta podopiecznego — działania personelu (@REQ: ADM-RESIDENT-
     await expect(card.zsnToggle).toHaveCount(0);
   });
 
-  test('@REQ: ADM-RESIDENT-CARD-VISIBILITY - kierownik placówki nadal zmienia status ZSN na karcie', async ({ loginPage, page }) => {
+  // Decyzja Michała 2026-11-17: ZSN (jak pozostałe pola karty) kierownik zmienia w oknie „Edytuj”; widok karty tylko pokazuje wartość
+  test('@REQ: ADM-RESIDENT-CARD-VISIBILITY - kierownik placówki zmienia status ZSN w oknie „Edytuj”, nie w widoku karty', async ({ loginPage, page }) => {
     // Identyfikator z bazy zamiast klikania w tabelę listy (na telefonie lista ma inny układ)
     const sql = postgres(dbUrl!, { prepare: false });
     const [r] = await sql`SELECT r.id::text AS id FROM public.residents r JOIN auth.users u
@@ -36,8 +37,11 @@ test.describe('Karta podopiecznego — działania personelu (@REQ: ADM-RESIDENT-
     await loginPage.loginAs('org_admin');
     const card = new ResidentProfilePage(page);
     await card.openAdminCard(r.id);
-    await expect(card.zsnToggle).toBeVisible();
-    await expect(card.zsnValue).toHaveCount(0);
+    await expect(card.zsnValue).toHaveText(/^(Tak|Nie)$/);
+    await expect(card.zsnToggle).toHaveCount(0);
+
+    await page.getByTestId('edit-resident-btn').click();
+    await expect(page.getByRole('dialog').getByRole('checkbox', { name: /ZSN/ })).toBeVisible();
   });
 
   test('@REQ: ADM-RESIDENT-CARD-VISIBILITY - uwagi z przyjęcia mają na karcie etykietę „Uwagi przyjęciowe”', async ({ loginPage, page }) => {

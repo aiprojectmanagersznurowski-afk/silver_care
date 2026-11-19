@@ -1,17 +1,22 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import postgres from 'postgres';
 import * as dotenv from 'dotenv';
 
 dotenv.config({ path: '.env.local' });
 
 const sql = postgres(process.env.DATABASE_URL as string, { prepare: false });
+// SC-FAM-08: bliscy bez odczytu tabeli residents — stosujemy migrację w transakcji, żeby test dawał ten sam wynik przed i po jej zastosowaniu na wspólnej bazie
+const minimizationSql = readFileSync(join(process.cwd(), 'supabase/migrations/20261116210000_family_residents_no_table_read.sql'), 'utf8');
 
 /**
  * @REQ: ORG-ISOLATION
  * @REQ: SEC-PESEL-HASH
+ * @REQ: FAM-RESIDENT-DATA-MINIMIZATION
  *
- * Izolacja nie kończy się na placówce: rodzina i opiekun prawny widzą wyłącznie powiązanych podopiecznych
- * (kontrakt: residents read `family:own`), a struktura placówki (pokoje, łóżka, przypisania) i cudze
+ * Izolacja nie kończy się na placówce: rodzina i opiekun prawny widzą wyłącznie powiązanych podopiecznych,
+ * i to tylko przez get_family_resident_overview — tabela residents nie ma dla nich polityki odczytu (SC-FAM-08), a struktura placówki (pokoje, łóżka, przypisania) i cudze
  * powiązania rodzin są dla nich niewidoczne. Zapis do pokoi jest dla kierownika placówki, nie dla każdego
  * konta z tej samej placówki. Każdy test działa w transakcji i kończy się ROLLBACK.
  */
@@ -48,6 +53,7 @@ async function seedOrg(tx: Tx) {
 
 async function rollback<T>(fn: (tx: Tx) => Promise<T>) {
   await sql.begin(async (tx) => {
+    await tx.unsafe(minimizationSql);
     await fn(tx);
     throw new Error('ROLLBACK');
   }).catch((e) => {
@@ -70,8 +76,10 @@ describe('RLS: izolacja według roli w obrębie placówki (ORG-ISOLATION)', () =
         const { orgId, linkedId } = await seedOrg(tx);
         await asRole(tx, familyRole, orgId, FAMILY_UID);
 
-        const residents = await tx`SELECT id FROM residents`;
-        expect(residents.map((r) => r.id)).toEqual([linkedId]);
+        // Tabela residents: zero wierszy; powiązany podopieczny wyłącznie przez wąskie RPC
+        expect(await tx`SELECT id FROM residents`).toHaveLength(0);
+        const overview = await tx`SELECT id FROM public.get_family_resident_overview()`;
+        expect(overview.map((r) => r.id)).toEqual([linkedId]);
 
         const links = await tx`SELECT relative_user_id FROM resident_relative_links`;
         expect(links.map((l) => l.relative_user_id)).toEqual([FAMILY_UID]);

@@ -29,6 +29,27 @@ test.describe('Profil podopiecznego — układ szablonu (@REQ: UI-TEMPLATE-ALIGN
     await profile.tab('Opaska').click();
     expect((await profile.visibleCardTitles()).join(' ')).toMatch(/Opaska/);
   });
+
+  for (const width of [1280, 1440]) {
+    test(`@REQ: UI-TEMPLATE-ALIGNMENT - laptop ${width}px: przyciski załącznika umowy mieszczą się w pasku bocznym`, async ({ loginPage, page }) => {
+      await loginPage.loginAs('org_admin');
+      await page.setViewportSize({ width, height: 900 });
+      const profile = new ResidentProfilePage(page);
+      await profile.openFirstFromList();
+      const attachment = profile.sidebar.locator('[data-testid="contract-attachment"]');
+      await expect(attachment).toBeVisible();
+
+      // Wąska kolumna boczna na szerokim ekranie: układ zależy od szerokości kontenera, nie okna
+      const overflow = await profile.sidebar.evaluate((card) => {
+        const frame = card.getBoundingClientRect();
+        return Array.from(card.querySelectorAll('[data-testid="contract-attachment"] button'))
+          .map((b) => ({ text: (b.textContent || '').trim(), r: b.getBoundingClientRect() }))
+          .filter(({ r }) => r.width > 0 && (r.right > frame.right + 1 || r.left < frame.left - 1))
+          .map(({ text }) => text);
+      });
+      expect(overflow).toEqual([]);
+    });
+  }
 });
 
 test.describe('Karta podopiecznego kierownika — dane według kontraktu (@REQ: ADM-RESIDENT-CARD-VISIBILITY, @REQ: SEC-PESEL-HASH)', () => {

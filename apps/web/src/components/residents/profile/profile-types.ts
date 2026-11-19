@@ -42,6 +42,12 @@ export interface ResidentRelativeLinkItem {
   created_at: string
 }
 
+export interface ResidentDeathReportItem {
+  reported_death_date: string
+  reported_at: string
+  notes?: string | null
+}
+
 export interface FullResidentData {
   id: string
   first_name: string
@@ -56,9 +62,14 @@ export interface FullResidentData {
   avatar_url?: string | null
   archived_at?: string | null
   death_date?: string | null
+  death_reported_at?: string | null
+  reported_death_date?: string | null
+  resident_death_reports?: ResidentDeathReportItem | ResidentDeathReportItem[] | null
   contract_end_date?: string | null
   contract_end_reason?: string | null
   contract_source?: string | null
+  /** Źródło finansowania (SC-ADM-24): osadzenie resident_funding, tylko w danych karty kierownika. */
+  resident_funding?: { funding_source: string | null } | { funding_source: string | null }[] | null
   contract_document_url?: string | null
   organization_id?: string
   bed_assignments?: ResidentBedAssignment[]

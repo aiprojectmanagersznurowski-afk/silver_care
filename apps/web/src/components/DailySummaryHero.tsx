@@ -90,7 +90,7 @@ export function DailySummaryHero({ resident, report, selectedDateMedia = [], onO
 
           <div className="flex flex-col gap-6">
             <div className="flex-1 min-w-0">
-              <h2 className="text-[1.4rem] leading-tight break-words text-primary-foreground sm:text-[1.6rem]">Podsumowanie Dnia</h2>
+              <h2 className="text-[1.4rem] leading-tight break-words text-primary-foreground sm:text-[1.6rem]">Podsumowanie dnia</h2>
               <div className="mt-3 bg-card/10 rounded-xl p-4 border border-white/20 backdrop-blur-sm">
                 <p className="text-[1rem] leading-relaxed opacity-95 text-left max-h-48 overflow-y-auto custom-scrollbar pr-2 whitespace-pre-wrap">
                   {reportText}

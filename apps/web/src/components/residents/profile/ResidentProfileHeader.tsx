@@ -1,16 +1,20 @@
 'use client'
 
-import React from 'react'
+import React, { useTransition } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Mic } from 'lucide-react'
 import { buttonVariants } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/patterns/StatusBadge'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 import { EditResidentDialog } from '@/components/EditResidentDialog'
 import { DischargeResidentDialog } from '@/components/DischargeResidentDialog'
 import { FullResidentData, ResidentBedAssignment } from './profile-types'
 import { formatPersonName } from '@/lib/person-name'
+import { extractPendingDeathReport } from '@/lib/discharge-helpers'
+import { cancelDeathReportAction } from '@/actions/resident-lifecycle-cancel'
+import { toast } from 'sonner'
 
 interface ResidentProfileHeaderProps {
   resident: FullResidentData
@@ -37,9 +41,26 @@ export function ResidentProfileHeader({
   needsAttention = false,
   voiceNoteHref,
 }: ResidentProfileHeaderProps) {
+  const [isCancelling, startCancelTransition] = useTransition()
   const activeBedLabel = activeAssignment?.beds
     ? `Pokój ${activeAssignment.beds.rooms?.number || '?'}, Łóżko ${activeAssignment.beds.label}`
     : null
+  const pendingReport = extractPendingDeathReport(resident)
+  const pendingDeath = pendingReport !== null
+  // Widoczność przycisku dla roli nurse wynika z uprawnień karty (!canManage && Boolean(voiceNoteHref) oznacza kartę personelu poza trybem readOnly impersonacji)
+  const canNurseInitiateDeath = Boolean(voiceNoteHref) && !canManage && isActive && !pendingDeath
+
+  const handleCancelDeathReport = () => {
+    if (!confirm('Czy na pewno chcesz anulować zgłoszenie zgonu? Zadania procedury zostaną usunięte.')) return
+    startCancelTransition(async () => {
+      const res = await cancelDeathReportAction(resident.id)
+      if (res.success) {
+        toast.success('Anulowano zgłoszenie zgonu.')
+      } else {
+        toast.error(res.error || 'Błąd podczas anulowania zgłoszenia.')
+      }
+    })
+  }
 
   return (
     <div className="space-y-2">
@@ -71,7 +92,9 @@ export function ResidentProfileHeader({
                 {formatPersonName(resident.first_name, resident.last_name)}
               </h1>
               <BusinessIdBadge type="resident" id={resident.id} />
-              {isActive ? (
+              {pendingDeath ? (
+                <StatusBadge>Zgłoszono zgon — do zatwierdzenia</StatusBadge>
+              ) : isActive ? (
                 <StatusBadge tone="brand">Aktywny pobyt</StatusBadge>
               ) : resident.death_date ? (
                 <StatusBadge>Zmarły ({resident.death_date})</StatusBadge>
@@ -85,35 +108,65 @@ export function ResidentProfileHeader({
               )}
             </div>
             <p className="text-sm text-muted-foreground mt-1">
-              {activeBedLabel ?? 'Brak przypisanego łóżka'}
+              {activeBedLabel
+                ? (pendingDeath ? `${activeBedLabel} (zgłoszono zgon — do zatwierdzenia)` : activeBedLabel)
+                : 'Brak przypisanego łóżka'}
             </p>
           </div>
         </div>
 
-        {(canManage || voiceNoteHref) && (
-        <div className="flex flex-wrap items-center gap-2">
-          {voiceNoteHref && (
-            <Link href={voiceNoteHref} className={buttonVariants({ className: 'min-h-touch' })}>
-              <Mic className="h-4 w-4" aria-hidden="true" />
-              Nagraj notatkę
-            </Link>
-          )}
+        {(canManage || canNurseInitiateDeath || voiceNoteHref) && (
+          <div className="flex flex-wrap items-center gap-2">
+            {voiceNoteHref && (
+              <Link href={voiceNoteHref} className={buttonVariants({ className: 'min-h-touch' })}>
+                <Mic className="h-4 w-4" aria-hidden="true" />
+                Nagraj notatkę
+              </Link>
+            )}
 
-          {canManage && <EditResidentDialog resident={resident} />}
+            {canManage && <EditResidentDialog resident={resident} />}
 
-          {canManage && isActive && (
-            <DischargeResidentDialog
-              resident={{
-                id: resident.id,
-                first_name: resident.first_name,
-                last_name: resident.last_name,
-              }}
-              activeBedLabel={activeBedLabel}
-            />
-          )}
-        </div>
+            {canManage && isActive && (
+              <DischargeResidentDialog
+                resident={{
+                  id: resident.id,
+                  first_name: resident.first_name,
+                  last_name: resident.last_name,
+                  death_reported_at: pendingReport?.reported_at ?? null,
+                  reported_death_date: pendingReport?.reported_death_date ?? null,
+                }}
+                activeBedLabel={activeBedLabel}
+                mode="full"
+              />
+            )}
+
+            {canManage && pendingDeath && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="min-h-touch text-muted-foreground hover:text-foreground"
+                disabled={isCancelling}
+                onClick={handleCancelDeathReport}
+              >
+                {isCancelling ? 'Anulowanie...' : 'Anuluj zgłoszenie zgonu'}
+              </Button>
+            )}
+
+            {canNurseInitiateDeath && (
+              <DischargeResidentDialog
+                resident={{
+                  id: resident.id,
+                  first_name: resident.first_name,
+                  last_name: resident.last_name,
+                }}
+                activeBedLabel={activeBedLabel}
+                mode="nurse_death_init"
+              />
+            )}
+          </div>
         )}
       </div>
     </div>
   )
 }
+

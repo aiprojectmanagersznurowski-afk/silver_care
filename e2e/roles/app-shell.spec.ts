@@ -38,6 +38,34 @@ test.describe('Powłoka aplikacji — zwijany pasek boczny (@REQ: UI-TEMPLATE-AL
   }
 });
 
+test.describe('Powłoka aplikacji — podmenu przy zwiniętym pasku (@REQ: UI-TEMPLATE-ALIGNMENT)', () => {
+  test('@REQ: UI-TEMPLATE-ALIGNMENT - org_admin: zwinięty pasek otwiera podmenu „Analiza” obok ikony, bez rozwijania paska', async ({ loginPage, page }) => {
+    await loginPage.loginAs('org_admin');
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/admin');
+    const appShell = new AppShellPage(page);
+    await appShell.expectExpanded();
+    await appShell.toggle();
+    await appShell.expectCollapsed();
+
+    // Standard szablonu (shadcn-admin): pozycja z podmenu przy zwiniętym pasku otwiera menu wysuwane w prawo
+    await appShell.sidebar.getByRole('button', { name: 'Analiza' }).click();
+    const flyout = page.getByRole('menu');
+    await expect(flyout).toBeVisible();
+    await expect(flyout.getByRole('menuitem', { name: 'Dane dzienne' })).toBeVisible();
+    await flyout.getByRole('menuitem', { name: 'Statystyka' }).click();
+
+    await expect(page).toHaveURL(/\/admin\/reports\/statistics$/);
+    await expect(flyout).toBeHidden();
+    await appShell.expectCollapsed();
+
+    // Po rozwinięciu paska podmenu wraca do rozwijania w miejscu
+    await appShell.toggle();
+    await appShell.expectExpanded();
+    await expect(appShell.navLink('/admin/reports/daily')).toBeVisible();
+  });
+});
+
 test.describe('Powłoka aplikacji — wspólny nagłówek szablonu (@REQ: UI-TEMPLATE-ALIGNMENT)', () => {
   for (const shell of SHELLS) {
     test(`@REQ: UI-TEMPLATE-ALIGNMENT - ${shell.role}: nagłówek 48px, zwijanie i wyszukiwarka po lewej, motyw po prawej`, async ({ loginPage, page }) => {

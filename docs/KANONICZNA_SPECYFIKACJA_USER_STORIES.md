@@ -1,6 +1,6 @@
 # 📖 Kanoniczna specyfikacja user stories — Silver Care
 
-> **Wersja:** 2.19 (kanał urządzeń Zero-UI, stałe przypisanie urządzeń, konfigurowalna retencja nagrań — 📝 PROPOZYCJA) · **Ostatnia aktualizacja:** 2026-11-17
+> **Wersja:** 2.22 (prywatne zdjęcie podopiecznego, edycja karty w oknie „Edytuj”, kanał urządzeń Zero-UI, stałe przypisanie urządzeń, konfigurowalna retencja nagrań — 📝 PROPOZYCJA) · **Ostatnia aktualizacja:** 2026-11-17
 > **Właściciele:** Darek Rink, Michał Sznurowski
 
 ## Jak czytać i utrzymywać ten dokument
@@ -354,6 +354,20 @@
 - **AC3 (30-dniowe okno retencji):** Rodzina zachowuje ograniczony dostęp w trybie odczytu przez 30 dni od daty zgonu lub wypisu, z jawną informacją o dacie wygaszenia dostępu i liczbie pozostałych dni.
 - **AC4 (Odcięcie po okresie retencji):** Po upływie 30 dni od daty zgonu/wypisu albo po jawnym ustawieniu `archived_at` dostęp do danych pobytu zostaje automatycznie odcięty zgodnie z polityką `SOFT_ARCHIVE_THEN_RETENTION`.
 
+### [SC-FAM-08] Minimalny zakres danych podopiecznego dla bliskich
+🔗 **Kontrakt:** `FAM-RESIDENT-DATA-MINIMIZATION` · **Status:** 📝 PROPOZYCJA
+
+> ℹ️ Decyzja Michała z 2026-11-16: przegląd przy `SC-ADM-24` wykazał, że polityka `residents_family_select` daje bliskim cały wiersz `residents` powiązanego podopiecznego. Przez API bliski odczyta skrót PESEL, orzeczenie o niepełnosprawności (`is_zsn`), poziom opieki, uwagi przyjęciowe personelu, stawkę i ścieżkę pliku umowy — choć portal rodziny żadnej z tych danych nie pokazuje.
+
+**User story:** Jako placówka chcę, aby bliscy mieli dostęp wyłącznie do danych podopiecznego potrzebnych w portalu rodziny, aby dane szczególnej kategorii (art. 9 RODO) i dane umowy nie były dostępne poza personelem, nawet przez bezpośrednie zapytanie do API.
+
+**Kryteria akceptacji:**
+- **AC1 (Brak odczytu tabeli):** Role `family` i `legal_guardian` nie mają polityki `SELECT` na `residents`. Zapytanie bliskiego do tabeli zwraca zero wierszy (test na poziomie bazy).
+- **AC2 (Jawna lista kolumn):** Jedyną ścieżką odczytu jest `get_family_resident_overview()`: identyfikator, imię, nazwisko, zdjęcie, data zgonu, data końca umowy, data archiwizacji.
+- **AC3 (Plan dnia placówki):** Pozycje planu dnia bez podopiecznego (`resident_id IS NULL`) nadal są widoczne dla bliskich z aktywnym powiązaniem w placówce (`SC-FAM-06`), bez odczytu `residents` w kontekście bliskiego.
+- **AC4 (Portal bez zmian dla użytkownika):** Nagłówek z wyborem podopiecznego, pulpit, plan dnia, wiadomości i zgody działają jak dotąd; błąd RPC to jawny komunikat, nie ciche przejście na odczyt tabeli.
+- **AC5 (Kolejność wdrożenia):** Kod portalu przestaje czytać `residents` przed migracją, która zdejmuje politykę (wspólna baza `staging` i produkcji).
+
 ---
 
 ## ⚖️ DOMENA 4: COMPLIANCE (Zapewnienie zgodności)
@@ -558,6 +572,7 @@
 - **AC3 (Automatyczne zwolnienie łóżka):** Zakończenie pobytu atomowo zamyka aktywne przypisanie do łóżka pensjonariusza (`bed_assignments.unassigned_at = now()`), przywracając łóżko do puli wolnych miejsc placówki.
 - **AC4 (Wgląd rodziny read-only — Wariant B):** Wypis i zakończenie umowy nie ustawiają automatycznie `archived_at` — bliscy w Portalu Rodziny zachowują dostęp w trybie tylko do odczytu (read-only) do czasu ręcznej archiwizacji (`ADM-ARCHIVE`). Zdarzenie rejestrowane jest w `resident_events` (`contract_ended` i/lub `death`) na potrzeby modułu BI i wskaźników rotacji.
 - **AC5 (Ślad audytowy i ochrona danych):** Całość operacji jest rejestrowana w `audit_logs` pod akcją `RESIDENT_DISCHARGE` bez wycieku danych wrażliwych. W trybie impersonacji Super Admina akcja jest zablokowana.
+- **AC6 (Operacyjna inicjacja przy zgonie przez personel — `ADM-RESIDENT-LIFECYCLE-DISCHARGE`):** Rola `nurse` na karcie aktywnego podopiecznego ma dostęp wyłącznie do operacyjnej inicjacji zgłoszenia zgonu („Zgłoś zgon”), bez możliwości edycji danych podopiecznego ani rozwiązywania umowy z innych powodów. Zgłoszenie w jednej transakcji rejestruje oczekujące zgłoszenie w tabeli dostępnej wyłącznie dla personelu (`resident_death_reports`, bez dostępu dla `family` i `legal_guardian`), zapisuje zdarzenie `death_reported` w `resident_events`, generuje w agendzie personelu (`agenda_items`, `family_visible = false`) pakiet zadań procedury po zgonie (karta zgonu, depozyt rzeczy osobistych, sanityzacja łóżka/pokoju) i zapisuje ślad audytowy `RESIDENT_DEATH_REPORTED` w `audit_logs`. Formalne zatwierdzenie zgonu, zamknięcie umowy i zwolnienie łóżka (`bed_assignments.unassigned_at = now()`) wykonuje Kierownik placówki (`org_admin`), który może również anulować omyłkowe zgłoszenie (`RESIDENT_DEATH_REPORT_CANCELLED`, z usunięciem wyłącznie zadań powiązanych ze zgłoszeniem).
 
 #### [SC-ADM-20] Wspólna karta podopiecznego dla personelu (widoczność sekcji według roli)
 🔗 **Kontrakt:** brak REQ (proponowany nowy: `ADM-RESIDENT-CARD-VISIBILITY`; wdraża reguły: `ORG-ISOLATION`, `SEC-PESEL-HASH`, `MDR-NO-INTERPRETATION`, `UI-ACCESSIBILITY`, `UI-TEMPLATE-ALIGNMENT`) · **WO:** [`UI-RESIDENT-CARD`](workorders/UI-RESIDENT-CARD.md) · **Status:** 📝 PROPOZYCJA
@@ -577,6 +592,7 @@
 - **AC8 (ZSN tylko do odczytu dla personelu — 📝 2026-11-06):** Status ZSN wynika z dokumentacji przyjęcia i późniejszych dokumentów potwierdzających, więc zmienia go wyłącznie rola z prawem zapisu podopiecznego (Kierownik placówki). Personel opiekuńczy widzi wartość („Tak”/„Nie”) bez przełącznika, a API odrzuca jego próbę zapisu. Zapis, który nie zmienił wiersza, jest błędem, a nie sukcesem.
 - **AC9 (Uwagi przyjęciowe — 📝 2026-11-06):** Treść wpisana przy przyjęciu („Uwagi przyjęciowe” w kreatorze) ma na karcie tę samą nazwę. Nie pochodzi z notatek głosowych.
 - **AC10 (Notatka głosowa z karty — 📝 2026-11-06):** Personel nagrywa notatkę głosową o podopiecznym prosto z nagłówka karty („Nagraj notatkę”); identyfikator podopiecznego przekazuje interfejs (`VOICE-ZERO-GUESSING`). Przycisku nie ma w trybie podglądu (impersonacja).
+- **AC11 (Edycja tylko w oknie „Edytuj” — 📝 2026-11-17):** Pola karty podopiecznego (dane ogólne, ZSN, poziom opieki, źródło pozyskania, źródło finansowania, zdjęcie, uwagi) zmienia się w oknie „Edytuj”. Widok karty tylko wyświetla dane — bez przycisków „Zmień” i przełączników przy pojedynczych polach (decyzja Michała z 2026-11-17).
 
 #### [SC-ADM-21] Sekcja „Zadania” na karcie podopiecznego i wpływ przekazania zmiany na kartę
 🔗 **Kontrakt:** brak REQ (proponowany nowy: `ADM-RESIDENT-CARD-TASKS`; rozszerza `ADM-RESIDENT-CARD-VISIBILITY`) · **ADR:** ADR-021 · **Status:** 📝 PROPOZYCJA
@@ -639,8 +655,36 @@
 - **AC5 (Karta podopiecznego):** Sekcja „Zadania” na karcie (`SC-ADM-21`) pokazuje obowiązujące zadania standardowe podopiecznego (z profilu i indywidualne) z informacją o źródle.
 - **AC6 (Źródła medyczne — osobna decyzja):** `MEDICAL_ORDER` (zalecenia lekarza) i `MEDICATION_SCHEDULE` (harmonogram przyjmowania leków) to dane art. 9 i obszar bliski granicy MDR. Przed włączeniem wymagają osobnego ADR i oceny prawnej: system wyłącznie **odwzorowuje** zalecenia wprowadzone przez uprawnioną osobę, nie wylicza dawek, nie sprawdza interakcji, nie generuje alertów na podstawie metryk i nie pokazuje tych danych bliskim.
 
+#### [SC-ADM-24] Źródło finansowania pobytu podopiecznego
+🔗 **Kontrakt:** `ADM-RESIDENT-FUNDING` · **Status:** 📝 PROPOZYCJA
+
+> ℹ️ Decyzja Michała z 2026-11-16: dotychczasowe pole `contract_source` (Internet, Polecenie, Szpital, MOPS, Polecenie rodziny, Inne) to **kanał pozyskania**, a karta podpisywała je „Źródło finansowania” i przy braku danych pokazywała zmyślone „private”. Finansowanie pobytu to osobna informacja i dostaje osobne pole.
+
+**User story:** Jako kierownik placówki chcę zapisać, kto finansuje pobyt podopiecznego (prywatnie, gmina, współfinansowanie), oddzielnie od tego, skąd podopieczny do nas trafił, aby rozliczenia i statystyki umów nie mieszały dwóch różnych informacji.
+
+**Kryteria akceptacji:**
+- **AC1 (Wartości):** Źródło finansowania przyjmuje wyłącznie: **Prywatnie (podopieczny lub rodzina)**, **Gmina / MOPS**, **Współfinansowanie (prywatnie + gmina)**, **Inne**. Inną wartość odrzuca baza (ograniczenie `CHECK`).
+- **AC2 (Brak danych):** Puste pole jest pokazywane jako „Brak danych”, nigdy jako wartość domyślna ani zgadywana. Migracja nie nadaje wartości istniejącym podopiecznym.
+- **AC3 (Dostęp):** Pole czyta i zmienia wyłącznie kierownik placówki — w sekcji karty „Umowa i pakiety” (`RESIDENT_CARD_SECTIONS.contract`) i w kreatorze przyjęcia. Pielęgniarka, rodzina i opiekun prawny go nie widzą; kolumna nie trafia do jawnej listy kolumn innych ról (`SC-ADM-20`).
+- **AC4 (Źródło pozyskania):** Dotychczasowe `contract_source` jest podpisane w interfejsie „Źródło pozyskania”; przy braku danych „Brak danych” zamiast „private”.
+- **AC5 (Ślad):** Zmiana źródła finansowania na istniejącym podopiecznym zapisuje wpis w `audit_logs` bez danych osobowych (identyfikator podopiecznego, stara i nowa wartość kodu).
+
+#### [SC-ADM-25] Prywatne zdjęcie podopiecznego
+🔗 **Kontrakt:** `ADM-RESIDENT-PHOTO` · **Status:** 📝 PROPOZYCJA
+
+> ℹ️ Decyzja Michała z 2026-11-17: zdjęcia podopiecznych trafiały do publicznego bucketu `avatars` (plik widoczny dla każdego, kto zna adres), a polityki pozwalały każdemu zalogowanemu kontu — także bliskim — wgrać, nadpisać lub usunąć dowolne zdjęcie. Zdjęcia przechodzą do prywatnego bucketu z dostępem według roli i placówki.
+
+**User story:** Jako kierownik placówki chcę dodać lub zmienić zdjęcie podopiecznego w oknie „Edytuj”, a jako placówka chcemy, żeby zdjęcie widzieli tylko personel i powiązani bliscy, aby wizerunek podopiecznego nie był dostępny publicznie.
+
+**Kryteria akceptacji:**
+- **AC1 (Prywatny bucket):** Zdjęcia leżą w prywatnym buckecie; publiczny adres nie zwraca pliku. Ścieżka: `<organization_id>/<resident_id>/<plik>`.
+- **AC2 (Zapis):** Wgrywa, zmienia i usuwa zdjęcie wyłącznie kierownik placówki, tylko dla podopiecznego swojej placówki (polityki `storage.objects` sprawdzają rolę z `app_metadata` i placówkę ze ścieżki).
+- **AC3 (Odczyt):** Personel placówki i bliscy z aktywnym powiązaniem lub w oknie retencji (`SC-FAM-07`) widzą zdjęcie przez krótkotrwały podpisany link; brak zdjęcia = inicjał, bez zdjęcia zastępczego udającego podopiecznego.
+- **AC4 (Gdzie się zmienia):** Okno „Edytuj” karty (`SC-ADM-20/AC11`) i kreator przyjęcia; widok karty tylko wyświetla.
+- **AC5 (Migracja):** Istniejące zdjęcia z bucketu `avatars` przeniesione do prywatnego, publiczne kopie usunięte; `avatars` nie przyjmuje nowych zdjęć podopiecznych (zdjęcia personelu — osobna decyzja).
+
 #### [SC-ADM-24] Rejestr urządzeń nagrywających i przydział przy wydaniu
-🔗 **Kontrakt:** brak REQ (proponowany nowy: `VOICE-DEVICE-REGISTRY`) · **ADR:** ADR-022 · **Status:** 📝 PROPOZYCJA
+🔗 **Kontrakt:** `VOICE-DEVICE-REGISTRY` · **ADR:** ADR-022 · **Status:** 📝 PROPOZYCJA
 
 **User story:** Jako kierownik placówki chcę zarejestrować urządzenia nagrywające placówki i unieważnić zgubione, a pracownikowi przypisać urządzenie na stałe, aby każde nagranie miało znanego autora.
 
@@ -1063,5 +1107,8 @@
 | 2026-10-29 | 2.15 | Dopisanie `SC-ADM-22` (limit miejsc placówki: przekroczenie z ostrzeżeniem dla kierownika i super admina) i `NFR-UI-06` (spójna terminologia interfejsu) ze statusem 📝 PROPOZYCJA, na podstawie decyzji Michała z 2026-10-29; `MASTER_DATA_STANDARD.md` w wersji 2.0. |
 | 2026-10-30 | 2.16 | Moduł zadań wg decyzji Michała z 2026-10-30: przebudowa `SC-NUR-13` (cykl zmiany, kierownik zmiany w grafiku — wariant B, źródło zadania, grupowanie per pokój/podopieczny, rozliczenie: wykonane / anulowane z powodem / przeniesione), `SC-NUR-12/AC1a` (grafik i kierownik zmiany), nowe `SC-NUR-15` (wydruk planu pracy), `SC-NUR-16` (rozliczenie z notatek głosowych) i `SC-ADM-23` (plan opieki — rejestr zadań standardowych, komponent rozwojowy) ze statusem 📝 PROPOZYCJA. |
 | 2026-11-06 | 2.17 | `SC-ADM-20`: AC8 (ZSN tylko do odczytu dla personelu, decyzja Michała z 2026-11-06), AC9 (etykieta „Uwagi przyjęciowe”), AC10 (nagranie notatki głosowej z karty) ze statusem 📝 PROPOZYCJA. |
-| 2026-11-17 | 2.18 | Kanał urządzeń Zero-UI wg ADR-022 (decyzje Michała z 2026-11-16 i 2026-11-17): nowe `SC-NUR-17` (nagrywanie na urządzeniu i zrzut w stacji), `SC-NUR-18` (kolejka „Do przypisania” z podpowiedzią serwera i potwierdzeniem człowieka) i `SC-ADM-24` (rejestr urządzeń i przydział przy wydaniu) ze statusem 📝 PROPOZYCJA. |
-| 2026-11-17 | 2.19 | Decyzje Michała z 2026-11-17: `SC-ADM-24` — stałe przypisanie urządzenia, zamykane tylko zwrotem; `SC-NUR-02/AC4` — audio z obu kanałów w `voice-recordings`, retencja ustawiana przez kierownika placówki albo super admina (7–90 dni, domyślnie 30), 📝 PROPOZYCJA. |
+| 2026-11-16 | 2.18 | Nowe `SC-ADM-24` (źródło finansowania pobytu podopiecznego, oddzielnie od źródła pozyskania; decyzja Michała z 2026-11-16) ze statusem 📝 PROPOZYCJA. |
+| 2026-11-16 | 2.19 | Nowe `SC-FAM-08` (minimalny zakres danych podopiecznego dla bliskich, bez odczytu tabeli `residents`; decyzja Michała z 2026-11-16) ze statusem 📝 PROPOZYCJA. |
+| 2026-11-17 | 2.20 | Nowe `SC-ADM-25` (prywatne zdjęcie podopiecznego) i `SC-ADM-20/AC11` (pola karty edytuje się w oknie „Edytuj”) — decyzje Michała z 2026-11-17, 📝 PROPOZYCJA. |
+| 2026-11-17 | 2.21 | Kanał urządzeń Zero-UI wg ADR-022 (decyzje Michała z 2026-11-16 i 2026-11-17): nowe `SC-NUR-17` (nagrywanie na urządzeniu i zrzut w stacji), `SC-NUR-18` (kolejka „Do przypisania” z podpowiedzią serwera i potwierdzeniem człowieka) i `SC-ADM-24` (rejestr urządzeń i przydział przy wydaniu) ze statusem 📝 PROPOZYCJA. |
+| 2026-11-17 | 2.22 | Decyzje Michała z 2026-11-17: `SC-ADM-24` — stałe przypisanie urządzenia, zamykane tylko zwrotem; `SC-NUR-02/AC4` — audio z obu kanałów w `voice-recordings`, retencja ustawiana przez kierownika placówki albo super admina (7–90 dni, domyślnie 30), 📝 PROPOZYCJA. |

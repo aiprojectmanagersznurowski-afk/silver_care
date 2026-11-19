@@ -126,13 +126,13 @@ export function FamilyDashboardClient({ resident, reports, selectedDateMedia = [
             onClick={() => setActiveTab('AGENDA')}
             className={`px-3 sm:px-5 py-2 rounded-xl text-sm sm:text-sm font-medium whitespace-nowrap shrink-0 transition-colors ${activeTab === 'AGENDA' ? 'bg-card text-primary' : 'text-muted-foreground hover:text-foreground'}`}
           >
-            Agenda i Menu
+            Agenda i menu
           </button>
           <button 
             onClick={() => setActiveTab('GALERIA')}
             className={`px-3 sm:px-5 py-2 rounded-xl text-sm sm:text-sm font-medium whitespace-nowrap shrink-0 transition-colors ${activeTab === 'GALERIA' ? 'bg-card text-primary' : 'text-muted-foreground hover:text-foreground'}`}
           >
-            Galeria Dnia
+            Galeria dnia
           </button>
         </div>
 
@@ -173,7 +173,7 @@ export function FamilyDashboardClient({ resident, reports, selectedDateMedia = [
              <div className="bg-card rounded-xl p-6 border border-border">
                <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                  <div>
-                   <h2 className="text-xl font-display mb-2 text-foreground">Galeria i Wspomnienia</h2>
+                   <h2 className="text-xl font-display mb-2 text-foreground">Galeria i wspomnienia</h2>
                    <p className="text-muted-foreground">Wybierz dzień, aby zobaczyć zdjęcia z zajęć i przeczytać pełny raport dzienny.</p>
                  </div>
                </div>
