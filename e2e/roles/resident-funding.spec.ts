@@ -29,23 +29,17 @@ test.describe('Źródło finansowania na karcie podopiecznego (@REQ: ADM-RESIDEN
     await expect(profile.sidebar).not.toContainText(/\bprivate\b/);
   });
 
-  test('@REQ: ADM-RESIDENT-FUNDING - kierownik zmienia źródło finansowania przyciskiem „Zmień” na karcie', async ({ loginPage, page }) => {
+  // Decyzja Michała 2026-11-17: pola karty edytuje się w oknie „Edytuj” (resident-edit-dialog.spec), widok karty tylko je pokazuje
+  test('@REQ: ADM-RESIDENT-FUNDING - widok karty bez przycisku „Zmień” przy źródle finansowania', async ({ loginPage, page }) => {
     await loginPage.loginAs('org_admin');
     await page.setViewportSize({ width: 1440, height: 900 });
     const profile = new ResidentProfilePage(page);
     await profile.openFirstFromList();
 
     const funding = profile.sidebar.locator('[data-testid="funding-source"]');
-    const current = (await funding.locator('[data-slot="field-value"]').innerText()).trim();
-    const target = current === 'Gmina / MOPS' ? 'Inne' : 'Gmina / MOPS';
-
-    await funding.getByRole('button', { name: 'Zmień źródło finansowania' }).click();
-    await funding.getByRole('combobox', { name: 'Źródło finansowania' }).selectOption({ label: target });
-    await funding.getByRole('button', { name: 'Zapisz' }).click();
-
-    await expect(funding.locator('[data-slot="field-value"]')).toHaveText(target);
-    await page.reload();
-    await expect(profile.sidebar.locator('[data-testid="funding-source"] [data-slot="field-value"]')).toHaveText(target);
+    await expect(funding.locator('[data-slot="field-value"]')).toBeVisible();
+    await expect(profile.sidebar.getByRole('button', { name: /Zmień/ })).toHaveCount(0);
+    await expect(funding.getByRole('combobox')).toHaveCount(0);
   });
 
   // Kreator nie kończy przyjęcia: przyjęcie zmienia liczbę podopiecznych placówki testowej, na której

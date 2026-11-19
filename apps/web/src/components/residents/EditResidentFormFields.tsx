@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { Textarea } from '@/components/ui/textarea'
+import { CONTRACT_SOURCES, CONTRACT_SOURCE_LABELS, FUNDING_SOURCES, FUNDING_SOURCE_LABELS, NO_DATA_LABEL } from '@/lib/reporting-constants'
 
 export interface EditResidentFormData {
   first_name: string
@@ -15,14 +16,20 @@ export interface EditResidentFormData {
   care_level: string
   is_zsn: boolean
   notes: string
+  /** Źródło pozyskania (residents.contract_source); '' = brak danych. */
+  contract_source: string
+  /** Źródło finansowania (resident_funding, SC-ADM-24); '' = brak danych. */
+  funding_source: string
 }
 
 interface EditResidentFormFieldsProps {
   formData: EditResidentFormData
   setFormData: React.Dispatch<React.SetStateAction<EditResidentFormData>>
+  /** Źródło finansowania już zapisane — nie da się go wyczyścić (brak usuwania w resident_funding). */
+  fundingSet?: boolean
 }
 
-export function EditResidentFormFields({ formData, setFormData }: EditResidentFormFieldsProps) {
+export function EditResidentFormFields({ formData, setFormData, fundingSet = false }: EditResidentFormFieldsProps) {
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -129,6 +136,42 @@ export function EditResidentFormFields({ formData, setFormData }: EditResidentFo
               ZSN: Znaczny stopień niepełnosprawności
             </span>
           </label>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <Label htmlFor="edit-contract-source" className="text-sm font-medium text-foreground">
+            Źródło pozyskania
+          </Label>
+          <NativeSelect
+            id="edit-contract-source"
+            value={formData.contract_source}
+            onChange={(e) => setFormData((prev) => ({ ...prev, contract_source: e.target.value }))}
+            className="w-full"
+          >
+            <NativeSelectOption value="">{NO_DATA_LABEL}</NativeSelectOption>
+            {CONTRACT_SOURCES.map((key) => (
+              <NativeSelectOption key={key} value={key}>{CONTRACT_SOURCE_LABELS[key]}</NativeSelectOption>
+            ))}
+          </NativeSelect>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="edit-funding-source" className="text-sm font-medium text-foreground">
+            Źródło finansowania
+          </Label>
+          <NativeSelect
+            id="edit-funding-source"
+            value={formData.funding_source}
+            onChange={(e) => setFormData((prev) => ({ ...prev, funding_source: e.target.value }))}
+            className="w-full"
+          >
+            <NativeSelectOption value="" disabled={fundingSet}>{NO_DATA_LABEL}</NativeSelectOption>
+            {FUNDING_SOURCES.map((key) => (
+              <NativeSelectOption key={key} value={key}>{FUNDING_SOURCE_LABELS[key]}</NativeSelectOption>
+            ))}
+          </NativeSelect>
         </div>
       </div>
 
