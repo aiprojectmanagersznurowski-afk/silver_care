@@ -429,7 +429,7 @@ Personel ma trudności z obsługą komputera, więc praca opiekunek odbywa się 
 
 ## ADR-022 — Kanał urządzeń Zero-UI: StickS3, nagrania bez `resident_id` i kolejka przypisania (Status: PROPOZYCJA — wymaga potwierdzenia Darka) 📝
 
-**Kontekst.** Architektura potoku (`docs/architecture/VOICE_SHIFT_REPORTING_PIPELINE.md`) dodaje drugi kanał wejścia: urządzenie bez ekranu przypięte do fartucha. Urządzenie nie zna podopiecznego w chwili nagrania, a ADR-006 i reguła `R08-zero-guessing` każą odrzucić żądanie bez `resident_id`. ADR-021 pkt 4 rozwiązał to samo dla odcinków przekazania zmiany. Brakowało decyzji dla notatek z urządzeń.
+**Kontekst.** Architektura potoku (`docs/architecture/VOICE_SHIFT_REPORTING_PIPELINE.md`) dodaje drugi kanał wejścia: urządzenie przypięte do fartucha, obsługiwane jednym przyciskiem. Jego ekran pokazuje wyłącznie stan (nagrywanie, liczba notatek, bateria, wysyłanie), nigdy treści nagrań ani nazwisk (decyzja Michała z 2026-11-19, makieta ekranów w `silver-care-devices`). Urządzenie nie zna podopiecznego w chwili nagrania, a ADR-006 i reguła `R08-zero-guessing` każą odrzucić żądanie bez `resident_id`. ADR-021 pkt 4 rozwiązał to samo dla odcinków przekazania zmiany. Brakowało decyzji dla notatek z urządzeń.
 
 **Decyzja (Michał, 2026-11-16 i 2026-11-17; Darek: do potwierdzenia).**
 1. **Urządzenie: M5Stack StickS3** (SKU `K150`, ESP32-S3) zamiast M5StickC PLUS2. PLUS2 zostaje wariantem zapasowym (kompendium §1).
