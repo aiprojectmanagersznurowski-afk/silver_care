@@ -696,6 +696,15 @@ if (DEVICE_INGEST_PROTOCOL) {
   for (const c of Object.keys(pr.wire?.responseBody || {})) {
     if (c !== 'always' && !knownCodes.has(c)) err('R34-device-ingest', `wire.responseBody opisuje nieznany kod "${c}".`);
   }
+  // Zegar (1.2.0): StickS3 nie ma RTC — czas tylko z server_time, a utrata zasilania daje TIME_UNCERTAIN.
+  if (!(pr.wire?.responseBody?.always || []).includes('server_time')) err('R34-device-ingest', 'Odpowiedzi protokołu bez server_time — urządzenie bez RTC nie ma skąd ustawić zegara.');
+  const clockStates = new Set((pr.clock?.states || []).map((st) => st.id));
+  for (const st of pr.clock?.uncertainStates || []) if (!clockStates.has(st)) err('R34-device-ingest', `clock.uncertainStates zawiera nieznany stan "${st}".`);
+  if (!clockStates.has('UNKNOWN') || !(pr.clock?.uncertainStates || []).includes('UNKNOWN')) err('R34-device-ingest', 'Stan zegara UNKNOWN (utrata zasilania) musi istnieć i dawać TIME_UNCERTAIN.');
+  const initReq = (pr.wire?.requests || []).find((rq) => rq.step === 'INIT');
+  for (const f of ['clock_state', 'age_ms']) {
+    if (initReq && !(initReq.body || []).includes(f)) err('R34-device-ingest', `INIT bez pola "${f}" — serwer nie oceni wiarygodności czasu nagrania.`);
+  }
   const mayDelete = (pr.responses || []).filter((r) => r.deviceMayDelete).map((r) => r.code);
   for (const c of mayDelete) {
     if (!['ACCEPTED', 'DUPLICATE'].includes(c)) err('R34-device-ingest', `Urządzenie kasuje nagranie po "${c}". Wolno wyłącznie po ACCEPTED albo DUPLICATE.`);
