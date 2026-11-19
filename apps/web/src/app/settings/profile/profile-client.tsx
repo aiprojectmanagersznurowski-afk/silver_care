@@ -58,7 +58,7 @@ export function ProfileSecurityClient({ initialData }: { initialData: ProfileDat
       {/* 4. Historia Bezpieczeństwa (4 stany UI) */}
       <Card>
         <CardHeader>
-          <CardTitle>Ostatnie Zdarzenia Bezpieczeństwa</CardTitle>
+          <CardTitle>Ostatnie zdarzenia bezpieczeństwa</CardTitle>
           <CardDescription>Rejestr aktywności związanych z Twoim kontem.</CardDescription>
         </CardHeader>
         <CardContent>

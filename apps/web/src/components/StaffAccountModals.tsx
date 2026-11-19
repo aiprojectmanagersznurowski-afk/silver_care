@@ -46,7 +46,7 @@ export function StaffAccountModals({
       <Dialog open={dialogType === 'reset'} onOpenChange={(open) => !open && onClose()}>
         <DialogContent className="sm:max-w-lg md:max-w-xl p-6">
           <DialogHeader>
-            <DialogTitle>Reset Hasła Pracownika</DialogTitle>
+            <DialogTitle>Reset hasła pracownika</DialogTitle>
             <DialogDescription>
               Wybierz metodę resetu hasła dla konta <span className="font-semibold text-foreground">{email}</span>.
             </DialogDescription>
@@ -88,7 +88,7 @@ export function StaffAccountModals({
       <Dialog open={dialogType === 'suspend'} onOpenChange={(open) => !open && onClose()}>
         <DialogContent className="sm:max-w-lg md:max-w-xl p-6">
           <DialogHeader>
-            <DialogTitle>Zawieszenie Konta Pracownika</DialogTitle>
+            <DialogTitle>Zawieszenie konta pracownika</DialogTitle>
             <DialogDescription>
               Operacja natychmiast zablokuje możliwość logowania pracownika <span className="font-semibold text-foreground">{email}</span> i unieważni wszystkie aktywne sesje.
             </DialogDescription>

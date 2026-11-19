@@ -82,10 +82,45 @@ jobs:
       # Bez .git: Vercel Hobby blokuje publikację, gdy autor commita (np. merge Darka) nie jest
       # w zespole Vercela — CLI wysyła metadane Gita z katalogu. Runner jest jednorazowy.
       - name: Deploy
+        id: deploy
         run: |
           rm -rf .git
           url=$(pnpm dlx vercel@65.5.0 deploy --yes $PROD_FLAG --token="$VERCEL_TOKEN")
           echo "Wdrożenie ($TARGET): $url" >> "$GITHUB_STEP_SUMMARY"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      # Stały adres stagingu (Site URL i Redirect URLs w Supabase stagingu).
+      # Tylko push na staging; produkcja i podglądy PR zostają bez aliasu.
+      # Bezpośrednie REST API Vercela zamiast `vercel alias set`: CLI w `alias` woła
+      # bezwarunkowo GET /v2/user (bez allowOwnerLookupFallback obecnego w `deploy`)
+      # i kończy się błędem „User not found (404)” dla tokenu projektowego/zespołowego.
+      - name: Alias stagingu
+        if: github.event_name == 'push' && github.ref == 'refs/heads/staging'
+        env:
+          DEPLOY_URL: ${{ steps.deploy.outputs.url }}
+        run: |
+          host="${DEPLOY_URL#https://}"
+          host="${host%/}"
+          qs=""
+          case "$VERCEL_ORG_ID" in team_*) qs="?teamId=$VERCEL_ORG_ID" ;; esac
+          dpl_id=$(curl -fsSL -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v13/deployments/${host}${qs}" | jq -r '.id')
+          if [ -z "$dpl_id" ] || [ "$dpl_id" = "null" ]; then
+            echo "::error::Nie udało się pobrać ID wdrożenia dla $host"
+            exit 1
+          fi
+          code=$(curl -sS -o /tmp/alias.json -w "%{http_code}" -X POST \
+            -H "Authorization: Bearer $VERCEL_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"alias":"silver-care-staging.vercel.app"}' \
+            "https://api.vercel.com/v2/deployments/${dpl_id}/aliases${qs}")
+          cat /tmp/alias.json
+          echo ""
+          if [ "$code" != "200" ] && [ "$code" != "409" ]; then
+            echo "::error::Przypisanie aliasu zwróciło HTTP $code"
+            exit 1
+          fi
+          echo "Alias stagingu: https://silver-care-staging.vercel.app" >> "$GITHUB_STEP_SUMMARY"
 
       # Zielony job ma znaczyć działającą aplikację, nie tylko udaną publikację.
       # Podglądy są za ochroną Vercela (302), więc sprawdzamy stały adres produkcji.

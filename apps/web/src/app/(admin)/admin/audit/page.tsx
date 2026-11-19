@@ -46,7 +46,7 @@ export default async function AdminAuditPage({
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Rejestr Audytowy"
+        title="Rejestr audytowy"
         description="Wgląd w logi bezpieczeństwa i akcji systemowych z filtrowaniem wg dat, strefą czasową i eksportem RODO."
       />
 

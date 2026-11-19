@@ -41,7 +41,7 @@ export function AgendaTimeline({ residentId }: AgendaTimelineProps) {
 
   return (
     <div className="p-4">
-      <h3 className="text-lg font-semibold mb-4 text-foreground">Plan Dnia</h3>
+      <h3 className="text-lg font-semibold mb-4 text-foreground">Plan dnia</h3>
       <div className="relative border-l border-border ml-3 space-y-6">
         {agenda.map((item: AgendaItem) => (
           <div key={item.id} className="mb-8 ml-6 relative">

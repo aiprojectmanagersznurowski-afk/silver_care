@@ -65,6 +65,31 @@ export const CONTRACT_SOURCE_LABELS: Record<ContractSource, string> = {
   other: 'Inne',
 }
 
+/** Brak wartości w danych — jawnie, bez zgadywania (zakaz fabrykowania w fallbackach). */
+export const NO_DATA_LABEL = 'Brak danych'
+
+/** Źródło pozyskania (residents.contract_source); nieznany kod lub brak to „Brak danych”. */
+export function contractSourceLabel(code: string | null | undefined): string {
+  return code && code in CONTRACT_SOURCE_LABELS ? CONTRACT_SOURCE_LABELS[code as ContractSource] : NO_DATA_LABEL
+}
+
+// ── Funding sources (SC-ADM-24, tabela resident_funding, tylko kierownik placówki) ──
+
+export const FUNDING_SOURCES = ['private', 'municipality', 'co_financed', 'other'] as const
+export type FundingSource = typeof FUNDING_SOURCES[number]
+
+export const FUNDING_SOURCE_LABELS: Record<FundingSource, string> = {
+  private: 'Prywatnie (podopieczny lub rodzina)',
+  municipality: 'Gmina / MOPS',
+  co_financed: 'Współfinansowanie (prywatnie + gmina)',
+  other: 'Inne',
+}
+
+/** Źródło finansowania; brak wiersza lub nieznany kod to „Brak danych”. */
+export function fundingSourceLabel(code: string | null | undefined): string {
+  return code && code in FUNDING_SOURCE_LABELS ? FUNDING_SOURCE_LABELS[code as FundingSource] : NO_DATA_LABEL
+}
+
 // ── Contract end reasons ────────────────────────────────────────────────────
 
 export const CONTRACT_END_REASONS = [

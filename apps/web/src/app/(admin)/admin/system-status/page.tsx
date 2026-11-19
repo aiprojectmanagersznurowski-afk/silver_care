@@ -25,7 +25,7 @@ export default async function SystemStatusPage() {
     <div className="space-y-8">
       <div>
         <h2 className="text-3xl font-display font-semibold tracking-tight text-foreground">
-          Status Systemu i Alerty
+          Status systemu i alerty
         </h2>
         <p className="mt-2 text-muted-foreground">
           Zarządzanie stanem technicznym platformy oraz publikowanie komunikatów serwisowych dla placówek.

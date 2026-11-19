@@ -29,7 +29,7 @@ export function DischargeConsequencesAlert({ activeBedLabel }: DischargeConseque
         <li className="flex items-center gap-1.5">
           <ShieldCheck className="h-3.5 w-3.5 text-foreground shrink-0" />
           <span>
-            <strong>Portal Rodziny:</strong> Bliscy zachowują dostęp do wglądu w dotychczasową historię (tryb tylko do odczytu).
+            <strong>Portal rodziny:</strong> Bliscy zachowują dostęp do wglądu w dotychczasową historię (tryb tylko do odczytu).
           </span>
         </li>
         <li>

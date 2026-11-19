@@ -1,178 +1,123 @@
 #!/usr/bin/env node
 /**
- * sc-pr-handoff — Automatyzacja procedury SDLC Hand-off (INFRA-SDLC-WORKFLOW)
+ * sc-pr-handoff — przekazanie zadania do review (INFRA-SDLC-WORKFLOW) na GitHubie.
+ *
+ * Od 2026-11-17 zadania są w GitHub Issues i na tablicy GitHub Projects „Silver Care”
+ * (decyzja Michała i Darka); Trello zostaje tylko do odczytu.
  *
  * UŻYCIE:
- *   node tools/sc-pr-handoff.mjs <CARD_ID_LUB_REQ_ID> [opcje]
+ *   node tools/sc-pr-handoff.mjs <NUMER_ISSUE> [opcje]
  *
  * OPCJE:
- *   --to darek|michal      Wymuszenie przypisania konkretnego recenzenta
- *   --pr-url <url>         Link do otwartego Pull Requesta
- *   --skip-verify          Pominięcie ponownego uruchamiania verify.sh (jeśli wykonano wcześniej)
- *   --notes <tekst>        Dodatkowa notatka dla recenzenta w komentarzu
- *   --dry-run              Tylko wyświetl planowane akcje bez modyfikacji Trello
+ *   --to darek|michal      Wymuszenie recenzenta
+ *   --pr <numer>           PR do przekazania: recenzent na PR i „Closes #<issue>” w opisie
+ *   --skip-verify          Pominięcie verify.sh (jeśli wykonano wcześniej)
+ *   --notes <tekst>        Notatka dla recenzenta w komentarzu
+ *   --dry-run              Tylko pokaż planowane akcje
+ *
+ * Wymaga zalogowanego `gh` z uprawnieniami repo i project (`gh auth status`).
  */
 
-import dotenv from 'dotenv';
-import { execSync } from 'node:child_process';
-import { IN_REVIEW_LIST_ID, MEMBERS, determineReviewer, determineAuthor, formatHandoffComment } from './lib/sdlc-handoff-core.mjs';
-
-dotenv.config({ path: '.env.local' });
-
-const apiKey = process.env.TRELLO_API;
-const token = process.env.TRELLO_TOKEN;
-
-if (!apiKey || !token) {
-  console.error('❌ Błąd: Brak TRELLO_API lub TRELLO_TOKEN w .env.local');
-  process.exit(1);
-}
+import { execFileSync, execSync } from 'node:child_process';
+import { BOARD, determineReviewer, determineAuthor, formatHandoffComment, ensureClosesKeyword } from './lib/sdlc-handoff-core.mjs';
 
 const args = process.argv.slice(2);
-if (args.length === 0 || args[0].startsWith('-')) {
+if (args.length === 0 || !/^\d+$/.test(args[0])) {
   console.log(`
 Użycie:
-  node tools/sc-pr-handoff.mjs <CARD_ID_LUB_REQ_ID> [opcje]
+  node tools/sc-pr-handoff.mjs <NUMER_ISSUE> [--pr <numer>] [--to darek|michal] [--skip-verify] [--notes "..."] [--dry-run]
 
-Przykłady:
-  node tools/sc-pr-handoff.mjs 6ab51176eff957370b0b46d2
-  node tools/sc-pr-handoff.mjs INFRA-SDLC-WORKFLOW --to michal --pr-url https://github.com/.../pull/42
-  node tools/sc-pr-handoff.mjs FAM-DASHBOARD --skip-verify
+Przykład:
+  node tools/sc-pr-handoff.mjs 231 --pr 232
 `);
   process.exit(1);
 }
 
-const cardTarget = args[0];
+const issue = args[0];
 const dryRun = args.includes('--dry-run');
 const skipVerify = args.includes('--skip-verify');
+const arg = (flag) => {
+  const i = args.indexOf(flag);
+  return i !== -1 && i + 1 < args.length ? args[i + 1] : null;
+};
+const forcedTo = arg('--to');
+const pr = arg('--pr');
+const notes = arg('--notes');
 
-function getArgValue(flag) {
-  const idx = args.indexOf(flag);
-  return idx !== -1 && idx + 1 < args.length ? args[idx + 1] : null;
+const gh = (...a) => execFileSync('gh', a, { encoding: 'utf8' }).trim();
+const ghJson = (...a) => JSON.parse(gh(...a));
+
+function setInReviewStatus(issueUrl) {
+  const project = ghJson('project', 'view', String(BOARD.projectNumber), '--owner', BOARD.owner, '--format', 'json');
+  const field = ghJson('project', 'field-list', String(BOARD.projectNumber), '--owner', BOARD.owner, '--format', 'json')
+    .fields.find((f) => f.name === BOARD.statusField);
+  const option = field?.options?.find((o) => o.name === BOARD.inReview);
+  if (!field || !option) throw new Error(`Brak pola „${BOARD.statusField}” albo opcji „${BOARD.inReview}” na tablicy`);
+  // item-add jest idempotentne: zwraca istniejący element, jeśli issue już jest na tablicy
+  const item = ghJson('project', 'item-add', String(BOARD.projectNumber), '--owner', BOARD.owner, '--url', issueUrl, '--format', 'json');
+  gh('project', 'item-edit', '--id', item.id, '--project-id', project.id, '--field-id', field.id, '--single-select-option-id', option.id);
 }
 
-const forcedTo = getArgValue('--to');
-const prUrl = getArgValue('--pr-url');
-const notes = getArgValue('--notes');
-
-async function run() {
+function run() {
   console.log('🔄 === SILVER CARE SDLC HAND-OFF (INFRA-SDLC-WORKFLOW) ===\n');
 
-  // 1. Weryfikacja jakościowa
   if (!skipVerify) {
-    console.log('▸ Krok 1/4: Uruchamianie pełnej bramki jakościowej (bash scripts/verify.sh --full)...');
+    console.log('▸ Krok 1/4: bash scripts/verify.sh --full');
     try {
       execSync('bash scripts/verify.sh --full', { stdio: 'inherit' });
-      console.log('  ✓ Bramka jakościowa przeszła pomyślnie (100% PASS).\n');
-    } catch (err) {
-      console.error('\n❌ BŁĄD BRAMKI: Nie można przekazać zadania do review, dopóki verify.sh --full nie przechodzi w 100%!');
+    } catch {
+      console.error('\n❌ Bramka czerwona — nie przekazuję do review.');
       process.exit(1);
     }
   } else {
-    console.log('▸ Krok 1/4: Weryfikacja jakościowa pominięta na żądanie flagi --skip-verify.\n');
+    console.log('▸ Krok 1/4: weryfikacja pominięta (--skip-verify).');
   }
 
-  // 2. Pobranie karty z Trello
-  console.log(`▸ Krok 2/4: Wyszukiwanie karty '${cardTarget}' na Trello...`);
-  let card = null;
-
-  // Próba odczytu bezpośrednio jako cardId (24 znaki hex)
-  if (/^[0-9a-fA-F]{24}$/.test(cardTarget)) {
-    const res = await fetch(`https://api.trello.com/1/cards/${cardTarget}?key=${apiKey}&token=${token}`);
-    if (res.ok) {
-      card = await res.json();
-    }
-  }
-
-  // Jeśli nie ID lub 404, przeszukaj tablicę Silver Care — Backlog
-  if (!card) {
-    const boardId = '6aa2a30828269c1448177426';
-    const boardCardsRes = await fetch(`https://api.trello.com/1/boards/${boardId}/cards?key=${apiKey}&token=${token}`);
-    if (boardCardsRes.ok) {
-      const allCards = await boardCardsRes.json();
-      const match = allCards.find(c => 
-        c.name.toLowerCase().includes(cardTarget.toLowerCase()) || 
-        c.desc.includes(cardTarget)
-      );
-      if (match) {
-        card = match;
-      }
-    }
-  }
-
-  if (!card) {
-    console.error(`❌ Błąd: Nie znaleziono karty Trello odpowiadającej '${cardTarget}'.`);
+  console.log(`\n▸ Krok 2/4: issue #${issue}`);
+  const data = ghJson('issue', 'view', issue, '--repo', BOARD.repo, '--json', 'title,url,assignees,state');
+  if (data.state !== 'OPEN') {
+    console.error(`❌ Issue #${issue} nie jest otwarte (${data.state}).`);
     process.exit(1);
   }
-
-  console.log(`  ✓ Znaleziono kartę: ${card.name} (ID: ${card.id})`);
-
-  // 3. Wyznaczenie recenzenta i przygotowanie komentarza
-  console.log('\n▸ Krok 3/4: Wyznaczanie recenzenta i pobieranie historii git...');
-  const reviewer = determineReviewer(card.idMembers, forcedTo);
+  const assignees = data.assignees.map((a) => a.login);
+  // Nieprzypisane issue: autorem jest zalogowany użytkownik gh, recenzentem druga osoba
+  const authorHint = assignees.length ? assignees : [gh('api', 'user', '--jq', '.login')];
+  const reviewer = determineReviewer(authorHint, forcedTo);
   const author = determineAuthor(reviewer);
+  console.log(`  ✓ ${data.title}`);
+  console.log(`  - autor: @${author.github}, recenzent: @${reviewer.github}`);
 
-  let recentCommits = [];
+  let commits = [];
   try {
-    const gitLog = execSync('git log -n 5 --oneline', { encoding: 'utf8' }).trim();
-    if (gitLog) {
-      recentCommits = gitLog.split('\n');
-    }
-  } catch (err) {
+    commits = execSync('git log -n 5 --oneline', { encoding: 'utf8' }).trim().split('\n').filter(Boolean);
+  } catch {
     // brak repozytorium lub commitów
   }
-
-  const commentText = formatHandoffComment({
-    author,
-    reviewer,
-    commits: recentCommits,
-    verifyPassed: true,
-    prUrl,
-    notes
-  });
-
-  console.log(`  - Autor: ${author.name} (@${author.username})`);
-  console.log(`  - Wyznaczony recenzent: ${reviewer.name} (@${reviewer.username})`);
-  console.log(`  - Lista docelowa: PR Created / In Review (${IN_REVIEW_LIST_ID})`);
+  const prUrl = pr ? `https://github.com/${BOARD.repo}/pull/${pr}` : null;
+  const comment = formatHandoffComment({ author, reviewer, commits, verifyPassed: !skipVerify, prUrl, notes });
 
   if (dryRun) {
-    console.log('\n[DRY-RUN] Treść komentarza do dodania:\n');
-    console.log(commentText);
-    console.log('\n[DRY-RUN] Zakończono bez wprowadzania zmian.');
+    console.log('\n[DRY-RUN] Komentarz:\n\n' + comment + '\n\n[DRY-RUN] Bez zmian.');
     return;
   }
 
-  // 4. Aktualizacja Trello (przeniesienie, przypisanie, komentarz)
-  console.log('\n▸ Krok 4/4: Aktualizacja karty na Trello...');
+  console.log('\n▸ Krok 3/4: issue — recenzent, status, komentarz');
+  const toRemove = assignees.filter((a) => a !== reviewer.github);
+  gh('issue', 'edit', issue, '--repo', BOARD.repo, '--add-assignee', reviewer.github, ...(toRemove.length ? ['--remove-assignee', toRemove.join(',')] : []));
+  setInReviewStatus(data.url);
+  gh('issue', 'comment', issue, '--repo', BOARD.repo, '--body', comment);
+  console.log(`  ✓ przypisane do @${reviewer.github}, status „${BOARD.inReview}”, komentarz dodany`);
 
-  // A. Przeniesienie i przypisanie recenzenta
-  const moveUrl = `https://api.trello.com/1/cards/${card.id}?idList=${IN_REVIEW_LIST_ID}&idMembers=${reviewer.id}&key=${apiKey}&token=${token}`;
-  const moveRes = await fetch(moveUrl, { method: 'PUT' });
-  if (!moveRes.ok) {
-    console.error('  ✗ Błąd przenoszenia karty:', await moveRes.text());
-    process.exit(1);
-  }
-  console.log(`  ✓ Przeniesiono kartę do listy 'PR Created / In Review'`);
-  console.log(`  ✓ Przypisano kartę do: ${reviewer.name} (@${reviewer.username})`);
-
-  // B. Dodanie komentarza
-  const commentUrl = `https://api.trello.com/1/cards/${card.id}/actions/comments?key=${apiKey}&token=${token}`;
-  const commentRes = await fetch(commentUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text: commentText })
-  });
-  if (!commentRes.ok) {
-    console.warn('  ⚠️ Ostrzeżenie: Nie udało się dodać komentarza:', await commentRes.text());
+  if (pr) {
+    console.log(`\n▸ Krok 4/4: PR #${pr} — recenzent i „Closes #${issue}”`);
+    const body = ghJson('pr', 'view', pr, '--repo', BOARD.repo, '--json', 'body').body || '';
+    gh('pr', 'edit', pr, '--repo', BOARD.repo, '--add-reviewer', reviewer.github, '--body', ensureClosesKeyword(body, issue));
+    console.log('  ✓ gotowe');
   } else {
-    console.log('  ✓ Opublikowano komentarz ze statusem wdrożenia i instrukcją review');
+    console.log(`\n▸ Krok 4/4: pominięty (bez --pr). Pamiętaj: recenzent @${reviewer.github} na PR i „Closes #${issue}” w opisie.`);
   }
 
-  console.log('\n🎉 === SDLC HAND-OFF ZAKOŃCZONY SUKCESEM ===');
-  console.log(`📌 Karta: ${card.name}`);
-  console.log(`👤 Reviewer: ${reviewer.name} (@${reviewer.github})`);
-  console.log(`⚠️  PAMIĘTAJ O ZASADZIE INFRA-SDLC-WORKFLOW:`);
-  console.log(`   - Wystaw lub zaktualizuj Pull Request na GitHubie i przypisz go do @${reviewer.github}.`);
-  console.log(`   - NIE MERGUJ SAMEMU! Merge wykonuje wyłącznie ${reviewer.name} po zatwierdzeniu review.`);
+  console.log(`\n🎉 Przekazano. NIE scalaj sam — scala @${reviewer.github} po review.`);
 }
 
-run().catch(console.error);
+run();

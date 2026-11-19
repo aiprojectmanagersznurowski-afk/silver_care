@@ -9,7 +9,7 @@ import { ListEmpty } from '@/components/patterns/ListState'
 import { RoomGridView } from './RoomGridView'
 import { RoomTableView } from './RoomTableView'
 import type { RoomItem } from './room-helpers'
-import { formatSectorName } from '@/lib/sector'
+import { formatSectorName, normalizeSectorInput } from '@/lib/sector'
 
 export type { RoomItem }
 
@@ -45,10 +45,12 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
     return Array.from(floors).sort()
   }, [rooms])
 
+  // Sektor porównujemy po nazwie bez przedrostka: „Sektor B” i „B” w bazie to ten sam sektor.
   const availableSectors = useMemo(() => {
     const sectors = new Set<string>()
     rooms.forEach((r) => {
-      if (r.sector) sectors.add(r.sector)
+      const sector = normalizeSectorInput(r.sector)
+      if (sector) sectors.add(sector)
     })
     return Array.from(sectors).sort()
   }, [rooms])
@@ -56,7 +58,7 @@ export default function RoomList({ rooms, onUpdate }: RoomListProps) {
   const filteredRooms = useMemo(() => {
     return rooms.filter((room) => {
       if (selectedFloor !== 'all' && room.floor !== selectedFloor) return false
-      if (selectedSector !== 'all' && room.sector !== selectedSector) return false
+      if (selectedSector !== 'all' && normalizeSectorInput(room.sector) !== selectedSector) return false
       if (selectedOccupancy === 'free' && room.free <= 0) return false
       if (selectedOccupancy === 'full' && room.free > 0) return false
 
