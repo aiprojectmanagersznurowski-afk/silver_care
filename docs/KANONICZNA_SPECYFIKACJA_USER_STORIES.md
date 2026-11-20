@@ -1,6 +1,6 @@
 # 📖 Kanoniczna specyfikacja user stories — Silver Care
 
-> **Wersja:** 2.24 (urządzenia wspólne z autorem z przedstawienia, ekran stanu urządzenia, notatki odporne na restart, prywatne zdjęcie podopiecznego, edycja karty w oknie „Edytuj” — 📝 PROPOZYCJA) · **Ostatnia aktualizacja:** 2026-11-19
+> **Wersja:** 2.25 (`SC-SUP-06` — wielomodułowość platformy sterowana flagami per placówka, urządzenia wspólne z autorem z przedstawienia, ekran stanu urządzenia, notatki odporne na restart, prywatne zdjęcie podopiecznego, edycja karty w oknie „Edytuj” — 📝 PROPOZYCJA) · **Ostatnia aktualizacja:** 2026-11-20
 > **Właściciele:** Darek Rink, Michał Sznurowski
 
 ## Jak czytać i utrzymywać ten dokument
@@ -107,6 +107,20 @@
 - **AC4 (Wycofanie atrapy z pulpitu placówki — Wariant A):** Z głównego pulpitu administratora placówki (`/admin`) zostaje usunięty statyczny kafelek KPI „Status systemu: Stabilny”, a w jego miejsce prezentowany jest rzeczywisty wskaźnik operacyjny ośrodka („Raporty do zatwierdzenia” — liczba raportów w statusie `draft`).
 - **AC5 (Ślad audytowy i 4 stany UI):** Każda publikacja i zakończenie alertu systemowego rejestruje wpis w `audit_logs` (`SYSTEM_ALERT_PUBLISHED` / `SYSTEM_ALERT_RESOLVED`) bez danych osobowych (`SEC-NO-PII-LOGS`). Panel Super Admina obsługuje 4 stany UI (`loading`, `empty`, `success`, `error`).
 - **AC6 (Termin wygaśnięcia — 📝 2026-10-26):** Przy publikacji Super Admin może podać opcjonalny termin wygaśnięcia (`system_alerts.expires_at`, późniejszy niż utworzenie). Po terminie alert znika z banera placówek i z listy aktywnych, a w historii ma status „Wygasł”; wiersz w bazie nie jest zmieniany. Bez terminu alert trwa do ręcznego zakończenia. Termin z przeszłości jest odrzucany przed zapisem.
+
+### [SC-SUP-06] Modułowość platformy sterowana flagami (Feature Flags) w panelu Super Admina per placówka
+🔗 **Kontrakt:** brak REQ (proponowany nowy: `SUP-FEATURE-FLAGS`; wdraża: `ORG-ISOLATION`, `SUP-IMPERSONATION`, `SEC-AUDIT-APPEND-ONLY`, `SEC-NO-PII-LOGS`, `SEC-403-LOGGING`, `UI-FOUR-STATES`, `UI-TERMINOLOGY`) · **Work Order:** [`WO-SUP-FEATURE-FLAGS.md`](workorders/WO-SUP-FEATURE-FLAGS.md) · **Status:** 📝 PROPOZYCJA
+
+> ℹ️ Docelowy wpis `SUP-FEATURE-FLAGS`, nowy plik `contracts/features.contract.mjs` oraz zasób `organization_feature_flags` w `contracts/roles.contract.mjs` zostaną dodane w Etapie 1 po otwarciu okna kontraktowego przez człowieka.
+
+**User story:** Jako Administrator platformy (`super_admin`), chcę włączać i wyłączać duże moduły systemowe (9 domen biznesowych) oraz flagi delegacji uprawnień (2 delegacje) indywidualnie dla każdej placówki (`organization_id`) z poziomu panelu Super Admina (`/admin/organizations/[id]`), aby kontrolować zakres udostępnianych funkcji na etapie pilotażu i planów subskrypcyjnych oraz bezpiecznie delegować wybrane uprawnienia konfiguracyjne Kierownikowi placówki (`org_admin`) z pełnym egzekwowaniem w UI, API, Server Actions i RLS.
+
+**Kryteria akceptacji:**
+- **AC1 (Kontrakt źródłem prawdy i niewyłączalny Rdzeń):** Katalog 9 dużych modułów systemowych (`module_facility_management`, `module_residents_management`, `module_voice_and_reports`, `module_shift_tasks`, `module_audit_compliance`, `module_family_portal`, `module_documents_contracts`, `module_finance_budget`, `module_wearables_iot`), 2 flag delegacji (`allow_org_admin_report_config`, `allow_org_admin_contract_templates`), wartości domyślne oraz graf zależności (`dependsOn`) istnieją wyłącznie w `contracts/features.contract.mjs`. Niewyłączalny Rdzeń (`Core`: uwierzytelnianie, RBAC/MFA, `organizations`, profil oraz obowiązkowy rejestr audytowy RODO `audit_logs`) pozostaje zawsze aktywny.
+- **AC2 (Izolacja zapisu na poziomie DB i API):** Flagi przechowuje odizolowana tabela `organization_feature_flags` (nie `organizations.settings`). Próba modyfikacji flagi przez `org_admin`, `nurse`, `legal_guardian`, `family` lub w trybie impersonacji `super_admin` jest odrzucana zarówno przez `withAuth`/Server Action, jak i przez RLS/RPC w PostgreSQL.
+- **AC3 (Egzekwowanie pełnostosowe bez regresji):** Wyłączenie modułu dla placówki A ukrywa jego nawigację i widoki po stronie serwera (przy wyłączonym `module_family_portal` layout `(family)` renderuje `ListEmpty` bez pętli przekierowań i bez wycieku danych) oraz zwraca `403 FEATURE_DISABLED_FOR_ORG` na powiązanych endpointach API i Server Actions dla placówki A, nie wpływając na placówkę B (`ORG-ISOLATION`) ani na Rdzeń (`Core`).
+- **AC4 (Zależności i atomowa kaskada):** Włączenie modułu potomnego lub flagi delegującej bez aktywnego modułu nadrzędnego jest blokowane w UI i po stronie bazy (`FEATURE_DEPENDENCY_DISABLED`). Wyłączenie modułu nadrzędnego wymaga potwierdzenia (`ConfirmDialog`) i dezaktywuje wszystkie zależne moduły oraz flagi delegacji w jednej transakcji PostgreSQL.
+- **AC5 (Audyt i E2E):** Każda zmiana flagi (w tym kaskadowa) odkłada niemutowalny wpis `ORG_FEATURE_FLAG_UPDATED` w `audit_logs` w tej samej transakcji bez PII (`SEC-NO-PII-LOGS`). Przełączenie flagi przez `super_admin` i natychmiastowy efekt w sesji `org_admin` są potwierdzone testami DB (`tests/db/feature_flags.test.ts`) i Playwright E2E (`e2e/feature-flags.spec.ts`).
 
 ---
 
@@ -1116,3 +1130,4 @@
 | 2026-11-17 | 2.22 | Decyzje Michała z 2026-11-17: `SC-ADM-24` — stałe przypisanie urządzenia, zamykane tylko zwrotem; `SC-NUR-02/AC4` — audio z obu kanałów w `voice-recordings`, retencja ustawiana przez kierownika placówki albo super admina (7–90 dni, domyślnie 30), 📝 PROPOZYCJA. |
 | 2026-11-19 | 2.23 | Decyzja Michała z 2026-11-19 po pomiarach na StickS3: `SC-NUR-17` dostaje ekran stanu zamiast samych sygnałów dźwiękowych (AC2, bez treści nagrań), `AC9` — restart ani wyłączenie nie kasują notatek, `AC10` — kliknięcie przycisku zasilania nie restartuje. 📝 PROPOZYCJA. |
 | 2026-11-19 | 2.24 | Decyzja Michała z 2026-11-19: urządzenia są wspólne, autora ustala przedstawienie w pierwszej notatce sesji (`SC-NUR-17/AC5`, kontrakt `DEVICE_INGEST_PROTOCOL.authorship` 1.2.0). `SC-ADM-24` (rejestr urządzeń): stały przydział zastąpiony opcjonalną ewidencją wydania. 📝 PROPOZYCJA. |
+| 2026-11-20 | 2.25 | Dopisanie `SC-SUP-06` (wielomodułowość platformy sterowana flagami per placówka — 9 dużych modułów systemowych + 2 flagi delegacji dla `org_admin`, issue `#303`, Work Order `WO-SUP-FEATURE-FLAGS.md`) ze statusem 📝 PROPOZYCJA. |
