@@ -696,6 +696,31 @@ if (DEVICE_INGEST_PROTOCOL) {
   for (const c of Object.keys(pr.wire?.responseBody || {})) {
     if (c !== 'always' && !knownCodes.has(c)) err('R34-device-ingest', `wire.responseBody opisuje nieznany kod "${c}".`);
   }
+  // Zegar (1.2.0): StickS3 nie ma RTC — czas tylko z server_time, a utrata zasilania daje TIME_UNCERTAIN.
+  if (!(pr.wire?.responseBody?.always || []).includes('server_time')) err('R34-device-ingest', 'Odpowiedzi protokołu bez server_time — urządzenie bez RTC nie ma skąd ustawić zegara.');
+  const clockStates = new Set((pr.clock?.states || []).map((st) => st.id));
+  for (const st of pr.clock?.uncertainStates || []) if (!clockStates.has(st)) err('R34-device-ingest', `clock.uncertainStates zawiera nieznany stan "${st}".`);
+  if (!clockStates.has('UNKNOWN') || !(pr.clock?.uncertainStates || []).includes('UNKNOWN')) err('R34-device-ingest', 'Stan zegara UNKNOWN (utrata zasilania) musi istnieć i dawać TIME_UNCERTAIN.');
+  const initReq = (pr.wire?.requests || []).find((rq) => rq.step === 'INIT');
+  for (const f of ['clock_state', 'age_ms']) {
+    if (initReq && !(initReq.body || []).includes(f)) err('R34-device-ingest', `INIT bez pola "${f}" — serwer nie oceni wiarygodności czasu nagrania.`);
+  }
+  // Autorstwo (1.2.0): wspólne urządzenia, autor z przedstawienia w sesji — serwer dopasowuje, człowiek rozstrzyga.
+  const au = pr.authorship || {};
+  if (au.source === 'SELF_INTRODUCTION') {
+    for (const f of ['session_id', 'session_seq']) {
+      if (initReq && !(initReq.body || []).includes(f)) err('R34-device-ingest', `INIT bez pola "${f}" — bez sesji nie da się ustalić autora z przedstawienia.`);
+    }
+    if (au.llmIdentifies !== false || au.matchedBy !== 'server') err('R34-device-ingest', 'Autora z przedstawienia dopasowuje serwer, nigdy model AI.');
+    const resolvers = au.ambiguousResolvedBy || [];
+    if (!resolvers.length || resolvers.some((r) => !String(r).includes(':') && r !== 'super_admin')) err('R34-device-ingest', 'Niejednoznacznego autora wybiera człowiek (rola:zakres), nie system.');
+    if (!Number.isFinite(au.sessionInactivityTimeoutMinutes) || au.sessionInactivityTimeoutMinutes <= 0 || au.sessionInactivityTimeoutMinutes > 240) {
+      err('R34-device-ingest', 'Sesja SELF_INTRODUCTION wymaga timeoutu bezczynności (1–240 min), aby zapobiec sklejeniu brudnopisów dwóch osób.');
+    }
+    if (au.outOfOrderPolicy !== 'RETROACTIVE_ON_SEQ_1') {
+      err('R34-device-ingest', 'Sesja SELF_INTRODUCTION wymaga retroaktywnego uzupełniania autora po dotarciu session_seq 1 (RETROACTIVE_ON_SEQ_1).');
+    }
+  }
   const mayDelete = (pr.responses || []).filter((r) => r.deviceMayDelete).map((r) => r.code);
   for (const c of mayDelete) {
     if (!['ACCEPTED', 'DUPLICATE'].includes(c)) err('R34-device-ingest', `Urządzenie kasuje nagranie po "${c}". Wolno wyłącznie po ACCEPTED albo DUPLICATE.`);

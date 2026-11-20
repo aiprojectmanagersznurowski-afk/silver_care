@@ -542,15 +542,21 @@ export const REQUIREMENTS = [
     "risk": "HIGH",
     "source": "SC-NUR-17, ADR-022",
     "domain": "voice",
-    "statement": "Urządzenie bez ekranu przekazuje nagrania przez uwierzytelniony, idempotentny protokół z potwierdzeniem odbioru.",
+    "statement": "Urządzenie z ekranem tylko ze stanem (bez treści nagrań i nazwisk) przekazuje nagrania przez uwierzytelniony, idempotentny protokół z potwierdzeniem odbioru i czasem serwera.",
     "acceptance": [
       "Żądanie bez ważnego tokenu albo z tokenem unieważnionym dostaje DEVICE_REVOKED",
       "Token urządzenia jest przechowywany wyłącznie jako skrót token_hash",
       "Ponowna wysyłka tej samej pary device_id i client_capture_id zwraca DUPLICATE bez drugiego wpisu",
       "Urządzenie kasuje nagranie wyłącznie po ACCEPTED albo DUPLICATE",
       "Żądanie z resident_id, imieniem, PESEL albo transkryptem jest odrzucane jako FORBIDDEN_FIELD",
-      "Autorem nagrania jest osoba przydzielona do urządzenia w chwili recorded_at",
-      "Nagranie z czasem spoza okna synchronizacji dostaje oznaczenie TIME_UNCERTAIN"
+      "Autorem nagrań sesji jest osoba, która przedstawiła się w pierwszym nagraniu sesji",
+      "Przedstawienie dopasowuje serwer bez modelu do personelu placówki; brak albo kilka dopasowań wybiera kierownik zmiany",
+      "Bezczynność urządzenia powyżej 3 godzin automatycznie otwiera nową sesję, chroniąc prywatność brudnopisów między osobami",
+      "Gdy nagrania z session_seq > 1 dotrą przed session_seq 1 (np. po retry), serwer retroaktywnie uzupełnia autora całej sesji po dotarciu session_seq 1",
+      "Nagranie z czasem spoza okna synchronizacji dostaje oznaczenie TIME_UNCERTAIN",
+      "Każda odpowiedź protokołu niesie server_time, z którego urządzenie bez RTC ustawia zegar",
+      "Nagranie z clock_state RELATIVE dostaje recorded_at równe chwili przyjęcia INIT minus age_ms",
+      "Nagranie z clock_state UNKNOWN dostaje oznaczenie TIME_UNCERTAIN"
     ]
   },
   {
@@ -576,14 +582,14 @@ export const REQUIREMENTS = [
     "risk": "MEDIUM",
     "source": "SC-ADM-24, ADR-022",
     "domain": "voice",
-    "statement": "Kierownik placówki prowadzi rejestr urządzeń, a kierownik zmiany przydziela je osobom przy wydaniu.",
+    "statement": "Kierownik placówki prowadzi rejestr urządzeń placówki. Urządzenia są wspólne: autora nagrań ustala przedstawienie w sesji, a wpis wydania jest opcjonalną ewidencją sprzętu.",
     "acceptance": [
       "Token urządzenia jest pokazywany jeden raz przy rejestracji",
       "Unieważnienie ustawia revoked_at zamiast usuwać wiersz",
-      "Jedno urządzenie ma w danej chwili najwyżej jeden aktywny przydział",
-      "Przydział tworzy kierownik zmiany albo kierownik placówki",
-      "Rejestracja, unieważnienie i przydział trafiają do audit_logs",
-      "Konto bliskiego nie widzi urządzeń ani przydziałów"
+      "Jedno urządzenie ma w danej chwili najwyżej jeden aktywny wpis wydania",
+      "Wpis wydania tworzy kierownik zmiany albo kierownik placówki i nie wyznacza autora nagrań",
+      "Rejestracja, unieważnienie i wpis wydania trafiają do audit_logs",
+      "Konto bliskiego nie widzi urządzeń ani wpisów wydania"
     ]
   },
   {

@@ -96,7 +96,8 @@ export const MATRIX = [
   { resource: 'shift_plan_approvals',    read: ['org_admin:own', 'nurse:own'],              create: ['org_admin:own', 'nurse:shift_lead'], update: [], delete: [] },
 
   // Kanał urządzeń Zero-UI (ADR-022, SC-ADM-24, SC-NUR-18). Bliscy bez dostępu. Nic nie jest usuwane:
-  // urządzenie unieważnia się przez revoked_at, przydział zamyka przez ended_at.
+  // urządzenie unieważnia się przez revoked_at, wpis wydania zamyka przez ended_at (ewidencja sprzętu,
+  // nie autorstwo — od 2026-11-19 autora ustala przedstawienie w sesji).
   // Kolejka „Do przypisania” to jedyne miejsce, w którym kierownicy czytają cudze nagranie, i tylko do czasu decyzji.
   // voice_draft_notes zostaje prywatne dla autora (decyzja Michała z 2026-11-17).
   { resource: 'voice_devices',           read: ['org_admin:own', 'nurse:own'],              create: ['org_admin'],    update: ['org_admin:own'],          delete: [] },

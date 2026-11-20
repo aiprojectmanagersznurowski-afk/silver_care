@@ -18,8 +18,8 @@ Decyzje Michała z 2026-11-16 i 2026-11-17 (ADR-022): urządzenie M5Stack StickS
 | Obiekt | Rola | Kluczowe kolumny i ograniczenia |
 |---|---|---|
 | `voice_devices` | rejestr urządzeń placówki | `organization_id`, `label` („Stick 04”, unikalny w placówce), `token_hash` (SHA-256 z 32 losowych bajtów, unikalny), `revoked_at`, `last_sync_at`, `firmware_version`, `created_by` |
-| `voice_device_assignments` | stałe przypisanie do pracownika, zamykane zwrotem | `organization_id`, `device_id`, `user_id`, `started_at`, `ended_at`, `assigned_by`; **bez nakładania się przedziałów na jednym urządzeniu** (`EXCLUDE USING gist`, wymaga `btree_gist`) |
-| `voice_draft_notes` (rozszerzenie) | jeden model nagrania | `source` (`APP`/`DEVICE`, domyślnie `APP`), `device_id`, `client_capture_id`, `recorded_at`, `time_uncertain`, `audio_sha256`; `resident_id` i `nurse_id` NULL tylko dla `DEVICE` (`CHECK`); unikalne `(device_id, client_capture_id)` |
+| `voice_device_assignments` | opcjonalna ewidencja wydania sprzętu (nie wyznacza autora) | `organization_id`, `device_id`, `user_id`, `started_at`, `ended_at`, `assigned_by`; **bez nakładania się przedziałów na jednym urządzeniu** (`EXCLUDE USING gist`, wymaga `btree_gist`) |
+| `voice_draft_notes` (rozszerzenie) | jeden model nagrania | `source` (`APP`/`DEVICE`, domyślnie `APP`), `device_id`, `client_capture_id`, `session_id`, `session_seq`, `recorded_at`, `time_uncertain`, `audio_sha256`; `resident_id` i `nurse_id` NULL tylko dla `DEVICE` (`CHECK`); unikalne `(device_id, client_capture_id)` |
 | `voice_assignment_queue` | pozycje czekające na decyzję | `organization_id`, `note_id`, `shift_definition_id`, `shift_date`, `candidates` (tylko identyfikatory i powód dopasowania, bez imion), `status` (`PENDING`/`DECIDED`), `outcome` (`RESIDENT`/`FACILITY`/`UNASSIGNABLE`), `resident_id`, `decided_by`, `decided_at` |
 | bucket `voice-recordings` | pliki nagrań z obu kanałów | prywatny, bez polityk dla klienta, region UE, ścieżka `{organization_id}/{source}/{id}` |
 | `voice_retention_settings` | retencja nagrań placówki (`VOICE_RETENTION`) | jeden wiersz na placówkę, 7–90 dni, brak wiersza = 30; zmienia `org_admin` swojej placówki i `super_admin`; zmiana w `audit_logs`; osobny zasób, bo `org_admin` nie edytuje `organizations` |
@@ -31,7 +31,7 @@ Decyzje Michała z 2026-11-16 i 2026-11-17 (ADR-022): urządzenie M5Stack StickS
 
 - Urządzenie nie ma sesji, więc trasa działa po stronie serwera kluczem `service_role`. **Każde zapytanie filtruje po `organization_id` z rekordu urządzenia, nigdy z żądania.** Klucz nie opuszcza serwera.
 - `INIT`: token z `X-Device-Token` → skrót → urządzenie aktywne; odrzuć pola z `fields.forbidden` (`FORBIDDEN_FIELD`); para `(device_id, client_capture_id)` już przyjęta → `DUPLICATE`; inaczej `createSignedUploadUrl` → `UPLOAD_URL`.
-- `COMMIT`: sprawdź obiekt w Storage i skrót → `voice_draft_notes` (`DEVICE`), autor z przydziału w chwili `recorded_at` (brak → `nurse_id` NULL, oznaczenie „brak autora”), `time_uncertain` według `DEVICE_INGEST_PROTOCOL.clock`, pozycja w kolejce → `ACCEPTED`.
+- `COMMIT`: sprawdź obiekt w Storage i skrót → `voice_draft_notes` (`DEVICE`), autor z przedstawienia w `session_seq 1` (dopasowanie serwera bez AI, retroaktywnie dla `session_seq > 1` po retry; brak/niejednoznaczność → `NO_AUTHOR` w kolejce), `time_uncertain` według `DEVICE_INGEST_PROTOCOL.clock`; `COMMIT` potwierdza zapis (`ACCEPTED`) i kolejkuje transkrypcję asynchronicznie (bez synchronicznego wywołania Groq w żądaniu urządzenia).
 - Logi: tylko `device_id`, `organization_id`, kod odpowiedzi. Bez tokenu, nazw plików z treścią i transkryptu.
 
 ## Podział na kroki (każdy RED → GREEN, ≤3 pliki na commit)
@@ -68,10 +68,14 @@ Każdy krok: test RED, GREEN, `node tools/sc-phase.mjs`, `bash scripts/verify.sh
 4. **Wykrycie stacji po napięciu USB** (> 4,5 V), nie po `isCharging()`, które na StickS3 skacze między 0 a 1.
 
 ## Rozstrzygnięte (Michał, 2026-11-17)
-1. **Przydział:** urządzenie przypisane pracownikowi na stałe, przydział zamyka wyłącznie zwrot.
+1. **Przydział:** ~~urządzenie przypisane pracownikowi na stałe~~ — zastąpione 2026-11-19: urządzenia wspólne, autor z przedstawienia w pierwszej notatce sesji (protokół 1.2.0, `authorship`). `voice_device_assignments` zostaje opcjonalną ewidencją wydania; krok 7 nie wymaga przydziału przy wydaniu, a krok 8 dostaje dopasowanie autora sesji.
 2. **Audio z aplikacji:** zapisywane w `voice-recordings`, jak z urządzeń.
 3. **Retencja:** konfigurowalna per placówka przez kierownika placówki i super admina, 7–90 dni, domyślnie 30. Kontrakt zmieniony w oknie kontraktowym 2026-11-17 (commit `91800ab`, reguła R17).
 
+## Skalowalność i flota (przed krokami 5–8)
+1. **Burst na końcu zmiany:** `COMMIT` potwierdza zapis i odkłada transkrypcję do trwałej kolejki asynchronicznej z rate-limitingiem (bez synchronicznego STT w żądaniu urządzenia), `FAMILY_REPORT` odświeżany zbiorczo (`debounce`/`stale`), kontrola egressu przy weryfikacji `sha256` oraz rate-limiting na `/api/voice/device`.
+2. **Wąskie gardło kierownika zmiany (krok 8):** grupowanie kolejki po sesji/pokoju, zbiorcze potwierdzanie (batch confirm) jednoznacznych dopasowań oraz scenariusz dwóch podopiecznych w jednym nagraniu.
+3. **Flota IoT i RODO:** provisioning Wi-Fi/tokenu dla nietechnicznych placówek, kanał OTA w protokole (m.in. rotacja certyfikatów CA) oraz docelowy STT w UE zamiast wysyłania produkcyjnego wolumenu surowego audio do Groq.
+
 ## WYMAGA DECYZJI
 1. **Format nagrań na urządzeniu** (repo `silver-care-devices`): rekomendacja Opus 16 kb/s w Ogg, ok. 34 min z aktualizacjami przez Wi-Fi wobec ok. 8 min dla IMA ADPCM. Pomiar 2026-11-19 (devices#4): transkrypcja `whisper-large-v3` z Opus 16 kb/s taka sama jak z WAV, kodowanie przy 240 MHz i złożoności 3 zajmuje 0,35 czasu nagrania. Czeka na potwierdzenie.
-2. **Opis urządzenia w kontrakcie:** `VOICE-DEVICE-INGEST.statement` i `CAPTURE_SOURCES.DEVICE.desc` mówią „urządzenie bez ekranu”. Zmiana na „ekran tylko ze stanem” wymaga okna kontraktowego `VOICE-DEVICE-INGEST`.
