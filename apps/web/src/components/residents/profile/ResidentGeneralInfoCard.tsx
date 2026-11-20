@@ -10,7 +10,6 @@ import {
   GENDER_LABELS,
   CareLevel,
 } from '@/lib/reporting-constants'
-import { ResidentZsnCheckbox } from '@/components/ResidentZsnCheckbox'
 import { StatusBadge } from '@/components/patterns/StatusBadge'
 import { FullResidentData } from './profile-types'
 
@@ -18,15 +17,12 @@ interface ResidentGeneralInfoCardProps {
   resident: FullResidentData
   age: number | null
   stayDays: number | null
-  /** Zmiana ZSN tylko dla roli z sekcją „Edycja i wypis” (kierownik placówki); personel widzi wartość. */
-  canEditZsn?: boolean
 }
 
 export function ResidentGeneralInfoCard({
   resident,
   age,
   stayDays,
-  canEditZsn = false,
 }: ResidentGeneralInfoCardProps) {
   const careLevel = (resident.care_level || 'unknown') as CareLevel | 'unknown'
   const careLevelBg = CARE_LEVEL_BG_CLASSES[careLevel] || 'bg-muted text-foreground'
@@ -79,16 +75,10 @@ export function ResidentGeneralInfoCard({
 
           <div>
             <span className="text-sm text-muted-foreground block mb-1">Status ZSN</span>
-            {canEditZsn ? (
-              <ResidentZsnCheckbox
-                residentId={resident.id}
-                initialValue={Boolean(resident.is_zsn)}
-              />
-            ) : (
-              <StatusBadge tone={resident.is_zsn ? 'brand' : 'neutral'} data-testid="resident-zsn-value">
-                {resident.is_zsn ? 'Tak' : 'Nie'}
-              </StatusBadge>
-            )}
+            {/* Zmiana ZSN w oknie „Edytuj” (decyzja Michała 2026-11-17) — widok karty tylko pokazuje */}
+            <StatusBadge tone={resident.is_zsn ? 'brand' : 'neutral'} data-testid="resident-zsn-value">
+              {resident.is_zsn ? 'Tak' : 'Nie'}
+            </StatusBadge>
           </div>
 
           <div>

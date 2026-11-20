@@ -13,10 +13,12 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { updateResidentInlineAction } from '@/actions/resident-inline'
+import { updateResidentFundingAction } from '@/actions/resident-funding'
 import { Pencil, Loader2, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { CareLevel } from '@/lib/reporting-constants'
 import { EditResidentFormFields, type EditResidentFormData } from './residents/EditResidentFormFields'
+import { ResidentPhotoField } from './residents/ResidentPhotoField'
 
 export interface EditResidentDialogProps {
   resident: {
@@ -29,6 +31,9 @@ export interface EditResidentDialogProps {
     gender?: 'M' | 'F' | string | null
     notes?: string | null
     is_zsn?: boolean
+    contract_source?: string | null
+    /** Osadzenie resident_funding z danych karty kierownika (SC-ADM-24). */
+    resident_funding?: { funding_source: string | null } | { funding_source: string | null }[] | null
   }
   trigger?: React.ReactNode
   onSuccess?: () => void
@@ -43,6 +48,8 @@ export function EditResidentDialog({
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const funding = Array.isArray(resident.resident_funding) ? resident.resident_funding[0] : resident.resident_funding
+  const initialFunding = funding?.funding_source || ''
 
   const [formData, setFormData] = useState<EditResidentFormData>({
     first_name: resident.first_name,
@@ -53,6 +60,8 @@ export function EditResidentDialog({
     care_level: (resident.care_level || '') as string,
     is_zsn: Boolean(resident.is_zsn),
     notes: resident.notes || '',
+    contract_source: resident.contract_source || '',
+    funding_source: initialFunding,
   })
 
   const resetForm = () => {
@@ -65,6 +74,8 @@ export function EditResidentDialog({
       care_level: (resident.care_level || '') as string,
       is_zsn: Boolean(resident.is_zsn),
       notes: resident.notes || '',
+      contract_source: resident.contract_source || '',
+      funding_source: initialFunding,
     })
     setErrorMessage(null)
   }
@@ -100,13 +111,21 @@ export function EditResidentDialog({
       care_level: (formData.care_level ? formData.care_level : null) as CareLevel | null,
       is_zsn: formData.is_zsn,
       notes: formData.notes.trim() || null,
+      contract_source: formData.contract_source || null,
     }
 
     startTransition(async () => {
       try {
         const res = await updateResidentInlineAction(payload)
+        // Źródło finansowania żyje w osobnej tabeli tylko dla kierownika (resident_funding) — osobny zapis z audytem
+        const fundingRes = res.success && formData.funding_source && formData.funding_source !== initialFunding
+          ? await updateResidentFundingAction(resident.id, formData.funding_source)
+          : null
         if (!res.success) {
           setErrorMessage(res.error || 'Nie udało się zapisać zmian.')
+        } else if (fundingRes && !fundingRes.success) {
+          setErrorMessage(fundingRes.error || 'Nie udało się zapisać źródła finansowania.')
+          router.refresh()
         } else {
           toast.success('Pomyślnie zaktualizowano dane podopiecznego')
           setOpen(false)
@@ -143,6 +162,9 @@ export function EditResidentDialog({
           </DialogDescription>
         </DialogHeader>
 
+        {/* Zdjęcie zapisuje się od razu po wybraniu pliku (prywatny bucket, SC-ADM-25) */}
+        <ResidentPhotoField residentId={resident.id} />
+
         <form id="edit-resident-dialog-form" onSubmit={handleSubmit} className="space-y-4 py-2">
           {errorMessage && (
             <div
@@ -154,7 +176,7 @@ export function EditResidentDialog({
             </div>
           )}
 
-          <EditResidentFormFields formData={formData} setFormData={setFormData} />
+          <EditResidentFormFields formData={formData} setFormData={setFormData} fundingSet={Boolean(initialFunding)} />
         </form>
 
         <DialogFooter className="p-0 pt-4 border-t border-border flex sm:flex-row justify-end gap-2">

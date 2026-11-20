@@ -42,7 +42,8 @@ export const POST = withAuth(
   async (request, { supabase }) => {
     const body = await request.json()
     const rawNumber = body.national_id || body['pes' + 'el']
-    const { first_name, last_name, avatar_url } = body
+    // Zdjęcie dodaje się w oknie „Edytuj” do prywatnego bucketu (SC-ADM-25) — adres z żądania jest pomijany
+    const { first_name, last_name } = body
 
     if (!first_name?.trim() || !last_name?.trim() || !rawNumber?.trim()) {
       throw new ApiError('Imię, nazwisko i identyfikator są wymagane', 400, 'VALIDATION_ERROR')
@@ -65,7 +66,6 @@ export const POST = withAuth(
         first_name: first_name.trim(),
         last_name: last_name.trim(),
         pesel_hash,
-        avatar_url: avatar_url || null,
       })
       .select('id')
       .single()

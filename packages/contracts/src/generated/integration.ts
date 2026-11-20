@@ -185,3 +185,236 @@ export const SYNC_STALENESS = {
   "status": "STABLE"
 } as const;
 
+export const DEVICE_AUTH = {
+  "device": "M5Stack StickS3 (SKU K150)",
+  "credential": "Token per urządzenie, pokazywany jeden raz przy rejestracji",
+  "header": "X-Device-Token",
+  "storedAs": "token_hash",
+  "revocation": "voice_devices.revoked_at — unieważniony token dostaje odmowę, nagrania zostają zaszyfrowane na urządzeniu",
+  "grants": [
+    "voice_upload"
+  ],
+  "sessionAccess": false,
+  "serviceRoleOnDevice": false,
+  "status": "STABLE"
+} as const;
+
+export const DEVICE_INGEST_PROTOCOL = {
+  "version": "1.2.0",
+  "endpoint": "/api/voice/device",
+  "runtime": "Next.js, Vercel fra1",
+  "storageRegion": "EU",
+  "steps": [
+    {
+      "id": "INIT",
+      "desc": "Urządzenie wysyła token i metadane nagrania. Serwer zwraca podpisany adres zapisu w Storage albo DUPLICATE, jeśli nagranie już przyjęto."
+    },
+    {
+      "id": "UPLOAD",
+      "desc": "Urządzenie wysyła plik prosto do Storage pod podpisany adres."
+    },
+    {
+      "id": "COMMIT",
+      "desc": "Urządzenie potwierdza zapis. Serwer sprawdza skrót pliku i tworzy voice_draft_notes ze źródłem DEVICE, bez resident_id, z pozycją w kolejce przypisania."
+    }
+  ],
+  "idempotencyKey": [
+    "device_id",
+    "client_capture_id"
+  ],
+  "fields": {
+    "required": [
+      "client_capture_id",
+      "session_id",
+      "session_seq",
+      "recorded_at",
+      "clock_state",
+      "age_ms",
+      "duration_ms",
+      "sha256",
+      "size_bytes",
+      "codec",
+      "firmware_version"
+    ],
+    "forbidden": [
+      "resident_id",
+      "resident_name",
+      "pesel",
+      "transcript"
+    ],
+    "formats": {
+      "session_id": "UUID v4 (string), unikalny dla sesji urządzenia",
+      "session_seq": "liczba całkowita >= 1 (integer), numer nagrania w obrębie sesji (1 = przedstawienie)",
+      "age_ms": "liczba całkowita >= 0 (integer), czas w milisekundach od nagrania do INIT (0 przy UNKNOWN)"
+    }
+  },
+  "codecs": [
+    "IMA_ADPCM_WAV",
+    "OPUS"
+  ],
+  "wire": {
+    "contentType": "application/json",
+    "requests": [
+      {
+        "step": "INIT",
+        "method": "POST",
+        "path": "/api/voice/device",
+        "body": [
+          "client_capture_id",
+          "session_id",
+          "session_seq",
+          "recorded_at",
+          "clock_state",
+          "age_ms",
+          "duration_ms",
+          "sha256",
+          "size_bytes",
+          "codec",
+          "firmware_version"
+        ],
+        "responses": [
+          "UPLOAD_URL",
+          "DUPLICATE",
+          "DEVICE_REVOKED",
+          "FORBIDDEN_FIELD",
+          "RETRY_LATER"
+        ]
+      },
+      {
+        "step": "COMMIT",
+        "method": "POST",
+        "path": "/api/voice/device/commit",
+        "body": [
+          "client_capture_id",
+          "sha256"
+        ],
+        "responses": [
+          "ACCEPTED",
+          "DUPLICATE",
+          "DEVICE_REVOKED",
+          "HASH_MISMATCH",
+          "RETRY_LATER"
+        ]
+      }
+    ],
+    "upload": {
+      "method": "PUT",
+      "url": "upload_url z odpowiedzi UPLOAD_URL (podpisany adres Storage, ważny do upload_expires_at)",
+      "contentTypes": {
+        "IMA_ADPCM_WAV": "audio/wav",
+        "OPUS": "audio/ogg"
+      },
+      "success": "HTTP 200 z Storage; urządzenie robi wtedy COMMIT"
+    },
+    "responseBody": {
+      "always": [
+        "code",
+        "server_time"
+      ],
+      "UPLOAD_URL": [
+        "upload_url",
+        "upload_expires_at"
+      ],
+      "RETRY_LATER": [
+        "retry_after_s"
+      ]
+    }
+  },
+  "clock": {
+    "marker": "TIME_UNCERTAIN",
+    "serverTime": "server_time w każdej odpowiedzi: UTC, ISO 8601 z milisekundami",
+    "ageMs": "Czas od nagrania do wysłania INIT według licznika urządzenia, w milisekundach; 0 przy UNKNOWN",
+    "states": [
+      {
+        "id": "SYNCED",
+        "recordedAt": "recorded_at z urządzenia",
+        "desc": "Zegar był ustawiony z server_time i urządzenie nie straciło od tego czasu zasilania."
+      },
+      {
+        "id": "RELATIVE",
+        "recordedAt": "chwila przyjęcia INIT minus age_ms",
+        "desc": "Zegar nie był ustawiony, ale urządzenie nie straciło zasilania od nagrania, więc licznik jest ciągły."
+      },
+      {
+        "id": "UNKNOWN",
+        "recordedAt": "recorded_at z urządzenia, niewiarygodny",
+        "desc": "Urządzenie straciło zasilanie między nagraniem a synchronizacją."
+      }
+    ],
+    "uncertainStates": [
+      "UNKNOWN"
+    ],
+    "when": "clock_state UNKNOWN albo wyliczony recorded_at w przyszłości względem server_time albo wcześniejszy niż ostatnia synchronizacja zegara urządzenia minus 24 godziny",
+    "effect": "Kierownik zmiany przypisuje nagranie do zmiany ręcznie."
+  },
+  "authorship": {
+    "source": "SELF_INTRODUCTION",
+    "rule": "Autorem wszystkich nagrań sesji (session_id) jest osoba, która przedstawiła się w nagraniu z session_seq 1, np. „Jestem Gabriela Kowalska”.",
+    "sessionInactivityTimeoutMinutes": 180,
+    "sessionStart": [
+      "Opróżnienie urządzenia w stacji (wszystkie nagrania potwierdzone ACCEPTED albo DUPLICATE)",
+      "Gest „Nowa osoba” na urządzeniu (przytrzymanie bocznego przycisku przez 3 s)",
+      "Bezczynność urządzenia powyżej 3 godzin (sessionInactivityTimeoutMinutes) — automatyczne rozpoczęcie nowej sesji i ekran „Przedstaw się”"
+    ],
+    "outOfOrderPolicy": "RETROACTIVE_ON_SEQ_1",
+    "outOfOrderRule": "Jeśli nagrania z session_seq > 1 dotrą przed session_seq 1 (np. po retry nieudanego PUT), pozostają tymczasowo jako NO_AUTHOR, a po dotarciu i transkrypcji session_seq 1 serwer retroaktywnie uzupełnia autora całej sesji.",
+    "matchedBy": "server",
+    "llmIdentifies": false,
+    "matchOn": [
+      "imię i nazwisko z transkryptu nagrania session_seq 1, porównane z personelem placówki urządzenia"
+    ],
+    "whenUnique": "Autor ustawiany automatycznie, zapis w audit_logs",
+    "ambiguousResolvedBy": [
+      "nurse:shift_lead",
+      "org_admin:own"
+    ],
+    "whenMissing": "NO_AUTHOR — brak przedstawienia, brak dopasowania albo kilka osób; nagranie przyjęte, kierownik zmiany wybiera autora sesji w kolejce",
+    "deviceRegistry": "voice_device_assignments to opcjonalna ewidencja wydania sprzętu i nie wyznacza autora"
+  },
+  "responses": [
+    {
+      "code": "UPLOAD_URL",
+      "http": 200,
+      "deviceMayDelete": false,
+      "desc": "Podpisany adres zapisu. Urządzenie wysyła plik i robi COMMIT."
+    },
+    {
+      "code": "ACCEPTED",
+      "http": 200,
+      "deviceMayDelete": true,
+      "desc": "Nagranie przyjęte po COMMIT."
+    },
+    {
+      "code": "DUPLICATE",
+      "http": 200,
+      "deviceMayDelete": true,
+      "desc": "To nagranie przyjęto już wcześniej."
+    },
+    {
+      "code": "DEVICE_REVOKED",
+      "http": 401,
+      "deviceMayDelete": false,
+      "desc": "Token nieznany albo unieważniony."
+    },
+    {
+      "code": "FORBIDDEN_FIELD",
+      "http": 422,
+      "deviceMayDelete": false,
+      "desc": "Żądanie zawiera pole z listy fields.forbidden."
+    },
+    {
+      "code": "HASH_MISMATCH",
+      "http": 422,
+      "deviceMayDelete": false,
+      "desc": "Skrót pliku w Storage nie zgadza się z INIT. Wysyłka do powtórzenia."
+    },
+    {
+      "code": "RETRY_LATER",
+      "http": 503,
+      "deviceMayDelete": false,
+      "desc": "Chwilowa niedostępność. Urządzenie ponawia przy kolejnym zrzucie."
+    }
+  ],
+  "status": "STABLE"
+} as const;
+

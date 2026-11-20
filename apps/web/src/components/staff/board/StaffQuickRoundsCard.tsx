@@ -117,7 +117,7 @@ export function StaffQuickRoundsCard({
               className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors min-h-touch"
             >
               <Mic className="h-4 w-4" />
-              Dyktuj (1-klik)
+              Dyktuj
             </Link>
           </TooltipTrigger>
           <TooltipContent>

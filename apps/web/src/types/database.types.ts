@@ -978,6 +978,7 @@ export interface Database {
           created_at: string
           archived_at: string | null
           avatar_url: string | null
+          photo_path: string | null
           birth_date: string | null
           gender: string | null
           admission_date: string | null
@@ -1003,6 +1004,7 @@ export interface Database {
           created_at?: string
           archived_at?: string | null
           avatar_url?: string | null
+          photo_path?: string | null
           birth_date?: string | null
           gender?: string | null
           admission_date?: string | null
@@ -1028,6 +1030,7 @@ export interface Database {
           created_at?: string
           archived_at?: string | null
           avatar_url?: string | null
+          photo_path?: string | null
           birth_date?: string | null
           gender?: string | null
           admission_date?: string | null

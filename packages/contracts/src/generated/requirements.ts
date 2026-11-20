@@ -237,6 +237,21 @@ export const REQUIREMENTS = [
     ]
   },
   {
+    "id": "ADM-RESIDENT-PHOTO",
+    "status": "TODO",
+    "risk": "HIGH",
+    "source": "SC-ADM-25",
+    "domain": "residents",
+    "statement": "Zdjęcie podopiecznego jest przechowywane prywatnie i dostępne wyłącznie osobom uprawnionym do danych tego podopiecznego.",
+    "acceptance": [
+      "Zdjęcia podopiecznych leżą w prywatnym buckecie; bez zalogowania i uprawnienia plik nie jest dostępny pod żadnym adresem",
+      "Wgrywa, zmienia i usuwa zdjęcie wyłącznie kierownik placówki, tylko dla podopiecznego swojej placówki; ścieżka pliku zaczyna się od identyfikatora placówki i podopiecznego",
+      "Czyta personel placówki podopiecznego oraz bliscy z aktywnym powiązaniem lub w oknie retencji; aplikacja pokazuje zdjęcie przez krótkotrwały podpisany link",
+      "Zdjęcie dodaje się i zmienia w oknie „Edytuj” karty podopiecznego oraz w kreatorze przyjęcia, nie w widoku karty",
+      "Istniejące zdjęcia z publicznego bucketu są przeniesione, a publiczne kopie usunięte; publiczny bucket nie przyjmuje nowych zdjęć podopiecznych"
+    ]
+  },
+  {
     "id": "ADM-RESIDENT-CARD-VISIBILITY",
     "status": "TODO",
     "risk": "HIGH",
@@ -440,14 +455,15 @@ export const REQUIREMENTS = [
     "id": "VOICE-ZERO-GUESSING",
     "status": "TODO",
     "risk": "HIGH",
-    "source": "SC-NUR-02/AC2, ADR-006",
+    "source": "SC-NUR-02/AC2, ADR-006, ADR-022",
     "domain": "voice",
     "statement": "Model nigdy nie ustala tożsamości pensjonariusza z nagrania.",
     "acceptance": [
-      "Żądanie rozpoczęcia nagrania zawiera resident_id jako UUID z frontendu",
+      "Żądanie nagrania z aplikacji zawiera resident_id jako UUID z frontendu",
       "Transkrypt wysyłany do modelu nie zawiera imienia, nazwiska ani identyfikatora",
       "Złączenie treści z tożsamością następuje w pamięci funkcji brzegowej przed zapisem",
-      "Brak resident_id w żądaniu kończy się odmową, nie próbą rozpoznania"
+      "Brak resident_id w żądaniu z aplikacji kończy się odmową, nie próbą rozpoznania",
+      "Nagranie z urządzenia bez podopiecznego potwierdzonego przez człowieka nie dociera do CLASSIFY ani do modelu"
     ]
   },
   {
@@ -480,12 +496,17 @@ export const REQUIREMENTS = [
     "id": "VOICE-RETENTION",
     "status": "TODO",
     "risk": "MEDIUM",
-    "source": "SC-NUR-02/AC3",
+    "source": "SC-NUR-02/AC3, SC-NUR-02/AC4",
     "domain": "voice",
-    "statement": "Surowe nagrania są usuwane po trzydziestu dniach.",
+    "statement": "Surowe nagrania są usuwane po terminie retencji placówki, domyślnie po trzydziestu dniach.",
     "acceptance": [
       "Zadanie bazodanowe usuwa wpisy starsze niż TTL",
-      "Usunięcie nie kasuje zatwierdzonego raportu"
+      "Usunięcie nie kasuje zatwierdzonego raportu",
+      "Placówka bez własnego ustawienia ma retencję 30 dni",
+      "Ustawienie spoza zakresu 7–90 dni jest odrzucane",
+      "Retencję zmienia wyłącznie kierownik swojej placówki albo super admin",
+      "Po terminie znika także plik nagrania w voice-recordings",
+      "Zmiana retencji trafia do audit_logs"
     ]
   },
   {
@@ -513,6 +534,62 @@ export const REQUIREMENTS = [
       "Model zwraca polecenie follow_up z konkretnym pytaniem",
       "Model nie generuje treści, której nie było w nagraniu",
       "Odpowiedź personelu dołącza się do tej samej rozmowy"
+    ]
+  },
+  {
+    "id": "VOICE-DEVICE-INGEST",
+    "status": "TODO",
+    "risk": "HIGH",
+    "source": "SC-NUR-17, ADR-022",
+    "domain": "voice",
+    "statement": "Urządzenie z ekranem tylko ze stanem (bez treści nagrań i nazwisk) przekazuje nagrania przez uwierzytelniony, idempotentny protokół z potwierdzeniem odbioru i czasem serwera.",
+    "acceptance": [
+      "Żądanie bez ważnego tokenu albo z tokenem unieważnionym dostaje DEVICE_REVOKED",
+      "Token urządzenia jest przechowywany wyłącznie jako skrót token_hash",
+      "Ponowna wysyłka tej samej pary device_id i client_capture_id zwraca DUPLICATE bez drugiego wpisu",
+      "Urządzenie kasuje nagranie wyłącznie po ACCEPTED albo DUPLICATE",
+      "Żądanie z resident_id, imieniem, PESEL albo transkryptem jest odrzucane jako FORBIDDEN_FIELD",
+      "Autorem nagrań sesji jest osoba, która przedstawiła się w pierwszym nagraniu sesji",
+      "Przedstawienie dopasowuje serwer bez modelu do personelu placówki; brak albo kilka dopasowań wybiera kierownik zmiany",
+      "Bezczynność urządzenia powyżej 3 godzin automatycznie otwiera nową sesję, chroniąc prywatność brudnopisów między osobami",
+      "Gdy nagrania z session_seq > 1 dotrą przed session_seq 1 (np. po retry), serwer retroaktywnie uzupełnia autora całej sesji po dotarciu session_seq 1",
+      "Nagranie z czasem spoza okna synchronizacji dostaje oznaczenie TIME_UNCERTAIN",
+      "Każda odpowiedź protokołu niesie server_time, z którego urządzenie bez RTC ustawia zegar",
+      "Nagranie z clock_state RELATIVE dostaje recorded_at równe chwili przyjęcia INIT minus age_ms",
+      "Nagranie z clock_state UNKNOWN dostaje oznaczenie TIME_UNCERTAIN"
+    ]
+  },
+  {
+    "id": "VOICE-RESIDENT-ASSIGN",
+    "status": "TODO",
+    "risk": "HIGH",
+    "source": "SC-NUR-18, ADR-022",
+    "domain": "voice",
+    "statement": "Nagranie bez podopiecznego trafia do kolejki, w której serwer podsuwa kandydatów, a człowiek potwierdza.",
+    "acceptance": [
+      "Kandydatów wyznacza serwer na rejestrze tej placówki, bez udziału modelu",
+      "Bez potwierdzenia człowieka nagranie nie przechodzi do etapu CLASSIFY",
+      "Kolejkę czyta i rozstrzyga wyłącznie kierownik tej zmiany albo kierownik placówki",
+      "Po decyzji pozycja znika z kolejki, a voice_draft_notes czyta dalej tylko autor",
+      "Nagranie oznaczone jako nie do przypisania nie trafia do modelu i podlega retencji",
+      "Każda decyzja zapisuje w audit_logs kandydatów podsuniętych i wybór człowieka",
+      "Konto bliskiego otrzymuje zero wierszy z kolejki przypisania"
+    ]
+  },
+  {
+    "id": "VOICE-DEVICE-REGISTRY",
+    "status": "TODO",
+    "risk": "MEDIUM",
+    "source": "SC-ADM-24, ADR-022",
+    "domain": "voice",
+    "statement": "Kierownik placówki prowadzi rejestr urządzeń placówki. Urządzenia są wspólne: autora nagrań ustala przedstawienie w sesji, a wpis wydania jest opcjonalną ewidencją sprzętu.",
+    "acceptance": [
+      "Token urządzenia jest pokazywany jeden raz przy rejestracji",
+      "Unieważnienie ustawia revoked_at zamiast usuwać wiersz",
+      "Jedno urządzenie ma w danej chwili najwyżej jeden aktywny wpis wydania",
+      "Wpis wydania tworzy kierownik zmiany albo kierownik placówki i nie wyznacza autora nagrań",
+      "Rejestracja, unieważnienie i wpis wydania trafiają do audit_logs",
+      "Konto bliskiego nie widzi urządzeń ani wpisów wydania"
     ]
   },
   {

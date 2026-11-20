@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { isImpersonationSessionActive, assertMutationAllowedDuringImpersonation } from '@/lib/impersonation-guards'
 import type { TablesUpdate } from '@/types/database.types'
+import { CONTRACT_SOURCES } from '@/lib/reporting-constants'
 
 export interface UpdateResidentPayload {
   residentId: string
@@ -17,6 +18,8 @@ export interface UpdateResidentPayload {
   notes?: string | null
   admission_date?: string | null
   is_zsn?: boolean
+  /** Źródło pozyskania (SC-ADM-24/AC4); null = brak danych. */
+  contract_source?: string | null
 }
 
 export interface UpdateResidentResult {
@@ -120,6 +123,13 @@ export async function updateResidentInlineAction(
 
   if (payload.is_zsn !== undefined) {
     updateData.is_zsn = payload.is_zsn
+  }
+
+  if (payload.contract_source !== undefined) {
+    if (payload.contract_source !== null && !(CONTRACT_SOURCES as readonly string[]).includes(payload.contract_source)) {
+      return { success: false, error: 'Wybierz źródło pozyskania z listy.' }
+    }
+    updateData.contract_source = payload.contract_source
   }
 
   if (payload.birth_date !== undefined) {
