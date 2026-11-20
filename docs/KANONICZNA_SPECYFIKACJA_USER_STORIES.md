@@ -1,6 +1,6 @@
 # 📖 Kanoniczna specyfikacja user stories — Silver Care
 
-> **Wersja:** 2.22 (prywatne zdjęcie podopiecznego, edycja karty w oknie „Edytuj”, kanał urządzeń Zero-UI, stałe przypisanie urządzeń, konfigurowalna retencja nagrań — 📝 PROPOZYCJA) · **Ostatnia aktualizacja:** 2026-11-17
+> **Wersja:** 2.23 (ekran stanu urządzenia i notatki odporne na restart, prywatne zdjęcie podopiecznego, edycja karty w oknie „Edytuj”, kanał urządzeń Zero-UI — 📝 PROPOZYCJA) · **Ostatnia aktualizacja:** 2026-11-19
 > **Właściciele:** Darek Rink, Michał Sznurowski
 
 ## Jak czytać i utrzymywać ten dokument
@@ -841,20 +841,22 @@
 - **AC4 (Nieobecność):** Podopieczny ze statusem nieobecności (szpital, przepustka) nie dostaje komunikatu o obchodzie.
 - **AC5 (Jedno powiadomienie):** Najwyżej jedno powiadomienie `F1` na dobę na bliskiego.
 
-#### [SC-NUR-17] Notatki na urządzeniu bez ekranu i zrzut w stacji dokującej
+#### [SC-NUR-17] Notatki na urządzeniu przypiętym do fartucha i zrzut w stacji dokującej
 🔗 **Kontrakt:** brak REQ (proponowany nowy: `VOICE-DEVICE-INGEST`; wdraża: `VOICE-RETENTION`, `VOICE-ZERO-GUESSING`) · **ADR:** ADR-022 · **Status:** 📝 PROPOZYCJA
 
 **User story:** Jako opiekunka chcę nacisnąć przycisk na urządzeniu przypiętym do fartucha, powiedzieć notatkę i puścić, a po zmianie odłożyć urządzenie do stacji, aby nie obsługiwać telefonu ani ekranu.
 
 **Kryteria akceptacji:**
 - **AC1 (Nagranie bez sieci):** Wciśnij, powiedz, puść. Nagranie zapisuje się w zaszyfrowanej pamięci urządzenia z czasem nagrania (`recorded_at`) i identyfikatorem urządzenia, także bez sieci.
-- **AC2 (Sygnały):** Krótki ton potwierdza początek i koniec nagrania. Osobny sygnał oznacza niską baterię albo pełną pamięć. Urządzenie nie wyświetla ani nie odtwarza treści nagrań.
+- **AC2 (Ekran stanu):** Ekran pokazuje wyłącznie stan: nagrywanie z czasem i poziomem dźwięku, „Zapisano”, liczbę notatek czekających na wysłanie, baterię, wysyłanie w stacji, ostrzeżenia (słaba bateria, pełna pamięć) i usterki z kodem. Ekran gaśnie po 15 s. Urządzenie nie wyświetla ani nie odtwarza treści nagrań ani nazwisk. Czerwień tylko dla usterki urządzenia.
 - **AC3 (Zrzut w stacji):** Po odłożeniu do stacji (wykryte ładowanie) urządzenie wysyła nagrania. Endpoint uwierzytelnia token urządzenia i wydaje podpisany adres zapisu w Storage (UE). Urządzenie kasuje nagranie dopiero po potwierdzeniu przyjęcia.
 - **AC4 (Idempotencja):** Ponowna wysyłka tego samego nagrania nie tworzy drugiego wpisu.
 - **AC5 (Autor z przydziału):** Autorem jest osoba, której urządzenie było przydzielone w chwili `recorded_at` (`SC-ADM-24`). Nagranie z chwili bez przydziału trafia do kolejki z oznaczeniem „brak autora”.
 - **AC6 (Bez podopiecznego w żądaniu):** Żądanie nie zawiera `resident_id`. Nagranie trafia do kolejki „Do przypisania” (`SC-NUR-18`) i bez potwierdzenia człowieka nie przechodzi do klasyfikacji ani do modelu (ADR-022).
 - **AC7 (Czas niepewny):** Gdy `recorded_at` jest w przyszłości albo wcześniejszy niż ostatnia synchronizacja zegara minus doba, nagranie dostaje oznaczenie „czas niepewny”, a kierownik zmiany przypisuje je do zmiany ręcznie.
 - **AC8 (Unieważnione urządzenie):** Urządzenie z unieważnionym tokenem dostaje odmowę, a nagrania zostają zaszyfrowane na urządzeniu.
+- **AC9 (Restart nie kasuje notatek):** Restart, wyłączenie ani rozładowanie nie usuwa zapisanych notatek. Nagranie trafia do zaszyfrowanej pamięci w trakcie mówienia, a po starcie urządzenie odtwarza kolejkę i licznik z tej pamięci. Nagranie przerwane restartem zostaje do miejsca przerwania.
+- **AC10 (Przypadkowe kliknięcie):** Pojedyncze kliknięcie przycisku zasilania nie restartuje urządzenia, tylko wybudza ekran (M5PM1 `SINGLE_RST_DIS`, ustawiane przy każdym starcie).
 
 #### [SC-NUR-18] Kolejka „Do przypisania”: kierownik zmiany potwierdza podopiecznego
 🔗 **Kontrakt:** brak REQ (proponowany nowy: `VOICE-RESIDENT-ASSIGN`, rozszerza `VOICE-ZERO-GUESSING`) · **ADR:** ADR-006, ADR-021 pkt 4, ADR-022 · **Status:** 📝 PROPOZYCJA
@@ -1112,3 +1114,4 @@
 | 2026-11-17 | 2.20 | Nowe `SC-ADM-25` (prywatne zdjęcie podopiecznego) i `SC-ADM-20/AC11` (pola karty edytuje się w oknie „Edytuj”) — decyzje Michała z 2026-11-17, 📝 PROPOZYCJA. |
 | 2026-11-17 | 2.21 | Kanał urządzeń Zero-UI wg ADR-022 (decyzje Michała z 2026-11-16 i 2026-11-17): nowe `SC-NUR-17` (nagrywanie na urządzeniu i zrzut w stacji), `SC-NUR-18` (kolejka „Do przypisania” z podpowiedzią serwera i potwierdzeniem człowieka) i `SC-ADM-24` (rejestr urządzeń i przydział przy wydaniu) ze statusem 📝 PROPOZYCJA. |
 | 2026-11-17 | 2.22 | Decyzje Michała z 2026-11-17: `SC-ADM-24` — stałe przypisanie urządzenia, zamykane tylko zwrotem; `SC-NUR-02/AC4` — audio z obu kanałów w `voice-recordings`, retencja ustawiana przez kierownika placówki albo super admina (7–90 dni, domyślnie 30), 📝 PROPOZYCJA. |
+| 2026-11-19 | 2.23 | Decyzja Michała z 2026-11-19 po pomiarach na StickS3: `SC-NUR-17` dostaje ekran stanu zamiast samych sygnałów dźwiękowych (AC2, bez treści nagrań), `AC9` — restart ani wyłączenie nie kasują notatek, `AC10` — kliknięcie przycisku zasilania nie restartuje. 📝 PROPOZYCJA. |

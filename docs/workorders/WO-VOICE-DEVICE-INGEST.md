@@ -56,10 +56,16 @@ Kroki 2–6 dają działające przyjęcie nagrań bez UI: da się je sprawdzić 
 - **ADR-006 / MDR:** model nie wskazuje podopiecznego. Dopasowanie jest deterministyczne (nazwisko, `rooms.number`, `beds.label`) i wyłącznie w placówce urządzenia. Bez decyzji człowieka brak `CLASSIFY` (R08).
 - **RODO art. 9:** pliki w prywatnym buckecie w UE. Transkrypcja nagrań bez przypisania idzie przez Groq jak dziś (ADR-009, surowe audio przed maskowaniem). Kandydaci w kolejce przechowywani jako identyfikatory, imiona dociągane przy wyświetleniu.
 - **`service_role` w trasie urządzeń:** największe ryzyko kroku 5. Wymaga recenzji pod kątem filtra `organization_id` w każdym zapytaniu.
-- **Zegar StickS3:** brak potwierdzonego układu RTC (kompendium §1). `TIME_UNCERTAIN` musi działać od pierwszego dnia.
+- **Zegar StickS3:** pomiar 2026-11-19 potwierdził brak układu RTC (na I2C tylko ES8311, IMU i M5PM1). Czas przetrwa restart programowy, ginie po wyłączeniu. `TIME_UNCERTAIN` musi działać od pierwszego dnia.
 
 ## Weryfikacja
 Każdy krok: test RED, GREEN, `node tools/sc-phase.mjs`, `bash scripts/verify.sh --full`, a dla UI testy E2E (Page Object, `@REQ`). Migracje stosowane po scaleniu, wspólna baza dla stagingu i produkcji.
+
+## Kryteria akceptacji firmware'u (`silver-care-devices`, z pomiarów 2026-11-19, devices#4)
+1. **Restart ani wyłączenie nie kasują notatek** (`SC-NUR-17/AC9`): zapis na zaszyfrowaną partycję w trakcie nagrywania (ramki 20 ms), kolejka i licznik odtwarzane z flash po starcie, przerwane nagranie zachowane do miejsca przerwania. Kasowanie wyłącznie po `deviceMayDelete: true`.
+2. **Kliknięcie zasilania nie restartuje** (`SC-NUR-17/AC10`): przy każdym starcie M5PM1 `BTN_CFG_1` (0x49) bit 0 `SINGLE_RST_DIS`. Fabrycznie rejestr ma `0x2a`. `DL_LOCK` (bit 7) dopiero po decyzji o Secure Boot.
+3. **Ekran stanu według makiety** (`SC-NUR-17/AC2`), bez treści nagrań i nazwisk.
+4. **Wykrycie stacji po napięciu USB** (> 4,5 V), nie po `isCharging()`, które na StickS3 skacze między 0 a 1.
 
 ## Rozstrzygnięte (Michał, 2026-11-17)
 1. **Przydział:** urządzenie przypisane pracownikowi na stałe, przydział zamyka wyłącznie zwrot.
@@ -67,4 +73,5 @@ Każdy krok: test RED, GREEN, `node tools/sc-phase.mjs`, `bash scripts/verify.sh
 3. **Retencja:** konfigurowalna per placówka przez kierownika placówki i super admina, 7–90 dni, domyślnie 30. Kontrakt zmieniony w oknie kontraktowym 2026-11-17 (commit `91800ab`, reguła R17).
 
 ## WYMAGA DECYZJI
-1. **Format nagrań na urządzeniu** (repo `silver-care-devices`): rekomendacja Opus 16 kb/s w Ogg, ok. 34 min z aktualizacjami przez Wi-Fi wobec ok. 8 min dla IMA ADPCM. Do potwierdzenia pomiarem na egzemplarzu.
+1. **Format nagrań na urządzeniu** (repo `silver-care-devices`): rekomendacja Opus 16 kb/s w Ogg, ok. 34 min z aktualizacjami przez Wi-Fi wobec ok. 8 min dla IMA ADPCM. Pomiar 2026-11-19 (devices#4): transkrypcja `whisper-large-v3` z Opus 16 kb/s taka sama jak z WAV, kodowanie przy 240 MHz i złożoności 3 zajmuje 0,35 czasu nagrania. Czeka na potwierdzenie.
+2. **Opis urządzenia w kontrakcie:** `VOICE-DEVICE-INGEST.statement` i `CAPTURE_SOURCES.DEVICE.desc` mówią „urządzenie bez ekranu”. Zmiana na „ekran tylko ze stanem” wymaga okna kontraktowego `VOICE-DEVICE-INGEST`.
