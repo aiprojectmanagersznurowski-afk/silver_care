@@ -1,5 +1,6 @@
 'use server'
 
+import { getFeatureOrganizationId, getOrgFeatureFlags } from '@/lib/feature-flags'
 import { createClient } from '@/lib/supabase/server'
 import {
   SearchCategoryKey,
@@ -47,8 +48,18 @@ export async function searchGlobalAction(
     return failure(cleanQ, 'Brak uprawnień do wyszukiwarki.')
   }
 
-  const org = orgId as string
-  const want = new Set(categoriesToSearch(selectedCategory, role))
+  const org = await getFeatureOrganizationId(user) ?? ''
+  const isPlatformSearch = isSuperAdmin && !org
+  const flags = org ? await getOrgFeatureFlags(org).catch(() => null) : null
+  const available: Record<SearchCategoryKey, boolean> = {
+    organizations: isSuperAdmin,
+    residents: Boolean(flags?.module_residents_management),
+    facility: Boolean(flags?.module_facility_management),
+    agenda: Boolean(flags?.module_residents_management),
+    reports: Boolean(flags?.module_voice_and_reports),
+  }
+  if (org && !flags) return failure(cleanQ, 'Nie udało się sprawdzić dostępności modułów.')
+  const want = new Set(categoriesToSearch(selectedCategory, role).filter((category) => available[category]))
   const like = `%${cleanQ}%`
   const words = splitSearchWords(cleanQ)
   // Każde słowo musi pasować do imienia albo nazwiska (osobne .or() są łączone warunkiem „i”)
@@ -58,12 +69,13 @@ export async function searchGlobalAction(
   const residents = () => {
     let q = supabase
       .from('residents')
-      .select('id, first_name, last_name, care_level, is_zsn, archived_at, death_date, contract_end_date, bed_assignments(unassigned_at, beds(label, rooms(number)))')
+      .select('id, first_name, last_name, care_level, is_zsn, archived_at, death_date, contract_end_date'
+        + (flags?.module_facility_management ? ', bed_assignments(unassigned_at, beds(label, rooms(number)))' : ''))
     for (const w of words) q = q.or(nameFilter(w))
     const ordered = q
       .order('archived_at', { ascending: true, nullsFirst: true }) // aktywni przed archiwalnymi, zanim zadziała limit
       .limit(SEARCH_CANDIDATE_LIMIT)
-    return isSuperAdmin ? ordered : ordered.eq('organization_id', org)
+    return isPlatformSearch ? ordered : ordered.eq('organization_id', org)
   }
 
   const rooms = () => {
@@ -72,7 +84,7 @@ export async function searchGlobalAction(
       .select('id, number, floor, sector, organization_id, beds(id, label, bed_assignments(unassigned_at, residents(id, first_name, last_name)))')
       .or(`number.ilike.${like},sector.ilike.${like}`)
       .limit(SEARCH_CANDIDATE_LIMIT)
-    return isSuperAdmin ? q : q.eq('organization_id', org)
+    return isPlatformSearch ? q : q.eq('organization_id', org)
   }
 
   const beds = () => {
@@ -81,7 +93,7 @@ export async function searchGlobalAction(
       .select('id, label, rooms!inner(id, number, floor, sector, organization_id), bed_assignments(unassigned_at, residents(id, first_name, last_name))')
       .ilike('label', like)
       .limit(SEARCH_CANDIDATE_LIMIT)
-    return isSuperAdmin ? q : q.eq('rooms.organization_id', org)
+    return isPlatformSearch ? q : q.eq('rooms.organization_id', org)
   }
 
   const agenda = () => {
@@ -90,7 +102,7 @@ export async function searchGlobalAction(
       .select('id, title, time, residents(first_name, last_name)')
       .ilike('title', like)
       .limit(SEARCH_CANDIDATE_LIMIT)
-    return isSuperAdmin ? q : q.eq('organization_id', org)
+    return isPlatformSearch ? q : q.eq('organization_id', org)
   }
 
   const reports = () => {
@@ -100,7 +112,7 @@ export async function searchGlobalAction(
       .from('daily_reports')
       .select('id, created_at, status, residents!inner(id, first_name, last_name, organization_id)')
       .limit(SEARCH_CANDIDATE_LIMIT)
-    if (!isSuperAdmin) q = q.eq('residents.organization_id', org)
+    if (!isPlatformSearch) q = q.eq('residents.organization_id', org)
     if (isDateSearch) return q.gte('created_at', `${cleanQ}T00:00:00Z`).lte('created_at', `${cleanQ}T23:59:59Z`)
     for (const w of words) q = q.or(nameFilter(w), { foreignTable: 'residents' })
     return q
