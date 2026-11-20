@@ -12,6 +12,7 @@ const state = { calls: [] as Call[] }
 function client() {
   return {
     auth: { getUser: vi.fn(async () => ({ data: { user: { id: 'u1', app_metadata: { role: 'org_admin', organization_id: 'o1' } } }, error: null })) },
+    rpc: vi.fn(async () => ({ data: true, error: null })),
     from: (table: string) => {
       const b: Record<string, unknown> = {}
       for (const method of ['select', 'eq', 'single', 'update', 'insert']) {

@@ -18,6 +18,7 @@ const state = {
 function client() {
   return {
     auth: { getUser: vi.fn(async () => ({ data: { user: state.user }, error: null })) },
+    rpc: vi.fn(async () => ({ data: true, error: null })),
     from: (table: string) => {
       const b: Record<string, unknown> = {}
       for (const method of ['select', 'eq', 'maybeSingle', 'upsert', 'insert']) {
