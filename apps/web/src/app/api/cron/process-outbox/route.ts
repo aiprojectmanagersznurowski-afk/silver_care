@@ -102,13 +102,25 @@ export async function GET(request: Request) {
     const smsapiToken = process.env.SMSAPI_TOKEN
     const mailtrapToken = process.env.EMAIL_PROVIDER_KEY
 
+    const familyPortalByOrg = new Map<string, boolean>()
+    const hasFamilyPortal = async (organizationId: string) => {
+      const known = familyPortalByOrg.get(organizationId)
+      if (known !== undefined) return known
+      const { data, error } = await adminClient.rpc('has_org_feature', {
+        p_org_id: organizationId, p_feature_key: 'module_family_portal',
+      })
+      if (error || data == null) throw new Error('FEATURE_FLAGS_UNAVAILABLE')
+      familyPortalByOrg.set(organizationId, data)
+      return data
+    }
+
     // Iterujemy po atomowo zarezerwowanych powiadomieniach
     for (const notification of records) {
       let success = true
       let errorMessage: string | null = null
 
       try {
-        if (notification.entity_type === 'report') {
+        if (notification.entity_type === 'report' && await hasFamilyPortal(notification.organization_id)) {
           // Pobierz resident_id z raportu
           const { data: report, error: reportErr } = await adminClient
             .from('daily_reports')
@@ -206,7 +218,7 @@ export async function GET(request: Request) {
           }
         } else if (notification.entity_type === 'capacity_exceeded') {
           await deliverCapacityExceeded(adminClient, notification, mailtrapToken, request)
-        } else {
+        } else if (notification.entity_type !== 'report') {
           // Nieznany typ nie może być oznaczony jako wysłany bez wysyłki
           throw new Error(`Unsupported outbox entity_type: ${notification.entity_type}`)
         }
