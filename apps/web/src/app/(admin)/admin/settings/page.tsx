@@ -1,3 +1,5 @@
+import { requireOrgFeature } from '@/lib/feature-flags'
+import { FeatureDisabledState } from '@/components/patterns/FeatureDisabledState'
 import { PageHeader } from '@/components/patterns/PageHeader'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getBedOptimizerRulesAction } from '@/actions/bed-rules'
@@ -6,6 +8,8 @@ import { BedRulesSettingsForm } from '@/components/facility/BedRulesSettingsForm
 export const dynamic = 'force-dynamic'
 
 export default async function FacilitySettingsPage() {
+  if (!(await requireOrgFeature('module_facility_management')).allowed) return <FeatureDisabledState />
+
   const initialRules = await getBedOptimizerRulesAction()
 
   return (
