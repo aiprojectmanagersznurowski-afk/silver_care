@@ -1,4 +1,4 @@
-import { requireOrgFeature } from '@/lib/feature-flags'
+import { getCurrentFeatureFlags } from '@/lib/feature-flags'
 import { FeatureDisabledState } from '@/components/patterns/FeatureDisabledState'
 import { cookies } from 'next/headers'
 import { notFound, redirect } from 'next/navigation'
@@ -11,7 +11,8 @@ import { getCurrentUser } from '@/lib/supabase/current-user'
 
 /** Karta podopiecznego kierownika (i superadmina w impersonacji, tylko do odczytu) — SC-ADM-20. */
 export default async function ResidentProfilePage({ params }: { params: Promise<{ id: string }> }) {
-  if (!(await requireOrgFeature('module_residents_management')).allowed) return <FeatureDisabledState />
+  const flags = (await getCurrentFeatureFlags())?.flags
+  if (!flags?.module_residents_management) return <FeatureDisabledState />
 
   const { id } = await params
   const supabase = await createClient()
@@ -19,7 +20,7 @@ export default async function ResidentProfilePage({ params }: { params: Promise<
   if (!user) redirect('/login')
 
   const isImpersonating = isImpersonationSessionActive(await cookies(), user)
-  const card = await getResidentCard(supabase, id, user, isImpersonating)
+  const card = await getResidentCard(supabase, id, user, isImpersonating, flags)
 
   if (card.status === 'forbidden') redirect('/')
   if (card.status === 'not_found') notFound()
@@ -30,6 +31,7 @@ export default async function ResidentProfilePage({ params }: { params: Promise<
   return (
     <ResidentCard
       card={card}
+      voiceEnabled={flags.module_voice_and_reports}
       backHref="/admin/residents"
       backLabel="Wróć do listy podopiecznych"
       reportsHref="/admin/reports/daily"

@@ -1,3 +1,4 @@
+import type { EffectiveFeatureFlags } from '@/lib/feature-flags'
 import type { SupabaseClient, User } from '@supabase/supabase-js'
 import type { ResidentCardSection } from '@silvercare/contracts/src/generated/presentation'
 import { resolveCardAccess, sectionsFor, residentSelect, type CardAccess } from './card-access'
@@ -34,11 +35,19 @@ export async function getResidentCard(
   supabase: SupabaseClient,
   residentId: string,
   user: User,
-  isImpersonating: boolean
+  isImpersonating: boolean,
+  flags?: EffectiveFeatureFlags,
 ): Promise<ResidentCardResult> {
   const access = resolveCardAccess(user.app_metadata?.role as string | undefined, isImpersonating)
   if (!access) return { status: 'forbidden' }
-  const sections = sectionsFor(access)
+  const sections = sectionsFor(access).filter((section) => (
+    !flags || (
+      (section !== 'tasks' || flags.module_shift_tasks)
+      && (section !== 'wearable' || flags.module_wearables_iot)
+      && (section !== 'contract' || flags.module_documents_contracts)
+      && (section !== 'bed' || flags.module_facility_management)
+    )
+  ))
   const orgId = user.app_metadata?.organization_id as string | undefined
 
   let residentQuery = supabase.from('residents').select(residentSelect(sections)).eq('id', residentId)
@@ -55,7 +64,7 @@ export async function getResidentCard(
     sections.includes('wearable')
       ? supabase.from('external_wearable_links').select('id, provider, external_user_id, created_at').eq('resident_id', residentId).eq('provider', 'POLAR').maybeSingle()
       : { data: null, error: null },
-    sections.includes('daily')
+    sections.includes('daily') && flags?.module_voice_and_reports !== false
       ? supabase.from('daily_reports').select('id, status, created_at, approved_at').eq('resident_id', residentId).order('created_at', { ascending: false }).limit(5)
       : { data: [], error: null },
     sections.includes('daily')
