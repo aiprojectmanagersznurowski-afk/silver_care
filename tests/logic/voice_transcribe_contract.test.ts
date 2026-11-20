@@ -54,9 +54,10 @@ describe('Kontrakt endpointu /api/voice/transcribe (3 kształty żądania)', () 
 
     vi.mocked(createClient).mockResolvedValueOnce({
       auth: {
-        getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'nurse-uuid-456' } }, error: null }),
+        getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'nurse-uuid-456', app_metadata: { role: 'nurse', organization_id: 'org-a' } } }, error: null }),
       },
       from: vi.fn((table: string) => {
+        if (table === 'organization_feature_flags') return { select: () => ({ eq: async () => ({ data: [], error: null }) }) }
         if (table === 'voice_draft_notes') {
           return { insert: mockInsert }
         }
@@ -97,11 +98,11 @@ describe('Kontrakt endpointu /api/voice/transcribe (3 kształty żądania)', () 
   })
 
   it('Kształt 2: żądanie bez resident_id zwraca czysty transkrypt bez tworzenia rekordu szkicu @REQ: VOICE-ZERO-GUESSING', async () => {
-    const mockFrom = vi.fn()
+    const mockFrom = vi.fn(() => ({ select: () => ({ eq: async () => ({ data: [], error: null }) }) }))
 
     vi.mocked(createClient).mockResolvedValueOnce({
       auth: {
-        getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'nurse-uuid-456' } }, error: null }),
+        getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'nurse-uuid-456', app_metadata: { role: 'nurse', organization_id: 'org-a' } } }, error: null }),
       },
       from: mockFrom,
     } as unknown as Awaited<ReturnType<typeof createClient>>)
@@ -126,8 +127,8 @@ describe('Kontrakt endpointu /api/voice/transcribe (3 kształty żądania)', () 
     expect(json.transcript).toBe('Senior zjadł pełny obiad i odpoczywał w ogrodzie.')
     expect(json.draftId).toBeUndefined()
 
-    // Baza nie może być dotykana dla czatu personelu
-    expect(mockFrom).not.toHaveBeenCalled()
+    // Czat sprawdza flagę i nie tworzy szkicu.
+    expect(mockFrom.mock.calls).toEqual([['organization_feature_flags']])
   })
 
   it('Kształt 3: żądanie z draft_id pobiera stary transkrypt, dopisuje uzupełnienie i aktualizuje szkic @REQ: VOICE-FOLLOWUP @REQ: VOICE-OFFLINE', async () => {
@@ -143,9 +144,10 @@ describe('Kontrakt endpointu /api/voice/transcribe (3 kształty żądania)', () 
 
     vi.mocked(createClient).mockResolvedValueOnce({
       auth: {
-        getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'nurse-uuid-456' } }, error: null }),
+        getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'nurse-uuid-456', app_metadata: { role: 'nurse', organization_id: 'org-a' } } }, error: null }),
       },
       from: vi.fn((table: string) => {
+        if (table === 'organization_feature_flags') return { select: () => ({ eq: async () => ({ data: [], error: null }) }) }
         if (table === 'voice_draft_notes') {
           return {
             select: mockSelect,

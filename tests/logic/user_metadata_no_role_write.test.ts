@@ -33,7 +33,7 @@ function mockCaller(role: string, orgId?: string) {
         data: { user: { id: 'caller-1', app_metadata: { role, ...(orgId ? { organization_id: orgId } : {}) } } },
       }),
     },
-    rpc: vi.fn().mockResolvedValue({ error: null }),
+    rpc: vi.fn().mockResolvedValue({ data: true, error: null }),
   } as unknown as Awaited<ReturnType<typeof createClient>>)
 }
 
