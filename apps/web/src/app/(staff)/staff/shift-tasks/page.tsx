@@ -1,3 +1,5 @@
+import { requireOrgFeature } from '@/lib/feature-flags'
+import { FeatureDisabledState } from '@/components/patterns/FeatureDisabledState'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
@@ -22,6 +24,8 @@ type SearchParams = Promise<{ shift?: string; date?: string; group?: string; res
 
 /** Zadania zmiany (NUR-TASKS, SC-NUR-13/15): personel opiekuńczy i kierownik placówki; bliscy nie mają dostępu (RLS). */
 export default async function ShiftTasksPage({ searchParams }: { searchParams: SearchParams }) {
+  if (!(await requireOrgFeature('module_shift_tasks')).allowed) return <FeatureDisabledState />
+
   const user = await getCurrentUser()
   const role = getAppRole(user)
   if (!user || (role !== 'nurse' && role !== 'org_admin')) redirect('/')

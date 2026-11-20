@@ -1,3 +1,5 @@
+import { requireOrgFeature } from '@/lib/feature-flags'
+import { FeatureDisabledState } from '@/components/patterns/FeatureDisabledState'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/supabase/current-user'
@@ -21,6 +23,8 @@ export const dynamic = 'force-dynamic'
  * kontrakt nie daje tego zasobu administratorowi platformy ani bliskim.
  */
 export default async function ShiftsPage({ searchParams }: { searchParams: Promise<{ week?: string }> }) {
+  if (!(await requireOrgFeature('module_shift_tasks')).allowed) return <FeatureDisabledState />
+
   const user = await getCurrentUser()
   if (!user || getAppRole(user) !== 'org_admin') redirect('/')
 
