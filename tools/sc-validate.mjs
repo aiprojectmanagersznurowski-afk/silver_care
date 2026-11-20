@@ -728,11 +728,51 @@ if (DEVICE_INGEST_PROTOCOL) {
   }
 }
 
-// R35 — modułowość i flagi placówki (SC-SUP-06, SUP-FEATURE-FLAGS): acykliczny graf, ochrona Rdzenia, zapis wyłącznie super_admin.
+// R35 — modułowość i flagi placówki (SC-SUP-06, SUP-FEATURE-FLAGS): kompletność Rdzenia i katalogu, typy tras, mapowania wieloflagowe, acykliczny graf, zapis wyłącznie super_admin przez RPC.
 {
-  if (!Array.isArray(CORE_CAPABILITIES) || !CORE_CAPABILITIES.includes('mandatory_rodo_audit_logs')) {
-    err('R35-feature-flags', 'CORE_CAPABILITIES musi zawierać mandatory_rodo_audit_logs — obowiązkowy audyt RODO nie może być wyłączalny.');
+  const REQUIRED_CORE_CAPABILITIES = [
+    'auth_sessions',
+    'rbac_mfa',
+    'organization_isolation',
+    'user_profile',
+    'mandatory_rodo_audit_logs',
+  ];
+  const REQUIRED_MODULES = [
+    'module_facility_management',
+    'module_residents_management',
+    'module_voice_and_reports',
+    'module_shift_tasks',
+    'module_audit_compliance',
+    'module_family_portal',
+    'module_documents_contracts',
+    'module_finance_budget',
+    'module_wearables_iot',
+  ];
+  const REQUIRED_DELEGATIONS = [
+    'allow_org_admin_report_config',
+    'allow_org_admin_contract_templates',
+  ];
+
+  if (!Array.isArray(CORE_CAPABILITIES)) {
+    err('R35-feature-flags', 'CORE_CAPABILITIES musi być tablicą.');
+  } else {
+    const seenCore = new Set();
+    for (const cap of CORE_CAPABILITIES) {
+      if (typeof cap !== 'string' || cap.trim().length === 0) {
+        err('R35-feature-flags', 'CORE_CAPABILITIES może zawierać wyłącznie niepuste ciągi znaków.');
+      } else if (seenCore.has(cap)) {
+        err('R35-feature-flags', `Zduplikowany element CORE_CAPABILITIES: "${cap}".`);
+      } else {
+        seenCore.add(cap);
+      }
+    }
+    for (const reqCap of REQUIRED_CORE_CAPABILITIES) {
+      if (!seenCore.has(reqCap)) {
+        err('R35-feature-flags', `CORE_CAPABILITIES musi zawierać "${reqCap}" — obowiązkowy element Rdzenia nie może zostać usunięty.`);
+      }
+    }
   }
+
   if (!Array.isArray(FEATURE_FLAGS) || FEATURE_FLAGS.length === 0) {
     err('R35-feature-flags', 'Katalog FEATURE_FLAGS nie może być pusty.');
   } else {
@@ -756,15 +796,76 @@ if (DEVICE_INGEST_PROTOCOL) {
       if (!Array.isArray(flag.dependsOn)) {
         err('R35-feature-flags', `Flaga "${flag.key}" musi mieć tablicę dependsOn.`);
       }
+      if (!Array.isArray(flag.routes)) {
+        err('R35-feature-flags', `Flaga "${flag.key}" musi mieć tablicę routes.`);
+      } else {
+        const seenRoutes = new Set();
+        for (const route of flag.routes) {
+          if (typeof route !== 'string' || route.trim().length === 0 || !route.startsWith('/')) {
+            err('R35-feature-flags', `Flaga "${flag.key}" ma niepoprawną trasę w routes: "${String(route)}". Wymagany prefiks "/".`);
+          } else if (seenRoutes.has(route)) {
+            err('R35-feature-flags', `Flaga "${flag.key}" ma zduplikowaną trasę w routes: "${route}".`);
+          } else {
+            seenRoutes.add(route);
+          }
+        }
+      }
+      if (!Array.isArray(flag.apiPrefixes)) {
+        err('R35-feature-flags', `Flaga "${flag.key}" musi mieć tablicę apiPrefixes.`);
+      } else {
+        const seenApi = new Set();
+        for (const prefix of flag.apiPrefixes) {
+          if (typeof prefix !== 'string' || prefix.trim().length === 0 || !prefix.startsWith('/api/')) {
+            err('R35-feature-flags', `Flaga "${flag.key}" ma niepoprawny wzorzec w apiPrefixes: "${String(prefix)}". Wymagany prefiks "/api/".`);
+          } else if (seenApi.has(prefix)) {
+            err('R35-feature-flags', `Flaga "${flag.key}" ma zduplikowany wzorzec w apiPrefixes: "${prefix}".`);
+          } else {
+            seenApi.add(prefix);
+          }
+        }
+      }
+    }
+
+    for (const modKey of REQUIRED_MODULES) {
+      const mod = flagsByKey.get(modKey);
+      if (!mod || mod.kind !== 'module') {
+        err('R35-feature-flags', `Katalog FEATURE_FLAGS musi zawierać moduł "${modKey}" (kind: 'module').`);
+      }
+    }
+    for (const delKey of REQUIRED_DELEGATIONS) {
+      const del = flagsByKey.get(delKey);
+      if (!del || del.kind !== 'delegation') {
+        err('R35-feature-flags', `Katalog FEATURE_FLAGS musi zawierać delegację "${delKey}" (kind: 'delegation').`);
+      }
+    }
+
+    const familyPortal = flagsByKey.get('module_family_portal');
+    const requiredFamilyApi = [
+      '/api/residents/[id]/report/latest',
+      '/api/residents/[id]/agenda',
+      '/api/admin/residents/[id]/messages',
+    ];
+    if (familyPortal && Array.isArray(familyPortal.apiPrefixes)) {
+      for (const ep of requiredFamilyApi) {
+        if (!familyPortal.apiPrefixes.includes(ep)) {
+          err('R35-feature-flags', `module_family_portal.apiPrefixes musi jawnie zawierać "${ep}" (kanoniczne mapowanie endpointu).`);
+        }
+      }
+    }
+    const docsContracts = flagsByKey.get('module_documents_contracts');
+    if (docsContracts && Array.isArray(docsContracts.apiPrefixes)) {
+      if (!docsContracts.apiPrefixes.includes('/api/admin/residents/[id]/contract')) {
+        err('R35-feature-flags', 'module_documents_contracts.apiPrefixes musi zawierać "/api/admin/residents/[id]/contract".');
+      }
     }
 
     for (const flag of FEATURE_FLAGS) {
-      for (const dep of flag.dependsOn || []) {
+      for (const dep of Array.isArray(flag.dependsOn) ? flag.dependsOn : []) {
         if (dep === flag.key) err('R35-feature-flags', `Flaga "${flag.key}" zależy od samej siebie.`);
         else if (!flagsByKey.has(dep)) err('R35-feature-flags', `Flaga "${flag.key}" zależy od nieistniejącej flagi "${dep}".`);
       }
       if (flag.kind === 'delegation') {
-        const deps = flag.dependsOn || [];
+        const deps = Array.isArray(flag.dependsOn) ? flag.dependsOn : [];
         if (deps.length === 0) {
           err('R35-feature-flags', `Flaga delegująca "${flag.key}" musi zależeć od modułu nadrzędnego.`);
         } else if (!deps.some((d) => flagsByKey.get(d)?.kind === 'module')) {
@@ -783,7 +884,7 @@ if (DEVICE_INGEST_PROTOCOL) {
       if (state === 1) return true;
       if (state === 2) return false;
       color.set(key, 1);
-      for (const dep of flagsByKey.get(key)?.dependsOn || []) {
+      for (const dep of Array.isArray(flagsByKey.get(key)?.dependsOn) ? flagsByKey.get(key).dependsOn : []) {
         if (flagsByKey.has(dep) && hasCycle(dep)) return true;
       }
       color.set(key, 2);
@@ -803,6 +904,30 @@ if (DEVICE_INGEST_PROTOCOL) {
   }
   if (!Array.isArray(fp.managedBy) || fp.managedBy.length !== 1 || fp.managedBy[0] !== 'super_admin') {
     err('R35-feature-flags', 'Zarządzanie flagami placówki należy wyłącznie do super_admin.');
+  }
+  if (fp.writePathPolicy !== 'RPC_ONLY') {
+    err('R35-feature-flags', 'FEATURE_FLAG_POLICY.writePathPolicy musi wynosić "RPC_ONLY" (brak bezpośredniego zapisu w sesjach aplikacyjnych).');
+  }
+  if (fp.impersonationVerification !== 'APP_COOKIE_AND_DB_SESSION') {
+    err('R35-feature-flags', 'FEATURE_FLAG_POLICY.impersonationVerification musi wynosić "APP_COOKIE_AND_DB_SESSION".');
+  }
+  if (fp.rlsEnforcementRequired !== true) {
+    err('R35-feature-flags', 'FEATURE_FLAG_POLICY.rlsEnforcementRequired musi wynosić true.');
+  }
+  if (fp.multiFlagRoutePolicy !== 'REQUIRE_ALL_MATCHING') {
+    err('R35-feature-flags', 'FEATURE_FLAG_POLICY.multiFlagRoutePolicy musi wynosić "REQUIRE_ALL_MATCHING".');
+  }
+  if (fp.hasFeatureCrossTenantDenied !== true) {
+    err('R35-feature-flags', 'FEATURE_FLAG_POLICY.hasFeatureCrossTenantDenied musi wynosić true.');
+  }
+  if (
+    !Array.isArray(fp.hasFeatureExecuteRoles)
+    || !fp.hasFeatureExecuteRoles.includes('authenticated')
+    || !fp.hasFeatureExecuteRoles.includes('service_role')
+    || fp.hasFeatureExecuteRoles.includes('anon')
+    || fp.hasFeatureExecuteRoles.includes('public')
+  ) {
+    err('R35-feature-flags', 'FEATURE_FLAG_POLICY.hasFeatureExecuteRoles musi obejmować authenticated oraz service_role bez anon i public.');
   }
   if (fp.blockImpersonation !== true || fp.cascadeDisableDependents !== true || fp.requireParentEnabled !== true || fp.failClosedUnknownKey !== true || fp.coreAuditImmutable !== true) {
     err('R35-feature-flags', 'Polityka FEATURE_FLAG_POLICY musi wymuszać blockImpersonation, cascadeDisableDependents, requireParentEnabled, failClosedUnknownKey i coreAuditImmutable.');

@@ -104,6 +104,13 @@ const MUTATIONS = [
   { rule: 'R35-feature-flags', file: 'features.contract.mjs', from: '  blockImpersonation: true,', to: '  blockImpersonation: false,', desc: 'edycja flag możliwa w trybie impersonacji' },
   { rule: 'R35-feature-flags', file: 'features.contract.mjs', from: "  managedBy: ['super_admin'],", to: "  managedBy: ['super_admin', 'org_admin'],", desc: 'polityka dopuszcza org_admin do zarządzania flagami' },
   { rule: 'R35-feature-flags', file: 'features.contract.mjs', from: "  'mandatory_rodo_audit_logs',\n", to: '', desc: 'obowiązkowy audyt RODO usunięty z niewyłączalnego Rdzenia' },
+  { rule: 'R35-feature-flags', file: 'features.contract.mjs', from: "  'auth_sessions',\n", to: '', desc: 'element auth_sessions usunięty z niewyłączalnego Rdzenia' },
+  { rule: 'R35-feature-flags', file: 'features.contract.mjs', from: "  {\n    key: 'allow_org_admin_report_config',\n    kind: 'delegation',\n    label: 'Konfiguracja raportów przez Kierownika placówki',\n    description: 'Deleguje do Kierownika placówki możliwość konfigurowania aktywnych typów i parametrów raportów operacyjnych własnej placówki.',\n    defaultEnabled: false,\n    dependsOn: ['module_voice_and_reports'],\n    routes: [],\n    apiPrefixes: [],\n  },\n", to: '', desc: 'usunięta delegacja allow_org_admin_report_config z katalogu' },
+  { rule: 'R35-feature-flags', file: 'features.contract.mjs', from: "    apiPrefixes: ['/api/voice'],", to: "    apiPrefixes: 123,", desc: 'pole apiPrefixes ustawione jako liczba zamiast tablicy' },
+  { rule: 'R35-feature-flags', file: 'features.contract.mjs', from: "    routes: ['/admin/budget'],", to: "    routes: 'admin/budget',", desc: 'pole routes ustawione jako string zamiast tablicy ścieżek' },
+  { rule: 'R35-feature-flags', file: 'features.contract.mjs', from: "      '/api/residents/[id]/report/latest',\n", to: '', desc: 'usunięty endpoint /api/residents/[id]/report/latest z module_family_portal' },
+  { rule: 'R35-feature-flags', file: 'features.contract.mjs', from: "  writePathPolicy: 'RPC_ONLY',", to: "  writePathPolicy: 'DIRECT_RLS',", desc: 'zapis flag poza wyłącznym RPC' },
+  { rule: 'R35-feature-flags', file: 'features.contract.mjs', from: "  multiFlagRoutePolicy: 'REQUIRE_ALL_MATCHING',", to: "  multiFlagRoutePolicy: 'FIRST_MATCH',", desc: 'osłabiona reguła tras wieloflagowych' },
 ];
 
 const results = [];
