@@ -1,3 +1,4 @@
+import { assertTargetOrgFeatureForApi } from '@/lib/feature-flags'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -37,6 +38,9 @@ export async function POST(request: Request) {
     if (!orgId) {
       return NextResponse.json({ error: 'Brak przypisania do organizacji' }, { status: 400 })
     }
+
+    const featureDenied = await assertTargetOrgFeatureForApi(supabase, orgId, new URL(request.url).pathname, user.id)
+    if (featureDenied) return featureDenied
 
     const body = await request.json()
     const { email, role, avatar_url } = body
