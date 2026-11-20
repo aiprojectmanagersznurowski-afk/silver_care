@@ -36,7 +36,7 @@ export const GET = withAuth(async (request, { supabase }) => {
   if (error) throw error
 
   return NextResponse.json({ residents: data || [] })
-})
+}, { requiredFeature: 'module_residents_management' })
 
 export const POST = withAuth(
   async (request, { supabase }) => {
@@ -74,5 +74,5 @@ export const POST = withAuth(
 
     return NextResponse.json({ success: true, id: data.id })
   },
-  { roles: ['org_admin', 'nurse', 'super_admin'], blockImpersonation: true }
+  { roles: ['org_admin', 'nurse', 'super_admin'], blockImpersonation: true, requiredFeature: 'module_residents_management' }
 )
