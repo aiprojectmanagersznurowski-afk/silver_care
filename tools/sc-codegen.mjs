@@ -220,6 +220,35 @@ files['packages/contracts/src/generated/features.ts'] = BANNER
   + `    resolveOne(flag.key);\n`
   + `  }\n`
   + `  return resolved;\n`
+  + `}\n\n`
+  + `export function matchesFeatureApiPattern(pathname: string, pattern: string): boolean {\n`
+  + `  const clean = (value: string): string[] =>\n`
+  + `    value.split(/[?#]/)[0].split('/').filter(Boolean);\n`
+  + `  const pathSegs = clean(pathname);\n`
+  + `  const patternSegs = clean(pattern);\n`
+  + `  if (patternSegs.length === 0 || pathSegs.length < patternSegs.length) {\n`
+  + `    return false;\n`
+  + `  }\n`
+  + `  for (let i = 0; i < patternSegs.length; i += 1) {\n`
+  + `    const patternSeg = patternSegs[i];\n`
+  + `    const pathSeg = pathSegs[i];\n`
+  + `    if (!pathSeg) return false;\n`
+  + `    if (/^\\[[^\\]]+\\]$/.test(patternSeg)) continue;\n`
+  + `    if (patternSeg !== pathSeg) return false;\n`
+  + `  }\n`
+  + `  return true;\n`
+  + `}\n\n`
+  + `export function getRequiredFeaturesForApiPath(pathname: string): FeatureKey[] {\n`
+  + `  const required: FeatureKey[] = [];\n`
+  + `  for (const flag of FEATURE_FLAGS) {\n`
+  + `    const matched = (flag.apiPrefixes as readonly string[]).some((pattern) =>\n`
+  + `      matchesFeatureApiPattern(pathname, pattern)\n`
+  + `    );\n`
+  + `    if (matched && !required.includes(flag.key)) {\n`
+  + `      required.push(flag.key);\n`
+  + `    }\n`
+  + `  }\n`
+  + `  return required;\n`
   + `}\n`;
 
 // dokument czytelny dla człowieka
@@ -259,6 +288,7 @@ md.push('| ID | Domena | Ryzyko | Treść |', '|---|---|---|---|');
 for (const r of reqs.REQUIREMENTS) md.push(`| ${r.id} | ${r.domain} | ${r.risk} | ${r.statement} |`);
 md.push(`\n## Modułowość i flagi placówki (SC-SUP-06)\n`);
 md.push(`**Niewyłączalny Rdzeń:** ${features.CORE_CAPABILITIES.map((c) => `\`${c}\``).join(', ')}.\n`);
+md.push(`**Zasady polityki:** zapis \`${features.FEATURE_FLAG_POLICY.writePathPolicy}\`, impersonacja \`${features.FEATURE_FLAG_POLICY.impersonationVerification}\`, trasy wieloflagowe \`${features.FEATURE_FLAG_POLICY.multiFlagRoutePolicy}\`, egzekwowanie RLS/RPC: ${features.FEATURE_FLAG_POLICY.rlsEnforcementRequired ? 'tak' : 'nie'}.\n`);
 md.push('| Klucz | Rodzaj | Domyślnie | Zależności | Nazwa |', '|---|---|---|---|---|');
 for (const f of features.FEATURE_FLAGS) {
   const deps = f.dependsOn.length ? f.dependsOn.map((d) => `\`${d}\``).join(', ') : '—';

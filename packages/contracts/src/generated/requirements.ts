@@ -62,8 +62,8 @@ export const REQUIREMENTS = [
     "statement": "Administrator platformy włącza i wyłącza duże moduły systemowe oraz flagi delegacji uprawnień per placówka z pełnym egzekwowaniem w UI, API, Server Actions i RLS, bez wpływu na niewyłączalny Rdzeń (w tym obowiązkowy rejestr audytowy RODO).",
     "acceptance": [
       "Lista 9 modułów, 2 flag delegacji, wartości domyślne i acykliczny graf zależności istnieją wyłącznie w contracts/features.contract.mjs",
-      "Flagi są przechowywane w tabeli organization_feature_flags (nie organizations.settings); zapis przez org_admin, nurse, legal_guardian, family albo w trybie impersonacji super_admin jest odrzucany w API i w RLS/RPC",
-      "Wyłączenie modułu dla placówki A ukrywa jego nawigację i ekrany oraz zwraca 403 FEATURE_DISABLED_FOR_ORG na powiązanych trasach bez wpływu na placówkę B i bez wyłączania obowiązkowego audytu RODO",
+      "Flagi są przechowywane w tabeli organization_feature_flags (nie organizations.settings); bezpośredni INSERT/UPDATE/DELETE z sesji aplikacyjnych jest zablokowany (wyłącznie atomowy RPC set_organization_feature_flag), a zapis w trybie faktycznej impersonacji (sc_impersonation + sesja DB + claim JWT impersonator_id) oraz przez role inne niż super_admin jest odrzucany",
+      "Wyłączenie modułu dla placówki A ukrywa jego nawigację i widoki oraz jest egzekwowane w UI, API (z regułą REQUIRE_ALL_MATCHING dla tras wieloflagowych, np. /api/residents/[id]/report/latest), Server Actions oraz w politykach RLS i domenowych RPC (m.in. daily_reports i get_family_resident_overview), bez wpływu na placówkę B i bez wyłączania obowiązkowego audytu RODO",
       "Włączenie flagi bez aktywnego modułu nadrzędnego jest blokowane (FEATURE_DEPENDENCY_DISABLED), a wyłączenie modułu nadrzędnego dezaktywuje wszystkie flagi zależne w jednej transakcji",
       "Każda zmiana flagi (w tym kaskadowa) odkłada niemutowalny wpis ORG_FEATURE_FLAG_UPDATED w audit_logs w tej samej transakcji bez PII"
     ]

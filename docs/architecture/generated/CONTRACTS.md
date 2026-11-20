@@ -167,6 +167,8 @@ Bazowy rozmiar 14px · minimalny kontrast 4.5:1 · cel dotykowy 38px
 
 **Niewyłączalny Rdzeń:** `auth_sessions`, `rbac_mfa`, `organization_isolation`, `user_profile`, `mandatory_rodo_audit_logs`.
 
+**Zasady polityki:** zapis `RPC_ONLY`, impersonacja `APP_COOKIE_AND_DB_SESSION`, trasy wieloflagowe `REQUIRE_ALL_MATCHING`, egzekwowanie RLS/RPC: tak.
+
 | Klucz | Rodzaj | Domyślnie | Zależności | Nazwa |
 |---|---|---|---|---|
 | `module_facility_management` | `module` | włączony | — | Zarządzanie placówką |

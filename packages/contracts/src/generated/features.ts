@@ -41,6 +41,7 @@ export const FEATURE_FLAGS = [
     ],
     "apiPrefixes": [
       "/api/residents",
+      "/api/admin/residents",
       "/api/staff/agenda"
     ]
   },
@@ -104,7 +105,10 @@ export const FEATURE_FLAGS = [
     "apiPrefixes": [
       "/api/messages",
       "/api/admin/messages",
-      "/api/family"
+      "/api/admin/residents/[id]/messages",
+      "/api/family",
+      "/api/residents/[id]/report/latest",
+      "/api/residents/[id]/agenda"
     ]
   },
   {
@@ -185,6 +189,15 @@ export const FEATURE_FLAG_POLICY = {
   "managedBy": [
     "super_admin"
   ],
+  "writePathPolicy": "RPC_ONLY",
+  "impersonationVerification": "APP_COOKIE_AND_DB_SESSION",
+  "rlsEnforcementRequired": true,
+  "multiFlagRoutePolicy": "REQUIRE_ALL_MATCHING",
+  "hasFeatureExecuteRoles": [
+    "authenticated",
+    "service_role"
+  ],
+  "hasFeatureCrossTenantDenied": true,
   "blockImpersonation": true,
   "cascadeDisableDependents": true,
   "requireParentEnabled": true,
@@ -269,4 +282,35 @@ export function resolveEffectiveFeatureFlags(
     resolveOne(flag.key);
   }
   return resolved;
+}
+
+export function matchesFeatureApiPattern(pathname: string, pattern: string): boolean {
+  const clean = (value: string): string[] =>
+    value.split(/[?#]/)[0].split('/').filter(Boolean);
+  const pathSegs = clean(pathname);
+  const patternSegs = clean(pattern);
+  if (patternSegs.length === 0 || pathSegs.length < patternSegs.length) {
+    return false;
+  }
+  for (let i = 0; i < patternSegs.length; i += 1) {
+    const patternSeg = patternSegs[i];
+    const pathSeg = pathSegs[i];
+    if (!pathSeg) return false;
+    if (/^\[[^\]]+\]$/.test(patternSeg)) continue;
+    if (patternSeg !== pathSeg) return false;
+  }
+  return true;
+}
+
+export function getRequiredFeaturesForApiPath(pathname: string): FeatureKey[] {
+  const required: FeatureKey[] = [];
+  for (const flag of FEATURE_FLAGS) {
+    const matched = (flag.apiPrefixes as readonly string[]).some((pattern) =>
+      matchesFeatureApiPattern(pathname, pattern)
+    );
+    if (matched && !required.includes(flag.key)) {
+      required.push(flag.key);
+    }
+  }
+  return required;
 }
