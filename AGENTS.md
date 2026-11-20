@@ -64,6 +64,13 @@ Rdzeń: `organizations`, `residents`. Identyfikatory dostawców żyją w `extern
 - Każde story ma linię `🔗 Kontrakt` z ID `@REQ` albo `brak REQ`; nowe wymaganie w kontrakcie wskazuje story w polu `source`.
 - Zmiana zakresu funkcji = aktualizacja story w tym samym PR co kod.
 
+## Przepływ Git
+
+- Każde standardowe zadanie zaczynaj od pobrania aktualnego `origin/staging` (`git fetch origin staging`) i utworzenia z niego osobnej gałęzi roboczej.
+- Wypchnij gałąź roboczą na GitHub i otwórz PR do `staging`. PR scala druga osoba z zespołu po pozytywnym review.
+- Zmiany zebrane na `staging` trafiają na produkcję zbiorczym PR-em `staging → main`, scalanym commitem scalającym.
+- Pilna poprawka produkcyjna ma osobną ścieżkę opisaną w [instrukcjach projektu](.claude/CLAUDE.md).
+
 ## Pętla
 
 ```
