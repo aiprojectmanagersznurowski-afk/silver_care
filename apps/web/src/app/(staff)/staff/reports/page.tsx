@@ -1,3 +1,5 @@
+import { requireOrgFeature } from '@/lib/feature-flags'
+import { FeatureDisabledState } from '@/components/patterns/FeatureDisabledState'
 import { createClient } from '@/lib/supabase/server'
 import { ReportCard } from '@/components/ReportCard'
 import { BulkReportApprover } from '@/components/BulkReportApprover'
@@ -11,6 +13,8 @@ interface StaffReportsPageProps {
 }
 
 export default async function StaffReportsPage({ searchParams }: StaffReportsPageProps) {
+  if (!(await requireOrgFeature('module_voice_and_reports')).allowed) return <FeatureDisabledState />
+
   const { resident: residentId } = await searchParams
   const supabase = await createClient()
 
