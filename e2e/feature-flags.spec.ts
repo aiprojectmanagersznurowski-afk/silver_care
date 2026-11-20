@@ -9,7 +9,7 @@ import { OrganizationFeatureFlagsPage } from './page-objects/OrganizationFeature
 const portal = 'module_family_portal'
 const parent = 'module_residents_management'
 
-async function login(page: Page, email: string, password: string) {
+async function login(page: Page, email: string, password: string, landing: string) {
   const loginPage = new LoginPage(page)
   await loginPage.goto()
   await loginPage.revealForm()
@@ -19,7 +19,7 @@ async function login(page: Page, email: string, password: string) {
     await expect(loginPage.emailInput).toHaveValue(email, { timeout: 1_000 })
   }).toPass({ timeout: 10_000 })
   await loginPage.submit()
-  await page.waitForURL((url) => url.pathname !== '/login', { timeout: 20_000 })
+  await page.waitForURL((url) => url.pathname === landing, { timeout: 20_000 })
 }
 
 test('@REQ: SUP-FEATURE-FLAGS - zmiana modułów, MFA, izolacja, kaskada i blokada podglądu', async ({ browser, page }) => {
@@ -59,11 +59,11 @@ test('@REQ: SUP-FEATURE-FLAGS - zmiana modułów, MFA, izolacja, kaskada i bloka
       VALUES (${resident.id}, ${family.id}, 'PUBLISHED', '{}'::jsonb)`
     return { org: org.id, resident: resident.id, family }
   }
-  const newSession = async (email: string) => {
+  const newSession = async (email: string, landing: string) => {
     const context = await browser.newContext()
     contexts.push(context)
     const session = await context.newPage()
-    await login(session, email, password)
+    await login(session, email, password, landing)
     return session
   }
 
@@ -72,7 +72,7 @@ test('@REQ: SUP-FEATURE-FLAGS - zmiana modułów, MFA, izolacja, kaskada i bloka
     const b = await createFacility()
     const operator = await createUser('super_admin')
     const manager = await createUser('org_admin', a.org)
-    await login(page, operator.email, password)
+    await login(page, operator.email, password, '/admin/organizations')
     const flagsPage = new OrganizationFeatureFlagsPage(page)
     await flagsPage.open(a.org)
 
@@ -86,7 +86,7 @@ test('@REQ: SUP-FEATURE-FLAGS - zmiana modułów, MFA, izolacja, kaskada i bloka
     await flagsPage.toggle(portal).click()
     await expect(flagsPage.toggle(portal)).not.toBeChecked()
 
-    const familyA = await newSession(a.family.email)
+    const familyA = await newSession(a.family.email, '/dashboard')
     await familyA.goto('/dashboard')
     await expect(familyA.locator('[data-slot="list-empty"]')).toContainText('Moduł niedostępny')
     await expect(familyA.getByRole('button', { name: 'Wyloguj się' })).toBeVisible()
@@ -94,12 +94,12 @@ test('@REQ: SUP-FEATURE-FLAGS - zmiana modułów, MFA, izolacja, kaskada i bloka
     expect(denied.status()).toBe(403)
     expect(await denied.json()).toMatchObject({ code: FEATURE_FLAG_POLICY.disabledErrorCode, feature: portal })
 
-    const familyB = await newSession(b.family.email)
+    const familyB = await newSession(b.family.email, '/dashboard')
     const allowed = await familyB.request.get(`/api/residents/${b.resident}/report/latest`)
     expect(allowed.status()).toBe(200)
     expect(await allowed.json()).toMatchObject({ report: { status: 'PUBLISHED' } })
 
-    const managerPage = await newSession(manager.email)
+    const managerPage = await newSession(manager.email, '/admin')
     await managerPage.goto('/admin/invitations')
     await expect(managerPage.locator('[data-slot="list-empty"]')).toContainText('Moduł niedostępny')
     const navigation = managerPage.getByRole('navigation', { name: 'Nawigacja główna' })
