@@ -1,3 +1,5 @@
+import { requireOrgFeature } from '@/lib/feature-flags'
+import { FeatureDisabledState } from '@/components/patterns/FeatureDisabledState'
 import { createClient } from '@/lib/supabase/server'
 import { InviteFamilyDialog } from '@/components/InviteFamilyDialog'
 import { InvitationsTable, type InvitationRecord } from '@/components/InvitationsTable'
@@ -7,6 +9,8 @@ import { getAppRole } from '@/lib/auth/app-role'
 import { getCurrentUser } from '@/lib/supabase/current-user'
 
 export default async function AdminInvitationsPage() {
+  if (!(await requireOrgFeature('module_family_portal')).allowed) return <FeatureDisabledState />
+
   const supabase = await createClient()
   const user = await getCurrentUser()
 

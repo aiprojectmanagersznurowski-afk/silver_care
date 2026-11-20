@@ -1,3 +1,5 @@
+import { requireOrgFeature } from '@/lib/feature-flags'
+import { FeatureDisabledState } from '@/components/patterns/FeatureDisabledState'
 import { StaffMessagesInbox } from '@/components/StaffMessagesInbox'
 import { PageHeader } from '@/components/patterns/PageHeader'
 
@@ -8,6 +10,8 @@ export default async function AdminMessagesPage({
 }: {
   searchParams: Promise<{ residentId?: string }>
 }) {
+  if (!(await requireOrgFeature('module_family_portal')).allowed) return <FeatureDisabledState />
+
   const params = await searchParams
 
   return (
