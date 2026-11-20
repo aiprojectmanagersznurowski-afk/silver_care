@@ -1,3 +1,4 @@
+import { assertOrgFeatureForApi } from '@/lib/feature-flags'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
@@ -10,6 +11,9 @@ export async function POST(request: Request) {
     if (!user) {
       return NextResponse.json({ error: 'Brak autoryzacji' }, { status: 401 })
     }
+
+    const featureDenied = await assertOrgFeatureForApi(supabase, user, new URL(request.url).pathname)
+    if (featureDenied) return featureDenied
 
     const role = user.app_metadata?.role as string | undefined
     if (!['org_admin', 'super_admin'].includes(role || '')) {
