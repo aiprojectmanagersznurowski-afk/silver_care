@@ -55,7 +55,12 @@
         "resident_name",
         "pesel",
         "transcript"
-      ]
+      ],
+      "formats": {
+        "session_id": "UUID v4 (string), unikalny dla sesji urządzenia",
+        "session_seq": "liczba całkowita >= 1 (integer), numer nagrania w obrębie sesji (1 = przedstawienie)",
+        "age_ms": "liczba całkowita >= 0 (integer), czas w milisekundach od nagrania do INIT (0 przy UNKNOWN)"
+      }
     },
     "codecs": [
       "IMA_ADPCM_WAV",
@@ -159,10 +164,14 @@
     "authorship": {
       "source": "SELF_INTRODUCTION",
       "rule": "Autorem wszystkich nagrań sesji (session_id) jest osoba, która przedstawiła się w nagraniu z session_seq 1, np. „Jestem Gabriela Kowalska”.",
+      "sessionInactivityTimeoutMinutes": 180,
       "sessionStart": [
         "Opróżnienie urządzenia w stacji (wszystkie nagrania potwierdzone ACCEPTED albo DUPLICATE)",
-        "Gest „Nowa osoba” na urządzeniu (przytrzymanie bocznego przycisku przez 3 s)"
+        "Gest „Nowa osoba” na urządzeniu (przytrzymanie bocznego przycisku przez 3 s)",
+        "Bezczynność urządzenia powyżej 3 godzin (sessionInactivityTimeoutMinutes) — automatyczne rozpoczęcie nowej sesji i ekran „Przedstaw się”"
       ],
+      "outOfOrderPolicy": "RETROACTIVE_ON_SEQ_1",
+      "outOfOrderRule": "Jeśli nagrania z session_seq > 1 dotrą przed session_seq 1 (np. po retry nieudanego PUT), pozostają tymczasowo jako NO_AUTHOR, a po dotarciu i transkrypcji session_seq 1 serwer retroaktywnie uzupełnia autora całej sesji.",
       "matchedBy": "server",
       "llmIdentifies": false,
       "matchOn": [

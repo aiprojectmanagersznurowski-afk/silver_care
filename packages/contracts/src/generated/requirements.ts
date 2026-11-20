@@ -551,6 +551,8 @@ export const REQUIREMENTS = [
       "Żądanie z resident_id, imieniem, PESEL albo transkryptem jest odrzucane jako FORBIDDEN_FIELD",
       "Autorem nagrań sesji jest osoba, która przedstawiła się w pierwszym nagraniu sesji",
       "Przedstawienie dopasowuje serwer bez modelu do personelu placówki; brak albo kilka dopasowań wybiera kierownik zmiany",
+      "Bezczynność urządzenia powyżej 3 godzin automatycznie otwiera nową sesję, chroniąc prywatność brudnopisów między osobami",
+      "Gdy nagrania z session_seq > 1 dotrą przed session_seq 1 (np. po retry), serwer retroaktywnie uzupełnia autora całej sesji po dotarciu session_seq 1",
       "Nagranie z czasem spoza okna synchronizacji dostaje oznaczenie TIME_UNCERTAIN",
       "Każda odpowiedź protokołu niesie server_time, z którego urządzenie bez RTC ustawia zegar",
       "Nagranie z clock_state RELATIVE dostaje recorded_at równe chwili przyjęcia INIT minus age_ms",
@@ -586,8 +588,8 @@ export const REQUIREMENTS = [
       "Unieważnienie ustawia revoked_at zamiast usuwać wiersz",
       "Jedno urządzenie ma w danej chwili najwyżej jeden aktywny wpis wydania",
       "Wpis wydania tworzy kierownik zmiany albo kierownik placówki i nie wyznacza autora nagrań",
-      "Rejestracja, unieważnienie i przydział trafiają do audit_logs",
-      "Konto bliskiego nie widzi urządzeń ani przydziałów"
+      "Rejestracja, unieważnienie i wpis wydania trafiają do audit_logs",
+      "Konto bliskiego nie widzi urządzeń ani wpisów wydania"
     ]
   },
   {

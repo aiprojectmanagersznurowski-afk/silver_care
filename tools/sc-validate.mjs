@@ -714,6 +714,12 @@ if (DEVICE_INGEST_PROTOCOL) {
     if (au.llmIdentifies !== false || au.matchedBy !== 'server') err('R34-device-ingest', 'Autora z przedstawienia dopasowuje serwer, nigdy model AI.');
     const resolvers = au.ambiguousResolvedBy || [];
     if (!resolvers.length || resolvers.some((r) => !String(r).includes(':') && r !== 'super_admin')) err('R34-device-ingest', 'Niejednoznacznego autora wybiera człowiek (rola:zakres), nie system.');
+    if (!Number.isFinite(au.sessionInactivityTimeoutMinutes) || au.sessionInactivityTimeoutMinutes <= 0 || au.sessionInactivityTimeoutMinutes > 240) {
+      err('R34-device-ingest', 'Sesja SELF_INTRODUCTION wymaga timeoutu bezczynności (1–240 min), aby zapobiec sklejeniu brudnopisów dwóch osób.');
+    }
+    if (au.outOfOrderPolicy !== 'RETROACTIVE_ON_SEQ_1') {
+      err('R34-device-ingest', 'Sesja SELF_INTRODUCTION wymaga retroaktywnego uzupełniania autora po dotarciu session_seq 1 (RETROACTIVE_ON_SEQ_1).');
+    }
   }
   const mayDelete = (pr.responses || []).filter((r) => r.deviceMayDelete).map((r) => r.code);
   for (const c of mayDelete) {
