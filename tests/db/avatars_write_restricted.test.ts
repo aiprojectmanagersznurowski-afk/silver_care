@@ -23,7 +23,11 @@ const asRole = (tx: Tx, role: string) =>
 
 async function rollback(fn: (tx: Tx) => Promise<void>) {
   await sql.begin(async (tx) => {
-    await tx.unsafe(migrationSql);
+    const [state] = await tx`SELECT EXISTS (
+      SELECT 1 FROM pg_policies
+      WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'avatars_admins_insert'
+    ) AS applied`;
+    if (!state.applied) await tx.unsafe(migrationSql);
     await tx`SET LOCAL ROLE authenticated`;
     await fn(tx);
     throw new Error('ROLLBACK');
