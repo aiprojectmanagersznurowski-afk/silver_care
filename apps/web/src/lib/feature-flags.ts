@@ -70,7 +70,7 @@ function featureDisabled(feature: FeatureKey, pathname: string, context: { userI
     .sort((a, b) => b.length - a.length)[0] ?? '/api'
   console.warn(`[FEATURE_DISABLED_403] user_id=${context.userId ?? '-'} org_id=${context.organizationId ?? '-'} feature=${feature} path=${path}`)
   return NextResponse.json({
-    error: 'Ten moduł jest niedostępny w Twojej placówce.',
+    error: featureDisabledMessage,
     code: FEATURE_FLAG_POLICY.disabledErrorCode,
     feature,
   }, { status: 403 })
@@ -91,14 +91,23 @@ export async function assertOrgFeatureForApi(
   return disabled ? featureDisabled(disabled, route, { userId: user.id, organizationId: organizationId ?? undefined }) : null
 }
 
+export const featureDisabledMessage = 'Ten moduł jest niedostępny w Twojej placówce.'
+
+export async function isOrgFeatureEnabled(supabase: DbClient, organizationId: string | null | undefined, feature: FeatureKey) {
+  if (!organizationId) return false
+  const { data, error } = await supabase.rpc('has_org_feature', { p_org_id: organizationId, p_feature_key: feature })
+  return !error && data === true
+}
+
 /** The organization must come from a server-side record authorized by the caller. */
 export async function assertTargetOrgFeatureForApi(
   supabase: DbClient, organizationId: string, pathname: string, userId?: string,
 ) {
   const required = getRequiredFeaturesForApiPath(pathname)
   for (const feature of required) {
-    const { data, error } = await supabase.rpc('has_org_feature', { p_org_id: organizationId, p_feature_key: feature })
-    if (error || data !== true) return featureDisabled(feature, pathname, { organizationId, userId })
+    if (!(await isOrgFeatureEnabled(supabase, organizationId, feature))) {
+      return featureDisabled(feature, pathname, { organizationId, userId })
+    }
   }
   return null
 }

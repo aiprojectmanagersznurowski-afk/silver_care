@@ -1,3 +1,4 @@
+import { featureDisabledMessage, isOrgFeatureEnabled } from '@/lib/feature-flags'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { isImpersonationSessionActive, safeGetCookieStore } from '@/lib/impersonation-guards'
@@ -19,6 +20,9 @@ export async function requireOrgAdmin(options?: { allowImpersonation?: boolean }
   const role = user.app_metadata?.role as string | undefined
   if (!['org_admin', 'super_admin'].includes(role || '')) {
     throw new Error('Brak uprawnień kierownika placówki')
+  }
+  if (!(await isOrgFeatureEnabled(supabase, orgId, 'module_facility_management'))) {
+    throw new Error(featureDisabledMessage)
   }
   return { user, orgId, supabase, adminClient: createAdminClient() }
 }

@@ -1,3 +1,4 @@
+import { featureDisabledMessage, isOrgFeatureEnabled } from '@/lib/feature-flags'
 import { createClient } from '@/lib/supabase/server'
 import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -56,6 +57,10 @@ export async function verifyStaffManagerAndTarget(staffId: string): Promise<Veri
   const targetOrg = getAppOrganizationId(targetUser.user)
   if (callerRole === 'org_admin' && targetOrg !== callerOrg) {
     return { success: false, error: '403: Nie masz uprawnień do pracownika z innej placówki.' }
+  }
+
+  if (!(await isOrgFeatureEnabled(supabase, targetOrg || callerOrg, 'module_facility_management'))) {
+    return { success: false, error: featureDisabledMessage }
   }
 
   return {
