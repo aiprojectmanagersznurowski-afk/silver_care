@@ -1,3 +1,4 @@
+import { assertTargetOrgFeatureForApi } from '@/lib/feature-flags'
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { validateInvitationState, determineConsentsForRole, resolveRelativeRole } from '@/lib/onboarding';
@@ -35,6 +36,9 @@ export async function POST(request: Request) {
     if (!validation.valid) {
       return NextResponse.json({ error: validation.message }, { status: 400 });
     }
+
+    const featureDenied = await assertTargetOrgFeatureForApi(adminClient, invitation.organization_id, new URL(request.url).pathname);
+    if (featureDenied) return featureDenied;
 
     // 2. Walidacja zgód dla danej roli (CONSENT-GRANTOR)
     const consentEval = determineConsentsForRole(invitation.role, Boolean(consentsAccepted));

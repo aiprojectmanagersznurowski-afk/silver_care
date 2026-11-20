@@ -91,11 +91,14 @@ export async function assertOrgFeatureForApi(
   return disabled ? featureDisabled(disabled, route, { userId: user.id, organizationId: organizationId ?? undefined }) : null
 }
 
-/** For public endpoints the organization must come from a verified server-side record. */
-export async function assertPublicOrgFeatureForApi(organizationId: string, pathname: string) {
+/** The organization must come from a server-side record authorized by the caller. */
+export async function assertTargetOrgFeatureForApi(
+  supabase: DbClient, organizationId: string, pathname: string, userId?: string,
+) {
   const required = getRequiredFeaturesForApiPath(pathname)
-  if (!required.length) return null
-  const flags = await getOrgFeatureFlagsAdmin(organizationId).catch(() => null)
-  const disabled = required.find((feature) => !flags?.[feature])
-  return disabled ? featureDisabled(disabled, pathname, { organizationId }) : null
+  for (const feature of required) {
+    const { data, error } = await supabase.rpc('has_org_feature', { p_org_id: organizationId, p_feature_key: feature })
+    if (error || data !== true) return featureDisabled(feature, pathname, { organizationId, userId })
+  }
+  return null
 }
