@@ -14,7 +14,8 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from '@/components/ui/sidebar'
-import { SidebarNav, type SidebarNavGroup } from '@/components/SidebarNav'
+import type { EffectiveFeatureFlags } from '@/lib/feature-flags'
+import { filterFeatureNavigation, SidebarNav, type SidebarNavGroup } from '@/components/SidebarNav'
 import { SidebarAccount } from '@/components/SidebarAccount'
 import { roleLabel } from '@/lib/auth/role-labels'
 
@@ -33,7 +34,7 @@ export function getStaffNavGroups(): SidebarNavGroup[] {
   ]
 }
 
-export function StaffSidebar({ userEmail }: { userEmail: string | undefined }) {
+export function StaffSidebar({ userEmail, flags }: { userEmail: string | undefined; flags?: EffectiveFeatureFlags | null }) {
   const groups = getStaffNavGroups()
 
   return (
@@ -50,7 +51,7 @@ export function StaffSidebar({ userEmail }: { userEmail: string | undefined }) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarNav groups={groups} />
+        <SidebarNav groups={filterFeatureNavigation(groups, flags)} />
       </SidebarContent>
       <SidebarAccount userEmail={userEmail} roleLabel={roleLabel('nurse')} />
       <SidebarRail />
