@@ -1,6 +1,6 @@
 'use server'
 
-import { featureDisabledMessage, isOrgFeatureEnabled } from '@/lib/feature-flags'
+import { featureDisabledMessage } from '@/lib/feature-flags'
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
