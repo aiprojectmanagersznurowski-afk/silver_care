@@ -12,8 +12,14 @@ const parent = 'module_residents_management'
 async function login(page: Page, email: string, password: string) {
   const loginPage = new LoginPage(page)
   await loginPage.goto()
-  await loginPage.login(email, password)
-  await page.waitForURL((url) => url.pathname !== '/login')
+  await loginPage.revealForm()
+  await expect(async () => {
+    await loginPage.fillEmail(email)
+    await loginPage.fillPassword(password)
+    await expect(loginPage.emailInput).toHaveValue(email, { timeout: 1_000 })
+  }).toPass({ timeout: 10_000 })
+  await loginPage.submit()
+  await page.waitForURL((url) => url.pathname !== '/login', { timeout: 20_000 })
 }
 
 test('@REQ: SUP-FEATURE-FLAGS - zmiana modułów, MFA, izolacja, kaskada i blokada podglądu', async ({ browser, page }) => {
