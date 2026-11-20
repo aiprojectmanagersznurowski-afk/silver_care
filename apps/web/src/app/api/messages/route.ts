@@ -1,3 +1,4 @@
+import { assertOrgFeatureForApi } from '@/lib/feature-flags'
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { isSpamLimitExceeded } from '@/lib/messages';
@@ -10,6 +11,9 @@ export async function GET(request: Request) {
   if (authError || !user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  const featureDenied = await assertOrgFeatureForApi(supabase, user, new URL(request.url).pathname)
+  if (featureDenied) return featureDenied
 
   // Fetch messages where this family member is involved
   const { data, error } = await supabase
@@ -40,6 +44,9 @@ export async function POST(request: Request) {
   if (authError || !user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  const featureDenied = await assertOrgFeatureForApi(supabase, user, new URL(request.url).pathname)
+  if (featureDenied) return featureDenied
 
   try {
     const body = await request.json();

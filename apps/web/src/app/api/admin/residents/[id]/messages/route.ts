@@ -1,3 +1,4 @@
+import { assertOrgFeatureForApi } from '@/lib/feature-flags'
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
@@ -11,6 +12,9 @@ export async function GET(
   if (authError || !user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  const featureDenied = await assertOrgFeatureForApi(supabase, user, new URL(request.url).pathname)
+  if (featureDenied) return featureDenied
 
   const role = user.app_metadata?.role as string | undefined;
   if (!['org_admin'].includes(role || '')) {
