@@ -1,3 +1,4 @@
+import { assertOrgFeatureForApi } from '@/lib/feature-flags'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
@@ -25,6 +26,9 @@ export async function POST(req: Request) {
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const featureDenied = await assertOrgFeatureForApi(supabase, user, new URL(req.url).pathname)
+    if (featureDenied) return featureDenied
 
     const cookieStore = await cookies()
     if (isImpersonationSessionActive(cookieStore, user)) {
