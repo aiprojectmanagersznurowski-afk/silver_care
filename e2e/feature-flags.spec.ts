@@ -96,9 +96,11 @@ test('@REQ: SUP-FEATURE-FLAGS - zmiana modułów, MFA, izolacja, kaskada i bloka
     const managerPage = await newSession(manager.email)
     await managerPage.goto('/admin/invitations')
     await expect(managerPage.locator('[data-slot="list-empty"]')).toContainText('Moduł niedostępny')
-    await expect(managerPage.getByRole('link', { name: 'Zaproszenia', exact: true })).toHaveCount(0)
-    await expect(managerPage.getByRole('link', { name: 'Wiadomości', exact: true })).toHaveCount(0)
-    await expect(managerPage.getByRole('link', { name: 'Audyt', exact: true })).toHaveCount(1)
+    const navigation = managerPage.getByRole('navigation', { name: 'Nawigacja główna' })
+    if (!await navigation.isVisible()) await managerPage.getByRole('button', { name: 'Zwiń lub rozwiń menu' }).click()
+    await expect(navigation.getByRole('link', { name: 'Zaproszenia', exact: true })).toHaveCount(0)
+    await expect(navigation.getByRole('link', { name: 'Wiadomości', exact: true })).toHaveCount(0)
+    await expect(navigation.getByRole('link', { name: 'Rejestr placówki', exact: true })).toBeVisible()
 
     await flagsPage.toggle(portal).click()
     await expect(flagsPage.toggle(portal)).toBeChecked()
@@ -119,8 +121,17 @@ test('@REQ: SUP-FEATURE-FLAGS - zmiana modułów, MFA, izolacja, kaskada i bloka
   } finally {
     await Promise.all(contexts.map((context) => context.close()))
     try {
-      if (organizations.length) await sql`DELETE FROM organizations WHERE id IN ${sql(organizations)}`
-      await Promise.all(ids.map((id) => supabase.auth.admin.deleteUser(id)))
+      // Testowe wpisy audytu zachowują reguły append-only. Usuwamy placówki bez audytu,
+      // a konto operatora wskazane przez zmiany flag blokujemy bez usuwania jego identyfikatora.
+      if (organizations.length) {
+        await sql`DELETE FROM organizations o WHERE o.id IN ${sql(organizations)}
+          AND NOT EXISTS (SELECT 1 FROM audit_logs a WHERE a.organization_id = o.id)`
+      }
+      const actors = ids.length ? await sql`SELECT DISTINCT updated_by FROM organization_feature_flags WHERE updated_by IN ${sql(ids)}` : []
+      const retained = new Set(actors.map((row) => row.updated_by))
+      await Promise.all(ids.map((id) => retained.has(id)
+        ? supabase.auth.admin.updateUserById(id, { ban_duration: '87600h' })
+        : supabase.auth.admin.deleteUser(id)))
     } finally {
       await sql.end()
     }
