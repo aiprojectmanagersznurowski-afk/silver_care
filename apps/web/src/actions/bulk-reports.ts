@@ -1,5 +1,6 @@
 'use server'
 
+import { featureDisabledMessage, isOrgFeatureEnabled } from '@/lib/feature-flags'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
@@ -59,9 +60,15 @@ export async function bulkPublishReportsAction(reportIds: string[]): Promise<Bul
     return { success: false, error: 'Błąd podczas pobierania wybranych raportów.' }
   }
 
-  const validDraftIds = reports
-    .filter((r) => r.status === 'DRAFT' && (!orgId || role === 'super_admin' || r.residents?.organization_id === orgId))
-    .map((r) => r.id)
+  const drafts = reports.filter((report) =>
+    report.status === 'DRAFT' && (role === 'super_admin' || (orgId && report.residents?.organization_id === orgId)),
+  )
+  const targetOrganizations = [...new Set(drafts.map((report) => report.residents?.organization_id))]
+  const enabled = await Promise.all(targetOrganizations.map((targetOrg) =>
+    isOrgFeatureEnabled(supabase, targetOrg, 'module_voice_and_reports'),
+  ))
+  if (enabled.includes(false)) return { success: false, error: featureDisabledMessage }
+  const validDraftIds = drafts.map((report) => report.id)
 
   if (validDraftIds.length === 0) {
     return { success: false, error: 'Żaden z wybranych raportów nie kwalifikuje się do publikacji (muszą być szkicami).' }
