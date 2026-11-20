@@ -1,5 +1,6 @@
 'use server'
 
+import { featureDisabledMessage, isOrgFeatureEnabled } from '@/lib/feature-flags'
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
@@ -23,6 +24,11 @@ export async function cancelDeathReportAction(residentId: string): Promise<{ suc
   if (!role || !['org_admin', 'super_admin'].includes(role)) {
     return { success: false, error: 'Brak uprawnień do anulowania zgłoszenia (wymagana rola Kierownika placówki).' }
   }
+
+  const { data: enabled, error: flagError } = await supabase.rpc('has_resident_org_feature', {
+    p_resident_id: residentId, p_feature_key: 'module_residents_management',
+  })
+  if (flagError || !enabled) return { success: false, error: featureDisabledMessage }
 
   const { error: rpcErr } = await supabase.rpc('cancel_resident_death_report_atomic', {
     p_resident_id: residentId,
