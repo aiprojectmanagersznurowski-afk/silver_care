@@ -1,3 +1,5 @@
+import { requireOrgFeature } from '@/lib/feature-flags'
+import { FeatureDisabledState } from '@/components/patterns/FeatureDisabledState'
 import { cookies } from 'next/headers'
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
@@ -9,6 +11,8 @@ import { getCurrentUser } from '@/lib/supabase/current-user'
 
 /** Karta podopiecznego w części personelu — ta sama karta co u kierownika, sekcje według roli (SC-ADM-20). */
 export default async function StaffResidentCardPage({ params }: { params: Promise<{ id: string }> }) {
+  if (!(await requireOrgFeature('module_residents_management')).allowed) return <FeatureDisabledState />
+
   const { id } = await params
   const supabase = await createClient()
   const user = await getCurrentUser()
