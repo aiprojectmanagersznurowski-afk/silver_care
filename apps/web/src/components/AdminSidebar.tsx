@@ -29,7 +29,8 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from '@/components/ui/sidebar'
-import { SidebarNav, type SidebarNavGroup } from '@/components/SidebarNav'
+import type { EffectiveFeatureFlags } from '@/lib/feature-flags'
+import { filterFeatureNavigation, SidebarNav, type SidebarNavGroup } from '@/components/SidebarNav'
 import { SidebarAccount } from '@/components/SidebarAccount'
 import { roleLabel } from '@/lib/auth/role-labels'
 import { useStaffUnansweredMessages } from '@/hooks/useStaffUnansweredMessages'
@@ -82,13 +83,15 @@ export function AdminSidebar({
   userEmail,
   role,
   isImpersonating = false,
+  flags,
 }: {
   userEmail: string
   role?: string
   isImpersonating?: boolean
+  flags?: EffectiveFeatureFlags | null
 }) {
   const showPlatform = role === 'super_admin' && !isImpersonating
-  const { unansweredCount } = useStaffUnansweredMessages()
+  const { unansweredCount } = useStaffUnansweredMessages(!showPlatform && (flags === undefined || Boolean(flags?.module_family_portal)))
   const groups = showPlatform ? [PLATFORM_GROUP] : [facilityGroup(isImpersonating, unansweredCount)]
 
   return (
@@ -105,7 +108,7 @@ export function AdminSidebar({
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarNav groups={groups} />
+        <SidebarNav groups={filterFeatureNavigation(groups, flags)} />
       </SidebarContent>
       <SidebarAccount userEmail={userEmail} roleLabel={roleLabel(role)} />
       <SidebarRail />

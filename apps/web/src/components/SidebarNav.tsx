@@ -1,5 +1,7 @@
 'use client'
 
+import { FEATURE_FLAGS } from '@silvercare/contracts/src/generated/features'
+import type { EffectiveFeatureFlags } from '@/lib/feature-flags'
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -40,6 +42,14 @@ export interface SidebarNavItem {
 export interface SidebarNavGroup {
   label?: string
   items: SidebarNavItem[]
+}
+
+export function filterFeatureNavigation(groups: SidebarNavGroup[], flags: EffectiveFeatureFlags | null | undefined) {
+  if (flags === undefined) return groups
+  const allowed = (href: string) => !FEATURE_FLAGS.some((feature) =>
+    (feature.routes as readonly string[]).includes(href) && !flags?.[feature.key],
+  )
+  return groups.map((group) => ({ ...group, items: group.items.filter((item) => allowed(item.href)) }))
 }
 
 function isActivePath(pathname: string, item: Pick<SidebarNavItem, 'href' | 'exact'>) {
