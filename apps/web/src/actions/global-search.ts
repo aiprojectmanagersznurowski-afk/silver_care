@@ -55,6 +55,7 @@ export async function searchGlobalAction(
     organizations: isSuperAdmin,
     residents: Boolean(flags?.module_residents_management),
     facility: Boolean(flags?.module_facility_management),
+    staff: Boolean(flags?.module_facility_management),
     agenda: Boolean(flags?.module_residents_management),
     reports: Boolean(flags?.module_voice_and_reports),
   }

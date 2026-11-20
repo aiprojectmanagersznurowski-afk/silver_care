@@ -41,7 +41,7 @@ describe('Database Reports (REPORT-APPROVAL, CARE-REPORTS-CORE)', () => {
 
       // 3. Family cannot read draft
       const familySub = '33333333-3333-3333-3333-333333333333';
-      await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "${familySub}", "app_metadata": {"role": "family"}}`}, true)`;
+      await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "${familySub}", "app_metadata": {"role": "family", "organization_id": "${orgId}"}}`}, true)`;
       
       // Note: we might need a link in resident_relative_links for family to read anything.
       // Setup the link first via postgres
@@ -49,7 +49,7 @@ describe('Database Reports (REPORT-APPROVAL, CARE-REPORTS-CORE)', () => {
       await tx`INSERT INTO resident_relative_links (resident_id, relative_user_id, relationship_code, role) VALUES (${resId}, ${familySub}, 'son', 'family')`;
 
       await tx`SET LOCAL ROLE authenticated`;
-      await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "${familySub}", "app_metadata": {"role": "family"}}`}, true)`;
+      await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "${familySub}", "app_metadata": {"role": "family", "organization_id": "${orgId}"}}`}, true)`;
       const readFamilyDraft = await tx`SELECT * FROM daily_reports WHERE id = ${report[0].id}`;
       expect(readFamilyDraft.length).toBe(0); // Should return nothing due to RLS
 
@@ -58,7 +58,7 @@ describe('Database Reports (REPORT-APPROVAL, CARE-REPORTS-CORE)', () => {
       await tx`UPDATE daily_reports SET status = 'PUBLISHED', approved_by = ${nurseSub} WHERE id = ${report[0].id}`;
 
       // 5. Family can read published report
-      await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "${familySub}", "app_metadata": {"role": "family"}}`}, true)`;
+      await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "${familySub}", "app_metadata": {"role": "family", "organization_id": "${orgId}"}}`}, true)`;
       const readFamilyPub = await tx`SELECT * FROM daily_reports WHERE id = ${report[0].id}`;
       expect(readFamilyPub.length).toBe(1);
 
