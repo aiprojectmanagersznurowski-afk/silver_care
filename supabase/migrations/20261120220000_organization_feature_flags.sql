@@ -36,10 +36,10 @@ REVOKE ALL ON public.organization_feature_flags FROM PUBLIC, anon, authenticated
 GRANT SELECT ON public.organization_feature_flags TO authenticated, service_role;
 CREATE POLICY feature_flags_select ON public.organization_feature_flags FOR SELECT TO authenticated
   USING (
-    (SELECT auth.jwt() -> 'app_metadata' ->> 'role') = 'super_admin'
+    ((SELECT auth.jwt()) -> 'app_metadata' ->> 'role') = 'super_admin'
     OR (
       organization_id = (SELECT public.get_jwt_organization_id())
-      AND (SELECT auth.jwt() -> 'app_metadata' ->> 'role') IN ('org_admin', 'nurse', 'legal_guardian', 'family')
+      AND ((SELECT auth.jwt()) -> 'app_metadata' ->> 'role') IN ('org_admin', 'nurse', 'legal_guardian', 'family')
     )
   );
 CREATE POLICY feature_flags_mfa ON public.organization_feature_flags AS RESTRICTIVE FOR ALL TO authenticated

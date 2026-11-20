@@ -2,20 +2,20 @@
 -- Restrictive policies preserve the existing role, tenant and retention checks.
 CREATE POLICY feature_daily_reports ON public.daily_reports AS RESTRICTIVE FOR ALL TO authenticated
   USING (public.has_resident_org_feature(resident_id,
-    CASE WHEN (SELECT auth.jwt() -> 'app_metadata' ->> 'role') IN ('family', 'legal_guardian')
+    CASE WHEN ((SELECT auth.jwt()) -> 'app_metadata' ->> 'role') IN ('family', 'legal_guardian')
       THEN 'module_family_portal' ELSE 'module_voice_and_reports' END));
 
 CREATE POLICY feature_resident_media ON public.resident_media AS RESTRICTIVE FOR SELECT TO authenticated
-  USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') NOT IN ('family', 'legal_guardian')
+  USING (((SELECT auth.jwt()) -> 'app_metadata' ->> 'role') NOT IN ('family', 'legal_guardian')
     OR public.has_resident_org_feature(resident_id, 'module_family_portal'));
 
 CREATE POLICY feature_resident_media_storage ON storage.objects AS RESTRICTIVE FOR SELECT TO authenticated
   USING (bucket_id <> 'resident-media'
-    OR (SELECT auth.jwt() -> 'app_metadata' ->> 'role') NOT IN ('family', 'legal_guardian')
+    OR ((SELECT auth.jwt()) -> 'app_metadata' ->> 'role') NOT IN ('family', 'legal_guardian')
     OR EXISTS (SELECT 1 FROM public.resident_media media WHERE media.storage_path = name));
 
 CREATE POLICY feature_agenda_family ON public.agenda_items AS RESTRICTIVE FOR SELECT TO authenticated
-  USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') NOT IN ('family', 'legal_guardian')
+  USING (((SELECT auth.jwt()) -> 'app_metadata' ->> 'role') NOT IN ('family', 'legal_guardian')
     OR public.has_org_feature(organization_id, 'module_family_portal'));
 
 CREATE POLICY feature_family_messages ON public.family_messages AS RESTRICTIVE FOR ALL TO authenticated

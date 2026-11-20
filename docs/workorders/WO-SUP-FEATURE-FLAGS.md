@@ -166,3 +166,8 @@ Elementy podstawowe działają dla każdej placówki niezależnie od flag:
 - **RODO art. 9 i MDR:** wyłączenie dowolnego modułu nigdy nie wyłącza `audit_logs`, nie odsłania danych w fallbackach i nie zmienia granicy MDR. W logach 403 wyłącznie UUID i kody (`SEC-403-LOGGING`, `SEC-NO-PII-LOGS`).
 - **Standard UI:** wszystkie nowe komponenty ≤ 250 LOC, `PageHeader`, `TableCard`, `StatusBadge` (`neutral`/`brand`), `min-h-touch`, skala `14px`/`12px`, terminologia `UI_TERMINOLOGY`.
 - **Weryfikacja końcowa:** każdy etap przechodzi `node tools/sc-phase.mjs`, `bash scripts/verify.sh --full` oraz po stronie frontendu `pnpm test:e2e`.
+
+## Przygotowanie środowiska do wdrożenia
+
+- Włącz rejestrację i weryfikację TOTP w Supabase Auth przed udostępnieniem panelu flag. PostgreSQL wymaga sesji `aal2` do zmiany flag. Panel pozwala skonfigurować i potwierdzić drugi składnik.
+- Ustaw `POLAR_WEBHOOK_SIGNATURE_SECRET` w środowisku serwera, jeśli placówki korzystają z webhooka Polar AccessLink. Serwer weryfikuje podpis zdarzenia przed odczytem powiązania opaski.
