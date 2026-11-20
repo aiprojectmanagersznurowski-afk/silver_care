@@ -109,9 +109,9 @@
 - **AC6 (Termin wygaśnięcia — 📝 2026-10-26):** Przy publikacji Super Admin może podać opcjonalny termin wygaśnięcia (`system_alerts.expires_at`, późniejszy niż utworzenie). Po terminie alert znika z banera placówek i z listy aktywnych, a w historii ma status „Wygasł”; wiersz w bazie nie jest zmieniany. Bez terminu alert trwa do ręcznego zakończenia. Termin z przeszłości jest odrzucany przed zapisem.
 
 ### [SC-SUP-06] Modułowość platformy sterowana flagami (Feature Flags) w panelu Super Admina per placówka
-🔗 **Kontrakt:** brak REQ (proponowany nowy: `SUP-FEATURE-FLAGS`; wdraża: `ORG-ISOLATION`, `SUP-IMPERSONATION`, `SEC-AUDIT-APPEND-ONLY`, `SEC-NO-PII-LOGS`, `SEC-403-LOGGING`, `UI-FOUR-STATES`, `UI-TERMINOLOGY`) · **Work Order:** [`WO-SUP-FEATURE-FLAGS.md`](workorders/WO-SUP-FEATURE-FLAGS.md) · **Status:** 📝 PROPOZYCJA
+🔗 **Kontrakt:** `SUP-FEATURE-FLAGS`, `ORG-ISOLATION`, `SUP-IMPERSONATION`, `SEC-AUDIT-APPEND-ONLY`, `SEC-NO-PII-LOGS`, `SEC-403-LOGGING`, `UI-FOUR-STATES`, `UI-TERMINOLOGY` · **Work Order:** [`WO-SUP-FEATURE-FLAGS.md`](workorders/WO-SUP-FEATURE-FLAGS.md) · **Status:** 📝 PROPOZYCJA
 
-> ℹ️ Docelowy wpis `SUP-FEATURE-FLAGS`, nowy plik `contracts/features.contract.mjs` oraz zasób `organization_feature_flags` w `contracts/roles.contract.mjs` zostaną dodane w Etapie 1 po otwarciu okna kontraktowego przez człowieka.
+> ℹ️ Wymaganie `SUP-FEATURE-FLAGS`, katalog w `contracts/features.contract.mjs`, zasób `organization_feature_flags` w `contracts/roles.contract.mjs` oraz reguła bramki `R35-feature-flags` zostały dopisane do kontraktu w Etapie 1.
 
 **User story:** Jako Administrator platformy (`super_admin`), chcę włączać i wyłączać duże moduły systemowe (9 domen biznesowych) oraz flagi delegacji uprawnień (2 delegacje) indywidualnie dla każdej placówki (`organization_id`) z poziomu panelu Super Admina (`/admin/organizations/[id]`), aby kontrolować zakres udostępnianych funkcji na etapie pilotażu i planów subskrypcyjnych oraz bezpiecznie delegować wybrane uprawnienia konfiguracyjne Kierownikowi placówki (`org_admin`) z pełnym egzekwowaniem w UI, API, Server Actions i RLS.
 
