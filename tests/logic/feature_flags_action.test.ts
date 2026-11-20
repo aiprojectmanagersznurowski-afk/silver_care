@@ -5,7 +5,7 @@ const { getUser, rpc, revalidatePath, getActiveImpersonation } = vi.hoisted(() =
   getUser: vi.fn(), rpc: vi.fn(), revalidatePath: vi.fn(), getActiveImpersonation: vi.fn(),
 }))
 vi.mock('@/lib/supabase/server', () => ({ createClient: () => ({ auth: { getUser }, rpc }) }))
-vi.mock('next/cache', () => ({ revalidatePath }))
+vi.mock('../../apps/web/node_modules/next/cache.js', () => ({ revalidatePath }))
 vi.mock('@/lib/impersonation-guards', async (importOriginal) => ({
   ...await importOriginal<object>(), safeGetCookieStore: vi.fn(), getActiveImpersonation,
 }))
