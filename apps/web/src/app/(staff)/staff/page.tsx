@@ -1,3 +1,5 @@
+import { requireOrgFeature } from '@/lib/feature-flags'
+import { FeatureDisabledState } from '@/components/patterns/FeatureDisabledState'
 import { createClient } from '@/lib/supabase/server'
 import { StaffBoardClient } from '@/components/StaffBoardClient'
 import { residentPhotoUrls } from '@/lib/resident-photo'
@@ -5,6 +7,8 @@ import { residentPhotoUrls } from '@/lib/resident-photo'
 export const dynamic = 'force-dynamic'
 
 export default async function StaffDashboard() {
+  if (!(await requireOrgFeature('module_residents_management')).allowed) return <FeatureDisabledState />
+
   const supabase = await createClient()
 
   const residentsRes = await supabase
