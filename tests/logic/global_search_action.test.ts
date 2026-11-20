@@ -101,7 +101,7 @@ describe('searchGlobalAction: dostęp tylko dla personelu (@REQ: ORG-ISOLATION)'
   it('@REQ: ORG-ISOLATION - wybrana kategoria odpytuje tylko swoje tabele', async () => {
     const { calls } = mockClient({ role: 'nurse', organization_id: ORG })
     await searchGlobalAction('Sniadanie', 'agenda')
-    expect([...new Set(calls.map((c) => c.table))]).toEqual(['agenda_items'])
+    expect([...new Set(calls.map((c) => c.table))]).toEqual(['organization_feature_flags', 'agenda_items'])
   })
 })
 

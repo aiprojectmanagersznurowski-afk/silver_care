@@ -25,7 +25,7 @@ function mockSupabase(calls: Call[], rows: Record<string, unknown[]>) {
     return chain
   }
   vi.mocked(createClient).mockResolvedValue({
-    auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'a1', app_metadata: { role: 'org_admin' } } }, error: null }) },
+    auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'a1', app_metadata: { role: 'org_admin', organization_id: 'o1' } } }, error: null }) },
     from,
   } as unknown as Awaited<ReturnType<typeof createClient>>)
 }

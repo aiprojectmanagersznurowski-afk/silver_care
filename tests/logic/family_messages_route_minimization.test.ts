@@ -17,6 +17,7 @@ type Call = { table: string; method: string; args: unknown[] }
 function mockSupabase(overview: { id: string }[]) {
   const calls: Call[] = []
   const from = (table: string) => {
+    if (table === 'organization_feature_flags') return { select: () => ({ eq: async () => ({ data: [], error: null }) }) }
     const chain: Record<string, unknown> = {}
     for (const method of ['select', 'eq', 'gte', 'insert', 'single']) {
       chain[method] = (...args: unknown[]) => {
