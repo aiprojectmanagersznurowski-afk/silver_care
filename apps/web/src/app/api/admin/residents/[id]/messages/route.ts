@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
 export async function GET(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const supabase = await createClient();
@@ -13,7 +13,7 @@ export async function GET(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const featureDenied = await assertOrgFeatureForApi(supabase, user, new URL(request.url).pathname)
+  const featureDenied = await assertOrgFeatureForApi(supabase, user, '/api/admin/residents/[id]/messages')
   if (featureDenied) return featureDenied
 
   const role = user.app_metadata?.role as string | undefined;

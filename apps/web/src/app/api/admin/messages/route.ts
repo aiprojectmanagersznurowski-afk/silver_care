@@ -10,9 +10,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const featureDenied = await assertOrgFeatureForApi(supabase, user, new URL(request.url).pathname)
-  if (featureDenied) return featureDenied
-
   const role = user.app_metadata?.role as string | undefined;
   if (role !== 'org_admin') {
     return NextResponse.json({ error: 'Brak uprawnień kierownika placówki' }, { status: 403 });
@@ -75,13 +72,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const featureDenied = await assertOrgFeatureForApi(supabase, user, new URL(request.url).pathname)
+  const featureDenied = await assertOrgFeatureForApi(supabase, user, '/api/admin/messages')
   if (featureDenied) return featureDenied
 
   const role = user.app_metadata?.role as string | undefined;
   if (role !== 'org_admin') {
     return NextResponse.json({ error: 'Brak uprawnień kierownika placówki' }, { status: 403 });
   }
+
+  const featureDenied = await assertOrgFeatureForApi(supabase, user, '/api/admin/messages')
+  if (featureDenied) return featureDenied
 
   try {
     const body = await request.json();
