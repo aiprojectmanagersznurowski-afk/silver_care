@@ -40,7 +40,7 @@ export async function POST(req: Request) {
 
     if (error) return NextResponse.json({ error: 'Nie udało się odczytać powiązania Polar' }, { status: 500 })
     if (link) {
-      const featureDenied = await assertTargetOrgFeatureForApi(supabase, link.organization_id, new URL(req.url).pathname)
+      const featureDenied = await assertTargetOrgFeatureForApi(supabase, link.organization_id, '/api/polar/webhook')
       if (featureDenied) return featureDenied
 
       const { error: auditError } = await supabase.from('audit_logs').insert({
