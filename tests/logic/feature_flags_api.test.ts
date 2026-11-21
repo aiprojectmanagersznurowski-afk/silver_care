@@ -1,4 +1,5 @@
 import { createHmac } from 'node:crypto'
+import { featureSnapshot } from '../helpers/feature-snapshot.test.fixture'
 import { NextRequest } from 'next/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { GET as validateInvitation } from '@/app/api/family/invite/validate/route'
@@ -8,7 +9,7 @@ import { FEATURE_FLAG_POLICY } from '@silvercare/contracts/src/generated/feature
 
 const { from, rpc, useSession } = vi.hoisted(() => ({ from: vi.fn(), rpc: vi.fn(), useSession: vi.fn() }))
 vi.mock('@/lib/supabase/admin', () => ({ createAdminClient: () => ({ from, rpc }) }))
-vi.mock('@/lib/supabase/server', () => ({ createClient: () => ({ from, auth: { getUser: useSession } }) }))
+vi.mock('@/lib/supabase/server', () => ({ createClient: () => ({ from, rpc, auth: { getUser: useSession } }) }))
 
 const org = '6061863f-c8cf-4bb5-b7c0-b3fb669ba80c'
 const resident = 'dbdc6c69-03c1-49da-b056-2a7f827dcef3'
@@ -30,15 +31,14 @@ const queryFor = (data: unknown) => {
 
 describe('@REQ: SUP-FEATURE-FLAGS', () => {
   it('blokuje najnowszy raport po wyłączeniu dowolnego z wymaganych modułów', async () => {
-    for (const feature of ['module_residents_management', 'module_family_portal']) {
-      from.mockClear().mockImplementation(() => ({
-        select: () => ({ eq: async () => ({ data: [{ feature_key: feature, enabled: false }], error: null }) }),
-      }))
+    for (const feature of ['module_residents_management', 'module_family_portal'] as const) {
+      rpc.mockResolvedValueOnce(featureSnapshot({ [feature]: false }))
       const response = await latestReport(new Request(`https://test.local/api/residents/${resident}/report/latest`),
         { params: Promise.resolve({ id: resident }) })
       expect(response.status).toBe(403)
       expect(await response.json()).toMatchObject({ code: FEATURE_FLAG_POLICY.disabledErrorCode, feature })
-      expect(from.mock.calls).toEqual([['organization_feature_flags']])
+      expect(rpc).toHaveBeenLastCalledWith('get_org_feature_flags', { p_org_id: org })
+      expect(from).not.toHaveBeenCalled()
     }
   })
 

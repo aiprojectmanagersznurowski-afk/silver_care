@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { featureSnapshot } from '../helpers/feature-snapshot.test.fixture'
 
 vi.mock('@/lib/supabase/server', () => ({ createClient: vi.fn() }))
 
@@ -41,6 +42,7 @@ function mockClient(
     return b
   })
   vi.mocked(createClient).mockResolvedValue({
+    rpc: async () => featureSnapshot(),
     auth: {
       getUser: vi.fn().mockResolvedValue({
         data: { user: appMetadata === null ? null : { id: 'u-1', app_metadata: appMetadata, user_metadata: opts.userMetadata ?? {} } },
@@ -91,17 +93,17 @@ describe('searchGlobalAction: dostęp tylko dla personelu (@REQ: ORG-ISOLATION)'
     expect(calls.some((c) => c.table === 'residents' && c.method === 'eq' && c.args[0] === 'organization_id' && c.args[1] === ORG)).toBe(true)
   })
 
-  it('@REQ: ORG-ISOLATION - super_admin bez organizacji szuka także placówek', async () => {
+  it('@REQ: ORG-ISOLATION - super_admin bez organizacji wyszukuje wyłącznie placówki', async () => {
     const { calls } = mockClient({ role: 'super_admin' })
     const res = await searchGlobalAction('Sloneczna')
     expect(res.success).toBe(true)
-    expect(calls.some((c) => c.table === 'organizations')).toBe(true)
+    expect([...new Set(calls.map((c) => c.table))]).toEqual(['organizations'])
   })
 
   it('@REQ: ORG-ISOLATION - wybrana kategoria odpytuje tylko swoje tabele', async () => {
     const { calls } = mockClient({ role: 'nurse', organization_id: ORG })
     await searchGlobalAction('Sniadanie', 'agenda')
-    expect([...new Set(calls.map((c) => c.table))]).toEqual(['organization_feature_flags', 'agenda_items'])
+    expect([...new Set(calls.map((c) => c.table))]).toEqual(['agenda_items'])
   })
 })
 
