@@ -1,3 +1,5 @@
+import { requireOrgFeature } from '@/lib/feature-flags'
+import { FeatureDisabledState } from '@/components/patterns/FeatureDisabledState'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { cookies } from 'next/headers'
 import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
@@ -9,6 +11,8 @@ import { getAppRole } from '@/lib/auth/app-role'
 import { getCurrentUser } from '@/lib/supabase/current-user'
 
 export default async function AdminStaffPage() {
+  if (!(await requireOrgFeature('module_facility_management')).allowed) return <FeatureDisabledState />
+
   const user = await getCurrentUser()
 
   if (!user) {

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { featureSnapshot } from '../helpers/feature-snapshot.test.fixture'
 import { MATRIX } from '../../contracts/roles.contract.mjs'
 
 vi.mock('@/lib/supabase/server', () => ({ createClient: vi.fn() }))
@@ -34,6 +35,7 @@ function mockSupabase(role: string, updatedRows: unknown[] | null) {
     return chain
   }
   vi.mocked(createClient).mockResolvedValue({
+    rpc: async () => featureSnapshot(),
     auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'u1', app_metadata: { role, organization_id: 'o1' } } }, error: null }) },
     from,
   } as unknown as Awaited<ReturnType<typeof createClient>>)

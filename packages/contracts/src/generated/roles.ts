@@ -101,7 +101,8 @@ export const RESOURCES = [
   "voice_devices",
   "voice_device_assignments",
   "voice_assignment_queue",
-  "voice_retention_settings"
+  "voice_retention_settings",
+  "organization_feature_flags"
 ] as const;
 
 export const MATRIX = [
@@ -493,6 +494,25 @@ export const MATRIX = [
       "super_admin"
     ],
     "delete": []
+  },
+  {
+    "resource": "organization_feature_flags",
+    "read": [
+      "super_admin",
+      "org_admin:own",
+      "nurse:own",
+      "legal_guardian:own",
+      "family:own"
+    ],
+    "create": [
+      "super_admin"
+    ],
+    "update": [
+      "super_admin"
+    ],
+    "delete": [
+      "super_admin"
+    ]
   }
 ] as const;
 

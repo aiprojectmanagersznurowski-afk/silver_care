@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { featureSnapshot } from '../helpers/feature-snapshot.test.fixture'
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
@@ -53,8 +54,9 @@ describe('Kontrakt endpointu /api/voice/transcribe (3 kształty żądania)', () 
     })
 
     vi.mocked(createClient).mockResolvedValueOnce({
+      rpc: async () => featureSnapshot(),
       auth: {
-        getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'nurse-uuid-456' } }, error: null }),
+        getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'nurse-uuid-456', app_metadata: { role: 'nurse', organization_id: 'org-a' } } }, error: null }),
       },
       from: vi.fn((table: string) => {
         if (table === 'voice_draft_notes') {
@@ -97,11 +99,12 @@ describe('Kontrakt endpointu /api/voice/transcribe (3 kształty żądania)', () 
   })
 
   it('Kształt 2: żądanie bez resident_id zwraca czysty transkrypt bez tworzenia rekordu szkicu @REQ: VOICE-ZERO-GUESSING', async () => {
-    const mockFrom = vi.fn()
+    const mockFrom = vi.fn(() => ({ select: () => ({ eq: async () => ({ data: [], error: null }) }) }))
 
     vi.mocked(createClient).mockResolvedValueOnce({
+      rpc: async () => featureSnapshot(),
       auth: {
-        getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'nurse-uuid-456' } }, error: null }),
+        getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'nurse-uuid-456', app_metadata: { role: 'nurse', organization_id: 'org-a' } } }, error: null }),
       },
       from: mockFrom,
     } as unknown as Awaited<ReturnType<typeof createClient>>)
@@ -126,7 +129,7 @@ describe('Kontrakt endpointu /api/voice/transcribe (3 kształty żądania)', () 
     expect(json.transcript).toBe('Senior zjadł pełny obiad i odpoczywał w ogrodzie.')
     expect(json.draftId).toBeUndefined()
 
-    // Baza nie może być dotykana dla czatu personelu
+    // Czat sprawdza flagę i nie tworzy szkicu.
     expect(mockFrom).not.toHaveBeenCalled()
   })
 
@@ -142,8 +145,9 @@ describe('Kontrakt endpointu /api/voice/transcribe (3 kształty żądania)', () 
     })
 
     vi.mocked(createClient).mockResolvedValueOnce({
+      rpc: async () => featureSnapshot(),
       auth: {
-        getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'nurse-uuid-456' } }, error: null }),
+        getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'nurse-uuid-456', app_metadata: { role: 'nurse', organization_id: 'org-a' } } }, error: null }),
       },
       from: vi.fn((table: string) => {
         if (table === 'voice_draft_notes') {

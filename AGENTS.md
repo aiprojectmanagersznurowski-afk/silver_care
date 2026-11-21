@@ -64,6 +64,13 @@ Rdzeń: `organizations`, `residents`. Identyfikatory dostawców żyją w `extern
 - Każde story ma linię `🔗 Kontrakt` z ID `@REQ` albo `brak REQ`; nowe wymaganie w kontrakcie wskazuje story w polu `source`.
 - Zmiana zakresu funkcji = aktualizacja story w tym samym PR co kod.
 
+## Przepływ Git
+
+- Każde standardowe zadanie zaczynaj od pobrania aktualnego `origin/staging` (`git fetch origin staging`) i utworzenia z niego osobnej gałęzi roboczej.
+- Wypchnij gałąź roboczą na GitHub i otwórz PR do `staging`. PR scala druga osoba z zespołu po pozytywnym review.
+- Zmiany zebrane na `staging` trafiają na produkcję zbiorczym PR-em `staging → main`, scalanym commitem scalającym.
+- Pilna poprawka produkcyjna ma osobną ścieżkę opisaną w [instrukcjach projektu](.claude/CLAUDE.md).
+
 ## Pętla
 
 ```
@@ -73,6 +80,8 @@ PLAN → CONTRACT (jeśli trzeba) → RED → GREEN → VERIFY → REVIEW → PR
 `node tools/sc-phase.mjs red|green|contract` pilnuje granicy faz. Każdy test niesie `@REQ: <ID>`.
 
 Dla zmian i scenariuszy w warstwie frontendu (`apps/web`): faza RED wymaga testów Playwright E2E w `e2e/` z Page Object Model, a weryfikacja obejmuje `pnpm test:e2e`.
+
+**Zakaz separatora `--` w komendach testowych (`pnpm` v10):** `pnpm` v10 przekazuje samodzielne `--` dosłownie do Playwrighta i Vitesta, przez co `pnpm test:e2e -- e2e/<plik>.spec.ts --project=chromium` ignoruje filtr pliku i projektu i uruchamia całą suitę (666 testów na `workers: 1`). Argumenty przekazuj zawsze **bez `--`**: `pnpm test:e2e e2e/<plik>.spec.ts --project=chromium`, `pnpm test:db tests/db/<plik>.test.ts`, `pnpm test tests/logic/<plik>.test.ts` (albo `pnpm exec playwright test ...`).
 
 ## Przed zamknięciem zadania (INFRA-SDLC-WORKFLOW)
 

@@ -24,6 +24,7 @@ type OkCard = Extract<ResidentCardResult, { status: 'ok' }>
 
 interface ResidentCardProps {
   card: OkCard
+  voiceEnabled: boolean
   backHref: string
   backLabel: string
   /** Pełna lista raportów w części aplikacji właściwej dla roli. */
@@ -37,7 +38,7 @@ const list = <T,>(value: unknown) => (Array.isArray(value) ? (value as T[]) : []
  * Wspólna karta podopiecznego dla personelu (SC-ADM-20). Zakładki i sekcje wynikają wyłącznie z listy
  * sekcji roli (RESIDENT_CARD_SECTIONS); dane pochodzą z getResidentCard, które pobiera tylko to, co rola może czytać.
  */
-export function ResidentCard({ card, backHref, backLabel, reportsHref }: ResidentCardProps) {
+export function ResidentCard({ card, backHref, backLabel, reportsHref, voiceEnabled }: ResidentCardProps) {
   const has = (id: string) => (card.sections as readonly string[]).includes(id)
   const resident = card.resident as unknown as FullResidentData
 
@@ -63,7 +64,7 @@ export function ResidentCard({ card, backHref, backLabel, reportsHref }: Residen
     tabs.push({
       id: 'daily',
       label: labelOf('daily'),
-      content: <DailySection reports={card.daily?.reports ?? []} agenda={card.daily?.agenda ?? []} reportsHref={reportsHref} />,
+      content: <DailySection reports={card.daily?.reports ?? []} agenda={card.daily?.agenda ?? []} reportsHref={voiceEnabled ? reportsHref : undefined} />,
     })
   }
   if (has('tasks') && card.tasks) {
@@ -73,7 +74,7 @@ export function ResidentCard({ card, backHref, backLabel, reportsHref }: Residen
       content: <ResidentTasksSection tasks={card.tasks} addTaskHref={`/staff/shift-tasks?resident=${resident.id}`} />,
     })
   }
-  if (has('family')) tabs.push({ id: 'family', label: labelOf('family'), content: <ResidentFamilyCard resident={resident} relativeLinks={relativeLinks} /> })
+  if (has('family')) tabs.push({ id: 'family', label: labelOf('family'), content: <ResidentFamilyCard resident={resident} relativeLinks={relativeLinks} canInvite={card.canInviteFamily} /> })
   if (has('events')) tabs.push({ id: 'events', label: labelOf('events'), content: <ResidentEventsCard events={events} /> })
   if (has('wearable')) {
     const link = card.wearable as { external_user_id?: string; created_at?: string } | null
@@ -101,7 +102,7 @@ export function ResidentCard({ card, backHref, backLabel, reportsHref }: Residen
         backLabel={backLabel}
         activeAssignment={activeAssignment}
         needsAttention={card.tasks?.needsAttention ?? false}
-        voiceNoteHref={card.access.readOnly ? undefined : `/voice?resident=${resident.id}`}
+        voiceNoteHref={card.access.readOnly || !voiceEnabled ? undefined : `/voice?resident=${resident.id}`}
       />
       <ResidentProfileTabs
         overviewLabel={labelOf('overview')}

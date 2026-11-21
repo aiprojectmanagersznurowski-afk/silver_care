@@ -75,6 +75,14 @@ export async function GET(request: Request) {
         throw new Error('Adres e-mail z Google nie pokrywa się z zaproszeniem.')
       }
 
+      const { data: portalEnabled, error: flagError } = await adminClient.rpc('has_org_feature', {
+        p_org_id: invitation.organization_id, p_feature_key: 'module_family_portal',
+      })
+      if (flagError || !portalEnabled) {
+        await supabase.auth.signOut()
+        throw new Error('Portal rodziny jest niedostępny w placówce.')
+      }
+
       // 2. Walidacja bezpieczeństwa realizacji zaproszenia (SEC-OAUTH-METADATA-OVERWRITE, OAUTH-GUARDIAN-CONSENTS)
       const claimEvaluation = evaluateOAuthInviteClaim({
         currentUserRole: user.app_metadata?.role,

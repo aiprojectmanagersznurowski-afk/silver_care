@@ -1,3 +1,5 @@
+import { requireOrgFeature } from '@/lib/feature-flags'
+import { FeatureDisabledState } from '@/components/patterns/FeatureDisabledState'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/supabase/current-user'
@@ -17,6 +19,8 @@ type SearchParams = Promise<{ shift?: string; date?: string }>
 
 /** Plan pracy zmiany do wydruku A4 (NUR-SHIFT-PLAN-PRINT, SC-NUR-16): tylko zatwierdzony plan, pola bez PESEL i kontaktów. */
 export default async function ShiftPlanPrintPage({ searchParams }: { searchParams: SearchParams }) {
+  if (!(await requireOrgFeature('module_shift_tasks')).allowed) return <FeatureDisabledState />
+
   const user = await getCurrentUser()
   const role = getAppRole(user)
   if (!user || (role !== 'nurse' && role !== 'org_admin')) redirect('/')

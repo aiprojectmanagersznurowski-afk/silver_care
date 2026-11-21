@@ -48,6 +48,7 @@ export const RESOURCES = [
   'resident_events', 'resident_packages',
   'shift_definitions', 'shift_roster', 'shift_tasks', 'shift_plan_approvals',
   'voice_devices', 'voice_device_assignments', 'voice_assignment_queue', 'voice_retention_settings',
+  'organization_feature_flags',
 ];
 
 /**
@@ -105,6 +106,8 @@ export const MATRIX = [
   { resource: 'voice_assignment_queue',  read: ['org_admin:own', 'nurse:shift_lead'],       create: [],               update: ['org_admin:own', 'nurse:shift_lead'], delete: [] },
   // Retencja nagrań placówki (SC-NUR-02/AC4, VOICE_RETENTION.setBy). Osobny zasób, bo kierownik placówki nie edytuje organizations.
   { resource: 'voice_retention_settings', read: ['org_admin:own', 'super_admin'],           create: ['org_admin:own', 'super_admin'], update: ['org_admin:own', 'super_admin'], delete: [] },
+  // Wielomodułowość platformy (SC-SUP-06, SUP-FEATURE-FLAGS): odizolowane od organizations.settings, zapis wyłącznie super_admin.
+  { resource: 'organization_feature_flags', read: ['super_admin', 'org_admin:own', 'nurse:own', 'legal_guardian:own', 'family:own'], create: ['super_admin'], update: ['super_admin'], delete: ['super_admin'] },
 ];
 
 /**

@@ -65,31 +65,14 @@ export async function startImpersonationAction(formData: FormData): Promise<void
 }
 
 export async function stopImpersonationAction() {
+  const supabase = await createClient()
+  const { data: targetOrgId, error } = await supabase.rpc('finish_impersonation')
+  if (error) {
+    console.warn('[IMPERSONATION_STOP_FAILED]', { code: error.code })
+    return { error: 'Nie udało się zakończyć podglądu. Spróbuj ponownie.' }
+  }
+
   const cookieStore = await cookies()
-  const rawSession = cookieStore.get('sc_impersonation')?.value
-
-  let targetOrgId = ''
-
-  if (rawSession) {
-    try {
-      const session: ImpersonationSession = JSON.parse(rawSession)
-      targetOrgId = session.targetOrgId
-
-      const supabase = await createClient()
-      await supabase.rpc('log_impersonation_stop', {
-        p_target_admin_id: session.targetAdminId,
-        p_target_org_id: session.targetOrgId
-      })
-    } catch (e) {
-      console.error('Błąd log_impersonation_stop:', e)
-    }
-  }
-
   cookieStore.delete('sc_impersonation')
-
-  if (targetOrgId) {
-    redirect(`/admin/organizations/${targetOrgId}`)
-  } else {
-    redirect('/admin/organizations')
-  }
+  redirect(targetOrgId ? `/admin/organizations/${targetOrgId}` : '/admin/organizations')
 }

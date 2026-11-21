@@ -1,5 +1,6 @@
 'use server'
 
+import { featureDisabledMessage, isOrgFeatureEnabled } from '@/lib/feature-flags'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
@@ -25,6 +26,10 @@ export async function analyzeBulkImportAction(rows: RawResidentRow[]): Promise<{
   if (!user) return { error: 'Brak autoryzacji sesji.' }
   const orgId = user.app_metadata?.organization_id
   if (!orgId) return { error: 'Brak przypisanej placówki.' }
+
+  if (!(await isOrgFeatureEnabled(supabase, orgId, 'module_residents_management'))) {
+    return { error: featureDisabledMessage }
+  }
 
   const adminClient = createAdminClient()
 
@@ -89,6 +94,10 @@ export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[
   const validRows = rowsToImport.filter((r) => r.isValid)
   if (validRows.length === 0) {
     return { error: 'Brak poprawnych wierszy do zaimportowania.' }
+  }
+
+  if (!(await isOrgFeatureEnabled(supabase, orgId, 'module_residents_management'))) {
+    return { error: featureDisabledMessage }
   }
 
   const adminClient = createAdminClient()

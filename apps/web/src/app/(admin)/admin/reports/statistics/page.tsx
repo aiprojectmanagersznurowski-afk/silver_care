@@ -1,9 +1,13 @@
+import { requireOrgFeature } from '@/lib/feature-flags'
+import { FeatureDisabledState } from '@/components/patterns/FeatureDisabledState'
 import { createClient } from '@/lib/supabase/server'
 import { StatisticsDashboardClient } from '@/components/StatisticsDashboardClient'
 import { PageHeader } from '@/components/patterns/PageHeader'
 import { getCurrentUser } from '@/lib/supabase/current-user'
 
 export default async function StatisticsPage() {
+  if (!(await requireOrgFeature('module_voice_and_reports')).allowed) return <FeatureDisabledState />
+
   const supabase = await createClient()
   const user = await getCurrentUser()
   const orgId = user?.app_metadata?.organization_id

@@ -89,7 +89,7 @@ Krój: `-apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui, sans-
 
 Bazowy rozmiar 14px · minimalny kontrast 4.5:1 · cel dotykowy 38px
 
-## Wymagania (68)
+## Wymagania (69)
 
 | ID | Domena | Ryzyko | Treść |
 |---|---|---|---|
@@ -97,6 +97,7 @@ Bazowy rozmiar 14px · minimalny kontrast 4.5:1 · cel dotykowy 38px
 | ORG-PROVISION | tenancy | MEDIUM | Utworzenie placówki tworzy pierwszego org_admin i wysyła mu zaproszenie. |
 | SUP-IMPERSONATION | tenancy | HIGH | Super admin może działać jako administrator placówki w celu diagnostyki. |
 | SUP-IAM-PANEL | tenancy | HIGH | Super admin (Power Admin) posiada panel do zarządzania uprawnieniami, rolami użytkowników i ogólnym dostępem do systemu. |
+| SUP-FEATURE-FLAGS | tenancy | HIGH | Administrator platformy włącza i wyłącza duże moduły systemowe oraz flagi delegacji uprawnień per placówka z pełnym egzekwowaniem w UI, API, Server Actions i RLS, bez wpływu na niewyłączalny Rdzeń (w tym obowiązkowy rejestr audytowy RODO). |
 | ADM-RESIDENT-ADD | residents | HIGH | Administrator dodaje pensjonariusza, przypisuje bliskich i przypisuje łóżko. |
 | ADM-FACILITY-MANAGE | facility | MEDIUM | Administrator zarządza rejestrem pokoi i łóżek placówki. |
 | ADM-BED-ASSIGNMENT | facility | HIGH | Jedno łóżko ma co najwyżej jednego aktywnego pensjonariusza; jeden pensjonariusz ma co najwyżej jedno aktywne łóżko. |
@@ -161,3 +162,23 @@ Bazowy rozmiar 14px · minimalny kontrast 4.5:1 · cel dotykowy 38px
 | INFRA-EU-REGION | infra | HIGH | Dane nie opuszczają Europejskiego Obszaru Gospodarczego, poza jawnie udokumentowanymi wyjątkami. |
 | INFRA-GROQ-TRANSCRIPTION | infra | HIGH | Transkrypcja surowego audio odbywa się przez Groq (USA, transfer na bazie SCC) wyłącznie na etapie TRANSCRIBE, przed redakcją danych medycznych. |
 | INFRA-GROQ-DEMO-INTERIM | infra | HIGH | Gdy brak klucza modelu EU, CLASSIFY, GENERATE oraz etapy przekazania zmiany (HANDOVER_STRUCTURE, TASK_PROPOSE) mogą tymczasowo korzystać z Groq wyłącznie w jawnie włączonym trybie demo (ALLOW_DEMO_GROQ_FALLBACK=true), przed podpisaniem DPA, ograniczone do danych syntetycznych. |
+
+## Modułowość i flagi placówki (SC-SUP-06)
+
+**Niewyłączalny Rdzeń:** `auth_sessions`, `rbac_mfa`, `organization_isolation`, `user_profile`, `mandatory_rodo_audit_logs`.
+
+**Zasady polityki:** zapis `RPC_ONLY`, impersonacja `APP_COOKIE_AND_DB_SESSION`, trasy wieloflagowe `REQUIRE_ALL_MATCHING`, egzekwowanie RLS/RPC: tak.
+
+| Klucz | Rodzaj | Domyślnie | Zależności | Nazwa |
+|---|---|---|---|---|
+| `module_facility_management` | `module` | włączony | — | Zarządzanie placówką |
+| `module_residents_management` | `module` | włączony | — | Zarządzanie podopiecznymi |
+| `module_voice_and_reports` | `module` | włączony | — | Nagrywanie i budowanie raportów |
+| `module_shift_tasks` | `module` | włączony | — | Lista zadań i praca zmianowa |
+| `module_audit_compliance` | `module` | wyłączony | — | Rozszerzone audytowanie aktywności |
+| `module_family_portal` | `module` | włączony | `module_residents_management` | Portal rodziny i komunikacja |
+| `module_documents_contracts` | `module` | włączony | `module_residents_management` | Umowy i dokumenty |
+| `module_finance_budget` | `module` | wyłączony | `module_facility_management` | Budżetowanie i rentowność |
+| `module_wearables_iot` | `module` | włączony | `module_residents_management` | Opaski i sensory IoT |
+| `allow_org_admin_report_config` | `delegation` | wyłączony | `module_voice_and_reports` | Konfiguracja raportów przez Kierownika placówki |
+| `allow_org_admin_contract_templates` | `delegation` | wyłączony | `module_documents_contracts` | Szablony umów przez Kierownika placówki |

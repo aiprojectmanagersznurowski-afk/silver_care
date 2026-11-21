@@ -1,5 +1,6 @@
 'use server'
 
+import { featureDisabledMessage, isOrgFeatureEnabled } from '@/lib/feature-flags'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/supabase/current-user'
@@ -26,6 +27,11 @@ async function requireOrgAdminSession(): Promise<{ orgId: string } | { error: st
   const role = user.app_metadata?.role as string | undefined
   const orgId = user.app_metadata?.organization_id as string | undefined
   if (role !== 'org_admin' || !orgId) return { error: 'Grafik układa kierownik placówki.' }
+  const supabase = await createClient()
+  if (!(await isOrgFeatureEnabled(supabase, orgId, 'module_shift_tasks'))) {
+    return { error: featureDisabledMessage }
+  }
+
   return { orgId }
 }
 

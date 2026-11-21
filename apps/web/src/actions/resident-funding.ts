@@ -1,5 +1,6 @@
 'use server'
 
+import { featureDisabledMessage, isOrgFeatureEnabled } from '@/lib/feature-flags'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
@@ -38,6 +39,10 @@ export async function updateResidentFundingAction(
   if (user.app_metadata?.role !== 'org_admin' || !orgId) {
     return { success: false, error: 'Źródło finansowania zmienia wyłącznie kierownik placówki.' }
   }
+  if (!(await isOrgFeatureEnabled(supabase, orgId, 'module_residents_management'))) {
+    return { success: false, error: featureDisabledMessage }
+  }
+
   if (!residentId) return { success: false, error: 'Brak identyfikatora podopiecznego.' }
   if (!isFundingSource(fundingSource)) return { success: false, error: 'Wybierz źródło finansowania z listy.' }
 

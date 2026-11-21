@@ -1,5 +1,6 @@
 'use server'
 
+import { featureDisabledMessage, isOrgFeatureEnabled } from '@/lib/feature-flags'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/supabase/current-user'
@@ -40,6 +41,10 @@ export async function addShiftTaskAction(input: AddShiftTaskInput): Promise<Shif
   if (invalid) return { error: invalid }
 
   const supabase = await createClient()
+  if (!(await isOrgFeatureEnabled(supabase, orgId, 'module_shift_tasks'))) {
+    return { error: featureDisabledMessage }
+  }
+
   let accepted = role === 'org_admin'
   if (!accepted) {
     const { data } = await supabase.rpc('is_shift_lead', { p_shift_definition_id: input.shiftDefinitionId, p_shift_date: input.shiftDate })
@@ -71,6 +76,11 @@ async function requireStaff() {
   const role = getAppRole(user)
   const orgId = getAppOrganizationId(user)
   if (!user || !orgId || (role !== 'nurse' && role !== 'org_admin')) return null
+  const supabase = await createClient()
+  if (!(await isOrgFeatureEnabled(supabase, orgId, 'module_shift_tasks'))) {
+    return null
+  }
+
   return { user, orgId }
 }
 

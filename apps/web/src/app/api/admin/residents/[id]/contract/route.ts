@@ -1,3 +1,4 @@
+import { assertOrgFeatureForApi } from '@/lib/feature-flags'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
@@ -20,15 +21,18 @@ export async function POST(
       return NextResponse.json({ error: 'Brak autoryzacji' }, { status: 401 })
     }
 
+    const role = user.app_metadata?.role
+    if (role !== 'org_admin' && role !== 'super_admin') {
+      return NextResponse.json({ error: 'Brak uprawnień. Tylko kierownik placówki może zarządzać umowami.' }, { status: 403 })
+    }
+
     const cookieStore = await cookies()
     if (isImpersonationSessionActive(cookieStore, user)) {
       return NextResponse.json({ error: 'Operacja niedozwolona w trybie podglądu' }, { status: 403 })
     }
 
-    const role = user.app_metadata?.role
-    if (role !== 'org_admin' && role !== 'super_admin') {
-      return NextResponse.json({ error: 'Brak uprawnień. Tylko kierownik placówki może zarządzać umowami.' }, { status: 403 })
-    }
+    const featureDenied = await assertOrgFeatureForApi(supabase, user, '/api/admin/residents/[id]/contract')
+    if (featureDenied) return featureDenied
 
     const orgId = user.app_metadata?.organization_id
     if (!orgId) {
@@ -100,15 +104,18 @@ export async function DELETE(
       return NextResponse.json({ error: 'Brak autoryzacji' }, { status: 401 })
     }
 
+    const role = user.app_metadata?.role
+    if (role !== 'org_admin' && role !== 'super_admin') {
+      return NextResponse.json({ error: 'Brak uprawnień' }, { status: 403 })
+    }
+
     const cookieStore = await cookies()
     if (isImpersonationSessionActive(cookieStore, user)) {
       return NextResponse.json({ error: 'Operacja niedozwolona w trybie podglądu' }, { status: 403 })
     }
 
-    const role = user.app_metadata?.role
-    if (role !== 'org_admin' && role !== 'super_admin') {
-      return NextResponse.json({ error: 'Brak uprawnień' }, { status: 403 })
-    }
+    const featureDenied = await assertOrgFeatureForApi(supabase, user, '/api/admin/residents/[id]/contract')
+    if (featureDenied) return featureDenied
 
     const orgId = user.app_metadata?.organization_id
     if (!orgId) {

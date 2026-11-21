@@ -22,7 +22,7 @@ describe('Database Resident Archive (ADM-ARCHIVE)', () => {
       const org = await tx`INSERT INTO organizations (name) VALUES ('Test Org Archive') RETURNING id`;
       const orgId = org[0].id;
 
-      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
+      await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "44444444-4444-4444-8444-444444444444", "app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
       const resident = await tx`INSERT INTO residents (organization_id, first_name, last_name, pesel_hash) VALUES (${orgId}, 'Jan', 'Kowalski', 'hash_arch') RETURNING id`;
       
       // Insert audit log manually for testing hard delete

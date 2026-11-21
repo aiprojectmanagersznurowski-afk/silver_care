@@ -1,4 +1,12 @@
 <!-- WYGENEROWANE z .claude/CLAUDE.md przez tools/sc-port-antigravity.mjs — nie edytuj ręcznie. -->
+## Zasada pytań i obsługa sprzeczności (Koniec zasady „Zero Pytań”)
+
+W projekcie **nie obowiązuje** zasada „zero pytań / pełna autonomia przy niejasnościach”.
+Nowa reguła nadrzędna:
+**W przypadku wykrycia sprzeczności między kontraktem, istniejącym kodem a poleceniem użytkownika — ZATRZYMAJ SIĘ i zadaj 1 precyzyjne pytanie weryfikujące przed zapisaniem plików.**
+
+Decyzje techniczne mieszczące się w kontrakcie (odwracalne, bez wpływu na dane osobowe i granice prawne) realizujesz zgodnie z `DEFAULTS` z `autonomy.contract.mjs`. Jeśli jednak polecenie użytkownika lub istniejący kod koliduje z kontraktem lub granicami MDR/RODO — zadaj pytanie.
+
 ## Czego nie robisz sam
 
 Otwarcie okna kontraktowego i publikacja raportu do bliskich należą do człowieka.

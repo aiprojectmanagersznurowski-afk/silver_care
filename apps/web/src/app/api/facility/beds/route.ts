@@ -29,7 +29,7 @@ export const GET = withAuth(async (request, { supabase }) => {
   const formattedBeds = mapBedsWithActiveAssignment(beds || [])
 
   return NextResponse.json({ beds: formattedBeds })
-})
+}, { requiredFeature: 'module_facility_management' })
 
 export const POST = withAuth(
   async (request, { supabase, user }) => {
@@ -96,5 +96,5 @@ export const POST = withAuth(
 
     return NextResponse.json({ bed })
   },
-  { roles: ['org_admin', 'super_admin'], blockImpersonation: true }
+  { roles: ['org_admin', 'super_admin'], blockImpersonation: true, requiredFeature: 'module_facility_management' }
 )

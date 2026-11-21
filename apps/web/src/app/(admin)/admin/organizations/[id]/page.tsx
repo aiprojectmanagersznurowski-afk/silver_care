@@ -11,6 +11,9 @@ import { OrganizationAdminsSection } from '@/components/organizations/Organizati
 import { OrganizationStaffSection } from '@/components/organizations/OrganizationStaffSection'
 import { PageHeader } from '@/components/patterns/PageHeader'
 import { getAppRole, getAppOrganizationId } from '@/lib/auth/app-role'
+import { OrganizationFeatureFlagsSection } from '@/components/admin/OrganizationFeatureFlagsSection'
+import { getOrgFeatureFlags } from '@/lib/feature-flags'
+import { getActiveImpersonation, safeGetCookieStore } from '@/lib/impersonation-guards'
 import { getCurrentUser } from '@/lib/supabase/current-user'
 
 export default async function OrganizationDetailsPage({
@@ -41,6 +44,12 @@ export default async function OrganizationDetailsPage({
   if (orgError || !organization) {
     notFound()
   }
+
+  const isImpersonating = Boolean(getActiveImpersonation(await safeGetCookieStore(), user))
+  const [flags, assurance] = await Promise.all([
+    getOrgFeatureFlags(id).catch(() => null),
+    isImpersonating ? null : supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
+  ])
 
   // 2. Pobierz liczbę podopiecznych (agregacja COUNT — zero PII)
   const adminClient = createAdminClient()
@@ -106,6 +115,14 @@ export default async function OrganizationDetailsPage({
         organizationId={organization.id}
         organizationName={organization.name}
         administrators={administrators}
+      />
+
+      <OrganizationFeatureFlagsSection
+        organizationId={id}
+        flags={flags}
+        isImpersonating={isImpersonating}
+        hasMfa={assurance?.data?.currentLevel === 'aal2'}
+        needsMfaVerification={assurance?.data?.nextLevel === 'aal2'}
       />
 
       {/* Sekcja Personel */}

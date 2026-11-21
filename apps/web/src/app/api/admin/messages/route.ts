@@ -1,3 +1,4 @@
+import { assertOrgFeatureForApi } from '@/lib/feature-flags'
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
@@ -13,6 +14,9 @@ export async function GET(request: Request) {
   if (role !== 'org_admin') {
     return NextResponse.json({ error: 'Brak uprawnień kierownika placówki' }, { status: 403 });
   }
+
+  const featureDenied = await assertOrgFeatureForApi(supabase, user, '/api/admin/messages')
+  if (featureDenied) return featureDenied
 
   // Odświeżanie w tle dociąga tylko wiadomości nowsze niż `since` (skalowanie skrzynki)
   const since = new URL(request.url).searchParams.get('since');
@@ -75,6 +79,9 @@ export async function POST(request: Request) {
   if (role !== 'org_admin') {
     return NextResponse.json({ error: 'Brak uprawnień kierownika placówki' }, { status: 403 });
   }
+
+  const featureDenied = await assertOrgFeatureForApi(supabase, user, '/api/admin/messages')
+  if (featureDenied) return featureDenied
 
   try {
     const body = await request.json();

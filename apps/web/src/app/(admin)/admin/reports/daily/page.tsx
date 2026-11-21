@@ -1,8 +1,12 @@
+import { requireOrgFeature } from '@/lib/feature-flags'
+import { FeatureDisabledState } from '@/components/patterns/FeatureDisabledState'
 import { DailyReportClient } from '@/components/DailyReportClient'
 import { PageHeader } from '@/components/patterns/PageHeader'
 import { getCurrentUser } from '@/lib/supabase/current-user'
 
 export default async function DailyReportPage() {
+  if (!(await requireOrgFeature('module_voice_and_reports')).allowed) return <FeatureDisabledState />
+
 
   // Get organization_id from current user
   const user = await getCurrentUser()

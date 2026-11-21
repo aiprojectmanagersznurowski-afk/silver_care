@@ -1,6 +1,6 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { stopImpersonationAction, ImpersonationSession } from '@/actions/impersonation'
 import { ShieldAlert, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -8,10 +8,12 @@ import { roleLabel } from '@/lib/auth/role-labels'
 
 export function ImpersonationBanner({ session }: { session: ImpersonationSession }) {
   const [isPending, startTransition] = useTransition()
+  const [error, setError] = useState('')
 
   const handleStop = () => {
     startTransition(async () => {
-      await stopImpersonationAction()
+      const result = await stopImpersonationAction()
+      setError(result.error)
     })
   }
 
@@ -31,6 +33,7 @@ export function ImpersonationBanner({ session }: { session: ImpersonationSession
         <span className="hidden md:inline text-sm text-background/80">
           Akcje destrukcyjne są zablokowane
         </span>
+        {error && <span>{error}</span>}
         <Button
           onClick={handleStop}
           disabled={isPending}

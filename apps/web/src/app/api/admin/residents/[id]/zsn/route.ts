@@ -1,3 +1,4 @@
+import { assertOrgFeatureForApi } from '@/lib/feature-flags'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
@@ -15,16 +16,19 @@ export async function PATCH(
       return NextResponse.json({ error: 'Brak autoryzacji' }, { status: 401 })
     }
 
-    const cookieStore = await cookies()
-    if (isImpersonationSessionActive(cookieStore, user)) {
-      return NextResponse.json({ error: 'Operacja niedozwolona w trybie podglądu' }, { status: 403 })
-    }
-
     // ZSN wynika z dokumentacji przyjęcia: zmienia go rola z prawem zapisu residents (MATRIX), nie personel opiekuńczy
     const role = user.app_metadata?.role
     if (role !== 'org_admin' && role !== 'super_admin') {
       return NextResponse.json({ error: 'Status ZSN zmienia kierownik placówki' }, { status: 403 })
     }
+
+    const cookieStore = await cookies()
+    if (isImpersonationSessionActive(cookieStore, user)) {
+      return NextResponse.json({ error: 'Operacja niedozwolona w trybie podglądu' }, { status: 403 })
+    }
+
+    const featureDenied = await assertOrgFeatureForApi(supabase, user, '/api/admin/residents/[id]/zsn')
+    if (featureDenied) return featureDenied
 
     const orgId = user.app_metadata?.organization_id
     if (orgId && role !== 'super_admin') {

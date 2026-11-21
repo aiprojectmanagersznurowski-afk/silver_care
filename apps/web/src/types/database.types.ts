@@ -14,6 +14,38 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      active_impersonation_sessions: {
+        Row: {
+          actor_id: string
+          session_id: string
+          target_admin_id: string
+          organization_id: string
+          expires_at: string
+        }
+        Insert: {
+          actor_id: string
+          session_id: string
+          target_admin_id: string
+          organization_id: string
+          expires_at: string
+        }
+        Update: {
+          actor_id?: string
+          session_id?: string
+          target_admin_id?: string
+          organization_id?: string
+          expires_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "active_impersonation_sessions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agenda_items: {
         Row: {
           id: string
@@ -402,6 +434,64 @@ export interface Database {
             columns: ["resident_id"]
             isOneToOne: false
             referencedRelation: "residents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feature_flag_defaults: {
+        Row: {
+          feature_key: string
+          default_enabled: boolean
+          depends_on: unknown[]
+        }
+        Insert: {
+          feature_key: string
+          default_enabled: boolean
+          depends_on: unknown[]
+        }
+        Update: {
+          feature_key?: string
+          default_enabled?: boolean
+          depends_on?: unknown[]
+        }
+        Relationships: [
+        ]
+      }
+      organization_feature_flags: {
+        Row: {
+          organization_id: string
+          feature_key: string
+          enabled: boolean
+          updated_by: string
+          updated_at: string
+        }
+        Insert: {
+          organization_id: string
+          feature_key: string
+          enabled: boolean
+          updated_by: string
+          updated_at?: string
+        }
+        Update: {
+          organization_id?: string
+          feature_key?: string
+          enabled?: boolean
+          updated_by?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_feature_flags_feature_key_fkey"
+            columns: ["feature_key"]
+            isOneToOne: false
+            referencedRelation: "feature_flag_defaults"
+            referencedColumns: ["feature_key"]
+          },
+          {
+            foreignKeyName: "organization_feature_flags_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -1609,6 +1699,7 @@ export interface Database {
         }
         Returns: Database["public"]["Tables"]["outbox_notifications"]["Row"][]
       }
+      finish_impersonation: { Args: never; Returns: string }
       fn_admissions_by_month_care_level: {
         Args: {
           p_org_id: string
@@ -1771,6 +1862,27 @@ export interface Database {
       is_relative_active_or_retained: {
         Args: {
           target_resident_id: string
+        }
+        Returns: boolean
+      }
+      get_org_feature_flags: {
+        Args: { p_org_id: string }
+        Returns: {
+          enabled: boolean
+          feature_key: string
+        }[]
+      }
+      has_org_feature: {
+        Args: {
+          p_org_id: string
+          p_feature_key: string
+        }
+        Returns: boolean
+      }
+      has_resident_org_feature: {
+        Args: {
+          p_resident_id: string
+          p_feature_key: string
         }
         Returns: boolean
       }
@@ -1939,6 +2051,14 @@ export interface Database {
           p_invitation_id: string
         }
         Returns: undefined
+      }
+      set_organization_feature_flag: {
+        Args: {
+          p_org_id: string
+          p_feature_key: string
+          p_enabled: boolean
+        }
+        Returns: Json
       }
       settle_shift_task: {
         Args: {

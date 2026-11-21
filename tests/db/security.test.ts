@@ -56,11 +56,11 @@ describe('Database Security MFA (SEC-MFA-STAFF)', () => {
       const orgId = org[0].id;
       
       // Setup resident as org_admin (with aal2 because current system allows it before MFA is enforced, but let's be safe)
-      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
+      await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "44444444-4444-4444-8444-444444444444", "app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
       await tx`INSERT INTO residents (organization_id, first_name, last_name, pesel_hash) VALUES (${orgId}, 'Jan', 'Nowak', 'hash') RETURNING id`;
 
       // 1. org_admin WITHOUT MFA (aal1) should fail to read residents
-      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal1"}`}, true)`;
+      await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "44444444-4444-4444-8444-444444444444", "app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal1"}`}, true)`;
       
       let err1;
       await tx`SAVEPOINT no_mfa_staff`;
@@ -74,7 +74,7 @@ describe('Database Security MFA (SEC-MFA-STAFF)', () => {
       expect((err1 as any).message).toMatch(/MFA \(aal2\) required for staff/);
 
       // 2. org_admin WITH MFA (aal2) should succeed
-      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
+      await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "44444444-4444-4444-8444-444444444444", "app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
       const res1 = await tx`SELECT * FROM residents`;
       expect(res1.length).toBe(1);
 

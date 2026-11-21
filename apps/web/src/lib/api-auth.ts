@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { handleApiError } from '@/lib/api-errors'
 import { isImpersonationSessionActive, safeGetCookieStore } from '@/lib/impersonation-guards'
+import type { FeatureKey } from '@silvercare/contracts/src/generated/features'
+import { assertOrgFeatureForApi } from '@/lib/feature-flags'
 import { getAppRole, getAppOrganizationId } from '@/lib/auth/app-role'
 
 export interface AuthenticatedUser {
@@ -24,6 +26,7 @@ export interface WithAuthOptions {
   roles?: string[]
   requireOrganization?: boolean
   blockImpersonation?: boolean
+  requiredFeature?: FeatureKey | readonly FeatureKey[]
 }
 
 type ApiRouteHandler = (
@@ -128,6 +131,11 @@ export function withAuth(handler: ApiRouteHandler, options: WithAuthOptions = {}
             { status: 403 }
           )
         }
+      }
+
+      if (options.requiredFeature) {
+        const denied = await assertOrgFeatureForApi(supabase, rawUser, options.requiredFeature, request.nextUrl.pathname)
+        if (denied) return denied
       }
 
       // Rozwiń params jeśli są promisem (Next.js 15+)

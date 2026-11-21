@@ -1,3 +1,5 @@
+import { getCurrentFeatureFlags } from '@/lib/feature-flags'
+import { FeatureDisabledState } from '@/components/patterns/FeatureDisabledState'
 import { cookies } from 'next/headers'
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
@@ -9,13 +11,16 @@ import { getCurrentUser } from '@/lib/supabase/current-user'
 
 /** Karta podopiecznego kierownika (i superadmina w impersonacji, tylko do odczytu) — SC-ADM-20. */
 export default async function ResidentProfilePage({ params }: { params: Promise<{ id: string }> }) {
+  const flags = (await getCurrentFeatureFlags())?.flags
+  if (!flags?.module_residents_management) return <FeatureDisabledState />
+
   const { id } = await params
   const supabase = await createClient()
   const user = await getCurrentUser()
   if (!user) redirect('/login')
 
   const isImpersonating = isImpersonationSessionActive(await cookies(), user)
-  const card = await getResidentCard(supabase, id, user, isImpersonating)
+  const card = await getResidentCard(supabase, id, user, isImpersonating, flags)
 
   if (card.status === 'forbidden') redirect('/')
   if (card.status === 'not_found') notFound()
@@ -26,6 +31,7 @@ export default async function ResidentProfilePage({ params }: { params: Promise<
   return (
     <ResidentCard
       card={card}
+      voiceEnabled={flags.module_voice_and_reports}
       backHref="/admin/residents"
       backLabel="Wróć do listy podopiecznych"
       reportsHref="/admin/reports/daily"

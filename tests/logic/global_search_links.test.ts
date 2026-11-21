@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { featureSnapshot } from '../helpers/feature-snapshot.test.fixture'
 
 vi.mock('@/lib/supabase/server', () => ({ createClient: vi.fn() }))
 
@@ -62,6 +63,7 @@ describe('zapytanie o raporty pobiera identyfikator podopiecznego (@REQ: ORG-ISO
   it('@REQ: ORG-ISOLATION - select raportów zawiera residents!inner(id, …), filtr organizacji zostaje', async () => {
     const calls: { table: string; method: string; args: unknown[] }[] = []
     vi.mocked(createClient).mockResolvedValue({
+      rpc: async () => featureSnapshot(),
       auth: {
         getUser: vi.fn().mockResolvedValue({
           data: { user: { id: 'u', app_metadata: { role: 'nurse', organization_id: 'org-1' }, user_metadata: {} } },
