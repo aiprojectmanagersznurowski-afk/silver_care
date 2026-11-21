@@ -175,3 +175,7 @@ Elementy podstawowe działają dla każdej placówki niezależnie od flag:
 ### Wspólne rejestry
 
 Odczyt tabel `residents`, `rooms`, `beds` i `bed_assignments` pozostaje objęty izolacją ról i placówek. Z tych samych rejestrów korzystają raporty BI, przydziały i potok głosowy. Te moduły mogą działać niezależnie. Odcinanie wspólnych odczytów po wyłączeniu ewidencji zmieniałoby rzeczywistą liczbę zajętych łóżek w raportach. Zapisy podlegają flagom swojego modułu. Ekrany, API i RPC raportów egzekwują dostępność swojej funkcji niezależnie od dostępu do rejestru.
+
+### Webhook Polar
+
+Webhook dla placówki z wyłączonymi opaskami zwraca wymagane przez AC3 `403`. Polar oczekuje potwierdzenia `200` i dezaktywuje webhook po siedmiu dniach bez udanych dostaw. Wspólny webhook wymaga uwzględnienia tego zachowania przed uruchomieniem integracji. [Dokumentacja Polar AccessLink](https://www.polar.com/accesslink-api/#failure-management)

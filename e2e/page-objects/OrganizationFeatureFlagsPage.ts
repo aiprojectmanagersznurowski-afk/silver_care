@@ -34,6 +34,8 @@ export class OrganizationFeatureFlagsPage {
     await this.page.getByRole('button', { name: 'Skonfiguruj uwierzytelnianie' }).click()
     const secret = this.page.getByTestId('feature-flags-totp-secret')
     await expect(secret).toBeVisible()
+    const qr = this.page.getByRole('img', { name: 'Kod QR do konfiguracji uwierzytelniania' })
+    await expect.poll(() => qr.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0)
     return secret
   }
 
