@@ -39,7 +39,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Brak przypisania do organizacji' }, { status: 400 })
     }
 
-    const featureDenied = await assertTargetOrgFeatureForApi(supabase, orgId, new URL(request.url).pathname, user.id)
+    const featureDenied = await assertTargetOrgFeatureForApi(supabase, orgId, '/api/staff/invite', user.id)
     if (featureDenied) return featureDenied
 
     const body = await request.json()

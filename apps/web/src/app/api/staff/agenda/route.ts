@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const featureDenied = await assertOrgFeatureForApi(supabase, user, new URL(request.url).pathname)
+  const featureDenied = await assertOrgFeatureForApi(supabase, user, '/api/staff/agenda')
   if (featureDenied) return featureDenied
 
   const { searchParams } = new URL(request.url)
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const featureDenied = await assertOrgFeatureForApi(supabase, user, new URL(request.url).pathname)
+  const featureDenied = await assertOrgFeatureForApi(supabase, user, '/api/staff/agenda')
   if (featureDenied) return featureDenied
 
   const cookieStore = await cookies()
@@ -127,7 +127,7 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const featureDenied = await assertOrgFeatureForApi(supabase, user, new URL(request.url).pathname)
+  const featureDenied = await assertOrgFeatureForApi(supabase, user, '/api/staff/agenda')
   if (featureDenied) return featureDenied
 
   const cookieStore = await cookies()
@@ -194,7 +194,7 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const featureDenied = await assertOrgFeatureForApi(supabase, user, new URL(request.url).pathname)
+  const featureDenied = await assertOrgFeatureForApi(supabase, user, '/api/staff/agenda')
   if (featureDenied) return featureDenied
 
   const cookieStore = await cookies()
