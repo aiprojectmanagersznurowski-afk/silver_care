@@ -21,14 +21,14 @@ export async function POST(
       return NextResponse.json({ error: 'Brak autoryzacji' }, { status: 401 })
     }
 
-    const cookieStore = await cookies()
-    if (isImpersonationSessionActive(cookieStore, user)) {
-      return NextResponse.json({ error: 'Operacja niedozwolona w trybie podglądu' }, { status: 403 })
-    }
-
     const role = user.app_metadata?.role
     if (role !== 'org_admin' && role !== 'super_admin') {
       return NextResponse.json({ error: 'Brak uprawnień. Tylko kierownik placówki może zarządzać umowami.' }, { status: 403 })
+    }
+
+    const cookieStore = await cookies()
+    if (isImpersonationSessionActive(cookieStore, user)) {
+      return NextResponse.json({ error: 'Operacja niedozwolona w trybie podglądu' }, { status: 403 })
     }
 
     const featureDenied = await assertOrgFeatureForApi(supabase, user, '/api/admin/residents/[id]/contract')
@@ -104,14 +104,14 @@ export async function DELETE(
       return NextResponse.json({ error: 'Brak autoryzacji' }, { status: 401 })
     }
 
-    const cookieStore = await cookies()
-    if (isImpersonationSessionActive(cookieStore, user)) {
-      return NextResponse.json({ error: 'Operacja niedozwolona w trybie podglądu' }, { status: 403 })
-    }
-
     const role = user.app_metadata?.role
     if (role !== 'org_admin' && role !== 'super_admin') {
       return NextResponse.json({ error: 'Brak uprawnień' }, { status: 403 })
+    }
+
+    const cookieStore = await cookies()
+    if (isImpersonationSessionActive(cookieStore, user)) {
+      return NextResponse.json({ error: 'Operacja niedozwolona w trybie podglądu' }, { status: 403 })
     }
 
     const featureDenied = await assertOrgFeatureForApi(supabase, user, '/api/admin/residents/[id]/contract')

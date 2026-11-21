@@ -13,13 +13,13 @@ export async function GET(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const featureDenied = await assertOrgFeatureForApi(supabase, user, '/api/admin/residents/[id]/messages')
-  if (featureDenied) return featureDenied
-
   const role = user.app_metadata?.role as string | undefined;
   if (!['org_admin'].includes(role || '')) {
     return NextResponse.json({ error: 'Brak uprawnień do zasobów administracyjnych' }, { status: 403 });
   }
+
+  const featureDenied = await assertOrgFeatureForApi(supabase, user, '/api/admin/residents/[id]/messages')
+  if (featureDenied) return featureDenied
 
   const { id: resident_id } = await params;
 
