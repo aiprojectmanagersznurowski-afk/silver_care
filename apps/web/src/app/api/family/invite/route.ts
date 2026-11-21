@@ -64,7 +64,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Nie znaleziono podopiecznego' }, { status: target.status })
     }
 
-    const featureDenied = await assertTargetOrgFeatureForApi(adminClient, target.organizationId, new URL(request.url).pathname, user.id)
+    const featureDenied = await assertTargetOrgFeatureForApi(adminClient, target.organizationId, '/api/family/invite', user.id)
     if (featureDenied) return featureDenied
 
     const orgId = target.organizationId
@@ -153,7 +153,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'Brak dostępu do zaproszenia z innej placówki' }, { status: 403 })
     }
 
-    const featureDenied = await assertTargetOrgFeatureForApi(adminClient, invitation.organization_id, new URL(request.url).pathname, user.id)
+    const featureDenied = await assertTargetOrgFeatureForApi(adminClient, invitation.organization_id, '/api/family/invite', user.id)
     if (featureDenied) return featureDenied
 
     if (action === 'revoke') {

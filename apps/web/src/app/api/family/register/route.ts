@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: validation.message }, { status: 400 });
     }
 
-    const featureDenied = await assertTargetOrgFeatureForApi(adminClient, invitation.organization_id, new URL(request.url).pathname);
+    const featureDenied = await assertTargetOrgFeatureForApi(adminClient, invitation.organization_id, '/api/family/register');
     if (featureDenied) return featureDenied;
 
     // 2. Walidacja zgód dla danej roli (CONSENT-GRANTOR)

@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(validation, { status: 400 });
     }
 
-    const featureDenied = await assertTargetOrgFeatureForApi(adminClient, invitation.organization_id, request.nextUrl.pathname);
+    const featureDenied = await assertTargetOrgFeatureForApi(adminClient, invitation.organization_id, '/api/family/invite/validate');
     if (featureDenied) return featureDenied;
 
     return NextResponse.json({
