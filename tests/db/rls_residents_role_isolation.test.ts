@@ -25,7 +25,7 @@ const FAMILY_UID = '00000000-0000-0000-0000-0000000000f1';
 const OTHER_FAMILY_UID = '00000000-0000-0000-0000-0000000000f2';
 
 const claims = (role: string, orgId: string, sub?: string) =>
-  JSON.stringify({ ...(sub ? { sub } : {}), app_metadata: { role, organization_id: orgId }, aal: 'aal2' });
+  JSON.stringify({ sub: sub ?? '44444444-4444-4444-8444-444444444444', app_metadata: { role, organization_id: orgId }, aal: 'aal2' });
 
 type Tx = postgres.TransactionSql;
 
