@@ -16,7 +16,7 @@ const { ROLES, STAFF_ROLES, RELATIVE_ROLES, MFA_REQUIRED_ROLES, CONSENT_GRANTORS
 const { FAMILY_VISIBLE_METRICS, PHYSIOLOGICAL_FIELDS, FORBIDDEN_UI_TERMS, MDR_GUARDRAILS,
         REQUIRED_UI_STATES, RESIDENT_CARD_SECTIONS = [], AGENDA_FAMILY_EXCLUSION, UI_TERMINOLOGY } = await load('presentation.contract.mjs');
 const { TRANSCRIPT_STREAMS, MEDICAL_CATEGORIES, PIPELINE_STAGES, VOICE_RETENTION,
-        AI_PROVENANCE_FIELDS, AI_FEEDBACK_CATEGORIES, CAPTURE_SOURCES = [], RESIDENT_ASSIGNMENT } = await load('voice.contract.mjs');
+        AI_PROVENANCE_FIELDS, AI_FEEDBACK_CATEGORIES, CAPTURE_SOURCES = [], RESIDENT_ASSIGNMENT, OPERATIONAL_REPORT_ENGINE } = await load('voice.contract.mjs');
 const { PROVIDERS, WEARABLE_LINK, ORG_LINK, FIELD_MAPPINGS, INGEST_PRECONDITIONS, SYNC_STALENESS,
         DEVICE_AUTH, DEVICE_INGEST_PROTOCOL } = await load('integration.contract.mjs');
 const { NOTIFICATIONS, FORBIDDEN_TRIGGERS, CHANNELS, RECIPIENTS, QUEUE_POLICY } = await load('notifications.contract.mjs');
@@ -956,6 +956,63 @@ if (DEVICE_INGEST_PROTOCOL) {
       if (entry !== 'super_admin' && !entry.endsWith(':own')) {
         err('R35-feature-flags', `organization_feature_flags.read: rola "${entry}" spoza super_admin musi być ograniczona do :own.`);
       }
+    }
+  }
+}
+
+// R36 — konfigurowalny silnik kategorii raportów operacyjnych per placówka (VOICE-DOCK-REPORTS, ADR-023)
+{
+  const ore = OPERATIONAL_REPORT_ENGINE;
+  const req = REQUIREMENTS_BY_ID?.['VOICE-DOCK-REPORTS'] ?? REQUIREMENTS.find((r) => r.id === 'VOICE-DOCK-REPORTS');
+  if (!req) {
+    err('R36-operational-reports', 'Brak wymagania VOICE-DOCK-REPORTS w rejestrze wymagań.');
+  } else if (req.risk !== 'HIGH') {
+    err('R36-operational-reports', 'VOICE-DOCK-REPORTS musi mieć ryzyko HIGH — dotyczy granic MDR i danych art. 9.');
+  }
+  if (!ore) {
+    err('R36-operational-reports', 'Brak eksportu OPERATIONAL_REPORT_ENGINE w voice.contract.mjs.');
+  } else {
+    const defCodes = new Set((ore.defaultCategories || []).map((c) => c.code));
+    for (const must of ['audit_operational', 'technical_maintenance', 'catering_kitchen']) {
+      if (!defCodes.has(must)) err('R36-operational-reports', `Brak domyślnej kategorii operacyjnej "${must}" w OPERATIONAL_REPORT_ENGINE.`);
+    }
+    if (ore.writePathPolicy !== 'RPC_ONLY') err('R36-operational-reports', 'OPERATIONAL_REPORT_ENGINE.writePathPolicy musi wynosić "RPC_ONLY".');
+    if (ore.blockImpersonation !== true) err('R36-operational-reports', 'OPERATIONAL_REPORT_ENGINE.blockImpersonation musi wynosić true.');
+    if (ore.medicalStreamExcluded !== true) err('R36-operational-reports', 'Strumień MEDICAL musi być wyłączony z raportów operacyjnych (medicalStreamExcluded: true).');
+    if (ore.superAdminReadsReportContent !== false) err('R36-operational-reports', 'super_admin nie może czytać treści raportów operacyjnych ani zdarzeń placówki.');
+    if (ore.noFabricationOnEmpty !== true) err('R36-operational-reports', 'OPERATIONAL_REPORT_ENGINE.noFabricationOnEmpty musi wynosić true.');
+    for (const r of ore.allowedRecipientRoles || []) {
+      if (RELATIVE_ROLES.includes(r)) err('R36-operational-reports', `Rola bliskich "${r}" w allowedRecipientRoles raportów operacyjnych.`);
+    }
+    for (const res of ['voice_sanitized_events', 'organization_report_configs', 'operational_reports']) {
+      if (!RESOURCES.includes(res)) err('R36-operational-reports', `Brak zasobu "${res}" w RESOURCES.`);
+      const row = MATRIX.find((m) => m.resource === res);
+      if (!row) { err('R36-operational-reports', `Brak wiersza macierzy dla "${res}".`); continue; }
+      for (const cap of ['read', 'create', 'update', 'delete']) {
+        for (const entry of row[cap] || []) {
+          if (RELATIVE_ROLES.includes(entry.split(':')[0])) {
+            err('R36-operational-reports', `${res}.${cap}: dostępne dla roli bliskich "${entry}".`);
+          }
+        }
+      }
+      if ((row.delete || []).length) err('R36-operational-reports', `${res}: dozwolone delete — użyj archiwizacji/retencji zamiast kasowania.`);
+    }
+    for (const res of ['voice_sanitized_events', 'operational_reports']) {
+      const row = MATRIX.find((m) => m.resource === res);
+      if (row && (row.read || []).some((e) => e.split(':')[0] === 'super_admin')) {
+        err('R36-operational-reports', `${res}.read: super_admin nie czyta treści opieki placówki.`);
+      }
+    }
+    const cfgRow = MATRIX.find((m) => m.resource === 'organization_report_configs');
+    if (cfgRow && (cfgRow.create || []).some((e) => e.split(':')[0] !== 'super_admin')) {
+      err('R36-operational-reports', 'Tworzenie nowych kategorii raportów (organization_report_configs.create) należy wyłącznie do super_admin.');
+    }
+    const resPolicy = DELETE_POLICIES.find((d) => d.entity === 'residents');
+    if (!resPolicy || !(resPolicy.cascades || []).includes('voice_sanitized_events')) {
+      err('R36-operational-reports', 'DELETE_POLICIES dla residents musi kaskadować do voice_sanitized_events (RODO art. 17).');
+    }
+    if (!(VOICE_RETENTION?.keeps || []).includes('voice_sanitized_events') || !(VOICE_RETENTION?.keeps || []).includes('operational_reports')) {
+      err('R36-operational-reports', 'VOICE_RETENTION.keeps musi chronić voice_sanitized_events i operational_reports przy wygaśnięciu surowych nagrań.');
     }
   }
 }

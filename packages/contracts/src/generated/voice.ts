@@ -243,3 +243,126 @@ export const RESIDENT_ASSIGNMENT = {
   "status": "STABLE"
 } as const;
 
+export const OPERATIONAL_REPORT_ENGINE = {
+  "moduleKey": "module_voice_and_reports",
+  "delegationFlagKey": "allow_org_admin_report_config",
+  "sanitizedEventResource": "voice_sanitized_events",
+  "configResource": "organization_report_configs",
+  "reportResource": "operational_reports",
+  "captureScopes": {
+    "APP": [
+      "resident"
+    ],
+    "DEVICE": [
+      "resident",
+      "facility"
+    ]
+  },
+  "defaultCategories": [
+    {
+      "code": "audit_operational",
+      "label": "Raport audytowy",
+      "defaultSchedule": "daily",
+      "defaultSections": [
+        "summary",
+        "events",
+        "action_items"
+      ],
+      "defaultRecipientRoles": [
+        "org_admin"
+      ],
+      "requiresApproval": true
+    },
+    {
+      "code": "technical_maintenance",
+      "label": "Raport dla działu technicznego",
+      "defaultSchedule": "daily",
+      "defaultSections": [
+        "summary",
+        "events",
+        "locations",
+        "action_items"
+      ],
+      "defaultRecipientRoles": [
+        "org_admin",
+        "nurse"
+      ],
+      "requiresApproval": true
+    },
+    {
+      "code": "catering_kitchen",
+      "label": "Raport o kuchni i cateringu",
+      "defaultSchedule": "daily",
+      "defaultSections": [
+        "summary",
+        "events",
+        "action_items"
+      ],
+      "defaultRecipientRoles": [
+        "org_admin",
+        "nurse"
+      ],
+      "requiresApproval": true
+    }
+  ],
+  "allowedSchedules": [
+    "manual",
+    "per_shift",
+    "daily",
+    "weekly"
+  ],
+  "allowedSections": [
+    "summary",
+    "events",
+    "locations",
+    "action_items",
+    "source_quotes"
+  ],
+  "allowedRecipientRoles": [
+    "org_admin",
+    "nurse"
+  ],
+  "forbiddenRecipientRoles": [
+    "family",
+    "legal_guardian"
+  ],
+  "categoryCreatedBy": [
+    "super_admin"
+  ],
+  "categoryConfiguredBy": [
+    "super_admin",
+    "org_admin:own"
+  ],
+  "reportGeneratedBy": [
+    "org_admin:own",
+    "nurse:own"
+  ],
+  "reportApprovedBy": [
+    "org_admin:own",
+    "nurse:own"
+  ],
+  "writePathPolicy": "RPC_ONLY",
+  "blockImpersonation": true,
+  "superAdminReadsReportContent": false,
+  "medicalStreamExcluded": true,
+  "excludeOperationalFactsFromFamilyReport": true,
+  "noFabricationOnEmpty": true,
+  "maskBeforeLlm": [
+    "pesel",
+    "phone",
+    "email",
+    "resident_name",
+    "room_number",
+    "bed_label"
+  ],
+  "draftRetentionLinkPolicy": "SET_NULL_ON_DRAFT_EXPIRY",
+  "deleteStrategy": "ARCHIVE_NOT_DELETE",
+  "auditActions": {
+    "categoryUpsert": "ORG_REPORT_CATEGORY_UPSERTED",
+    "configUpdate": "ORG_REPORT_CONFIG_UPDATED",
+    "reportGenerate": "OPERATIONAL_REPORT_GENERATED",
+    "reportApprove": "OPERATIONAL_REPORT_APPROVED"
+  },
+  "status": "STABLE"
+} as const;
+

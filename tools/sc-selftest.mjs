@@ -115,6 +115,10 @@ const MUTATIONS = [
   { rule: 'R35-feature-flags', file: 'features.contract.mjs', from: "      '/api/residents/[id]/report/latest',\n", to: '', desc: 'usunięty endpoint /api/residents/[id]/report/latest z module_family_portal' },
   { rule: 'R35-feature-flags', file: 'features.contract.mjs', from: "  writePathPolicy: 'RPC_ONLY',", to: "  writePathPolicy: 'DIRECT_RLS',", desc: 'zapis flag poza wyłącznym RPC' },
   { rule: 'R35-feature-flags', file: 'features.contract.mjs', from: "  multiFlagRoutePolicy: 'REQUIRE_ALL_MATCHING',", to: "  multiFlagRoutePolicy: 'FIRST_MATCH',", desc: 'osłabiona reguła tras wieloflagowych' },
+  { rule: 'R36-operational-reports', file: 'roles.contract.mjs', from: "{ resource: 'operational_reports',         read: ['org_admin:own', 'nurse:own'],              create: ['org_admin:own', 'nurse:own'], update: ['org_admin:own', 'nurse:own'],     delete: [] },", to: "{ resource: 'operational_reports',         read: ['org_admin:own', 'nurse:own', 'family:own'], create: ['org_admin:own', 'nurse:own'], update: ['org_admin:own', 'nurse:own'],     delete: [] },", desc: 'rodzina czyta raporty operacyjne placówki' },
+  { rule: 'R36-operational-reports', file: 'roles.contract.mjs', from: "{ resource: 'operational_reports',         read: ['org_admin:own', 'nurse:own'],", to: "{ resource: 'operational_reports',         read: ['super_admin', 'org_admin:own', 'nurse:own'],", desc: 'super admin czyta treści raportów operacyjnych placówki' },
+  { rule: 'R36-operational-reports', file: 'voice.contract.mjs', from: "  medicalStreamExcluded: true,", to: "  medicalStreamExcluded: false,", desc: 'strumień medyczny trafia do raportów operacyjnych' },
+  { rule: 'R36-operational-reports', file: 'roles.contract.mjs', from: "{ resource: 'organization_report_configs', read: ['super_admin', 'org_admin:own', 'nurse:own'], create: ['super_admin'],", to: "{ resource: 'organization_report_configs', read: ['super_admin', 'org_admin:own', 'nurse:own'], create: ['super_admin', 'org_admin:own'],", desc: 'kierownik placówki sam tworzy nowe kategorie raportów' },
 ];
 
 const results = [];

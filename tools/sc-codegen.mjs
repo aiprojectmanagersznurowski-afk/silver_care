@@ -64,7 +64,8 @@ files['packages/contracts/src/generated/voice.ts'] = BANNER
   + emit('AI_PROVENANCE_FIELDS', voice.AI_PROVENANCE_FIELDS) + emit('AI_FEEDBACK_CATEGORIES', voice.AI_FEEDBACK_CATEGORIES)
   + emit('PROMPT_VERSION', voice.PROMPT_VERSION)
   + (voice.CAPTURE_SOURCES ? emit('CAPTURE_SOURCES', voice.CAPTURE_SOURCES) : '')
-  + (voice.RESIDENT_ASSIGNMENT ? emit('RESIDENT_ASSIGNMENT', voice.RESIDENT_ASSIGNMENT) : '');
+  + (voice.RESIDENT_ASSIGNMENT ? emit('RESIDENT_ASSIGNMENT', voice.RESIDENT_ASSIGNMENT) : '')
+  + (voice.OPERATIONAL_REPORT_ENGINE ? emit('OPERATIONAL_REPORT_ENGINE', voice.OPERATIONAL_REPORT_ENGINE) : '');
 
 files['packages/contracts/src/generated/integration.ts'] = BANNER
   + emit('PROVIDERS', integ.PROVIDERS) + emit('WEARABLE_LINK', integ.WEARABLE_LINK)
