@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { featureSnapshot } from '../helpers/feature-snapshot.test.fixture'
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
@@ -53,11 +54,11 @@ describe('Kontrakt endpointu /api/voice/transcribe (3 kształty żądania)', () 
     })
 
     vi.mocked(createClient).mockResolvedValueOnce({
+      rpc: async () => featureSnapshot(),
       auth: {
         getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'nurse-uuid-456', app_metadata: { role: 'nurse', organization_id: 'org-a' } } }, error: null }),
       },
       from: vi.fn((table: string) => {
-        if (table === 'organization_feature_flags') return { select: () => ({ eq: async () => ({ data: [], error: null }) }) }
         if (table === 'voice_draft_notes') {
           return { insert: mockInsert }
         }
@@ -101,6 +102,7 @@ describe('Kontrakt endpointu /api/voice/transcribe (3 kształty żądania)', () 
     const mockFrom = vi.fn(() => ({ select: () => ({ eq: async () => ({ data: [], error: null }) }) }))
 
     vi.mocked(createClient).mockResolvedValueOnce({
+      rpc: async () => featureSnapshot(),
       auth: {
         getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'nurse-uuid-456', app_metadata: { role: 'nurse', organization_id: 'org-a' } } }, error: null }),
       },
@@ -128,7 +130,7 @@ describe('Kontrakt endpointu /api/voice/transcribe (3 kształty żądania)', () 
     expect(json.draftId).toBeUndefined()
 
     // Czat sprawdza flagę i nie tworzy szkicu.
-    expect(mockFrom.mock.calls).toEqual([['organization_feature_flags']])
+    expect(mockFrom).not.toHaveBeenCalled()
   })
 
   it('Kształt 3: żądanie z draft_id pobiera stary transkrypt, dopisuje uzupełnienie i aktualizuje szkic @REQ: VOICE-FOLLOWUP @REQ: VOICE-OFFLINE', async () => {
@@ -143,11 +145,11 @@ describe('Kontrakt endpointu /api/voice/transcribe (3 kształty żądania)', () 
     })
 
     vi.mocked(createClient).mockResolvedValueOnce({
+      rpc: async () => featureSnapshot(),
       auth: {
         getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'nurse-uuid-456', app_metadata: { role: 'nurse', organization_id: 'org-a' } } }, error: null }),
       },
       from: vi.fn((table: string) => {
-        if (table === 'organization_feature_flags') return { select: () => ({ eq: async () => ({ data: [], error: null }) }) }
         if (table === 'voice_draft_notes') {
           return {
             select: mockSelect,
