@@ -89,6 +89,21 @@ export const REQUIREMENTS = [
   R('VOICE-DEVICE-REGISTRY', { source: 'SC-ADM-24, ADR-022', domain: 'voice', statement: 'Kierownik placówki prowadzi rejestr urządzeń placówki. Urządzenia są wspólne: przedstawienie określa deklarowanego autora sesji, a wpis wydania jest opcjonalną ewidencją sprzętu.', acceptance: ['Token urządzenia jest pokazywany jeden raz przy rejestracji', 'Unieważnienie ustawia revoked_at zamiast usuwać wiersz', 'Jedno urządzenie ma w danej chwili najwyżej jeden aktywny wpis wydania', 'Wpis wydania tworzy kierownik zmiany albo kierownik placówki i nie wyznacza autora nagrań', 'Rejestracja, unieważnienie i wpis wydania trafiają do audit_logs', 'Konto bliskiego nie widzi urządzeń ani wpisów wydania'] }),
   R('REPORT-APPROVAL', { source: 'SC-NUR-03', domain: 'reports', statement: 'Raport trafia do bliskich dopiero po zatwierdzeniu przez personel.', acceptance: ['Status published i approved_by ustawiane w jednej operacji', 'Przed zatwierdzeniem RLS nie udostępnia raportu bliskim', 'Raport nosi etykietę o udziale AI wymaganą przez EU AI Act', 'Metadane modelu i wersji promptu zapisane przy generowaniu'], risk: 'HIGH' }),
   R('REPORT-AI-FEEDBACK', { source: 'SC-COMP-01', domain: 'reports', statement: 'Personel może zgłosić błąd w raporcie wygenerowanym przez AI.', acceptance: ['Zgłoszenie wymaga wyboru kategorii z AI_FEEDBACK_CATEGORIES', 'Zapisywana jest migawka tekstu i wersja promptu', 'Zgłoszenie blokuje publikację raportu'] }),
+  R('VOICE-DOCK-REPORTS', {
+    source: 'SC-SUP-06, SC-NUR-12, ADR-023',
+    domain: 'reports',
+    statement: 'Potok głosowy w module module_voice_and_reports zapisuje po etapie ASSIGN i REDACT niemutowalne, zanonimizowane zdarzenia (voice_sanitized_events) i kieruje je do konfigurowalnych per placówka kategorii raportów operacyjnych (organization_report_configs, operational_reports) bez ujawniania strumienia MEDICAL ani dopuszczania ról bliskich.',
+    acceptance: [
+      'Nagrania z aplikacji wymagają potwierdzonego resident_id przy nagraniu (AT_CAPTURE), a nagrania z urządzeń przechodzą przez voice_assignment_queue (RESIDENT lub FACILITY) przed utworzeniem voice_sanitized_events',
+      'Przed klasyfikacją domenową i generowaniem raportów wycinane są dane medyczne (MEDICAL_CATEGORIES) oraz maskowane są PESEL, telefon, e-mail, imiona, nazwiska, numery pokoi i etykiety łóżek',
+      'Każda placówka ma domyślne kategorie operacyjne (audit_operational, technical_maintenance, catering_kitchen), a super_admin może dodawać i archiwizować dodatkowe kategorie per placówka wyłącznie przez RPC z blokadą impersonacji i śladem w audit_logs',
+      'Flaga allow_org_admin_report_config deleguje Kierownikowi placówki wyłącznie konfigurację istniejących kategorii własnej placówki (włączenie, harmonogram, dozwolone sekcje, role odbiorców org_admin/nurse), a nie tworzenie kategorii ani zmianę reguł redakcji',
+      'Zasoby voice_sanitized_events, organization_report_configs i operational_reports są niedostępne dla ról family i legal_guardian (0 wierszy w RLS); super_admin nie czyta treści voice_sanitized_events ani operational_reports',
+      'Trigger niemutowalności voice_sanitized_events blokuje modyfikację treści, zezwalając wyłącznie na wyzerowanie draft_note_id (ON DELETE SET NULL) przy retencji voice_draft_notes oraz kaskadowe usunięcie przy wymazaniu podopiecznego (RODO art. 17)',
+      'Przy braku zdarzeń w okresie raportu generator zwraca jawny komunikat o braku danych bez fabrykowania faktów, a fakty operacyjne/placówkowe nie są wstrzykiwane do raportu rodzinnego daily_reports',
+    ],
+    risk: 'HIGH',
+  }),
 
   // ── Integracja (ADR-002) ──────────────────────────────────────────────────
   R('INT-CORE-DECOUPLED', { source: 'ADR-002', domain: 'integration', statement: 'Identyfikatory zewnętrzne nie występują na tabelach rdzenia.', acceptance: ['residents nie ma kolumny polar_user_id ani żadnej innej kolumny dostawcy', 'Powiązanie żyje w external_wearable_links z kolumną provider', 'Dodanie drugiego dostawcy nie wymaga migracji tabel rdzenia'], risk: 'HIGH' }),

@@ -634,6 +634,23 @@ export const REQUIREMENTS = [
     ]
   },
   {
+    "id": "VOICE-DOCK-REPORTS",
+    "status": "TODO",
+    "risk": "HIGH",
+    "source": "SC-SUP-06, SC-NUR-12, ADR-023",
+    "domain": "reports",
+    "statement": "Potok głosowy w module module_voice_and_reports zapisuje po etapie ASSIGN i REDACT niemutowalne, zanonimizowane zdarzenia (voice_sanitized_events) i kieruje je do konfigurowalnych per placówka kategorii raportów operacyjnych (organization_report_configs, operational_reports) bez ujawniania strumienia MEDICAL ani dopuszczania ról bliskich.",
+    "acceptance": [
+      "Nagrania z aplikacji wymagają potwierdzonego resident_id przy nagraniu (AT_CAPTURE), a nagrania z urządzeń przechodzą przez voice_assignment_queue (RESIDENT lub FACILITY) przed utworzeniem voice_sanitized_events",
+      "Przed klasyfikacją domenową i generowaniem raportów wycinane są dane medyczne (MEDICAL_CATEGORIES) oraz maskowane są PESEL, telefon, e-mail, imiona, nazwiska, numery pokoi i etykiety łóżek",
+      "Każda placówka ma domyślne kategorie operacyjne (audit_operational, technical_maintenance, catering_kitchen), a super_admin może dodawać i archiwizować dodatkowe kategorie per placówka wyłącznie przez RPC z blokadą impersonacji i śladem w audit_logs",
+      "Flaga allow_org_admin_report_config deleguje Kierownikowi placówki wyłącznie konfigurację istniejących kategorii własnej placówki (włączenie, harmonogram, dozwolone sekcje, role odbiorców org_admin/nurse), a nie tworzenie kategorii ani zmianę reguł redakcji",
+      "Zasoby voice_sanitized_events, organization_report_configs i operational_reports są niedostępne dla ról family i legal_guardian (0 wierszy w RLS); super_admin nie czyta treści voice_sanitized_events ani operational_reports",
+      "Trigger niemutowalności voice_sanitized_events blokuje modyfikację treści, zezwalając wyłącznie na wyzerowanie draft_note_id (ON DELETE SET NULL) przy retencji voice_draft_notes oraz kaskadowe usunięcie przy wymazaniu podopiecznego (RODO art. 17)",
+      "Przy braku zdarzeń w okresie raportu generator zwraca jawny komunikat o braku danych bez fabrykowania faktów, a fakty operacyjne/placówkowe nie są wstrzykiwane do raportu rodzinnego daily_reports"
+    ]
+  },
+  {
     "id": "INT-CORE-DECOUPLED",
     "status": "TODO",
     "risk": "HIGH",

@@ -89,7 +89,7 @@ Krój: `-apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui, sans-
 
 Bazowy rozmiar 14px · minimalny kontrast 4.5:1 · cel dotykowy 38px
 
-## Wymagania (69)
+## Wymagania (70)
 
 | ID | Domena | Ryzyko | Treść |
 |---|---|---|---|
@@ -138,6 +138,7 @@ Bazowy rozmiar 14px · minimalny kontrast 4.5:1 · cel dotykowy 38px
 | VOICE-DEVICE-REGISTRY | voice | MEDIUM | Kierownik placówki prowadzi rejestr urządzeń placówki. Urządzenia są wspólne: przedstawienie określa deklarowanego autora sesji, a wpis wydania jest opcjonalną ewidencją sprzętu. |
 | REPORT-APPROVAL | reports | HIGH | Raport trafia do bliskich dopiero po zatwierdzeniu przez personel. |
 | REPORT-AI-FEEDBACK | reports | MEDIUM | Personel może zgłosić błąd w raporcie wygenerowanym przez AI. |
+| VOICE-DOCK-REPORTS | reports | HIGH | Potok głosowy w module module_voice_and_reports zapisuje po etapie ASSIGN i REDACT niemutowalne, zanonimizowane zdarzenia (voice_sanitized_events) i kieruje je do konfigurowalnych per placówka kategorii raportów operacyjnych (organization_report_configs, operational_reports) bez ujawniania strumienia MEDICAL ani dopuszczania ról bliskich. |
 | INT-CORE-DECOUPLED | integration | HIGH | Identyfikatory zewnętrzne nie występują na tabelach rdzenia. |
 | INT-INGEST-PRECONDITIONS | integration | HIGH | Ingest zapisuje dane wyłącznie przy spełnieniu wszystkich warunków wstępnych. |
 | INT-NORMALIZATION | integration | MEDIUM | Dane dostawcy są normalizowane do pól kanonicznych. |

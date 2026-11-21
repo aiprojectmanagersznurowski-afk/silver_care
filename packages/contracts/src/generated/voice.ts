@@ -143,7 +143,9 @@ export const VOICE_RETENTION = {
   ],
   "keeps": [
     "daily_reports",
-    "daily_logs"
+    "daily_logs",
+    "voice_sanitized_events",
+    "operational_reports"
   ],
   "auditChange": true,
   "enforcedBy": "cron bazodanowy",

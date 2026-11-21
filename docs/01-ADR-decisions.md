@@ -478,3 +478,27 @@ sequenceDiagram
 - Jeden plik może zawierać wiele fragmentów. Każdy fragment ma jedno przypisanie do podopiecznego albo placówki. Serwer automatycznie przypisuje jedno spójne dopasowanie w rejestrze placówki do szkicu. Fragmenty wymagające wyjaśnienia trafiają do kolejki kierownika.
 - Przedstawienie na dyktafonie deklaruje autora sesji. Kierownik może ustalić lub skorygować autora fragmentu, także gdy urządzenie zmieniło użytkownika w tej samej sesji. Opóźniona deklaracja zachowuje wcześniejsze korekty.
 - Zatwierdzenie raportu lub zadania pozostaje osobną decyzją. Szczegóły procesu opisują `SC-NUR-18`, `SC-NUR-19` i `SC-NUR-20`. Kontrakt rozstrzyga zasady przypisania i dostępu.
+
+---
+
+## ADR-023 — Dekompozycja potoku głosowego i konfigurowalny silnik kategorii raportów per placówka w module `module_voice_and_reports` (Status: PROPOZYCJA — decyzja Darka 2026-11-21) 📝
+
+**Kontekst.** Dotychczasowy potok głosowy (`apps/web/src/lib/voice-process-persistence.ts`) był sztywno sprzężony z jednym atomowym zapisem `process_voice_draft_atomic` (wyłącznie `daily_logs` + `daily_reports`). Jednocześnie z wejściem stacji dokującej Zero-UI (`ADR-022`, `DEVICE_INGEST_PROTOCOL`) oraz modułowości platformy (`SC-SUP-06`, `module_voice_and_reports`) pojawiła się potrzeba zasilania z jednego strumienia nagrań elastycznego zestawu raportów operacyjnych (raport audytowy, dla działu technicznego, o kuchni/cateringu oraz kolejne kategorie dodawane per placówka), bez naruszania granic MDR/RODO i bez mieszania ścieżek `APP` i `DEVICE`.
+
+**Decyzja (Darek, 2026-11-21).**
+1. **Jeden wspólny moduł `module_voice_and_reports` i 3 odsprzęglone warstwy potoku:**
+   - **Warstwa 1 (`Ingest, Assign & Hard Redact` → `voice_sanitized_events`):** wspólny, niemutowalny artefakt zanonimizowanych zdarzeń. Zachowuje rozdział `CAPTURE_SOURCES` (`APP`: obowiązkowe `resident_id` przy nagraniu — `AT_CAPTURE`, `scope = 'resident'`; `DEVICE`: `AT_ASSIGN` z potwierdzoną decyzją człowieka z `voice_assignment_queue`, dopuszczającą `RESIDENT` lub `FACILITY`). Przed zapisem i wysyłką do LLM wycinane są dane `MEDICAL_CATEGORIES` (strumień `MEDICAL` zostaje wyłącznie w `daily_logs`) oraz maskowane są PESEL, telefon, e-mail, imiona/nazwiska podopiecznych, numery pokoi i etykiety łóżek.
+   - **Warstwa 2 (`Dynamic Domain Classifier & Router` w EOG):** pobiera aktywne kategorie placówki (`organization_report_configs`) i w jednym wywołaniu EU LLM kieruje zanonimizowane fakty do kategorii operacyjnych placówki (obok istniejącej ścieżki raportu dobowego `daily_reports`). Fakty operacyjne/placówkowe nie są wstrzykiwane do `daily_reports`.
+   - **Warstwa 3 (`Pluggable Report Generators & Sinks` → `organization_report_configs`, `operational_reports`):** wspólny interfejs generatorów (`OperationalCategoryReportGenerator`) napędzany definicją kategorii placówki, z post-filtrem MDR (`sanitizeReportAndVerifySafety`), AI Provenance i zakazem fabrykowania przy braku zdarzeń.
+2. **Kategorie raportów definiowane per placówka przez `super_admin` i delegacja flagą:**
+   - Każda placówka otrzymuje 3 domyślne kategorie operacyjne (`audit_operational`, `technical_maintenance`, `catering_kitchen`).
+   - `super_admin` może dodawać, edytować i archiwizować kolejne kategorie per `organization_id` wyłącznie przez RPC (`upsert_organization_report_category`) z wymogiem MFA (`aal2`), blokadą faktycznej impersonacji oraz śladem w `audit_logs` bez PII. Zgodnie z separacją ról `super_admin` nie czyta treści `voice_sanitized_events` ani `operational_reports`.
+   - Flaga `allow_org_admin_report_config` deleguje Kierownikowi placówki (`org_admin`) wyłącznie konfigurację istniejących kategorii własnej placówki (`configure_organization_report_category`: włączenie, harmonogram `manual`/`per_shift`/`daily`/`weekly`, sekcje z białej listy kontraktu, odbiorcy spośród `org_admin`/`nurse`), nigdy tworzenie nowych kategorii ani zmianę reguł redakcji czy dostępów bliskich (`family`/`legal_guardian` mają zawsze `0` wierszy).
+   - Generowanie i zatwierdzanie raportów operacyjnych należy do `org_admin` i `nurse` własnej placówki przy aktywnym `module_voice_and_reports` (zapis `RPC_ONLY`).
+3. **Retencja nagrań i wymazywanie RODO art. 17:**
+   - Trigger niemutowalności `voice_sanitized_events` blokuje modyfikację treści i usuwanie, ale zezwala na wyzerowanie `draft_note_id` (`ON DELETE SET NULL`) przy wygaśnięciu retencyjnym `voice_draft_notes` (`VOICE_RETENTION.keeps`) oraz kaskadowe usunięcie przy twardym wymazaniu podopiecznego (`DELETE_POLICIES` dla `residents`).
+
+**Konsekwencje.**
+- Przekazanie zmiany (`shift_handover`) pozostaje w osobnym przepływie `SC-NUR-12` (nie jest nadpisywane przez generatory operacyjne w `#304`).
+- Zasoby `voice_sanitized_events`, `organization_report_configs`, `operational_reports` oraz wymaganie `VOICE-DOCK-REPORTS` i `OPERATIONAL_REPORT_ENGINE` stają się częścią kontraktu (`R36-operational-reports`).
+

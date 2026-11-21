@@ -49,6 +49,7 @@ export const RESOURCES = [
   'shift_definitions', 'shift_roster', 'shift_tasks', 'shift_plan_approvals',
   'voice_devices', 'voice_device_assignments', 'voice_assignment_queue', 'voice_retention_settings',
   'organization_feature_flags',
+  'voice_sanitized_events', 'organization_report_configs', 'operational_reports',
 ];
 
 /**
@@ -108,6 +109,11 @@ export const MATRIX = [
   { resource: 'voice_retention_settings', read: ['org_admin:own', 'super_admin'],           create: ['org_admin:own', 'super_admin'], update: ['org_admin:own', 'super_admin'], delete: [] },
   // Wielomodułowość platformy (SC-SUP-06, SUP-FEATURE-FLAGS): odizolowane od organizations.settings, zapis wyłącznie super_admin.
   { resource: 'organization_feature_flags', read: ['super_admin', 'org_admin:own', 'nurse:own', 'legal_guardian:own', 'family:own'], create: ['super_admin'], update: ['super_admin'], delete: ['super_admin'] },
+  // Silnik raportów operacyjnych i zredagowanych zdarzeń głosowych (VOICE-DOCK-REPORTS, ADR-023).
+  // Bliscy bez dostępu (0 wierszy). super_admin zarządza kategoriami per placówka, ale nie czyta treści opieki.
+  { resource: 'voice_sanitized_events',      read: ['org_admin:own', 'nurse:own'],              create: ['org_admin:own', 'nurse:own'], update: [],                                 delete: [] },
+  { resource: 'organization_report_configs', read: ['super_admin', 'org_admin:own', 'nurse:own'], create: ['super_admin'],              update: ['super_admin', 'org_admin:own'],   delete: [] },
+  { resource: 'operational_reports',         read: ['org_admin:own', 'nurse:own'],              create: ['org_admin:own', 'nurse:own'], update: ['org_admin:own', 'nurse:own'],     delete: [] },
 ];
 
 /**
@@ -155,7 +161,7 @@ export const DELETE_POLICIES = [
     strategy: 'SOFT_ARCHIVE_THEN_RETENTION',
     rationale: 'archived_at odcina rodzinę natychmiast; twardy DELETE dopiero po retencji albo na żądanie z art. 17.',
     familyOffboardingRetentionDays: OFFBOARDING_RETENTION_DAYS,
-    cascades: ['daily_logs', 'daily_reports', 'voice_draft_notes', 'voice_assignment_queue', 'wellness_daily'],
+    cascades: ['daily_logs', 'daily_reports', 'voice_draft_notes', 'voice_assignment_queue', 'voice_sanitized_events', 'wellness_daily'],
   },
   { entity: 'resident_relative_links', strategy: 'REVOKE_NOT_DELETE', rationale: 'Cofnięcie dostępu musi zostawić ślad kto i kiedy — usunięcie wiersza kasuje dowód.', cascades: [] },
 ];

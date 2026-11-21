@@ -102,7 +102,10 @@ export const RESOURCES = [
   "voice_device_assignments",
   "voice_assignment_queue",
   "voice_retention_settings",
-  "organization_feature_flags"
+  "organization_feature_flags",
+  "voice_sanitized_events",
+  "organization_report_configs",
+  "operational_reports"
 ] as const;
 
 export const MATRIX = [
@@ -513,6 +516,51 @@ export const MATRIX = [
     "delete": [
       "super_admin"
     ]
+  },
+  {
+    "resource": "voice_sanitized_events",
+    "read": [
+      "org_admin:own",
+      "nurse:own"
+    ],
+    "create": [
+      "org_admin:own",
+      "nurse:own"
+    ],
+    "update": [],
+    "delete": []
+  },
+  {
+    "resource": "organization_report_configs",
+    "read": [
+      "super_admin",
+      "org_admin:own",
+      "nurse:own"
+    ],
+    "create": [
+      "super_admin"
+    ],
+    "update": [
+      "super_admin",
+      "org_admin:own"
+    ],
+    "delete": []
+  },
+  {
+    "resource": "operational_reports",
+    "read": [
+      "org_admin:own",
+      "nurse:own"
+    ],
+    "create": [
+      "org_admin:own",
+      "nurse:own"
+    ],
+    "update": [
+      "org_admin:own",
+      "nurse:own"
+    ],
+    "delete": []
   }
 ] as const;
 
@@ -552,6 +600,7 @@ export const DELETE_POLICIES = [
       "daily_reports",
       "voice_draft_notes",
       "voice_assignment_queue",
+      "voice_sanitized_events",
       "wellness_daily"
     ]
   },

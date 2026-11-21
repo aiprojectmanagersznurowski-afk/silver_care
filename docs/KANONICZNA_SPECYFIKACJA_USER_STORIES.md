@@ -109,7 +109,7 @@
 - **AC6 (Termin wygaśnięcia — 📝 2026-10-26):** Przy publikacji Super Admin może podać opcjonalny termin wygaśnięcia (`system_alerts.expires_at`, późniejszy niż utworzenie). Po terminie alert znika z banera placówek i z listy aktywnych, a w historii ma status „Wygasł”; wiersz w bazie nie jest zmieniany. Bez terminu alert trwa do ręcznego zakończenia. Termin z przeszłości jest odrzucany przed zapisem.
 
 ### [SC-SUP-06] Modułowość platformy sterowana flagami (Feature Flags) w panelu Super Admina per placówka
-🔗 **Kontrakt:** `SUP-FEATURE-FLAGS`, `ORG-ISOLATION`, `SUP-IMPERSONATION`, `SEC-AUDIT-APPEND-ONLY`, `SEC-NO-PII-LOGS`, `SEC-403-LOGGING`, `UI-FOUR-STATES`, `UI-TERMINOLOGY` · **Work Order:** [`WO-SUP-FEATURE-FLAGS.md`](workorders/WO-SUP-FEATURE-FLAGS.md) · **Status:** 📝 PROPOZYCJA
+🔗 **Kontrakt:** `SUP-FEATURE-FLAGS`, `VOICE-DOCK-REPORTS`, `ORG-ISOLATION`, `SUP-IMPERSONATION`, `SEC-AUDIT-APPEND-ONLY`, `SEC-NO-PII-LOGS`, `SEC-403-LOGGING`, `UI-FOUR-STATES`, `UI-TERMINOLOGY` · **Work Order:** [`WO-SUP-FEATURE-FLAGS.md`](workorders/WO-SUP-FEATURE-FLAGS.md) · **Status:** 📝 PROPOZYCJA
 
 > ℹ️ Wymaganie `SUP-FEATURE-FLAGS`, katalog w `contracts/features.contract.mjs`, zasób `organization_feature_flags` w `contracts/roles.contract.mjs` oraz reguła bramki `R35-feature-flags` zostały dopisane i rozszerzone po review w Etapie 1.
 
