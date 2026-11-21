@@ -17,6 +17,7 @@ export type ResidentCardResult =
       access: CardAccess
       sections: ResidentCardSection[]
       resident: Row
+      canInviteFamily: boolean
       wearable: Row | null
       daily: { reports: Row[]; agenda: Row[] } | null
       /** Sekcja „Zadania” (SC-ADM-21); null, gdy rola jej nie ma. */
@@ -95,6 +96,7 @@ export async function getResidentCard(
     access,
     sections,
     resident: row,
+    canInviteFamily: sections.includes('family') && !access.readOnly && Boolean(flags?.module_family_portal),
     wearable: (wearable.data as Row | null) ?? null,
     daily: sections.includes('daily') ? { reports: (reports.data as Row[]) ?? [], agenda: (agenda.data as Row[]) ?? [] } : null,
     tasks: sections.includes('tasks') ? summarizeResidentTasks((tasks.data as ResidentTaskRow[]) ?? [], new Date()) : null,

@@ -10,6 +10,7 @@ import { FullResidentData, ResidentRelativeLinkItem } from './profile-types'
 interface ResidentFamilyCardProps {
   resident: FullResidentData
   relativeLinks: ResidentRelativeLinkItem[]
+  canInvite: boolean
 }
 
 const RELATION_LABELS: Record<string, string> = {
@@ -24,6 +25,7 @@ const RELATION_LABELS: Record<string, string> = {
 export function ResidentFamilyCard({
   resident,
   relativeLinks,
+  canInvite,
 }: ResidentFamilyCardProps) {
   return (
     <Card>
@@ -32,16 +34,18 @@ export function ResidentFamilyCard({
           <Users className="h-5 w-5 text-primary" />
           Bliscy i kontakty ({relativeLinks.length})
         </CardTitle>
-        <InviteFamilyDialog
-          residents={[{ id: resident.id, first_name: resident.first_name, last_name: resident.last_name }]}
-          defaultResidentId={resident.id}
-          triggerLabel="Zaproś bliskiego"
-        />
+        {canInvite && (
+          <InviteFamilyDialog
+            residents={[{ id: resident.id, first_name: resident.first_name, last_name: resident.last_name }]}
+            defaultResidentId={resident.id}
+            triggerLabel="Zaproś bliskiego"
+          />
+        )}
       </CardHeader>
       <CardContent className="pt-4 space-y-3">
         {relativeLinks.length === 0 ? (
           <div className="p-4 rounded-xl border border-dashed border-border text-center text-sm text-muted-foreground">
-            Brak powiązanych kont bliskich. Użyj przycisku &bdquo;Zaproś bliskiego&rdquo;, aby nadać dostęp do portalu rodziny.
+            Brak powiązanych kont bliskich.
           </div>
         ) : (
           <div className="space-y-2.5">

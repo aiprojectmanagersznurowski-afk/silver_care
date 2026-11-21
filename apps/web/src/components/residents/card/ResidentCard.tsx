@@ -74,7 +74,7 @@ export function ResidentCard({ card, backHref, backLabel, reportsHref, voiceEnab
       content: <ResidentTasksSection tasks={card.tasks} addTaskHref={`/staff/shift-tasks?resident=${resident.id}`} />,
     })
   }
-  if (has('family')) tabs.push({ id: 'family', label: labelOf('family'), content: <ResidentFamilyCard resident={resident} relativeLinks={relativeLinks} /> })
+  if (has('family')) tabs.push({ id: 'family', label: labelOf('family'), content: <ResidentFamilyCard resident={resident} relativeLinks={relativeLinks} canInvite={card.canInviteFamily} /> })
   if (has('events')) tabs.push({ id: 'events', label: labelOf('events'), content: <ResidentEventsCard events={events} /> })
   if (has('wearable')) {
     const link = card.wearable as { external_user_id?: string; created_at?: string } | null
