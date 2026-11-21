@@ -82,6 +82,8 @@ test('@REQ: SUP-FEATURE-FLAGS - zmiana modułów, MFA, izolacja, kaskada i bloka
       await expect(flagsPage.toggle(flag.key)).toHaveAttribute('aria-checked', String(flag.defaultEnabled))
     }
     await expect(flagsPage.toggle(portal)).toBeDisabled()
+    await flagsPage.startMfaEnrollment()
+    await flagsPage.open(a.org)
     await flagsPage.confirmMfa()
     await flagsPage.toggle(portal).click()
     await expect(flagsPage.toggle(portal)).not.toBeChecked()

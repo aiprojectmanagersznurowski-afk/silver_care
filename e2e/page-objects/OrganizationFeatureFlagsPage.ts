@@ -30,10 +30,15 @@ export class OrganizationFeatureFlagsPage {
     })
   }
 
-  async confirmMfa() {
+  async startMfaEnrollment() {
     await this.page.getByRole('button', { name: 'Skonfiguruj uwierzytelnianie' }).click()
     const secret = this.page.getByTestId('feature-flags-totp-secret')
     await expect(secret).toBeVisible()
+    return secret
+  }
+
+  async confirmMfa() {
+    const secret = await this.startMfaEnrollment()
     await this.page.getByLabel('Kod uwierzytelniający').fill(totp((await secret.textContent())!.trim()))
     await this.page.getByRole('button', { name: 'Potwierdź kod' }).click()
     await expect(this.toggle('module_family_portal')).toBeEnabled()
