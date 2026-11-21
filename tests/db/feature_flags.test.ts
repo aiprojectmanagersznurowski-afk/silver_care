@@ -181,4 +181,59 @@ describe('@REQ: SUP-FEATURE-FLAGS', () => {
       expect(await tx`SELECT id FROM public.get_family_resident_overview()`).toHaveLength(expected)
     }
   }))
+  it('zwraca komplet efektywnych flag już przy aal1 i odmawia obcej placówce', () => transaction(async (tx) => {
+    await createUser(tx, rootUser)
+    const org = await createOrg(tx)
+    const otherOrg = await createOrg(tx)
+    await asUser(tx, 'super_admin', null)
+    await setFlag(tx, org, parent, false)
+    await asUser(tx, 'super_admin', null, rootUser, { aal: 'aal1' })
+    const rows = await tx`SELECT * FROM public.get_org_feature_flags(${org})`
+    expect(rows).toHaveLength(FEATURE_FLAGS.length)
+    expect([...rows]).toContainEqual({ feature_key: portal, enabled: false })
+    await asUser(tx, 'org_admin', org)
+    expect([...(await tx`SELECT * FROM public.get_org_feature_flags(${org})`)]).toEqual([...rows])
+    await denied(tx, (sp) => sp`SELECT * FROM public.get_org_feature_flags(${otherOrg})`)
+    await asUser(tx, 'invalid', org)
+    await denied(tx, (sp) => sp`SELECT * FROM public.get_org_feature_flags(${org})`)
+  }))
+
+  it('blokuje tylko wyłączone raporty BI, zachowując wyniki dla aktywnego modułu', () => transaction(async (tx) => {
+    await createUser(tx, rootUser)
+    const disabled = await createOrg(tx)
+    const enabled = await createOrg(tx)
+    await asUser(tx, 'super_admin', null)
+    await setFlag(tx, disabled, 'module_voice_and_reports', false)
+    const calls = [
+      ['fn_daily_report', [2026, 11]], ['fn_monthly_summary', [2026, 11]], ['fn_occupancy_kpi', []],
+      ['fn_care_level_stats', []], ['fn_contract_end_reasons', []], ['fn_deaths_by_stay_length', []],
+      ['fn_admissions_by_month_care_level', []], ['fn_contract_sources', []],
+    ] as const
+    for (const [fn, dates] of calls) {
+      const statement = (sp: Tx, oid: string) => sp.unsafe(
+        `SELECT * FROM public.${fn}($1${dates.length ? ', $2, $3' : ''})`, [oid, ...dates],
+      )
+      await asUser(tx, 'org_admin', enabled)
+      await statement(tx, enabled)
+      await asUser(tx, 'org_admin', disabled)
+      await denied(tx, (sp) => statement(sp, disabled))
+    }
+  }))
+
+  it('ukrywa dane opasek i zatrzymuje wszystkie ścieżki ingestu po wyłączeniu modułu', () => transaction(async (tx) => {
+    await createUser(tx, rootUser)
+    const { org, resident } = await familyFixture(tx)
+    await tx`INSERT INTO physiological_data_ingest (organization_id, resident_id, metric, value)
+      VALUES (${org}, ${resident}, 'steps_total', 1)`
+    await asUser(tx, 'org_admin', org)
+    expect(await tx`SELECT id FROM physiological_data_ingest WHERE resident_id = ${resident}`).toHaveLength(1)
+    await asUser(tx, 'super_admin', null)
+    await setFlag(tx, org, 'module_wearables_iot', false)
+    await asUser(tx, 'org_admin', org)
+    expect(await tx`SELECT id FROM physiological_data_ingest WHERE resident_id = ${resident}`).toHaveLength(0)
+    await denied(tx, (sp) => sp`SELECT public.process_ingest_payload(${org}, ${resident}, 'steps_total', 1, 'fixture')`)
+    await denied(tx, (sp) => sp`SELECT public.normalize_and_ingest(${org}, ${resident}, 'polar', 'steps_total', '1', 'fixture')`)
+    await denied(tx, (sp) => sp`SELECT public.process_ingest_batch(${org}, ${resident}, 'polar', '[]'::jsonb)`)
+  }))
+
 })
