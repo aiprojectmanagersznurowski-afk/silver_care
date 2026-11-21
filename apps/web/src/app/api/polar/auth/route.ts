@@ -25,7 +25,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const featureDenied = await assertOrgFeatureForApi(supabase, user, new URL(req.url).pathname)
+    const featureDenied = await assertOrgFeatureForApi(supabase, user, '/api/polar/auth')
     if (featureDenied) return featureDenied
 
     const { searchParams } = new URL(req.url)

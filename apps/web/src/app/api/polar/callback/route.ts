@@ -45,7 +45,7 @@ export async function GET(req: Request) {
     const { data: resident } = await supabase.from('residents').select('organization_id').eq('id', stateObj.residentId)
       .eq('organization_id', stateObj.orgId).is('archived_at', null).maybeSingle()
     if (!resident) return NextResponse.json({ error: 'Nie znaleziono podopiecznego' }, { status: 404 })
-    const featureDenied = await assertTargetOrgFeatureForApi(supabase, resident.organization_id, new URL(req.url).pathname, user.id)
+    const featureDenied = await assertTargetOrgFeatureForApi(supabase, resident.organization_id, '/api/polar/callback', user.id)
     if (featureDenied) return featureDenied
 
     // 1. Wymień kod na token z użyciem Basic Auth (zgodnie z OAUTH_CONFIG)
