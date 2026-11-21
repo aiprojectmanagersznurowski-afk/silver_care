@@ -122,6 +122,7 @@ export default async function OrganizationDetailsPage({
         flags={flags}
         isImpersonating={isImpersonating}
         hasMfa={assurance?.data?.currentLevel === 'aal2'}
+        needsMfaVerification={assurance?.data?.nextLevel === 'aal2'}
       />
 
       {/* Sekcja Personel */}

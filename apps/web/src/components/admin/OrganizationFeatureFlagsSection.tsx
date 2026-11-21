@@ -27,9 +27,10 @@ interface Props {
   flags: EffectiveFeatureFlags | null
   isImpersonating: boolean
   hasMfa: boolean
+  needsMfaVerification: boolean
 }
 
-export function OrganizationFeatureFlagsSection({ organizationId, flags, isImpersonating, hasMfa }: Props) {
+export function OrganizationFeatureFlagsSection({ organizationId, flags, isImpersonating, hasMfa, needsMfaVerification }: Props) {
   const [pending, startTransition] = useTransition()
   const [confirmation, setConfirmation] = useState<FeatureKey | null>(null)
   const [error, setError] = useState<string>()
@@ -54,7 +55,7 @@ export function OrganizationFeatureFlagsSection({ organizationId, flags, isImper
       {isImpersonating && <p role="status" className="rounded-lg border border-border p-4 text-sm">
         Tryb podglądu placówki blokuje zmianę modułów.
       </p>}
-      {!isImpersonating && !hasMfa && <FeatureFlagsMfa />}
+      {!isImpersonating && !hasMfa && <FeatureFlagsMfa needsVerification={needsMfaVerification} />}
       {error && <ListError title={error} />}
       {sections.map(({ title, kind }) => {
         const definitions = FEATURE_FLAGS.filter((flag) => flag.kind === kind)
