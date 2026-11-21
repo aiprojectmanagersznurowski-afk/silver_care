@@ -31,8 +31,7 @@ function client() {
     rpc: vi.fn(async () => ({ data: true, error: null })),
     from: (table: string) => chain(table, () => (table === 'residents' ? { data: state.resident, error: null } : { data: null, error: null })),
     storage: {
-      rpc: vi.fn(async () => ({ data: true, error: null })),
-    from: (bucket: string) => ({
+      from: (bucket: string) => ({
         list: vi.fn(async (...args: unknown[]) => { state.calls.push({ target: `storage:${bucket}`, method: 'list', args }); return { data: state.exists ? [{ name: 'nowe.webp' }] : [], error: null } }),
         remove: vi.fn(async (...args: unknown[]) => { state.calls.push({ target: `storage:${bucket}`, method: 'remove', args }); return { data: [], error: null } }),
       }),
