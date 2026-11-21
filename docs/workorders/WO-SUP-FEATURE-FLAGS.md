@@ -171,3 +171,7 @@ Elementy podstawowe działają dla każdej placówki niezależnie od flag:
 
 - Włącz rejestrację i weryfikację TOTP w Supabase Auth przed udostępnieniem panelu flag. PostgreSQL wymaga sesji `aal2` do zmiany flag. Panel pozwala skonfigurować i potwierdzić drugi składnik.
 - Ustaw `POLAR_WEBHOOK_SIGNATURE_SECRET` w środowisku serwera, jeśli placówki korzystają z webhooka Polar AccessLink. Serwer weryfikuje podpis zdarzenia przed odczytem powiązania opaski.
+
+### Wspólne rejestry
+
+Odczyt tabel `residents`, `rooms`, `beds` i `bed_assignments` pozostaje objęty izolacją ról i placówek. Z tych samych rejestrów korzystają raporty BI, przydziały i potok głosowy. Te moduły mogą działać niezależnie. Odcinanie wspólnych odczytów po wyłączeniu ewidencji zmieniałoby rzeczywistą liczbę zajętych łóżek w raportach. Zapisy podlegają flagom swojego modułu. Ekrany, API i RPC raportów egzekwują dostępność swojej funkcji niezależnie od dostępu do rejestru.
