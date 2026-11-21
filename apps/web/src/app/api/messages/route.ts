@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { isSpamLimitExceeded } from '@/lib/messages';
 import { getFamilyResidents } from '@/lib/family-residents';
 
-export async function GET(request: Request) {
+export async function GET() {
   const supabase = await createClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
 
@@ -12,7 +12,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const featureDenied = await assertOrgFeatureForApi(supabase, user, new URL(request.url).pathname)
+  const featureDenied = await assertOrgFeatureForApi(supabase, user, '/api/messages')
   if (featureDenied) return featureDenied
 
   // Fetch messages where this family member is involved
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const featureDenied = await assertOrgFeatureForApi(supabase, user, new URL(request.url).pathname)
+  const featureDenied = await assertOrgFeatureForApi(supabase, user, '/api/messages')
   if (featureDenied) return featureDenied
 
   try {
