@@ -271,7 +271,8 @@ export const OPERATIONAL_REPORT_ENGINE = {
       "defaultRecipientRoles": [
         "org_admin"
       ],
-      "requiresApproval": true
+      "requiresApproval": true,
+      "defaultRetentionDays": 365
     },
     {
       "code": "technical_maintenance",
@@ -287,7 +288,8 @@ export const OPERATIONAL_REPORT_ENGINE = {
         "org_admin",
         "nurse"
       ],
-      "requiresApproval": true
+      "requiresApproval": true,
+      "defaultRetentionDays": 365
     },
     {
       "code": "catering_kitchen",
@@ -302,9 +304,22 @@ export const OPERATIONAL_REPORT_ENGINE = {
         "org_admin",
         "nurse"
       ],
-      "requiresApproval": true
+      "requiresApproval": true,
+      "defaultRetentionDays": 365
     }
   ],
+  "reportRetention": {
+    "defaultDays": 365,
+    "minDays": 30,
+    "maxDays": 1825,
+    "scope": "organization_category",
+    "configuredBy": [
+      "super_admin",
+      "org_admin:own"
+    ],
+    "enforcedBy": "cleanup_expired_operational_reports"
+  },
+  "onResidentErasure": "REVERT_TO_DRAFT_OR_NO_DATA",
   "allowedSchedules": [
     "manual",
     "per_shift",
