@@ -15,6 +15,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Brak uprawnień kierownika placówki' }, { status: 403 });
   }
 
+  const featureDenied = await assertOrgFeatureForApi(supabase, user, '/api/admin/messages')
+  if (featureDenied) return featureDenied
+
   // Odświeżanie w tle dociąga tylko wiadomości nowsze niż `since` (skalowanie skrzynki)
   const since = new URL(request.url).searchParams.get('since');
   if (since !== null && Number.isNaN(Date.parse(since))) {
@@ -71,9 +74,6 @@ export async function POST(request: Request) {
   if (authError || !user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-
-  const featureDenied = await assertOrgFeatureForApi(supabase, user, '/api/admin/messages')
-  if (featureDenied) return featureDenied
 
   const role = user.app_metadata?.role as string | undefined;
   if (role !== 'org_admin') {
