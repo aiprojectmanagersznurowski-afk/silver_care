@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import type { User } from '@supabase/supabase-js'
 import {
   FEATURE_FLAGS, FEATURE_FLAG_POLICY, getRequiredFeaturesForApiPath, isFeatureKey,
-  matchesFeatureApiPattern, resolveEffectiveFeatureFlags, type FeatureKey,
+  matchesFeatureApiPattern, type FeatureKey,
 } from '@silvercare/contracts/src/generated/features'
 import { getAppOrganizationId, getAppRole } from '@/lib/auth/app-role'
 import { getActiveImpersonation, safeGetCookieStore } from '@/lib/impersonation-guards'
@@ -14,7 +14,6 @@ import { createClient } from '@/lib/supabase/server'
 export type EffectiveFeatureFlags = Record<FeatureKey, boolean>
 type DbClient = Awaited<ReturnType<typeof createClient>>
 type FeatureUser = Pick<User, 'id' | 'app_metadata'>
-const defaultFlags = resolveEffectiveFeatureFlags()
 
 async function loadFlags(supabase: DbClient, organizationId: string): Promise<EffectiveFeatureFlags> {
   const { data, error } = await supabase.rpc('get_org_feature_flags', { p_org_id: organizationId })
@@ -52,9 +51,7 @@ export const getCurrentFeatureFlags = cache(async () => {
   const user = await getCurrentUser()
   if (!user || !getAppRole(user)) return null
   const organizationId = await getFeatureOrganizationId(user)
-  if (!organizationId) {
-    return getAppRole(user) === 'super_admin' ? { organizationId, flags: defaultFlags } : null
-  }
+  if (!organizationId) return null
   try {
     return { organizationId, flags: await getOrgFeatureFlags(organizationId) }
   } catch {

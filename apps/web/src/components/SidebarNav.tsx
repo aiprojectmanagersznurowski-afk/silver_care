@@ -46,10 +46,20 @@ export interface SidebarNavGroup {
 
 export function filterFeatureNavigation(groups: SidebarNavGroup[], flags: EffectiveFeatureFlags | null | undefined) {
   if (flags === undefined) return groups
-  const allowed = (href: string) => !FEATURE_FLAGS.some((feature) =>
-    (feature.routes as readonly string[]).includes(href) && !flags?.[feature.key],
-  )
-  return groups.map((group) => ({ ...group, items: group.items.filter((item) => allowed(item.href)) }))
+  const allowed = (href: string) => {
+    const path = href.split(/[?#]/, 1)[0].replace(/\/$/, '')
+    return !FEATURE_FLAGS.some((feature) => !flags?.[feature.key] &&
+      feature.routes.some((route) => path === route || (route !== '/staff' && path.startsWith(`${route}/`))),
+    )
+  }
+  return groups.flatMap((group) => {
+    const items = group.items.flatMap((item) => {
+      if (!item.children) return allowed(item.href) ? [item] : []
+      const children = item.children.filter((child) => allowed(child.href))
+      return children.length ? [{ ...item, children }] : []
+    })
+    return items.length ? [{ ...group, items }] : []
+  })
 }
 
 function isActivePath(pathname: string, item: Pick<SidebarNavItem, 'href' | 'exact'>) {

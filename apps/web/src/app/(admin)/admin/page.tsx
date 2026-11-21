@@ -10,6 +10,7 @@ import { FacilityIcon } from '@/components/icons/FacilityIcon'
 import { PageHeader } from '@/components/patterns/PageHeader'
 import { MetricCard, MetricGrid } from '@/components/patterns/MetricCard'
 import { getAppRole } from '@/lib/auth/app-role'
+import { getCurrentFeatureFlags } from '@/lib/feature-flags'
 import { getCurrentUser } from '@/lib/supabase/current-user'
 
 export default async function AdminDashboard() {
@@ -25,11 +26,17 @@ export default async function AdminDashboard() {
     redirect('/admin/organizations')
   }
 
+  const flags = (await getCurrentFeatureFlags())?.flags
+  const noCount = { count: null }
   const [{ count: residentsCount }, { count: totalBedsCount }, { count: occupiedBedsCount }, { count: pendingReportsCount }] = await Promise.all([
-    supabase.from('residents').select('*', { count: 'exact', head: true }).is('archived_at', null),
-    supabase.from('beds').select('*', { count: 'exact', head: true }),
-    supabase.from('bed_assignments').select('*', { count: 'exact', head: true }).is('unassigned_at', null),
-    supabase.from('daily_reports').select('*', { count: 'exact', head: true }).eq('status', 'draft'),
+    flags?.module_residents_management
+      ? supabase.from('residents').select('*', { count: 'exact', head: true }).is('archived_at', null) : noCount,
+    flags?.module_facility_management
+      ? supabase.from('beds').select('*', { count: 'exact', head: true }) : noCount,
+    flags?.module_facility_management
+      ? supabase.from('bed_assignments').select('*', { count: 'exact', head: true }).is('unassigned_at', null) : noCount,
+    flags?.module_voice_and_reports
+      ? supabase.from('daily_reports').select('*', { count: 'exact', head: true }).eq('status', 'DRAFT') : noCount,
   ])
 
   const totalBeds = totalBedsCount || 0
@@ -40,29 +47,41 @@ export default async function AdminDashboard() {
     <div className="flex flex-col gap-4 md:gap-6">
       <PageHeader title="Pulpit główny" description="Szybki podgląd stanu placówki i obłożenia." />
 
-      <MetricGrid>
-        <MetricCard icon={<Users />} label="Aktywni podopieczni" value={residentsCount || 0} description="Podopieczni bez archiwizacji." />
-        <MetricCard icon={<Bed />} label="Obłożenie placówki" value={`${occupancyRate}%`} description={`${occupiedBeds} z ${totalBeds} łóżek zajętych.`} />
-        <MetricCard icon={<BedDouble />} label="Wolne łóżka" value={totalBeds - occupiedBeds} description="Łóżka bez aktywnego przypisania." />
-        <MetricCard icon={<FileText />} label="Raporty do zatwierdzenia" value={pendingReportsCount || 0} description="Raporty do zatwierdzenia w statusie roboczym." />
-      </MetricGrid>
+      {(residentsCount !== null || totalBedsCount !== null || pendingReportsCount !== null) && (
+        <MetricGrid>
+          {residentsCount !== null && <MetricCard icon={<Users />} label="Aktywni podopieczni" value={residentsCount} description="Podopieczni bez archiwizacji." />}
+          {totalBedsCount !== null && occupiedBedsCount !== null && (
+            <>
+              <MetricCard icon={<Bed />} label="Obłożenie placówki" value={`${occupancyRate}%`} description={`${occupiedBeds} z ${totalBeds} łóżek zajętych.`} />
+              <MetricCard icon={<BedDouble />} label="Wolne łóżka" value={totalBeds - occupiedBeds} description="Łóżka bez aktywnego przypisania." />
+            </>
+          )}
+          {pendingReportsCount !== null && <MetricCard icon={<FileText />} label="Raporty do zatwierdzenia" value={pendingReportsCount} description="Raporty do zatwierdzenia w statusie roboczym." />}
+        </MetricGrid>
+      )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Na skróty</CardTitle>
-          <CardDescription>Szybki dostęp do kluczowych sekcji</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-wrap gap-2">
-          <Link href="/admin/residents" className={buttonVariants({ variant: 'outline' })}>
-            <Users />
-            Lista podopiecznych
-          </Link>
-          <Link href="/admin/facility" className={buttonVariants({ variant: 'outline' })}>
-            <FacilityIcon />
-            Struktura placówki
-          </Link>
-        </CardContent>
-      </Card>
+      {(flags?.module_residents_management || flags?.module_facility_management) && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Na skróty</CardTitle>
+            <CardDescription>Szybki dostęp do kluczowych sekcji</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            {flags.module_residents_management && (
+              <Link href="/admin/residents" className={buttonVariants({ variant: 'outline' })}>
+                <Users />
+                Lista podopiecznych
+              </Link>
+            )}
+            {flags.module_facility_management && (
+              <Link href="/admin/facility" className={buttonVariants({ variant: 'outline' })}>
+                <FacilityIcon />
+                Struktura placówki
+              </Link>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }
