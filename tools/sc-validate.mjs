@@ -1014,6 +1014,13 @@ if (DEVICE_INGEST_PROTOCOL) {
     if (!(VOICE_RETENTION?.keeps || []).includes('voice_sanitized_events') || !(VOICE_RETENTION?.keeps || []).includes('operational_reports')) {
       err('R36-operational-reports', 'VOICE_RETENTION.keeps musi chronić voice_sanitized_events i operational_reports przy wygaśnięciu surowych nagrań.');
     }
+    const rr = ore.reportRetention || {};
+    if (rr.defaultDays !== 365 || rr.minDays !== 30 || rr.maxDays !== 1825) {
+      err('R36-operational-reports', 'OPERATIONAL_REPORT_ENGINE.reportRetention musi mieć defaultDays: 365, minDays: 30, maxDays: 1825.');
+    }
+    if (ore.onResidentErasure !== 'REVERT_TO_DRAFT_OR_NO_DATA') {
+      err('R36-operational-reports', 'OPERATIONAL_REPORT_ENGINE.onResidentErasure musi wynosić "REVERT_TO_DRAFT_OR_NO_DATA" (RODO art. 17).');
+    }
   }
 }
 

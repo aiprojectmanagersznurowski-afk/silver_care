@@ -119,6 +119,8 @@ const MUTATIONS = [
   { rule: 'R36-operational-reports', file: 'roles.contract.mjs', from: "{ resource: 'operational_reports',         read: ['org_admin:own', 'nurse:own'],", to: "{ resource: 'operational_reports',         read: ['super_admin', 'org_admin:own', 'nurse:own'],", desc: 'super admin czyta treści raportów operacyjnych placówki' },
   { rule: 'R36-operational-reports', file: 'voice.contract.mjs', from: "  medicalStreamExcluded: true,", to: "  medicalStreamExcluded: false,", desc: 'strumień medyczny trafia do raportów operacyjnych' },
   { rule: 'R36-operational-reports', file: 'roles.contract.mjs', from: "{ resource: 'organization_report_configs', read: ['super_admin', 'org_admin:own', 'nurse:own'], create: ['super_admin'],", to: "{ resource: 'organization_report_configs', read: ['super_admin', 'org_admin:own', 'nurse:own'], create: ['super_admin', 'org_admin:own'],", desc: 'kierownik placówki sam tworzy nowe kategorie raportów' },
+  { rule: 'R36-operational-reports', file: 'voice.contract.mjs', from: "  onResidentErasure: 'REVERT_TO_DRAFT_OR_NO_DATA',", to: "  onResidentErasure: 'KEEP_STALE_APPROVED',", desc: 'raport zachowuje stary stan APPROVED po wymazaniu podopiecznego RODO art. 17' },
+  { rule: 'R36-operational-reports', file: 'voice.contract.mjs', from: "    defaultDays: 365,\n    minDays: 30,", to: "    defaultDays: 0,\n    minDays: 30,", desc: 'retencja raportów operacyjnych wynosi zero dni' },
 ];
 
 const results = [];
