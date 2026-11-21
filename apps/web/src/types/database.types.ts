@@ -1699,6 +1699,7 @@ export interface Database {
         }
         Returns: Database["public"]["Tables"]["outbox_notifications"]["Row"][]
       }
+      finish_impersonation: { Args: never; Returns: string }
       fn_admissions_by_month_care_level: {
         Args: {
           p_org_id: string
