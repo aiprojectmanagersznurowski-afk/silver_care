@@ -27,7 +27,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const featureDenied = await assertOrgFeatureForApi(supabase, user, new URL(req.url).pathname)
+    const featureDenied = await assertOrgFeatureForApi(supabase, user, '/api/voice/transcribe')
     if (featureDenied) return featureDenied
 
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1'
