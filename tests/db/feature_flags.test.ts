@@ -117,6 +117,14 @@ describe('@REQ: SUP-FEATURE-FLAGS', () => {
     await tx`SELECT public.log_impersonation_stop(${target}, ${org})`
     await setFlag(tx, org, portal, false)
     expect(await getFlag(tx, org, portal)).toBe(false)
+    await asUser(tx, 'super_admin', null, rootUser, { session_id: '' })
+    await tx`SELECT public.log_impersonation_start(${target}, ${org})`
+    await asUser(tx, 'super_admin', null)
+    expect((await tx`SELECT public.finish_impersonation() AS org`)[0].org).toBeNull()
+    await denied(tx, (sp) => setFlag(sp, org, portal, true), '42501', 'FEATURE_FLAG_IMPERSONATION_BLOCKED')
+    await asUser(tx, 'super_admin', null, rootUser, { session_id: '' })
+    expect((await tx`SELECT public.finish_impersonation() AS org`)[0].org).toBe(org)
+    expect((await tx`SELECT public.finish_impersonation() AS org`)[0].org).toBeNull()
     await asUser(tx, 'super_admin', null, rootUser, { impersonator_id: rootUser })
     await denied(tx, (sp) => setFlag(sp, org, portal, true), '42501', 'FEATURE_FLAG_IMPERSONATION_BLOCKED')
   }))
