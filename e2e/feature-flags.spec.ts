@@ -138,6 +138,21 @@ test('@REQ: SUP-FEATURE-FLAGS - zmiana modułów, MFA, izolacja, kaskada i bloka
     await flagsPage.startPreview()
     await flagsPage.open(a.org)
     await expect(flagsPage.toggle('module_facility_management')).toBeDisabled()
+    await page.goto('/admin')
+    await expect(page).toHaveURL(/\/admin$/)
+    const pageErrors: Error[] = []
+    const onPageError = (err: Error) => pageErrors.push(err)
+    page.on('pageerror', onPageError)
+    try {
+      await flagsPage.stopPreview(a.org)
+      await expect(flagsPage.toggle('module_facility_management')).toBeEnabled()
+      await expect(flagsPage.toggle(parent)).not.toBeChecked()
+      await flagsPage.toggle(parent).click()
+      await expect(flagsPage.toggle(parent)).toBeChecked()
+    } finally {
+      page.off('pageerror', onPageError)
+    }
+    expect(pageErrors).toEqual([])
   } finally {
     await Promise.all(contexts.map((context) => context.close()))
     try {

@@ -51,4 +51,16 @@ export class OrganizationFeatureFlagsPage {
     await this.page.getByRole('menuitem', { name: 'Zaloguj jako' }).click()
     await this.page.waitForURL('**/admin')
   }
+
+  previewBanner() {
+    return this.page.getByRole('alert').filter({ hasText: 'Działasz w trybie impersonacji' })
+  }
+
+  async stopPreview(organizationId: string) {
+    const banner = this.previewBanner()
+    await expect(banner).toBeVisible()
+    await banner.getByRole('button', { name: 'Zakończ podgląd' }).click()
+    await expect(this.page).toHaveURL(new RegExp(`/admin/organizations/${organizationId}$`), { timeout: 20_000 })
+    await expect(banner).toHaveCount(0, { timeout: 20_000 })
+  }
 }
