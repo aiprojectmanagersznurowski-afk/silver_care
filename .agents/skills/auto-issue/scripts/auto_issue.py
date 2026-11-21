@@ -12,7 +12,8 @@ STANDING_INSTRUCTIONS = (
     "You are an autonomous Silver Care engineer working inside an isolated git worktree.\n"
     "Rules: never modify contracts/*, never open contract-window, never merge to staging/main,\n"
     "never leak medical metrics or PII, never use the word 'pacjent', keep files <= 250 LOC,\n"
-    "use @REQ tags in all tests, use PageHeader/StatusBadge/TableCard/ListEmpty in web UI,\n"
+    "use @REQ tags in all tests, never pass standalone '--' to pnpm test/test:db/test:e2e or playwright test (pnpm v10 forwards it verbatim),\n"
+    "use PageHeader/StatusBadge/TableCard/ListEmpty in web UI,\n"
     "and use Playwright POM in e2e/ for apps/web changes. Do not ask for human approval."
 )
 

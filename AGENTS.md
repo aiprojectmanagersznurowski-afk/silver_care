@@ -81,6 +81,8 @@ PLAN → CONTRACT (jeśli trzeba) → RED → GREEN → VERIFY → REVIEW → PR
 
 Dla zmian i scenariuszy w warstwie frontendu (`apps/web`): faza RED wymaga testów Playwright E2E w `e2e/` z Page Object Model, a weryfikacja obejmuje `pnpm test:e2e`.
 
+**Zakaz separatora `--` w komendach testowych (`pnpm` v10):** `pnpm` v10 przekazuje samodzielne `--` dosłownie do Playwrighta i Vitesta, przez co `pnpm test:e2e -- e2e/<plik>.spec.ts --project=chromium` ignoruje filtr pliku i projektu i uruchamia całą suitę (666 testów na `workers: 1`). Argumenty przekazuj zawsze **bez `--`**: `pnpm test:e2e e2e/<plik>.spec.ts --project=chromium`, `pnpm test:db tests/db/<plik>.test.ts`, `pnpm test tests/logic/<plik>.test.ts` (albo `pnpm exec playwright test ...`).
+
 ## Przed zamknięciem zadania (INFRA-SDLC-WORKFLOW)
 
 1. Bramka jakościowa:
