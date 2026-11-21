@@ -111,8 +111,9 @@ test('@REQ: SUP-FEATURE-FLAGS - zmiana modułów, MFA, izolacja, kaskada i bloka
     await expect(navigation.getByRole('link', { name: 'Rejestr placówki', exact: true })).toBeVisible()
     await managerPage.goto(`/admin/residents/${a.resident}`)
     await managerPage.getByRole('tab', { name: 'Bliscy i kontakty' }).click()
-    await expect(managerPage.getByRole('heading', { name: /Bliscy i kontakty/ })).toBeVisible()
-    await expect(managerPage.getByRole('button', { name: 'Zaproś bliskiego' })).toHaveCount(0)
+    const contacts = managerPage.getByRole('tabpanel', { name: 'Bliscy i kontakty' })
+    await expect(contacts).toContainText('Bliscy i kontakty (1)')
+    await expect(contacts.getByRole('button', { name: 'Zaproś bliskiego' })).toHaveCount(0)
 
     await flagsPage.toggle(portal).click()
     await expect(flagsPage.toggle(portal)).toBeChecked()
