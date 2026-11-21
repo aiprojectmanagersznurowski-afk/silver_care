@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { featureSnapshot } from '../helpers/feature-snapshot.test.fixture'
 
 vi.mock('@/lib/supabase/server', () => ({ createClient: vi.fn() }))
 
@@ -17,7 +18,6 @@ type Call = { table: string; method: string; args: unknown[] }
 function mockSupabase(overview: { id: string }[]) {
   const calls: Call[] = []
   const from = (table: string) => {
-    if (table === 'organization_feature_flags') return { select: () => ({ eq: async () => ({ data: [], error: null }) }) }
     const chain: Record<string, unknown> = {}
     for (const method of ['select', 'eq', 'gte', 'insert', 'single']) {
       chain[method] = (...args: unknown[]) => {
@@ -29,7 +29,8 @@ function mockSupabase(overview: { id: string }[]) {
       resolve(table === 'family_messages' ? { count: 0, data: null, error: null } : { data: { organization_id: 'o1' }, error: null })
     return chain
   }
-  const rpc = vi.fn(async () => ({ data: overview, error: null }))
+  const rpc = vi.fn(async (fn: string) => fn === 'get_org_feature_flags'
+    ? featureSnapshot() : { data: overview, error: null })
   vi.mocked(createClient).mockResolvedValue({
     auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'u1', app_metadata: { role: 'family', organization_id: 'o1' } } }, error: null }) },
     from,
