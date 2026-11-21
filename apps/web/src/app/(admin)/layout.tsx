@@ -8,6 +8,7 @@ import { AppHeader } from '@/components/patterns/AppHeader'
 import { ImpersonationBanner } from '@/components/ImpersonationBanner'
 import { SystemAlertBanner } from '@/components/SystemAlertBanner'
 import { getActiveImpersonation } from '@/lib/impersonation-guards'
+import { availableSearchCategories } from '@/lib/global-search-features'
 import { GlobalCommandPalette } from '@/components/GlobalCommandPalette'
 import { StaffNotificationBell } from '@/components/StaffNotificationBell'
 import { getAppRole } from '@/lib/auth/app-role'
@@ -40,7 +41,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         {impersonationSession && <ImpersonationBanner session={impersonationSession} />}
         <SystemAlertBanner role={role} />
         <AppHeader
-          search={<GlobalCommandPalette userRole={role} />}
+          search={<GlobalCommandPalette categories={availableSearchCategories(role, flags)} />}
           actions={role !== 'super_admin' && flags?.module_family_portal ? <StaffNotificationBell /> : undefined}
         />
         <div className="flex-1 p-4 md:p-6">

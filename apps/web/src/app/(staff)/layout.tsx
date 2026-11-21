@@ -3,6 +3,7 @@ import { ReactNode } from 'react'
 import { redirect } from 'next/navigation'
 import { StaffSidebar } from '@/components/StaffSidebar'
 import { cookies } from 'next/headers'
+import { availableSearchCategories } from '@/lib/global-search-features'
 import { GlobalCommandPalette } from '@/components/GlobalCommandPalette'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { AppHeader } from '@/components/patterns/AppHeader'
@@ -29,7 +30,7 @@ export default async function StaffLayout({ children }: { children: ReactNode })
       <StaffSidebar userEmail={user?.email} flags={flags} />
       <SidebarInset className="min-w-0 overflow-x-clip">
         <SystemAlertBanner role={role} />
-        <AppHeader search={<GlobalCommandPalette userRole={role} />} />
+        <AppHeader search={<GlobalCommandPalette categories={availableSearchCategories(role, flags)} />} />
         <div className="flex-1 p-4 md:p-6">
           {flags?.module_voice_and_reports && <StaffVoiceSyncListener />}
           <div className="mx-auto w-full max-w-screen-2xl">{children}</div>
