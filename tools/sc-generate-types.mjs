@@ -44,22 +44,30 @@ async function run() {
   }
 
   const fks = await sql`
-    SELECT tc.table_name, tc.constraint_name as foreign_key_name, kcu.column_name,
-      ccu.table_name AS foreign_table_name, ccu.column_name AS foreign_column_name,
+    SELECT cl.relname AS table_name,
+      con.conname AS foreign_key_name,
+      fcl.relname AS foreign_table_name,
+      array_agg(att.attname::text ORDER BY cols.ord) AS columns,
+      array_agg(fatt.attname::text ORDER BY cols.ord) AS referenced_columns,
       EXISTS (
-        SELECT 1 FROM information_schema.table_constraints tc2
-        JOIN information_schema.key_column_usage kcu2
-          ON tc2.constraint_name = kcu2.constraint_name AND tc2.table_schema = kcu2.table_schema
-        WHERE tc2.table_name = tc.table_name AND tc2.table_schema = 'public'
-          AND tc2.constraint_type IN ('UNIQUE', 'PRIMARY KEY') AND kcu2.column_name = kcu.column_name
-        GROUP BY tc2.constraint_name
-        HAVING (SELECT COUNT(*) FROM information_schema.key_column_usage kcu3 
-                WHERE kcu3.constraint_name = tc2.constraint_name AND kcu3.table_schema = 'public') = 1
+        SELECT 1 FROM pg_constraint uc
+        WHERE uc.conrelid = con.conrelid
+          AND uc.contype IN ('p', 'u')
+          AND array_length(uc.conkey, 1) = array_length(con.conkey, 1)
+          AND uc.conkey <@ con.conkey
+          AND con.conkey <@ uc.conkey
       ) AS is_one_to_one
-    FROM information_schema.table_constraints AS tc
-    JOIN information_schema.key_column_usage AS kcu ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema
-    JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name AND ccu.table_schema = tc.table_schema
-    WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_schema = 'public' ORDER BY tc.table_name, tc.constraint_name;`
+    FROM pg_constraint con
+    JOIN pg_class cl ON cl.oid = con.conrelid
+    JOIN pg_namespace ns ON ns.oid = cl.relnamespace
+    JOIN pg_class fcl ON fcl.oid = con.confrelid
+    JOIN pg_namespace fns ON fns.oid = fcl.relnamespace
+    CROSS JOIN LATERAL unnest(con.conkey, con.confkey) WITH ORDINALITY AS cols(attnum, fattnum, ord)
+    JOIN pg_attribute att ON att.attrelid = con.conrelid AND att.attnum = cols.attnum
+    JOIN pg_attribute fatt ON fatt.attrelid = con.confrelid AND fatt.attnum = cols.fattnum
+    WHERE con.contype = 'f' AND ns.nspname = 'public' AND fns.nspname = 'public'
+    GROUP BY cl.relname, con.oid, con.conname, fcl.relname, con.conrelid, con.conkey
+    ORDER BY cl.relname, con.conname;`
 
   const tableFks = new Map()
   for (const fk of fks) {
@@ -133,9 +141,11 @@ async function run() {
     }
     code += `        }\n        Relationships: [\n`
     for (const rel of rels) {
-      code += `          {\n            foreignKeyName: "${rel.foreign_key_name}"\n            columns: ["${rel.column_name}"]\n` +
+      const colsJson = rel.columns.map(c => `"${c}"`).join(', ')
+      const refColsJson = rel.referenced_columns.map(c => `"${c}"`).join(', ')
+      code += `          {\n            foreignKeyName: "${rel.foreign_key_name}"\n            columns: [${colsJson}]\n` +
         `            isOneToOne: ${rel.is_one_to_one ? 'true' : 'false'}\n            referencedRelation: "${rel.foreign_table_name}"\n` +
-        `            referencedColumns: ["${rel.foreign_column_name}"]\n          },\n`
+        `            referencedColumns: [${refColsJson}]\n          },\n`
     }
     code += `        ]\n      }\n`
   }
