@@ -1864,6 +1864,13 @@ export interface Database {
         }
         Returns: boolean
       }
+      get_org_feature_flags: {
+        Args: { p_org_id: string }
+        Returns: {
+          enabled: boolean
+          feature_key: string
+        }[]
+      }
       has_org_feature: {
         Args: {
           p_org_id: string

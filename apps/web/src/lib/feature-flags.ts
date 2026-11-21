@@ -17,15 +17,19 @@ type FeatureUser = Pick<User, 'id' | 'app_metadata'>
 const defaultFlags = resolveEffectiveFeatureFlags()
 
 async function loadFlags(supabase: DbClient, organizationId: string): Promise<EffectiveFeatureFlags> {
-  const { data, error } = await supabase.from('organization_feature_flags')
-    .select('feature_key, enabled').eq('organization_id', organizationId)
-
-  if (error || !data) throw new Error('FEATURE_FLAGS_UNAVAILABLE')
-  const overrides: Partial<EffectiveFeatureFlags> = {}
-  for (const row of data) {
-    if (isFeatureKey(row.feature_key)) overrides[row.feature_key] = row.enabled
+  const { data, error } = await supabase.rpc('get_org_feature_flags', { p_org_id: organizationId })
+  if (error || !Array.isArray(data) || data.length !== FEATURE_FLAGS.length) {
+    throw new Error('FEATURE_FLAGS_UNAVAILABLE')
   }
-  return resolveEffectiveFeatureFlags(overrides)
+
+  const flags: Partial<EffectiveFeatureFlags> = {}
+  for (const { feature_key: key, enabled } of data) {
+    if (!isFeatureKey(key) || typeof enabled !== 'boolean' || Object.hasOwn(flags, key)) {
+      throw new Error('FEATURE_FLAGS_UNAVAILABLE')
+    }
+    flags[key] = enabled
+  }
+  return flags as EffectiveFeatureFlags
 }
 
 /** Reuse the tenant snapshot within a server render. */
@@ -76,6 +80,11 @@ function featureDisabled(feature: FeatureKey, pathname: string, context: { userI
   }, { status: 403 })
 }
 
+function unmappedFeatureRoute() {
+  console.error('[FEATURE_ROUTE_UNMAPPED]')
+  return NextResponse.json({ error: featureDisabledMessage, code: FEATURE_FLAG_POLICY.disabledErrorCode }, { status: 403 })
+}
+
 export async function assertOrgFeatureForApi(
   supabase: DbClient, user: FeatureUser, featureOrPath: FeatureKey | readonly FeatureKey[] | string, pathname?: string,
 ) {
@@ -83,7 +92,7 @@ export async function assertOrgFeatureForApi(
   const required = typeof featureOrPath === 'string'
     ? isFeatureKey(featureOrPath) ? [featureOrPath] : getRequiredFeaturesForApiPath(featureOrPath)
     : featureOrPath
-  if (!required.length) return null
+  if (!required.length) return unmappedFeatureRoute()
 
   const organizationId = await getFeatureOrganizationId(user)
   const flags = organizationId ? await loadFlags(supabase, organizationId).catch(() => null) : null
@@ -104,6 +113,7 @@ export async function assertTargetOrgFeatureForApi(
   supabase: DbClient, organizationId: string, pathname: string, userId?: string,
 ) {
   const required = getRequiredFeaturesForApiPath(pathname)
+  if (!required.length) return unmappedFeatureRoute()
   for (const feature of required) {
     if (!(await isOrgFeatureEnabled(supabase, organizationId, feature))) {
       return featureDisabled(feature, pathname, { organizationId, userId })
