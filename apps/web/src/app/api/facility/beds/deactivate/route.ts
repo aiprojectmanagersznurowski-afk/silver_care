@@ -12,7 +12,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Brak autoryzacji' }, { status: 401 })
     }
 
-    const featureDenied = await assertOrgFeatureForApi(supabase, user, new URL(request.url).pathname)
+    const featureDenied = await assertOrgFeatureForApi(supabase, user, '/api/facility/beds/deactivate')
     if (featureDenied) return featureDenied
 
     const role = user.app_metadata?.role as string | undefined
