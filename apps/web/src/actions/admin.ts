@@ -1,5 +1,6 @@
 'use server'
 
+import { featureDisabledMessage, isOrgFeatureEnabled } from '@/lib/feature-flags'
 import { createClient } from '@/lib/supabase/server'
 import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -22,8 +23,12 @@ export async function deleteResidentAction(formData: FormData) {
   }
   if (user.app_metadata?.role !== 'org_admin') return
 
-  // Rejestracja w audit_logs przed usunięciem rekordu (R14-audit-append-only, bez PII)
   const orgId = user.app_metadata?.organization_id
+  if (!await isOrgFeatureEnabled(supabase, orgId, 'module_residents_management')) {
+    return { error: featureDisabledMessage }
+  }
+
+  // Rejestracja w audit_logs przed usunięciem rekordu (R14-audit-append-only, bez PII)
   if (orgId) {
     await supabase.from('audit_logs').insert({
       organization_id: orgId,
@@ -57,6 +62,11 @@ export async function deleteStaffAction(formData: FormData) {
   }
   if (user.app_metadata?.role !== 'org_admin') return
 
+  const orgId = user.app_metadata?.organization_id
+  if (!await isOrgFeatureEnabled(supabase, orgId, 'module_facility_management')) {
+    return { error: featureDisabledMessage }
+  }
+
   // Usunięcie personelu (nurse) ze zbioru auth.users wymaga uprawnień service_role
   // Musimy zabezpieczyć, by admin nie usuwał użytkowników z INNYCH organizacji.
   const adminClient = createAdminClient()
@@ -67,7 +77,7 @@ export async function deleteStaffAction(formData: FormData) {
   const targetAppMeta = targetUser.user.app_metadata || {}
   
   // Administrator może usunąć użytkownika tylko ze swojej organizacji
-  if (targetAppMeta.organization_id !== user.app_metadata?.organization_id) return
+  if (targetAppMeta.organization_id !== orgId) return
   
   // Nie pozwalamy adminowi usunąć samego siebie, ani innych org_admin / super_admin
   if (targetAppMeta.role !== 'nurse') return 

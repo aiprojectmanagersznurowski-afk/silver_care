@@ -26,6 +26,14 @@ export function FeatureFlagsMfa() {
         setFactor({ id: existing.id })
         return
       }
+      for (const pendingFactor of factors.all) {
+        if (pendingFactor.factor_type !== 'totp' || pendingFactor.status !== 'unverified') continue
+        const { error: removalError } = await mfa.unenroll({ factorId: pendingFactor.id })
+        if (removalError && removalError.code !== 'mfa_factor_not_found') {
+          setError('Nie udało się wznowić konfiguracji uwierzytelniania. Spróbuj ponownie.')
+          return
+        }
+      }
       const { data, error: enrollmentError } = await mfa.enroll({ factorType: 'totp', issuer: 'Silver Care' })
       if (enrollmentError || !data) {
         setError('Nie udało się skonfigurować uwierzytelniania.')

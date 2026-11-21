@@ -218,7 +218,9 @@ export async function GET(request: Request) {
           }
         } else if (notification.entity_type === 'capacity_exceeded') {
           await deliverCapacityExceeded(adminClient, notification, mailtrapToken, request)
-        } else if (notification.entity_type !== 'report') {
+        } else if (notification.entity_type === 'report') {
+          console.info(`[OUTBOX_SKIPPED_FEATURE_DISABLED] notification_id=${notification.id} org_id=${notification.organization_id}`)
+        } else {
           // Nieznany typ nie może być oznaczony jako wysłany bez wysyłki
           throw new Error(`Unsupported outbox entity_type: ${notification.entity_type}`)
         }
