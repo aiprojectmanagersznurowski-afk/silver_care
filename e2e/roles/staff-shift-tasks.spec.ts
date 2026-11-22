@@ -149,7 +149,12 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
   test('@REQ: NUR-SHIFT-PLAN-PRINT - wydruk planu wymaga akceptacji, pokazuje tylko zadania do zrobienia i zostawia ślad w audycie', async ({ loginPage, page }) => {
     await seedTask('E2E Zadanie na wydruk', 'TODO');
     await seedTask('E2E Propozycja poza wydrukiem', 'PROPOSED');
-    await sql`DELETE FROM public.shift_plan_approvals WHERE organization_id = ${orgId} AND shift_date = ${PRINT_DATE}`;
+    const [shift] = await sql`SELECT id FROM public.shift_definitions WHERE organization_id = ${orgId} AND code = ${CODE}`;
+    await sql`DELETE FROM public.shift_plan_approvals WHERE shift_definition_id = ${shift.id} AND shift_date = ${PRINT_DATE}`;
+    const printAudits = () => sql`SELECT (payload->>'version')::int AS version FROM public.audit_logs
+      WHERE organization_id = ${orgId} AND action = 'SHIFT_PLAN_PRINTED'
+        AND payload->>'shift_definition_id' = ${shift.id} AND payload->>'shift_date' = ${PRINT_DATE}
+      ORDER BY version`;
     await loginPage.loginAs('org_admin');
     await page.addInitScript(() => { (window as unknown as { __printed: number }).__printed = 0; window.print = () => { (window as unknown as { __printed: number }).__printed++; }; });
     const tasks = new ShiftTasksPage(page);
@@ -165,9 +170,29 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
     await expect(page).toHaveURL(/shift-plan\/print/);
     await expect(page.getByText('E2E Zadanie na wydruk')).toBeVisible();
     await expect(page.getByText('E2E Propozycja poza wydrukiem')).toHaveCount(0);
+    const printCount = () => page.evaluate(() => (window as unknown as { __printed: number }).__printed);
     await tasks.printButton.click();
-    await expect.poll(() => page.evaluate(() => (window as unknown as { __printed: number }).__printed)).toBe(1);
-    const [row] = await sql`SELECT count(*)::int AS n FROM public.audit_logs WHERE organization_id = ${orgId} AND action = 'SHIFT_PLAN_PRINTED'`;
-    expect(row.n).toBeGreaterThan(0);
+    await expect.poll(printCount).toBe(1);
+    expect(await printAudits()).toEqual([{ version: 1 }]);
+
+    const otherPage = await page.context().newPage();
+    const otherTasks = new ShiftTasksPage(otherPage);
+    await otherTasks.goto(CODE, PRINT_DATE);
+    await otherTasks.approvePlanButton.click();
+    await expect(otherTasks.planStatus).toContainText('Plan zatwierdzony, wersja 2');
+    await otherPage.close();
+
+    await tasks.printButton.click();
+    const outdatedPreview = 'Zatwierdzono nowszą wersję planu. Odśwież podgląd przed wydrukiem.';
+    await expect(page.getByRole('alert').filter({ hasText: outdatedPreview })).toBeVisible();
+    expect(await printCount()).toBe(1);
+    expect(await printAudits()).toEqual([{ version: 1 }]);
+    await expect(page.getByText('Wersja 1', { exact: false })).toBeVisible();
+
+    await page.reload();
+    await expect(page.getByText('Wersja 2', { exact: false })).toBeVisible();
+    await tasks.printButton.click();
+    await expect.poll(printCount).toBe(1);
+    expect(await printAudits()).toEqual([{ version: 1 }, { version: 2 }]);
   });
 });
