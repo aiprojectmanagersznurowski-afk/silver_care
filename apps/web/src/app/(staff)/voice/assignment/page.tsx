@@ -25,6 +25,12 @@ const reasonLabels: Record<(typeof RESIDENT_ASSIGNMENT.reviewReasons)[number], s
   NO_AUTHOR: 'Autor nieustalony',
   TIME_UNCERTAIN: 'Czas nagrania niepewny',
 }
+const attributionLabels: Record<(typeof RESIDENT_ASSIGNMENT.authorAttribution)[number], string> = {
+  AUTHENTICATED_SESSION: 'Sesja webowa',
+  DECLARED_SESSION: 'Deklaracja w nagraniu',
+  MANUAL_SEGMENT_CORRECTION: 'Ręczne ustalenie autora',
+  UNKNOWN: 'Autor nieustalony',
+}
 const time = new Intl.DateTimeFormat('pl-PL', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Europe/Warsaw' })
 
 export default async function VoiceAssignmentPage({ searchParams }: { searchParams: Promise<{ segment?: string }> }) {
@@ -79,7 +85,7 @@ async function AssignmentDetails({ orgId, segmentId }: { orgId: string; segmentI
   // Identyfikator pochodzi z otwartej pozycji odczytanej z RLS, a zapytania usługowe są ponownie ograniczone do placówki.
   const admin = createAdminClient()
   const { data: segment } = await admin.from(RESIDENT_ASSIGNMENT.segmentResource)
-    .select('transcript_path, author_id, start_ms, end_ms, voice_captures(recorded_at, clock_state)')
+    .select('transcript_path, author_id, author_attribution, voice_captures(recorded_at, received_at, clock_state)')
     .eq('organization_id', orgId).eq('id', segmentId).eq('assignment_status', 'PENDING').maybeSingle()
   if (!segment?.transcript_path) return <ListError title="Źródło fragmentu jest niedostępne" />
   const sessionDb = await createClient()
@@ -93,9 +99,15 @@ async function AssignmentDetails({ orgId, segmentId }: { orgId: string; segmentI
   const author = staff.find(({ id }) => id === segment.author_id)?.label
   const capture = segment.voice_captures
   const capturedAt = capture?.clock_state === 'UNKNOWN' ? 'do ustalenia' : capture?.recorded_at && time.format(new Date(capture.recorded_at))
+  const receivedAt = capture?.received_at && time.format(new Date(capture.received_at))
+  const attribution = attributionLabels[segment.author_attribution as keyof typeof attributionLabels]
   return (
     <section className="space-y-4 rounded-lg border border-border p-4" aria-label="Decyzja o przypisaniu">
-      <p className="text-sm text-muted-foreground">Czas nagrania {capturedAt ?? 'do ustalenia'} · Autor {author ?? 'do ustalenia'}</p>
+      <dl className="grid gap-3 text-sm sm:grid-cols-3">
+        <div><dt className="text-muted-foreground">Czas nagrania</dt><dd>{capturedAt ?? 'Do ustalenia'}</dd></div>
+        <div><dt className="text-muted-foreground">Przyjęto w systemie</dt><dd>{receivedAt ?? 'Brak danych'}</dd></div>
+        <div><dt className="text-muted-foreground">Autor</dt><dd>{author ?? 'Do ustalenia'} · {attribution}</dd></div>
+      </dl>
       <p className="whitespace-pre-wrap rounded-md bg-muted p-3 text-sm">{await transcript.data.text()}</p>
       <ResolveVoiceForm key={segmentId} segmentId={segmentId} author={segment.author_id}
         residents={(residents.data ?? []).map(({ id, first_name, last_name }) => ({ id, label: `${last_name} ${first_name}` }))}
