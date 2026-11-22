@@ -159,7 +159,7 @@ const rejoin = PIPELINE_STAGES.find((s) => s.id === 'REJOIN');
 if (rejoin && stageOrder.indexOf('REJOIN') < iGenerate) {
   err('R08-zero-guessing', 'Złączenie z tożsamością następuje przed generowaniem — transkrypt nie byłby anonimowy.');
 }
-// ADR-022: źródło bez resident_id przy nagraniu wymaga potwierdzenia człowieka przed CLASSIFY.
+// ADR-022: zakres fragmentu musi być rozstrzygnięty przed CLASSIFY.
 const RESIDENT_ID_MODES = ['AT_CAPTURE', 'AT_ASSIGN'];
 for (const src of CAPTURE_SOURCES) {
   if (!RESIDENT_ID_MODES.includes(src.residentId)) {
@@ -174,11 +174,19 @@ if (deferredSources.length) {
   if (!assign) err('R08-zero-guessing', `Źródła ${deferredSources.map((s) => s.id).join(', ')} nie mają resident_id, a potok nie ma etapu ASSIGN.`);
   else {
     if (iClassify !== -1 && iAssign > iClassify) err('R08-zero-guessing', 'Etap ASSIGN występuje po CLASSIFY — nagranie bez podopiecznego trafiłoby do klasyfikacji.');
-    if (assign.actor !== 'nurse' && assign.actor !== 'org_admin') err('R08-zero-guessing', `Etap ASSIGN wykonuje "${assign.actor}". Podopiecznego potwierdza człowiek.`);
+    if (assign.actor !== 'nurse' && assign.actor !== 'org_admin') err('R08-zero-guessing', `Etap ASSIGN wskazuje "${assign.actor}". Wyjątki rozstrzyga personel.`);
   }
   if (!ra) err('R08-zero-guessing', 'Brak RESIDENT_ASSIGNMENT dla nagrań bez resident_id.');
   else {
     if (ra.llmIdentifies !== false || ra.suggestedBy !== 'server') err('R08-zero-guessing', 'Kandydatów na podopiecznego wyznacza serwer, nigdy model.');
+    const auto = ra.autoAssign;
+    if (assign?.automaticActor !== 'system' || auto?.actor !== 'system'
+      || auto.condition !== 'SINGLE_CONSISTENT_REGISTRY_MATCH' || auto.output !== 'DRAFT_ONLY') {
+      err('R08-zero-guessing', 'Automatyczne przypisanie wykonuje serwer wyłącznie przy jednym spójnym dopasowaniu i tylko na potrzeby szkicu.');
+    }
+    if (ra.oneRecordingOneResident !== false || ra.oneSegmentOneResident !== true) {
+      err('R08-zero-guessing', 'Nagranie może zawierać wiele fragmentów. Każdy fragment dotyczy najwyżej jednego podopiecznego.');
+    }
     if (ra.onUnconfirmed !== 'HOLD_BEFORE_CLASSIFY') err('R08-zero-guessing', `Nagranie bez potwierdzenia: "${ra.onUnconfirmed}". Ma czekać przed CLASSIFY.`);
     for (const s of deferredSources) if (!(ra.appliesTo || []).includes(s.id)) err('R08-zero-guessing', `RESIDENT_ASSIGNMENT nie obejmuje źródła "${s.id}".`);
     for (const c of ra.confirmedBy || []) {
