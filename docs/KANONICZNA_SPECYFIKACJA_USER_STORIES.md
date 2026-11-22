@@ -1,6 +1,6 @@
 # 📖 Kanoniczna specyfikacja user stories — Silver Care
 
-> **Wersja:** 2.26 (`SC-SUP-06` — wielomodułowość platformy sterowana flagami per placówka z wyłącznym zapisem RPC, blokadą faktycznej impersonacji i egzekwowaniem RLS/RPC; urządzenia wspólne z autorem z przedstawienia, ekran stanu urządzenia, notatki odporne na restart, prywatne zdjęcie podopiecznego, edycja karty w oknie „Edytuj” — 📝 PROPOZYCJA) · **Ostatnia aktualizacja:** 2026-11-20
+> **Wersja:** 2.27 (nagranie ogólne, przypisanie fragmentów i zamknięcie zmiany — 📝 PROPOZYCJA) · **Ostatnia aktualizacja:** 2026-11-22
 > **Właściciele:** Darek Rink, Michał Sznurowski
 
 ## Jak czytać i utrzymywać ten dokument
@@ -232,7 +232,7 @@
 
 **Kryteria akceptacji:**
 - **AC1 (Izolacja brudnopisów):** Tabela `daily_logs` jest niedostępna dla rodziny. Zredagowane podsumowanie trafia do draftu raportu dla rodziny (`daily_reports`).
-- **AC2 (Zero-guessing entity resolution — kluczowe!):** Model AI ma absolutny zakaz zgadywania tożsamości seniora na podstawie samego nagrania. Aplikacja frontendowa (Next.js) musi przy inicjacji nagrania wysłać twardy UUID (`resident_id`) w payloadzie POST. Transkrypt wysyłany do LLM jest anonimowy, a ponowne złączenie notatki z tożsamością następuje dopiero w pamięci RAM funkcji brzegowej przed zapisem do bazy.
+- **AC2 (Nagranie o podopiecznym):** Aplikacja przekazuje UUID podopiecznego wybranego przed nagraniem. Ten tryb wymaga `resident_id` i zachowuje przypisanie z aplikacji. Sprzeczna wzmianka o innej osobie wymaga wyjaśnienia. Tryb nagrania ogólnego opisuje `SC-NUR-19`. Model otrzymuje anonimową treść, a system łączy wynik z właściwym podopiecznym przed zapisem.
 - **AC3 (Retencja):** Surowe zapisy w tabelach `voice_draft_notes` mają ustawiony TTL (czas życia) na 30 dni, po czym są automatycznie usuwane przez bazodanowego Crona.
 - **AC4 (Retencja konfigurowalna i pliki audio — 📝 2026-11-17):** Nagrania z aplikacji i z urządzeń są zapisywane w prywatnym buckecie `voice-recordings` (UE). Retencję ustawia kierownik placówki albo super admin dla danej placówki, w zakresie 7–90 dni, domyślnie 30 dni. Cron usuwa po terminie i plik, i wiersz `voice_draft_notes`; zatwierdzone raporty zostają. Zmiana retencji trafia do `audit_logs`. Decyzja Michała z 2026-11-17; kontrakt: `VOICE_RETENTION`, zasób `voice_retention_settings`.
 
@@ -784,13 +784,13 @@
   *Then:* Wpis trafia do „Spraw placówki”; zadanie ogólne bez podopiecznego tylko po akceptacji.
 - **Przypadek 3 (Imię innej osoby w odcinku):** W odcinku pani Marii pada imię pana Jana.
   *Then:* Treść zostaje przy pani Marii; model nie przenosi jej do pana Jana i nie tworzy dla niego wpisu.
-- **Przypadek 3a (Sugestia z pokoju):** Opiekun nagrywa bez wyboru: „W dwunastce, łóżko B, odmówiła kolacji.”
-  *Then:* Serwer podsuwa podopieczną z pokoju 12, łóżko B; opiekun potwierdza albo wybiera kogoś innego. Bez potwierdzenia odcinek czeka i nie trafia do modelu.
+- **Przypadek 3a (Nagranie ogólne):** Opiekun mówi „W pokoju 12, łóżko B, odmówiła kolacji”.
+  *Then:* Serwer przypisuje fragment zgodnie z `SC-NUR-18`. Brak jednoznacznego dopasowania pozostawia fragment do wyjaśnienia.
 
 **Kryteria akceptacji:**
 - **AC1 (Konfiguracja zmian):** Kierownik definiuje 2 albo 3 zmiany na dobę (godziny od–do, strefa `Europe/Warsaw`); zmiana nocna przechodzi przez północ.
 - **AC1a (Grafik i kierownik zmiany — 📝 2026-10-30):** Kierownik placówki układa grafik: kto z personelu opiekuńczego pracuje na danej zmianie i kto jest **kierownikiem zmiany** (jeden na zmianę). Kierownik zmiany to osoba z rolą `nurse` z dodatkowymi uprawnieniami **wyłącznie na swojej zmianie** (akceptacja planu, wydruk, potwierdzanie wykonania — `SC-NUR-13`, `SC-NUR-15`, `SC-NUR-16`); poza nią działa jak zwykły personel. Decyzja Michała 2026-10-30 (wariant B).
-- **AC2 (Odcinki z identyfikatorem i sugestią):** Każdy odcinek ma `resident_id` potwierdzony przez człowieka albo jest odcinkiem „Placówka”. Gdy podopiecznego nie wybrano przed nagraniem, serwer (nie model) podsuwa kandydatów na podstawie nazwiska, numeru pokoju lub łóżka z transkryptu, tylko spośród podopiecznych tej placówki. Brak potwierdzenia kończy się odmową; jeden kandydat nie jest przyjmowany automatycznie.
+- **AC2 (Źródła przekazania):** Szkic przekazania korzysta z fragmentów przypisanych do podopiecznego albo placówki według `SC-NUR-18`. Fragment wymagający wyjaśnienia pozostaje w kolejce. Zatwierdzenie i odbiór przekazania odbywają się osobno (`SC-NUR-20`).
 - **AC2a (Maskowanie przed modelem):** Nazwiska, numery pokoi i łóżek są maskowane w transkrypcie przed wysłaniem do modelu.
 - **AC3 (Języki):** Nagranie po polsku, angielsku lub ukraińsku; raport przekazania zawsze po polsku, z cytatem w języku oryginału przy każdej propozycji zadania.
 - **AC4 (Stały szablon):** Pola: sprawy per podopieczny, sprawy placówki, osoby wymagające uwagi, ważne zdarzenia, zadania. Treść tylko z nagrania; puste pole to „Brak informacji w nagraniu”, nigdy treść dopisana przez model.
@@ -817,6 +817,7 @@
 - **AC6 (Sortowanie i grupowanie):** Lista zadań grupowana **per pokój** albo **per podopieczny** (wybór użytkownika, zapamiętany), w grupie sortowana po godzinie; zadania placówki w osobnej grupie „Placówka”. Ten sam układ na ekranie i na wydruku.
 - **AC7 (Uprawnienia — wariant B):** Kierownik zmiany (`nurse` wyznaczony w grafiku) akceptuje, drukuje i rozlicza **tylko zadania swojej zmiany**; personel opiekuńczy widzi zadania swojej zmiany i może dodawać zadania ręczne do akceptacji; kierownik placówki (`org_admin`) ma pełny dostęp we własnej placówce. Wymaga zmiany kontraktu (uprawnienie zależne od grafiku zmiany).
 - **AC8 (Widoki):** `/staff/agenda` — zadania bieżącej zmiany obok planu dnia z wyraźnym rozróżnieniem; sekcja na karcie podopiecznego (`SC-ADM-21`).
+- **AC8a (Plan w dyżurce — 📝 PROPOZYCJA):** Personel widzi zatwierdzoną listę swojej zmiany z podziałem na pracowników i zadania wspólne. Dostępne są też grupowanie według pokoju lub podopiecznego i widok na karcie podopiecznego. Kierownik może poprawić propozycję i przypisać pracownika z grafiku danej zmiany. Wszystkie widoki korzystają z tych samych zadań.
 - **AC9 (Granica bliskich i MDR):** Zadania tylko dla personelu (RLS i `MATRIX`), nigdy dla `family` ani `legal_guardian`, osobna tabela (nie `agenda_items`). Zadania są poleceniami personelu i planu opieki ustalonego przez placówkę, nie zaleceniami systemu — model nie proponuje dawek, leków ani działań, których nie wypowiedziała osoba przekazująca.
 
 #### [SC-NUR-15] Wydruk planu pracy zmiany
@@ -837,7 +838,7 @@
 **User story:** Jako kierownik zmiany chcę, żeby system po zmianie zestawił notatki głosowe personelu („co zostało wykonane”) z otwartymi zadaniami i podsunął, które wyglądają na wykonane, aby rozliczenie zmiany zajęło kilka minut, a opiekunki tylko mówiły, zamiast klikać.
 
 **Kryteria akceptacji:**
-- **AC1 (Źródło):** Notatki głosowe z danej zmiany (odcinki z `resident_id` potwierdzonym przez człowieka albo „Placówka” — jak `SC-NUR-12/AC2`) są dopasowywane wyłącznie do otwartych zadań tej zmiany i tego samego podopiecznego (albo placówki).
+- **AC1 (Źródło):** Fragmenty notatek z danej zmiany przypisane według `SC-NUR-18` są dopasowywane wyłącznie do otwartych zadań tej zmiany i tego samego podopiecznego albo placówki.
 - **AC2 (Podpowiedź, nie decyzja):** Przy zadaniu pojawia się „wykonane?” z cytatem z notatki; status zmienia się dopiero po potwierdzeniu kierownika zmiany. Model nie oznacza niczego sam i nie tworzy zadań.
 - **AC3 (Brak dopasowania):** Zadanie bez wzmianki w notatkach nie dostaje podpowiedzi; kierownik zmiany rozlicza je ręcznie (`SC-NUR-13/AC5`).
 - **AC4 (Wzmianka o odmowie):** Gdy notatka mówi o niewykonaniu (np. „odmówiła kolacji”), podpowiedź brzmi „niewykonane — przenieść albo anulować?”, z cytatem.
@@ -865,28 +866,49 @@
 - **AC2 (Ekran stanu):** Ekran pokazuje wyłącznie stan: nagrywanie z czasem i poziomem dźwięku, „Zapisano”, liczbę notatek czekających na wysłanie, baterię, wysyłanie w stacji, ostrzeżenia (słaba bateria, pełna pamięć) i usterki z kodem. Ekran gaśnie po 15 s. Urządzenie nie wyświetla ani nie odtwarza treści nagrań ani nazwisk. Czerwień tylko dla usterki urządzenia.
 - **AC3 (Zrzut w stacji):** Po odłożeniu do stacji (wykryte ładowanie) urządzenie wysyła nagrania. Endpoint uwierzytelnia token urządzenia i wydaje podpisany adres zapisu w Storage (UE). Urządzenie kasuje nagranie dopiero po potwierdzeniu przyjęcia.
 - **AC4 (Idempotencja):** Ponowna wysyłka tego samego nagrania nie tworzy drugiego wpisu.
-- **AC5 (Autor z przedstawienia):** Opiekunka bierze dowolne urządzenie, np. gdy na swoim nie ma już miejsca. Sesja zaczyna się po opróżnieniu urządzenia w stacji, po geście „Nowa osoba” (przytrzymanie bocznego przycisku przez 3 s) albo automatycznie po 3 godzinach bezczynności (`sessionInactivityTimeoutMinutes: 180`), chroniąc prywatność brudnopisów między osobami. Ekran prosi wtedy: „Przedstaw się w pierwszej notatce”. Pierwsza notatka sesji zaczyna się od „Jestem …” (np. „Jestem Gabriela Kowalska”). Serwer, bez modelu AI, dopasowuje imię i nazwisko do personelu placówki i przypisuje tej osobie wszystkie notatki sesji; jeśli przy ponowieniach nagrania z `session_seq > 1` dotrą przed `session_seq 1`, serwer uzupełnia autora całej sesji retroaktywnie po dotarciu i transkrypcji `session_seq 1`. Brak przedstawienia, brak dopasowania albo kilka osób: notatki trafiają do kolejki z oznaczeniem „brak autora”, a kierownik zmiany wybiera autora sesji.
-- **AC6 (Bez podopiecznego w żądaniu):** Żądanie nie zawiera `resident_id`. Nagranie trafia do kolejki „Do przypisania” (`SC-NUR-18`) i bez potwierdzenia człowieka nie przechodzi do klasyfikacji ani do modelu (ADR-022).
+- **AC5 (Autor z przedstawienia):** Sesja zaczyna się po opróżnieniu urządzenia w stacji, po geście „Nowa osoba” albo po 3 godzinach bezczynności. Serwer dopasowuje przedstawienie z pierwszej notatki do personelu placówki. Wynik jest deklaracją autora sesji. Późniejsze dotarcie pierwszej notatki uzupełnia deklarację i zachowuje ręczne korekty. Brak lub niejednoznaczność przedstawienia trafia do kolejki z oznaczeniem „Autor nieustalony”. Kierownik może skorygować autora fragmentu, gdy urządzenia użyła inna osoba (`SC-NUR-18`).
+- **AC6 (Bez podopiecznego w żądaniu):** Żądanie z urządzenia przekazuje nagranie bez `resident_id`. Serwer rozstrzyga zakres fragmentów według `SC-NUR-18`.
 - **AC7 (Czas niepewny):** Gdy `recorded_at` jest w przyszłości albo wcześniejszy niż ostatnia synchronizacja zegara minus doba, nagranie dostaje oznaczenie „czas niepewny”, a kierownik zmiany przypisuje je do zmiany ręcznie.
 - **AC8 (Unieważnione urządzenie):** Urządzenie z unieważnionym tokenem dostaje odmowę, a nagrania zostają zaszyfrowane na urządzeniu.
 - **AC9 (Restart nie kasuje notatek):** Restart, wyłączenie ani rozładowanie nie usuwa zapisanych notatek. Nagranie trafia do zaszyfrowanej pamięci w trakcie mówienia, a po starcie urządzenie odtwarza kolejkę i licznik z tej pamięci. Nagranie przerwane restartem zostaje do miejsca przerwania.
 - **AC10 (Przypadkowe kliknięcie):** Pojedyncze kliknięcie przycisku zasilania nie restartuje urządzenia, tylko wybudza ekran (M5PM1 `SINGLE_RST_DIS`, ustawiane przy każdym starcie).
 
-#### [SC-NUR-18] Kolejka „Do przypisania”: kierownik zmiany potwierdza podopiecznego
-🔗 **Kontrakt:** brak REQ (proponowany nowy: `VOICE-RESIDENT-ASSIGN`, rozszerza `VOICE-ZERO-GUESSING`) · **ADR:** ADR-006, ADR-021 pkt 4, ADR-022 · **Status:** 📝 PROPOZYCJA
+#### [SC-NUR-18] Przypisanie fragmentów i kolejka wyjątków
+🔗 **Kontrakt:** `VOICE-RESIDENT-ASSIGN`, `VOICE-ZERO-GUESSING` · **ADR:** ADR-006, ADR-022 · **Status:** 📝 PROPOZYCJA
 
-> ℹ️ Tryb dyktafonu w aplikacji (architektura potoku, §4) zasila tę samą kolejkę. Dostanie osobne story przy Work Orderze tego kroku.
-
-**User story:** Jako kierownik zmiany chcę zobaczyć nagrania bez przypisanego podopiecznego z podpowiedzią systemu i potwierdzić, kogo dotyczą, aby notatki z urządzeń trafiły do właściwej karty bez zgadywania.
+**User story:** Jako kierownik zmiany chcę rozstrzygać fragmenty, których autora lub zakresu serwer nie mógł ustalić, aby notatki z webu i dyktafonów trafiały do właściwych raportów bez dodatkowej pracy przy jednoznacznych dopasowaniach.
 
 **Kryteria akceptacji:**
-- **AC1 (Zawartość):** Kolejka pokazuje nagrania tej placówki bez potwierdzonego podopiecznego: autora, czas nagrania, zmianę, transkrypt i odtwarzanie. Dostęp ma tylko personel, bliscy nie.
-- **AC2 (Podpowiedź serwera):** Po transkrypcji serwer, nie model, porównuje nazwisko, numer pokoju i łóżka z rejestrem tej placówki i pokazuje kandydatów. Podpowiedź nie jest przypisaniem.
-- **AC3 (Decyzja człowieka):** Kierownik potwierdza kandydata, wybiera innego podopiecznego, „Sprawa placówki” albo „Nie do przypisania”. Dopiero potwierdzenie uruchamia maskowanie, klasyfikację i dalszy potok.
-- **AC4 (Nie do przypisania):** Nagranie zostaje w brudnopisie personelu, nie trafia do modelu i podlega retencji `VOICE-RETENTION`.
-- **AC5 (Jedno nagranie, jedna osoba):** Gdy serwer znajdzie kilka osób, kierownik wybiera jedną albo oznacza nagranie do ponownego omówienia. **WYMAGA DECYZJI:** czy kolejka ma pozwalać dzielić nagranie na kilka osób (architektura, pytanie 8).
-- **AC6 (Kto potwierdza):** Kierownik tej zmiany (`nurse:shift_lead`) albo kierownik placówki. Każde przypisanie trafia do `audit_logs`: kto, kiedy, kandydat podsunięty i wybrany.
-- **AC7 (Ten sam potok):** Przypisane nagranie idzie tą samą drogą co nagranie z aplikacji: maskowanie, strumienie MEDICAL / DISCOMFORT / BEHAVIORAL, REDACT przed modelem. Model nigdy nie ustala tożsamości.
+- **AC1 (Fragment źródłowy):** Każdy fragment ma pozycję w pliku, czas nagrania i przypisaną zmianę albo status do wyjaśnienia. Jeden plik może zawierać sprawy kilku podopiecznych i placówki. Fragment dotyczący wielu spraw można rozdzielić albo przekazać do wyjaśnienia.
+- **AC2 (Dopasowanie):** Serwer porównuje dostępne wskazówki z rejestrem własnej placówki. Jedno spójne dopasowanie przypisuje podopiecznego na potrzeby szkicu. Jawnie ogólna sprawa otrzymuje zakres „Placówka”. Brak, konflikt lub wiele dopasowań trafiają do kolejki. Model raportowy otrzymuje wyłącznie zredagowaną treść.
+- **AC3 (Wyjaśnienie):** Kierownik tej zmiany albo kierownik placówki może potwierdzić lub zmienić przypisanie podopiecznego, oznaczyć sprawę placówki albo wybrać „Nie do przypisania”. Może też skorygować autora wybranego fragmentu. Kolejka udostępnia wyłącznie materiał potrzebny do decyzji w zakresie uprawnień kierownika.
+- **AC4 (Nie do przypisania):** Fragment pozostaje w chronionym materiale źródłowym do upływu retencji i jest pomijany przy generowaniu raportów oraz zadań.
+- **AC5 (Autor):** Widać, czy autor pochodzi z sesji webowej, deklaracji na urządzeniu, ręcznej korekty, czy pozostaje nieustalony. Autor zgłoszenia i osoba, która wykonała zadanie, mają odrębne znaczenie.
+- **AC6 (Audyt):** Przypisanie i korekta zapisują identyfikator fragmentu, metodę, czas oraz identyfikatory poprzedniego i nowego przypisania. Ręczna korekta zapisuje osobę podejmującą decyzję. Rejestr ma historię zdarzeń i nie zawiera transkryptu.
+- **AC7 (Wspólny potok):** Fragment o ustalonym zakresie zasila właściwe szkice po redakcji. Wyjaśnienie jednego fragmentu nie blokuje pozostałych poprawnie przypisanych fragmentów tego pliku. Zasady dostępu do raportów i materiału źródłowego obowiązują niezależnie.
+
+#### [SC-NUR-19] Nagranie ogólne w webie
+🔗 **Kontrakt:** `VOICE-ZERO-GUESSING`, `VOICE-RESIDENT-ASSIGN`, `VOICE-OFFLINE` · **Status:** 📝 PROPOZYCJA
+
+**User story:** Jako członek personelu chcę rozpocząć nagranie ogólne bez wybierania podopiecznego, aby dyktować w trakcie zmiany tak samo jak na dyktafonie.
+
+**Kryteria akceptacji:**
+- **AC1 (Dwa tryby):** „Nagranie ogólne” zaczyna się bez wyboru osoby. „Nagranie o podopiecznym” zachowuje przebieg `SC-NUR-02`.
+- **AC2 (Autor i zakres):** Autor pochodzi z uwierzytelnionej sesji. Nagranie ogólne ma zakres nieustalony do etapu przypisania fragmentów według `SC-NUR-18`.
+- **AC3 (Synchronizacja):** Nagranie przesłane ponownie po utracie łączności zachowuje to samo źródło i nie powiela fragmentów, raportów ani propozycji zadań.
+
+#### [SC-NUR-20] Zamknięcie zmiany i przekazanie zadań
+🔗 **Kontrakt:** brak REQ · **Status:** 📝 PROPOZYCJA
+
+**User story:** Jako kierownik zmiany chcę w jednym miejscu przejrzeć wyjątki, rozliczyć zadania i przekazać następnej zmianie zatwierdzony plan, aby personel mógł kontynuować pracę i odtworzyć podjęte decyzje.
+
+**Kryteria akceptacji:**
+- **AC1 (Jeden przebieg):** Kierownik tej zmiany lub kierownik placówki przechodzi od wyjątków przypisań do przeglądu zdarzeń, szkicu przekazania i propozycji zadań. Widzi odnośniki do źródłowych fragmentów. Następna zmiana potwierdza odbiór przekazania.
+- **AC2 (Plan następnej zmiany):** Z istniejącej listy zadań powstaje plan ogólny i widoki według podopiecznego lub pracownika. Uprawniony kierownik aktualizuje przypisania, zatwierdza plan i drukuje jego wersję. Personel widzi zadania swojej zmiany na ekranie w dyżurce.
+- **AC3 (Zgłoszenie i rozliczenie):** Głosowe zgłoszenie wykonania daje podpowiedź dla kierownika. Dopiero jego potwierdzenie zmienia status zadania. Zatwierdzone rozliczenie jest widoczne w przekazaniu.
+- **AC4 (Niekompletne dane):** Niepełna albo nieznana kompletność synchronizacji jest jawna. Po częściowym zamknięciu spóźnione dane można włączyć audytowanym uzupełnieniem z odnośnikiem do pierwotnego przekazania.
+- **AC5 (Raporty):** Przekazanie i zapis incydentów są wewnętrzne. Raport rodzinny pozostaje osobnym szkicem dotyczącym jednego podopiecznego i ma własne zatwierdzenie oraz publikację.
+- **AC6 (Audyt):** Można ustalić źródło zgłoszenia, czas nagrania i odbioru, korekty przypisania, zatwierdzenie przekazania i planu, odbiór, wydruk oraz rozliczenie zadania. Wpisy audytowe przechowują identyfikatory i kody działań.
 
 #### [SC-USR-01] Własny profil i bezpieczeństwo konta
 🔗 **Kontrakt:** `SEC-SESSION`, `SEC-MFA-STAFF` · **WO:** [`NUR-PROFILE-SECURITY`](workorders/NUR-PROFILE-SECURITY.md) · **Status:** ✅ 📝
@@ -1132,3 +1154,4 @@
 | 2026-11-19 | 2.24 | Decyzja Michała z 2026-11-19: urządzenia są wspólne, autora ustala przedstawienie w pierwszej notatce sesji (`SC-NUR-17/AC5`, kontrakt `DEVICE_INGEST_PROTOCOL.authorship` 1.2.0). `SC-ADM-24` (rejestr urządzeń): stały przydział zastąpiony opcjonalną ewidencją wydania. 📝 PROPOZYCJA. |
 | 2026-11-20 | 2.25 | Dopisanie `SC-SUP-06` (wielomodułowość platformy sterowana flagami per placówka — 9 dużych modułów systemowych + 2 flagi delegacji dla `org_admin`, issue `#303`, Work Order `WO-SUP-FEATURE-FLAGS.md`) ze statusem 📝 PROPOZYCJA. |
 | 2026-11-20 | 2.26 | Doprecyzowanie `SC-SUP-06` (AC2, AC3) po review: wyłączna ścieżka zapisu `RPC_ONLY`, blokada faktycznej impersonacji na warstwie aplikacji i DB, kanoniczne mapowanie tras wieloflagowych (`REQUIRE_ALL_MATCHING`) oraz egzekwowanie w RLS i domenowych RPC. |
+| 2026-11-22 | 2.27 | Propozycja nagrania ogólnego (`SC-NUR-19`), przypisania fragmentów i wyjątków (`SC-NUR-18`) oraz zamknięcia zmiany (`SC-NUR-20`). Doprecyzowanie istniejących stories nagrań, przekazania i zadań. |
