@@ -195,4 +195,51 @@ describe('Zadania zmiany i akceptacja planu (NUR-TASKS, NUR-SHIFT-PLAN-PRINT)', 
       expect((await tx`SELECT version FROM shift_plan_approvals ORDER BY version`).map((r) => r.version)).toEqual([1, 2]);
     });
   }, 30000);
+
+  it('@REQ: NUR-SHIFT-CLOSURE - przypisanie ogranicza grafik i zapisy audytu nie zawierają treści', async () => {
+    await rollback(async (tx) => {
+      const s = await seed(tx);
+      const id = await taskIn(tx, s, 'TODO');
+      await as(tx, 'nurse', s.orgId, s.nurse);
+      await failsWith(tx, /SHIFT_ASSIGNMENT_FORBIDDEN/, (sp) => addManual(sp, s, s.nurse, { assignee_user_id: s.nurse }));
+      await as(tx, 'nurse', s.orgId, s.lead);
+      const assign = (sp: Tx, to: string | null) => sp`UPDATE shift_tasks SET assignee_user_id = ${to} WHERE id = ${id}`;
+      await failsWith(tx, /SHIFT_ASSIGNEE_NOT_ON_ROSTER/, (sp) => assign(sp, s.foreignAdmin));
+      await failsWith(tx, /SHIFT_ASSIGNEE_NOT_ON_ROSTER/, (sp) => assign(sp, s.admin));
+      await assign(tx, s.nurse);
+      await assign(tx, s.nurse);
+      await assign(tx, null);
+      await tx`UPDATE shift_tasks SET status = 'DONE' WHERE id = ${id}`;
+      await failsWith(tx, /SHIFT_ASSIGNMENT_TASK_SETTLED/, (sp) => assign(sp, s.nurse));
+      await as(tx, 'org_admin', s.orgId, s.admin);
+      const changes = await tx`SELECT performed_by, payload FROM audit_logs
+        WHERE organization_id = ${s.orgId} AND action = 'SHIFT_TASK_ASSIGNEE_CHANGED'`;
+      expect(changes).toHaveLength(2);
+      expect(changes.every((row) => row.performed_by === s.lead)).toBe(true);
+      expect(changes.map((row) => row.payload)).toEqual(expect.arrayContaining([
+        expect.objectContaining({ task_id: id, previous_assignee_id: null, assignee_id: s.nurse }),
+        expect.objectContaining({ task_id: id, previous_assignee_id: s.nurse, assignee_id: null }),
+      ]));
+      expect(JSON.stringify(changes)).not.toContain(SECRET_TITLE);
+    });
+  }, 30000);
+
+  it('@REQ: NUR-SHIFT-CLOSURE - przeniesienie zadania i zatwierdzenie planu mają osobny ślad', async () => {
+    await rollback(async (tx) => {
+      const s = await seed(tx);
+      const id = await taskIn(tx, s, 'TODO');
+      await as(tx, 'nurse', s.orgId, s.lead);
+      const [{ settle_shift_task: copyId }] = await tx`SELECT public.settle_shift_task(${id}, 'CARRIED', NULL, ${s.nightId}, ${DAY}::date)`;
+      await tx`INSERT INTO shift_plan_approvals (organization_id, shift_definition_id, shift_date, version, approved_by)
+        VALUES (${s.orgId}, ${s.dayId}, ${DAY}, 1, ${s.lead})`;
+      await as(tx, 'org_admin', s.orgId, s.admin);
+      const logs = await tx`SELECT action, performed_by, payload FROM audit_logs WHERE organization_id = ${s.orgId}`;
+      expect(logs).toEqual(expect.arrayContaining([
+        expect.objectContaining({ action: 'SHIFT_TASK_CARRIED', performed_by: s.lead, payload: expect.objectContaining({ task_id: copyId, source_task_id: id, shift_definition_id: s.nightId }) }),
+        expect.objectContaining({ action: 'SHIFT_PLAN_APPROVED', performed_by: s.lead, payload: expect.objectContaining({ shift_definition_id: s.dayId, version: 1 }) }),
+      ]));
+      expect(JSON.stringify(logs)).not.toContain(SECRET_TITLE);
+    });
+  }, 30000);
+
 });
