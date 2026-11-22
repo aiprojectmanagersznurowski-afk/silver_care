@@ -111,7 +111,8 @@ export const RESOURCES = [
   "voice_segment_proposals",
   "family_voice_report_provenance",
   "operational_report_jobs",
-  "voice_storage_deletions"
+  "voice_storage_deletions",
+  "voice_app_report_jobs"
 ] as const;
 
 export const MATRIX = [
@@ -605,6 +606,13 @@ export const MATRIX = [
   },
   {
     "resource": "voice_storage_deletions",
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  {
+    "resource": "voice_app_report_jobs",
     "read": [],
     "create": [],
     "update": [],

@@ -51,6 +51,7 @@ export const RESOURCES = [
   'organization_feature_flags',
   'voice_sanitized_events', 'organization_report_configs', 'operational_reports',
   'voice_segment_proposals', 'family_voice_report_provenance', 'operational_report_jobs', 'voice_storage_deletions',
+  'voice_app_report_jobs',
 ];
 
 /**
@@ -124,6 +125,7 @@ export const MATRIX = [
   { resource: 'family_voice_report_provenance', read: [], create: [], update: [], delete: [] },
   { resource: 'operational_report_jobs',        read: [], create: [], update: [], delete: [] },
   { resource: 'voice_storage_deletions',        read: [], create: [], update: [], delete: [] },
+  { resource: 'voice_app_report_jobs',         read: [], create: [], update: [], delete: [] },
 ];
 
 /**
