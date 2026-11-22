@@ -87,3 +87,27 @@ export function findDeclaredVoiceAuthor(text: string, staff: readonly VoiceStaff
   const matches = staff.filter(({ name }) => identities.has(normalizeName(name)))
   return matches.length === 1 ? matches[0].id : null
 }
+
+export function readRedactionUrl(config: SpeechConfiguration) {
+  const configured = process.env.VOICE_PRIVATE_REDACT_URL
+  const url = configured && URL.canParse(configured) ? new URL(configured) : null
+  if (!url || url.origin !== config.url.origin || url.username || url.password || url.search || url.hash
+    || url.pathname === config.url.pathname) {
+    throw new Error('VOICE_REDACTION_CONFIGURATION')
+  }
+  return url
+}
+
+export async function redactPrivately(config: SpeechConfiguration, raw: string, fetcher: typeof fetch = fetch) {
+  const url = readRedactionUrl(config)
+  const response = await fetcher(url, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${config.token}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ text: raw }), redirect: 'error', signal: AbortSignal.timeout(25_000), cache: 'no-store',
+  }).catch(() => { throw new Error('VOICE_REDACTION_UNAVAILABLE') })
+  if (!response.ok) throw new Error('VOICE_REDACTION_UNAVAILABLE')
+  const payload = await readLimitedJson(response).catch(() => { throw new Error('VOICE_REDACTION_INVALID') })
+  const value = (payload as { redacted_transcript?: unknown } | null)?.redacted_transcript
+  if (typeof value !== 'string' || value.length > 12_000) throw new Error('VOICE_REDACTION_INVALID')
+  return value
+}

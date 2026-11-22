@@ -2,6 +2,7 @@ import { createHash, timingSafeEqual } from 'node:crypto'
 import { NextResponse } from 'next/server'
 import { processNextVoiceCapture } from '@/lib/voice-capture-worker'
 import { readSpeechConfiguration } from '@/lib/voice-private-speech'
+import { processNextVoiceProjection } from '@/lib/voice-projection-worker'
 
 export const runtime = 'nodejs'
 export const maxDuration = 120
@@ -14,8 +15,11 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'UNAUTHORIZED' }, { status: 401 })
   }
   try {
-    const status = await processNextVoiceCapture(readSpeechConfiguration())
-    return NextResponse.json({ status }, { status: status === 'failed' ? 503 : 200 })
+    const config = readSpeechConfiguration()
+    const [capture, projection] = await Promise.allSettled([processNextVoiceCapture(config), processNextVoiceProjection(config)])
+    const status = (result: typeof capture) => result.status === 'fulfilled' ? result.value : 'failed'
+    const result = { capture: status(capture), projection: status(projection) }
+    return NextResponse.json(result, { status: Object.values(result).includes('failed') ? 503 : 200 })
   } catch {
     return NextResponse.json({ error: 'VOICE_PROCESSING_UNAVAILABLE' }, { status: 503 })
   }
