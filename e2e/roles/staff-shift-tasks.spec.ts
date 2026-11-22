@@ -187,16 +187,16 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
     await expect(page.getByRole('alert').filter({ hasText: outdatedPreview })).toBeVisible();
     expect(await printCount()).toBe(1);
     expect(await printAudits()).toEqual([{ version: 1 }]);
-    await expect(page.getByText('Wersja 1', { exact: false })).toBeVisible();
+    await expect(page.locator('[data-slot=page-header-description]:visible').filter({ hasText: 'Wersja 1' })).toBeVisible();
 
     await page.reload();
-    await expect(page.getByText('Wersja 2', { exact: false })).toBeVisible();
+    await expect(page.locator('[data-slot=page-header-description]:visible').filter({ hasText: 'Wersja 2' })).toBeVisible();
     await tasks.printButton.click();
     await expect.poll(printCount).toBe(1);
     expect(await printAudits()).toEqual([{ version: 1 }, { version: 2 }]);
 
     await page.emulateMedia({ media: 'print' });
-    await expect(page.getByText('Wersja 2', { exact: false })).toBeVisible();
+    await expect(page.locator('[data-slot=page-header-description]:visible').filter({ hasText: 'Wersja 2' })).toBeVisible();
     await expect(page.getByText('E2E Zadanie na wydruk')).toBeVisible();
     await expect(tasks.printButton).toBeHidden();
   });
@@ -217,12 +217,16 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
     const option = tasks.assigneeSelect(assigned).locator(`option[value="${nurse.id}"]`);
     await expect(option).toHaveCount(1);
     const name = (await option.textContent())!;
+    await tasks.approvePlanButton.click();
+    await expect(tasks.planStatus).toContainText('Plan zatwierdzony, wersja 1');
     await tasks.assign(assigned, nurse.id);
+    await expect(tasks.planStatus).toContainText('Plan wymaga ponownego zatwierdzenia');
+    await expect(tasks.printLink).toHaveCount(0);
     await page.getByRole('link', { name: 'Według pracowników' }).click();
     await expect(tasks.group(name)).toContainText(assigned);
     await expect(tasks.group('Zadania wspólne')).toContainText(shared);
     await tasks.approvePlanButton.click();
-    await expect(tasks.planStatus).toContainText('Plan zatwierdzony');
+    await expect(tasks.planStatus).toContainText('Plan zatwierdzony, wersja 2');
     await tasks.printLink.click();
     await expect(page.getByRole('row').filter({ hasText: assigned })).toContainText(name);
 
