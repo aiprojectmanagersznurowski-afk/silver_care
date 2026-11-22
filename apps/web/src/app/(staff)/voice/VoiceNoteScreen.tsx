@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect, Suspense } from 'react'
+import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
@@ -129,6 +130,7 @@ function VoiceNoteContent() {
           title="Notatka głosowa"
           description="Wybierz podopiecznego, dla którego chcesz nagrać notatkę ze statusu dnia."
         />
+        <Link href="/voice/general" className="inline-flex min-h-touch items-center rounded-md border px-3 text-sm">Nagranie ogólne</Link>
         <VoiceResidentSelect
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
