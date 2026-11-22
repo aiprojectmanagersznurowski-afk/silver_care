@@ -1,6 +1,6 @@
 // ==============================================================================
 // Automatycznie wygenerowane typy bazy danych Silver Care (PostgreSQL/Supabase)
-// Wygenerowano: 2026-11-22T15:28:26.701Z
+// Wygenerowano: 2026-11-22T15:30:10.537Z
 // ==============================================================================
 
 export type Json =
@@ -494,6 +494,47 @@ export interface Database {
           depends_on?: unknown[]
         }
         Relationships: [
+        ]
+      }
+      operational_report_jobs: {
+        Row: {
+          organization_id: string
+          category_code: string
+          period_start: string
+          period_end: string
+          lease_token: string | null
+          available_at: string
+          attempts: number
+          completed_at: string | null
+        }
+        Insert: {
+          organization_id: string
+          category_code: string
+          period_start: string
+          period_end: string
+          lease_token?: string | null
+          available_at?: string
+          attempts?: number
+          completed_at?: string | null
+        }
+        Update: {
+          organization_id?: string
+          category_code?: string
+          period_start?: string
+          period_end?: string
+          lease_token?: string | null
+          available_at?: string
+          attempts?: number
+          completed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operational_report_jobs_organization_id_category_code_fkey"
+            columns: ["organization_id", "category_code"]
+            isOneToOne: false
+            referencedRelation: "organization_report_configs"
+            referencedColumns: ["organization_id", "category_code"]
+          },
         ]
       }
       operational_reports: {
@@ -2263,6 +2304,13 @@ export interface Database {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      claim_due_operational_report: {
+        Args: {
+          p_organization_id?: string | null
+          p_now?: string | null
+        }
+        Returns: Json
+      }
       claim_voice_capture: {
         Args: {
           p_capture_id?: string | null
@@ -2284,6 +2332,13 @@ export interface Database {
       cleanup_voice_drafts: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      complete_operational_report_job: {
+        Args: {
+          p_token: string
+          p_success: boolean
+        }
+        Returns: boolean
       }
       complete_voice_capture_failure: {
         Args: {
