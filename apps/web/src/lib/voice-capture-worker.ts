@@ -3,7 +3,7 @@ import { VOICE_RETENTION } from '@silvercare/contracts/src/generated/voice'
 import type { Database } from '@/types/database.types'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { assignVoiceSegment, type AssignmentResident, type SegmentAssignment } from '@/lib/voice-segment-assignment'
-import { findDeclaredVoiceAuthor, readPrivateSpeech, readSpeechConfiguration, type PrivateSpeechSegment, type VoiceStaffIdentity } from '@/lib/voice-private-speech'
+import { findDeclaredVoiceAuthor, hasExplicitVoiceIntroduction, readPrivateSpeech, readSpeechConfiguration, type PrivateSpeechSegment, type VoiceStaffIdentity } from '@/lib/voice-private-speech'
 
 type Capture = Database['public']['Tables']['voice_captures']['Row']
 type CaptureIdentity = Pick<Capture, 'source' | 'author_id' | 'clock_state' | 'session_seq' | 'selected_resident_id'>
@@ -32,7 +32,9 @@ export function planCaptureSegments(capture: CaptureIdentity, registry: Registry
   const segments = clips.flatMap(({ text, start_ms, end_ms }, ordinal) => {
     if (ordinal === 0 && declaration && onlyIntroduction(text)) return []
     const spokenAuthor = isDevice ? findDeclaredVoiceAuthor(text, registry.staff) : null
-    if (spokenAuthor && spokenAuthor !== sessionAuthor) authorConflict = true
+    if (isDevice && (spokenAuthor ? spokenAuthor !== sessionAuthor : hasExplicitVoiceIntroduction(text))) {
+      authorConflict = true
+    }
     const author_id = authorConflict ? null : sessionAuthor
     const assignment = safelyAttributed(assignVoiceSegment({
       text, authorId: author_id, timeCertain: capture.clock_state !== 'UNKNOWN',

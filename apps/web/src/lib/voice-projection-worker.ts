@@ -44,13 +44,17 @@ export async function processNextVoiceProjection(config: ReturnType<typeof readS
       enabled: category.is_enabled, archivedAt: category.archived_at,
     }))
     const result = await classifySanitizedVoiceEvent(sanitized, configRows, item.registry)
+    const proposedTasks = extractNextShiftTaskIntents(sanitized.sanitizedTranscript)
+    const familyFacts = result.behavioralFacts.filter((fact) => !proposedTasks.some(
+      ({ title, quote }) => quote.includes(fact) || fact.includes(title),
+    ))
     const response = await admin.rpc('complete_voice_segment_projection', {
       ...lease,
       p_result: {
-        behavioral_facts: result.behavioralFacts,
+        behavioral_facts: familyFacts,
         operational_facts: result.operationalFacts,
         category_codes: result.categoryCodes,
-        proposed_tasks: extractNextShiftTaskIntents(sanitized.sanitizedTranscript),
+        proposed_tasks: proposedTasks,
         restricted_medical: item.scope === 'resident' ? redactVoiceTranscript(raw).extractedMedical : [],
       },
     })

@@ -74,9 +74,14 @@ function normalizeName(text: string) {
   return text.toLocaleLowerCase('pl').normalize('NFKD').replace(/\p{M}/gu, '').replace(/ł/g, 'l').trim()
 }
 
+export function hasExplicitVoiceIntroduction(text: string) {
+  return /^(?:(?:dzien dobry|czesc)[, ]+)?(?:nazywam sie|(?:(?:tutaj|tu) )?mowi)\s+\p{L}/u
+    .test(normalizeName(text.slice(0, 400)))
+}
+
 export function findDeclaredVoiceAuthor(text: string, staff: readonly VoiceStaffIdentity[]) {
   const statements = normalizeName(text.slice(0, 400)).split(/[.!?;\n]+/)
-  const introduction = /^(?:(?:dzien dobry|czesc)[, ]+)?(?:nazywam sie|jestem|(?:tutaj )?mowi|tu)\s+(.+)$/u
+  const introduction = /^(?:(?:dzien dobry|czesc)[, ]+)?(?:nazywam sie|jestem|(?:(?:tutaj|tu) )?mowi|tu)\s+(.+)$/u
   if (!introduction.test(statements[0]?.trim() ?? '')) return null
   const names = statements.flatMap((statement) => {
     const name = introduction.exec(statement.trim())?.[1]?.split(',', 1)[0].trim()
