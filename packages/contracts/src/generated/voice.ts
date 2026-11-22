@@ -68,9 +68,9 @@ export const PIPELINE_STAGES = [
   {
     "id": "CAPTURE",
     "actor": "nurse",
-    "input": "audio + resident_id (UUID) z aplikacji albo audio z urządzenia bez resident_id",
-    "output": "voice_draft_notes",
-    "desc": "Nagranie z jednego ze źródeł CAPTURE_SOURCES. Tożsamość nigdy nie pochodzi z treści nagrania."
+    "input": "audio oraz resident_id (UUID) wyłącznie w trybie o podopiecznym",
+    "output": "nagranie źródłowe",
+    "desc": "Tryb APP z wybranym podopiecznym zachowuje dotychczasowe wejście. APP_GENERAL i DEVICE przyjmują nagranie głosowe do przypisania fragmentów."
   },
   {
     "id": "TRANSCRIBE",
@@ -82,9 +82,10 @@ export const PIPELINE_STAGES = [
   {
     "id": "ASSIGN",
     "actor": "nurse",
-    "input": "transkrypt + kandydaci z dopasowania serwera",
-    "output": "resident_id (UUID) potwierdzony przez człowieka albo zakres placówki",
-    "desc": "Tylko nagrania bez resident_id (RESIDENT_ASSIGNMENT). Serwer podsuwa, człowiek potwierdza. Bez potwierdzenia brak przejścia do CLASSIFY."
+    "automaticActor": "system",
+    "input": "fragment transkryptu + rejestr tej placówki",
+    "output": "zakres fragmentu i źródło przypisania albo kolejka wyjątków",
+    "desc": "Serwer przypisuje jedno spójne dopasowanie na potrzeby szkicu. Personel rozstrzyga wyjątki. Fragment o nieustalonym zakresie czeka przed CLASSIFY."
   },
   {
     "id": "CLASSIFY",
@@ -175,15 +176,22 @@ export const CAPTURE_SOURCES = [
     "desc": "Aplikacja: podopieczny wybrany przed nagraniem (SC-NUR-02)."
   },
   {
+    "id": "APP_GENERAL",
+    "residentId": "AT_ASSIGN",
+    "author": "Sesja zalogowanego użytkownika",
+    "desc": "Aplikacja: nagranie ogólne bez wstępnego zakresu (SC-NUR-19)."
+  },
+  {
     "id": "DEVICE",
     "residentId": "AT_ASSIGN",
-    "author": "Osoba z przedstawienia w pierwszym nagraniu sesji urządzenia (DEVICE_INGEST_PROTOCOL.authorship)",
+    "author": "Deklaracja z przedstawienia na początku sesji urządzenia (DEVICE_INGEST_PROTOCOL.authorship)",
     "desc": "Urządzenie z ekranem tylko ze stanem, bez treści nagrań i nazwisk, M5Stack StickS3 (SC-NUR-17)."
   }
 ] as const;
 
 export const RESIDENT_ASSIGNMENT = {
   "appliesTo": [
+    "APP_GENERAL",
     "DEVICE"
   ],
   "queueResource": "voice_assignment_queue",
@@ -194,7 +202,27 @@ export const RESIDENT_ASSIGNMENT = {
     "numer pokoju (rooms.number)",
     "etykieta łóżka (beds.label)"
   ],
-  "matchScope": "Wyłącznie rejestr placówki, do której należy urządzenie.",
+  "matchScope": "Wyłącznie rejestr placówki z uwierzytelnionej sesji lub zweryfikowanego źródła nagrania.",
+  "autoAssign": {
+    "actor": "system",
+    "condition": "SINGLE_CONSISTENT_REGISTRY_MATCH",
+    "output": "DRAFT_ONLY"
+  },
+  "facilityScope": "Wyłącznie jawna sprawa placówki. Brak podopiecznego pozostaje nieustalonym zakresem.",
+  "reviewReasons": [
+    "NO_MATCH",
+    "MULTIPLE_MATCHES",
+    "CONFLICTING_EVIDENCE",
+    "MIXED_SEGMENT",
+    "NO_AUTHOR",
+    "TIME_UNCERTAIN"
+  ],
+  "authorAttribution": [
+    "AUTHENTICATED_SESSION",
+    "DECLARED_SESSION",
+    "MANUAL_SEGMENT_CORRECTION",
+    "UNKNOWN"
+  ],
   "confirmedBy": [
     "nurse:shift_lead",
     "org_admin:own"
@@ -205,10 +233,11 @@ export const RESIDENT_ASSIGNMENT = {
     "UNASSIGNABLE"
   ],
   "onUnconfirmed": "HOLD_BEFORE_CLASSIFY",
-  "onUnassignable": "Zostaje w brudnopisie personelu, nie trafia do modelu, podlega VOICE_RETENTION.",
-  "afterDecision": "Pozycja znika z kolejki. Nagranie czyta dalej wyłącznie autor (voice_draft_notes, nurse:own).",
-  "oneRecordingOneResident": true,
-  "audit": "audit_logs: kto, kiedy, kandydaci podsunięci przez serwer i wybór człowieka.",
+  "onUnassignable": "Fragment pozostaje w chronionym źródle do upływu VOICE_RETENTION i jest wyłączony z raportów oraz zadań.",
+  "afterDecision": "Pozycja znika z kolejki. Dostęp do szkiców i materiału źródłowego wynika z ich odrębnych uprawnień.",
+  "oneRecordingOneResident": false,
+  "oneSegmentOneResident": true,
+  "audit": "audit_logs: identyfikator fragmentu, metoda i czas przypisania, identyfikatory poprzedniego i nowego przypisania oraz osoba przy korekcie ręcznej.",
   "status": "STABLE"
 } as const;
 
