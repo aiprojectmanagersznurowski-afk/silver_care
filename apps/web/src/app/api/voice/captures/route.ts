@@ -29,8 +29,8 @@ function audioType(declared: string, bytes: ArrayBuffer) {
   return null
 }
 
-export const POST = withAuth(async (request, { user, supabase }) => {
-  const { data: assurance } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+export const POST = withAuth(async (request, { user, supabase, accessToken }) => {
+  const { data: assurance } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel(accessToken)
   if (assurance?.currentLevel !== 'aal2') return failure('Potwierdź drugi składnik uwierzytelniania.', 403)
   const intendedSize = Number(request.headers.get('content-length'))
   if (intendedSize > maxAudioBytes + 32_768) return failure('Nagranie przekracza dozwolony rozmiar.', 413)

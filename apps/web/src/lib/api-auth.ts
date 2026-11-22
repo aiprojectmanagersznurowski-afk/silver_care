@@ -18,6 +18,7 @@ export interface AuthenticatedUser {
 
 export interface ApiAuthContext {
   user: AuthenticatedUser
+  accessToken?: string
   supabase: ReturnType<typeof createClient> extends Promise<infer R> ? R : ReturnType<typeof createClient>
   params?: Record<string, string | string[]>
 }
@@ -145,6 +146,7 @@ export function withAuth(handler: ApiRouteHandler, options: WithAuthOptions = {}
 
       const authContext: ApiAuthContext = {
         user,
+        accessToken: bearerToken,
         supabase,
         params: resolvedParams,
       }
