@@ -4,6 +4,7 @@ import { expect, test } from '@playwright/test'
 import postgres from 'postgres'
 import { LoginPage } from './page-objects/LoginPage'
 import { VoiceAssignmentPage } from './page-objects/VoiceAssignmentPage'
+import { VoiceFamilyFactsPage } from './page-objects/VoiceFamilyFactsPage'
 
 test('@REQ: VOICE-RESIDENT-ASSIGN - kierownik po MFA rozstrzyga wyjątek, z dowodem audytowym', async ({ page }) => {
   test.setTimeout(120_000)
@@ -19,6 +20,8 @@ test('@REQ: VOICE-RESIDENT-ASSIGN - kierownik po MFA rozstrzyga wyjątek, z dowo
   const org = randomUUID()
   const capture = randomUUID()
   const segment = randomUUID()
+  const resident = randomUUID()
+  const fact = 'Podopieczna zjadła całe śniadanie.'
   const path = `${org}/transcripts/${capture}/fixture/0`
   const note = 'Unikalna treść syntetyczna do sprawdzenia.'
   const email = `voice-${randomUUID()}@example.test`
@@ -58,9 +61,21 @@ test('@REQ: VOICE-RESIDENT-ASSIGN - kierownik po MFA rozstrzyga wyjątek, z dowo
       WHERE organization_id = ${org} AND action = 'VOICE_SEGMENT_RESOLVED'`
     expect(audit.payload).toMatchObject({ segment_id: segment, method: 'MANUAL', scope: 'FACILITY' })
     expect(JSON.stringify(audit.payload)).not.toContain(note)
+    await sql`INSERT INTO public.residents (id, organization_id, first_name, last_name)
+      VALUES (${resident}, ${org}, 'Anna', 'Testowa')`
+    await sql`INSERT INTO public.voice_segment_proposals
+      (segment_id, organization_id, capture_id, resident_id, author_id, recorded_at, time_state, behavioral_facts)
+      VALUES (${randomUUID()}, ${org}, ${capture}, ${resident}, ${author}, now(), 'SYNCED', ARRAY[${fact}::text])`
+    const family = new VoiceFamilyFactsPage(page)
+    await family.open()
+    await family.include(fact)
+    const [report] = await sql`SELECT status, content FROM public.daily_reports WHERE resident_id = ${resident}`
+    expect(report.status).toBe('DRAFT')
+    expect(report.content.text).toContain(fact)
   } finally {
     await api.storage.from('voice-recordings').remove([path])
     await sql`DELETE FROM public.voice_captures WHERE id = ${capture}`
+    await sql`DELETE FROM public.residents WHERE id = ${resident}`
     if (author) await api.auth.admin.deleteUser(author)
     await sql`DELETE FROM public.organizations WHERE id = ${org}
       AND NOT EXISTS (SELECT 1 FROM public.audit_logs WHERE organization_id = ${org})`
