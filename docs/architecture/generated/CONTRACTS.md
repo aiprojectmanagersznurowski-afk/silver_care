@@ -126,15 +126,15 @@ Bazowy rozmiar 14px · minimalny kontrast 4.5:1 · cel dotykowy 38px
 | UI-ACCESSIBILITY | presentation | MEDIUM | Interfejs spełnia WCAG 2.1 na poziomie AA. |
 | UI-TERMINOLOGY | presentation | MEDIUM | Ta sama rzecz nazywa się w całym interfejsie tak samo, według słownika UI_TERMINOLOGY. |
 | UI-TEMPLATE-ALIGNMENT | presentation | MEDIUM | Interfejs używa komponentów, układu i wygladu szablonu shadcn-admin (styl nova) — promień, cień, odstępy, jeden styl przycisków i filtrów — z tekstem min. 14px i celem dotykowym 38px (ADR-016, ADR-018), z tokenami generowanymi z kontraktu. |
-| VOICE-ZERO-GUESSING | voice | HIGH | Model nigdy nie ustala tożsamości pensjonariusza z nagrania. |
+| VOICE-ZERO-GUESSING | voice | HIGH | Model raportowy nigdy nie ustala tożsamości podopiecznego z nagrania. |
 | VOICE-MEDICAL-STRIP | voice | HIGH | Dane medyczne są usuwane z transkryptu przed wysłaniem do modelu. |
 | VOICE-DRAFT-ISOLATION | voice | HIGH | Brudnopis personelu jest niedostępny dla bliskich. |
 | VOICE-RETENTION | voice | MEDIUM | Surowe nagrania są usuwane po terminie retencji placówki, domyślnie po trzydziestu dniach. |
 | VOICE-OFFLINE | voice | MEDIUM | Dyktafon działa bez łączności i synchronizuje się po jej odzyskaniu. |
 | VOICE-FOLLOWUP | voice | MEDIUM | Przy zbyt ubogiej notatce asystent dopytuje zamiast uzupełniać treść samodzielnie. |
 | VOICE-DEVICE-INGEST | voice | HIGH | Urządzenie z ekranem tylko ze stanem (bez treści nagrań i nazwisk) przekazuje nagrania przez uwierzytelniony, idempotentny protokół z potwierdzeniem odbioru i czasem serwera. |
-| VOICE-RESIDENT-ASSIGN | voice | HIGH | Nagranie bez podopiecznego trafia do kolejki, w której serwer podsuwa kandydatów, a człowiek potwierdza. |
-| VOICE-DEVICE-REGISTRY | voice | MEDIUM | Kierownik placówki prowadzi rejestr urządzeń placówki. Urządzenia są wspólne: autora nagrań ustala przedstawienie w sesji, a wpis wydania jest opcjonalną ewidencją sprzętu. |
+| VOICE-RESIDENT-ASSIGN | voice | HIGH | Serwer przypisuje zakres fragmentu nagrania, a kierownik rozstrzyga wyjątki i może skorygować autora. |
+| VOICE-DEVICE-REGISTRY | voice | MEDIUM | Kierownik placówki prowadzi rejestr urządzeń placówki. Urządzenia są wspólne: przedstawienie określa deklarowanego autora sesji, a wpis wydania jest opcjonalną ewidencją sprzętu. |
 | REPORT-APPROVAL | reports | HIGH | Raport trafia do bliskich dopiero po zatwierdzeniu przez personel. |
 | REPORT-AI-FEEDBACK | reports | MEDIUM | Personel może zgłosić błąd w raporcie wygenerowanym przez AI. |
 | INT-CORE-DECOUPLED | integration | HIGH | Identyfikatory zewnętrzne nie występują na tabelach rdzenia. |

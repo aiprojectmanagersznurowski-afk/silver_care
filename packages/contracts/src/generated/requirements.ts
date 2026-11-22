@@ -455,15 +455,14 @@ export const REQUIREMENTS = [
     "id": "VOICE-ZERO-GUESSING",
     "status": "TODO",
     "risk": "HIGH",
-    "source": "SC-NUR-02/AC2, ADR-006, ADR-022",
+    "source": "SC-NUR-02/AC2, SC-NUR-18, SC-NUR-19, ADR-006, ADR-022",
     "domain": "voice",
-    "statement": "Model nigdy nie ustala tożsamości pensjonariusza z nagrania.",
+    "statement": "Model raportowy nigdy nie ustala tożsamości podopiecznego z nagrania.",
     "acceptance": [
-      "Żądanie nagrania z aplikacji zawiera resident_id jako UUID z frontendu",
-      "Transkrypt wysyłany do modelu nie zawiera imienia, nazwiska ani identyfikatora",
-      "Złączenie treści z tożsamością następuje w pamięci funkcji brzegowej przed zapisem",
-      "Brak resident_id w żądaniu z aplikacji kończy się odmową, nie próbą rozpoznania",
-      "Nagranie z urządzenia bez podopiecznego potwierdzonego przez człowieka nie dociera do CLASSIFY ani do modelu"
+      "Tryb nagrania o podopiecznym wymaga resident_id jako UUID z aplikacji i zachowuje wybrany zakres, a sprzeczna wzmianka wymaga wyjaśnienia",
+      "Tryb nagrania ogólnego przyjmuje audio bez resident_id, a autor pochodzi z uwierzytelnionej sesji",
+      "Serwer ustala zakres fragmentu w rejestrze tej samej placówki przed klasyfikacją, a przypadek niejednoznaczny oczekuje w kolejce",
+      "Transkrypt wysyłany do modelu raportowego nie zawiera imienia, nazwiska ani identyfikatora, a system łączy wynik z tożsamością przed zapisem"
     ]
   },
   {
@@ -549,10 +548,10 @@ export const REQUIREMENTS = [
       "Ponowna wysyłka tej samej pary device_id i client_capture_id zwraca DUPLICATE bez drugiego wpisu",
       "Urządzenie kasuje nagranie wyłącznie po ACCEPTED albo DUPLICATE",
       "Żądanie z resident_id, imieniem, PESEL albo transkryptem jest odrzucane jako FORBIDDEN_FIELD",
-      "Autorem nagrań sesji jest osoba, która przedstawiła się w pierwszym nagraniu sesji",
+      "Przedstawienie z pierwszego nagrania to deklaracja autora sesji, którą kierownik może skorygować dla wybranego fragmentu",
       "Przedstawienie dopasowuje serwer bez modelu do personelu placówki; brak albo kilka dopasowań wybiera kierownik zmiany",
       "Bezczynność urządzenia powyżej 3 godzin automatycznie otwiera nową sesję, chroniąc prywatność brudnopisów między osobami",
-      "Gdy nagrania z session_seq > 1 dotrą przed session_seq 1 (np. po retry), serwer retroaktywnie uzupełnia autora całej sesji po dotarciu session_seq 1",
+      "Gdy później dotrze session_seq 1, serwer uzupełnia brakującą deklarację autora z zachowaniem ręcznych korekt",
       "Nagranie z czasem spoza okna synchronizacji dostaje oznaczenie TIME_UNCERTAIN",
       "Każda odpowiedź protokołu niesie server_time, z którego urządzenie bez RTC ustawia zegar",
       "Nagranie z clock_state RELATIVE dostaje recorded_at równe chwili przyjęcia INIT minus age_ms",
@@ -563,17 +562,17 @@ export const REQUIREMENTS = [
     "id": "VOICE-RESIDENT-ASSIGN",
     "status": "TODO",
     "risk": "HIGH",
-    "source": "SC-NUR-18, ADR-022",
+    "source": "SC-NUR-18, SC-NUR-19, ADR-022",
     "domain": "voice",
-    "statement": "Nagranie bez podopiecznego trafia do kolejki, w której serwer podsuwa kandydatów, a człowiek potwierdza.",
+    "statement": "Serwer przypisuje zakres fragmentu nagrania, a kierownik rozstrzyga wyjątki i może skorygować autora.",
     "acceptance": [
-      "Kandydatów wyznacza serwer na rejestrze tej placówki, bez udziału modelu",
-      "Bez potwierdzenia człowieka nagranie nie przechodzi do etapu CLASSIFY",
-      "Kolejkę czyta i rozstrzyga wyłącznie kierownik tej zmiany albo kierownik placówki",
-      "Po decyzji pozycja znika z kolejki, a voice_draft_notes czyta dalej tylko autor",
-      "Nagranie oznaczone jako nie do przypisania nie trafia do modelu i podlega retencji",
-      "Każda decyzja zapisuje w audit_logs kandydatów podsuniętych i wybór człowieka",
-      "Konto bliskiego otrzymuje zero wierszy z kolejki przypisania"
+      "Jeden plik może zawierać wiele fragmentów, a każdy fragment ma własny zakres i odnośnik do źródła",
+      "Jedno spójne dopasowanie serwera w rejestrze placówki przypisuje podopiecznego na potrzeby szkicu, a jawna sprawa placówki otrzymuje zakres FACILITY",
+      "Brak lub konflikt dopasowania, nieustalony autor albo niepewny czas trafiają do kolejki z powodem, bez zatrzymywania poprawnie rozstrzygniętych fragmentów",
+      "Kolejkę czyta i rozstrzyga wyłącznie kierownik tej zmiany albo kierownik placówki, a bliscy otrzymują zero wierszy",
+      "Fragment nierozstrzygnięty albo oznaczony jako nie do przypisania pozostaje poza klasyfikacją i raportami oraz podlega retencji",
+      "Audyt zapisuje metodę, czas i identyfikatory źródła oraz zmiany przypisania z osobą przy ręcznej korekcie, bez treści transkryptu",
+      "Automatyczne przypisanie zasila szkic bez zatwierdzania raportu, publikacji rodzinie ani rozliczania zadań"
     ]
   },
   {
@@ -582,7 +581,7 @@ export const REQUIREMENTS = [
     "risk": "MEDIUM",
     "source": "SC-ADM-24, ADR-022",
     "domain": "voice",
-    "statement": "Kierownik placówki prowadzi rejestr urządzeń placówki. Urządzenia są wspólne: autora nagrań ustala przedstawienie w sesji, a wpis wydania jest opcjonalną ewidencją sprzętu.",
+    "statement": "Kierownik placówki prowadzi rejestr urządzeń placówki. Urządzenia są wspólne: przedstawienie określa deklarowanego autora sesji, a wpis wydania jest opcjonalną ewidencją sprzętu.",
     "acceptance": [
       "Token urządzenia jest pokazywany jeden raz przy rejestracji",
       "Unieważnienie ustawia revoked_at zamiast usuwać wiersz",
