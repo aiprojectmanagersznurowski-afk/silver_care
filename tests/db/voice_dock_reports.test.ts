@@ -87,6 +87,23 @@ describe('Raporty operacyjne', () => {
     })
   })
 
+  it('harmonogram wybiera zamknięty okres, a odbiorcy kategorii ograniczają odczyt i akceptację @REQ: VOICE-DOCK-REPORTS', async () => {
+    await transaction(async (tx) => {
+      const { org, user } = await setup(tx)
+      await service(tx)
+      const [due] = await tx`SELECT public.claim_due_operational_report(
+        ${org}, now() + interval '2 days') AS result`
+      expect(due.result).toMatchObject({ organization_id: org, schedule_mode: 'daily' })
+      const [report] = await emptyReport(tx, org)
+      await staff(tx, user, org, 'nurse')
+      expect(await tx`SELECT id FROM public.operational_reports WHERE id = ${report.id}`).toHaveLength(0)
+      await expect(tx.savepoint((sp) => sp`SELECT public.approve_operational_report(${report.id})`))
+        .rejects.toMatchObject({ code: '42501' })
+      await staff(tx, user, org)
+      expect(await tx`SELECT id FROM public.operational_reports WHERE id = ${report.id}`).toHaveLength(1)
+    })
+  })
+
   it('oddziela rolę serwisową, waliduje brak danych i blokuje ponowne zatwierdzenie @REQ: VOICE-DOCK-REPORTS', async () => {
     await transaction(async (tx) => {
       const { org, user } = await setup(tx)
