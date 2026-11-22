@@ -50,6 +50,7 @@ export const RESOURCES = [
   'voice_devices', 'voice_device_assignments', 'voice_captures', 'voice_segments', 'voice_assignment_queue', 'voice_retention_settings',
   'organization_feature_flags',
   'voice_sanitized_events', 'organization_report_configs', 'operational_reports',
+  'voice_segment_proposals', 'family_voice_report_provenance', 'operational_report_jobs', 'voice_storage_deletions',
 ];
 
 /**
@@ -117,6 +118,12 @@ export const MATRIX = [
   { resource: 'voice_sanitized_events',      read: ['org_admin:own', 'nurse:own'],              create: [], update: [],                                 delete: [] },
   { resource: 'organization_report_configs', read: ['super_admin', 'org_admin:own', 'nurse:own'], create: ['super_admin'],              update: ['super_admin', 'org_admin:own'],   delete: [] },
   { resource: 'operational_reports',         read: ['org_admin:own', 'nurse:own'],              create: [], update: ['org_admin:own', 'nurse:own'],     delete: [] },
+  // Personel czyta fakty własnego autorstwa, kierownik placówki fakty w ustalonym zakresie placówki.
+  // Decyzja o faktach jest wykonywana tylko przez audytowany RPC; powiązania raportu zostają po stronie potoku.
+  { resource: 'voice_segment_proposals',       read: ['org_admin:own', 'nurse:own'], create: [], update: ['org_admin:own', 'nurse:own'], delete: [] },
+  { resource: 'family_voice_report_provenance', read: [], create: [], update: [], delete: [] },
+  { resource: 'operational_report_jobs',        read: [], create: [], update: [], delete: [] },
+  { resource: 'voice_storage_deletions',        read: [], create: [], update: [], delete: [] },
 ];
 
 /**

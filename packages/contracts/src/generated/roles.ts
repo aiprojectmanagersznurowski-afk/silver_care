@@ -107,7 +107,11 @@ export const RESOURCES = [
   "organization_feature_flags",
   "voice_sanitized_events",
   "organization_report_configs",
-  "operational_reports"
+  "operational_reports",
+  "voice_segment_proposals",
+  "family_voice_report_provenance",
+  "operational_report_jobs",
+  "voice_storage_deletions"
 ] as const;
 
 export const MATRIX = [
@@ -570,6 +574,40 @@ export const MATRIX = [
       "org_admin:own",
       "nurse:own"
     ],
+    "delete": []
+  },
+  {
+    "resource": "voice_segment_proposals",
+    "read": [
+      "org_admin:own",
+      "nurse:own"
+    ],
+    "create": [],
+    "update": [
+      "org_admin:own",
+      "nurse:own"
+    ],
+    "delete": []
+  },
+  {
+    "resource": "family_voice_report_provenance",
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  {
+    "resource": "operational_report_jobs",
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  {
+    "resource": "voice_storage_deletions",
+    "read": [],
+    "create": [],
+    "update": [],
     "delete": []
   }
 ] as const;
