@@ -471,3 +471,10 @@ sequenceDiagram
 - Transkrypcja nagrania bez przypisania idzie przez Groq (ADR-009) tak samo jak dziś: surowe audio przed maskowaniem. Zasięg wyjątku z ADR-009 się nie zmienia, ale obejmuje więcej nagrań.
 - Kierownik zmiany dostaje pracę przy kolejce. Okno rozliczenia (architektura, pytanie 9) trzeba sprawdzić w pilotażu.
 - Otwarte: dzielenie jednego nagrania na kilka osób (pytanie 8), zegar RTC w StickS3 (kompendium §1) i zgody personelu na nagrywanie głosu (odłożone w ADR-021).
+
+### Uzupełnienie 2026-11-22 — przypisanie fragmentów przed przygotowaniem szkicu
+
+- Tryb webowy o podopiecznym nadal przekazuje wybrany `resident_id`. Tryb nagrania ogólnego oraz przyjęte audio z urządzenia przekazują zakres do ustalenia po transkrypcji.
+- Jeden plik może zawierać wiele fragmentów. Każdy fragment ma jedno przypisanie do podopiecznego albo placówki. Serwer automatycznie przypisuje jedno spójne dopasowanie w rejestrze placówki do szkicu. Fragmenty wymagające wyjaśnienia trafiają do kolejki kierownika.
+- Przedstawienie na dyktafonie deklaruje autora sesji. Kierownik może ustalić lub skorygować autora fragmentu, także gdy urządzenie zmieniło użytkownika w tej samej sesji. Opóźniona deklaracja zachowuje wcześniejsze korekty.
+- Zatwierdzenie raportu lub zadania pozostaje osobną decyzją. Szczegóły procesu opisują `SC-NUR-18`, `SC-NUR-19` i `SC-NUR-20`. Kontrakt rozstrzyga zasady przypisania i dostępu.
