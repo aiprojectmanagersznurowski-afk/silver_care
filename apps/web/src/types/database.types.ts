@@ -1,6 +1,6 @@
 // ==============================================================================
 // Automatycznie wygenerowane typy bazy danych Silver Care (PostgreSQL/Supabase)
-// Wygenerowano: 2026-11-22T15:08:02.297Z
+// Wygenerowano: 2026-11-22T15:11:11.373Z
 // ==============================================================================
 
 export type Json =
@@ -1712,6 +1712,7 @@ export interface Database {
           processing_token: string | null
           processing_started_at: string | null
           processing_attempts: number
+          declared_author_id: string | null
         }
         Insert: {
           id?: string
@@ -1732,6 +1733,7 @@ export interface Database {
           processing_token?: string | null
           processing_started_at?: string | null
           processing_attempts?: number
+          declared_author_id?: string | null
         }
         Update: {
           id?: string
@@ -1752,6 +1754,7 @@ export interface Database {
           processing_token?: string | null
           processing_started_at?: string | null
           processing_attempts?: number
+          declared_author_id?: string | null
         }
         Relationships: [
           {
@@ -2143,6 +2146,14 @@ export interface Database {
         }
         Returns: Database["public"]["Tables"]["organization_report_configs"]["Row"] | null
       }
+      declare_voice_capture_author: {
+        Args: {
+          p_capture_id: string
+          p_token: string
+          p_author_id: string
+        }
+        Returns: undefined
+      }
       enforce_retention_policy: {
         Args: {
           years_to_keep: number
@@ -2511,6 +2522,13 @@ export interface Database {
           p_admin_full_name?: string | null
         }
         Returns: string
+      }
+      read_voice_capture_context: {
+        Args: {
+          p_capture_id: string
+          p_token: string
+        }
+        Returns: Json
       }
       record_generated_operational_report: {
         Args: {
