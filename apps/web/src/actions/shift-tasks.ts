@@ -151,6 +151,7 @@ export async function settleShiftTaskAction(input: SettleShiftTaskInput): Promis
   })
   if (error) {
     if (error.message.includes('SHIFT_NOT_LEAD')) return { error: 'Zadania rozlicza kierownik zmiany.' }
+    if (error.message.includes('SHIFT_TASK_ALREADY_CARRIED')) return { error: 'To zadanie zostało już przeniesione.' }
     if (error.message.includes('SHIFT_CARRY_TARGET_INVALID')) return { error: 'Wybierz inną zmianę lub datę niż obecna.' }
     if (error.message.includes('SHIFT_TASK_SETTLED')) return { error: 'To zadanie jest już rozliczone.' }
     console.error('[SHIFT_TASK_SETTLE_FAIL]', error.code)

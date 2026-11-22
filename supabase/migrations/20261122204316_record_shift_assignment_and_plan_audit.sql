@@ -1,5 +1,5 @@
 -- NUR-SHIFT-CLOSURE: przypisanie z grafiku i transakcyjny audyt zmian planu.
--- Wycofanie: usuń trzy triggery oraz ich funkcje. Zapisany audyt pozostaje historią.
+-- Wycofanie: usuń trzy triggery, ich funkcje oraz indeks idx_shift_tasks_carry_source. Zapisany audyt pozostaje historią.
 
 CREATE FUNCTION private.guard_shift_task_assignment() RETURNS trigger
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = ''
@@ -47,6 +47,8 @@ REVOKE ALL ON FUNCTION private.guard_shift_task_assignment() FROM PUBLIC;
 CREATE TRIGGER shift_task_assignment_guard BEFORE INSERT OR UPDATE OF assignee_user_id ON public.shift_tasks
   FOR EACH ROW EXECUTE FUNCTION private.guard_shift_task_assignment();
 
+CREATE INDEX idx_shift_tasks_carry_source ON public.shift_tasks (carried_from_task_id) WHERE carried_from_task_id IS NOT NULL;
+
 CREATE FUNCTION private.audit_shift_task_carry() RETURNS trigger
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = ''
 AS $$
@@ -55,7 +57,7 @@ DECLARE
   v_source public.shift_tasks%ROWTYPE;
 BEGIN
   SELECT * INTO v_source FROM public.shift_tasks
-  WHERE id = NEW.carried_from_task_id AND organization_id = NEW.organization_id;
+  WHERE id = NEW.carried_from_task_id AND organization_id = NEW.organization_id FOR NO KEY UPDATE;
   IF NOT FOUND OR auth.uid() IS NULL OR NEW.organization_id IS DISTINCT FROM public.get_jwt_organization_id()
      OR (v_role = 'org_admin' OR (v_role = 'nurse' AND public.is_shift_lead(v_source.shift_definition_id, v_source.shift_date))) IS NOT TRUE THEN
     RAISE EXCEPTION 'SHIFT_CARRY_SOURCE_FORBIDDEN' USING ERRCODE = '42501';
@@ -64,6 +66,11 @@ BEGIN
      OR (v_source.shift_definition_id = NEW.shift_definition_id AND v_source.shift_date = NEW.shift_date) THEN
     RAISE EXCEPTION 'SHIFT_CARRY_SOURCE_INVALID' USING ERRCODE = '23514';
   END IF;
+  IF EXISTS (SELECT 1 FROM public.shift_tasks WHERE carried_from_task_id = v_source.id AND id <> NEW.id) THEN
+    RAISE EXCEPTION 'SHIFT_TASK_ALREADY_CARRIED' USING ERRCODE = '23514';
+  END IF;
+  -- Lista źródłowa także się zmienia. Zwiększenie updated_at wymusza ponowną akceptację wydruku.
+  UPDATE public.shift_tasks SET updated_at = clock_timestamp() WHERE id = v_source.id;
   INSERT INTO public.audit_logs (organization_id, action, performed_by, payload)
   VALUES (NEW.organization_id, 'SHIFT_TASK_CARRIED', auth.uid(), jsonb_build_object(
     'task_id', NEW.id, 'source_task_id', v_source.id,
