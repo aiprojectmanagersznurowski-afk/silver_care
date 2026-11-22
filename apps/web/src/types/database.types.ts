@@ -1,6 +1,6 @@
 // ==============================================================================
 // Automatycznie wygenerowane typy bazy danych Silver Care (PostgreSQL/Supabase)
-// Wygenerowano: 2026-11-22T14:38:09.029Z
+// Wygenerowano: 2026-11-22T14:45:30.044Z
 // ==============================================================================
 
 export type Json =
@@ -457,6 +457,78 @@ export interface Database {
         Relationships: [
         ]
       }
+      operational_reports: {
+        Row: {
+          id: string
+          organization_id: string
+          category_code: string
+          period_start: string
+          period_end: string
+          source_event_ids: unknown[]
+          content: Json
+          status: string
+          requires_regeneration: boolean
+          ai_model: string
+          ai_prompt_version: string
+          ai_generated_at: string
+          approved_by: string | null
+          approved_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          category_code: string
+          period_start: string
+          period_end: string
+          source_event_ids: unknown[]
+          content: Json
+          status?: string
+          requires_regeneration?: boolean
+          ai_model: string
+          ai_prompt_version: string
+          ai_generated_at: string
+          approved_by?: string | null
+          approved_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          category_code?: string
+          period_start?: string
+          period_end?: string
+          source_event_ids?: unknown[]
+          content?: Json
+          status?: string
+          requires_regeneration?: boolean
+          ai_model?: string
+          ai_prompt_version?: string
+          ai_generated_at?: string
+          approved_by?: string | null
+          approved_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operational_reports_organization_id_category_code_fkey"
+            columns: ["organization_id", "category_code"]
+            isOneToOne: false
+            referencedRelation: "organization_report_configs"
+            referencedColumns: ["organization_id", "category_code"]
+          },
+          {
+            foreignKeyName: "operational_reports_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_feature_flags: {
         Row: {
           organization_id: string
@@ -489,6 +561,65 @@ export interface Database {
           },
           {
             foreignKeyName: "organization_feature_flags_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_report_configs: {
+        Row: {
+          id: string
+          organization_id: string
+          category_code: string
+          category_label: string
+          classifier_hint: string
+          is_enabled: boolean
+          schedule_mode: string
+          allowed_sections: unknown[]
+          recipient_roles: unknown[]
+          requires_approval: boolean
+          retention_days: number
+          archived_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          category_code: string
+          category_label: string
+          classifier_hint?: string
+          is_enabled?: boolean
+          schedule_mode: string
+          allowed_sections: unknown[]
+          recipient_roles: unknown[]
+          requires_approval?: boolean
+          retention_days?: number
+          archived_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          category_code?: string
+          category_label?: string
+          classifier_hint?: string
+          is_enabled?: boolean
+          schedule_mode?: string
+          allowed_sections?: unknown[]
+          recipient_roles?: unknown[]
+          requires_approval?: boolean
+          retention_days?: number
+          archived_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_report_configs_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -1784,6 +1915,83 @@ export interface Database {
           },
         ]
       }
+      voice_sanitized_events: {
+        Row: {
+          id: string
+          organization_id: string
+          draft_note_id: string | null
+          segment_id: string | null
+          capture_source: string
+          scope: string
+          resident_id: string | null
+          author_id: string
+          sanitized_text: string
+          matched_categories: unknown[]
+          recorded_at: string
+          metadata: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          draft_note_id?: string | null
+          segment_id?: string | null
+          capture_source: string
+          scope: string
+          resident_id?: string | null
+          author_id: string
+          sanitized_text: string
+          matched_categories: unknown[]
+          recorded_at: string
+          metadata: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          draft_note_id?: string | null
+          segment_id?: string | null
+          capture_source?: string
+          scope?: string
+          resident_id?: string | null
+          author_id?: string
+          sanitized_text?: string
+          matched_categories?: unknown[]
+          recorded_at?: string
+          metadata?: Json
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_sanitized_events_draft_note_id_fkey"
+            columns: ["draft_note_id"]
+            isOneToOne: false
+            referencedRelation: "voice_draft_notes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voice_sanitized_events_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voice_sanitized_events_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: false
+            referencedRelation: "residents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voice_sanitized_events_segment_id_organization_id_fkey"
+            columns: ["segment_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "voice_segments"
+            referencedColumns: ["id", "organization_id"]
+          },
+        ]
+      }
       voice_segments: {
         Row: {
           id: string
@@ -1868,6 +2076,12 @@ export interface Database {
         }
         Returns: Json
       }
+      approve_operational_report: {
+        Args: {
+          p_report_id: string
+        }
+        Returns: Database["public"]["Tables"]["operational_reports"]["Row"] | null
+      }
       bed_count: {
         Args: {
           r: Database["public"]["Tables"]["rooms"]["Row"]
@@ -1884,9 +2098,27 @@ export interface Database {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      cleanup_expired_operational_reports: {
+        Args: {
+          p_org_id?: string | null
+        }
+        Returns: Json
+      }
       cleanup_voice_drafts: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      configure_organization_report_category: {
+        Args: {
+          p_org_id: string
+          p_category_code: string
+          p_is_enabled: string
+          p_schedule_mode: string
+          p_allowed_sections_json: string
+          p_recipient_roles_json: string
+          p_retention_days?: string | null
+        }
+        Returns: Database["public"]["Tables"]["organization_report_configs"]["Row"] | null
       }
       enforce_retention_policy: {
         Args: {
@@ -2050,6 +2282,12 @@ export interface Database {
           feature_key: string
           enabled: boolean
         }[]
+      }
+      get_organization_report_configs: {
+        Args: {
+          p_org_id: string
+        }
+        Returns: Database["public"]["Tables"]["organization_report_configs"]["Row"][]
       }
       get_superadmin_organization_summary: {
         Args: Record<PropertyKey, never>
@@ -2243,12 +2481,41 @@ export interface Database {
         }
         Returns: string
       }
+      record_generated_operational_report: {
+        Args: {
+          p_org_id: string
+          p_category_code: string
+          p_period_start: string
+          p_period_end: string
+          p_source_event_ids_json: string
+          p_content_json: string
+          p_ai_model: string
+          p_ai_prompt_version: string
+          p_ai_generated_at: string
+        }
+        Returns: Database["public"]["Tables"]["operational_reports"]["Row"] | null
+      }
       record_shift_plan_print: {
         Args: {
           p_shift_definition_id: string
           p_shift_date: string
         }
         Returns: number
+      }
+      record_voice_sanitized_event: {
+        Args: {
+          p_org_id: string
+          p_draft_note_id: string
+          p_capture_source: string
+          p_scope: string
+          p_resident_id: string
+          p_author_id: string
+          p_sanitized_text: string
+          p_matched_categories_json: string
+          p_recorded_at: string
+          p_metadata_json: string
+        }
+        Returns: Database["public"]["Tables"]["voice_sanitized_events"]["Row"] | null
       }
       report_resident_death_atomic: {
         Args: {
@@ -2316,6 +2583,22 @@ export interface Database {
           p_new_bed_id: string
         }
         Returns: undefined
+      }
+      upsert_organization_report_category: {
+        Args: {
+          p_org_id: string
+          p_category_code: string
+          p_category_label: string
+          p_classifier_hint?: string | null
+          p_is_enabled?: string | null
+          p_schedule_mode?: string | null
+          p_allowed_sections_json?: string | null
+          p_recipient_roles_json?: string | null
+          p_requires_approval?: string | null
+          p_retention_days?: string | null
+          p_archived_at?: string | null
+        }
+        Returns: Database["public"]["Tables"]["organization_report_configs"]["Row"] | null
       }
     }
     Enums: {
