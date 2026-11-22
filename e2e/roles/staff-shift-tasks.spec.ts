@@ -77,10 +77,10 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
   });
 
   /** Zadania do rozliczenia wstawia baza, żeby test nie zależał od kolejności poprzednich. */
-  async function seedTask(title: string, status: 'PROPOSED' | 'TODO') {
+  async function seedTask(title: string, status: 'PROPOSED' | 'TODO', date = SETTLE_DATE) {
     const [admin] = await sql`SELECT id FROM auth.users WHERE email = ${TEST_USERS.org_admin.email}`;
     await sql`INSERT INTO public.shift_tasks (organization_id, shift_definition_id, shift_date, title, source, status, created_by)
-      SELECT ${orgId}, id, ${SETTLE_DATE}, ${title}, 'MANUAL', ${status}, ${admin.id} FROM public.shift_definitions
+      SELECT ${orgId}, id, ${date}, ${title}, 'MANUAL', ${status}, ${admin.id} FROM public.shift_definitions
       WHERE organization_id = ${orgId} AND code = ${CODE}`;
   }
 
@@ -200,4 +200,38 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
     await expect(page.getByText('E2E Zadanie na wydruk')).toBeVisible();
     await expect(tasks.printButton).toBeHidden();
   });
+
+  test('@REQ: NUR-SHIFT-CLOSURE - kierownik przypisuje z grafiku, a personel widzi pracownika i zadania wspólne', async ({ loginPage, page }) => {
+    const date = '2026-11-11';
+    const assigned = 'E2E Zadanie przypisane';
+    const shared = 'E2E Zadanie wspólne';
+    await seedTask(assigned, 'TODO', date);
+    await seedTask(shared, 'TODO', date);
+    const [nurse] = await sql`SELECT id FROM auth.users WHERE email = ${TEST_USERS.nurse.email}`;
+    await sql`INSERT INTO public.shift_roster (organization_id, shift_definition_id, shift_date, user_id)
+      SELECT ${orgId}, id, ${date}, ${nurse.id} FROM public.shift_definitions WHERE organization_id = ${orgId} AND code = ${CODE}`;
+
+    await loginPage.loginAs('org_admin');
+    const tasks = new ShiftTasksPage(page);
+    await tasks.goto(CODE, date);
+    const option = tasks.assigneeSelect(assigned).locator(`option[value="${nurse.id}"]`);
+    await expect(option).toHaveCount(1);
+    const name = (await option.textContent())!;
+    await tasks.assign(assigned, nurse.id);
+    await page.getByRole('link', { name: 'Według pracowników' }).click();
+    await expect(tasks.group(name)).toContainText(assigned);
+    await expect(tasks.group('Zadania wspólne')).toContainText(shared);
+    await tasks.approvePlanButton.click();
+    await expect(tasks.planStatus).toContainText('Plan zatwierdzony');
+    await tasks.printLink.click();
+    await expect(page.getByRole('row').filter({ hasText: assigned })).toContainText(name);
+
+    await page.context().clearCookies();
+    await loginPage.loginAs('nurse');
+    await tasks.goto(CODE, date);
+    await page.getByRole('link', { name: 'Według pracowników' }).click();
+    await expect(tasks.group(name)).toContainText(assigned);
+    await expect(tasks.assigneeSelect(assigned)).toHaveCount(0);
+  });
+
 });

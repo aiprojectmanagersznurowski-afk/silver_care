@@ -56,6 +56,15 @@ export class ShiftTasksPage {
     await this.task(title).getByRole('button', { name: /^Zatwierdź zadanie/ }).click();
   }
 
+  assigneeSelect(title: string): Locator {
+    return this.task(title).getByLabel(`Przypisz zadanie: ${title}`);
+  }
+
+  async assign(title: string, userId: string) {
+    await this.assigneeSelect(title).selectOption(userId);
+    await this.task(title).getByRole('button', { name: 'Zapisz przypisanie' }).click();
+  }
+
   async markDone(title: string) {
     await this.task(title).getByRole('button', { name: /^Wykonane:/ }).click();
   }
