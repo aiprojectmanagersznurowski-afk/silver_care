@@ -207,35 +207,42 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
     const shared = 'E2E Zadanie wspólne';
     await seedTask(assigned, 'TODO', date);
     await seedTask(shared, 'TODO', date);
-    const [nurse] = await sql`SELECT id FROM auth.users WHERE email = ${TEST_USERS.nurse.email}`;
-    await sql`INSERT INTO public.shift_roster (organization_id, shift_definition_id, shift_date, user_id)
-      SELECT ${orgId}, id, ${date}, ${nurse.id} FROM public.shift_definitions WHERE organization_id = ${orgId} AND code = ${CODE}`;
+    const [nurse] = await sql`INSERT INTO auth.users (id, aud, role, raw_app_meta_data, raw_user_meta_data)
+      VALUES (gen_random_uuid(), 'authenticated', 'authenticated',
+        ${sql.json({ role: 'nurse', organization_id: orgId, is_active: true })},
+        ${sql.json({ full_name: 'E2E Osoba z grafiku' })}) RETURNING id`;
+    try {
+      await sql`INSERT INTO public.shift_roster (organization_id, shift_definition_id, shift_date, user_id)
+        SELECT ${orgId}, id, ${date}, ${nurse.id} FROM public.shift_definitions WHERE organization_id = ${orgId} AND code = ${CODE}`;
 
-    await loginPage.loginAs('org_admin');
-    const tasks = new ShiftTasksPage(page);
-    await tasks.goto(CODE, date);
-    const option = tasks.assigneeSelect(assigned).locator(`option[value="${nurse.id}"]`);
-    await expect(option).toHaveCount(1);
-    const name = (await option.textContent())!;
-    await tasks.approvePlanButton.click();
-    await expect(tasks.planStatus).toContainText('Plan zatwierdzony, wersja 1');
-    await tasks.assign(assigned, nurse.id);
-    await expect(tasks.planStatus).toContainText('Plan wymaga ponownego zatwierdzenia');
-    await expect(tasks.printLink).toHaveCount(0);
-    await page.getByRole('link', { name: 'Według pracowników' }).click();
-    await expect(tasks.group(name)).toContainText(assigned);
-    await expect(tasks.group('Zadania wspólne')).toContainText(shared);
-    await tasks.approvePlanButton.click();
-    await expect(tasks.planStatus).toContainText('Plan zatwierdzony, wersja 2');
-    await tasks.printLink.click();
-    await expect(page.getByRole('row').filter({ hasText: assigned })).toContainText(name);
+      await loginPage.loginAs('org_admin');
+      const tasks = new ShiftTasksPage(page);
+      await tasks.goto(CODE, date);
+      const option = tasks.assigneeSelect(assigned).locator(`option[value="${nurse.id}"]`);
+      await expect(option).toHaveCount(1);
+      const name = (await option.textContent())!;
+      await tasks.approvePlanButton.click();
+      await expect(tasks.planStatus).toContainText('Plan zatwierdzony, wersja 1');
+      await tasks.assign(assigned, nurse.id);
+      await expect(tasks.planStatus).toContainText('Plan wymaga ponownego zatwierdzenia');
+      await expect(tasks.printLink).toHaveCount(0);
+      await page.getByRole('link', { name: 'Według pracowników' }).click();
+      await expect(tasks.group(name)).toContainText(assigned);
+      await expect(tasks.group('Zadania wspólne')).toContainText(shared);
+      await tasks.approvePlanButton.click();
+      await expect(tasks.planStatus).toContainText('Plan zatwierdzony, wersja 2');
+      await tasks.printLink.click();
+      await expect(page.getByRole('row').filter({ hasText: assigned })).toContainText(name);
 
-    await page.context().clearCookies();
-    await loginPage.loginAs('nurse');
-    await tasks.goto(CODE, date);
-    await page.getByRole('link', { name: 'Według pracowników' }).click();
-    await expect(tasks.group(name)).toContainText(assigned);
-    await expect(tasks.assigneeSelect(assigned)).toHaveCount(0);
+      await page.context().clearCookies();
+      await loginPage.loginAs('nurse');
+      await tasks.goto(CODE, date);
+      await page.getByRole('link', { name: 'Według pracowników' }).click();
+      await expect(tasks.group(name)).toContainText(assigned);
+      await expect(tasks.assigneeSelect(assigned)).toHaveCount(0);
+    } finally {
+      await sql`DELETE FROM auth.users WHERE id = ${nurse.id}`;
+    }
   });
 
 });
