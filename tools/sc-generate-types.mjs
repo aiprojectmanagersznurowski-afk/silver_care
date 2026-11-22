@@ -77,12 +77,18 @@ async function run() {
 
   const views = await sql`SELECT table_name FROM information_schema.views WHERE table_schema = 'public' ORDER BY table_name`
   const computedCols = await sql`
+    WITH input_parameters AS MATERIALIZED (
+      SELECT specific_name, min(udt_name) AS udt_name
+      FROM information_schema.parameters
+      WHERE specific_schema = 'public' AND parameter_mode = 'IN'
+      GROUP BY specific_name
+      HAVING count(*) = 1 AND min(ordinal_position) = 1
+        AND min(data_type) = 'USER-DEFINED'
+    )
     SELECT r.routine_name, r.data_type, r.type_udt_name, p.udt_name AS table_name
     FROM information_schema.routines r
-    JOIN information_schema.parameters p ON p.specific_name = r.specific_name
-    WHERE r.routine_schema = 'public' AND p.parameter_mode = 'IN' AND p.ordinal_position = 1
-      AND p.data_type = 'USER-DEFINED'
-      AND (SELECT count(*) FROM information_schema.parameters p2 WHERE p2.specific_name = r.specific_name AND p2.parameter_mode = 'IN') = 1`
+    JOIN input_parameters p ON p.specific_name = r.specific_name
+    WHERE r.routine_schema = 'public'`
 
   const tableComputed = new Map()
   for (const cc of computedCols) {

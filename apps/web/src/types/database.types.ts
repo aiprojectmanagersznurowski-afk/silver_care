@@ -1,6 +1,6 @@
 // ==============================================================================
 // Automatycznie wygenerowane typy bazy danych Silver Care (PostgreSQL/Supabase)
-// Wygenerowano: 2026-10-31T17:31:34.066Z
+// Wygenerowano: 2026-11-22T14:38:09.029Z
 // ==============================================================================
 
 export type Json =
@@ -742,6 +742,51 @@ export interface Database {
           },
         ]
       }
+      resident_death_reports: {
+        Row: {
+          resident_id: string
+          organization_id: string
+          reported_death_date: string
+          notes: string | null
+          task_ids: unknown[]
+          reported_at: string
+          reported_by: string
+        }
+        Insert: {
+          resident_id: string
+          organization_id: string
+          reported_death_date: string
+          notes?: string | null
+          task_ids?: unknown[]
+          reported_at?: string
+          reported_by: string
+        }
+        Update: {
+          resident_id?: string
+          organization_id?: string
+          reported_death_date?: string
+          notes?: string | null
+          task_ids?: unknown[]
+          reported_at?: string
+          reported_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resident_death_reports_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resident_death_reports_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: true
+            referencedRelation: "residents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       resident_events: {
         Row: {
           id: string
@@ -788,6 +833,45 @@ export interface Database {
             foreignKeyName: "resident_events_resident_id_fkey"
             columns: ["resident_id"]
             isOneToOne: false
+            referencedRelation: "residents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resident_funding: {
+        Row: {
+          resident_id: string
+          organization_id: string
+          funding_source: string
+          updated_by: string
+          updated_at: string
+        }
+        Insert: {
+          resident_id: string
+          organization_id: string
+          funding_source: string
+          updated_by: string
+          updated_at?: string
+        }
+        Update: {
+          resident_id?: string
+          organization_id?: string
+          funding_source?: string
+          updated_by?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resident_funding_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resident_funding_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: true
             referencedRelation: "residents"
             referencedColumns: ["id"]
           },
@@ -864,7 +948,7 @@ export interface Database {
           content_type: string
           captured_at?: string
           created_at?: string
-          uploaded_by?: string
+          uploaded_by: string
         }
         Update: {
           id?: string
@@ -974,90 +1058,6 @@ export interface Database {
           },
         ]
       }
-      resident_death_reports: {
-        Row: {
-          resident_id: string
-          organization_id: string
-          reported_death_date: string
-          notes: string | null
-          task_ids: string[]
-          reported_at: string
-          reported_by: string
-        }
-        Insert: {
-          resident_id: string
-          organization_id: string
-          reported_death_date: string
-          notes?: string | null
-          task_ids?: string[]
-          reported_at?: string
-          reported_by: string
-        }
-        Update: {
-          resident_id?: string
-          organization_id?: string
-          reported_death_date?: string
-          notes?: string | null
-          task_ids?: string[]
-          reported_at?: string
-          reported_by?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "resident_death_reports_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "resident_death_reports_resident_id_fkey"
-            columns: ["resident_id"]
-            isOneToOne: true
-            referencedRelation: "residents"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      resident_funding: {
-        Row: {
-          resident_id: string
-          organization_id: string
-          funding_source: string
-          updated_by: string
-          updated_at: string
-        }
-        Insert: {
-          resident_id: string
-          organization_id: string
-          funding_source: string
-          updated_by: string
-          updated_at?: string
-        }
-        Update: {
-          resident_id?: string
-          organization_id?: string
-          funding_source?: string
-          updated_by?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "resident_funding_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "resident_funding_resident_id_fkey"
-            columns: ["resident_id"]
-            isOneToOne: true
-            referencedRelation: "residents"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       residents: {
         Row: {
           id: string
@@ -1068,7 +1068,6 @@ export interface Database {
           created_at: string
           archived_at: string | null
           avatar_url: string | null
-          photo_path: string | null
           birth_date: string | null
           gender: string | null
           admission_date: string | null
@@ -1084,6 +1083,7 @@ export interface Database {
           contract_document_path: string | null
           contract_document_name: string | null
           search_name: string | null
+          photo_path: string | null
         }
         Insert: {
           id?: string
@@ -1094,7 +1094,6 @@ export interface Database {
           created_at?: string
           archived_at?: string | null
           avatar_url?: string | null
-          photo_path?: string | null
           birth_date?: string | null
           gender?: string | null
           admission_date?: string | null
@@ -1110,6 +1109,7 @@ export interface Database {
           contract_document_path?: string | null
           contract_document_name?: string | null
           search_name?: string | null
+          photo_path?: string | null
         }
         Update: {
           id?: string
@@ -1120,7 +1120,6 @@ export interface Database {
           created_at?: string
           archived_at?: string | null
           avatar_url?: string | null
-          photo_path?: string | null
           birth_date?: string | null
           gender?: string | null
           admission_date?: string | null
@@ -1136,6 +1135,7 @@ export interface Database {
           contract_document_path?: string | null
           contract_document_name?: string | null
           search_name?: string | null
+          photo_path?: string | null
         }
         Relationships: [
           {
@@ -1156,9 +1156,9 @@ export interface Database {
           floor: string
           sector: string | null
           is_active: boolean
-          bed_count?: number
           free_beds?: number
           occupied_beds?: number
+          bed_count?: number
         }
         Insert: {
           id?: string
@@ -1307,31 +1307,10 @@ export interface Database {
         Relationships: [
           {
             foreignKeyName: "fk_shift_plan_approvals_definition"
-            columns: ["shift_definition_id"]
+            columns: ["shift_definition_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "shift_definitions"
-            referencedColumns: ["organization_id"]
-          },
-          {
-            foreignKeyName: "fk_shift_plan_approvals_definition"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "shift_definitions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_shift_plan_approvals_definition"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "shift_definitions"
-            referencedColumns: ["organization_id"]
-          },
-          {
-            foreignKeyName: "fk_shift_plan_approvals_definition"
-            columns: ["shift_definition_id"]
-            isOneToOne: false
-            referencedRelation: "shift_definitions"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organization_id"]
           },
           {
             foreignKeyName: "shift_plan_approvals_organization_id_fkey"
@@ -1373,31 +1352,10 @@ export interface Database {
         Relationships: [
           {
             foreignKeyName: "fk_shift_roster_definition"
-            columns: ["organization_id"]
+            columns: ["shift_definition_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "shift_definitions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_shift_roster_definition"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "shift_definitions"
-            referencedColumns: ["organization_id"]
-          },
-          {
-            foreignKeyName: "fk_shift_roster_definition"
-            columns: ["shift_definition_id"]
-            isOneToOne: false
-            referencedRelation: "shift_definitions"
-            referencedColumns: ["organization_id"]
-          },
-          {
-            foreignKeyName: "fk_shift_roster_definition"
-            columns: ["shift_definition_id"]
-            isOneToOne: false
-            referencedRelation: "shift_definitions"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organization_id"]
           },
           {
             foreignKeyName: "shift_roster_organization_id_fkey"
@@ -1478,31 +1436,10 @@ export interface Database {
         Relationships: [
           {
             foreignKeyName: "fk_shift_tasks_definition"
-            columns: ["shift_definition_id"]
+            columns: ["shift_definition_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "shift_definitions"
-            referencedColumns: ["organization_id"]
-          },
-          {
-            foreignKeyName: "fk_shift_tasks_definition"
-            columns: ["shift_definition_id"]
-            isOneToOne: false
-            referencedRelation: "shift_definitions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_shift_tasks_definition"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "shift_definitions"
-            referencedColumns: ["organization_id"]
-          },
-          {
-            foreignKeyName: "fk_shift_tasks_definition"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "shift_definitions"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organization_id"]
           },
           {
             foreignKeyName: "shift_tasks_carried_from_task_id_fkey"
@@ -1573,6 +1510,218 @@ export interface Database {
         Relationships: [
         ]
       }
+      voice_assignment_queue: {
+        Row: {
+          segment_id: string
+          organization_id: string
+          shift_definition_id: string | null
+          shift_date: string | null
+          reasons: unknown[]
+          candidates: unknown[]
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+        }
+        Insert: {
+          segment_id: string
+          organization_id: string
+          shift_definition_id?: string | null
+          shift_date?: string | null
+          reasons: unknown[]
+          candidates?: unknown[]
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+        }
+        Update: {
+          segment_id?: string
+          organization_id?: string
+          shift_definition_id?: string | null
+          shift_date?: string | null
+          reasons?: unknown[]
+          candidates?: unknown[]
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_assignment_queue_segment_id_organization_id_fkey"
+            columns: ["segment_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "voice_segments"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "voice_assignment_queue_shift_definition_id_organization_id_fkey"
+            columns: ["shift_definition_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "shift_definitions"
+            referencedColumns: ["id", "organization_id"]
+          },
+        ]
+      }
+      voice_captures: {
+        Row: {
+          id: string
+          organization_id: string
+          source: string
+          source_key: string
+          storage_path: string
+          sha256: string
+          author_id: string | null
+          selected_resident_id: string | null
+          device_id: string | null
+          session_id: string | null
+          session_seq: number | null
+          recorded_at: string
+          received_at: string
+          clock_state: string
+          status: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          source: string
+          source_key: string
+          storage_path: string
+          sha256: string
+          author_id?: string | null
+          selected_resident_id?: string | null
+          device_id?: string | null
+          session_id?: string | null
+          session_seq?: number | null
+          recorded_at: string
+          received_at?: string
+          clock_state?: string
+          status?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          source?: string
+          source_key?: string
+          storage_path?: string
+          sha256?: string
+          author_id?: string | null
+          selected_resident_id?: string | null
+          device_id?: string | null
+          session_id?: string | null
+          session_seq?: number | null
+          recorded_at?: string
+          received_at?: string
+          clock_state?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_captures_device_id_organization_id_fkey"
+            columns: ["device_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "voice_devices"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "voice_captures_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voice_captures_selected_resident_id_fkey"
+            columns: ["selected_resident_id"]
+            isOneToOne: false
+            referencedRelation: "residents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voice_device_assignments: {
+        Row: {
+          id: string
+          organization_id: string
+          device_id: string
+          user_id: string
+          started_at: string
+          ended_at: string | null
+          assigned_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          device_id: string
+          user_id: string
+          started_at?: string
+          ended_at?: string | null
+          assigned_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          device_id?: string
+          user_id?: string
+          started_at?: string
+          ended_at?: string | null
+          assigned_by?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_voice_device_assignments_device"
+            columns: ["device_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "voice_devices"
+            referencedColumns: ["id", "organization_id"]
+          },
+        ]
+      }
+      voice_devices: {
+        Row: {
+          id: string
+          organization_id: string
+          label: string
+          token_hash: string
+          firmware_version: string | null
+          last_sync_at: string | null
+          revoked_at: string | null
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          label: string
+          token_hash: string
+          firmware_version?: string | null
+          last_sync_at?: string | null
+          revoked_at?: string | null
+          created_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          label?: string
+          token_hash?: string
+          firmware_version?: string | null
+          last_sync_at?: string | null
+          revoked_at?: string | null
+          created_by?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_devices_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       voice_draft_notes: {
         Row: {
           id: string
@@ -1635,6 +1784,63 @@ export interface Database {
           },
         ]
       }
+      voice_segments: {
+        Row: {
+          id: string
+          organization_id: string
+          capture_id: string
+          ordinal: number
+          start_ms: number
+          end_ms: number
+          transcript_path: string | null
+          assignment_status: string
+          resident_id: string | null
+          author_id: string | null
+          author_attribution: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          capture_id: string
+          ordinal: number
+          start_ms: number
+          end_ms: number
+          transcript_path?: string | null
+          assignment_status?: string
+          resident_id?: string | null
+          author_id?: string | null
+          author_attribution?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          capture_id?: string
+          ordinal?: number
+          start_ms?: number
+          end_ms?: number
+          transcript_path?: string | null
+          assignment_status?: string
+          resident_id?: string | null
+          author_id?: string | null
+          author_attribution?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_segments_capture_id_organization_id_fkey"
+            columns: ["capture_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "voice_captures"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "voice_segments_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: false
+            referencedRelation: "residents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       resident_sync_status: {
@@ -1668,6 +1874,12 @@ export interface Database {
         }
         Returns: number
       }
+      cancel_resident_death_report_atomic: {
+        Args: {
+          p_resident_id: string
+        }
+        Returns: undefined
+      }
       check_mfa_requirement: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -1688,6 +1900,10 @@ export interface Database {
         }
         Returns: string
       }
+      family_has_active_link_in_org: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       fetch_next_voice_job: {
         Args: Record<PropertyKey, never>
         Returns: Database["public"]["Tables"]["voice_draft_notes"]["Row"] | null
@@ -1699,7 +1915,10 @@ export interface Database {
         }
         Returns: Database["public"]["Tables"]["outbox_notifications"]["Row"][]
       }
-      finish_impersonation: { Args: never; Returns: string }
+      finish_impersonation: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       fn_admissions_by_month_care_level: {
         Args: {
           p_org_id: string
@@ -1807,9 +2026,30 @@ export interface Database {
         }
         Returns: number
       }
+      get_family_resident_overview: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          first_name: string
+          last_name: string
+          photo_path: string
+          death_date: string
+          contract_end_date: string
+          archived_at: string
+        }[]
+      }
       get_jwt_organization_id: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_org_feature_flags: {
+        Args: {
+          p_org_id: string
+        }
+        Returns: {
+          feature_key: string
+          enabled: boolean
+        }[]
       }
       get_superadmin_organization_summary: {
         Args: Record<PropertyKey, never>
@@ -1840,38 +2080,6 @@ export interface Database {
         }
         Returns: undefined
       }
-      is_medical_agenda_item: {
-        Args: {
-          p_title: string
-          p_type: string
-        }
-        Returns: boolean
-      }
-      get_family_resident_overview: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          id: string
-          first_name: string
-          last_name: string
-          avatar_url: string | null
-          death_date: string | null
-          contract_end_date: string | null
-          archived_at: string | null
-        }[]
-      }
-      is_relative_active_or_retained: {
-        Args: {
-          target_resident_id: string
-        }
-        Returns: boolean
-      }
-      get_org_feature_flags: {
-        Args: { p_org_id: string }
-        Returns: {
-          enabled: boolean
-          feature_key: string
-        }[]
-      }
       has_org_feature: {
         Args: {
           p_org_id: string
@@ -1886,6 +2094,19 @@ export interface Database {
         }
         Returns: boolean
       }
+      is_medical_agenda_item: {
+        Args: {
+          p_title: string
+          p_type: string
+        }
+        Returns: boolean
+      }
+      is_relative_active_or_retained: {
+        Args: {
+          target_resident_id: string
+        }
+        Returns: boolean
+      }
       is_relative_linked: {
         Args: {
           target_resident_id: string
@@ -1897,6 +2118,10 @@ export interface Database {
           p_shift_definition_id: string
           p_shift_date: string
         }
+        Returns: boolean
+      }
+      is_shift_lead_now: {
+        Args: Record<PropertyKey, never>
         Returns: boolean
       }
       log_access_denied: {
@@ -2030,15 +2255,30 @@ export interface Database {
           p_resident_id: string
           p_death_date: string
           p_notes?: string | null
-          p_tasks?: Json
+          p_tasks?: Json | null
         }
         Returns: undefined
       }
-      cancel_resident_death_report_atomic: {
+      resident_photo_readable: {
         Args: {
-          p_resident_id: string
+          p_name: string
         }
-        Returns: undefined
+        Returns: boolean
+      }
+      resident_photo_target: {
+        Args: {
+          p_name: string
+        }
+        Returns: {
+          organization_id: string
+          resident_id: string
+        }[]
+      }
+      resident_photo_writable: {
+        Args: {
+          p_name: string
+        }
+        Returns: boolean
       }
       revoke_consent: {
         Args: {

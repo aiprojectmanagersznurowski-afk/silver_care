@@ -62,7 +62,7 @@ export function assignVoiceSegment(input: AssignmentContext, residents: Assignme
     return pending(['MIXED_SEGMENT', ...reasons], [...nameMatches, ...roomMatches, ...selected])
   }
 
-  const evidence = []
+  const evidence: AssignmentResident[][] = []
   if (input.selectedResidentId) evidence.push(selected)
   if (nameMatches.length) evidence.push(nameMatches)
   if (rooms.length) evidence.push(roomMatches)
