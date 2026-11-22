@@ -2,6 +2,7 @@ import { CAPTURE_SOURCES, OPERATIONAL_REPORT_ENGINE, VOICE_RETENTION } from '@si
 import { createAdminClient } from '@/lib/supabase/admin'
 import { redactPrivately, readRedactionUrl, readSpeechConfiguration } from '@/lib/voice-private-speech'
 import { redactVoiceTranscript } from '@/lib/voice-redactor'
+import { extractNextShiftTaskIntents } from '@/lib/voice-shift-task-intent'
 import { classifySanitizedVoiceEvent, prepareSanitizedVoiceEvent, type OperationalReportCategory, type VoiceReportRegistry } from '@/lib/voice-report-engine'
 
 interface ProjectionClaim {
@@ -49,6 +50,7 @@ export async function processNextVoiceProjection(config: ReturnType<typeof readS
         behavioral_facts: result.behavioralFacts,
         operational_facts: result.operationalFacts,
         category_codes: result.categoryCodes,
+        proposed_tasks: extractNextShiftTaskIntents(sanitized.sanitizedTranscript),
         restricted_medical: item.scope === 'resident' ? redactVoiceTranscript(raw).extractedMedical : [],
       },
     })
