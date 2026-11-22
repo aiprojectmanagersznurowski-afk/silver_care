@@ -32,7 +32,7 @@ export default async function VoiceFamilyFactsPage() {
       description="Potwierdź drugi składnik uwierzytelniania, aby sprawdzić fakty do raportów." /></div>
   }
 
-  const result = await supabase.from('voice_segment_proposals')
+  const result = await supabase.from(OPERATIONAL_REPORT_ENGINE.proposalsResource)
     .select('segment_id, recorded_at, time_state, behavioral_facts, residents!inner(first_name,last_name,archived_at)')
     .eq('organization_id', orgId).not('resident_id', 'is', null).is('family_decision', null)
     .filter('behavioral_facts', 'neq', '{}').is('residents.archived_at', null).order('recorded_at').limit(100)

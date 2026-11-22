@@ -174,6 +174,8 @@ async function postChatCompletion(
 ): Promise<Response> {
   return fetch(config.endpoint, {
     method: 'POST',
+    redirect: 'error',
+    signal: AbortSignal.timeout(45_000),
     headers: { Authorization: `Bearer ${config.apiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ model, messages, temperature, max_tokens: maxTokens }),
   })
