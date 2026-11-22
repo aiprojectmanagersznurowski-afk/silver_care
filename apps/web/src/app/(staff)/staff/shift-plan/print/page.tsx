@@ -38,7 +38,7 @@ export default async function ShiftPlanPrintPage({ searchParams }: { searchParam
 
   const [leadRes, approvalRes] = await Promise.all([
     role === 'org_admin' ? Promise.resolve({ data: true }) : supabase.rpc('is_shift_lead', { p_shift_definition_id: shift.id, p_shift_date: date }),
-    supabase.from('shift_plan_approvals').select('version').eq('shift_definition_id', shift.id).eq('shift_date', date)
+    supabase.from('shift_plan_approvals').select('version, approved_at').eq('shift_definition_id', shift.id).eq('shift_date', date)
       .order('version', { ascending: false }).limit(1).maybeSingle(),
   ])
   if (leadRes.data !== true) return <ListEmpty title="Brak uprawnień" description="Plan pracy drukuje kierownik zmiany." />
@@ -47,7 +47,10 @@ export default async function ShiftPlanPrintPage({ searchParams }: { searchParam
     return <ListEmpty title="Najpierw zatwierdź plan zmiany" description="Wydruk jest możliwy po zatwierdzeniu planu na liście zadań." />
   }
 
-  const { tasks, carriedOut } = await loadShiftTaskData(supabase, shift.id, date)
+  const { tasks, carriedOut, lastPlanChange } = await loadShiftTaskData(supabase, shift.id, date)
+  if (lastPlanChange > Date.parse(approval.approved_at)) {
+    return <ListEmpty title="Plan wymaga ponownego zatwierdzenia" description="Wróć do listy zadań i zatwierdź jego aktualną wersję." />
+  }
   const visible = groupTasks(tasks, 'room', carriedOut).flatMap((g) => g.tasks)
   const sections = buildPrintSections(visible)
 
@@ -69,7 +72,7 @@ export default async function ShiftPlanPrintPage({ searchParams }: { searchParam
               <thead>
                 <tr className="border-b text-left text-muted-foreground">
                   <th className="py-1 pr-2">Podopieczny</th><th className="py-1 pr-2">Zadanie</th><th className="py-1 pr-2">Godzina</th>
-                  <th className="py-1 pr-2">Źródło</th><th className="py-1">Wykonano</th>
+                  <th className="py-1 pr-2">Źródło</th><th className="py-1 pr-2">Przypisanie</th><th className="py-1">Wykonano</th>
                 </tr>
               </thead>
               <tbody>
@@ -79,6 +82,7 @@ export default async function ShiftPlanPrintPage({ searchParams }: { searchParam
                     <td className="py-1 pr-2">{row.title}</td>
                     <td className="py-1 pr-2">{row.dueTime || '—'}</td>
                     <td className="py-1 pr-2">{row.source}</td>
+                    <td className="py-1 pr-2">{row.assignee}</td>
                     <td className="py-1"><span aria-hidden>☐</span></td>
                   </tr>
                 ))}
