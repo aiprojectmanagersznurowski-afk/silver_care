@@ -1,56 +1,55 @@
 export const dynamic = 'force-dynamic'
 
+import { SHIFT_TASK_POLICY } from '@silvercare/contracts/src/generated/facility'
 import { createClient } from '@/lib/supabase/server'
 import { AuditManagementClient } from '@/components/AuditManagementClient'
-import { AuditLogEntry } from '@/lib/audit-helpers'
+import { auditDayBoundary, parseAuditDate } from '@/lib/audit-helpers'
 import { PageHeader } from '@/components/patterns/PageHeader'
+import { ListError } from '@/components/patterns/ListState'
 
-export default async function AdminAuditPage({
-  searchParams,
-}: {
-  searchParams?: Promise<{ startDate?: string; endDate?: string }>
-}) {
+const PAGE_SIZE = 200
+
+type AuditParams = { startDate?: string; endDate?: string; scope?: string; page?: string }
+
+export default async function AdminAuditPage({ searchParams }: { searchParams?: Promise<AuditParams> }) {
   const params = searchParams ? await searchParams : {}
+  const startDate = parseAuditDate(params.startDate)
+  const endDate = parseAuditDate(params.endDate)
+  const scope = params.scope === 'shift' ? 'shift' : 'all'
+  const pageNumber = Number(params.page)
+  const page = Number.isSafeInteger(pageNumber) && pageNumber > 0 && pageNumber <= 1_000_000 ? pageNumber : 1
+  const invalidDate = (params.startDate && !startDate) || (params.endDate && !endDate)
+  const invalidOrder = startDate && endDate && startDate > endDate
+  const filterError = invalidDate ? 'Podaj poprawny zakres dat.' : invalidOrder ? 'Data początkowa musi poprzedzać końcową lub być taka sama.' : undefined
+
   const supabase = await createClient()
-
-  // Pobieranie audytu z tabeli audit_logs (izolowane przez RLS)
-  let query = supabase
-    .from('audit_logs')
+  // RLS ogranicza rejestr do istniejących uprawnień kierownika placówki i superadministratora.
+  let query = supabase.from('audit_logs')
     .select('id, organization_id, action, performed_by, payload, created_at')
-    .order('created_at', { ascending: false })
-
-  if (params.startDate) {
-    query = query.gte('created_at', new Date(params.startDate).toISOString())
+    .order('created_at', { ascending: false }).order('id', { ascending: false })
+  if (startDate) query = query.gte('created_at', auditDayBoundary(startDate))
+  if (endDate) query = query.lt('created_at', auditDayBoundary(endDate, true))
+  if (scope === 'shift') {
+    query = query.in('action', [...SHIFT_TASK_POLICY.audit, ...SHIFT_TASK_POLICY.closure.audit.events, ...SHIFT_TASK_POLICY.closure.audit.voiceEvents])
   }
-  if (params.endDate) {
-    const end = new Date(params.endDate)
-    end.setHours(23, 59, 59, 999)
-    query = query.lte('created_at', end.toISOString())
-  }
-
-  const { data: logs, error } = await query.limit(1000)
-
-  if (error) {
-    console.error('Błąd pobierania rejestru audytowego:', error.message)
-  }
-
-  const initialLogs: AuditLogEntry[] = (logs || []).map(l => ({
-    id: l.id,
-    organization_id: l.organization_id,
-    action: l.action,
-    performed_by: l.performed_by,
-    created_at: l.created_at,
-    payload: l.payload
-  }))
+  const offset = (page - 1) * PAGE_SIZE
+  const { data: logs, error } = filterError ? { data: [], error: null } : await query.range(offset, offset + PAGE_SIZE)
+  if (error) console.error('[AUDIT_QUERY_FAILED]', error.code)
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Rejestr audytowy"
-        description="Wgląd w logi bezpieczeństwa i akcji systemowych z filtrowaniem wg dat, strefą czasową i eksportem RODO."
+      <PageHeader title="Rejestr audytowy" />
+      {error && <ListError title="Nie udało się wczytać rejestru audytowego" />}
+      <AuditManagementClient
+        key={`${scope}|${startDate}|${endDate}|${page}`}
+        initialLogs={logs?.slice(0, PAGE_SIZE) ?? []}
+        initialStartDate={startDate}
+        initialEndDate={endDate}
+        initialScope={scope}
+        page={page}
+        hasNext={(logs?.length ?? 0) > PAGE_SIZE}
+        filterError={filterError}
       />
-
-      <AuditManagementClient initialLogs={initialLogs} />
     </div>
   )
 }

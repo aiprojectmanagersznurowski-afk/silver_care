@@ -2,6 +2,28 @@
  * Helpery dla rejestru audytowego (SEC-AUDIT-EXPORT-TIMEZONE, SEC-NO-PII-LOGS)
  */
 
+import { SHIFT_POLICY } from '@silvercare/contracts/src/generated/facility'
+
+const auditDateOffset = new Intl.DateTimeFormat('en-GB', {
+  timeZone: SHIFT_POLICY.timezone,
+  timeZoneName: 'longOffset',
+})
+
+export function parseAuditDate(value: string | undefined): string | undefined {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value) || value.startsWith('0000')) return undefined
+  const date = new Date(`${value}T00:00:00Z`)
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value ? value : undefined
+}
+
+export function auditDayBoundary(date: string, nextDay = false): string {
+  const reference = new Date(`${date}T00:00:00Z`)
+  if (nextDay) reference.setUTCDate(reference.getUTCDate() + 1)
+  const iso = reference.toISOString()
+  // Północ UTC wypada w Warszawie godzinę lub dwie po północy lokalnej, przed zmianą czasu.
+  const offset = auditDateOffset.formatToParts(reference).find((part) => part.type === 'timeZoneName')?.value
+  return new Date(`${iso.slice(0, iso.indexOf('T'))}T00:00:00${offset?.slice(3) || 'Z'}`).toISOString()
+}
+
 export interface AuditLogEntry {
   id: string
   organization_id: string | null
