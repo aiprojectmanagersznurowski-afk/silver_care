@@ -385,3 +385,21 @@ Nowe:
 14. ~~Granica doby dla raportu dla bliskich~~ → rozstrzygnięte przez Michała, decyzja 13.
 15. **Notatka kierownika zmiany a bliscy:** rekomenduję, żeby notatka kierownika po zakończonej pracy zasilała **tylko** raport przekazania, a nie raport dla bliskich (jak nagranie przekazania w v3). To mniej danych u bliskich i prostsze zasady dla kierownika. Czy się zgadzasz?
 16. **Trzy zmiany po 8 godzin:** która zamyka dobę raportu dla bliskich? Proponuję, żeby placówka oznaczała w `shift_definitions` jedną zmianę jako „zamykającą dobę raportu” (domyślnie tę, która kończy się najpóźniej przed 22:00). Raport obejmuje wtedy 24 godziny przed jej końcem.
+
+## 14. Konfiguracja integracji webu i Storage
+
+Implementacja obejmuje nagrania ogólne z webu (`APP_GENERAL`) i pliki stacji (`DEVICE`). Najpierw powstaje rekord `voice_captures`. Fragmenty z jednoznacznym przypisaniem trafiają do przygotowania faktów. Pozycje z nieustalonym zakresem, autorem lub czasem są widoczne w `/voice/assignment` zgodnie z uprawnieniami dla danej zmiany. Uwierzytelniona sesja webu i deklaracja z urządzenia mają osobne oznaczenia w audycie.
+
+### Wejście ze stacji
+
+Zaufana usługa integracji zapisuje plik w prywatnym bucketcie `voice-recordings` pod kluczem `<organization_id>/device/<device_id>/<client_capture_id>`. Po potwierdzeniu trwałego zapisu wywołuje `register_stored_device_capture` kontem usługi. Przekazuje identyfikatory urządzenia, sesji i nagrania, kolejność w sesji, klucz pliku, SHA-256, czas nagrania i stan zegara. Ponowienie z tymi samymi metadanymi zwraca dotychczasowe ID. Dla czasu `RELATIVE` usługa integracji wylicza czas nagrania z wieku pliku według protokołu urządzenia.
+
+### Przetwarzanie
+
+- `VOICE_PRIVATE_STT_URL` jest adresem HTTPS usługi transkrypcji w zatwierdzonej infrastrukturze placówki lub Silver Care. Żądanie POST zawiera bajty pliku i jego typ. Odpowiedź JSON zawiera uporządkowaną tablicę `segments` z polami `start_ms`, `end_ms`, `text`.
+- `VOICE_PRIVATE_REDACT_URL` jest drugim adresem HTTPS w tym samym originie. Żądanie POST zawiera pole `text`. Odpowiedź JSON zawiera `redacted_transcript` po usunięciu danych identyfikujących i medycznych. Pusty ciąg oznacza brak fragmentu do klasyfikacji. Obie operacje używają `VOICE_PRIVATE_STT_TOKEN` w nagłówku Bearer. Surowe treści pozostają wewnątrz tej infrastruktury i prywatnego Storage.
+- `CRON_SECRET` uwierzytelnia wywołanie `GET /api/cron/process-voice-captures` w nagłówku Bearer. Planista środowiska uruchamia je cyklicznie. Odpowiedź rozróżnia przyjęcie do transkrypcji, przetworzenie segmentu, raport operacyjny i retencję. Próby można ponawiać z tym samym kluczem nagrania.
+- `EU_LLM_API_KEY`, `EU_LLM_ENDPOINT` i `EU_LLM_MODEL` konfigurują klasyfikację oraz syntezę w EOG. Potok przekazuje do modelu wyłącznie oczyszczone fakty. W tym potoku obowiązuje biała lista modeli EOG.
+- `/staff/reports/voice-facts` pozwala zatwierdzić fakty do szkicu rodzinnego. Doba ma obecnie granicę o północy czasu Europe/Warsaw. Publikacja następuje w osobnej akcji w raportach. `/staff/reports/operational` pokazuje szkice i raporty operacyjne dla odbiorców skonfigurowanych w kategorii.
+
+Przed promocją należy podłączyć i uruchomić zatwierdzoną usługę transkrypcji oraz redakcji, zaplanować wywołanie workera w docelowym środowisku i potwierdzić na syntetycznym materiale całą drogę od obu źródeł do szkicu. Przegląd kontraktu `SC-NUR-20` obejmuje odrębną pracę nad zamknięciem zmiany, odbiorem, aneksem i formalnym obiegiem incydentów.
