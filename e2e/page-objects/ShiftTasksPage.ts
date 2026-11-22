@@ -21,7 +21,7 @@ export class ShiftTasksPage {
   constructor(page: Page) {
     this.page = page;
     this.heading = page.getByRole('heading', { name: 'Zadania zmiany', exact: true });
-    this.groups = page.locator('[data-testid="task-group"]');
+    this.groups = page.locator('[data-testid="task-group"]:visible');
     this.titleInput = page.getByLabel('Treść zadania');
     this.residentSelect = page.getByLabel('Podopieczny');
     this.addButton = page.getByRole('button', { name: 'Dodaj zadanie' });
@@ -43,7 +43,7 @@ export class ShiftTasksPage {
   }
 
   task(title: string): Locator {
-    return this.page.locator('[data-testid="task-row"]').filter({ hasText: title });
+    return this.page.locator('[data-testid="task-row"]:visible').filter({ hasText: title });
   }
 
   async addTask(title: string, residentId?: string) {

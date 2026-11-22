@@ -242,4 +242,21 @@ describe('Zadania zmiany i akceptacja planu (NUR-TASKS, NUR-SHIFT-PLAN-PRINT)', 
     });
   }, 30000);
 
+
+  it('@REQ: NUR-SHIFT-CLOSURE - przeniesienie unieważnia stary wydruk i ponowienie nie dubluje zadania', async () => {
+    await rollback(async (tx) => {
+      const s = await seed(tx);
+      const [task] = await tx`INSERT INTO shift_tasks (organization_id, shift_definition_id, shift_date, title, source, status, created_by, created_at, updated_at)
+        VALUES (${s.orgId}, ${s.dayId}, ${DAY}, ${SECRET_TITLE}, 'MANUAL', 'TODO', ${s.admin}, now() - interval '2 minutes', now() - interval '2 minutes') RETURNING id`;
+      await tx`INSERT INTO shift_plan_approvals (organization_id, shift_definition_id, shift_date, version, approved_by, approved_at)
+        VALUES (${s.orgId}, ${s.dayId}, ${DAY}, 1, ${s.admin}, now() - interval '1 minute')`;
+      await as(tx, 'nurse', s.orgId, s.lead);
+      const carry = (sp: Tx) => sp`SELECT public.settle_shift_task(${task.id}, 'CARRIED', NULL, ${s.nightId}, ${DAY}::date)`;
+      await carry(tx);
+      await failsWith(tx, /SHIFT_PLAN_STALE/, (sp) => sp`SELECT public.record_shift_plan_print(${s.dayId}, ${DAY}::date, 1)`);
+      await failsWith(tx, /SHIFT_TASK_ALREADY_CARRIED/, carry);
+      expect(await tx`SELECT id FROM shift_tasks WHERE carried_from_task_id = ${task.id}`).toHaveLength(1);
+    });
+  }, 30000);
+
 });
