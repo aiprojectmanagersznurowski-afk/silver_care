@@ -207,11 +207,9 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
     const shared = 'E2E Zadanie wspólne';
     await seedTask(assigned, 'TODO', date);
     await seedTask(shared, 'TODO', date);
-    const [nurse] = await sql`INSERT INTO auth.users (id, aud, role, raw_app_meta_data, raw_user_meta_data)
-      VALUES (gen_random_uuid(), 'authenticated', 'authenticated',
-        ${sql.json({ role: 'nurse', organization_id: orgId, is_active: true })},
-        ${sql.json({ full_name: 'E2E Osoba z grafiku' })}) RETURNING id`;
+    const [nurse] = await sql`SELECT id, raw_app_meta_data AS metadata FROM auth.users WHERE email = ${TEST_USERS.nurse.email}`;
     try {
+      await sql`UPDATE auth.users SET raw_app_meta_data = raw_app_meta_data || '{"is_active":true}'::jsonb WHERE id = ${nurse.id}`;
       await sql`INSERT INTO public.shift_roster (organization_id, shift_definition_id, shift_date, user_id)
         SELECT ${orgId}, id, ${date}, ${nurse.id} FROM public.shift_definitions WHERE organization_id = ${orgId} AND code = ${CODE}`;
 
@@ -241,7 +239,7 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
       await expect(tasks.group(name)).toContainText(assigned);
       await expect(tasks.assigneeSelect(assigned)).toHaveCount(0);
     } finally {
-      await sql`DELETE FROM auth.users WHERE id = ${nurse.id}`;
+      await sql`UPDATE auth.users SET raw_app_meta_data = ${sql.json(nurse.metadata)} WHERE id = ${nurse.id}`;
     }
   });
 
