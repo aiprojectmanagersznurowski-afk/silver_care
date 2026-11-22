@@ -502,4 +502,3 @@ sequenceDiagram
 **Konsekwencje.**
 - Przekazanie zmiany (`shift_handover`) pozostaje w osobnym przepływie `SC-NUR-12` (nie jest nadpisywane przez generatory operacyjne w `#304`).
 - Zasoby `voice_sanitized_events`, `organization_report_configs`, `operational_reports` oraz wymaganie `VOICE-DOCK-REPORTS` i `OPERATIONAL_REPORT_ENGINE` stają się częścią kontraktu (`R36-operational-reports`).
-

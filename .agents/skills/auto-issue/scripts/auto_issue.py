@@ -88,17 +88,17 @@ def compute_branch(issue_num, title):
     return run_cmd(["node", "--input-type=module", "-e", js, CORE_JS, str(issue_num), title]).stdout.strip()
 
 
-async def process_issue(issue_num, base_branch, base_ref, reviewer, max_rounds):
+async def process_issue(issue_num, base_branch, reviewer, max_rounds):
     phase(f"Issue #{issue_num}")
     issue = json.loads(run_cmd(["gh", "issue", "view", str(issue_num), "--json", "number,title,body,labels,url"]).stdout)
     branch = compute_branch(issue_num, issue["title"])
     log(f"Starting #{issue_num}: {issue['title']} -> branch {branch}")
 
-    worker = agent(STANDING_INSTRUCTIONS, role=f"Issue #{issue_num}", workspace="share", model="pro")
+    worker = agent(STANDING_INSTRUCTIONS, role=f"Issue #{issue_num}", workspace="share")
     try:
         t1 = await worker(
-            f"1. Run `pwd` (this is worktree_path). Bootstrap branch `{branch}` from `{base_ref}`:\n"
-            f"   `git fetch origin {base_branch} && git checkout -B {branch} {base_ref}`\n"
+            f"1. Run `pwd` (this is worktree_path). Bootstrap branch `{branch}` from `origin/{base_branch}`:\n"
+            f"   `git fetch origin {base_branch} && git checkout -B {branch} origin/{base_branch}`\n"
             f"2. If `.env.local` is missing, locate main repo via `git rev-parse --git-common-dir` parent and copy `.env.local` if present. "
             f"If `node_modules` is missing, run `pnpm install --frozen-lockfile --prefer-offline`.\n"
             f"3. Inspect codebase, `docs/KANONICZNA_SPECYFIKACJA_USER_STORIES.md`, and `contracts/` for Issue #{issue_num}:\n"
@@ -171,7 +171,7 @@ async def process_issue(issue_num, base_branch, base_ref, reviewer, max_rounds):
         for rnd in range(1, max_rounds + 1):
             code_verdict = run_codex_gate(
                 "code-review",
-                ["--repo", wt, "--issue", str(issue_num), "--base", base_ref, "--verify-passed", "--verify-summary", verify_summary],
+                ["--repo", wt, "--issue", str(issue_num), "--base", f"origin/{base_branch}", "--verify-passed", "--verify-summary", verify_summary],
             )
             log(f"Codex code-review round {rnd}: {code_verdict['verdict']} — {code_verdict['summary']}")
             if code_verdict["verdict"] == "APPROVED":
@@ -211,7 +211,6 @@ async def main():
     if not issues:
         raise ValueError("args['issues'] must contain at least one GitHub issue number.")
     base_branch = args.get("base_branch", "staging")
-    base_ref = args.get("base_ref", f"origin/{base_branch}")
     reviewer = args.get("reviewer", "aiprojectmanagersznurowski-afk")
     max_rounds = int(args.get("max_rounds", 3))
 
@@ -221,7 +220,7 @@ async def main():
         raise RuntimeError(f"Codex healthcheck failed: {health}")
     log(f"Codex healthy: {health.get('version')} ({health.get('latencyMs')}ms)")
 
-    results = await pipeline(issues, lambda num: process_issue(num, base_branch, base_ref, reviewer, max_rounds))
+    results = await pipeline(issues, lambda num: process_issue(num, base_branch, reviewer, max_rounds))
     phase("Session Report")
     completed = [r for r in results if r["status"] == "SHIPPED"]
     blocked = [r for r in results if r["status"] != "SHIPPED"]
