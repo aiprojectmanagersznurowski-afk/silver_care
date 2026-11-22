@@ -169,13 +169,21 @@ export async function approveShiftPlanAction(input: { shiftDefinitionId: string;
 }
 
 /** Zapis wydruku planu: ślad w audycie i printed_at. RPC sprawdza rolę, akceptację i aktualność planu. */
-export async function recordShiftPlanPrintAction(input: { shiftDefinitionId: string; shiftDate: string }): Promise<ShiftTaskActionResult> {
-  if (!UUID_RE.test(input.shiftDefinitionId) || !DATE_RE.test(input.shiftDate)) return { error: 'Niepoprawne dane planu.' }
+export async function recordShiftPlanPrintAction(input: { shiftDefinitionId: string; shiftDate: string; planVersion: number }): Promise<ShiftTaskActionResult> {
+  if (!UUID_RE.test(input.shiftDefinitionId) || !DATE_RE.test(input.shiftDate) ||
+      !Number.isInteger(input.planVersion) || input.planVersion < 1 || input.planVersion > 2_147_483_647) {
+    return { error: 'Niepoprawne dane planu.' }
+  }
   if (!(await requireStaff())) return { error: 'Brak uprawnień.' }
   const supabase = await createClient()
-  const { error } = await supabase.rpc('record_shift_plan_print', { p_shift_definition_id: input.shiftDefinitionId, p_shift_date: input.shiftDate })
+  const { error } = await supabase.rpc('record_shift_plan_print', {
+    p_shift_definition_id: input.shiftDefinitionId,
+    p_shift_date: input.shiftDate,
+    p_expected_version: input.planVersion,
+  })
   if (error) {
     if (error.message.includes('SHIFT_PLAN_NOT_APPROVED')) return { error: 'Najpierw zatwierdź plan zmiany.' }
+    if (error.message.includes('SHIFT_PLAN_VERSION_MISMATCH')) return { error: 'Zatwierdzono nowszą wersję planu. Odśwież podgląd przed wydrukiem.' }
     if (error.message.includes('SHIFT_PLAN_STALE')) return { error: 'Zadania zmieniły się po akceptacji. Zatwierdź plan ponownie.' }
     if (error.message.includes('SHIFT_NOT_LEAD')) return { error: 'Plan drukuje kierownik zmiany.' }
     console.error('[SHIFT_PLAN_PRINT_FAIL]', error.code)

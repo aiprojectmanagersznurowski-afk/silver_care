@@ -36,12 +36,14 @@ export default async function ShiftPlanPrintPage({ searchParams }: { searchParam
     .maybeSingle()
   if (!shift) return <ListEmpty title="Nie znaleziono zmiany" description="Wróć do listy zadań i wybierz zmianę." />
 
-  const [leadRes, approvalsRes] = await Promise.all([
+  const [leadRes, approvalRes] = await Promise.all([
     role === 'org_admin' ? Promise.resolve({ data: true }) : supabase.rpc('is_shift_lead', { p_shift_definition_id: shift.id, p_shift_date: date }),
-    supabase.from('shift_plan_approvals').select('version').eq('shift_definition_id', shift.id).eq('shift_date', date),
+    supabase.from('shift_plan_approvals').select('version').eq('shift_definition_id', shift.id).eq('shift_date', date)
+      .order('version', { ascending: false }).limit(1).maybeSingle(),
   ])
   if (leadRes.data !== true) return <ListEmpty title="Brak uprawnień" description="Plan pracy drukuje kierownik zmiany." />
-  if (!(approvalsRes.data ?? []).length) {
+  const approval = approvalRes.data
+  if (!approval) {
     return <ListEmpty title="Najpierw zatwierdź plan zmiany" description="Wydruk jest możliwy po zatwierdzeniu planu na liście zadań." />
   }
 
@@ -54,8 +56,8 @@ export default async function ShiftPlanPrintPage({ searchParams }: { searchParam
       <style>{'@media print { @page { size: A4; margin: 12mm } header, [data-slot^="sidebar"] { display: none !important } }'}</style>
       <PageHeader
         title="Plan pracy zmiany"
-        description={`${formatDayLabel(date)} · ${shift.name}, ${formatShiftRange(trimSeconds(shift.start_time), trimSeconds(shift.end_time))}`}
-        actions={<PrintPlanButton shiftDefinitionId={shift.id} shiftDate={date} />}
+        description={`${formatDayLabel(date)} · ${shift.name}, ${formatShiftRange(trimSeconds(shift.start_time), trimSeconds(shift.end_time))} · Wersja ${approval.version}`}
+        actions={<PrintPlanButton shiftDefinitionId={shift.id} shiftDate={date} planVersion={approval.version} />}
       />
       {sections.length === 0 ? (
         <ListEmpty title="Brak zadań do wydruku" description="Na tej zmianie nie ma zadań ze statusem „Do zrobienia”." />
