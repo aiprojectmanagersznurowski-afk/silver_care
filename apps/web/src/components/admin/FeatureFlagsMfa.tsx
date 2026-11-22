@@ -7,7 +7,9 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
-export function FeatureFlagsMfa({ needsVerification }: { needsVerification: boolean }) {
+export function FeatureFlagsMfa({
+  needsVerification, description = 'Potwierdź drugi składnik uwierzytelniania, aby zmienić moduły placówki.',
+}: { needsVerification: boolean; description?: string }) {
   const router = useRouter()
   const [factor, setFactor] = useState<{ id: string; enrollment?: { secret: string; qrCode: string } }>()
   const [error, setError] = useState('')
@@ -66,7 +68,7 @@ export function FeatureFlagsMfa({ needsVerification }: { needsVerification: bool
 
   return (
     <div className="space-y-3 rounded-lg border border-border p-4 text-sm">
-      <p>Potwierdź drugi składnik uwierzytelniania, aby zmienić moduły placówki.</p>
+      <p>{description}</p>
       {factor ? (
         <form className="space-y-3" onSubmit={verify}>
           {factor.enrollment && (
