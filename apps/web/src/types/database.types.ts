@@ -1,6 +1,6 @@
 // ==============================================================================
 // Automatycznie wygenerowane typy bazy danych Silver Care (PostgreSQL/Supabase)
-// Wygenerowano: 2026-11-22T15:22:11.437Z
+// Wygenerowano: 2026-11-22T15:26:15.472Z
 // ==============================================================================
 
 export type Json =
@@ -1927,6 +1927,32 @@ export interface Database {
           },
         ]
       }
+      voice_retention_settings: {
+        Row: {
+          organization_id: string
+          retention_days: number
+          updated_at: string
+        }
+        Insert: {
+          organization_id: string
+          retention_days: number
+          updated_at?: string
+        }
+        Update: {
+          organization_id?: string
+          retention_days?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_retention_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       voice_sanitized_events: {
         Row: {
           id: string
@@ -2130,6 +2156,22 @@ export interface Database {
           },
         ]
       }
+      voice_storage_deletions: {
+        Row: {
+          path: string
+          queued_at: string
+        }
+        Insert: {
+          path: string
+          queued_at?: string
+        }
+        Update: {
+          path?: string
+          queued_at?: string
+        }
+        Relationships: [
+        ]
+      }
     }
     Views: {
       resident_sync_status: {
@@ -2242,6 +2284,10 @@ export interface Database {
           years_to_keep: number
         }
         Returns: undefined
+      }
+      expire_voice_captures: {
+        Args: Record<PropertyKey, never>
+        Returns: number
       }
       f_unaccent: {
         Args: {
@@ -2720,6 +2766,13 @@ export interface Database {
           p_enabled: boolean
         }
         Returns: Json
+      }
+      set_voice_capture_retention: {
+        Args: {
+          p_organization_id: string
+          p_days: number
+        }
+        Returns: number
       }
       settle_shift_task: {
         Args: {
