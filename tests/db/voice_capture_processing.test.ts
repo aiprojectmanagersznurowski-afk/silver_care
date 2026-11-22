@@ -40,3 +40,37 @@ it('atomowo zapisuje fragmenty pod aktualną dzierżawą i odkłada wyjątki @RE
     throw rollback
   }).catch((error: unknown) => { if (error !== rollback) throw error })
 })
+
+it('przywraca deklarowanego autora po późnym dotarciu początku sesji @REQ: VOICE-RESIDENT-ASSIGN', async () => {
+  await sql.begin(async (tx) => {
+    const org = randomUUID()
+    const user = randomUUID()
+    const device = randomUUID()
+    const session = randomUUID()
+    const first = randomUUID()
+    const second = randomUUID()
+    await tx`INSERT INTO public.organizations (id, name) VALUES (${org}, 'Fixture sesji')`
+    await tx`INSERT INTO auth.users (id, aud, role, raw_app_meta_data, raw_user_meta_data)
+      VALUES (${user}, 'authenticated', 'authenticated',
+        jsonb_build_object('role', 'nurse', 'organization_id', ${org}::uuid), '{"full_name":"Łucja Żak"}')`
+    await tx`INSERT INTO public.voice_devices (id, organization_id, label, token_hash)
+      VALUES (${device}, ${org}, 'Fixture', ${device.replaceAll('-', '').repeat(2)})`
+    await tx`INSERT INTO public.voice_captures
+      (id, organization_id, source, source_key, storage_path, sha256, device_id, session_id, session_seq, recorded_at)
+      VALUES
+        (${first}, ${org}, 'DEVICE', ${first}, ${org + '/device/' + first}, ${'a'.repeat(64)}, ${device}, ${session}, 1, now()),
+        (${second}, ${org}, 'DEVICE', ${second}, ${org + '/device/' + second}, ${'a'.repeat(64)}, ${device}, ${session}, 2, now())`
+    await tx`SET LOCAL ROLE service_role`
+    const [later] = await tx`SELECT * FROM public.claim_voice_capture(${second})`
+    const segments = tx.json([{ ordinal: 0, start_ms: 0, end_ms: 1000,
+      transcript_path: org + '/transcripts/' + second, reasons: ['NO_AUTHOR'], candidate_ids: [] }])
+    await tx`SELECT public.finalize_voice_capture(${second}, ${later.processing_token}, ${segments}::jsonb)`
+    const [intro] = await tx`SELECT * FROM public.claim_voice_capture(${first})`
+    const [context] = await tx`SELECT public.read_voice_capture_context(${first}, ${intro.processing_token}) AS result`
+    expect(context.result.staff).toEqual([{ id: user, name: 'Łucja Żak' }])
+    await tx`SELECT public.declare_voice_capture_author(${first}, ${intro.processing_token}, ${user})`
+    const [assigned] = await tx`SELECT assignment_status, author_id, author_attribution FROM public.voice_segments WHERE capture_id = ${second}`
+    expect(assigned).toEqual({ assignment_status: 'FACILITY', author_id: user, author_attribution: 'DECLARED_SESSION' })
+    throw rollback
+  }).catch((error: unknown) => { if (error !== rollback) throw error })
+})
