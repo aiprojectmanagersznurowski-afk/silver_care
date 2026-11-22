@@ -7,12 +7,13 @@ Dokument porządkuje decyzje po wdrożeniu wejść głosowych na `codex/nowe-zmi
 | Obszar | Stan na gałęzi integracyjnej |
 |---|---|
 | Definicje zmian, grafik i kierownik | `shift_definitions`, `shift_roster`, `is_shift_lead` |
-| Lista zadań, ręczne rozliczenie, akceptacja i wydruk | `shift_tasks`, `settle_shift_task`, `shift_plan_approvals`, `record_shift_plan_print`. Jest grupowanie według pokoju lub podopiecznego. Wydruk wymaga dopięcia przypisania i zgodności z wersją widoczną w podglądzie. |
+| Lista zadań, ręczne rozliczenie, akceptacja i wydruk | `shift_tasks`, `settle_shift_task`, `shift_plan_approvals`, `record_shift_plan_print`. Grupowanie według pokoju, podopiecznego lub pracownika. Kierownik wybiera pracownika z grafiku. Zmiana przypisania zadania do zrobienia wymaga ponownego zatwierdzenia. Wydruk pokazuje przypisanie i wersję podglądu. |
+| Audyt na żądanie | Kierownik placówki w `/admin/audit` wybiera „Zmiany i nagrania” oraz zakres dat w `Europe/Warsaw`. Rejestr pokazuje m.in. przyjęcie nagrania, dopasowanie i korektę, zmianę przypisania zadania, przeniesienie, zatwierdzenie i wydruk wersji. Wyniki są stronicowane, a CSV i JSON obejmują bieżącą stronę. |
 | Nagranie o podopiecznym (`APP`) | `/voice`, istniejący szkic z wybranym `resident_id`. Przetworzone notatki mogą zasilać raporty operacyjne przez redakcję. |
 | Nagranie ogólne (`APP_GENERAL`) i plik z dyktafonu (`DEVICE`) | Prywatny Storage, `voice_captures`, `voice_segments`, przypisanie serwerowe i kolejka wyjątków w `/voice/assignment`. |
 | Raporty operacyjne i rodzinne | Kategorie per placówka i zredagowane zdarzenia operacyjne. Zweryfikowane fakty rodzinne zasilają szkic podopiecznego za dobę kalendarzową. Publikacja ma własną akcję. |
 | Propozycje z nagrania | Jawna dyspozycja na kolejną zmianę daje `PROPOSED` w `shift_tasks`, z cytatem i identyfikatorem źródła. |
-| Następny etap | Widok i wydruk według pracownika, głosowa podpowiedź rozliczenia, zamknięcie, odbiór przekazania, aneks oraz osobny obieg incydentu. |
+| Następny etap | Głosowa podpowiedź rozliczenia, zamknięcie zmiany, odbiór przekazania, aneks, historia w ramach zmiany i osobny obieg incydentu. |
 
 Gałąź integracyjna to `codex/nowe-zmiany`. Promocja do `staging` przebiega osobno po powrocie Michała i review. [PR #313](https://github.com/aiprojectmanagersznurowski-afk/silver_care/pull/313)
 
@@ -195,7 +196,7 @@ Stan z 22 listopada 2026. Numery wskazują istniejące otwarte issues. Pozycje �
 | Kolejność | Issue i zależności | Oczekiwany rezultat |
 |---|---|---|
 | 0 · równolegle | [#316](https://github.com/aiprojectmanagersznurowski-afk/silver_care/issues/316), [#304](https://github.com/aiprojectmanagersznurowski-afk/silver_care/issues/304), [#314](https://github.com/aiprojectmanagersznurowski-afk/silver_care/issues/314), [#315](https://github.com/aiprojectmanagersznurowski-afk/silver_care/issues/315) | Zestaw dowody z `codex/nowe-zmiany` z kryteriami otwartych issues. Wykonaj lokalną próbę obu wejść webowych i zapisz braki jako zadania do uzupełnienia. |
-| 1 · kontrakt | Nowe issue „Kontrakt zamknięcia zmiany” | Powiąż `SC-NUR-20` z `NUR-SHIFT-CLOSURE`. Po otwarciu okna przez człowieka ustal role, kompletność, stany, wersję, odbiór i aneks. Uzupełnij `SHIFT_TASK_POLICY` o widok pracownika i warunki przypisania. Rozpisz część incydentów jako odrębny zakres. |
+| 1 · kontrakt | `SC-NUR-20` i `NUR-SHIFT-CLOSURE` | Kontrakt obejmuje role, kompletność, wersję, odbiór, aneks, przypisanie według grafiku i audyt okresowy. Obieg incydentów ma własny zakres. |
 | 2 · plan pracy | [#259](https://github.com/aiprojectmanagersznurowski-afk/silver_care/issues/259) i [#305](https://github.com/aiprojectmanagersznurowski-afk/silver_care/issues/305) po odpowiednim fragmencie kontraktu | Przypisanie z grafiku, wspólne zadania, widok według pracownika, minimalny wydruk i zgodność wersji z audytem. Zabezpieczenie wersji wydruku można zacząć na podstawie obecnego `NUR-SHIFT-PLAN-PRINT`. |
 | 3a · rozliczenie głosowe | Nowe issue „Głosowe podpowiedzi rozliczenia” po kroku 1, powiązane z [#259](https://github.com/aiprojectmanagersznurowski-afk/silver_care/issues/259) | Dopasuj wypowiedź do istniejącego zadania, rozróżnij negację i odmowę, przetestuj decyzję przez `settle_shift_task`. |
 | 3b · wyjątki źródłowe | Nowe issue „Korekta czasu i podział mieszanego fragmentu”, powiązane z [#316](https://github.com/aiprojectmanagersznurowski-afk/silver_care/issues/316) | Rozstrzygnij czas i mieszany materiał w kolejce. Zachowaj oryginalne metadane, precyzyjne granice pododcinków oraz historię korekty. |
