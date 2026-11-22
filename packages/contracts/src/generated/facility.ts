@@ -234,8 +234,17 @@ export const SHIFT_TASK_POLICY = {
   "residentOptional": true,
   "groupBy": [
     "room",
-    "resident"
+    "resident",
+    "assignee"
   ],
+  "assignment": {
+    "rosterOnly": true,
+    "sharedWhenUnassigned": true,
+    "statuses": [
+      "PROPOSED",
+      "TODO"
+    ]
+  },
   "visibleToRelatives": false,
   "planApproval": {
     "requiredBeforePrint": true,
@@ -256,8 +265,41 @@ export const SHIFT_TASK_POLICY = {
   ],
   "audit": [
     "SHIFT_TASK_STATUS_CHANGED",
+    "SHIFT_TASK_ASSIGNEE_CHANGED",
+    "SHIFT_TASK_CARRIED",
     "SHIFT_PLAN_APPROVED",
     "SHIFT_PLAN_PRINTED"
-  ]
+  ],
+  "closure": {
+    "completeness": [
+      "COMPLETE",
+      "PARTIAL",
+      "UNKNOWN"
+    ],
+    "completeRequiresArrivalEvidence": true,
+    "partialRequiresReason": true,
+    "approveBy": [
+      "org_admin",
+      "nurse:shift_lead"
+    ],
+    "acknowledgeBy": [
+      "org_admin",
+      "nurse:receiving_shift_lead"
+    ],
+    "amendmentsReferencePriorVersion": true,
+    "audit": {
+      "events": [
+        "SHIFT_HANDOVER_APPROVED",
+        "SHIFT_HANDOVER_ACKNOWLEDGED",
+        "SHIFT_HANDOVER_AMENDMENT_APPROVED"
+      ],
+      "voiceEvents": [
+        "VOICE_CAPTURE_RECEIVED",
+        "VOICE_SEGMENT_AUTHOR_DECLARED",
+        "VOICE_SEGMENT_ASSIGNED",
+        "VOICE_SEGMENT_RESOLVED"
+      ]
+    }
+  }
 } as const;
 

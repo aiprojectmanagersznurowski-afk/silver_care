@@ -143,10 +143,23 @@ export const SHIFT_TASK_POLICY = {
   cancelRequiresReason: true,
   carriedOverMarker: 'z poprzedniej zmiany',
   residentOptional: true,
-  groupBy: ['room', 'resident'],
+  groupBy: ['room', 'resident', 'assignee'],
+  assignment: { rosterOnly: true, sharedWhenUnassigned: true, statuses: ['PROPOSED', 'TODO'] },
   visibleToRelatives: false,
   planApproval: { requiredBeforePrint: true, byRoles: ['nurse:shift_lead', 'org_admin'], reapprovalOnChange: true },
   /** Pola, które wolno umieścić na wydruku planu — bez PESEL, kontaktów i danych z karty (minimalizacja danych). */
   printFields: ['resident_name', 'room', 'bed', 'task_title', 'due_time', 'source_label', 'assignee'],
-  audit: ['SHIFT_TASK_STATUS_CHANGED', 'SHIFT_PLAN_APPROVED', 'SHIFT_PLAN_PRINTED'],
+  audit: ['SHIFT_TASK_STATUS_CHANGED', 'SHIFT_TASK_ASSIGNEE_CHANGED', 'SHIFT_TASK_CARRIED', 'SHIFT_PLAN_APPROVED', 'SHIFT_PLAN_PRINTED'],
+  closure: {
+    completeness: ['COMPLETE', 'PARTIAL', 'UNKNOWN'],
+    completeRequiresArrivalEvidence: true,
+    partialRequiresReason: true,
+    approveBy: ['org_admin', 'nurse:shift_lead'],
+    acknowledgeBy: ['org_admin', 'nurse:receiving_shift_lead'],
+    amendmentsReferencePriorVersion: true,
+    audit: {
+      events: ['SHIFT_HANDOVER_APPROVED', 'SHIFT_HANDOVER_ACKNOWLEDGED', 'SHIFT_HANDOVER_AMENDMENT_APPROVED'],
+      voiceEvents: ['VOICE_CAPTURE_RECEIVED', 'VOICE_SEGMENT_AUTHOR_DECLARED', 'VOICE_SEGMENT_ASSIGNED', 'VOICE_SEGMENT_RESOLVED'],
+    },
+  },
 };

@@ -89,7 +89,7 @@ Krój: `-apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui, sans-
 
 Bazowy rozmiar 14px · minimalny kontrast 4.5:1 · cel dotykowy 38px
 
-## Wymagania (70)
+## Wymagania (71)
 
 | ID | Domena | Ryzyko | Treść |
 |---|---|---|---|
@@ -107,6 +107,7 @@ Bazowy rozmiar 14px · minimalny kontrast 4.5:1 · cel dotykowy 38px
 | NUR-SHIFT-LEAD | staff | HIGH | Kierownik zmiany to osoba z personelu opiekuńczego wyznaczona w grafiku, z dodatkowymi uprawnieniami wyłącznie na swojej zmianie. |
 | NUR-TASKS | staff | HIGH | Zadania zmiany (dla podopiecznego albo placówki) przechodzą akceptację planu przez kierownika zmiany i są rozliczane jako wykonane, anulowane z powodem albo przeniesione na kolejną zmianę. |
 | NUR-SHIFT-PLAN-PRINT | staff | HIGH | Kierownik zmiany drukuje zaakceptowany plan pracy zmiany, aby opiekunki pracowały bez obsługi komputera. |
+| NUR-SHIFT-CLOSURE | staff | HIGH | Kierownik rozlicza zmianę, zatwierdza wersję przekazania i plan kolejnej zmiany. Uprawniony odbiorca potwierdza konkretną wersję przekazania. |
 | ADM-RESIDENT-CARD-TASKS | residents | MEDIUM | Karta podopiecznego ma sekcję „Zadania” z otwartymi i niedawno wykonanymi zadaniami podopiecznego. |
 | ADM-CARE-PLAN-TASKS | residents | HIGH | Zadania standardowe pochodzą z szablonów planu opieki definiowanych przez placówkę, a nie z rekomendacji systemu. |
 | ADM-CAPACITY-LIMIT | facility | HIGH | Limit miejsc placówki (liczba łóżek = maks. liczba aktywnych podopiecznych) ustala wyłącznie super admin; kierownik może go przekroczyć po potwierdzeniu, a przekroczenie powiadamia kierownika i super admina. |

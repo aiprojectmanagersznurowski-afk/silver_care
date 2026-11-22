@@ -800,7 +800,7 @@
 - **AC8 (Audyt i logi):** Zatwierdzenie i odbiór zapisują wpis w `audit_logs`; w logach serwera brak treści nagrań i imion (`SEC-NO-PII-LOGS`).
 
 #### [SC-NUR-13] Moduł zadań zmiany: plan, akceptacja kierownika zmiany, rozliczenie
-🔗 **Kontrakt:** brak REQ (proponowane nowe: `NUR-TASKS`, `NUR-TASKS-AI-PROPOSAL`, `NUR-SHIFT-LEAD`) · **ADR:** ADR-021 (uzupełnienie 2026-10-30) · **Status:** 📝 PROPOZYCJA
+🔗 **Kontrakt:** `NUR-TASKS`, `NUR-SHIFT-LEAD`, `NUR-SHIFT-CLOSURE` (proponowany nowy: `NUR-TASKS-AI-PROPOSAL`) · **ADR:** ADR-021 (uzupełnienie 2026-10-30) · **Status:** 📝 PROPOZYCJA
 
 > ℹ️ Zakres zaktualizowany decyzjami Michała z 2026-10-30: najpierw konfiguracja zmian (`SC-NUR-12/AC1`), kierownik zmiany jako lider w grafiku (wariant B), wydruk planu (`SC-NUR-15`), rozliczenie z notatek głosowych (`SC-NUR-16`), zadania standardowe z planu opieki (`SC-ADM-23`). Personel ma trudności z obsługą komputera — praca opiekunek odbywa się na wydruku, obsługę systemu przejmuje kierownik zmiany.
 
@@ -817,7 +817,7 @@
 - **AC6 (Sortowanie i grupowanie):** Lista zadań grupowana **per pokój** albo **per podopieczny** (wybór użytkownika, zapamiętany), w grupie sortowana po godzinie; zadania placówki w osobnej grupie „Placówka”. Ten sam układ na ekranie i na wydruku.
 - **AC7 (Uprawnienia — wariant B):** Kierownik zmiany (`nurse` wyznaczony w grafiku) akceptuje, drukuje i rozlicza **tylko zadania swojej zmiany**; personel opiekuńczy widzi zadania swojej zmiany i może dodawać zadania ręczne do akceptacji; kierownik placówki (`org_admin`) ma pełny dostęp we własnej placówce. Wymaga zmiany kontraktu (uprawnienie zależne od grafiku zmiany).
 - **AC8 (Widoki):** `/staff/agenda` — zadania bieżącej zmiany obok planu dnia z wyraźnym rozróżnieniem; sekcja na karcie podopiecznego (`SC-ADM-21`).
-- **AC8a (Plan w dyżurce — 📝 PROPOZYCJA):** Personel widzi zatwierdzoną listę swojej zmiany z podziałem na pracowników i zadania wspólne. Dostępne są też grupowanie według pokoju lub podopiecznego i widok na karcie podopiecznego. Kierownik może poprawić propozycję i przypisać pracownika z grafiku danej zmiany. Wszystkie widoki korzystają z tych samych zadań.
+- **AC8a (Plan w dyżurce — 📝 PROPOZYCJA):** Personel widzi zatwierdzoną listę swojej zmiany z podziałem na pracowników i zadania wspólne. Dostępne są też grupowanie według pokoju lub podopiecznego i widok na karcie podopiecznego. Kierownik może poprawić propozycję i przypisać pracownika z grafiku danej zmiany. Puste przypisanie oznacza zadanie wspólne. Wszystkie widoki korzystają z tych samych zadań.
 - **AC9 (Granica bliskich i MDR):** Zadania tylko dla personelu (RLS i `MATRIX`), nigdy dla `family` ani `legal_guardian`, osobna tabela (nie `agenda_items`). Zadania są poleceniami personelu i planu opieki ustalonego przez placówkę, nie zaleceniami systemu — model nie proponuje dawek, leków ani działań, których nie wypowiedziała osoba przekazująca.
 
 #### [SC-NUR-15] Wydruk planu pracy zmiany
@@ -898,7 +898,7 @@
 - **AC3 (Synchronizacja):** Nagranie przesłane ponownie po utracie łączności zachowuje to samo źródło i nie powiela fragmentów, raportów ani propozycji zadań.
 
 #### [SC-NUR-20] Zamknięcie zmiany i przekazanie zadań
-🔗 **Kontrakt:** brak REQ · **Status:** 📝 PROPOZYCJA
+🔗 **Kontrakt:** `NUR-SHIFT-CLOSURE`, `NUR-TASKS`, `NUR-SHIFT-PLAN-PRINT` · **ADR:** ADR-021, ADR-022, ADR-023 · **Status:** 📝 PROPOZYCJA
 
 **User story:** Jako kierownik zmiany chcę w jednym miejscu przejrzeć wyjątki, rozliczyć zadania i przekazać następnej zmianie zatwierdzony plan, aby personel mógł kontynuować pracę i odtworzyć podjęte decyzje.
 
@@ -908,7 +908,7 @@
 - **AC3 (Zgłoszenie i rozliczenie):** Głosowe zgłoszenie wykonania daje podpowiedź dla kierownika. Dopiero jego potwierdzenie zmienia status zadania. Zatwierdzone rozliczenie jest widoczne w przekazaniu.
 - **AC4 (Niekompletne dane):** Niepełna albo nieznana kompletność synchronizacji jest jawna. Po częściowym zamknięciu spóźnione dane można włączyć audytowanym uzupełnieniem z odnośnikiem do pierwotnego przekazania.
 - **AC5 (Raporty):** Przekazanie i zapis incydentów są wewnętrzne. Raport rodzinny pozostaje osobnym szkicem dotyczącym jednego podopiecznego i ma własne zatwierdzenie oraz publikację.
-- **AC6 (Audyt):** Można ustalić źródło zgłoszenia, czas nagrania i odbioru, korekty przypisania, zatwierdzenie przekazania i planu, odbiór, wydruk oraz rozliczenie zadania. Wpisy audytowe przechowują identyfikatory i kody działań.
+- **AC6 (Audyt):** Można ustalić źródło zgłoszenia, czas nagrania i odbioru, korekty przypisania, zatwierdzenie przekazania i planu, odbiór, wydruk oraz rozliczenie zadania. Kierownik placówki otwiera zakładkę „Rejestr audytowy”, wybiera zdarzenia zmian oraz zakres dat i może użyć istniejącego eksportu CSV lub JSON. Zakres obejmuje oba dni w strefie placówki. Wpisy przechowują identyfikatory, znaczniki czasu, kody działań i wersje. Kierownik zmiany widzi działania przypisane do jego przekazania w szczegółach właściwej zmiany.
 
 #### [SC-USR-01] Własny profil i bezpieczeństwo konta
 🔗 **Kontrakt:** `SEC-SESSION`, `SEC-MFA-STAFF` · **WO:** [`NUR-PROFILE-SECURITY`](workorders/NUR-PROFILE-SECURITY.md) · **Status:** ✅ 📝

@@ -175,7 +175,7 @@ export const REQUIREMENTS = [
     "acceptance": [
       "Każde zadanie ma źródło widoczne dla użytkownika: z przekazania, standardowe (plan opieki), ręczne albo przeniesione z poprzedniej zmiany",
       "Anulowanie zadania wymaga powodu, a niewykonane zadanie przechodzi na kolejną zmianę zamiast znikać",
-      "Lista jest grupowana per pokój albo per podopieczny",
+      "Lista jest grupowana według pokoju, podopiecznego lub pracownika; brak przypisania oznacza zadanie wspólne",
       "Zadania są niedostępne dla ról bliskich i nie trafiają do planu dnia współdzielonego z rodziną",
       "Każda zmiana statusu zadania zapisuje wpis w audit_logs bez treści zadania"
     ]
@@ -191,6 +191,22 @@ export const REQUIREMENTS = [
       "Wydruk jest dostępny dopiero po akceptacji planu i niesie wersję planu",
       "Wydruk zawiera wyłącznie pola z SHIFT_TASK_POLICY.printFields, bez PESEL i kontaktów",
       "Każdy wydruk zapisuje wpis w audit_logs: kto, kiedy i którą wersję planu wydrukował"
+    ]
+  },
+  {
+    "id": "NUR-SHIFT-CLOSURE",
+    "status": "TODO",
+    "risk": "HIGH",
+    "source": "SC-NUR-20",
+    "domain": "staff",
+    "statement": "Kierownik rozlicza zmianę, zatwierdza wersję przekazania i plan kolejnej zmiany. Uprawniony odbiorca potwierdza konkretną wersję przekazania.",
+    "acceptance": [
+      "Kierownik placówki albo grafikowy kierownik danej zmiany przypisuje otwarte zadanie osobie z grafiku tej samej zmiany lub pozostawia je jako wspólne. Zmiana przypisania wymaga nowej akceptacji planu",
+      "Przekazanie wiąże dopuszczone fakty z ich źródłami, rozliczone zadania i otwarte sprawy. Głosowe wykonanie jest podpowiedzią do ludzkiej decyzji, a raport rodzinny i incydenty mają oddzielne obiegi",
+      "Kompletność wymaga dowodu dostarczenia oczekiwanych źródeł. Przy stanie PARTIAL lub UNKNOWN kierownik może zatwierdzić wersję częściową z powodem",
+      "Odbiór zapisuje aktora, czas i wersję. Spóźniony materiał daje osobno zatwierdzany i odbierany aneks odwołujący się do poprzedniej wersji",
+      "Zmiana przypisania, przeniesienie zadania, zatwierdzenie planu i przekazania, wydruk, aneks oraz odbiór mają transakcyjny ślad bez treści nagrań, zadań i raportów",
+      "Kierownik placówki może odczytać i wyeksportować zdarzenia zmian za wybrany okres w strefie placówki. Kierownik zmiany czyta wyłącznie historię właściwego przekazania w zakresie grafiku"
     ]
   },
   {
