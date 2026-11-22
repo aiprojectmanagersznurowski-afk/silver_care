@@ -102,3 +102,10 @@ test.describe('Notatka głosowa personelu opiekuńczego (@REQ: VOICE-ZERO-GUESSI
     await voiceNotePage.expectTranscriptionVisible('Senior zjadł pełne śniadanie');
   });
 });
+
+test('@REQ: VOICE-RESIDENT-ASSIGN - nagranie ogólne dostępne obok wyboru podopiecznego', async ({ loginPage, voiceNotePage }) => {
+  await loginPage.loginAs('nurse');
+  await voiceNotePage.goto();
+  await voiceNotePage.expectResidentSelectionVisible();
+  await voiceNotePage.openGeneralRecording();
+});
