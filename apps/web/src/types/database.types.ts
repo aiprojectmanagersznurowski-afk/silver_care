@@ -1,6 +1,6 @@
 // ==============================================================================
 // Automatycznie wygenerowane typy bazy danych Silver Care (PostgreSQL/Supabase)
-// Wygenerowano: 2026-11-22T15:14:13.680Z
+// Wygenerowano: 2026-11-22T15:22:11.437Z
 // ==============================================================================
 
 export type Json =
@@ -2004,6 +2004,63 @@ export interface Database {
           },
         ]
       }
+      voice_segment_proposals: {
+        Row: {
+          segment_id: string
+          organization_id: string
+          capture_id: string
+          resident_id: string | null
+          author_id: string
+          recorded_at: string
+          time_state: string
+          behavioral_facts: unknown[]
+          reviewed_by: string | null
+          reviewed_at: string | null
+          created_at: string
+        }
+        Insert: {
+          segment_id: string
+          organization_id: string
+          capture_id: string
+          resident_id?: string | null
+          author_id: string
+          recorded_at: string
+          time_state: string
+          behavioral_facts: unknown[]
+          reviewed_by?: string | null
+          reviewed_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          segment_id?: string
+          organization_id?: string
+          capture_id?: string
+          resident_id?: string | null
+          author_id?: string
+          recorded_at?: string
+          time_state?: string
+          behavioral_facts?: unknown[]
+          reviewed_by?: string | null
+          reviewed_at?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_segment_proposals_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voice_segment_proposals_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: false
+            referencedRelation: "residents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       voice_segments: {
         Row: {
           id: string
@@ -2017,6 +2074,10 @@ export interface Database {
           resident_id: string | null
           author_id: string | null
           author_attribution: string
+          projection_status: string
+          projection_token: string | null
+          projection_attempted_at: string | null
+          projection_attempts: number
         }
         Insert: {
           id?: string
@@ -2030,6 +2091,10 @@ export interface Database {
           resident_id?: string | null
           author_id?: string | null
           author_attribution?: string
+          projection_status?: string
+          projection_token?: string | null
+          projection_attempted_at?: string | null
+          projection_attempts?: number
         }
         Update: {
           id?: string
@@ -2043,6 +2108,10 @@ export interface Database {
           resident_id?: string | null
           author_id?: string | null
           author_attribution?: string
+          projection_status?: string
+          projection_token?: string | null
+          projection_attempted_at?: string | null
+          projection_attempts?: number
         }
         Relationships: [
           {
@@ -2116,6 +2185,12 @@ export interface Database {
         }
         Returns: Database["public"]["Tables"]["voice_captures"]["Row"][]
       }
+      claim_voice_segment_projection: {
+        Args: {
+          p_segment_id?: string | null
+        }
+        Returns: Json
+      }
       cleanup_expired_operational_reports: {
         Args: {
           p_org_id?: string | null
@@ -2131,6 +2206,14 @@ export interface Database {
           p_capture_id: string
           p_token: string
           p_retry: boolean
+        }
+        Returns: boolean
+      }
+      complete_voice_segment_projection: {
+        Args: {
+          p_segment_id: string
+          p_token: string
+          p_result: Json
         }
         Returns: boolean
       }
