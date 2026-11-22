@@ -18,6 +18,8 @@ export class VoiceAssignmentPage {
     await this.page.getByRole('link', { name: 'Sprawdź fragment' }).first().click()
     await expect(this.page).toHaveURL(new RegExp(segment))
     await expect(this.page.getByText(text, { exact: true })).toBeVisible()
+    await expect(this.page.getByText(/Przyjęto w systemie/)).toBeVisible()
+    await expect(this.page.getByText(/Sesja webowa/)).toBeVisible()
     await this.page.getByLabel('Przypisanie fragmentu').selectOption('FACILITY')
     await this.page.getByRole('button', { name: 'Zapisz decyzję' }).click()
     await expect(this.page.getByText('Brak fragmentów do sprawdzenia')).toBeVisible()

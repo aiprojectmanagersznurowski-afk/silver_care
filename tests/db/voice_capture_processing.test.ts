@@ -9,7 +9,7 @@ const sql = postgres(database.toString(), { prepare: false })
 const rollback = Symbol('rollback')
 afterAll(() => sql.end())
 
-it('atomowo zapisuje fragmenty pod aktualną dzierżawą i odkłada wyjątki @REQ: VOICE-RESIDENT-ASSIGN', async () => {
+it('atomowo zapisuje fragmenty pod aktualną dzierżawą i odkłada wyjątki @REQ: VOICE-RESIDENT-ASSIGN @REQ: SEC-AUDIT-APPEND-ONLY', async () => {
   await sql.begin(async (tx) => {
     const org = randomUUID()
     const user = randomUUID()
@@ -22,6 +22,11 @@ it('atomowo zapisuje fragmenty pod aktualną dzierżawą i odkłada wyjątki @RE
     await tx`INSERT INTO public.voice_captures
       (id, organization_id, source, source_key, storage_path, sha256, author_id, recorded_at)
       VALUES (${capture}, ${org}, 'APP_GENERAL', ${key}, ${org + '/app_general/' + key}, ${'a'.repeat(64)}, ${user}, now())`
+    const [intake] = await tx`SELECT payload FROM public.audit_logs
+      WHERE organization_id = ${org} AND action = 'VOICE_CAPTURE_RECEIVED'`
+    expect(intake.payload).toMatchObject({ capture_id: capture, source: 'APP_GENERAL', author_id: user,
+      clock_state: 'SYNCED', recorded_at: expect.any(String), received_at: expect.any(String) })
+    expect(intake.payload).not.toHaveProperty('storage_path')
     await expect(tx.savepoint((sp) => sp`SELECT * FROM public.claim_voice_capture(${capture})`))
       .rejects.toMatchObject({ code: '42501' })
     await tx`SET LOCAL ROLE service_role`
