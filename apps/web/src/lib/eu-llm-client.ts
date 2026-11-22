@@ -20,6 +20,34 @@ export interface EuLlmConfig {
   region: 'EU' | 'US_DEMO_INTERIM'
 }
 
+export const CANONICAL_EU_LLM_MODELS = [
+  'mistral-large-eu', 'mistral-small-eu', 'gemini-2.5-flash-eu', 'gemini-2.5-pro-eu',
+  'gpt-4o-mini-eu', 'gpt-4o-eu', 'claude-3-5-sonnet-eu', 'bielik-11b-v2.3-instruct-eu',
+] as const
+
+export type CanonicalEuLlmModelId = (typeof CANONICAL_EU_LLM_MODELS)[number]
+
+export interface EuLlmCompletionWithProvenance {
+  text: string
+  model: CanonicalEuLlmModelId
+  region: 'EU'
+}
+
+const EU_LLM_MODEL_ALIASES: Record<string, CanonicalEuLlmModelId> = {
+  'mistral-small-latest': 'mistral-small-eu', 'mistral-large-latest': 'mistral-large-eu',
+}
+
+/** Mapuje identyfikator modelu dostawcy EOG na kanoniczną białą listę DB lub odrzuca model spoza EOG. */
+export function resolveCanonicalEuLlmModelId(rawModel: string): CanonicalEuLlmModelId {
+  const normalized = rawModel.trim()
+  if ((CANONICAL_EU_LLM_MODELS as readonly string[]).includes(normalized)) {
+    return normalized as CanonicalEuLlmModelId
+  }
+  const aliased = EU_LLM_MODEL_ALIASES[normalized]
+  if (aliased) return aliased
+  throw new Error('[EU-LLM-MODEL] Model spoza zatwierdzonej białej listy EOG.')
+}
+
 export function getEuLlmConfig(): EuLlmConfig {
   // Domyślny dostawca europejski: Mistral AI (Francja / UE) lub dedykowany gateway EU
   const endpoint = process.env.EU_LLM_ENDPOINT || 'https://api.mistral.ai/v1/chat/completions'
@@ -124,78 +152,47 @@ function getDemoGroqFallbackConfig(): EuLlmConfig | null {
   }
 }
 
-export async function callEuLlmCompletion(
-  messages: EuLlmMessage[],
-  temperature: number = 0.1,
-  maxTokens: number = 600
-): Promise<string> {
-  ensureEnvLoaded()
-  const euConfig = getEuLlmConfig()
-  const hasEuKey = !!euConfig.apiKey && euConfig.apiKey !== 'mock_eu_llm_key'
-
-  // Klucz EU ma zawsze pierwszeństwo — tryb demo jest wyłącznie awaryjny, nigdy nadrzędny
-  let config: EuLlmConfig = euConfig
-  if (!hasEuKey) {
-    const demo = getDemoGroqFallbackConfig()
-    if (demo) {
-      config = demo
-      // Bez treści promptu i bez PII — tylko fakt, że raport powstał poza EOG w trybie demo
-      console.warn(
-        '[EU-LLM-DEMO-FALLBACK] ADR-015: brak klucza EU, użyto Groq w trybie demo ' +
-        '(ALLOW_DEMO_GROQ_FALLBACK=true). Wyłącznie dane syntetyczne — nie używać z prawdziwymi podopiecznymi.'
-      )
-    }
-  }
-
+function assertValidLlmConfig(config: EuLlmConfig): void {
   // Weryfikacja suwerenności danych EOG (zgodność z ADR-009) — przed jakimkolwiek żądaniem.
-  // Tryb demo (region US_DEMO_INTERIM) jest jedynym świadomym wyjątkiem od tej reguły.
   if (config.region === 'EU' && !isEuEndpoint(config.endpoint)) {
     throw new Error('[EU-LLM-REGION] Endpoint modelu językowego nie znajduje się w EOG. Żądanie nie zostało wysłane.')
   }
-
-  // Weryfikacja konfiguracji klucza — brak cichego mockowania i brak zapasowego dostawcy
   if (!config.apiKey || config.apiKey === 'mock_eu_llm_key') {
     throw new Error(
       '[EU-LLM-CONFIG] Brak skonfigurowanego klucza API europejskiego modelu LLM (EU_LLM_API_KEY lub MISTRAL_API_KEY). ' +
       'Skonfiguruj zmienną środowiskową w .env.local. Ciche mockowanie i przełączanie na dostawcę spoza EOG są wyłączone.'
     )
   }
+}
 
-  const requestMaxTokens = config.region === 'US_DEMO_INTERIM' ? Math.max(maxTokens, 1500) : maxTokens
-
-  let response = await fetch(config.endpoint, {
+async function postChatCompletion(
+  config: EuLlmConfig,
+  model: string,
+  messages: EuLlmMessage[],
+  temperature: number,
+  maxTokens: number
+): Promise<Response> {
+  return fetch(config.endpoint, {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${config.apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: config.model,
-      messages,
-      temperature,
-      max_tokens: requestMaxTokens,
-    }),
+    headers: { Authorization: `Bearer ${config.apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model, messages, temperature, max_tokens: maxTokens }),
   })
+}
 
-  // Jeśli w trybie demo model zwróci 404 (np. llama-3.3-70b-versatile nie istnieje na danym koncie Groq),
-  // wykonaj automatyczny fallback na dostępne modele czatowe (qwen/qwen3.8-27b najszybszy i bez ucinania tokenów na reasoning)
+async function executeLlmCompletion(
+  config: EuLlmConfig,
+  messages: EuLlmMessage[],
+  temperature: number,
+  maxTokens: number
+): Promise<string> {
+  assertValidLlmConfig(config)
+  const requestMaxTokens = config.region === 'US_DEMO_INTERIM' ? Math.max(maxTokens, 1500) : maxTokens
+  let response = await postChatCompletion(config, config.model, messages, temperature, requestMaxTokens)
+
   if (!response.ok && config.region === 'US_DEMO_INTERIM' && response.status === 404) {
-    const fallbackModels = ['qwen/qwen3.8-27b', 'openai/gpt-oss-20b', 'openai/gpt-oss-120b']
-    for (const altModel of fallbackModels) {
+    for (const altModel of ['qwen/qwen3.8-27b', 'openai/gpt-oss-20b', 'openai/gpt-oss-120b']) {
       if (altModel === config.model) continue
-      const retryRes = await fetch(config.endpoint, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${config.apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: altModel,
-          messages,
-          temperature,
-          max_tokens: Math.max(maxTokens, 1500),
-        }),
-      })
+      const retryRes = await postChatCompletion(config, altModel, messages, temperature, requestMaxTokens)
       if (retryRes.ok) {
         response = retryRes
         break
@@ -207,12 +204,46 @@ export async function callEuLlmCompletion(
     // Bez treści odpowiedzi w komunikacie: może odbijać fragmenty promptu.
     throw new Error(`EU LLM request failed (${config.model}) status: ${response.status}`)
   }
-
   const data = await response.json()
   const text = data.choices?.[0]?.message?.content
   if (!text || typeof text !== 'string') {
     throw new Error('Pusta odpowiedź z europejskiego modelu LLM')
   }
-
   return text
+}
+
+/** Wywołuje model EOG ze ścisłym provenance białej listy i bez fallbacku demo spoza EOG. */
+export async function callEuLlmCompletionWithProvenance(
+  messages: EuLlmMessage[],
+  temperature: number = 0.1,
+  maxTokens: number = 600
+): Promise<EuLlmCompletionWithProvenance> {
+  ensureEnvLoaded()
+  const euConfig = getEuLlmConfig()
+  assertValidLlmConfig(euConfig)
+  const model = resolveCanonicalEuLlmModelId(euConfig.model)
+  const text = await executeLlmCompletion(euConfig, messages, temperature, maxTokens)
+  return { text, model, region: 'EU' }
+}
+
+export async function callEuLlmCompletion(
+  messages: EuLlmMessage[],
+  temperature: number = 0.1,
+  maxTokens: number = 600
+): Promise<string> {
+  ensureEnvLoaded()
+  const euConfig = getEuLlmConfig()
+  const hasEuKey = !!euConfig.apiKey && euConfig.apiKey !== 'mock_eu_llm_key'
+  let config: EuLlmConfig = euConfig
+  if (!hasEuKey) {
+    const demo = getDemoGroqFallbackConfig()
+    if (demo) {
+      config = demo
+      console.warn(
+        '[EU-LLM-DEMO-FALLBACK] ADR-015: brak klucza EU, użyto Groq w trybie demo ' +
+        '(ALLOW_DEMO_GROQ_FALLBACK=true). Wyłącznie dane syntetyczne — nie używać z prawdziwymi podopiecznymi.'
+      )
+    }
+  }
+  return executeLlmCompletion(config, messages, temperature, maxTokens)
 }
