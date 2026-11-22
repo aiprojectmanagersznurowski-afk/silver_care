@@ -82,15 +82,6 @@ export function isEuEndpoint(endpoint: string): boolean {
   )
 }
 
-/**
- * ADR-015: tymczasowy fallback CLASSIFY/GENERATE na Groq, wyłącznie na czas demo,
- * przed podpisaniem DPA z Groq na te etapy (PROVIDERS.GROQ_DEMO_LLM w
- * integration.contract.mjs). Wymaga jawnej, osobnej od GROQ_API_KEY zmiennej —
- * sama obecność klucza transkrypcji nic nie aktywuje. Wyłącznie dane syntetyczne/
- * demonstracyjne: zakaz użycia z rzeczywistymi danymi podopiecznych do czasu
- * podpisania DPA (operacyjne, nie wymuszone tu technicznie — tak jak zerowa
- * retencja Groq dla TRANSCRIBE w ADR-009 jest przełącznikiem w panelu, nie kodem).
- */
 function ensureEnvLoaded() {
   if (typeof process === 'undefined' || !process.env) return
   if (process.env.VITEST) return // nie nadpisuj w testach izolowanych vitest
