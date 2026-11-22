@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
-import { approveShiftTaskAction, settleShiftTaskAction, type ShiftTaskActionResult } from '@/actions/shift-tasks'
+import { approveShiftTaskAction, assignShiftTaskAction, settleShiftTaskAction, type ShiftTaskActionResult } from '@/actions/shift-tasks'
+import type { ShiftAssigneeOption } from '@/lib/shifts/shift-tasks-data'
 import type { TaskStatus } from '@/lib/shifts/shift-tasks-view'
 
 export interface CarryTarget {
@@ -19,15 +20,18 @@ interface ShiftTaskActionsProps {
   status: TaskStatus
   shiftDate: string
   targets: CarryTarget[]
+  assignees: ShiftAssigneeOption[]
+  assigneeUserId: string | null
 }
 
 /** Działania kierownika zmiany na zadaniu: zatwierdzenie propozycji oraz rozliczenie (wykonane / anulowane z powodem / przeniesione). */
-export function ShiftTaskActions({ taskId, title, status, shiftDate, targets }: ShiftTaskActionsProps) {
+export function ShiftTaskActions({ taskId, title, status, shiftDate, targets, assignees, assigneeUserId }: ShiftTaskActionsProps) {
   const router = useRouter()
   const [mode, setMode] = useState<'cancel' | 'carry' | null>(null)
   const [reason, setReason] = useState('')
   const [targetId, setTargetId] = useState(targets[0]?.id ?? '')
   const [targetDate, setTargetDate] = useState(shiftDate)
+  const [assignee, setAssignee] = useState(assigneeUserId ?? '')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -46,6 +50,21 @@ export function ShiftTaskActions({ taskId, title, status, shiftDate, targets }: 
   const btn = 'min-h-touch'
   return (
     <div className="flex flex-col items-start gap-2">
+      {(assignees.length > 0 || assigneeUserId) && (
+        <div className="flex flex-wrap gap-2">
+          <NativeSelect aria-label={`Przypisz zadanie: ${title}`} value={assignee} disabled={busy} onChange={(event) => setAssignee(event.target.value)}>
+            <NativeSelectOption value="">Zadanie wspólne</NativeSelectOption>
+            {assigneeUserId && !assignees.some(({ id }) => id === assigneeUserId) && (
+              <NativeSelectOption value={assigneeUserId} disabled>Osoba spoza aktualnego grafiku</NativeSelectOption>
+            )}
+            {assignees.map(({ id, name }) => <NativeSelectOption key={id} value={id}>{name}</NativeSelectOption>)}
+          </NativeSelect>
+          <Button type="button" variant="outline" size="sm" className={btn} disabled={busy || assignee === (assigneeUserId ?? '')}
+            onClick={() => run(() => assignShiftTaskAction(taskId, assignee || null, assigneeUserId))}>
+            Zapisz przypisanie
+          </Button>
+        </div>
+      )}
       <div className="flex flex-wrap gap-2">
         {status === 'PROPOSED' && (
           <Button type="button" size="sm" className={btn} disabled={busy} aria-label={`Zatwierdź zadanie: ${title}`} onClick={() => run(() => approveShiftTaskAction(taskId))}>Zatwierdź</Button>

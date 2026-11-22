@@ -1,5 +1,6 @@
 'use server'
 
+import { SHIFT_TASK_POLICY } from '@silvercare/contracts/src/generated/facility'
 import { featureDisabledMessage, isOrgFeatureEnabled } from '@/lib/feature-flags'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
@@ -95,6 +96,26 @@ export async function approveShiftTaskAction(taskId: string): Promise<ShiftTaskA
     return { error: 'Nie udało się zatwierdzić zadania.' }
   }
   if (!data?.length) return { error: 'Zadanie zatwierdza kierownik zmiany.' }
+  revalidatePath('/staff/shift-tasks')
+  return { success: true }
+}
+
+/** Przypisuje otwarte zadanie osobie z grafiku. RLS i trigger sprawdzają zakres i aktualność. */
+export async function assignShiftTaskAction(
+  taskId: string, assigneeUserId: string | null, previousAssigneeId: string | null,
+): Promise<ShiftTaskActionResult> {
+  if (!UUID_RE.test(taskId) || [assigneeUserId, previousAssigneeId].some((id) => id !== null && !UUID_RE.test(id))) {
+    return { error: 'Niepoprawne przypisanie zadania.' }
+  }
+  if (!(await requireStaff())) return { error: 'Brak uprawnień.' }
+  if (assigneeUserId === previousAssigneeId) return { success: true }
+  const supabase = await createClient()
+  const update = supabase.from('shift_tasks').update({ assignee_user_id: assigneeUserId })
+    .eq('id', taskId).in('status', SHIFT_TASK_POLICY.assignment.statuses)
+  const { data, error } = await (previousAssigneeId ? update.eq('assignee_user_id', previousAssigneeId) : update.is('assignee_user_id', null)).select('id').maybeSingle()
+  if (error?.message.includes('SHIFT_ASSIGNEE_NOT_ON_ROSTER')) return { error: 'Ta osoba nie jest już w grafiku zmiany.' }
+  if (error) console.error('[SHIFT_TASK_ASSIGN_FAIL]', error.code)
+  if (!data) return { error: 'Nie zapisano przypisania. Odśwież listę i sprawdź stan zadania oraz uprawnienia.' }
   revalidatePath('/staff/shift-tasks')
   return { success: true }
 }

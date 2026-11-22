@@ -2,17 +2,19 @@ import { TableCard } from '@/components/patterns/TableCard'
 import { StatusBadge } from '@/components/patterns/StatusBadge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ShiftTaskActions, type CarryTarget } from '@/components/shifts/ShiftTaskActions'
-import { sourceLabel, statusLabel, type TaskGroup } from '@/lib/shifts/shift-tasks-view'
+import type { ShiftAssigneeOption } from '@/lib/shifts/shift-tasks-data'
+import { assigneeLabel, sourceLabel, statusLabel, type TaskGroup } from '@/lib/shifts/shift-tasks-view'
 
 interface ShiftTaskGroupsProps {
   groups: TaskGroup[]
   shiftDate: string
   canSettle: boolean
   targets: CarryTarget[]
+  assignees: ShiftAssigneeOption[]
 }
 
 /** Zadania zmiany pogrupowane per pokój albo per podopieczny. Źródło widoczne przy każdym zadaniu. */
-export function ShiftTaskGroups({ groups, shiftDate, canSettle, targets }: ShiftTaskGroupsProps) {
+export function ShiftTaskGroups({ groups, shiftDate, canSettle, targets, assignees }: ShiftTaskGroupsProps) {
   return (
     <div className="space-y-4">
       {groups.map((group) => (
@@ -24,6 +26,7 @@ export function ShiftTaskGroups({ groups, shiftDate, canSettle, targets }: Shift
                   <TableHead>Zadanie</TableHead>
                   <TableHead className="w-24">Godzina</TableHead>
                   <TableHead>Źródło</TableHead>
+                  <TableHead>Przypisanie</TableHead>
                   <TableHead>Status</TableHead>
                   {canSettle && <TableHead>Działania</TableHead>}
                 </TableRow>
@@ -37,13 +40,15 @@ export function ShiftTaskGroups({ groups, shiftDate, canSettle, targets }: Shift
                     </TableCell>
                     <TableCell className="text-muted-foreground">{t.dueTime ? t.dueTime.slice(0, 5) : '—'}</TableCell>
                     <TableCell className="text-muted-foreground">{sourceLabel(t.source, t.carriedFromTaskId)}</TableCell>
+                    <TableCell>{t.assigneeUserId ? assigneeLabel(t) : 'Zadanie wspólne'}</TableCell>
                     <TableCell>
                       <StatusBadge tone={t.status === 'TODO' ? 'brand' : 'neutral'}>{statusLabel(t.status)}</StatusBadge>
                     </TableCell>
                     {canSettle && (
                       <TableCell>
                         {(t.status === 'PROPOSED' || t.status === 'TODO') && (
-                          <ShiftTaskActions taskId={t.id} title={t.title} status={t.status} shiftDate={shiftDate} targets={targets} />
+                          <ShiftTaskActions key={t.assigneeUserId ?? 'shared'} taskId={t.id} title={t.title} status={t.status} shiftDate={shiftDate}
+                            targets={targets} assignees={assignees} assigneeUserId={t.assigneeUserId ?? null} />
                         )}
                       </TableCell>
                     )}
