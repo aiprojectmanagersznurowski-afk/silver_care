@@ -28,7 +28,7 @@ it('atomowo zapisuje fragmenty pod aktualną dzierżawą i odkłada wyjątki @RE
     const [claimed] = await tx`SELECT * FROM public.claim_voice_capture(${capture})`
     expect(claimed).toMatchObject({ id: capture, status: 'TRANSCRIBING', processing_attempts: 1 })
     expect(await tx`SELECT * FROM public.claim_voice_capture(${capture}) WHERE id IS NOT NULL`).toHaveLength(0)
-    const segments = JSON.stringify([{ ordinal: 0, start_ms: 0, end_ms: 1000,
+    const segments = tx.json([{ ordinal: 0, start_ms: 0, end_ms: 1000,
       transcript_path: org + '/transcripts/' + key, reasons: ['NO_MATCH'], candidate_ids: [] }])
     await expect(tx.savepoint((sp) => sp`SELECT public.finalize_voice_capture(${capture}, ${randomUUID()}, ${segments}::jsonb)`))
       .rejects.toMatchObject({ message: 'VOICE_CAPTURE_LEASE_EXPIRED' })
