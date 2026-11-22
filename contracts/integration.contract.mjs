@@ -191,7 +191,7 @@ export const DEVICE_INGEST_PROTOCOL = {
   // i przedstawia się w pierwszym nagraniu sesji. Zastępuje stały przydział z 2026-11-17.
   authorship: {
     source: 'SELF_INTRODUCTION',
-    rule: 'Autorem wszystkich nagrań sesji (session_id) jest osoba, która przedstawiła się w nagraniu z session_seq 1, np. „Jestem Gabriela Kowalska”.',
+    rule: 'Przedstawienie w nagraniu z session_seq 1 ustala deklarowanego autora sesji. Ręczna korekta autora fragmentu ma pierwszeństwo przed deklaracją.',
     sessionInactivityTimeoutMinutes: 180,
     sessionStart: [
       'Opróżnienie urządzenia w stacji (wszystkie nagrania potwierdzone ACCEPTED albo DUPLICATE)',
@@ -199,13 +199,13 @@ export const DEVICE_INGEST_PROTOCOL = {
       'Bezczynność urządzenia powyżej 3 godzin (sessionInactivityTimeoutMinutes) — automatyczne rozpoczęcie nowej sesji i ekran „Przedstaw się”',
     ],
     outOfOrderPolicy: 'RETROACTIVE_ON_SEQ_1',
-    outOfOrderRule: 'Jeśli nagrania z session_seq > 1 dotrą przed session_seq 1 (np. po retry nieudanego PUT), pozostają tymczasowo jako NO_AUTHOR, a po dotarciu i transkrypcji session_seq 1 serwer retroaktywnie uzupełnia autora całej sesji.',
+    outOfOrderRule: 'Jeśli nagrania z session_seq > 1 dotrą przed session_seq 1 (np. po retry nieudanego PUT), pozostają tymczasowo jako NO_AUTHOR, a po dotarciu i transkrypcji session_seq 1 serwer retroaktywnie uzupełnia brakującą deklarację autora z zachowaniem ręcznych korekt.',
     matchedBy: 'server',
     llmIdentifies: false,
     matchOn: ['imię i nazwisko z transkryptu nagrania session_seq 1, porównane z personelem placówki urządzenia'],
-    whenUnique: 'Autor ustawiany automatycznie, zapis w audit_logs',
+    whenUnique: 'Deklarowany autor sesji ustawiany automatycznie, zapis w audit_logs',
     ambiguousResolvedBy: ['nurse:shift_lead', 'org_admin:own'],
-    whenMissing: 'NO_AUTHOR — brak przedstawienia, brak dopasowania albo kilka osób; nagranie przyjęte, kierownik zmiany wybiera autora sesji w kolejce',
+    whenMissing: 'NO_AUTHOR — brak przedstawienia, brak dopasowania albo kilka osób; nagranie przyjęte, uprawniony kierownik rozstrzyga autorstwo fragmentów w kolejce',
     deviceRegistry: 'voice_device_assignments to opcjonalna ewidencja wydania sprzętu i nie wyznacza autora',
   },
   responses: [
