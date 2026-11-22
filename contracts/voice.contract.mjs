@@ -135,7 +135,8 @@ export const VOICE_RETENTION = {
   scope: 'organization',
   settingsResource: 'voice_retention_settings',
   setBy: ['org_admin:own', 'super_admin'],
-  deletes: ['plik nagrania w voice-recordings', 'wiersz voice_draft_notes', 'pozycja voice_assignment_queue tego nagrania'],
+  deletes: ['plik nagrania i transkrypty w voice-recordings', 'wiersz voice_draft_notes',
+    'voice_captures i jego voice_segments', 'pozycje voice_assignment_queue tego nagrania'],
   keeps: ['daily_reports', 'daily_logs', 'voice_sanitized_events', 'operational_reports'],
   auditChange: true,
   enforcedBy: 'cron bazodanowy',
@@ -159,6 +160,7 @@ export const OPERATIONAL_REPORT_ENGINE = {
   moduleKey: 'module_voice_and_reports',
   delegationFlagKey: 'allow_org_admin_report_config',
   sanitizedEventResource: 'voice_sanitized_events',
+  proposalsResource: 'voice_segment_proposals',
   configResource: 'organization_report_configs',
   reportResource: 'operational_reports',
   captureScopes: {
