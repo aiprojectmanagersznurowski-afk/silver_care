@@ -354,10 +354,8 @@ export const OPERATIONAL_REPORT_ENGINE = {
     "super_admin",
     "org_admin:own"
   ],
-  "reportGeneratedBy": [
-    "org_admin:own",
-    "nurse:own"
-  ],
+  "sanitizedEventCreatedBy": "service_role_pipeline",
+  "reportGeneratedBy": "service_role_pipeline",
   "reportApprovedBy": [
     "org_admin:own",
     "nurse:own"
