@@ -44,6 +44,19 @@ it('zapisuje wyłącznie powiązane propozycje, z chronionym strumieniem medyczn
     const [again] = await tx`SELECT public.claim_voice_segment_projection(${segment}) AS result`
     expect(again.result).toBeNull()
     expect(await tx`SELECT id FROM public.daily_reports WHERE resident_id = ${resident}`).toHaveLength(0)
+    await tx`SET LOCAL ROLE authenticated`
+    await tx`SELECT set_config('request.jwt.claims', ${JSON.stringify({
+      sub: author, role: 'authenticated', aal: 'aal2', session_id: randomUUID(),
+      app_metadata: { role: 'nurse', organization_id: org },
+    })}, true)`
+    const [review] = await tx`SELECT public.review_voice_family_facts(${segment}, true) AS report_id`
+    const [retry] = await tx`SELECT public.review_voice_family_facts(${segment}, true) AS report_id`
+    expect(retry.report_id).toBe(review.report_id)
+    const [family] = await tx`SELECT status, content FROM public.daily_reports WHERE id = ${review.report_id}`
+    expect(family.status).toBe('DRAFT')
+    expect(family.content.text).toContain('Zjadła śniadanie.')
+    expect(family.content.text).not.toContain('Brakuje kubków.')
+    expect(family.content.text).not.toContain('materiał chroniony')
     throw rollback
   }).catch((error: unknown) => { if (error !== rollback) throw error })
 })
