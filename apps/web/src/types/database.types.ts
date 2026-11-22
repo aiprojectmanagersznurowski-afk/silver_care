@@ -1,6 +1,6 @@
 // ==============================================================================
 // Automatycznie wygenerowane typy bazy danych Silver Care (PostgreSQL/Supabase)
-// Wygenerowano: 2026-11-22T15:30:10.537Z
+// Wygenerowano: 2026-11-22T15:30:58.470Z
 // ==============================================================================
 
 export type Json =
@@ -2243,14 +2243,20 @@ export interface Database {
         Row: {
           path: string
           queued_at: string
+          lease_token: string | null
+          leased_until: string | null
         }
         Insert: {
           path: string
           queued_at?: string
+          lease_token?: string | null
+          leased_until?: string | null
         }
         Update: {
           path?: string
           queued_at?: string
+          lease_token?: string | null
+          leased_until?: string | null
         }
         Relationships: [
         ]
@@ -2322,6 +2328,10 @@ export interface Database {
           p_segment_id?: string | null
         }
         Returns: Json
+      }
+      claim_voice_storage_deletions: {
+        Args: Record<PropertyKey, never>
+        Returns: Database["public"]["Tables"]["voice_storage_deletions"]["Row"][]
       }
       cleanup_expired_operational_reports: {
         Args: {
@@ -2418,6 +2428,12 @@ export interface Database {
       finish_impersonation: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      finish_voice_storage_deletions: {
+        Args: {
+          p_token: string
+        }
+        Returns: number
       }
       fn_admissions_by_month_care_level: {
         Args: {
@@ -2748,6 +2764,12 @@ export interface Database {
           p_admin_full_name?: string | null
         }
         Returns: string
+      }
+      read_operational_report_material: {
+        Args: {
+          p_token: string
+        }
+        Returns: Json
       }
       read_voice_capture_context: {
         Args: {
