@@ -47,7 +47,7 @@ export const RESOURCES = [
   'rooms', 'beds', 'bed_assignments',
   'resident_events', 'resident_packages',
   'shift_definitions', 'shift_roster', 'shift_tasks', 'shift_plan_approvals',
-  'voice_devices', 'voice_device_assignments', 'voice_assignment_queue', 'voice_retention_settings',
+  'voice_devices', 'voice_device_assignments', 'voice_captures', 'voice_segments', 'voice_assignment_queue', 'voice_retention_settings',
   'organization_feature_flags',
   'voice_sanitized_events', 'organization_report_configs', 'operational_reports',
 ];
@@ -104,6 +104,9 @@ export const MATRIX = [
   // voice_draft_notes zostaje prywatne dla autora (decyzja Michała z 2026-11-17).
   { resource: 'voice_devices',           read: ['org_admin:own', 'nurse:own'],              create: ['org_admin'],    update: ['org_admin:own'],          delete: [] },
   { resource: 'voice_device_assignments', read: ['org_admin:own', 'nurse:own'],             create: ['org_admin:own', 'nurse:shift_lead'], update: ['org_admin:own', 'nurse:shift_lead'], delete: [] },
+  // Surowy materiał jest dostępny przez niezależne, kontrolowane ścieżki autora i kierownika.
+  { resource: 'voice_captures',          read: [], create: [], update: [], delete: [] },
+  { resource: 'voice_segments',          read: [], create: [], update: [], delete: [] },
   { resource: 'voice_assignment_queue',  read: ['org_admin:own', 'nurse:shift_lead'],       create: [],               update: ['org_admin:own', 'nurse:shift_lead'], delete: [] },
   // Retencja nagrań placówki (SC-NUR-02/AC4, VOICE_RETENTION.setBy). Osobny zasób, bo kierownik placówki nie edytuje organizations.
   { resource: 'voice_retention_settings', read: ['org_admin:own', 'super_admin'],           create: ['org_admin:own', 'super_admin'], update: ['org_admin:own', 'super_admin'], delete: [] },
@@ -111,9 +114,9 @@ export const MATRIX = [
   { resource: 'organization_feature_flags', read: ['super_admin', 'org_admin:own', 'nurse:own', 'legal_guardian:own', 'family:own'], create: ['super_admin'], update: ['super_admin'], delete: ['super_admin'] },
   // Silnik raportów operacyjnych i zredagowanych zdarzeń głosowych (VOICE-DOCK-REPORTS, ADR-023).
   // Bliscy bez dostępu (0 wierszy). super_admin zarządza kategoriami per placówka, ale nie czyta treści opieki.
-  { resource: 'voice_sanitized_events',      read: ['org_admin:own', 'nurse:own'],              create: ['org_admin:own', 'nurse:own'], update: [],                                 delete: [] },
+  { resource: 'voice_sanitized_events',      read: ['org_admin:own', 'nurse:own'],              create: [], update: [],                                 delete: [] },
   { resource: 'organization_report_configs', read: ['super_admin', 'org_admin:own', 'nurse:own'], create: ['super_admin'],              update: ['super_admin', 'org_admin:own'],   delete: [] },
-  { resource: 'operational_reports',         read: ['org_admin:own', 'nurse:own'],              create: ['org_admin:own', 'nurse:own'], update: ['org_admin:own', 'nurse:own'],     delete: [] },
+  { resource: 'operational_reports',         read: ['org_admin:own', 'nurse:own'],              create: [], update: ['org_admin:own', 'nurse:own'],     delete: [] },
 ];
 
 /**

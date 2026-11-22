@@ -100,6 +100,8 @@ export const RESOURCES = [
   "shift_plan_approvals",
   "voice_devices",
   "voice_device_assignments",
+  "voice_captures",
+  "voice_segments",
   "voice_assignment_queue",
   "voice_retention_settings",
   "organization_feature_flags",
@@ -470,6 +472,20 @@ export const MATRIX = [
     "delete": []
   },
   {
+    "resource": "voice_captures",
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  {
+    "resource": "voice_segments",
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  {
     "resource": "voice_assignment_queue",
     "read": [
       "org_admin:own",
@@ -523,10 +539,7 @@ export const MATRIX = [
       "org_admin:own",
       "nurse:own"
     ],
-    "create": [
-      "org_admin:own",
-      "nurse:own"
-    ],
+    "create": [],
     "update": [],
     "delete": []
   },
@@ -552,10 +565,7 @@ export const MATRIX = [
       "org_admin:own",
       "nurse:own"
     ],
-    "create": [
-      "org_admin:own",
-      "nurse:own"
-    ],
+    "create": [],
     "update": [
       "org_admin:own",
       "nurse:own"
