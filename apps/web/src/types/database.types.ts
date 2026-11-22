@@ -1,6 +1,6 @@
 // ==============================================================================
 // Automatycznie wygenerowane typy bazy danych Silver Care (PostgreSQL/Supabase)
-// Wygenerowano: 2026-11-22T15:26:15.472Z
+// Wygenerowano: 2026-11-22T15:28:26.701Z
 // ==============================================================================
 
 export type Json =
@@ -431,6 +431,45 @@ export interface Database {
           },
           {
             foreignKeyName: "family_messages_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: false
+            referencedRelation: "residents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      family_voice_report_provenance: {
+        Row: {
+          resident_id: string
+          report_day: string
+          report_id: string
+          last_generated_fingerprint: string
+          source_segment_ids: unknown[]
+        }
+        Insert: {
+          resident_id: string
+          report_day: string
+          report_id: string
+          last_generated_fingerprint: string
+          source_segment_ids: unknown[]
+        }
+        Update: {
+          resident_id?: string
+          report_day?: string
+          report_id?: string
+          last_generated_fingerprint?: string
+          source_segment_ids?: unknown[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_voice_report_provenance_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: true
+            referencedRelation: "daily_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_voice_report_provenance_resident_id_fkey"
             columns: ["resident_id"]
             isOneToOne: false
             referencedRelation: "residents"
@@ -2043,6 +2082,7 @@ export interface Database {
           reviewed_by: string | null
           reviewed_at: string | null
           created_at: string
+          family_decision: string | null
         }
         Insert: {
           segment_id: string
@@ -2056,6 +2096,7 @@ export interface Database {
           reviewed_by?: string | null
           reviewed_at?: string | null
           created_at?: string
+          family_decision?: string | null
         }
         Update: {
           segment_id?: string
@@ -2069,6 +2110,7 @@ export interface Database {
           reviewed_by?: string | null
           reviewed_at?: string | null
           created_at?: string
+          family_decision?: string | null
         }
         Relationships: [
           {
@@ -2744,6 +2786,13 @@ export interface Database {
           p_scope: string
           p_resident_id?: string | null
           p_author_id?: string | null
+        }
+        Returns: string
+      }
+      review_voice_family_facts: {
+        Args: {
+          p_segment_id: string
+          p_accept: boolean
         }
         Returns: string
       }
