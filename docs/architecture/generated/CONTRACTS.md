@@ -32,9 +32,9 @@ Dane są zbierane i dostępne personelowi. Zakaz dotyczy prezentacji bliskim, ni
 
 | Etap | Wykonawca | Wejście | Wyjście |
 |---|---|---|---|
-| CAPTURE | nurse | audio + resident_id (UUID) z aplikacji albo audio z urządzenia bez resident_id | voice_draft_notes |
+| CAPTURE | nurse | audio oraz resident_id (UUID) wyłącznie w trybie o podopiecznym | nagranie źródłowe |
 | TRANSCRIBE | system | audio | transkrypt tekstowy |
-| ASSIGN | nurse | transkrypt + kandydaci z dopasowania serwera | resident_id (UUID) potwierdzony przez człowieka albo zakres placówki |
+| ASSIGN | nurse | fragment transkryptu + rejestr tej placówki | zakres fragmentu i źródło przypisania albo kolejka wyjątków |
 | CLASSIFY | system | transkrypt | trzy strumienie |
 | REDACT | system | strumień MEDICAL | transkrypt bez danych medycznych |
 | GENERATE | llm | transkrypt zredagowany, anonimowy | draft raportu |
