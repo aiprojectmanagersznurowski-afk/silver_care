@@ -69,9 +69,14 @@ export default async function StaffReportsPage({ searchParams }: StaffReportsPag
             Nagraj nową notatkę
           </Link>
         ) : (
-          <Link href="/staff/reports/voice-facts" className="inline-flex min-h-touch items-center rounded-md border px-3 text-sm">
-            Fakty do raportów rodzinnych
-          </Link>
+          <>
+            <Link href="/staff/reports/voice-facts" className="inline-flex min-h-touch items-center rounded-md border px-3 text-sm">
+              Fakty do raportów rodzinnych
+            </Link>
+            <Link href="/staff/reports/operational" className="inline-flex min-h-touch items-center rounded-md border px-3 text-sm">
+              Raporty operacyjne
+            </Link>
+          </>
         )}
       />
 
