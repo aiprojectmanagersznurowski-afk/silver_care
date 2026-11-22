@@ -52,7 +52,8 @@ test('@REQ: VOICE-DOCK-REPORTS - administrator dodaje kategorię i retencję dla
     await expect(reports.row('Zużycie materiałów')).toHaveCount(0)
   } finally {
     if (accountId) await api.auth.admin.deleteUser(accountId)
-    await sql`DELETE FROM public.organizations WHERE id IN (${organizationId}, ${otherId})`
+    await sql`DELETE FROM public.organizations o WHERE o.id IN (${organizationId}, ${otherId})
+      AND NOT EXISTS (SELECT 1 FROM public.audit_logs a WHERE a.organization_id = o.id)`
     await sql.end()
   }
 })
