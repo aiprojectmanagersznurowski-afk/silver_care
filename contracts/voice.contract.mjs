@@ -95,6 +95,8 @@ export const CAPTURE_SOURCES = [
  */
 export const RESIDENT_ASSIGNMENT = {
   appliesTo: ['APP_GENERAL', 'DEVICE'],
+  captureResource: 'voice_captures',
+  segmentResource: 'voice_segments',
   queueResource: 'voice_assignment_queue',
   suggestedBy: 'server',
   llmIdentifies: false,
@@ -161,6 +163,7 @@ export const OPERATIONAL_REPORT_ENGINE = {
   reportResource: 'operational_reports',
   captureScopes: {
     APP: ['resident'],
+    APP_GENERAL: ['resident', 'facility'],
     DEVICE: ['resident', 'facility'],
   },
   defaultCategories: [

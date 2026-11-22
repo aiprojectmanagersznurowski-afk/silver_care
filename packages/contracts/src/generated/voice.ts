@@ -196,6 +196,8 @@ export const RESIDENT_ASSIGNMENT = {
     "APP_GENERAL",
     "DEVICE"
   ],
+  "captureResource": "voice_captures",
+  "segmentResource": "voice_segments",
   "queueResource": "voice_assignment_queue",
   "suggestedBy": "server",
   "llmIdentifies": false,
@@ -252,6 +254,10 @@ export const OPERATIONAL_REPORT_ENGINE = {
   "captureScopes": {
     "APP": [
       "resident"
+    ],
+    "APP_GENERAL": [
+      "resident",
+      "facility"
     ],
     "DEVICE": [
       "resident",
