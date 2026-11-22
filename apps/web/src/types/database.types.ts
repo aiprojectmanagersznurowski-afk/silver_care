@@ -1,6 +1,6 @@
 // ==============================================================================
 // Automatycznie wygenerowane typy bazy danych Silver Care (PostgreSQL/Supabase)
-// Wygenerowano: 2026-11-22T14:45:30.044Z
+// Wygenerowano: 2026-11-22T15:08:02.297Z
 // ==============================================================================
 
 export type Json =
@@ -1709,6 +1709,9 @@ export interface Database {
           received_at: string
           clock_state: string
           status: string
+          processing_token: string | null
+          processing_started_at: string | null
+          processing_attempts: number
         }
         Insert: {
           id?: string
@@ -1726,6 +1729,9 @@ export interface Database {
           received_at?: string
           clock_state?: string
           status?: string
+          processing_token?: string | null
+          processing_started_at?: string | null
+          processing_attempts?: number
         }
         Update: {
           id?: string
@@ -1743,6 +1749,9 @@ export interface Database {
           received_at?: string
           clock_state?: string
           status?: string
+          processing_token?: string | null
+          processing_started_at?: string | null
+          processing_attempts?: number
         }
         Relationships: [
           {
@@ -2098,6 +2107,12 @@ export interface Database {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      claim_voice_capture: {
+        Args: {
+          p_capture_id?: string | null
+        }
+        Returns: Database["public"]["Tables"]["voice_captures"]["Row"][]
+      }
       cleanup_expired_operational_reports: {
         Args: {
           p_org_id?: string | null
@@ -2107,6 +2122,14 @@ export interface Database {
       cleanup_voice_drafts: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      complete_voice_capture_failure: {
+        Args: {
+          p_capture_id: string
+          p_token: string
+          p_retry: boolean
+        }
+        Returns: boolean
       }
       configure_organization_report_category: {
         Args: {
@@ -2146,6 +2169,14 @@ export interface Database {
           p_lock_timeout_minutes?: number | null
         }
         Returns: Database["public"]["Tables"]["outbox_notifications"]["Row"][]
+      }
+      finalize_voice_capture: {
+        Args: {
+          p_capture_id: string
+          p_token: string
+          p_segments: Json
+        }
+        Returns: number
       }
       finish_impersonation: {
         Args: Record<PropertyKey, never>
@@ -2546,6 +2577,15 @@ export interface Database {
           p_name: string
         }
         Returns: boolean
+      }
+      resolve_voice_segment: {
+        Args: {
+          p_segment_id: string
+          p_scope: string
+          p_resident_id?: string | null
+          p_author_id?: string | null
+        }
+        Returns: string
       }
       revoke_consent: {
         Args: {
