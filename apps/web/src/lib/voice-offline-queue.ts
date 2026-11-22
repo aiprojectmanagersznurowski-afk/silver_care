@@ -5,6 +5,7 @@
 
 import {
   StoredVoiceItem,
+  type VoiceQueuePurpose,
   idbPutItem,
   idbGetItem,
   idbGetAllItems,
@@ -16,7 +17,7 @@ import {
 
 export { base64ToBlob, blobToBase64 }
 
-export type VoiceQueuePurpose = 'resident_note' | 'staff_message' | 'facility_import'
+export type { VoiceQueuePurpose }
 export type VoiceQueueStatus = 'pending' | 'failed_permanent'
 
 export interface OfflineVoiceItem {
@@ -27,6 +28,7 @@ export interface OfflineVoiceItem {
   mimeType?: string
   ext?: string
   purpose?: VoiceQueuePurpose
+  author_id?: string
   createdAt: number
   attempts?: number
   status?: VoiceQueueStatus
@@ -141,11 +143,17 @@ export async function sendOfflineVoiceItemToServer(item: OfflineVoiceItem): Prom
     formData.append('client_uuid', item.client_uuid)
     if (item.resident_id) formData.append('resident_id', item.resident_id)
     formData.append('purpose', item.purpose || 'resident_note')
+    const general = item.purpose === 'general_note'
+    if (general) {
+      if (!item.author_id) return false
+      formData.append('author_id', item.author_id)
+      formData.append('recorded_at', new Date(item.createdAt).toISOString())
+    }
 
     const ext = item.ext || (mime.includes('mp4') || mime.includes('m4a') ? 'm4a' : 'webm')
     formData.append('file', blob, `offline-${item.client_uuid}.${ext}`)
 
-    const res = await fetch('/api/voice/transcribe', {
+    const res = await fetch(general ? '/api/voice/captures' : '/api/voice/transcribe', {
       method: 'POST',
       body: formData,
     })

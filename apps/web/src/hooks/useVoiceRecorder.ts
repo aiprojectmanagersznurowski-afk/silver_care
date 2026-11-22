@@ -19,6 +19,7 @@ export interface TranscribeResponse {
 
 export interface UseVoiceRecorderOptions {
   purpose?: VoiceQueuePurpose
+  authorId?: string
   getExtraFormData?: () => Record<string, string | null | undefined>
   onSuccess?: (data: TranscribeResponse) => void | Promise<void>
   onError?: (error: string) => void
@@ -26,7 +27,7 @@ export interface UseVoiceRecorderOptions {
 }
 
 export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}) {
-  const { purpose = 'resident_note', getExtraFormData, onSuccess, onError, endpoint = '/api/voice/transcribe' } = options
+  const { purpose = 'resident_note', authorId, getExtraFormData, onSuccess, onError, endpoint = '/api/voice/transcribe' } = options
   const [state, setState] = useState<VoiceRecorderState>('idle')
   const [error, setError] = useState<string | null>(null)
   const [duration, setDuration] = useState(0)
@@ -70,13 +71,13 @@ export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}) {
   }, [cleanup])
 
   const handleQueueAudio = useCallback(async (
-    blob: Blob, ext: string, clientUuid: string, residentId: string, msg: string
+    blob: Blob, ext: string, clientUuid: string, residentId: string, recordedAt: number, msg: string
   ) => {
     try {
       await enqueueOfflineVoiceItem({
         client_uuid: clientUuid, resident_id: residentId, audioBlob: blob,
-        mimeType: blob.type || `audio/${ext}`, ext, purpose,
-        createdAt: Date.now(), attempts: 0, status: 'pending',
+        mimeType: blob.type || `audio/${ext}`, ext, purpose, author_id: authorId,
+        createdAt: recordedAt, attempts: 0, status: 'pending',
       })
       setState('queued'); setError(msg); onError?.(msg)
     } catch {
@@ -84,11 +85,12 @@ export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}) {
       const quotaMsg = 'Brak miejsca na urządzeniu. Nagranie zachowano w pamięci — pobierz je lokalnie.'
       setError(quotaMsg); setState('error'); onError?.(quotaMsg)
     }
-  }, [onError, purpose])
+  }, [authorId, onError, purpose])
 
   const sendAudio = useCallback(async (blob: Blob, ext: string) => {
     setState('transcribing'); setError(null); setFallbackAudioBlob(null)
     const clientUuid = generateClientUuid()
+    const recordedAt = Date.now()
     let residentId = ''
     try {
       const supabase = createClient()
@@ -96,6 +98,10 @@ export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}) {
       const formData = new FormData()
       formData.append('file', blob, `recording.${ext}`)
       formData.append('client_uuid', clientUuid)
+      if (authorId) {
+        formData.append('author_id', authorId)
+        formData.append('recorded_at', new Date(recordedAt).toISOString())
+      }
       if (getExtraFormData) {
         const extra = getExtraFormData()
         for (const [key, val] of Object.entries(extra)) {
@@ -104,14 +110,14 @@ export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}) {
       }
       residentId = (formData.get('resident_id') as string) || ''
       if (!isOnline()) {
-        await handleQueueAudio(blob, ext, clientUuid, residentId, 'Brak połączenia z siecią. Nagranie zapisano w kolejce offline.')
+        await handleQueueAudio(blob, ext, clientUuid, residentId, recordedAt, 'Brak połączenia z siecią. Nagranie zapisano w kolejce offline.')
         return
       }
       const headers: Record<string, string> = {}
       if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`
       const res = await fetch(endpoint, { method: 'POST', headers, body: formData })
       if (res.status >= 500) {
-        await handleQueueAudio(blob, ext, clientUuid, residentId, `Serwer placówki niedostępny (HTTP ${res.status}). Zapisano w kolejce offline.`)
+        await handleQueueAudio(blob, ext, clientUuid, residentId, recordedAt, `Serwer placówki niedostępny (HTTP ${res.status}). Zapisano w kolejce offline.`)
         return
       }
       const data: TranscribeResponse = await res.json().catch(() => ({}))
@@ -125,9 +131,9 @@ export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}) {
       }
       setState('idle'); await onSuccess?.(data)
     } catch {
-      await handleQueueAudio(blob, ext, clientUuid, residentId, 'Błąd sieci podczas wysyłania. Nagranie zabezpieczono w kolejce offline.')
+      await handleQueueAudio(blob, ext, clientUuid, residentId, recordedAt, 'Błąd sieci podczas wysyłania. Nagranie zabezpieczono w kolejce offline.')
     }
-  }, [endpoint, getExtraFormData, handleQueueAudio, onError, onSuccess])
+  }, [authorId, endpoint, getExtraFormData, handleQueueAudio, onError, onSuccess])
 
   const downloadFallbackAudio = useCallback(() => {
     if (!fallbackAudioBlob || typeof window === 'undefined') return
