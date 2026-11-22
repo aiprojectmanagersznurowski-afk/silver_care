@@ -194,5 +194,10 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
     await tasks.printButton.click();
     await expect.poll(printCount).toBe(1);
     expect(await printAudits()).toEqual([{ version: 1 }, { version: 2 }]);
+
+    await page.emulateMedia({ media: 'print' });
+    await expect(page.getByText('Wersja 2', { exact: false })).toBeVisible();
+    await expect(page.getByText('E2E Zadanie na wydruk')).toBeVisible();
+    await expect(tasks.printButton).toBeHidden();
   });
 });

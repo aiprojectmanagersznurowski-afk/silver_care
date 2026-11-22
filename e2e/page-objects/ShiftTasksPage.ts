@@ -20,7 +20,7 @@ export class ShiftTasksPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.heading = page.locator(':is(h1, h2):has-text("Zadania zmiany")');
+    this.heading = page.getByRole('heading', { name: 'Zadania zmiany', exact: true });
     this.groups = page.locator('[data-testid="task-group"]');
     this.titleInput = page.getByLabel('Treść zadania');
     this.residentSelect = page.getByLabel('Podopieczny');
