@@ -5,8 +5,9 @@ import postgres from 'postgres'
 import { LoginPage } from './page-objects/LoginPage'
 import { VoiceAssignmentPage } from './page-objects/VoiceAssignmentPage'
 import { VoiceFamilyFactsPage } from './page-objects/VoiceFamilyFactsPage'
+import { VoiceOperationalReportsPage } from './page-objects/VoiceOperationalReportsPage'
 
-test('@REQ: VOICE-RESIDENT-ASSIGN - kierownik po MFA rozstrzyga wyjątek, z dowodem audytowym', async ({ page }) => {
+test('@REQ: VOICE-RESIDENT-ASSIGN - kierownik rozstrzyga wyjątek i zatwierdza w osobnych ścieżkach @REQ: REPORT-APPROVAL @REQ: VOICE-DOCK-REPORTS', async ({ page }) => {
   test.setTimeout(120_000)
   const dbUrl = process.env.DATABASE_URL!
   const apiUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL)!
@@ -72,6 +73,19 @@ test('@REQ: VOICE-RESIDENT-ASSIGN - kierownik po MFA rozstrzyga wyjątek, z dowo
     const [report] = await sql`SELECT status, content FROM public.daily_reports WHERE resident_id = ${resident}`
     expect(report.status).toBe('DRAFT')
     expect(report.content.text).toContain(fact)
+    const operational = await sql.begin(async (tx) => {
+      await tx`SET LOCAL ROLE service_role`
+      const [draft] = await tx`SELECT id FROM public.record_generated_operational_report(
+        ${org}, 'audit_operational', '2026-11-18T00:00:00Z', '2026-11-19T00:00:00Z', '[]',
+        '{"no_data":true,"summary":"Brak zarejestrowanych zdarzeń w wybranym okresie.","events":[],"action_items":[]}',
+        'rule-based-no-data-v1', 'rule-based-no-data-v1', '2026-11-19T00:00:00Z')`
+      return draft.id
+    })
+    const operationsPage = new VoiceOperationalReportsPage(page)
+    await operationsPage.openReport()
+    await operationsPage.approve()
+    const [approved] = await sql`SELECT status, approved_by FROM public.operational_reports WHERE id = ${operational}`
+    expect(approved).toEqual({ status: 'APPROVED', approved_by: author })
   } finally {
     await api.storage.from('voice-recordings').remove([path])
     await sql`DELETE FROM public.voice_captures WHERE id = ${capture}`
