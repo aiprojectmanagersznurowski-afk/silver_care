@@ -1,6 +1,6 @@
 // ==============================================================================
 // Automatycznie wygenerowane typy bazy danych Silver Care (PostgreSQL/Supabase)
-// Wygenerowano: 2026-11-22T15:30:58.470Z
+// Wygenerowano: 2026-11-22T15:56:48.113Z
 // ==============================================================================
 
 export type Json =
@@ -1721,6 +1721,38 @@ export interface Database {
         Relationships: [
         ]
       }
+      voice_app_report_jobs: {
+        Row: {
+          draft_id: string
+          token: string | null
+          available_at: string
+          attempts: number
+          completed_at: string | null
+        }
+        Insert: {
+          draft_id: string
+          token?: string | null
+          available_at?: string
+          attempts?: number
+          completed_at?: string | null
+        }
+        Update: {
+          draft_id?: string
+          token?: string | null
+          available_at?: string
+          attempts?: number
+          completed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_app_report_jobs_draft_id_fkey"
+            columns: ["draft_id"]
+            isOneToOne: true
+            referencedRelation: "voice_draft_notes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       voice_assignment_queue: {
         Row: {
           segment_id: string
@@ -2317,6 +2349,12 @@ export interface Database {
         }
         Returns: Json
       }
+      claim_processed_app_voice_draft: {
+        Args: {
+          p_draft_id?: string | null
+        }
+        Returns: Json
+      }
       claim_voice_capture: {
         Args: {
           p_capture_id?: string | null
@@ -2347,6 +2385,14 @@ export interface Database {
         Args: {
           p_token: string
           p_success: boolean
+        }
+        Returns: boolean
+      }
+      complete_processed_app_voice_draft: {
+        Args: {
+          p_draft_id: string
+          p_token: string
+          p_result: Json
         }
         Returns: boolean
       }
