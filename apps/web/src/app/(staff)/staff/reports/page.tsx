@@ -63,10 +63,14 @@ export default async function StaffReportsPage({ searchParams }: StaffReportsPag
         description={residentInfo
           ? 'Historia oraz bieżące szkice raportów wygenerowane dla tego podopiecznego.'
           : 'Zatwierdź szkice raportów wygenerowane przez AI, aby rodzina mogła je zobaczyć.'}
-        actions={residentId && (
+        actions={residentId ? (
           <Link href={`/voice?resident=${residentId}`} className="inline-flex min-h-touch items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 transition-colors">
             <Mic className="h-4 w-4" />
             Nagraj nową notatkę
+          </Link>
+        ) : (
+          <Link href="/staff/reports/voice-facts" className="inline-flex min-h-touch items-center rounded-md border px-3 text-sm">
+            Fakty do raportów rodzinnych
           </Link>
         )}
       />

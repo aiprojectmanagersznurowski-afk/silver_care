@@ -130,7 +130,10 @@ function VoiceNoteContent() {
           title="Notatka głosowa"
           description="Wybierz podopiecznego, dla którego chcesz nagrać notatkę ze statusu dnia."
         />
-        <Link href="/voice/general" className="inline-flex min-h-touch items-center rounded-md border px-3 text-sm">Nagranie ogólne</Link>
+        <nav className="flex flex-wrap gap-2" aria-label="Nagrania">
+          <Link href="/voice/general" className="inline-flex min-h-touch items-center rounded-md border px-3 text-sm">Nagranie ogólne</Link>
+          <Link href="/voice/assignment" className="inline-flex min-h-touch items-center rounded-md border px-3 text-sm">Fragmenty do sprawdzenia</Link>
+        </nav>
         <VoiceResidentSelect
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
