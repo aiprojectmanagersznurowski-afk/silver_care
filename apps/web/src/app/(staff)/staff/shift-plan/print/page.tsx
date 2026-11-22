@@ -53,7 +53,7 @@ export default async function ShiftPlanPrintPage({ searchParams }: { searchParam
 
   return (
     <div className="space-y-6">
-      <style>{'@media print { @page { size: A4; margin: 12mm } header, [data-slot^="sidebar"] { display: none !important } }'}</style>
+      <style>{'@media print { @page { size: A4; margin: 12mm } header, [data-slot="sidebar"] { display: none !important } }'}</style>
       <PageHeader
         title="Plan pracy zmiany"
         description={`${formatDayLabel(date)} · ${shift.name}, ${formatShiftRange(trimSeconds(shift.start_time), trimSeconds(shift.end_time))} · Wersja ${approval.version}`}
