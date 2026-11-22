@@ -2,7 +2,7 @@ import { createHmac } from 'node:crypto'
 import { expect, type Page } from '@playwright/test'
 import { FEATURE_FLAGS_BY_KEY, type FeatureKey } from '../../packages/contracts/src/generated/features'
 
-function totp(secret: string) {
+export function totp(secret: string) {
   const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'
   const bits = Array.from(secret.toUpperCase().replace(/=+$/, ''), (character) =>
     alphabet.indexOf(character).toString(2).padStart(5, '0')).join('')
