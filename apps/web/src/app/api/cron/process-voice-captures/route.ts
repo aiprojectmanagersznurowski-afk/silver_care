@@ -2,7 +2,7 @@ import { createHash, timingSafeEqual } from 'node:crypto'
 import { NextResponse } from 'next/server'
 import { processNextVoiceCapture } from '@/lib/voice-capture-worker'
 import { readSpeechConfiguration } from '@/lib/voice-private-speech'
-import { processNextVoiceProjection } from '@/lib/voice-projection-worker'
+import { processNextSelectedVoiceOperationalReport, processNextVoiceProjection } from '@/lib/voice-projection-worker'
 import { processNextOperationalReport, removeExpiredVoiceStorage } from '@/lib/voice-maintenance-worker'
 
 export const runtime = 'nodejs'
@@ -17,12 +17,14 @@ export async function GET(request: Request) {
   }
   try {
     const config = Promise.resolve().then(readSpeechConfiguration)
-    const [capture, projection, operational, retention] = await Promise.allSettled([
+    const [capture, projection, selectedWeb, operational, retention] = await Promise.allSettled([
       config.then(processNextVoiceCapture), config.then(processNextVoiceProjection),
+      config.then(processNextSelectedVoiceOperationalReport),
       processNextOperationalReport(), removeExpiredVoiceStorage(),
     ])
     const status = (result: typeof capture) => result.status === 'fulfilled' ? result.value : 'failed'
-    const result = { capture: status(capture), projection: status(projection), operational: status(operational), retention: status(retention) }
+    const result = { capture: status(capture), projection: status(projection),
+      selectedWeb: status(selectedWeb), operational: status(operational), retention: status(retention) }
     return NextResponse.json(result, { status: Object.values(result).includes('failed') ? 503 : 200 })
   } catch {
     return NextResponse.json({ error: 'VOICE_PROCESSING_UNAVAILABLE' }, { status: 503 })

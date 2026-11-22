@@ -388,7 +388,7 @@ Nowe:
 
 ## 14. Konfiguracja integracji webu i Storage
 
-Implementacja obejmuje nagrania ogólne z webu (`APP_GENERAL`) i pliki stacji (`DEVICE`). Najpierw powstaje rekord `voice_captures`. Fragmenty z jednoznacznym przypisaniem trafiają do przygotowania faktów. Pozycje z nieustalonym zakresem, autorem lub czasem są widoczne w `/voice/assignment` zgodnie z uprawnieniami dla danej zmiany. Uwierzytelniona sesja webu i deklaracja z urządzenia mają osobne oznaczenia w audycie.
+Implementacja obejmuje nagrania ogólne z webu (`APP_GENERAL`) i pliki stacji (`DEVICE`). Najpierw powstaje rekord `voice_captures`. Fragmenty z jednoznacznym przypisaniem trafiają do przygotowania faktów. Pozycje z nieustalonym zakresem, autorem lub czasem są widoczne w `/voice/assignment` zgodnie z uprawnieniami dla danej zmiany. Uwierzytelniona sesja webu i deklaracja z urządzenia mają osobne oznaczenia w audycie. Przetworzone notatki z wcześniej wybranym podopiecznym (`APP`) mogą również zasilać raporty operacyjne. Ich powiązanie ze źródłem prowadzi do istniejącego szkicu.
 
 ### Wejście ze stacji
 
