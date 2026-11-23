@@ -39,6 +39,7 @@ export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}) {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const cancelledRef = useRef(false)
   const recordedAtRef = useRef(0)
+  const clientUuidRef = useRef<string | null>(null)
 
   const cleanup = useCallback(() => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
@@ -90,7 +91,7 @@ export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}) {
 
   const sendAudio = useCallback(async (blob: Blob, ext: string) => {
     setState('transcribing'); setError(null); setFallbackAudioBlob(null)
-    const clientUuid = generateClientUuid()
+    const clientUuid = clientUuidRef.current ??= generateClientUuid()
     const recordedAt = recordedAtRef.current
     let residentId = ''
     try {
@@ -179,6 +180,7 @@ export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}) {
         await sendAudio(audioBlob, format.ext)
       }
       recordedAtRef.current = Date.now()
+      clientUuidRef.current = null
       recorder.start(1000); setState('recording'); setDuration(0)
       timerRef.current = setInterval(() => setDuration((prev) => prev + 1), 1000)
     } catch {

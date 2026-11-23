@@ -7,7 +7,7 @@ type Mention = { fragmentIndex: number; quote: string; kind: EvidenceKind; title
 const sentences = new Intl.Segmenter('pl', { granularity: 'sentence' })
 const explicitTask = /^(wykonałam|wykonałem|wykonano) zadanie\s*[:–—-]\s*(.+)$/u
 const explicitNegation = /^nie (wykonałam|wykonałem|wykonano) zadania\s*[:–—-]\s*(.+)$/u
-const refusal = /^(?:(?:pani|pan|podopieczna|podopieczny|\[osoba\]) )?odmówi(?:ła|ł) (śniadania|obiadu|kolacji)$/u
+const refusal = /^(?:(?:(?:pani|pan)(?: \[osoba\])?|podopieczna|podopieczny|\[osoba\]) )?odmówi(?:ła|ł) (śniadania|obiadu|kolacji)$/u
 
 const mealTasks: Record<string, readonly string[]> = {
   śniadania: ['śniadanie', 'podać śniadanie', 'pomóc przy śniadaniu'],
@@ -37,7 +37,7 @@ function normalize(text: string) {
 
 function classifyMention(quote: string): Pick<Mention, 'kind' | 'titles'> | undefined {
   if (!quote || quote.length > SHIFT_TASK_VOICE.maxQuoteLength || quote.includes('?')) return
-  const text = normalize(quote)
+  const text = normalize(quote).replace(/^sprawa placówki\s*[:–—-]\s*/u, '')
   const exact = explicitTask.exec(text) ?? explicitNegation.exec(text)
   if (exact) {
     return { kind: text.startsWith('nie ') ? 'NOT_COMPLETED' : 'COMPLETED', titles: [normalize(exact[2])] }
