@@ -4,7 +4,8 @@ import postgres from 'postgres'
 import { afterAll, describe, expect, it } from 'vitest'
 
 const database = new URL(process.env.DATABASE_URL!)
-if (!['127.0.0.1', 'localhost'].includes(database.hostname) || database.port !== '54322') {
+if (!['127.0.0.1', 'localhost'].includes(database.hostname)
+  || database.username !== 'postgres' || database.pathname !== '/postgres') {
   throw new Error('Voice task tests require local Supabase')
 }
 const sql = postgres(database.toString(), { prepare: false })
@@ -101,6 +102,29 @@ describe('Dowód głosowy rozliczenia zmiany', () => {
       await asUser(tx, admin, 'org_admin', org)
       expect(await tx`SELECT quote FROM public.shift_task_voice_suggestions WHERE id = ${evidence}`)
         .toEqual([{ quote }])
+    })
+  })
+
+  it('@REQ: SEC-MFA-STAFF @REQ: NUR-TASKS-VOICE-COMPLETION tryb testowy zachowuje zakres kierownika i pojedynczą decyzję', async () => {
+    await transaction(async (tx) => {
+      const { org, other, author, lead, admin, task, evidence } = await fixture(tx)
+      await tx`CREATE OR REPLACE FUNCTION private.staff_mfa_disabled_for_tests() RETURNS boolean LANGUAGE sql STABLE RETURN true`
+      for (const [user, role, tenant] of [
+        [author, 'nurse', org], [admin, 'org_admin', other], [author, 'family', org],
+      ]) {
+        await asUser(tx, user, role, tenant, 'aal1')
+        expect(await tx`SELECT id FROM public.shift_task_voice_suggestions WHERE id = ${evidence}`).toEqual([])
+        await expect(tx.savepoint((sp) => decide(sp, evidence))).rejects.toMatchObject({ code: '42501' })
+      }
+
+      await asUser(tx, lead, 'nurse', org, 'aal1')
+      expect(await tx`SELECT quote FROM public.shift_task_voice_suggestions WHERE id = ${evidence}`).toEqual([{ quote }])
+      expect(await decide(tx, evidence)).toEqual([{ task_id: task }])
+      expect(await decide(tx, evidence)).toEqual([{ task_id: task }])
+      await tx`RESET ROLE`
+      expect(await tx`SELECT performed_by FROM public.audit_logs
+        WHERE organization_id = ${org} AND action = ${SHIFT_TASK_VOICE.auditAction}`)
+        .toEqual([{ performed_by: lead }])
     })
   })
 
