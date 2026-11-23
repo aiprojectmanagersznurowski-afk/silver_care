@@ -3,12 +3,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const owner = 'a4d39bb5-db96-4402-82db-7602fff489e6'
 const org = '0f52ca6a-5fee-4df3-aaa1-0a55562ecdda'
 const capture = '9767c130-be6e-4e8d-92c7-f47096b39490'
-const mocks = vi.hoisted(() => ({ from: vi.fn(), upload: vi.fn(), download: vi.fn(), assurance: vi.fn(), currentLevel: 'aal2' }))
+const mocks = vi.hoisted(() => ({ from: vi.fn(), upload: vi.fn(), download: vi.fn(), assurance: vi.fn(), rpc: vi.fn(), currentLevel: 'aal2' }))
 vi.mock('@/lib/api-auth', () => ({ withAuth: (handler: (request: Request, context: unknown) => unknown) =>
   (request: Request) => handler(request, {
     user: { id: owner, organizationId: org },
     accessToken: request.headers.get('authorization')?.replace(/^Bearer /, ''),
-    supabase: { auth: { mfa: { getAuthenticatorAssuranceLevel: mocks.assurance } } },
+    supabase: { auth: { mfa: { getAuthenticatorAssuranceLevel: mocks.assurance } }, rpc: mocks.rpc },
   }) }))
 vi.mock('@/lib/supabase/admin', () => ({ createAdminClient: () => ({
   from: mocks.from,
@@ -29,6 +29,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   mocks.currentLevel = 'aal2'
   mocks.assurance.mockImplementation(async () => ({ data: { currentLevel: mocks.currentLevel } }))
+  mocks.rpc.mockResolvedValue({ data: false })
 })
 
 describe('Przyjęcie nagrania ogólnego', () => {
@@ -51,6 +52,15 @@ describe('Przyjęcie nagrania ogólnego', () => {
     mocks.currentLevel = 'aal1'
     const post = POST as unknown as (request: Request) => Promise<Response>
     expect((await post(request())).status).toBe(403)
+    expect(mocks.upload).not.toHaveBeenCalled()
+  })
+
+  it('w trybie testowym nadal sprawdza właściciela nagrania @REQ: SEC-MFA-STAFF', async () => {
+    mocks.currentLevel = 'aal1'
+    mocks.rpc.mockResolvedValue({ data: true })
+    const post = POST as unknown as (request: Request) => Promise<Response>
+    expect((await post(request(org))).status).toBe(403)
+    expect((await post(request(owner, [1, 2, 3, 4]))).status).toBe(400)
     expect(mocks.upload).not.toHaveBeenCalled()
   })
 })

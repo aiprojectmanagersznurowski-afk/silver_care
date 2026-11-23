@@ -3,6 +3,7 @@ import { createClient } from '../apps/web/node_modules/@supabase/supabase-js'
 import { expect, test } from '@playwright/test'
 import postgres from 'postgres'
 import { LoginPage } from './page-objects/LoginPage'
+import { StaffMfaPage } from './page-objects/StaffMfaPage'
 import { VoiceAssignmentPage } from './page-objects/VoiceAssignmentPage'
 import { VoiceFamilyFactsPage } from './page-objects/VoiceFamilyFactsPage'
 import { VoiceOperationalReportsPage } from './page-objects/VoiceOperationalReportsPage'
@@ -97,14 +98,15 @@ test('@REQ: VOICE-RESIDENT-ASSIGN - kierownik rozstrzyga wyjątek i zatwierdza w
     if (upload.error) throw new Error('Cannot create test transcript')
 
     const login = new LoginPage(page)
+    const mfa = new StaffMfaPage(page)
     await login.goto()
     await login.login(email, password)
+    await mfa.expectChallenge()
+    await mfa.enrollTotp()
     await page.waitForURL((url) => !url.pathname.includes('/login'))
     const assignments = new VoiceAssignmentSourcePage(page)
     await assignments.open()
     await expect(page.getByRole('heading', { name: 'Fragmenty do sprawdzenia' })).toBeVisible()
-    await expect(page.getByRole('link', { name: 'Sprawdź fragment' })).toHaveCount(0)
-    await assignments.verifyMfa()
     await assignments.resolveFacility(segment, note)
     const [audit] = await sql`SELECT payload FROM public.audit_logs
       WHERE organization_id = ${org} AND action = 'VOICE_SEGMENT_RESOLVED'`
@@ -218,16 +220,18 @@ test('@REQ: VOICE-RESIDENT-ASSIGN kierownik koryguje czas i dzieli prywatny mate
       VALUES (${segment}, ${org}, ARRAY['TIME_UNCERTAIN', 'MIXED_SEGMENT'])`
 
     const login = new LoginPage(page)
+    const mfa = new StaffMfaPage(page)
     await login.goto()
     await login.login(email, password)
-    await page.waitForURL((url) => !url.pathname.includes('/login'))
+    await mfa.expectChallenge()
     const assignments = new VoiceAssignmentSourcePage(page)
-    await assignments.open()
     const input = { action: 'time', segmentId: segment, requestId: randomUUID(), expectedVersion: 0,
       mode: 'SHIFT_ONLY', shiftDefinitionId: shift, shiftDate: '2026-10-24', basis: 'ROSTER_VERIFIED' }
     expect((await page.request.post('/api/voice/assignment', { data: input })).status()).toBe(403)
     expect((await page.request.get(`/api/voice/assignment?segment=${segment}`)).status()).toBe(403)
-    await assignments.verifyMfa()
+    await mfa.enrollTotp()
+    await page.waitForURL((url) => !url.pathname.includes('/login'))
+    await assignments.open()
     await expect(page.getByRole('link', { name: 'Sprawdź fragment' })).toBeVisible()
     await assignments.openSource(segment)
     await assignments.setShift(shift)

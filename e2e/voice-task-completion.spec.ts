@@ -4,7 +4,7 @@ import { expect, test } from '@playwright/test'
 import postgres from 'postgres'
 import { LoginPage } from './page-objects/LoginPage'
 import { ShiftTasksPage } from './page-objects/ShiftTasksPage'
-import { VoiceAssignmentPage } from './page-objects/VoiceAssignmentPage'
+import { StaffMfaPage } from './page-objects/StaffMfaPage'
 import { totp } from './page-objects/OrganizationFeatureFlagsPage'
 
 test('@REQ: NUR-TASKS-VOICE-COMPLETION kierownik z aal2 potwierdza dowód i nie dubluje decyzji', async ({ page, request }) => {
@@ -94,15 +94,17 @@ test('@REQ: NUR-TASKS-VOICE-COMPLETION kierownik z aal2 potwierdza dowód i nie 
     }
 
     const login = new LoginPage(page)
+    const mfa = new StaffMfaPage(page)
     await login.goto()
     await login.login(email, password)
-    await page.waitForURL((url) => !url.pathname.includes('/login'))
+    await mfa.expectChallenge()
     const tasks = new ShiftTasksPage(page)
-    await tasks.goto(code, date)
     expect((await tasks.voiceDecision(evidence)).status()).toBe(403)
     await expect(tasks.voiceEvidence(title, quote)).toHaveCount(0)
 
-    await new VoiceAssignmentPage(page).verifyMfa()
+    await mfa.enrollTotp()
+    await page.waitForURL((url) => !url.pathname.includes('/login'))
+    await tasks.goto(code, date)
     await expect(tasks.voiceEvidence(title, quote)).toBeVisible()
     await expect(tasks.task(title)).toContainText('Sesja webowa')
     const [retry] = await Promise.all([tasks.voiceDecision(evidence), tasks.confirmVoiceEvidence(title)])
