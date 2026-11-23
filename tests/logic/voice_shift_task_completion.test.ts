@@ -10,6 +10,8 @@ describe('Regułowe rozliczenie głosowe', () => {
     ['Przewietrzyłam świetlicę.', 'room', 'COMPLETED'],
     ['Nie przewietrzyłam świetlicy.', 'room', 'NOT_COMPLETED'],
     ['Pani odmówiła kolacji.', 'meal', 'REFUSED'],
+    ['Pani [osoba] odmówiła kolacji.', 'meal', 'REFUSED'],
+    ['Sprawa placówki: Przewietrzyłam świetlicę.', 'room', 'COMPLETED'],
     ['Wykonano zadanie: Przewietrzyć świetlicę.', 'room', 'COMPLETED'],
   ])('@REQ: NUR-TASKS-VOICE-COMPLETION dopasowuje %s', (quote, taskId, kind) => {
     expect(matchVoiceTaskCompletion(quote, candidates)).toEqual([{ taskId, kind, fragmentIndex: 0, quote }])

@@ -76,7 +76,7 @@ async function fixture(tx: Tx) {
       'COMPLETED', ${quote}
     FROM public.shift_tasks t CROSS JOIN public.voice_captures c WHERE t.id = ${task} AND c.id = ${capture}
     RETURNING id`
-  return { org, other, author, lead, admin, capture, segment, task, evidence }
+  return { org, other, author, lead, admin, capture, shift, date, recordedAt, segment, task, evidence }
 }
 
 function decide(tx: Tx, evidence: string) {
@@ -143,6 +143,88 @@ describe('Dowód głosowy rozliczenia zmiany', () => {
       await asUser(tx, lead, 'nurse', org)
       expect(await tx`SELECT task_id, quote FROM public.shift_task_voice_suggestions WHERE task_id = ${task}`)
         .toEqual([{ task_id: task, quote }])
+    })
+  })
+
+  it('@REQ: NUR-TASKS-VOICE-COMPLETION blokuje sprzeczne dowody, odrzuca podpowiedź i chroni dowód po korekcie i upływie retencji', async () => {
+    await transaction(async (tx) => {
+      const { org, author, lead, capture, segment, task, evidence } = await fixture(tx)
+      const [negative] = await tx`
+        INSERT INTO public.shift_task_voice_suggestions (organization_id, shift_definition_id, shift_date, task_id,
+          segment_id, source_id, fragment_index, source_kind, author_id, author_attribution, recorded_at,
+          received_at, task_updated_at, kind, quote)
+        SELECT organization_id, shift_definition_id, shift_date, task_id, segment_id, source_id, 1, source_kind,
+          author_id, author_attribution, recorded_at, received_at, task_updated_at, 'NOT_COMPLETED', 'Nie przewietrzyłam świetlicy.'
+        FROM public.shift_task_voice_suggestions WHERE id = ${evidence}
+        RETURNING id`
+      await asUser(tx, lead, 'nurse', org)
+      await expect(tx.savepoint((sp) => decide(sp, evidence))).rejects.toMatchObject({ message: 'VOICE_TASK_EVIDENCE_CONFLICT' })
+      await tx`SELECT public.decide_shift_task_voice_suggestion(${negative.id}, 'REJECTED', NULL, NULL, NULL)`
+      expect(await tx`SELECT status FROM public.shift_tasks WHERE id = ${task}`).toEqual([{ status: 'TODO' }])
+      await tx`RESET ROLE`
+      await tx`UPDATE public.voice_segments SET author_id = ${lead}, author_attribution = 'MANUAL_SEGMENT_CORRECTION'
+        WHERE id = ${segment}`
+      await asUser(tx, lead, 'nurse', org)
+      expect(await tx`SELECT id FROM public.shift_task_voice_suggestions WHERE id = ${evidence}`).toEqual([])
+      await tx`RESET ROLE`
+      await tx`UPDATE public.voice_segments SET author_id = ${author}, author_attribution = 'AUTHENTICATED_SESSION'
+        WHERE id = ${segment}`
+      await tx`UPDATE public.voice_captures SET received_at = now() - interval '31 days' WHERE id = ${capture}`
+      await tx`UPDATE public.shift_task_voice_suggestions SET received_at = now() - interval '31 days' WHERE id = ${evidence}`
+      await asUser(tx, lead, 'nurse', org)
+      expect(await tx`SELECT id FROM public.shift_task_voice_suggestions WHERE id = ${evidence}`).toEqual([])
+      await expect(tx.savepoint((sp) => decide(sp, evidence))).rejects.toMatchObject({ code: '42501' })
+    })
+  })
+
+  it('@REQ: NUR-TASKS-VOICE-COMPLETION zapisuje dowody APP i DEVICE dla tego samego zadania podopiecznego', async () => {
+    await transaction(async (tx) => {
+      const { org, author, lead, shift, date, recordedAt } = await fixture(tx)
+      const resident = randomUUID()
+      const device = randomUUID()
+      const capture = randomUUID()
+      const segment = randomUUID()
+      const client = randomUUID()
+      const token = randomUUID()
+      const transcript = 'Pani odmówiła kolacji.'
+      await tx`INSERT INTO public.residents (id, organization_id, first_name, last_name)
+        VALUES (${resident}, ${org}, 'Anna', 'Testowa')`
+      const [{ id: task }] = await tx`INSERT INTO public.shift_tasks
+        (organization_id, shift_definition_id, shift_date, resident_id, title, source, status, created_by)
+        VALUES (${org}, ${shift}, ${date}, ${resident}, 'Pomóc przy kolacji', 'MANUAL', 'TODO', ${author}) RETURNING id`
+      await tx`SET LOCAL ROLE service_role`
+      const register = () => tx`SELECT public.record_app_voice_task_draft(${author}, ${resident}, ${client},
+        ${transcript}, ${recordedAt}, ${'b'.repeat(64)}) AS item`
+      const [{ item: app }] = await register()
+      expect(await register()).toEqual([{ item: app }])
+      await tx`RESET ROLE`
+      await tx`UPDATE public.voice_draft_notes SET status = 'PROCESSED' WHERE id = ${app.draft_id}`
+      await tx`UPDATE public.voice_app_report_jobs SET token = ${token} WHERE draft_id = ${app.draft_id}`
+      await tx`INSERT INTO public.voice_devices (id, organization_id, label, token_hash)
+        VALUES (${device}, ${org}, 'Dyktafon testowy', ${device.replaceAll('-', '').repeat(2)})`
+      await tx`INSERT INTO public.voice_captures
+        (id, organization_id, source, source_key, storage_path, sha256, device_id, session_id, session_seq, recorded_at, status)
+        VALUES (${capture}, ${org}, 'DEVICE', ${capture}, ${org + '/device/' + capture}, ${'c'.repeat(64)},
+          ${device}, ${capture}, 1, ${recordedAt}, 'SEGMENTED')`
+      await tx`INSERT INTO public.voice_segments
+        (id, organization_id, capture_id, ordinal, start_ms, end_ms, assignment_status, resident_id, author_id,
+          author_attribution, projection_status, projection_token)
+        VALUES (${segment}, ${org}, ${capture}, 0, 0, 1000, 'RESIDENT', ${resident}, ${author}, 'DECLARED_SESSION', 'PROCESSING', ${token})`
+      await tx`SET LOCAL ROLE service_role`
+      for (const [segmentId, draftId] of [[segment, null], [null, app.draft_id]]) {
+        const [{ items }] = await tx`SELECT public.sync_voice_task_suggestions(${segmentId}, ${draftId}, ${token}, NULL) AS items`
+        expect(items).toEqual([{ id: task, title: 'Pomóc przy kolacji', updated_at: expect.any(String) }])
+        const matches = tx.json([{ task_id: task, task_updated_at: items[0].updated_at, fragment_index: 0, kind: 'REFUSED', quote: transcript }])
+        await tx`SELECT public.sync_voice_task_suggestions(${segmentId}, ${draftId}, ${token}, ${matches})`
+      }
+      await asUser(tx, lead, 'nurse', org)
+      const visible = () => tx`SELECT source_kind, kind, quote FROM public.shift_task_voice_suggestions
+        WHERE task_id = ${task} ORDER BY source_kind`
+      expect(await visible()).toEqual(['APP', 'DEVICE'].map((source_kind) => ({ source_kind, kind: 'REFUSED', quote: transcript })))
+      await tx`RESET ROLE`
+      await tx`UPDATE public.voice_draft_notes SET transcript = 'Zmieniony tekst' WHERE id = ${app.draft_id}`
+      await asUser(tx, lead, 'nurse', org)
+      expect(await visible()).toEqual([{ source_kind: 'DEVICE', kind: 'REFUSED', quote: transcript }])
     })
   })
 })
