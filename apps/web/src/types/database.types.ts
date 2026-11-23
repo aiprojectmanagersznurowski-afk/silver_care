@@ -1892,6 +1892,7 @@ export interface Database {
           created_at: string
           decided_at: string | null
           decided_by: string | null
+          version: number
         }
         Insert: {
           segment_id: string
@@ -1903,6 +1904,7 @@ export interface Database {
           created_at?: string
           decided_at?: string | null
           decided_by?: string | null
+          version?: number
         }
         Update: {
           segment_id?: string
@@ -1914,6 +1916,7 @@ export interface Database {
           created_at?: string
           decided_at?: string | null
           decided_by?: string | null
+          version?: number
         }
         Relationships: [
           {
@@ -2347,6 +2350,15 @@ export interface Database {
           projection_token: string | null
           projection_attempted_at: string | null
           projection_attempts: number
+          corrected_at: string | null
+          event_occurred_at: string | null
+          parent_segment_id: string | null
+          derived_start_at: string | null
+          transcription_status: string | null
+          transcription_token: string | null
+          transcription_queue_version: number | null
+          transcription_started_at: string | null
+          transcription_attempts: number
         }
         Insert: {
           id?: string
@@ -2364,6 +2376,15 @@ export interface Database {
           projection_token?: string | null
           projection_attempted_at?: string | null
           projection_attempts?: number
+          corrected_at?: string | null
+          event_occurred_at?: string | null
+          parent_segment_id?: string | null
+          derived_start_at?: string | null
+          transcription_status?: string | null
+          transcription_token?: string | null
+          transcription_queue_version?: number | null
+          transcription_started_at?: string | null
+          transcription_attempts?: number
         }
         Update: {
           id?: string
@@ -2381,8 +2402,24 @@ export interface Database {
           projection_token?: string | null
           projection_attempted_at?: string | null
           projection_attempts?: number
+          corrected_at?: string | null
+          event_occurred_at?: string | null
+          parent_segment_id?: string | null
+          derived_start_at?: string | null
+          transcription_status?: string | null
+          transcription_token?: string | null
+          transcription_queue_version?: number | null
+          transcription_started_at?: string | null
+          transcription_attempts?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "voice_segment_parent_source"
+            columns: ["parent_segment_id", "capture_id"]
+            isOneToOne: false
+            referencedRelation: "voice_segments"
+            referencedColumns: ["id", "capture_id"]
+          },
           {
             foreignKeyName: "voice_segments_capture_id_organization_id_fkey"
             columns: ["capture_id", "organization_id"]
@@ -2434,6 +2471,15 @@ export interface Database {
       }
     }
     Functions: {
+      split_voice_segment: {
+        Args: {
+          p_segment_id: string
+          p_expected_version: number
+          p_request_id: string
+          p_parts: Json
+        }
+        Returns: Json
+      }
       sync_voice_task_suggestions: {
         Args: {
           p_draft_id: string | null
@@ -2513,6 +2559,12 @@ export interface Database {
         }
         Returns: Json
       }
+      can_play_voice_segment: {
+        Args: {
+          p_segment_id: string
+        }
+        Returns: boolean
+      }
       claim_voice_capture: {
         Args: {
           p_capture_id?: string | null
@@ -2553,6 +2605,12 @@ export interface Database {
           p_result: Json
         }
         Returns: boolean
+      }
+      claim_voice_segment_transcription: {
+        Args: {
+          p_segment_id?: string | null
+        }
+        Returns: Json
       }
       complete_voice_capture_failure: {
         Args: {
@@ -2596,6 +2654,20 @@ export interface Database {
         }
         Returns: undefined
       }
+      correct_voice_segment_time: {
+        Args: {
+          p_segment_id: string
+          p_expected_version: number
+          p_request_id: string
+          p_mode: string
+          p_basis: string
+          p_local_start?: string | null
+          p_utc_offset_minutes?: number | null
+          p_shift_definition_id?: string | null
+          p_shift_date?: string | null
+        }
+        Returns: Json
+      }
       expire_voice_captures: {
         Args: Record<PropertyKey, never>
         Returns: number
@@ -2632,6 +2704,15 @@ export interface Database {
       finish_impersonation: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      finish_voice_segment_transcription: {
+        Args: {
+          p_segment_id: string
+          p_token: string
+          p_result?: Json | null
+          p_unavailable?: boolean | null
+        }
+        Returns: boolean
       }
       finish_voice_storage_deletions: {
         Args: {
@@ -3061,6 +3142,17 @@ export interface Database {
           p_name: string
         }
         Returns: boolean
+      }
+      review_voice_segment_scope: {
+        Args: {
+          p_segment_id: string
+          p_expected_version: number
+          p_request_id: string
+          p_scope: string
+          p_resident_id?: string | null
+          p_author_id?: string | null
+        }
+        Returns: Json
       }
       resolve_voice_segment: {
         Args: {
