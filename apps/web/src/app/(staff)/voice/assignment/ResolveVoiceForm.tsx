@@ -1,5 +1,6 @@
 'use client'
 
+import { RESIDENT_ASSIGNMENT } from '@silvercare/contracts/src/generated/voice'
 import { useState, useTransition, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -7,13 +8,20 @@ import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 
 interface Option { id: string; label: string }
 
-export function ResolveVoiceForm({ segmentId, residents, staff, author }: {
-  segmentId: string; residents: Option[]; staff: Option[]; author: string | null
+const scopeLabels = {
+  RESIDENT: 'Podopieczny',
+  FACILITY: 'Sprawa placówki',
+  UNASSIGNABLE: 'Nie do przypisania',
+} satisfies Record<(typeof RESIDENT_ASSIGNMENT.outcomes)[number], string>
+
+export function ResolveVoiceForm({ segmentId, residents, staff, author, unassignableOnly = false }: {
+  segmentId: string; residents: Option[]; staff: Option[]; author: string | null; unassignableOnly?: boolean
 }) {
   const [scope, setScope] = useState('')
   const [error, setError] = useState('')
   const [pending, startTransition] = useTransition()
   const router = useRouter()
+  const outcomes = RESIDENT_ASSIGNMENT.outcomes.filter((outcome) => !unassignableOnly || outcome === 'UNASSIGNABLE')
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -41,9 +49,7 @@ export function ResolveVoiceForm({ segmentId, residents, staff, author }: {
         <span>Przypisanie fragmentu</span>
         <NativeSelect required value={scope} onChange={(event) => setScope(event.target.value)} className="min-h-touch">
           <NativeSelectOption value="">Wybierz zakres</NativeSelectOption>
-          <NativeSelectOption value="RESIDENT">Podopieczny</NativeSelectOption>
-          <NativeSelectOption value="FACILITY">Sprawa placówki</NativeSelectOption>
-          <NativeSelectOption value="UNASSIGNABLE">Brak możliwości przypisania</NativeSelectOption>
+          {outcomes.map((outcome) => <NativeSelectOption key={outcome} value={outcome}>{scopeLabels[outcome]}</NativeSelectOption>)}
         </NativeSelect>
       </label>
       {scope === 'RESIDENT' && (
@@ -55,13 +61,15 @@ export function ResolveVoiceForm({ segmentId, residents, staff, author }: {
           </NativeSelect>
         </label>
       )}
-      <label className="block space-y-1">
-        <span>Autor fragmentu</span>
-        <NativeSelect name="author" required={!author && scope !== 'UNASSIGNABLE'} className="min-h-touch">
-          <NativeSelectOption value="">{author ? 'Zachowaj ustalonego autora' : 'Wybierz autora'}</NativeSelectOption>
-          {staff.map(({ id, label }) => <NativeSelectOption key={id} value={id}>{label}</NativeSelectOption>)}
-        </NativeSelect>
-      </label>
+      {!unassignableOnly && (
+        <label className="block space-y-1">
+          <span>Autor fragmentu</span>
+          <NativeSelect name="author" required={!author && scope !== 'UNASSIGNABLE'} className="min-h-touch">
+            <NativeSelectOption value="">{author ? 'Zachowaj ustalonego autora' : 'Wybierz autora'}</NativeSelectOption>
+            {staff.map(({ id, label }) => <NativeSelectOption key={id} value={id}>{label}</NativeSelectOption>)}
+          </NativeSelect>
+        </label>
+      )}
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
       <Button className="min-h-touch" type="submit" disabled={pending}>Zapisz decyzję</Button>
     </form>

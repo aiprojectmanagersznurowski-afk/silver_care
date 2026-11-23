@@ -87,15 +87,22 @@ async function AssignmentDetails({ orgId, segmentId }: { orgId: string; segmentI
   const { data: segment } = await admin.from(RESIDENT_ASSIGNMENT.segmentResource)
     .select('transcript_path, author_id, author_attribution, voice_captures(recorded_at, received_at, clock_state)')
     .eq('organization_id', orgId).eq('id', segmentId).eq('assignment_status', 'PENDING').maybeSingle()
-  if (!segment?.transcript_path) return <ListError title="Źródło fragmentu jest niedostępne" />
+  if (!segment) return <ListError title="Źródło fragmentu jest niedostępne" />
+  const transcript = segment.transcript_path
+    ? await admin.storage.from(VOICE_RETENTION.storageBucket).download(segment.transcript_path)
+    : null
+  if (!transcript?.data?.size) {
+    return <ListError title="Źródło fragmentu jest niedostępne" action={
+      <ResolveVoiceForm key={segmentId} segmentId={segmentId} residents={[]} staff={[]} author={null} unassignableOnly />
+    } />
+  }
   const sessionDb = await createClient()
-  const [transcript, residents, staff] = await Promise.all([
-    admin.storage.from(VOICE_RETENTION.storageBucket).download(segment.transcript_path),
+  const [residents, staff] = await Promise.all([
     sessionDb.from('residents').select('id, first_name, last_name').eq('organization_id', orgId)
       .order('last_name').limit(1000),
     listShiftStaff(orgId),
   ])
-  if (!transcript.data || residents.error) return <ListError title="Nie udało się odczytać fragmentu" />
+  if (residents.error) return <ListError title="Nie udało się odczytać fragmentu" />
   const author = staff.find(({ id }) => id === segment.author_id)?.label
   const capture = segment.voice_captures
   const capturedAt = capture?.clock_state === 'UNKNOWN' ? 'do ustalenia' : capture?.recorded_at && time.format(new Date(capture.recorded_at))
