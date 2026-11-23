@@ -596,15 +596,22 @@ if (UI_TERMINOLOGY) {
 }
 
 // R31 — zakres „kierownik zmiany” (SC-NUR-12/AC1a, decyzja Michała 2026-10-30): uprawnienia na swojej zmianie,
-// nigdy odczyt, tylko dla zasobów z kluczem zmiany i tylko dla roli wskazanej w kontrakcie.
+// dla zasobów z kluczem zmiany i tylko dla roli wskazanej w kontrakcie. Odczyt ma jawne wyjątki.
 if (SHIFT_LEAD_SCOPE) {
   const sc = SHIFT_LEAD_SCOPE;
   if (!roleIds.includes(sc.role)) err('R31-shift-lead', `Zakres ${sc.qualifier} wskazuje nieistniejącą rolę "${sc.role}".`);
   if (!RESOURCES.includes(sc.derivedFrom?.resource)) err('R31-shift-lead', 'Grafik, z którego wynika kierownik zmiany, nie jest zasobem w macierzy.');
   if (sc.leadsPerShift !== 1) err('R31-shift-lead', `Na zmianę musi przypadać dokładnie jeden kierownik (jest: ${sc.leadsPerShift}).`);
-  // Jedyny dozwolony odczyt kierownika zmiany to kolejka przypisania nagrań (ADR-022).
-  for (const r of sc.readResources || []) {
-    if (r !== RESIDENT_ASSIGNMENT?.queueResource) err('R31-shift-lead', `Odczyt z zakresem ${sc.qualifier} dla "${r}". Dozwolony wyłącznie dla kolejki przypisania nagrań.`);
+  // ADR-022 i NUR-TASKS-VOICE-COMPLETION. Wyjątki nie obejmują dostępu do źródłowych brudnopisów.
+  const scopedReadResources = [RESIDENT_ASSIGNMENT?.queueResource, 'shift_task_voice_suggestions'];
+  for (const resource of sc.readResources || []) {
+    if (!scopedReadResources.includes(resource)) err('R31-shift-lead', `Odczyt z zakresem ${sc.qualifier} dla "${resource}" jest poza jawnymi wyjątkami.`);
+  }
+  const voiceSuggestions = MATRIX.find(({ resource }) => resource === 'shift_task_voice_suggestions');
+  if (voiceSuggestions && (voiceSuggestions.read.length !== 2
+    || !voiceSuggestions.read.includes('org_admin:own')
+    || !voiceSuggestions.read.includes(`${sc.role}:${sc.qualifier}`))) {
+    err('R31-shift-lead', 'Podpowiedzi głosowe czytają wyłącznie kierownik placówki i kierownik właściwej zmiany.');
   }
   for (const row of MATRIX) {
     for (const cap of ['read', 'create', 'update', 'delete']) {
