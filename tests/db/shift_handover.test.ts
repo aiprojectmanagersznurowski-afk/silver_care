@@ -179,5 +179,13 @@ it('@REQ: NUR-SHIFT-CLOSURE requires receipt evidence and blocks completeness wh
     expect(await s.preview()).toMatchObject({
       versions: [{ completeness: 'COMPLETE', expectedSourceIds: expect.arrayContaining([delivered, inProgress]) }],
     })
+
+    await tx`RESET ROLE`
+    const lateReceipt = await capture('SEGMENTED')
+    await s.claims(s.lead)
+    const amendment = await s.preview()
+    expect(amendment).toMatchObject({ latestVersion: 1, facts: [], canApprove: true, newReceipts: 1 })
+    expect(await s.approve(amendment.revision, 'COMPLETE', null, [delivered, inProgress, lateReceipt])).toBe(2)
+    expect(await s.preview()).toMatchObject({ canApprove: false, newReceipts: 0 })
   })
 })
