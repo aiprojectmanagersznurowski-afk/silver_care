@@ -18,8 +18,8 @@ const migrationSql = readFileSync(join(process.cwd(), 'supabase/migrations/20261
  */
 type Tx = postgres.TransactionSql;
 
-const asRole = (tx: Tx, role: string) =>
-  tx`SELECT set_config('request.jwt.claims', ${JSON.stringify({ sub: '00000000-0000-0000-0000-00000000a0a0', role: 'authenticated', app_metadata: { role, organization_id: '00000000-0000-0000-0000-00000000b0b0' } })}, true)`;
+const asRole = (tx: Tx, role: string, aal = 'aal2') =>
+  tx`SELECT set_config('request.jwt.claims', ${JSON.stringify({ sub: '00000000-0000-0000-0000-00000000a0a0', role: 'authenticated', aal, app_metadata: { role, organization_id: '00000000-0000-0000-0000-00000000b0b0' } })}, true)`;
 
 async function rollback(fn: (tx: Tx) => Promise<void>) {
   await sql.begin(async (tx) => {
@@ -63,6 +63,13 @@ describe('Bucket avatars — zapis tylko kierownik placówki i super admin (@REQ
       const rows = await tx`SELECT cmd, coalesce(qual, with_check) AS rule FROM pg_policies WHERE schemaname = 'storage' AND tablename = 'objects' AND cmd IN ('UPDATE', 'DELETE') AND coalesce(qual, with_check) LIKE '%avatars%'`;
       expect(rows.map((r) => r.cmd).sort()).toEqual(['DELETE', 'UPDATE']);
       for (const r of rows) expect(r.rule, r.cmd).toMatch(/org_admin/);
+    });
+  });
+
+  it('@REQ: SEC-MFA-STAFF - konto kierownika z aal1 nie wgrywa pliku do avatars', async () => {
+    await rollback(async (tx) => {
+      await asRole(tx, 'org_admin', 'aal1');
+      expect(await tryPut(tx, 'staff/test-aal1.webp')).toMatch(/MFA \(aal2\) required/);
     });
   });
 });
