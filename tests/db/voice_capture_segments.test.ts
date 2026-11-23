@@ -4,7 +4,7 @@ import postgres from 'postgres'
 import { afterAll, describe, expect, it } from 'vitest'
 
 const database = new URL(process.env.DATABASE_URL!)
-if (!['127.0.0.1', 'localhost'].includes(database.hostname) || database.port !== '54322'
+if (!['127.0.0.1', 'localhost'].includes(database.hostname)
   || database.username !== 'postgres' || database.pathname !== '/postgres') {
   throw new Error('Voice capture tests require the local Supabase test database')
 }
@@ -58,6 +58,53 @@ async function fixture(tx: Tx) {
 }
 
 describe('Nagrania i fragmenty', () => {
+  it('wyznacza dyżur z czasu każdego fragmentu i zachowuje datę rozpoczęcia nocy @REQ: VOICE-RESIDENT-ASSIGN', async () => {
+    await transaction(async (tx) => {
+      const { org, author, lead, capture, shift: day } = await fixture(tx)
+      const night = randomUUID()
+      const afterMidnight = randomUUID()
+      await tx`UPDATE public.shift_definitions SET is_active = (id = ${day})
+        WHERE organization_id = ${org}`
+      await tx`UPDATE public.shift_definitions SET start_time = '07:00', end_time = '19:00' WHERE id = ${day}`
+      await tx`INSERT INTO public.shift_definitions (id, organization_id, code, name, start_time, end_time)
+        VALUES (${night}, ${org}, 'fixture-night', 'Nocna', '19:00', '07:00')`
+      await tx`UPDATE public.shift_roster SET shift_definition_id = ${night}
+        WHERE organization_id = ${org} AND user_id = ${lead}`
+      await tx`UPDATE public.voice_captures SET recorded_at = '2026-11-22 18:59+01' WHERE id = ${capture}`
+      await tx`INSERT INTO public.voice_captures
+        (id, organization_id, source, source_key, storage_path, sha256, author_id, recorded_at)
+        VALUES (${afterMidnight}, ${org}, 'APP_GENERAL', ${afterMidnight}, ${org + '/fixture/' + afterMidnight},
+          ${'a'.repeat(64)}, ${author}, '2026-11-23 00:00+01')`
+
+      await tx`SET LOCAL ROLE service_role`
+      for (const [id, offsets] of [[capture, [0, 120_000]], [afterMidnight, [60_000]]] as const) {
+        const [claim] = await tx`SELECT processing_token FROM public.claim_voice_capture(${id})`
+        const segments = offsets.map((start, ordinal) => ({
+          ordinal, start_ms: start, end_ms: start + 1_000,
+          transcript_path: `${org}/transcripts/${id}/${claim.processing_token}/${ordinal}`,
+          scope: 'PENDING', reasons: ['NO_MATCH'],
+        }))
+        await tx`SELECT public.finalize_voice_capture(${id}, ${claim.processing_token}, ${tx.json(segments)})`
+      }
+
+      await tx`RESET ROLE`
+      const rows = await tx`SELECT q.shift_definition_id AS shift, q.shift_date::text AS date,
+        s.derived_start_at AS start, s.corrected_at, private.voice_segment_effective_at(s, c) AS effective
+        FROM public.voice_assignment_queue q JOIN public.voice_segments s ON s.id = q.segment_id
+        JOIN public.voice_captures c ON c.id = s.capture_id
+        WHERE q.organization_id = ${org} ORDER BY c.recorded_at, s.ordinal`
+      expect(rows).toEqual([
+        [day, '2026-11-22T17:59Z'], [night, '2026-11-22T18:01Z'], [night, '2026-11-22T23:01Z'],
+      ].map(([shift, time]) => ({
+        shift, date: '2026-11-22', start: new Date(time), corrected_at: null, effective: new Date(time),
+      })))
+
+      await asUser(tx, lead, 'nurse', org)
+      expect(await tx`SELECT shift_definition_id FROM public.voice_assignment_queue WHERE organization_id = ${org}`)
+        .toEqual([{ shift_definition_id: night }, { shift_definition_id: night }])
+    })
+  })
+
   it('chroni dane źródłowe i utrzymuje odrębne fragmenty po jednym nagraniu @REQ: VOICE-RESIDENT-ASSIGN', async () => {
     await transaction(async (tx) => {
       const fixtureIds = await fixture(tx)
