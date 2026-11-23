@@ -63,6 +63,7 @@ CROSS JOIN LATERAL (SELECT private.voice_transcript_capture_id(o.name) AS captur
 WHERE o.bucket_id = 'voice-recordings' AND src.capture_id IS NOT NULL
   AND NOT EXISTS (SELECT 1 FROM public.voice_captures c
     WHERE c.id = src.capture_id AND c.organization_id::text = split_part(o.name, '/', 1))
-ON CONFLICT (path) DO NOTHING;
+ON CONFLICT (path) DO UPDATE SET
+  queued_at = excluded.queued_at, lease_token = NULL, leased_until = NULL;
 
 NOTIFY pgrst, 'reload schema';
