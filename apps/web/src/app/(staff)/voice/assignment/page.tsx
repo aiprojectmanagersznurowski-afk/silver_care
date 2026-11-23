@@ -69,7 +69,7 @@ export default async function VoiceAssignmentPage({ searchParams }: { searchPara
   const supabase = await createClient()
   const { data: assurance } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
   const title = <PageHeader title="Fragmenty do sprawdzenia" back={{ href: '/voice', label: 'Wróć do trybów nagrywania' }} />
-  if (assurance?.currentLevel !== review.requiredAal) {
+  if (!await staffMfaSatisfied(supabase, assurance?.currentLevel, review.requiredAal)) {
     return <div className="space-y-4">{title}<FeatureFlagsMfa needsVerification={assurance?.nextLevel === review.requiredAal}
       description="Potwierdź drugi składnik uwierzytelniania, aby sprawdzić fragmenty nagrań." /></div>
   }
@@ -190,3 +190,4 @@ async function AssignmentDetails({ orgId, item, shifts, facilityManager, queueHr
     </section>
   )
 }
+import { staffMfaSatisfied } from '@/lib/auth/staff-mfa'

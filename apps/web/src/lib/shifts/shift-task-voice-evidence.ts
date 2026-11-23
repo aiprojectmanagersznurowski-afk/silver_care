@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { SHIFT_TASK_VOICE } from '@silvercare/contracts/src/generated/roles'
 import type { Database } from '@/types/database.types'
 import { isOrgFeatureEnabled } from '@/lib/feature-flags'
+import { staffMfaSatisfied } from '@/lib/auth/staff-mfa'
 
 type EvidenceRow = Database['public']['Tables'][typeof SHIFT_TASK_VOICE.resource]['Row']
 export type ShiftTaskVoiceEvidence = Pick<EvidenceRow,
@@ -15,7 +16,7 @@ export async function loadShiftTaskVoiceEvidence(
   if (!enabled) return { rows: [] }
 
   const { data: assurance } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
-  if (assurance?.currentLevel !== SHIFT_TASK_VOICE.requiredAal) {
+  if (!await staffMfaSatisfied(supabase, assurance?.currentLevel, SHIFT_TASK_VOICE.requiredAal)) {
     return { rows: [], mfa: { needsVerification: assurance?.nextLevel === SHIFT_TASK_VOICE.requiredAal } }
   }
 

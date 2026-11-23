@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import { SHIFT_TASK_VOICE } from '@silvercare/contracts/src/generated/roles'
+import { staffMfaSatisfied } from '@/lib/auth/staff-mfa'
 import { assertOrgFeatureForApi } from '@/lib/feature-flags'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
@@ -123,7 +124,8 @@ export async function POST(req: Request) {
       const canRegisterAudio = typeof clientUuid === 'string' && uuid.test(clientUuid) && uuid.test(residentId)
         && hasRecordingTime && getAppRole(user) === 'nurse'
       const assurance = canRegisterAudio ? await supabase.auth.mfa.getAuthenticatorAssuranceLevel(token) : null
-      if (clientUuid && assurance?.data?.currentLevel === SHIFT_TASK_VOICE.requiredAal) {
+      if (clientUuid && canRegisterAudio
+        && await staffMfaSatisfied(supabase, assurance?.data?.currentLevel, SHIFT_TASK_VOICE.requiredAal)) {
         const { data, error } = await createAdminClient().rpc('record_app_voice_task_draft', {
           p_author_id: user.id, p_resident_id: residentId, p_client_uuid: clientUuid, p_transcript: transcription,
           p_recorded_at: new Date(recordedAt).toISOString(),
