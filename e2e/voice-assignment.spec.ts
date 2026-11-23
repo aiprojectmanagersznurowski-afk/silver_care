@@ -46,8 +46,8 @@ class VoiceAssignmentSourcePage extends VoiceAssignmentPage {
 
   async resolveUnavailableSource(segment: string) {
     await this.page.goto(`/voice/assignment?segment=${segment}`)
-    await expect(this.page.getByText('Źródło fragmentu jest niedostępne')).toBeVisible()
-    const scope = this.page.getByLabel('Przypisanie fragmentu')
+    await expect(this.page.getByText('Źródło fragmentu jest niedostępne').filter({ visible: true })).toBeVisible()
+    const scope = this.page.getByRole('combobox', { name: 'Przypisanie fragmentu' })
     await expect(scope.getByRole('option')).toHaveText(['Wybierz zakres', 'Nie do przypisania'])
     await scope.selectOption('UNASSIGNABLE')
     await this.page.getByRole('button', { name: 'Zapisz decyzję' }).click()
