@@ -76,7 +76,7 @@ async function fixture(tx: Tx) {
       'COMPLETED', ${quote}
     FROM public.shift_tasks t CROSS JOIN public.voice_captures c WHERE t.id = ${task} AND c.id = ${capture}
     RETURNING id`
-  return { org, other, author, lead, admin, capture, task, evidence }
+  return { org, other, author, lead, admin, capture, segment, task, evidence }
 }
 
 function decide(tx: Tx, evidence: string) {
@@ -122,6 +122,27 @@ describe('Dowód głosowy rozliczenia zmiany', () => {
       await tx`DELETE FROM public.voice_captures WHERE id = ${capture}`
       expect(await tx`SELECT id FROM public.shift_task_voice_suggestions WHERE id = ${evidence}`).toEqual([])
       expect(await audit()).toHaveLength(1)
+    })
+  })
+
+  it('@REQ: NUR-TASKS-VOICE-COMPLETION wybiera nocny zakres i deduplikuje zapis z rezerwacji workera', async () => {
+    await transaction(async (tx) => {
+      const { org, lead, task, segment, evidence } = await fixture(tx)
+      await tx`DELETE FROM public.shift_task_voice_suggestions WHERE id = ${evidence}`
+      const token = randomUUID()
+      await tx`UPDATE public.voice_segments SET projection_status = 'PROCESSING', projection_token = ${token}
+        WHERE id = ${segment}`
+      await tx`SET LOCAL ROLE service_role`
+      const [lookup] = await tx`SELECT public.sync_voice_task_suggestions(${segment}, NULL, ${token}, NULL) AS items`
+      expect(lookup.items).toEqual([{ id: task, title: 'Przewietrzyć świetlicę', updated_at: expect.any(String) }])
+      const payload = tx.json([{ task_id: task, task_updated_at: lookup.items[0].updated_at,
+        fragment_index: 0, kind: 'COMPLETED', quote }])
+      for (let attempt = 0; attempt < 2; attempt++) {
+        await tx`SELECT public.sync_voice_task_suggestions(${segment}, NULL, ${token}, ${payload})`
+      }
+      await asUser(tx, lead, 'nurse', org)
+      expect(await tx`SELECT task_id, quote FROM public.shift_task_voice_suggestions WHERE task_id = ${task}`)
+        .toEqual([{ task_id: task, quote }])
     })
   })
 })
