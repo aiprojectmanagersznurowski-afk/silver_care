@@ -80,13 +80,22 @@ it('@REQ: VOICE-RESIDENT-ASSIGN przekazuje nocny wyjątek i zapisuje dokładny c
         .rejects.toMatchObject({ code: '42501' })
       expect(await tx`SELECT segment_id FROM public.voice_assignment_queue WHERE segment_id = ${segment}`).toHaveLength(0)
     }
+    await tx`RESET ROLE`
+    await tx`INSERT INTO public.organization_feature_flags (organization_id, feature_key, enabled, updated_by)
+      VALUES (${org}, 'module_voice_and_reports', false, ${admin})`
+    await asUser(tx, admin, 'org_admin', org)
+    await expect(tx.savepoint((sp) => correct(sp, segment, 0, randomUUID(), null, null, night, '2026-10-24')))
+      .rejects.toMatchObject({ message: 'FEATURE_DISABLED_FOR_ORG' })
+    expect(await tx`SELECT segment_id FROM public.voice_assignment_queue WHERE segment_id = ${segment}`).toHaveLength(0)
+    await tx`RESET ROLE`
+    await tx`DELETE FROM public.organization_feature_flags WHERE organization_id = ${org}`
     await asUser(tx, admin, 'org_admin', org)
     const transferKey = randomUUID()
     const first = await correct(tx, segment, 0, transferKey, null, null, night, '2026-10-24')
     expect(first[0].result).toMatchObject({ version: 1, corrected_at: null, shift_date: '2026-10-24' })
     expect(await correct(tx, segment, 0, transferKey, null, null, night, '2026-10-24')).toEqual(first)
     await expect(tx.savepoint((sp) => correct(sp, segment, 0, randomUUID(), null, null, day, '2026-10-25')))
-      .rejects.toMatchObject({ code: '40001' })
+      .rejects.toMatchObject({ code: 'PT409' })
     await asUser(tx, nurse, 'nurse', org)
     expect(await tx`SELECT segment_id FROM public.voice_assignment_queue WHERE segment_id = ${segment}`).toHaveLength(0)
     await asUser(tx, lead, 'nurse', org)
@@ -163,34 +172,34 @@ it('@REQ: VOICE-RESIDENT-ASSIGN dzieli tylko dostępne audio, zachowuje wersję 
       VALUES (${residentA}, ${org}, 'Anna', 'Testowa'), (${residentB}, ${org}, 'Ewa', 'Próbna')`
     await asUser(tx, admin, 'org_admin', org)
     await correct(tx, segment, 0, randomUUID(), '2026-10-25 02:30', 60)
-    const parts = [{ start_ms: 1000, end_ms: 1900 }, { start_ms: 1900, end_ms: 2800 },
-      { start_ms: 2800, end_ms: 3700 }, { start_ms: 3700, end_ms: 4000, excluded: true }]
+    const parts = [{ start_ms: 1000, end_ms: 1600 }, { start_ms: 1600, end_ms: 2200 },
+      { start_ms: 2200, end_ms: 2800 }, { start_ms: 2800, end_ms: 3700 }, { start_ms: 3700, end_ms: 4000, excluded: true }]
     const split = (db: Tx, input: typeof parts, key = randomUUID()) =>
       db`SELECT public.split_voice_segment(${segment}, 1, ${key}, ${db.json(input)}) AS split`
     await expect(tx.savepoint((sp) => split(sp, parts))).rejects.toMatchObject({ message: 'VOICE_AUDIO_UNAVAILABLE' })
     await tx`RESET ROLE`
     await tx`INSERT INTO storage.objects (bucket_id, name) VALUES ('voice-recordings', ${org + '/fixture/' + capture})`
     await asUser(tx, lead, 'nurse', org)
-    await expect(tx.savepoint((sp) => split(sp, [{ start_ms: 999, end_ms: 2000 }, parts[1]])))
+    await expect(tx.savepoint((sp) => split(sp, [{ start_ms: 999, end_ms: 1500 }, parts[1]])))
       .rejects.toMatchObject({ code: '22023' })
-    await expect(tx.savepoint((sp) => split(sp, [parts[0], { start_ms: 1800, end_ms: 2800 }])))
+    await expect(tx.savepoint((sp) => split(sp, [parts[0], { start_ms: 1500, end_ms: 2200 }])))
       .rejects.toMatchObject({ code: '22023' })
     const key = randomUUID()
     const saved = await split(tx, parts, key)
     expect(await split(tx, parts, key)).toEqual(saved)
-    await expect(tx.savepoint((sp) => split(sp, parts))).rejects.toMatchObject({ code: '40001' })
+    await expect(tx.savepoint((sp) => split(sp, parts))).rejects.toMatchObject({ code: 'PT409' })
     const kids = saved[0].split.children as { segment_id: string; start_ms: number; end_ms: number }[]
-    expect(kids.map(({ start_ms, end_ms }) => [start_ms, end_ms])).toEqual([[1000, 1900], [1900, 2800], [2800, 3700], [3700, 4000]])
+    expect(kids.map(({ start_ms, end_ms }) => [start_ms, end_ms])).toEqual([[1000, 1600], [1600, 2200], [2200, 2800], [2800, 3700], [3700, 4000]])
     await tx`SET LOCAL ROLE service_role`
     expect(await tx`SELECT public.claim_voice_segment_projection(${segment}) AS claim`).toEqual([{ claim: null }])
-    const [notExcluded] = await tx`SELECT public.claim_voice_segment_transcription(${kids[3].segment_id}) AS claim`
+    const [notExcluded] = await tx`SELECT public.claim_voice_segment_transcription(${kids[4].segment_id}) AS claim`
     expect(notExcluded.claim).toBeNull()
-    for (const [index, resident] of [residentA, residentB, null].entries()) {
+    for (const [index, resident] of [residentA, residentB, null, null].entries()) {
       const { segment_id } = kids[index]
       const [{ claim }] = await tx`SELECT public.claim_voice_segment_transcription(${segment_id}) AS claim`
       const path = `${org}/transcripts/${capture}/${segment_id}/${claim.token}`
       const payload = tx.json({ transcript_path: path, scope: resident ? 'RESIDENT' : 'FACILITY',
-        resident_id: resident, reasons: index === 1 ? ['MIXED_SEGMENT'] : [], candidate_ids: [] })
+        resident_id: resident, reasons: index === 3 ? ['MIXED_SEGMENT'] : [], candidate_ids: [] })
       // A stale worker cannot complete a lease owned by a different invocation.
       expect(await tx`SELECT public.finish_voice_segment_transcription(${segment_id}, ${randomUUID()}, ${payload}) AS ok`)
         .toEqual([{ ok: false }])
@@ -199,12 +208,14 @@ it('@REQ: VOICE-RESIDENT-ASSIGN dzieli tylko dostępne audio, zachowuje wersję 
     }
     const [ready] = await tx`SELECT public.claim_voice_segment_projection(${kids[0].segment_id}) AS claim`
     expect(ready.claim).toMatchObject({ resident_id: residentA, scope: 'resident' })
-    expect(await tx`SELECT public.claim_voice_segment_projection(${kids[1].segment_id}) AS claim`).toEqual([{ claim: null }])
+    const [otherResident] = await tx`SELECT public.claim_voice_segment_projection(${kids[1].segment_id}) AS claim`
+    expect(otherResident.claim).toMatchObject({ resident_id: residentB, scope: 'resident' })
+    expect(await tx`SELECT public.claim_voice_segment_projection(${kids[3].segment_id}) AS claim`).toEqual([{ claim: null }])
     const [facility] = await tx`SELECT public.claim_voice_segment_projection(${kids[2].segment_id}) AS claim`
     expect(facility.claim).toMatchObject({ scope: 'facility' })
     await tx`RESET ROLE`
     const [open] = await tx`SELECT shift_definition_id, shift_date::text, reasons FROM public.voice_assignment_queue
-      WHERE segment_id = ${kids[1].segment_id} AND decided_at IS NULL`
+      WHERE segment_id = ${kids[3].segment_id} AND decided_at IS NULL`
     expect(open).toEqual({ shift_definition_id: night, shift_date: '2026-10-24', reasons: ['MIXED_SEGMENT'] })
     const [parent] = await tx`SELECT assignment_status FROM public.voice_segments WHERE id = ${segment}`
     expect(parent.assignment_status).toBe('SPLIT')
@@ -216,7 +227,7 @@ it('@REQ: VOICE-RESIDENT-ASSIGN dzieli tylko dostępne audio, zachowuje wersję 
     await tx`SELECT public.expire_voice_captures()`
     expect(await tx`SELECT id FROM public.voice_segments WHERE capture_id = ${capture}`).toHaveLength(0)
     expect(await tx`SELECT path FROM public.voice_storage_deletions WHERE path LIKE ${org + '/transcripts/' + capture + '/%'}`)
-      .toHaveLength(3)
+      .toHaveLength(4)
   })
 })
 
@@ -236,10 +247,19 @@ it('@REQ: VOICE-RESIDENT-ASSIGN odbiera dostęp do odsłuchu po decyzji i odrzuc
     const key = randomUUID()
     const scope = (db: Tx, version: number) =>
       db`SELECT public.review_voice_segment_scope(${segment}, ${version}, ${key}, 'FACILITY') AS result`
-    await expect(tx.savepoint((sp) => scope(sp, 0))).rejects.toMatchObject({ code: '40001' })
+    await expect(tx.savepoint((sp) => scope(sp, 0))).rejects.toMatchObject({ code: 'PT409' })
     const saved = await scope(tx, 1)
     expect(saved[0].result).toMatchObject({ version: 2, closed: true })
     expect(await scope(tx, 1)).toEqual(saved)
     expect(await visible()).toBe(false)
+  })
+})
+
+it('@REQ: VOICE-RETENTION ukrywa otwartą pozycję po upływie retencji źródła', async () => {
+  await transaction(async (tx) => {
+    const { org, admin, segment, capture } = await fixture(tx)
+    await tx`UPDATE public.voice_captures SET received_at = now() - interval '100 days' WHERE id = ${capture}`
+    await asUser(tx, admin, 'org_admin', org)
+    expect(await tx`SELECT segment_id FROM public.voice_assignment_queue WHERE segment_id = ${segment}`).toHaveLength(0)
   })
 })

@@ -15,10 +15,10 @@ class VoiceAssignmentSourcePage extends VoiceAssignmentPage {
 
   async setShift(shiftId: string) {
     const form = this.page.getByRole('form', { name: 'Korekta czasu nagrania' })
-    await form.getByLabel('Ustalenie czasu').selectOption('SHIFT_ONLY')
-    await form.getByLabel('Zmiana').selectOption(shiftId)
+    await form.getByRole('combobox', { name: 'Ustalenie czasu', exact: true }).selectOption('SHIFT_ONLY')
+    await form.getByRole('combobox', { name: 'Zmiana', exact: true }).selectOption(shiftId)
     await form.getByLabel('Data początku zmiany').fill('2026-10-24')
-    await form.getByLabel('Podstawa decyzji').selectOption('ROSTER_VERIFIED')
+    await form.getByRole('combobox', { name: 'Podstawa decyzji', exact: true }).selectOption('ROSTER_VERIFIED')
     await form.getByRole('button', { name: 'Zapisz korektę' }).click()
     await expect(this.page.getByRole('region', { name: 'Decyzja o przypisaniu' })
       .getByText('Nocna · 2026-10-24', { exact: true })).toBeVisible()
@@ -26,11 +26,11 @@ class VoiceAssignmentSourcePage extends VoiceAssignmentPage {
 
   async verifyStart() {
     const form = this.page.getByRole('form', { name: 'Korekta czasu nagrania' })
-    await form.getByLabel('Ustalenie czasu').selectOption('VERIFIED_START')
+    await form.getByRole('combobox', { name: 'Ustalenie czasu', exact: true }).selectOption('VERIFIED_START')
     await form.getByLabel('Lokalny początek fragmentu').fill('2026-10-25T02:30')
-    await expect(form.getByLabel('Przesunięcie UTC').locator('option[value="120"]')).toHaveCount(1)
-    await form.getByLabel('Przesunięcie UTC').selectOption('60')
-    await form.getByLabel('Podstawa decyzji').selectOption('SOURCE_VERIFIED')
+    await expect(form.getByRole('combobox', { name: 'Przesunięcie UTC', exact: true }).locator('option[value="120"]')).toHaveCount(1)
+    await form.getByRole('combobox', { name: 'Przesunięcie UTC', exact: true }).selectOption('60')
+    await form.getByRole('combobox', { name: 'Podstawa decyzji', exact: true }).selectOption('SOURCE_VERIFIED')
     await form.getByRole('button', { name: 'Zapisz korektę' }).click()
     await expect(this.page.locator('time[datetime="2026-10-25T01:30:00+00:00"]')).toBeVisible()
   }

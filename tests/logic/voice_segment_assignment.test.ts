@@ -27,6 +27,13 @@ describe('Przypisanie fragmentu', () => {
       .toMatchObject({ scope: 'PENDING', reasons: ['NO_MATCH'] })
   })
 
+  it('kieruje osobną sprawę placówki i podopiecznego do podziału @REQ: VOICE-RESIDENT-ASSIGN', () => {
+    expect(assignVoiceSegment({ ...known, text: 'Anna Kowalska wróciła ze spaceru. Sprawa placówki. Winda nie działa.' }, residents))
+      .toMatchObject({ scope: 'PENDING', reasons: ['MIXED_SEGMENT'], candidateIds: ['a'] })
+    expect(assignVoiceSegment({ ...known, text: 'Sprawa placówki: Jan Żółć zgłasza usterkę.' }, residents))
+      .toMatchObject({ scope: 'PENDING', reasons: ['CONFLICTING_EVIDENCE'] })
+  })
+
   it('oddziela stanowisko aplikacji od ogólnego zakresu i niejasnego autora @REQ: VOICE-ZERO-GUESSING', () => {
     expect(assignVoiceSegment({ ...known, text: 'Otworzono okno', selectedResidentId: 'a' }, residents))
       .toEqual({ scope: 'RESIDENT', residentId: 'a' })
