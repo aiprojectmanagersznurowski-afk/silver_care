@@ -32,7 +32,7 @@ function fail(error: string, status: number) {
 
 function mutationError(error: { code: string; message: string }) {
   if (error.code === '42501') return fail('Brak dostępu do tego fragmentu lub zmiany.', 403)
-  if (error.code === '40001') return fail('Stan fragmentu się zmienił. Odśwież kolejkę i sprawdź go ponownie.', 409)
+  if (error.code === 'PT409' || error.message === 'VOICE_REVIEW_CONFLICT') return fail('Stan fragmentu się zmienił. Odśwież kolejkę i sprawdź go ponownie.', 409)
   if (error.message === 'VOICE_LOCAL_TIME_INVALID') return fail('Wybierz istniejącą godzinę sprzed przyjęcia nagrania.', 422)
   if (error.message === 'VOICE_SHIFT_NOT_UNIQUE') return fail('Nie znaleziono jednej aktywnej zmiany dla podanego czasu.', 422)
   if (error.message === 'VOICE_AUDIO_UNAVAILABLE') return fail(missingAudio, 422)

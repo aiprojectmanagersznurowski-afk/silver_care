@@ -63,13 +63,24 @@ END $$;
 
 CREATE FUNCTION private.replay_voice_review(p_segment_id uuid, p_request_id uuid, p_input jsonb) RETURNS jsonb
 LANGUAGE plpgsql SET search_path = '' AS $$
-DECLARE v_decision private.voice_review_decisions;
+DECLARE v_decision private.voice_review_decisions; v_queue public.voice_assignment_queue;
 BEGIN
   IF p_request_id IS NULL THEN RAISE EXCEPTION 'VOICE_REQUEST_ID_REQUIRED' USING ERRCODE = '22023'; END IF;
   SELECT * INTO v_decision FROM private.voice_review_decisions WHERE segment_id = p_segment_id AND request_id = p_request_id;
   IF NOT FOUND THEN RETURN NULL; END IF;
-  IF v_decision.actor_id IS DISTINCT FROM auth.uid() OR v_decision.input IS DISTINCT FROM p_input THEN
-    RAISE EXCEPTION 'VOICE_REVIEW_CONFLICT' USING ERRCODE = '40001';
+  IF v_decision.actor_id IS DISTINCT FROM auth.uid() THEN
+    RAISE EXCEPTION 'VOICE_SEGMENT_ACCESS_DENIED' USING ERRCODE = '42501';
+  END IF;
+  IF auth.jwt()->'app_metadata'->>'role' = 'nurse' THEN
+    SELECT * INTO v_queue FROM public.voice_assignment_queue WHERE segment_id = p_segment_id;
+    IF NOT COALESCE(public.is_shift_lead(
+      COALESCE(v_queue.shift_definition_id, (v_decision.result->>'shift_definition_id')::uuid),
+      COALESCE(v_queue.shift_date, (v_decision.result->>'shift_date')::date)), false) THEN
+      RAISE EXCEPTION 'VOICE_SEGMENT_ACCESS_DENIED' USING ERRCODE = '42501';
+    END IF;
+  END IF;
+  IF v_decision.input IS DISTINCT FROM p_input THEN
+    RAISE EXCEPTION 'VOICE_REVIEW_CONFLICT' USING ERRCODE = 'PT409';
   END IF;
   RETURN v_decision.result;
 END $$;
@@ -82,7 +93,7 @@ BEGIN
     RAISE EXCEPTION 'VOICE_SEGMENT_ACCESS_DENIED' USING ERRCODE = '42501';
   END IF;
   IF p_queue.decided_at IS NOT NULL OR p_expected_version IS DISTINCT FROM p_queue.version THEN
-    RAISE EXCEPTION 'VOICE_REVIEW_CONFLICT' USING ERRCODE = '40001';
+    RAISE EXCEPTION 'VOICE_REVIEW_CONFLICT' USING ERRCODE = 'PT409';
   END IF;
 END $$;
 
@@ -106,7 +117,7 @@ BEGIN
   IF v_result IS NOT NULL THEN RETURN v_result; END IF;
   PERFORM private.assert_voice_review_version(v_queue, p_expected_version);
   SELECT * INTO STRICT v_segment FROM public.voice_segments WHERE id = p_segment_id FOR UPDATE;
-  IF v_segment.assignment_status <> 'PENDING' THEN RAISE EXCEPTION 'VOICE_REVIEW_CONFLICT' USING ERRCODE = '40001'; END IF;
+  IF v_segment.assignment_status <> 'PENDING' THEN RAISE EXCEPTION 'VOICE_REVIEW_CONFLICT' USING ERRCODE = 'PT409'; END IF;
   IF p_basis IS NULL OR p_basis NOT IN ('ROSTER_VERIFIED', 'SOURCE_VERIFIED', 'STAFF_CONFIRMED') THEN
     RAISE EXCEPTION 'VOICE_TIME_BASIS_INVALID' USING ERRCODE = '22023';
   END IF;
