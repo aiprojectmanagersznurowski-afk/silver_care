@@ -9,13 +9,13 @@ import { createClient } from '@/lib/supabase/server'
 
 const mfaRoles = new Set<string>(MFA_REQUIRED_ROLES)
 
-function portalDestination(value: string | string[] | undefined) {
-  if (typeof value !== 'string' || !value.startsWith('/') || value.startsWith('//')) return '/'
+function portalDestination(value: string | string[] | undefined, defaultPath: string) {
+  if (typeof value !== 'string' || !value.startsWith('/') || value.startsWith('//')) return defaultPath
   const origin = 'https://silvercare.invalid'
   const url = new URL(value, origin)
   return url.origin === origin && /^\/(?:admin|staff|voice|reports)(?:\/|$)/.test(url.pathname)
     ? url.pathname + url.search
-    : '/'
+    : defaultPath
 }
 
 /** @REQ: SEC-MFA-STAFF */
@@ -31,7 +31,7 @@ export default async function StaffMfaPage({
 
   const { data } = await supabase.auth.getClaims()
   if (data?.claims.sub === user.id && await staffMfaSatisfied(supabase, data.claims.aal)) {
-    redirect(portalDestination((await searchParams).returnTo))
+    redirect(portalDestination((await searchParams).returnTo, role === 'nurse' ? '/staff' : '/admin'))
   }
 
   return (
