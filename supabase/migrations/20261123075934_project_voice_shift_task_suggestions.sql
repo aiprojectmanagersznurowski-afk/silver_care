@@ -3,6 +3,7 @@
 CREATE TABLE private.app_voice_task_recordings (
   draft_id uuid PRIMARY KEY REFERENCES public.voice_draft_notes(id) ON DELETE CASCADE,
   recorded_at timestamptz NOT NULL,
+  received_at timestamptz NOT NULL DEFAULT now(),
   audio_sha256 text NOT NULL CHECK (audio_sha256 ~ '^[0-9a-f]{64}$'),
   transcript_sha256 bytea NOT NULL
 );
@@ -94,11 +95,12 @@ BEGIN
   ELSE
     PERFORM d.id FROM public.voice_draft_notes d WHERE d.id = p_draft_id FOR SHARE;
     SELECT r.organization_id, d.resident_id, d.nurse_id AS author_id, 'AUTHENTICATED_SESSION'::text AS author_attribution,
-      'APP'::text AS source_kind, a.recorded_at, d.created_at AS received_at, d.updated_at AS draft_updated_at, j.attempts INTO v_source
+      'APP'::text AS source_kind, a.recorded_at, a.received_at, d.updated_at AS draft_updated_at, j.attempts INTO v_source
     FROM public.voice_draft_notes d JOIN private.app_voice_task_recordings a ON a.draft_id = d.id
     JOIN public.voice_app_report_jobs j ON j.draft_id = d.id JOIN public.residents r ON r.id = d.resident_id
     WHERE d.id = p_draft_id AND d.status = 'PROCESSED' AND j.token = p_token AND j.completed_at IS NULL
-      AND r.archived_at IS NULL AND d.updated_at IS NOT NULL AND d.created_at >= now() - interval '30 days'
+      AND r.archived_at IS NULL AND d.updated_at IS NOT NULL AND d.created_at = a.received_at
+      AND a.received_at >= now() - interval '30 days'
       AND a.transcript_sha256 = sha256(convert_to(d.transcript, 'UTF8'))
     FOR UPDATE OF j;
   END IF;
