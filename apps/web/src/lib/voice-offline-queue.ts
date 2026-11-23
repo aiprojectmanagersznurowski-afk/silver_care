@@ -147,8 +147,8 @@ export async function sendOfflineVoiceItemToServer(item: OfflineVoiceItem): Prom
     if (general) {
       if (!item.author_id) return false
       formData.append('author_id', item.author_id)
-      formData.append('recorded_at', new Date(item.createdAt).toISOString())
     }
+    formData.append('recorded_at', new Date(item.createdAt).toISOString())
 
     const ext = item.ext || (mime.includes('mp4') || mime.includes('m4a') ? 'm4a' : 'webm')
     formData.append('file', blob, `offline-${item.client_uuid}.${ext}`)

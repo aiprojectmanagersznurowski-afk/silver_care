@@ -38,6 +38,7 @@ export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}) {
   const audioChunksRef = useRef<Blob[]>([])
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const cancelledRef = useRef(false)
+  const recordedAtRef = useRef(0)
 
   const cleanup = useCallback(() => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
@@ -90,7 +91,7 @@ export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}) {
   const sendAudio = useCallback(async (blob: Blob, ext: string) => {
     setState('transcribing'); setError(null); setFallbackAudioBlob(null)
     const clientUuid = generateClientUuid()
-    const recordedAt = Date.now()
+    const recordedAt = recordedAtRef.current
     let residentId = ''
     try {
       const supabase = createClient()
@@ -98,10 +99,8 @@ export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}) {
       const formData = new FormData()
       formData.append('file', blob, `recording.${ext}`)
       formData.append('client_uuid', clientUuid)
-      if (authorId) {
-        formData.append('author_id', authorId)
-        formData.append('recorded_at', new Date(recordedAt).toISOString())
-      }
+      if (authorId) formData.append('author_id', authorId)
+      if (recordedAt > 0) formData.append('recorded_at', new Date(recordedAt).toISOString())
       if (getExtraFormData) {
         const extra = getExtraFormData()
         for (const [key, val] of Object.entries(extra)) {
@@ -179,6 +178,7 @@ export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}) {
         }
         await sendAudio(audioBlob, format.ext)
       }
+      recordedAtRef.current = Date.now()
       recorder.start(1000); setState('recording'); setDuration(0)
       timerRef.current = setInterval(() => setDuration((prev) => prev + 1), 1000)
     } catch {

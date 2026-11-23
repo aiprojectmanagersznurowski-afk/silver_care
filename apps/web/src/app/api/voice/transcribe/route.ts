@@ -1,11 +1,17 @@
+import { createHash } from 'node:crypto'
+import { SHIFT_TASK_VOICE } from '@silvercare/contracts/src/generated/roles'
 import { assertOrgFeatureForApi } from '@/lib/feature-flags'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { getAppRole } from '@/lib/auth/app-role'
 import { checkRateLimit } from '@/lib/rate-limiter'
 import { transcribeWithGroq } from '@/lib/voice-helpers'
 import type { TablesInsert, TablesUpdate } from '@/types/database.types'
 
 export const runtime = 'nodejs'
+
+const uuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i
 
 export async function POST(req: Request) {
   try {
@@ -49,6 +55,9 @@ export async function POST(req: Request) {
     const residentId = formData.get('resident_id') as string | null
     const draftId = formData.get('draft_id') as string | null
     const clientUuid = formData.get('client_uuid') as string | null
+    const recordedValue = formData.get('recorded_at')
+    const recordedAt = typeof recordedValue === 'string' ? Date.parse(recordedValue) : NaN
+    const hasRecordingTime = Number.isFinite(recordedAt) && recordedAt <= Date.now() + 60_000
 
     if (!file || !(file instanceof Blob) || file.size === 0) {
       return NextResponse.json({ error: 'Brak pliku dźwiękowego' }, { status: 400 })
@@ -61,7 +70,7 @@ export async function POST(req: Request) {
     let transcription = ''
     try {
       const sttResult = await transcribeWithGroq(file, apiKey)
-      transcription = sttResult.text
+      transcription = sttResult.text.trim()
     } catch (err: unknown) {
       const status =
         typeof err === 'object' && err !== null && 'status' in err && typeof (err as { status: unknown }).status === 'number'
@@ -111,6 +120,23 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Błąd aktualizacji transkrypcji' }, { status: 500 })
       }
     } else {
+      const canRegisterAudio = typeof clientUuid === 'string' && uuid.test(clientUuid) && uuid.test(residentId)
+        && hasRecordingTime && getAppRole(user) === 'nurse'
+      const assurance = canRegisterAudio ? await supabase.auth.mfa.getAuthenticatorAssuranceLevel(token) : null
+      if (clientUuid && assurance?.data?.currentLevel === SHIFT_TASK_VOICE.requiredAal) {
+        const { data, error } = await createAdminClient().rpc('record_app_voice_task_draft', {
+          p_author_id: user.id, p_resident_id: residentId, p_client_uuid: clientUuid, p_transcript: transcription,
+          p_recorded_at: new Date(recordedAt).toISOString(),
+          p_audio_hash: createHash('sha256').update(new Uint8Array(await file.arrayBuffer())).digest('hex'),
+        })
+        if (error || !data || typeof data !== 'object' || Array.isArray(data)
+          || typeof data.draft_id !== 'string' || typeof data.transcript !== 'string') {
+          return NextResponse.json({ error: 'Nie udało się potwierdzić zapisu nagrania.' }, {
+            status: error?.code === '23505' ? 409 : error?.code === '42501' ? 403 : 503,
+          })
+        }
+        return NextResponse.json({ success: true, text: data.transcript, transcript: data.transcript, newChunk: transcription, draftId: data.draft_id })
+      }
       const draftInsert: TablesInsert<'voice_draft_notes'> = {
         resident_id: residentId,
         nurse_id: user.id,
