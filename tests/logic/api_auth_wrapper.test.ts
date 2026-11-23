@@ -138,6 +138,7 @@ describe('API Auth Wrapper & Error Handling (@REQ: SEC-SESSION, @REQ: SEC-NO-PII
       const getClaims = vi.fn().mockResolvedValue({ data: { claims } })
       vi.mocked(createClient).mockResolvedValueOnce({
         auth: { getUser, getClaims },
+        rpc: vi.fn().mockResolvedValue({ data: false }),
       } as unknown as Awaited<ReturnType<typeof createClient>>)
       const response = await wrapped(request)
       expect(response.status).toBe(403)
@@ -147,5 +148,21 @@ describe('API Auth Wrapper & Error Handling (@REQ: SEC-SESSION, @REQ: SEC-NO-PII
     }
 
     expect(handler).not.toHaveBeenCalled()
+  })
+
+  it('honors the database decision for a verified test session @REQ: SEC-MFA-STAFF', async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: true })
+    vi.mocked(createClient).mockResolvedValueOnce({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'tester', app_metadata: { role: 'nurse' } } } }),
+        getClaims: vi.fn().mockResolvedValue({ data: { claims: { sub: 'tester', aal: 'aal1' } } }),
+      },
+      rpc,
+    } as unknown as Awaited<ReturnType<typeof createClient>>)
+    const response = await withAuth(() => NextResponse.json({ ok: true }))(
+      new NextRequest('http://localhost/api/test'),
+    )
+    expect(response.status).toBe(200)
+    expect(rpc).toHaveBeenCalledWith('staff_mfa_satisfied')
   })
 })

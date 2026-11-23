@@ -27,4 +27,10 @@ export class StaffMfaPage {
     await expect(this.page.getByRole('heading', { name: 'Rejestr audytowy' })).toBeVisible()
     await expect(this.page.getByText('Nie udało się wczytać rejestru audytowego')).toHaveCount(0)
   }
+
+  async expectVoiceQueue() {
+    await this.page.goto('/voice/assignment')
+    await expect(this.page.getByRole('heading', { name: 'Fragmenty do sprawdzenia' })).toBeVisible()
+    await expect(this.page.getByText('Brak fragmentów do sprawdzenia')).toBeVisible()
+  }
 }
