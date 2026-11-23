@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic'
 
+import { SHIFT_TASK_VOICE } from '@silvercare/contracts/src/generated/roles'
 import { SHIFT_TASK_POLICY } from '@silvercare/contracts/src/generated/facility'
 import { createClient } from '@/lib/supabase/server'
 import { AuditManagementClient } from '@/components/AuditManagementClient'
@@ -30,7 +31,7 @@ export default async function AdminAuditPage({ searchParams }: { searchParams?: 
   if (startDate) query = query.gte('created_at', auditDayBoundary(startDate))
   if (endDate) query = query.lt('created_at', auditDayBoundary(endDate, true))
   if (scope === 'shift') {
-    query = query.in('action', [...SHIFT_TASK_POLICY.audit, ...SHIFT_TASK_POLICY.closure.audit.events, ...SHIFT_TASK_POLICY.closure.audit.voiceEvents])
+    query = query.in('action', [...SHIFT_TASK_POLICY.audit, ...SHIFT_TASK_POLICY.closure.audit.events, ...SHIFT_TASK_POLICY.closure.audit.voiceEvents, SHIFT_TASK_VOICE.auditAction])
   }
   const offset = (page - 1) * PAGE_SIZE
   const { data: logs, error } = filterError ? { data: [], error: null } : await query.range(offset, offset + PAGE_SIZE)

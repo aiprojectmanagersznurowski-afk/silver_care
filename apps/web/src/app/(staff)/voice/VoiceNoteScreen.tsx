@@ -26,6 +26,7 @@ function VoiceNoteContent() {
   const draftIdRef = useRef<string | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [finalReport, setFinalReport] = useState<string | null>(null)
+  const [taskNote, setTaskNote] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [followupQuestion, setFollowupQuestion] = useState<string | null>(null)
   const [medicationEvent, setMedicationEvent] = useState<string | null>(null)
@@ -39,7 +40,7 @@ function VoiceNoteContent() {
 
   const resetNote = () => {
     updateDraftId(null); setTranscription(null); setFollowupQuestion(null)
-    setFinalReport(null); setError(null); setMedicationEvent(null); setRequiresMedConfirm(false); recorder.reset()
+    setFinalReport(null); setTaskNote(false); setError(null); setMedicationEvent(null); setRequiresMedConfirm(false); recorder.reset()
   }
 
   useEffect(() => {
@@ -80,7 +81,7 @@ function VoiceNoteContent() {
 
   const handleStartRecord = async () => {
     if (!draftIdRef.current) { setTranscription(null); setFinalReport(null); setFollowupQuestion(null) }
-    setError(null)
+    setError(null); setTaskNote(false)
     await recorder.startRecording()
   }
 
@@ -105,7 +106,8 @@ function VoiceNoteContent() {
       }
       const data = await res.json()
       if (res.ok && data.success) {
-        if (data.needsFollowup) setFollowupQuestion(data.question)
+        if (data.taskNote) { resetNote(); setTaskNote(true) }
+        else if (data.needsFollowup) setFollowupQuestion(data.question)
         else {
           setFinalReport(data.report)
           setMedicationEvent(data.medication_event || null)
@@ -164,7 +166,7 @@ function VoiceNoteContent() {
         <CardContent className="p-4 sm:p-8 space-y-6 sm:space-y-8 flex flex-col items-center">
           <div className="text-center space-y-2 max-w-md">
             <h3 className="font-medium text-foreground text-lg">Zaraportuj status</h3>
-            <p className="text-sm text-muted-foreground">Nagraj wiadomość, a sztuczna inteligencja ztranskrybuje ją i przygotuje gotowy raport dla rodziny.</p>
+            <p className="text-sm text-muted-foreground">Nagraj notatkę o podopiecznym lub o wykonanych zadaniach zmiany.</p>
           </div>
 
           {!finalReport && (
@@ -209,6 +211,7 @@ function VoiceNoteContent() {
             </div>
           )}
 
+          {taskNote && <p role="status" className="text-sm">Zapisano notatkę o zadaniach zmiany.</p>}
           {transcription && !finalReport && !isGenerating && (
             <VoiceTranscriptionEditor
               transcription={transcription}

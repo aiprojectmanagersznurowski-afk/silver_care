@@ -1,4 +1,4 @@
-import { assertOrgFeatureForApi } from '@/lib/feature-flags'
+import { assertOrgFeatureForApi, isOrgFeatureEnabled } from '@/lib/feature-flags'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
@@ -15,6 +15,9 @@ import {
   MedicationEvent,
 } from '@/lib/voice-redactor'
 import { saveProcessedVoiceDraft } from '@/lib/voice-process-persistence'
+import { omitVoiceTaskCompletion } from '@/lib/voice-shift-task-completion'
+import { getAppOrganizationId } from '@/lib/auth/app-role'
+import { SHIFT_TASK_VOICE } from '@silvercare/contracts/src/generated/roles'
 
 export const runtime = 'nodejs'
 
@@ -90,6 +93,7 @@ export async function POST(req: Request) {
       return NextResponse.json({
         success: true,
         report: reportText,
+        taskNote: reportText === null && omitVoiceTaskCompletion(draft.transcript ?? '') === '',
         idempotent: true,
         message: 'Notatka została już przetworzona (idempotent)',
       })
@@ -108,7 +112,18 @@ export async function POST(req: Request) {
     }
 
     // 2. Pre-LLM Redaction (ADR-007 & VOICE-MEDICAL-STRIP): Odcięcie PII i parametrów PRZED LLM
-    const { cleanedTranscript, extractedMedical } = redactVoiceTranscript(transcription)
+    const { cleanedTranscript: redacted, extractedMedical } = redactVoiceTranscript(transcription)
+    const remaining = omitVoiceTaskCompletion(redacted)
+    const tasksEnabled = remaining !== redacted.trim()
+      && await isOrgFeatureEnabled(supabase, getAppOrganizationId(user), SHIFT_TASK_VOICE.requiredFeatures[1])
+    const cleanedTranscript = tasksEnabled ? remaining : redacted
+    if (tasksEnabled && !cleanedTranscript && !extractedMedical.length) {
+      const { error } = await supabase.from('voice_draft_notes')
+        .update({ status: 'PROCESSED', updated_at: new Date().toISOString(), followup_question: null })
+        .eq('id', draft.id).eq('nurse_id', user.id).neq('status', 'PROCESSED')
+      if (error) return NextResponse.json({ error: 'Nie udało się przetworzyć notatki o zadaniach.' }, { status: 500 })
+      return NextResponse.json({ success: true, taskNote: true, report: null })
+    }
 
     // Europejski LLM w EOG (Krok 1: Klasyfikator i Redakcja Medyczna ze strukturą medication_event)
     const raw1 = await callEuLlmCompletion([
