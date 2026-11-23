@@ -68,6 +68,7 @@ DECLARE
   v_task_states jsonb;
   v_carried jsonb := '{}'::jsonb;
   v_copy uuid;
+  v_received uuid[];
   v_expected uuid[] := COALESCE(p_expected_source_ids, ARRAY[]::uuid[]);
   v_reason text := nullif(btrim(p_reason), '');
 BEGIN
@@ -123,18 +124,20 @@ BEGIN
       ORDER BY ord), '[]'::jsonb) INTO v_task_states
     FROM jsonb_array_elements(v_draft->'tasks') WITH ORDINALITY AS task(t, ord);
 
+  v_received := ARRAY(SELECT (receipt->>'id')::uuid FROM jsonb_array_elements(v_draft->'receipts') receipt);
+
   INSERT INTO private.shift_handover_versions
     (organization_id, shift_definition_id, shift_date, version, previous_version, completeness, partial_reason,
-     expected_source_ids, facts, task_states, next_shift_definition_id, next_shift_date, approved_by)
+     expected_source_ids, received_source_ids, facts, task_states, next_shift_definition_id, next_shift_date, approved_by)
   VALUES (v_shift.organization_id, p_shift, p_date, v_version, v_previous, p_completeness, v_reason,
-     v_expected, v_facts, v_task_states, v_next, v_next_date, auth.uid());
+     v_expected, v_received, v_facts, v_task_states, v_next, v_next_date, auth.uid());
 
   INSERT INTO public.audit_logs (organization_id, action, performed_by, payload)
   VALUES (v_shift.organization_id,
     CASE WHEN v_previous IS NULL THEN 'SHIFT_HANDOVER_APPROVED' ELSE 'SHIFT_HANDOVER_AMENDMENT_APPROVED' END,
     auth.uid(), jsonb_build_object('shift_definition_id', p_shift, 'shift_date', p_date, 'version', v_version,
       'previous_version', v_previous, 'completeness', p_completeness, 'next_shift_definition_id', v_next,
-      'next_shift_date', v_next_date, 'expected_source_ids', v_expected,
+      'next_shift_date', v_next_date, 'expected_source_ids', v_expected, 'received_source_ids', v_received,
       'fact_ids', (SELECT COALESCE(jsonb_agg(f->>'id'), '[]'::jsonb) FROM jsonb_array_elements(v_facts) f)));
   RETURN v_version;
 END;

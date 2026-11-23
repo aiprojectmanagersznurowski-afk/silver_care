@@ -9,6 +9,7 @@ CREATE TABLE private.shift_handover_versions (
   completeness text NOT NULL CHECK (completeness IN ('COMPLETE', 'PARTIAL', 'UNKNOWN')),
   partial_reason text,
   expected_source_ids uuid[] NOT NULL,
+  received_source_ids uuid[] NOT NULL DEFAULT ARRAY[]::uuid[],
   facts jsonb NOT NULL,
   task_states jsonb NOT NULL,
   next_shift_definition_id uuid NOT NULL,
@@ -123,6 +124,7 @@ DECLARE
   v_latest integer;
   v_voice jsonb := '{"facts":[],"receipts":[],"exceptions":0,"unknownAuthors":0,"pendingSources":0}';
   v_tasks jsonb;
+  v_new_receipts integer;
 BEGIN
   SELECT * INTO v_next FROM public.shift_definitions d
   WHERE d.organization_id = p_shift.organization_id AND d.is_active AND d.start_time > p_shift.start_time
@@ -149,10 +151,15 @@ BEGIN
     ORDER BY t.id), '[]'::jsonb) INTO v_tasks
   FROM public.shift_tasks t
   WHERE t.organization_id = p_shift.organization_id AND t.shift_definition_id = p_shift.id AND t.shift_date = p_date;
+  SELECT count(*) INTO v_new_receipts FROM jsonb_array_elements(v_voice->'receipts') receipt
+    WHERE NOT EXISTS (SELECT 1 FROM private.shift_handover_versions v
+      WHERE v.organization_id = p_shift.organization_id AND v.shift_definition_id = p_shift.id AND v.shift_date = p_date
+        AND (receipt->>'id')::uuid = ANY(v.received_source_ids));
+
   RETURN v_voice || jsonb_build_object('latestVersion', v_latest,
     'nextShift', jsonb_build_object('id', v_next.id, 'code', v_next.code, 'name', v_next.name, 'date', v_next_date),
-    'tasks', v_tasks, 'canApprove', v_next.id IS NOT NULL
-      AND (v_latest IS NULL OR jsonb_array_length(v_voice->'facts') > 0));
+    'tasks', v_tasks, 'newReceipts', v_new_receipts, 'canApprove', v_next.id IS NOT NULL
+      AND (v_latest IS NULL OR jsonb_array_length(v_voice->'facts') > 0 OR v_new_receipts > 0));
 END;
 $$;
 
