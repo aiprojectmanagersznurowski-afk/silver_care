@@ -23,6 +23,12 @@ if (fs.existsSync(rootEnv)) {
 
 const nextConfig: NextConfig = {
   transpilePackages: ['@silvercare/contracts'],
+  serverExternalPackages: ['ffmpeg-static'],
+  outputFileTracingRoot: path.resolve(__dirname, '../..'),
+  outputFileTracingIncludes: {
+    '/api/cron/process-voice-captures': ['./node_modules/ffmpeg-static/ffmpeg'],
+    '/api/voice/assignment': ['./node_modules/ffmpeg-static/ffmpeg'],
+  },
   env: {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || '',
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '',
