@@ -40,6 +40,11 @@ export class AuditPage {
     await this.filterButton.click();
   }
 
+  export(format: 'csv' | 'json') {
+    const button = format === 'csv' ? this.exportCsvButton : this.exportJsonButton;
+    return Promise.all([this.page.waitForEvent('download'), button.click()]).then(([download]) => download);
+  }
+
   async expectLoaded() {
     await expect(this.heading).toBeVisible();
     await expect(this.table).toBeVisible();

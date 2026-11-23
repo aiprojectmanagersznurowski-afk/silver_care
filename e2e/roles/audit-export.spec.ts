@@ -60,3 +60,49 @@ test('@REQ: NUR-SHIFT-CLOSURE - rejestr filtruje zdarzenia zmian według całej 
     await sql.end();
   }
 });
+
+test('@REQ: NUR-SHIFT-CLOSURE - eksport CSV i JSON obejmuje cały zakres w strefie placówki', async ({ loginPage, page }) => {
+  const { readFile } = await import('node:fs/promises');
+  const sql = postgres(process.env.DATABASE_URL!, { prepare: false });
+  const first = randomUUID();
+  const foreign = randomUUID();
+  const batch = randomUUID();
+  try {
+    const [admin] = await sql`SELECT id, raw_app_meta_data->>'organization_id' AS org
+      FROM auth.users WHERE email = ${TEST_USERS.org_admin.email}`;
+    const [other] = await sql`INSERT INTO public.organizations (name) VALUES ('Test izolacji eksportu') RETURNING id`;
+    await sql`INSERT INTO public.audit_logs (organization_id, performed_by, action, created_at, payload)
+      SELECT ${admin.org}, ${admin.id}, 'SHIFT_HANDOVER_APPROVED', '2026-03-29T18:00:00Z'::timestamptz,
+        jsonb_build_object('test_batch', ${batch}::text, 'test_row', row)
+      FROM generate_series(1, 202) row`;
+    await sql`INSERT INTO public.audit_logs (organization_id, performed_by, action, created_at, payload) VALUES
+      (${admin.org}, ${admin.id}, 'SHIFT_HANDOVER_ACKNOWLEDGED', '2026-03-28T23:00:00Z',
+        jsonb_build_object('test_batch', ${batch}::text, 'test_ref', ${first}::text)),
+      (${other.id}, ${admin.id}, 'SHIFT_HANDOVER_AMENDMENT_APPROVED', '2026-03-29T17:00:00Z',
+        jsonb_build_object('test_batch', ${batch}::text, 'test_ref', ${foreign}::text))`;
+
+    await loginPage.loginAs('org_admin');
+    const auditPage = new AuditPage(page);
+    await auditPage.goto();
+    await auditPage.filterShiftEvents('2026-03-29', '2026-03-29');
+    await expect(page).toHaveURL(/scope=shift/);
+    await expect(auditPage.table.getByText(first, { exact: false })).toHaveCount(0);
+
+    const csv = await auditPage.export('csv');
+    const json = await auditPage.export('json');
+    const csvText = await readFile((await csv.path())!, 'utf8');
+    const exported: { payload: { test_batch?: string; test_ref?: string } }[] = JSON.parse(await readFile((await json.path())!, 'utf8'));
+    expect(csvText).toContain(first);
+    expect(csvText).not.toContain(foreign);
+    const rows = exported.filter((event) => event.payload.test_batch === batch);
+    expect(rows).toHaveLength(203);
+    expect(rows.some((event) => event.payload.test_ref === first)).toBe(true);
+    expect(rows.some((event) => event.payload.test_ref === foreign)).toBe(false);
+  } finally {
+    await sql.begin(async (tx) => {
+      await tx`SELECT set_config('audit.allow_redact', 'true', true)`;
+      await tx`DELETE FROM public.audit_logs WHERE payload->>'test_batch' = ${batch}`;
+    });
+    await sql.end();
+  }
+});
