@@ -59,7 +59,7 @@ it('wysyła do prywatnej transkrypcji wyłącznie bajty wydzielonej części @RE
     segment_id: 'child', capture_id: 'capture', organization_id: 'org', storage_path: 'private-original', sha256: hash,
     token: 'lease', start_ms: 1000, end_ms: 1200, time_certain: true, author_id: 'author',
     residents: [{ id: 'resident', firstName: 'Anna', lastName: 'Testowa' }],
-  } }).mockResolvedValueOnce({ data: true })
+  } }).mockResolvedValueOnce({ data: true }).mockResolvedValueOnce({ data: 0 })
   const fetcher = vi.fn(async (_url: URL, init: RequestInit) => {
     const pcm = Buffer.from(await (init.body as Blob).arrayBuffer())
     expect(pcm.readUInt32LE(40)).toBe(6400)
@@ -71,8 +71,11 @@ it('wysyła do prywatnej transkrypcji wyłącznie bajty wydzielonej części @RE
     .toBe('processed')
   expect(fetcher).toHaveBeenCalledOnce()
   expect(storage.upload).toHaveBeenCalledWith('org/transcripts/capture/child/lease', expect.any(Blob), expect.any(Object))
-  expect(rpc).toHaveBeenLastCalledWith('finish_voice_segment_transcription', expect.objectContaining({
+  expect(rpc).toHaveBeenNthCalledWith(2, 'finish_voice_segment_transcription', expect.objectContaining({
     p_segment_id: 'child', p_token: 'lease',
     p_result: expect.objectContaining({ scope: 'RESIDENT', resident_id: 'resident' }),
   }))
+  expect(rpc).toHaveBeenLastCalledWith('queue_abandoned_voice_transcripts', {
+    p_capture_id: 'capture', p_paths: ['org/transcripts/capture/child/lease'],
+  })
 })
