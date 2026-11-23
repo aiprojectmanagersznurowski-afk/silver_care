@@ -2512,7 +2512,7 @@ export interface Database {
           p_shift: string
           p_date: string
         }
-        Returns: string[]
+        Returns: { task_id: string }[]
       }
       record_app_voice_task_draft: {
         Args: {
