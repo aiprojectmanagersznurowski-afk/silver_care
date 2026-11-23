@@ -237,6 +237,11 @@ export const SHIFT_TASK_POLICY = {
     "resident",
     "assignee"
   ],
+  "board": {
+    "defaultView": "table",
+    "defaultFilter": "all",
+    "mineFilter": "mine"
+  },
   "assignment": {
     "rosterOnly": true,
     "sharedWhenUnassigned": true,
@@ -264,6 +269,7 @@ export const SHIFT_TASK_POLICY = {
     "assignee"
   ],
   "audit": [
+    "SHIFT_TASK_CREATED",
     "SHIFT_TASK_STATUS_CHANGED",
     "SHIFT_TASK_ASSIGNEE_CHANGED",
     "SHIFT_TASK_CARRIED",
@@ -282,16 +288,15 @@ export const SHIFT_TASK_POLICY = {
       "org_admin",
       "nurse:shift_lead"
     ],
-    "acknowledgeBy": [
-      "org_admin",
-      "nurse:receiving_shift_lead"
-    ],
+    "approvalFinalizesVersion": true,
     "amendmentsReferencePriorVersion": true,
     "audit": {
       "events": [
         "SHIFT_HANDOVER_APPROVED",
-        "SHIFT_HANDOVER_ACKNOWLEDGED",
         "SHIFT_HANDOVER_AMENDMENT_APPROVED"
+      ],
+      "historicalEvents": [
+        "SHIFT_HANDOVER_ACKNOWLEDGED"
       ],
       "voiceEvents": [
         "VOICE_CAPTURE_RECEIVED",

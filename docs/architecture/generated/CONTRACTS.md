@@ -108,7 +108,7 @@ Bazowy rozmiar 14px · minimalny kontrast 4.5:1 · cel dotykowy 38px
 | NUR-TASKS | staff | HIGH | Zadania zmiany (dla podopiecznego albo placówki) przechodzą akceptację planu przez kierownika zmiany i są rozliczane jako wykonane, anulowane z powodem albo przeniesione na kolejną zmianę. |
 | NUR-SHIFT-PLAN-PRINT | staff | HIGH | Kierownik zmiany drukuje zaakceptowany plan pracy zmiany, aby opiekunki pracowały bez obsługi komputera. |
 | NUR-TASKS-VOICE-COMPLETION | staff | HIGH | Kierownik placówki albo właściwej zmiany może rozliczyć istniejące zadanie na podstawie zredagowanej podpowiedzi głosowej. |
-| NUR-SHIFT-CLOSURE | staff | HIGH | Kierownik rozlicza zmianę, zatwierdza wersję przekazania i plan kolejnej zmiany. Uprawniony odbiorca potwierdza konkretną wersję przekazania. |
+| NUR-SHIFT-CLOSURE | staff | HIGH | Kierownik rozlicza zmianę i zatwierdza wersję przekazania lub aneksu, kończąc jej obieg. Następna zmiana korzysta z listy zadań lub wydruku zatwierdzonego planu. |
 | ADM-RESIDENT-CARD-TASKS | residents | MEDIUM | Karta podopiecznego ma sekcję „Zadania” z otwartymi i niedawno wykonanymi zadaniami podopiecznego. |
 | ADM-CARE-PLAN-TASKS | residents | HIGH | Zadania standardowe pochodzą z szablonów planu opieki definiowanych przez placówkę, a nie z rekomendacji systemu. |
 | ADM-CAPACITY-LIMIT | facility | HIGH | Limit miejsc placówki (liczba łóżek = maks. liczba aktywnych podopiecznych) ustala wyłącznie super admin; kierownik może go przekroczyć po potwierdzeniu, a przekroczenie powiadamia kierownika i super admina. |
