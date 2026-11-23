@@ -72,9 +72,10 @@ it('zachowuje transkrypt zatwierdzony mimo utraty odpowiedzi workera @REQ: VOICE
     await tx`INSERT INTO public.voice_segments
       (organization_id, capture_id, ordinal, start_ms, end_ms, transcript_path)
       VALUES (${org}, ${capture}, 0, 0, 1000, ${committed})`
-    await tx`SET LOCAL ROLE authenticated`
-    await expect(tx.savepoint((sp) => sp`SELECT public.queue_abandoned_voice_transcripts(${capture}, ${[draft]}::text[])`))
-      .rejects.toMatchObject({ code: '42501' })
+    const [access] = await tx`SELECT
+      has_function_privilege('authenticated', 'public.queue_abandoned_voice_transcripts(uuid,text[])', 'EXECUTE') AS staff,
+      has_function_privilege('anon', 'public.queue_abandoned_voice_transcripts(uuid,text[])', 'EXECUTE') AS guest`
+    expect(access).toEqual({ staff: false, guest: false })
     await tx`SET LOCAL ROLE service_role`
     await tx`SELECT public.queue_abandoned_voice_transcripts(${capture}, ${paths}::text[])`
     await tx`SELECT public.queue_abandoned_voice_transcripts(${capture}, ${paths}::text[])`
