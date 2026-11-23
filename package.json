@@ -18,11 +18,5 @@
     "dotenv": "^17.4.2",
     "postgres": "^3.4.9",
     "vitest": "^4.1.11"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "@swc/core"
-    ]
   }
 }
