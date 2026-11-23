@@ -3,9 +3,10 @@ import { createClient } from '@/lib/supabase/server'
 import { handleApiError } from '@/lib/api-errors'
 import { isImpersonationSessionActive, safeGetCookieStore } from '@/lib/impersonation-guards'
 import type { FeatureKey } from '@silvercare/contracts/src/generated/features'
-import { assertOrgFeatureForApi } from '@/lib/feature-flags'
+import { assertOrgFeatureForApi, isOrgFeatureEnabled } from '@/lib/feature-flags'
 import { getAppRole, getAppOrganizationId } from '@/lib/auth/app-role'
 import { staffMfaSatisfied } from '@/lib/auth/staff-mfa'
+import { getCurrentUser } from '@/lib/supabase/current-user'
 import { MFA_REQUIRED_ROLES } from '@silvercare/contracts/src/generated/roles'
 
 const mfaRoles = new Set<string>(MFA_REQUIRED_ROLES)
@@ -171,4 +172,34 @@ export function withAuth(handler: ApiRouteHandler, options: WithAuthOptions = {}
       return handleApiError(error, request.nextUrl.pathname)
     }
   }
+}
+
+/** Zweryfikowana sesja dla Server Actions modułu zadań zmiany. */
+export async function authorizeShiftStaff() {
+  const user = await getCurrentUser()
+  const role = getAppRole(user)
+  const orgId = getAppOrganizationId(user)
+  if (!user || !orgId || (role !== 'org_admin' && role !== 'nurse')) return null
+  if (isImpersonationSessionActive(await safeGetCookieStore(), user)) return null
+
+  const supabase = await createClient()
+  const { data } = await supabase.auth.getClaims()
+  if (data?.claims.sub !== user.id || !await staffMfaSatisfied(supabase, data.claims.aal)) return null
+  if (!await isOrgFeatureEnabled(supabase, orgId, 'module_shift_tasks')) return null
+  return { user, role, orgId, supabase }
+}
+
+type ShiftStaffSession = NonNullable<Awaited<ReturnType<typeof authorizeShiftStaff>>>
+
+export async function getShiftStaffAccess(session: ShiftStaffSession, shiftId: string, date: string) {
+  const { role, orgId, user, supabase } = session
+  if (role === 'org_admin') {
+    const { data } = await supabase.from('shift_definitions').select('id')
+      .eq('organization_id', orgId).eq('id', shiftId).maybeSingle()
+    return data ? 'manage' : null
+  }
+  const { data } = await supabase.from('shift_roster').select('is_shift_lead')
+    .eq('organization_id', orgId).eq('shift_definition_id', shiftId).eq('shift_date', date)
+    .eq('user_id', user.id).maybeSingle()
+  return data ? data.is_shift_lead ? 'manage' : 'work' : null
 }
