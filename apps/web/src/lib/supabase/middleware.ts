@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { MFA_REQUIRED_ROLES } from '@silvercare/contracts/src/generated/roles'
 import { getAppRole } from '@/lib/auth/app-role'
+import { staffMfaSatisfied } from '@/lib/auth/staff-mfa'
 
 const mfaRoles = new Set<string>(MFA_REQUIRED_ROLES)
 
@@ -17,10 +18,16 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse
   }
 
+  const path = request.nextUrl.pathname
+  const isApi = path.startsWith('/api/')
+  const authorization = request.headers.get('authorization')
+  const bearer = isApi ? authorization?.match(/^Bearer\s+(.+)$/i)?.[1]?.trim() : undefined
+
   const supabase = createServerClient(
     url,
     anonKey,
     {
+      global: bearer ? { headers: { Authorization: `Bearer ${bearer}` } } : undefined,
       cookies: {
         getAll() {
           return request.cookies.getAll()
@@ -38,11 +45,6 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  const path = request.nextUrl.pathname
-  const isApi = path.startsWith('/api/')
-  const authorization = request.headers.get('authorization')
-  const bearer = isApi && authorization?.match(/^Bearer\s+(.+)$/i)?.[1]?.trim() || undefined
-
   const {
     data: { user },
   } = await supabase.auth.getUser(bearer)
@@ -58,7 +60,7 @@ export async function updateSession(request: NextRequest) {
     const mutation = !read && !path.startsWith('/auth/')
     if (role && mfaRoles.has(role) && (portal || login || isApi || mutation)) {
       const { data } = await supabase.auth.getClaims(bearer)
-      if (data?.claims.sub !== user.id || data.claims.aal !== 'aal2') {
+      if (data?.claims.sub !== user.id || !await staffMfaSatisfied(supabase, data.claims.aal)) {
         if (isApi || !read) {
           return NextResponse.json(
             { error: 'Potwierdź drugi składnik uwierzytelniania.', code: 'MFA_REQUIRED' },

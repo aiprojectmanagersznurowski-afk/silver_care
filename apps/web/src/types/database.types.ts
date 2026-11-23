@@ -2546,6 +2546,10 @@ export interface Database {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      staff_mfa_satisfied: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       claim_due_operational_report: {
         Args: {
           p_organization_id?: string | null

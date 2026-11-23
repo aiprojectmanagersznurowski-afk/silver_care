@@ -5,6 +5,7 @@ import { isImpersonationSessionActive, safeGetCookieStore } from '@/lib/imperson
 import type { FeatureKey } from '@silvercare/contracts/src/generated/features'
 import { assertOrgFeatureForApi } from '@/lib/feature-flags'
 import { getAppRole, getAppOrganizationId } from '@/lib/auth/app-role'
+import { staffMfaSatisfied } from '@/lib/auth/staff-mfa'
 import { MFA_REQUIRED_ROLES } from '@silvercare/contracts/src/generated/roles'
 
 const mfaRoles = new Set<string>(MFA_REQUIRED_ROLES)
@@ -126,7 +127,7 @@ export function withAuth(handler: ApiRouteHandler, options: WithAuthOptions = {}
 
       if (mfaRoles.has(role)) {
         const { data } = await supabase.auth.getClaims(bearerToken)
-        if (data?.claims.sub !== rawUser.id || data.claims.aal !== 'aal2') {
+        if (data?.claims.sub !== rawUser.id || !await staffMfaSatisfied(supabase, data.claims.aal)) {
           return NextResponse.json(
             { error: 'Potwierdź drugi składnik uwierzytelniania.', code: 'MFA_REQUIRED' },
             { status: 403 },
