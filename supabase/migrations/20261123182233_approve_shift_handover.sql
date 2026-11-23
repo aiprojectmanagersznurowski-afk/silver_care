@@ -27,10 +27,14 @@ RETURNS jsonb LANGUAGE sql STABLE SET search_path = '' AS $$
     'version', v.version, 'previousVersion', v.previous_version, 'completeness', v.completeness,
     'reason', v.partial_reason, 'approvedAt', v.approved_at, 'approvedBy', v.approved_by,
     'tasks', v.task_states, 'expectedSourceIds', to_jsonb(v.expected_source_ids), 'nextDate', v.next_shift_date,
-    'facts', (SELECT COALESCE(jsonb_agg(f || jsonb_build_object('text', e.sanitized_text) ORDER BY ord), '[]'::jsonb)
+    'facts', (SELECT COALESCE(jsonb_agg(f || jsonb_build_object(
+      'text', COALESCE(e.sanitized_text, array_to_string(p.behavioral_facts, E'\n'))) ORDER BY ord), '[]'::jsonb)
       FROM jsonb_array_elements(v.facts) WITH ORDINALITY AS fact(f, ord)
       LEFT JOIN public.voice_sanitized_events e
-        ON e.id = (f->>'id')::uuid AND e.organization_id = p_org
+        ON e.id = (f->>'id')::uuid AND e.organization_id = p_org AND COALESCE(f->>'kind', 'event') = 'event'
+        AND public.has_org_feature(p_org, 'module_voice_and_reports')
+      LEFT JOIN public.voice_segment_proposals p
+        ON p.segment_id = (f->>'id')::uuid AND p.organization_id = p_org AND f->>'kind' = 'behavior'
         AND public.has_org_feature(p_org, 'module_voice_and_reports'))
   ) ORDER BY v.version DESC), '[]'::jsonb)
   FROM private.shift_handover_versions v
@@ -61,6 +65,9 @@ DECLARE
   v_next_date date;
   v_task record;
   v_facts jsonb;
+  v_task_states jsonb;
+  v_carried jsonb := '{}'::jsonb;
+  v_copy uuid;
   v_expected uuid[] := COALESCE(p_expected_source_ids, ARRAY[]::uuid[]);
   v_reason text := nullif(btrim(p_reason), '');
 BEGIN
@@ -81,6 +88,7 @@ BEGIN
   END IF;
   IF p_completeness = 'COMPLETE' THEN
     IF cardinality(v_expected) = 0 OR cardinality(v_expected) > 500 OR (v_draft->>'exceptions')::integer > 0
+      OR (v_draft->>'pendingSources')::integer > 0
       OR EXISTS (SELECT 1 FROM unnest(v_expected) id WHERE NOT EXISTS (
         SELECT 1 FROM jsonb_array_elements(v_draft->'receipts') receipt WHERE (receipt->>'id')::uuid = id
       )) THEN
@@ -103,17 +111,23 @@ BEGIN
     FOR v_task IN SELECT (t->>'id')::uuid AS id FROM jsonb_array_elements(v_draft->'tasks') t
       WHERE t->>'status' = 'TODO' AND t->>'carriedToTaskId' IS NULL
     LOOP
-      PERFORM public.settle_shift_task(v_task.id, 'CARRIED', NULL, v_next, v_next_date);
+      v_copy := public.settle_shift_task(v_task.id, 'CARRIED', NULL, v_next, v_next_date);
+      v_carried := v_carried || jsonb_build_object(v_task.id::text, v_copy);
     END LOOP;
   END IF;
   SELECT COALESCE(jsonb_agg(f - 'text' ORDER BY ord), '[]'::jsonb) INTO v_facts
     FROM jsonb_array_elements(v_draft->'facts') WITH ORDINALITY AS fact(f, ord);
 
+  SELECT COALESCE(jsonb_agg(
+    CASE WHEN v_carried ? (t->>'id') THEN t || jsonb_build_object('carriedToTaskId', v_carried->(t->>'id')) ELSE t END
+      ORDER BY ord), '[]'::jsonb) INTO v_task_states
+    FROM jsonb_array_elements(v_draft->'tasks') WITH ORDINALITY AS task(t, ord);
+
   INSERT INTO private.shift_handover_versions
     (organization_id, shift_definition_id, shift_date, version, previous_version, completeness, partial_reason,
      expected_source_ids, facts, task_states, next_shift_definition_id, next_shift_date, approved_by)
   VALUES (v_shift.organization_id, p_shift, p_date, v_version, v_previous, p_completeness, v_reason,
-     v_expected, v_facts, v_draft->'tasks', v_next, v_next_date, auth.uid());
+     v_expected, v_facts, v_task_states, v_next, v_next_date, auth.uid());
 
   INSERT INTO public.audit_logs (organization_id, action, performed_by, payload)
   VALUES (v_shift.organization_id,
