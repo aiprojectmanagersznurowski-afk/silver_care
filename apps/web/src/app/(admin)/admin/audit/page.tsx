@@ -1,11 +1,8 @@
 export const dynamic = 'force-dynamic'
 
-import { SHIFT_TASK_VOICE } from '@silvercare/contracts/src/generated/roles'
-import { RESIDENT_ASSIGNMENT } from '@silvercare/contracts/src/generated/voice'
-import { SHIFT_TASK_POLICY } from '@silvercare/contracts/src/generated/facility'
 import { createClient } from '@/lib/supabase/server'
 import { AuditManagementClient } from '@/components/AuditManagementClient'
-import { auditDayBoundary, parseAuditDate } from '@/lib/audit-helpers'
+import { buildAuditQuery, getAuditFilter } from '@/lib/audit-query'
 import { PageHeader } from '@/components/patterns/PageHeader'
 import { ListError } from '@/components/patterns/ListState'
 
@@ -15,25 +12,12 @@ type AuditParams = { startDate?: string; endDate?: string; scope?: string; page?
 
 export default async function AdminAuditPage({ searchParams }: { searchParams?: Promise<AuditParams> }) {
   const params = searchParams ? await searchParams : {}
-  const startDate = parseAuditDate(params.startDate)
-  const endDate = parseAuditDate(params.endDate)
-  const scope = params.scope === 'shift' ? 'shift' : 'all'
+  const filter = getAuditFilter(params)
+  const { startDate, endDate, scope, filterError } = filter
   const pageNumber = Number(params.page)
   const page = Number.isSafeInteger(pageNumber) && pageNumber > 0 && pageNumber <= 1_000_000 ? pageNumber : 1
-  const invalidDate = (params.startDate && !startDate) || (params.endDate && !endDate)
-  const invalidOrder = startDate && endDate && startDate > endDate
-  const filterError = invalidDate ? 'Podaj poprawny zakres dat.' : invalidOrder ? 'Data początkowa musi poprzedzać końcową lub być taka sama.' : undefined
-
   const supabase = await createClient()
-  // RLS ogranicza rejestr do istniejących uprawnień kierownika placówki i superadministratora.
-  let query = supabase.from('audit_logs')
-    .select('id, organization_id, action, performed_by, payload, created_at')
-    .order('created_at', { ascending: false }).order('id', { ascending: false })
-  if (startDate) query = query.gte('created_at', auditDayBoundary(startDate))
-  if (endDate) query = query.lt('created_at', auditDayBoundary(endDate, true))
-  if (scope === 'shift') {
-    query = query.in('action', [...SHIFT_TASK_POLICY.audit, ...SHIFT_TASK_POLICY.closure.audit.events, ...SHIFT_TASK_POLICY.closure.audit.voiceEvents, SHIFT_TASK_VOICE.auditAction, ...RESIDENT_ASSIGNMENT.sourceReview.auditActions])
-  }
+  const query = buildAuditQuery(supabase, filter)
   const offset = (page - 1) * PAGE_SIZE
   const { data: logs, error } = filterError ? { data: [], error: null } : await query.range(offset, offset + PAGE_SIZE)
   if (error) console.error('[AUDIT_QUERY_FAILED]', error.code)
