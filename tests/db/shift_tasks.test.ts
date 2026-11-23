@@ -153,6 +153,9 @@ describe('Zadania zmiany i akceptacja planu (NUR-TASKS, NUR-SHIFT-PLAN-PRINT)', 
       await as(tx, 'nurse', s.orgId, s.lead);
       await failsWith(tx, /SHIFT_CANCEL_REASON_REQUIRED/, (sp) => sp`SELECT public.settle_shift_task(${id}, 'CANCELLED', NULL, NULL, NULL)`);
       const [{ settle_shift_task: newId }] = await tx`SELECT public.settle_shift_task(${id}, 'CARRIED', NULL, ${s.nightId}, ${DAY}::date)`;
+      expect(await tx`SELECT id FROM shift_tasks WHERE id = ${newId}`).toHaveLength(0);
+      expect(await tx`SELECT task_id FROM public.read_shift_task_carries(${s.dayId}, ${DAY}::date)`).toEqual([{ task_id: id }]);
+      await as(tx, 'org_admin', s.orgId, s.admin);
       const [moved] = await tx`SELECT shift_definition_id, shift_date, carried_from_task_id, status, source FROM shift_tasks WHERE id = ${newId}`;
       expect(moved).toMatchObject({ shift_definition_id: s.nightId, carried_from_task_id: id, status: 'TODO', source: 'MANUAL' });
       const [old] = await tx`SELECT status FROM shift_tasks WHERE id = ${id}`;
@@ -255,6 +258,7 @@ describe('Zadania zmiany i akceptacja planu (NUR-TASKS, NUR-SHIFT-PLAN-PRINT)', 
       await carry(tx);
       await failsWith(tx, /SHIFT_PLAN_STALE/, (sp) => sp`SELECT public.record_shift_plan_print(${s.dayId}, ${DAY}::date, 1)`);
       await failsWith(tx, /SHIFT_TASK_ALREADY_CARRIED/, carry);
+      await as(tx, 'org_admin', s.orgId, s.admin);
       expect(await tx`SELECT id FROM shift_tasks WHERE carried_from_task_id = ${task.id}`).toHaveLength(1);
     });
   }, 30000);

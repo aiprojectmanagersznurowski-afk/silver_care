@@ -133,4 +133,16 @@ describe('Wydruk planu pracy (NUR-SHIFT-PLAN-PRINT)', () => {
       expect(version).toBe(2);
     });
   }, 30000);
+  it('@REQ: NUR-SHIFT-CLOSURE - zmiana przypisania blokuje wydruk nawet w tej samej transakcji co akceptacja', async () => {
+    await rollback(async (tx) => {
+      const s = await seed(tx);
+      await approve(tx, s, s.admin, 1);
+      await tx`UPDATE shift_tasks SET assignee_user_id = ${s.lead}
+        WHERE shift_definition_id = ${s.dayId} AND shift_date = ${DAY}`;
+      await failsWith(tx, /SHIFT_PLAN_STALE/, (sp) => record(sp, s));
+      await approve(tx, s, s.admin, 2);
+      expect(await record(tx, s, 2)).toEqual([{ version: 2 }]);
+    });
+  });
+
 });
