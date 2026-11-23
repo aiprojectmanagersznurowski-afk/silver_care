@@ -137,17 +137,15 @@ async function AssignmentDetails({ orgId, item, shifts, facilityManager, queueHr
   // Pozycja pochodzi z otwartej kolejki odczytanej przez RLS. Zapytania usługowe pozostają w tej placówce.
   const admin = createAdminClient()
   const sessionDb = await createClient()
-  const [details, retention, audio] = await Promise.all([
+  const [details, audio] = await Promise.all([
     admin.from(RESIDENT_ASSIGNMENT.segmentResource)
       .select('transcript_path, author_id, author_attribution, start_ms, end_ms, corrected_at, derived_start_at, event_occurred_at, transcription_status, voice_captures(recorded_at, received_at, clock_state)')
       .eq('organization_id', orgId).eq('id', segmentId).eq('assignment_status', 'PENDING').maybeSingle(),
-    admin.from(VOICE_RETENTION.settingsResource).select('retention_days').eq('organization_id', orgId).maybeSingle(),
     mixed ? sessionDb.rpc('can_play_voice_segment', { p_segment_id: segmentId }) : null,
   ])
   const segment = details.data
   const capture = segment?.voice_captures
-  const retentionDays = retention.data?.retention_days ?? VOICE_RETENTION.ttlDays
-  if (!segment || !capture || retention.error || new Date(capture.received_at).getTime() + retentionDays * 86400000 < Date.now()) {
+  if (!segment || !capture) {
     return <ListError title="Źródło fragmentu jest niedostępne" />
   }
 
