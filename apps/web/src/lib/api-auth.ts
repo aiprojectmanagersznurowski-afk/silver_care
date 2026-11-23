@@ -5,6 +5,9 @@ import { isImpersonationSessionActive, safeGetCookieStore } from '@/lib/imperson
 import type { FeatureKey } from '@silvercare/contracts/src/generated/features'
 import { assertOrgFeatureForApi } from '@/lib/feature-flags'
 import { getAppRole, getAppOrganizationId } from '@/lib/auth/app-role'
+import { MFA_REQUIRED_ROLES } from '@silvercare/contracts/src/generated/roles'
+
+const mfaRoles = new Set<string>(MFA_REQUIRED_ROLES)
 
 export interface AuthenticatedUser {
   id: string
@@ -40,6 +43,7 @@ type ApiRouteHandler = (
  * Weryfikuje sesję użytkownika, token Bearer, role (RBAC) oraz przynależność organizacyjną.
  *
  * @REQ: SEC-SESSION
+ * @REQ: SEC-MFA-STAFF
  * @REQ: SEC-403-LOGGING
  * @REQ: ORG-ISOLATION
  */
@@ -60,7 +64,7 @@ export function withAuth(handler: ApiRouteHandler, options: WithAuthOptions = {}
       const {
         data: { user: rawUser },
         error: authError,
-      } = await supabase.auth.getUser()
+      } = await supabase.auth.getUser(bearerToken)
 
       if (authError || !rawUser) {
         return NextResponse.json(
@@ -74,6 +78,16 @@ export function withAuth(handler: ApiRouteHandler, options: WithAuthOptions = {}
 
       // Rola i placówka wyłącznie z app_metadata (user_metadata użytkownik edytuje sam)
       const role = getAppRole(rawUser) ?? 'authenticated'
+
+      if (mfaRoles.has(role)) {
+        const { data } = await supabase.auth.getClaims(bearerToken)
+        if (data?.claims.sub !== rawUser.id || data.claims.aal !== 'aal2') {
+          return NextResponse.json(
+            { error: 'Potwierdź drugi składnik uwierzytelniania.', code: 'MFA_REQUIRED' },
+            { status: 403 },
+          )
+        }
+      }
 
       const organizationId = getAppOrganizationId(rawUser) ?? undefined
 
