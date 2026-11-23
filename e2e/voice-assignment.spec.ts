@@ -7,6 +7,18 @@ import { VoiceAssignmentPage } from './page-objects/VoiceAssignmentPage'
 import { VoiceFamilyFactsPage } from './page-objects/VoiceFamilyFactsPage'
 import { VoiceOperationalReportsPage } from './page-objects/VoiceOperationalReportsPage'
 
+class VoiceAssignmentSourcePage extends VoiceAssignmentPage {
+  async resolveUnavailableSource(segment: string) {
+    await this.page.goto(`/voice/assignment?segment=${segment}`)
+    await expect(this.page.getByText('Źródło fragmentu jest niedostępne')).toBeVisible()
+    const scope = this.page.getByLabel('Przypisanie fragmentu')
+    await expect(scope.getByRole('option')).toHaveText(['Wybierz zakres', 'Nie do przypisania'])
+    await scope.selectOption('UNASSIGNABLE')
+    await this.page.getByRole('button', { name: 'Zapisz decyzję' }).click()
+    await expect(this.page.getByText('Brak fragmentów do sprawdzenia')).toBeVisible()
+  }
+}
+
 test('@REQ: VOICE-RESIDENT-ASSIGN - kierownik rozstrzyga wyjątek i zatwierdza w osobnych ścieżkach @REQ: REPORT-APPROVAL @REQ: VOICE-DOCK-REPORTS', async ({ page }) => {
   test.setTimeout(120_000)
   const dbUrl = process.env.DATABASE_URL!
@@ -21,6 +33,7 @@ test('@REQ: VOICE-RESIDENT-ASSIGN - kierownik rozstrzyga wyjątek i zatwierdza w
   const org = randomUUID()
   const capture = randomUUID()
   const segment = randomUUID()
+  const unavailableSegment = randomUUID()
   const resident = randomUUID()
   const fact = 'Podopieczna zjadła całe śniadanie.'
   const path = `${org}/transcripts/${capture}/fixture/0`
@@ -52,7 +65,7 @@ test('@REQ: VOICE-RESIDENT-ASSIGN - kierownik rozstrzyga wyjątek i zatwierdza w
     await login.goto()
     await login.login(email, password)
     await page.waitForURL((url) => !url.pathname.includes('/login'))
-    const assignments = new VoiceAssignmentPage(page)
+    const assignments = new VoiceAssignmentSourcePage(page)
     await assignments.open()
     await expect(page.getByRole('heading', { name: 'Fragmenty do sprawdzenia' })).toBeVisible()
     await expect(page.getByRole('link', { name: 'Sprawdź fragment' })).toHaveCount(0)
@@ -62,6 +75,15 @@ test('@REQ: VOICE-RESIDENT-ASSIGN - kierownik rozstrzyga wyjątek i zatwierdza w
       WHERE organization_id = ${org} AND action = 'VOICE_SEGMENT_RESOLVED'`
     expect(audit.payload).toMatchObject({ segment_id: segment, method: 'MANUAL', scope: 'FACILITY' })
     expect(JSON.stringify(audit.payload)).not.toContain(note)
+    await sql`INSERT INTO public.voice_segments
+      (id, organization_id, capture_id, ordinal, start_ms, end_ms, author_id, author_attribution)
+      VALUES (${unavailableSegment}, ${org}, ${capture}, 1, 1000, 2000, ${author}, 'AUTHENTICATED_SESSION')`
+    await sql`INSERT INTO public.voice_assignment_queue (segment_id, organization_id, reasons)
+      VALUES (${unavailableSegment}, ${org}, ARRAY['MIXED_SEGMENT'])`
+    await assignments.resolveUnavailableSource(unavailableSegment)
+    const [closed] = await sql`SELECT assignment_status, projection_status FROM public.voice_segments
+      WHERE id = ${unavailableSegment}`
+    expect(closed).toEqual({ assignment_status: 'UNASSIGNABLE', projection_status: 'WAITING' })
     await sql`INSERT INTO public.residents (id, organization_id, first_name, last_name)
       VALUES (${resident}, ${org}, 'Anna', 'Testowa')`
     await sql`INSERT INTO public.voice_segment_proposals
