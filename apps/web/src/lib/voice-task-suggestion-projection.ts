@@ -17,4 +17,9 @@ export async function projectVoiceTaskSuggestions(admin: AdminClient, source: So
   if (!matches.length) return
   const write = await admin.rpc('sync_voice_task_suggestions', { ...source, p_matches: matches })
   if (write.error) throw new Error('VOICE_TASK_EVIDENCE_WRITE_FAILED')
+  const metrics = write.data
+  if (metrics && typeof metrics === 'object' && !Array.isArray(metrics)
+    && typeof metrics.queue_delay_ms === 'number' && typeof metrics.retry_count === 'number') {
+    console.info('[VOICE_TASK_PROJECTION]', { queue_delay_ms: metrics.queue_delay_ms, retry_count: metrics.retry_count })
+  }
 }

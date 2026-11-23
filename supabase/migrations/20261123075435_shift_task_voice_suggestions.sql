@@ -64,6 +64,9 @@ RETURNS boolean LANGUAGE sql STABLE SET search_path = '' AS $$
     WHERE s.id = p_evidence.segment_id AND s.organization_id = p_evidence.organization_id
       AND s.resident_id IS NOT DISTINCT FROM p_evidence.resident_id AND s.author_id = p_evidence.author_id
       AND s.author_attribution = p_evidence.author_attribution AND s.assignment_status IN ('RESIDENT','FACILITY')
+      AND (c.source = 'DEVICE' OR c.author_id = s.author_id)
+      AND (s.resident_id IS NULL OR EXISTS (SELECT 1 FROM public.residents person
+        WHERE person.id = s.resident_id AND person.organization_id = s.organization_id AND person.archived_at IS NULL))
       AND c.status = 'SEGMENTED' AND c.source = p_evidence.source_kind AND c.clock_state <> 'UNKNOWN'
       AND c.recorded_at = p_evidence.recorded_at AND c.received_at = p_evidence.received_at
       AND c.received_at >= now() - make_interval(days => COALESCE(r.retention_days, 30))
@@ -162,8 +165,8 @@ BEGIN
   v_decided_at := clock_timestamp();
   UPDATE public.shift_task_voice_suggestions SET decision = p_decision, decided_by = auth.uid(),
     decided_at = v_decided_at, result_task_id = v_result WHERE id = p_evidence_id;
-  INSERT INTO public.audit_logs (organization_id, resident_id, action, performed_by, payload)
-  VALUES (v_org, v_task.resident_id, 'VOICE_SHIFT_TASK_DECIDED', auth.uid(), jsonb_build_object(
+  INSERT INTO public.audit_logs (organization_id, resident_id, action, performed_by, created_at, payload)
+  VALUES (v_org, v_task.resident_id, 'VOICE_SHIFT_TASK_DECIDED', auth.uid(), v_decided_at, jsonb_build_object(
     'task_id', v_task.id, 'evidence_id', p_evidence_id, 'result_task_id', v_result,
     'shift_definition_id', v_task.shift_definition_id, 'shift_date', v_task.shift_date,
     'source_id', v_evidence.source_id, 'source_kind', v_evidence.source_kind, 'fragment_index', v_evidence.fragment_index,

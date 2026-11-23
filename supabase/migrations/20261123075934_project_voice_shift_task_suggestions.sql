@@ -79,18 +79,22 @@ BEGIN
     PERFORM c.id FROM public.voice_captures c JOIN public.voice_segments s ON s.capture_id = c.id
       WHERE s.id = p_segment_id FOR SHARE OF c;
     SELECT s.organization_id, s.resident_id, s.author_id, s.author_attribution, c.source AS source_kind,
-      c.recorded_at, c.received_at, NULL::timestamptz AS draft_updated_at INTO v_source
+      c.recorded_at, c.received_at, NULL::timestamptz AS draft_updated_at, s.projection_attempts AS attempts INTO v_source
     FROM public.voice_segments s JOIN public.voice_captures c ON c.id = s.capture_id
     LEFT JOIN public.voice_retention_settings r ON r.organization_id = c.organization_id
     WHERE s.id = p_segment_id AND s.projection_token = p_token AND s.projection_status = 'PROCESSING'
       AND s.assignment_status IN ('RESIDENT','FACILITY') AND s.author_id IS NOT NULL
-      AND c.source IN ('APP_GENERAL','DEVICE') AND c.status = 'SEGMENTED' AND c.clock_state <> 'UNKNOWN'
+      AND ((c.source = 'APP_GENERAL' AND s.author_attribution = 'AUTHENTICATED_SESSION' AND s.author_id = c.author_id)
+        OR (c.source = 'DEVICE' AND s.author_attribution IN ('DECLARED_SESSION','MANUAL_SEGMENT_CORRECTION')))
+      AND (s.resident_id IS NULL OR EXISTS (SELECT 1 FROM public.residents person
+        WHERE person.id = s.resident_id AND person.organization_id = s.organization_id AND person.archived_at IS NULL))
+      AND c.status = 'SEGMENTED' AND c.clock_state <> 'UNKNOWN'
       AND c.received_at >= now() - make_interval(days => COALESCE(r.retention_days, 30))
     FOR NO KEY UPDATE OF s;
   ELSE
     PERFORM d.id FROM public.voice_draft_notes d WHERE d.id = p_draft_id FOR SHARE;
     SELECT r.organization_id, d.resident_id, d.nurse_id AS author_id, 'AUTHENTICATED_SESSION'::text AS author_attribution,
-      'APP'::text AS source_kind, a.recorded_at, d.created_at AS received_at, d.updated_at AS draft_updated_at INTO v_source
+      'APP'::text AS source_kind, a.recorded_at, d.created_at AS received_at, d.updated_at AS draft_updated_at, j.attempts INTO v_source
     FROM public.voice_draft_notes d JOIN private.app_voice_task_recordings a ON a.draft_id = d.id
     JOIN public.voice_app_report_jobs j ON j.draft_id = d.id JOIN public.residents r ON r.id = d.resident_id
     WHERE d.id = p_draft_id AND d.status = 'PROCESSED' AND j.token = p_token AND j.completed_at IS NULL
@@ -139,9 +143,18 @@ BEGIN
       v_source.organization_id, v_shift, v_date, v_task.id, v_source.resident_id, p_segment_id, p_draft_id, COALESCE(p_segment_id, p_draft_id),
       v_item.fragment_index, v_source.source_kind, v_source.author_id, v_source.author_attribution,
       v_source.recorded_at, v_source.received_at, v_source.draft_updated_at, v_task.updated_at, v_item.kind, v_item.quote
-    ) ON CONFLICT (task_id, source_kind, source_id, fragment_index) DO NOTHING;
+    ) ON CONFLICT (task_id, source_kind, source_id, fragment_index) DO UPDATE
+    SET author_id = EXCLUDED.author_id, author_attribution = EXCLUDED.author_attribution,
+      task_updated_at = EXCLUDED.task_updated_at, kind = EXCLUDED.kind, quote = EXCLUDED.quote
+    WHERE shift_task_voice_suggestions.decision IS NULL
+      AND (shift_task_voice_suggestions.author_id, shift_task_voice_suggestions.author_attribution,
+        shift_task_voice_suggestions.task_updated_at)
+      IS DISTINCT FROM (EXCLUDED.author_id, EXCLUDED.author_attribution, EXCLUDED.task_updated_at);
   END LOOP;
-  RETURN '[]'::jsonb;
+  RETURN jsonb_build_object(
+    'queue_delay_ms', GREATEST(0, floor(extract(epoch FROM clock_timestamp() - v_source.received_at) * 1000)),
+    'retry_count', GREATEST(0, v_source.attempts - 1)
+  );
 END $$;
 
 REVOKE ALL ON FUNCTION private.invalidate_modified_app_task_evidence(),
