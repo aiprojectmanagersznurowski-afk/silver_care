@@ -9,6 +9,7 @@ import { assigneeLabel, sourceLabel, statusLabel, type TaskGroup } from '@/lib/s
 
 interface ShiftTaskGroupsProps {
   groups: TaskGroup[]
+  showResident?: boolean
   shiftDate: string
   canSettle: boolean
   targets: CarryTarget[]
@@ -17,7 +18,7 @@ interface ShiftTaskGroupsProps {
 }
 
 /** Zadania zmiany pogrupowane per pokój albo per podopieczny. Źródło widoczne przy każdym zadaniu. */
-export function ShiftTaskGroups({ groups, shiftDate, canSettle, targets, assignees, evidenceByTask }: ShiftTaskGroupsProps) {
+export function ShiftTaskGroups({ groups, shiftDate, canSettle, targets, assignees, evidenceByTask, showResident }: ShiftTaskGroupsProps) {
   return (
     <div className="space-y-4">
       {groups.map((group) => (
@@ -27,6 +28,7 @@ export function ShiftTaskGroups({ groups, shiftDate, canSettle, targets, assigne
               <TableHeader className="text-muted-foreground">
                 <TableRow>
                   <TableHead>Zadanie</TableHead>
+                  {showResident && <TableHead>Podopieczny</TableHead>}
                   <TableHead className="w-24">Godzina</TableHead>
                   <TableHead>Źródło</TableHead>
                   <TableHead>Przypisanie</TableHead>
@@ -41,6 +43,7 @@ export function ShiftTaskGroups({ groups, shiftDate, canSettle, targets, assigne
                       {t.title}
                       {t.cancelReason && <span className="block text-xs font-normal text-muted-foreground">Powód: {t.cancelReason}</span>}
                     </TableCell>
+                    {showResident && <TableCell>{t.residentId ? t.residentName ?? 'Podopieczny' : 'Placówka'}</TableCell>}
                     <TableCell className="text-muted-foreground">{t.dueTime ? t.dueTime.slice(0, 5) : '—'}</TableCell>
                     <TableCell className="text-muted-foreground">{sourceLabel(t.source, t.carriedFromTaskId)}</TableCell>
                     <TableCell>{t.assigneeUserId ? assigneeLabel(t) : 'Zadanie wspólne'}</TableCell>
