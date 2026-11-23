@@ -31,6 +31,6 @@ export class StaffMfaPage {
   async expectVoiceQueue() {
     await this.page.goto('/voice/assignment')
     await expect(this.page.getByRole('heading', { name: 'Fragmenty do sprawdzenia' })).toBeVisible()
-    await expect(this.page.getByText('Brak fragmentów do sprawdzenia')).toBeVisible()
+    await expect(this.page.getByText('Brak fragmentów do sprawdzenia').filter({ visible: true })).toBeVisible()
   }
 }

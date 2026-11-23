@@ -51,7 +51,7 @@ class VoiceAssignmentSourcePage extends VoiceAssignmentPage {
     await expect(scope.getByRole('option')).toHaveText(['Wybierz zakres', 'Nie do przypisania'])
     await scope.selectOption('UNASSIGNABLE')
     await this.page.getByRole('button', { name: 'Zapisz decyzję' }).click()
-    await expect(this.page.getByText('Brak fragmentów do sprawdzenia')).toBeVisible()
+    await expect(this.page.getByText('Brak fragmentów do sprawdzenia').filter({ visible: true })).toBeVisible()
   }
 }
 

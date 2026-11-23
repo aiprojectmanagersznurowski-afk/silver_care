@@ -15,6 +15,6 @@ export class VoiceAssignmentPage {
     await expect(this.page.getByText(/Sesja webowa/)).toBeVisible()
     await this.page.getByLabel('Przypisanie fragmentu').selectOption('FACILITY')
     await this.page.getByRole('button', { name: 'Zapisz decyzję' }).click()
-    await expect(this.page.getByText('Brak fragmentów do sprawdzenia')).toBeVisible()
+    await expect(this.page.getByText('Brak fragmentów do sprawdzenia').filter({ visible: true })).toBeVisible()
   }
 }
