@@ -45,6 +45,7 @@ export interface HandoverDraft {
   exceptions: number
   unknownAuthors: number
   pendingSources: number
+  newReceipts: number
   facts: HandoverFact[]
   receipts: HandoverReceipt[]
   tasks: HandoverTaskState[]

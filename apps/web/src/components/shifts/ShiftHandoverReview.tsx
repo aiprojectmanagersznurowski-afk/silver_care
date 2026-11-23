@@ -64,6 +64,7 @@ export async function ShiftHandoverReview({ supabase, shiftId, date, tasks, audi
             <Link href="/voice/assignment" className="inline-flex min-h-touch items-center text-sm underline">
               Fragmenty do sprawdzenia · {draft.exceptions}
             </Link>
+            {amendment && draft.newReceipts > 0 && <p className="text-sm">Nowe dowody przyjęcia · {draft.newReceipts}</p>}
             {draft.pendingSources > 0 && <p className="text-sm">Źródła bez pełnego potwierdzenia · {draft.pendingSources}</p>}
             {draft.unknownAuthors > 0 && <p className="text-sm">Brak rozpoznania autora · {draft.unknownAuthors}</p>}
           </div>
@@ -80,12 +81,12 @@ export async function ShiftHandoverReview({ supabase, shiftId, date, tasks, audi
             <StatusBadge tone="neutral">Zatwierdzone</StatusBadge>
           </summary>
           <p className="text-sm">{completenessLabels[version.completeness]} · {formatHandoverTime(version.approvedAt)}</p>
-          <p className="break-all text-sm">Zatwierdził: {version.approvedBy}</p>
+          <p className="break-all text-sm">Zatwierdził {version.approvedBy}</p>
           {version.previousVersion !== null && <p className="text-sm">Uzupełnia wersję {version.previousVersion}</p>}
           {version.expectedSourceIds.length > 0 && (
-            <p className="break-all text-sm">Dowody przyjęcia: {version.expectedSourceIds.join(', ')}</p>
+            <p className="break-all text-sm">Dowody przyjęcia · {version.expectedSourceIds.join(', ')}</p>
           )}
-          {version.reason && <p className="text-sm">Powód: {version.reason}</p>}
+          {version.reason && <p className="text-sm">Powód · {version.reason}</p>}
           <HandoverFacts facts={version.facts} />
           <HandoverTasks states={version.tasks} names={taskNames} />
         </details>

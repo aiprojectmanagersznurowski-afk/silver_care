@@ -83,8 +83,8 @@ export default async function ShiftTasksPage({ searchParams }: { searchParams: S
             ))}
             <Link href={qs({ date: shiftDay(date, -1) })} className={navClass}>Poprzedni dzień</Link>
             <Link href={qs({ date: shiftDay(date, 1) })} className={navClass}>Następny dzień</Link>
-            <Link href={qs({ group: board.defaultView, mine: board.defaultFilter })} className={group === board.defaultView && !mine ? activeClass : navClass}>Wszystkie zadania</Link>
-            <Link href={qs({ mine: board.mineFilter })} className={mine ? activeClass : navClass}>Moje zadania</Link>
+            <Link href={qs({ group: board.defaultView, mine: board.defaultFilter })} aria-current={group === board.defaultView && !mine ? 'page' : undefined} className={group === board.defaultView && !mine ? activeClass : navClass}>Wszystkie zadania</Link>
+            <Link href={qs({ mine: board.mineFilter })} aria-current={mine ? 'page' : undefined} className={mine ? activeClass : navClass}>Moje zadania</Link>
             <Link href={qs({ group: 'room' })} className={group === 'room' ? activeClass : navClass}>Według pokoi</Link>
             <Link href={qs({ group: 'resident' })} className={group === 'resident' ? activeClass : navClass}>Według podopiecznych</Link>
             <Link href={qs({ group: 'assignee' })} className={group === 'assignee' ? activeClass : navClass}>Według pracowników</Link>
