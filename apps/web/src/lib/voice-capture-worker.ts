@@ -60,7 +60,6 @@ export async function processNextVoiceCapture(config: SpeechConfig) {
   const bucket = admin.storage.from(VOICE_RETENTION.storageBucket)
   const storedPaths: string[] = []
   let permanentError = false
-  let finalizing = false
   try {
     const source = await bucket.download(capture.storage_path)
     if (source.error || !source.data) throw new Error('VOICE_STORAGE_UNAVAILABLE')
@@ -89,15 +88,18 @@ export async function processNextVoiceCapture(config: SpeechConfig) {
       if (uploaded.error) throw new Error('VOICE_TRANSCRIPT_STORAGE_FAILED')
       prepared.push({ ...segment, transcript_path: path })
     }
-    finalizing = true
     const result = await admin.rpc('finalize_voice_capture', { ...lease, p_segments: prepared })
     if (result.error) throw new Error('VOICE_FINALIZE_FAILED')
     return 'processed'
   } catch {
-    // Po utracie odpowiedzi z finalizacji zapis mógł się powieść.
-    if (!finalizing && storedPaths.length) await bucket.remove(storedPaths)
     const released = await admin.rpc('complete_voice_capture_failure', { ...lease, p_retry: !permanentError })
     if (released.error) throw new Error('VOICE_RELEASE_FAILED')
+    if (storedPaths.length) {
+      const cleanup = await admin.rpc('queue_abandoned_voice_transcripts', {
+        p_capture_id: capture.id, p_paths: storedPaths,
+      })
+      if (cleanup.error) throw new Error('VOICE_TRANSCRIPT_CLEANUP_QUEUE_FAILED')
+    }
     return 'failed'
   }
 }

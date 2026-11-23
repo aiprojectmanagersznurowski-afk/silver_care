@@ -3060,6 +3060,10 @@ export interface Database {
         }
         Returns: Json
       }
+      queue_abandoned_voice_transcripts: {
+        Args: { p_capture_id: string; p_paths: string[] }
+        Returns: number
+      }
       read_voice_capture_context: {
         Args: {
           p_capture_id: string

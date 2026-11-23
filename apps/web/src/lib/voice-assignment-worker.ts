@@ -27,7 +27,7 @@ export async function processNextVoiceAssignmentPart(config: ReturnType<typeof r
   const lease = { p_segment_id: part.segment_id, p_token: part.token }
   const bucket = admin.storage.from(VOICE_RETENTION.storageBucket)
   let attemptedPath: string | undefined
-  let finalizing = false
+  let outcome: 'processed' | 'idle' | 'failed'
   try {
     const source = await bucket.download(part.storage_path)
     if (!source.data) {
@@ -47,7 +47,6 @@ export async function processNextVoiceAssignmentPart(config: ReturnType<typeof r
     const saved = await bucket.upload(path, new Blob([text], { type: 'text/plain; charset=utf-8' }), { upsert: false })
     if (saved.error) throw new Error('VOICE_TRANSCRIPT_STORAGE_FAILED')
 
-    finalizing = true
     const finished = await admin.rpc('finish_voice_segment_transcription', {
       ...lease,
       p_result: {
@@ -59,15 +58,19 @@ export async function processNextVoiceAssignmentPart(config: ReturnType<typeof r
       },
     })
     if (finished.error) throw new Error('VOICE_TRANSCRIPTION_WRITE_FAILED')
-    if (!finished.data) await bucket.remove([path])
-    return finished.data ? 'processed' : 'idle'
+    outcome = finished.data ? 'processed' : 'idle'
   } catch (error) {
-    // Po utracie odpowiedzi zapis mógł się powieść. Sprzątanie źródła obejmuje także ścieżki ponowień.
-    if (attemptedPath && !finalizing) await bucket.remove([attemptedPath])
     const released = await admin.rpc('finish_voice_segment_transcription', {
       ...lease, p_unavailable: error instanceof VoiceAudioUnavailable,
     })
     if (released.error) throw new Error('VOICE_TRANSCRIPTION_RELEASE_FAILED')
-    return released.data ? 'failed' : 'idle'
+    outcome = released.data ? 'failed' : 'idle'
   }
+  if (attemptedPath) {
+    const cleanup = await admin.rpc('queue_abandoned_voice_transcripts', {
+      p_capture_id: part.capture_id, p_paths: [attemptedPath],
+    })
+    if (cleanup.error) throw new Error('VOICE_TRANSCRIPT_CLEANUP_QUEUE_FAILED')
+  }
+  return outcome
 }
