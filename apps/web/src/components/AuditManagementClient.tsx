@@ -13,8 +13,6 @@ import { Download, Calendar, Filter, RotateCcw, Clock, ShieldCheck } from 'lucid
 import {
   AuditLogEntry,
   formatAuditTimestamp,
-  formatAuditToCsv,
-  formatAuditToJson
 } from '@/lib/audit-helpers'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
@@ -74,30 +72,11 @@ export function AuditManagementClient({
     router.push('/admin/audit')
   }
 
-  const handleExportCsv = () => {
-    const csvContent = formatAuditToCsv(initialLogs, browserTimeZone)
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', `audit-rodo-export-${new Date().toISOString().slice(0, 10)}.csv`)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
-  }
-
-  const handleExportJson = () => {
-    const jsonContent = formatAuditToJson(initialLogs, browserTimeZone)
-    const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', `audit-rodo-export-${new Date().toISOString().slice(0, 10)}.json`)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
+  const handleExport = (format: 'csv' | 'json') => {
+    const params = new URLSearchParams({ format, scope: initialScope })
+    if (initialStartDate) params.set('startDate', initialStartDate)
+    if (initialEndDate) params.set('endDate', initialEndDate)
+    window.location.assign(`/api/admin/audit/export?${params}`)
   }
 
   return (
@@ -158,7 +137,7 @@ export function AuditManagementClient({
               variant="outline"
               size="sm"
               disabled={!initialLogs.length}
-              onClick={handleExportCsv}
+              onClick={() => handleExport('csv')}
               className="min-h-touch rounded-xl border-border text-foreground hover:bg-muted/50 gap-1.5 text-sm font-medium"
             >
               <Download className="h-3.5 w-3.5 text-muted-foreground" />
@@ -170,7 +149,7 @@ export function AuditManagementClient({
               variant="outline"
               size="sm"
               disabled={!initialLogs.length}
-              onClick={handleExportJson}
+              onClick={() => handleExport('json')}
               className="min-h-touch rounded-xl border-border text-foreground hover:bg-muted/50 gap-1.5 text-sm font-medium"
             >
               <Download className="h-3.5 w-3.5 text-muted-foreground" />
