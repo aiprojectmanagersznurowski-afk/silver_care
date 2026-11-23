@@ -4,6 +4,7 @@ import { FeatureFlagsMfa } from '@/components/admin/FeatureFlagsMfa'
 import { PageHeader } from '@/components/patterns/PageHeader'
 import { Button } from '@/components/ui/button'
 import { getAppRole } from '@/lib/auth/app-role'
+import { staffMfaSatisfied } from '@/lib/auth/staff-mfa'
 import { createClient } from '@/lib/supabase/server'
 
 const mfaRoles = new Set<string>(MFA_REQUIRED_ROLES)
@@ -29,7 +30,7 @@ export default async function StaffMfaPage({
   if (!user || !role || !mfaRoles.has(role)) redirect('/')
 
   const { data } = await supabase.auth.getClaims()
-  if (data?.claims.sub === user.id && data.claims.aal === 'aal2') {
+  if (data?.claims.sub === user.id && await staffMfaSatisfied(supabase, data.claims.aal)) {
     redirect(portalDestination((await searchParams).returnTo))
   }
 

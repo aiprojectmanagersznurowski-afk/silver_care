@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { SHIFT_POLICY } from '@silvercare/contracts/src/generated/facility'
 import { OPERATIONAL_REPORT_ENGINE, RESIDENT_ASSIGNMENT, VOICE_RETENTION } from '@silvercare/contracts/src/generated/voice'
+import { staffMfaSatisfied } from '@/lib/auth/staff-mfa'
 import { FeatureFlagsMfa } from '@/components/admin/FeatureFlagsMfa'
 import { FeatureDisabledState } from '@/components/patterns/FeatureDisabledState'
 import { ListError } from '@/components/patterns/ListState'
@@ -190,4 +191,3 @@ async function AssignmentDetails({ orgId, item, shifts, facilityManager, queueHr
     </section>
   )
 }
-import { staffMfaSatisfied } from '@/lib/auth/staff-mfa'
