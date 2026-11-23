@@ -1,10 +1,10 @@
 'use client'
 
 import { RESIDENT_ASSIGNMENT } from '@silvercare/contracts/src/generated/voice'
-import { useState, useTransition, type FormEvent } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
+import { useVoiceReview, VoiceDecisionFeedback, type ReviewPosition } from './SourceReviewForm'
 
 interface Option { id: string; label: string }
 
@@ -14,33 +14,17 @@ const scopeLabels = {
   UNASSIGNABLE: 'Nie do przypisania',
 } satisfies Record<(typeof RESIDENT_ASSIGNMENT.outcomes)[number], string>
 
-export function ResolveVoiceForm({ segmentId, residents, staff, author, unassignableOnly = false }: {
-  segmentId: string; residents: Option[]; staff: Option[]; author: string | null; unassignableOnly?: boolean
+export function ResolveVoiceForm({ position, residents, staff, author, unassignableOnly = false }: {
+  position: ReviewPosition; residents: Option[]; staff: Option[]; author: string | null; unassignableOnly?: boolean
 }) {
   const [scope, setScope] = useState('')
-  const [error, setError] = useState('')
-  const [pending, startTransition] = useTransition()
-  const router = useRouter()
+  const decision = useVoiceReview(position)
   const outcomes = RESIDENT_ASSIGNMENT.outcomes.filter((outcome) => !unassignableOnly || outcome === 'UNASSIGNABLE')
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const form = new FormData(event.currentTarget)
-    setError('')
-    startTransition(async () => {
-      const response = await fetch('/api/voice/assignment', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ segmentId, scope, residentId: form.get('resident'), authorId: form.get('author') }),
-      }).catch(() => null)
-      if (!response?.ok) {
-        const data = await response?.json().catch(() => null)
-        setError(data?.error ?? 'Nie udało się zapisać decyzji.')
-        return
-      }
-      router.replace('/voice/assignment')
-      router.refresh()
-    })
+    decision.save({ action: 'scope', scope, residentId: form.get('resident'), authorId: form.get('author') })
   }
 
   return (
@@ -70,8 +54,8 @@ export function ResolveVoiceForm({ segmentId, residents, staff, author, unassign
           </NativeSelect>
         </label>
       )}
-      {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-      <Button className="min-h-touch" type="submit" disabled={pending}>Zapisz decyzję</Button>
+      <VoiceDecisionFeedback {...decision} />
+      <Button className="min-h-touch" type="submit" disabled={decision.pending}>Zapisz decyzję</Button>
     </form>
   )
 }
