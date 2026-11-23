@@ -34,6 +34,10 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
     await sql`DELETE FROM public.shift_definitions WHERE organization_id = ${orgId} AND name LIKE ${PREFIX + '%'}`;
     await sql`INSERT INTO public.shift_definitions (organization_id, code, name, start_time, end_time, order_index)
       VALUES (${orgId}, ${CODE}, ${PREFIX + 'Zadania'}, '07:00', '19:00', 903), (${orgId}, ${CODE_2}, ${PREFIX + 'Zadania nocna'}, '19:00', '07:00', 904)`;
+    await sql`INSERT INTO public.shift_roster (organization_id, shift_definition_id, shift_date, user_id)
+      SELECT ${orgId}, d.id, slots.day, u.id FROM public.shift_definitions d CROSS JOIN auth.users u
+      CROSS JOIN (VALUES (${DATE}::date), (${SETTLE_DATE}::date)) slots(day)
+      WHERE d.organization_id = ${orgId} AND d.code = ${CODE} AND u.email = ${TEST_USERS.nurse.email}`;
   });
 
   test.afterAll(async () => {
@@ -51,7 +55,7 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
     await expect(tasks.task('E2E Zmierzyć ilość płynów')).toContainText('Ręczne');
 
     await tasks.addTask('E2E Przewietrzyć świetlicę');
-    await expect(tasks.group('Zadania placówki')).toContainText('E2E Przewietrzyć świetlicę');
+    await expect(tasks.task('E2E Przewietrzyć świetlicę')).toContainText('Zadanie wspólne');
   });
 
   test('@REQ: NUR-TASKS - lista grupuje się według pokoi albo podopiecznych', async ({ loginPage, page }) => {
@@ -59,6 +63,7 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
     const tasks = new ShiftTasksPage(page);
     await tasks.goto(CODE, DATE);
 
+    await tasks.byRoomLink.click();
     await expect(tasks.group(/Pokój|Zadania placówki/).first()).toBeVisible();
     await tasks.byResidentLink.click();
     await expect(page).toHaveURL(/group=resident/);

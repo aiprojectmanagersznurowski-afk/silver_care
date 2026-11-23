@@ -69,7 +69,9 @@ export class ShiftTasksPage {
   }
 
   async markDone(title: string) {
-    await this.task(title).getByRole('button', { name: /^Oznacz jako wykonane/ }).click();
+    const button = this.task(title).getByRole('button', { name: /^Oznacz jako wykonane/ });
+    await expect(button).toBeVisible();
+    await button.click();
   }
 
   get handover() {

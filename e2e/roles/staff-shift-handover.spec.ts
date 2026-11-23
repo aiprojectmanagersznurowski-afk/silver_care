@@ -10,7 +10,7 @@ import { ShiftTasksPage } from '../page-objects/ShiftTasksPage'
 test('@REQ: NUR-SHIFT-CLOSURE — dwa dyżury, wydruk i spóźniony aneks', async ({ loginPage, page }) => {
   test.setTimeout(95_000)
   const sql = postgres(process.env.DATABASE_URL!, { prepare: false })
-  const day = '2026-11-18'
+  const day = '2020-11-18'
   const operation = randomUUID()
   const dayCode = 'NUR20-D-' + operation.slice(0, 6)
   const nightCode = 'NUR20-N-' + operation.slice(0, 6)
