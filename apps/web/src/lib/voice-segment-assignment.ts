@@ -48,7 +48,8 @@ export function assignVoiceSegment(input: AssignmentContext, residents: Assignme
   const nameMatches = [...fullName, ...named.filter(({ lastName }) => !exactSurnames.has(normalize(lastName)))]
   const rooms = uniqueMatches(text, /\b(?:pokoj|pokoju) ([\p{L}\p{N}]+)/gu)
   const beds = uniqueMatches(text, /\b(?:lozko|lozku|lozka) ([\p{L}\p{N}]+)/gu)
-  const facility = hasWords(text, 'sprawa placowki')
+  const facilityMarker = 'sprawa placowki'
+  const facility = hasWords(text, facilityMarker)
   const roomMatches = residents.filter(({ room }) => room && rooms.includes(normalize(room)))
   const bedMatches = residents.filter(({ bed }) => bed && beds.includes(normalize(bed)))
   const selected = residents.filter(({ id }) => id === input.selectedResidentId)
@@ -72,7 +73,13 @@ export function assignVoiceSegment(input: AssignmentContext, residents: Assignme
     ? residents.filter(({ id }) => evidence.every((group) => group.some((resident) => resident.id === id)))
     : []
   if (facility && evidence.length) {
-    return pending(['CONFLICTING_EVIDENCE', ...reasons], evidence.flat())
+    const separateFacilityMatter = !input.selectedResidentId && input.text.split(/[.!?;\n]+/u).some((statement) => {
+      const part = normalize(statement)
+      return hasWords(part, facilityMarker)
+        && !nameMatches.some(({ lastName }) => hasWords(part, normalize(lastName)))
+        && !/\b(?:pokoj|pokoju|lozko|lozku|lozka) [\p{L}\p{N}]+/u.test(part)
+    })
+    return pending([separateFacilityMatter ? 'MIXED_SEGMENT' : 'CONFLICTING_EVIDENCE', ...reasons], evidence.flat())
   }
   if (facility) return reasons.length ? pending(reasons, []) : { scope: 'FACILITY' }
   if (!candidates.length) {
