@@ -833,16 +833,16 @@
 - **AC5 (Dostęp):** Wydruk dostępny dla kierownika zmiany (swojej zmiany) i kierownika placówki.
 
 #### [SC-NUR-16] Rozliczenie zadań zmiany z notatek głosowych
-🔗 **Kontrakt:** brak REQ (proponowany nowy: `NUR-TASKS-VOICE-COMPLETION`; wdraża: `VOICE-ZERO-GUESSING`, `INFRA-GROQ-DEMO-INTERIM`) · **ADR:** ADR-021 (uzupełnienie 2026-10-30) · **Status:** 📝 PROPOZYCJA
+🔗 **Kontrakt:** `NUR-TASKS-VOICE-COMPLETION`, `VOICE-ZERO-GUESSING`, `VOICE-RETENTION`, `SEC-MFA-STAFF` · **ADR:** ADR-021 (uzupełnienie 2026-10-30) · **Status:** 📝 PROPOZYCJA
 
 **User story:** Jako kierownik zmiany chcę, żeby system po zmianie zestawił notatki głosowe personelu („co zostało wykonane”) z otwartymi zadaniami i podsunął, które wyglądają na wykonane, aby rozliczenie zmiany zajęło kilka minut, a opiekunki tylko mówiły, zamiast klikać.
 
 **Kryteria akceptacji:**
 - **AC1 (Źródło):** Fragmenty notatek z danej zmiany przypisane według `SC-NUR-18` są dopasowywane wyłącznie do otwartych zadań tej zmiany i tego samego podopiecznego albo placówki.
-- **AC2 (Podpowiedź, nie decyzja):** Przy zadaniu pojawia się „wykonane?” z cytatem z notatki; status zmienia się dopiero po potwierdzeniu kierownika zmiany. Model nie oznacza niczego sam i nie tworzy zadań.
-- **AC3 (Brak dopasowania):** Zadanie bez wzmianki w notatkach nie dostaje podpowiedzi; kierownik zmiany rozlicza je ręcznie (`SC-NUR-13/AC5`).
-- **AC4 (Wzmianka o odmowie):** Gdy notatka mówi o niewykonaniu (np. „odmówiła kolacji”), podpowiedź brzmi „niewykonane — przenieść albo anulować?”, z cytatem.
-- **AC5 (Granice danych):** Te same zasady co w potoku głosowym: maskowanie przed modelem, model nie ustala tożsamości, w discovery wyłącznie dane syntetyczne (ADR-015, ADR-021).
+- **AC2 (Podpowiedź i decyzja):** Kierownik placówki albo właściwej zmiany z aktywnym drugim składnikiem uwierzytelniania widzi zredagowany cytat, czas i metodę ustalenia autora. Decyzja kierownika zapisuje rozliczenie i metadane audytu w jednej transakcji.
+- **AC3 (Brak dopasowania):** Brak wzmianki, wiele zgodnych zadań, warunek, przyszłe polecenie i konflikt pozostawiają zadanie do ręcznego rozliczenia (`SC-NUR-13/AC5`).
+- **AC4 (Negacja lub odmowa):** Podpowiedź przypisuje rodzaj wzmianki i pokazuje cytat. Kierownik może przenieść zadanie, anulować je z powodem albo odrzucić podpowiedź i rozliczyć je ręcznie.
+- **AC5 (Granice danych):** Obowiązuje redakcja potoku głosowego i serwerowa weryfikacja tożsamości. Cytat wygasa ze źródłem, a w audycie pozostają metadane decyzji. Próby wykorzystują dane syntetyczne (ADR-015, ADR-021).
 
 #### [SC-NUR-14] Raport dobowy dla bliskich z jawnym komunikatem o obchodzie
 🔗 **Kontrakt:** `REPORT-APPROVAL`, `NTF-REPORT-READY`; proponowany nowy: `REPORT-ROUNDS-NOTICE` · **ADR:** ADR-021 · **Status:** 📝 PROPOZYCJA

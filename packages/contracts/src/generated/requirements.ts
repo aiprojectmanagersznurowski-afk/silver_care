@@ -162,7 +162,7 @@ export const REQUIREMENTS = [
       "Na jedną zmianę przypada najwyżej jeden kierownik zmiany",
       "Uprawnienia kierownika zmiany (akceptacja planu, rozliczenie) dotyczą tylko zadań jego zmiany, a poza nią działa jak zwykły personel",
       "Tożsamość i placówka kierownika zmiany pochodzą z sesji i app_metadata, nigdy z parametrów żądania",
-      "Zakres shift_lead w macierzy dotyczy wyłącznie zasobów z kluczem zmiany i nigdy odczytu"
+      "Zakres shift_lead w macierzy dotyczy wyłącznie zasobów z kluczem zmiany. Odczyt jest dozwolony w jawnych wyjątkach R31"
     ]
   },
   {
@@ -191,6 +191,22 @@ export const REQUIREMENTS = [
       "Wydruk jest dostępny dopiero po akceptacji planu i niesie wersję planu",
       "Wydruk zawiera wyłącznie pola z SHIFT_TASK_POLICY.printFields, bez PESEL i kontaktów",
       "Każdy wydruk zapisuje wpis w audit_logs: kto, kiedy i którą wersję planu wydrukował"
+    ]
+  },
+  {
+    "id": "NUR-TASKS-VOICE-COMPLETION",
+    "status": "TODO",
+    "risk": "HIGH",
+    "source": "SC-NUR-16/AC1–AC5, SC-NUR-20/AC3, SC-NUR-20/AC6",
+    "domain": "staff",
+    "statement": "Kierownik placówki albo właściwej zmiany może rozliczyć istniejące zadanie na podstawie zredagowanej podpowiedzi głosowej.",
+    "acceptance": [
+      "APP, APP_GENERAL i DEVICE stosują wspólne reguły po redakcji, bez dodatkowego wywołania modelu. Dowód wymaga ustalonego autora, czasu nagrania i jednoznacznego zadania TODO w tej samej placówce, zmianie i zakresie podopiecznego albo placówki",
+      "Reguły rozróżniają wykonanie, negację i odmowę. Wypowiedź warunkowa, przyszłe polecenie i konflikt blokują podpowiedź do rozliczenia",
+      "Odczyt cytatu i decyzja wymagają aal2, obu aktywnych modułów i zakresu placówki lub właściwej zmiany zgodnie z R31. Źródłowy brudnopis zachowuje własne ograniczenia",
+      "Decyzja kierownika, rozliczenie przez settle_shift_task i audyt metadanych są atomowe. Powtórzenie źródła lub równoległa decyzja nie powiela rozliczenia ani audytu",
+      "Cytat jest dostępny wyłącznie z aktywnym źródłem w jego okresie retencji. Audyt zachowuje metadane bez cytatu. Dowód nie trafia do raportu rodzinnego ani logów technicznych",
+      "Worker wykorzystuje istniejące rezerwacje i limit pracy. Zapytania ograniczają się do danej placówki i zmiany, a lista zadań pobiera podpowiedzi zbiorczo"
     ]
   },
   {

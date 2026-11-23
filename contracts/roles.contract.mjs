@@ -39,6 +39,17 @@ export const CONSENT_PURPOSES = [
   { id: 'wellness_family_view', desc: 'Prezentacja metryk behawioralnych bliskim (wariant B).', article9: true },
 ];
 
+/** Podpowiedź głosowa jest wewnętrznym dowodem zgodnym z NUR-TASKS-VOICE-COMPLETION. */
+export const SHIFT_TASK_VOICE = {
+  resource: 'shift_task_voice_suggestions',
+  requiredAal: 'aal2',
+  requiredFeatures: ['module_voice_and_reports', 'module_shift_tasks'],
+  maxQuoteLength: 300,
+  evidenceKinds: ['COMPLETED', 'NOT_COMPLETED', 'REFUSED'],
+  decisions: ['DONE', 'CANCELLED', 'CARRIED', 'REJECTED'],
+  auditAction: 'VOICE_SHIFT_TASK_DECIDED',
+};
+
 export const RESOURCES = [
   'organizations', 'profiles', 'residents', 'resident_relative_links',
   'consent_ledger', 'daily_logs', 'daily_reports', 'daily_agenda',
@@ -51,7 +62,7 @@ export const RESOURCES = [
   'organization_feature_flags',
   'voice_sanitized_events', 'organization_report_configs', 'operational_reports',
   'voice_segment_proposals', 'family_voice_report_provenance', 'operational_report_jobs', 'voice_storage_deletions',
-  'voice_app_report_jobs',
+  'voice_app_report_jobs', SHIFT_TASK_VOICE.resource,
 ];
 
 /**
@@ -126,21 +137,21 @@ export const MATRIX = [
   { resource: 'operational_report_jobs',        read: [], create: [], update: [], delete: [] },
   { resource: 'voice_storage_deletions',        read: [], create: [], update: [], delete: [] },
   { resource: 'voice_app_report_jobs',         read: [], create: [], update: [], delete: [] },
+  { resource: SHIFT_TASK_VOICE.resource, read: ['org_admin:own', 'nurse:shift_lead'], create: [], update: ['org_admin:own', 'nurse:shift_lead'], delete: [] },
 ];
 
 /**
  * Zakres „kierownik zmiany” (wariant B, decyzja Michała 2026-10-30): rola personelu opiekuńczego z dodatkowymi
  * uprawnieniami wyłącznie na zmianie, na której grafik wskazuje ją jako kierownika. Poza tą zmianą działa jak zwykły
- * personel. Zakres dotyczy tylko zasobów z kluczem zmiany i nigdy odczytu — odczyt ma każdy personel placówki.
+ * personel. Zakres dotyczy wyłącznie zasobów z kluczem zmiany. Odczyt jest ograniczony do readResources.
  */
 export const SHIFT_LEAD_SCOPE = {
   qualifier: 'shift_lead',
   role: 'nurse',
-  resources: ['shift_tasks', 'shift_plan_approvals', 'voice_device_assignments', 'voice_assignment_queue'],
+  resources: ['shift_tasks', 'shift_plan_approvals', 'voice_device_assignments', 'voice_assignment_queue', SHIFT_TASK_VOICE.resource],
   capabilities: ['create', 'update'],
-  // Jedyny wyjątek od zasady „bez odczytu”: kolejka przypisania nagrań (ADR-022). Kierownik zmiany czyta
-  // tylko nagrania ze swojej zmiany czekające na decyzję, nie brudnopisy personelu.
-  readResources: ['voice_assignment_queue'],
+  // Kolejka przypisania (ADR-022) i zredagowany dowód przy zadaniu właściwej zmiany.
+  readResources: ['voice_assignment_queue', SHIFT_TASK_VOICE.resource],
   derivedFrom: { resource: 'shift_roster', field: 'is_shift_lead' },
   leadsPerShift: 1,
   identity: 'auth.uid() z sesji i organizacja z app_metadata — nigdy z parametrów żądania',
