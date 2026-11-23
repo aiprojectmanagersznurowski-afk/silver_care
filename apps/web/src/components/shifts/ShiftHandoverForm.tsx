@@ -17,10 +17,10 @@ interface Props {
   revision: string
   amendment: boolean
   receipts: HandoverReceipt[]
-  exceptions: number
+  incompleteSources: number
 }
 
-export function ShiftHandoverForm({ shiftId, date, revision, amendment, receipts, exceptions }: Props) {
+export function ShiftHandoverForm({ shiftId, date, revision, amendment, receipts, incompleteSources }: Props) {
   const router = useRouter()
   const [completeness, setCompleteness] = useState<HandoverCompleteness>('UNKNOWN')
   const [pending, setPending] = useState(false)
@@ -40,6 +40,8 @@ export function ShiftHandoverForm({ shiftId, date, revision, amendment, receipts
       })
       if (result.error) setError(result.error)
       else router.refresh()
+    } catch {
+      setError('Nie udało się zapisać decyzji. Odśwież stronę przed ponowieniem.')
     } finally {
       setPending(false)
     }
@@ -51,7 +53,7 @@ export function ShiftHandoverForm({ shiftId, date, revision, amendment, receipts
         Kompletność materiału
         <NativeSelect value={completeness} onChange={(e) => setCompleteness(e.target.value as HandoverCompleteness)}>
           {SHIFT_TASK_POLICY.closure.completeness.map((state) => (
-            <NativeSelectOption key={state} value={state} disabled={state === 'COMPLETE' && (!receipts.length || exceptions > 0)}>
+            <NativeSelectOption key={state} value={state} disabled={state === 'COMPLETE' && (!receipts.length || incompleteSources > 0)}>
               {completenessLabels[state]}
             </NativeSelectOption>
           ))}

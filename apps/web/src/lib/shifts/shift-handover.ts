@@ -11,6 +11,8 @@ export interface HandoverReceipt {
 
 export interface HandoverFact extends HandoverReceipt {
   sourceId: string
+  kind: 'event' | 'behavior'
+  residentId: string | null
   recordedAt: string
   attribution: string
   text: string | null
@@ -42,6 +44,7 @@ export interface HandoverDraft {
   nextShift: { id: string | null; code: string | null; name: string | null; date: string }
   exceptions: number
   unknownAuthors: number
+  pendingSources: number
   facts: HandoverFact[]
   receipts: HandoverReceipt[]
   tasks: HandoverTaskState[]
