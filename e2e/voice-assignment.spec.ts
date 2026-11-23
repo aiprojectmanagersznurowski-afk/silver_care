@@ -9,7 +9,8 @@ import { VoiceOperationalReportsPage } from './page-objects/VoiceOperationalRepo
 
 class VoiceAssignmentSourcePage extends VoiceAssignmentPage {
   async openSource(segment: string) {
-    await this.page.goto(`/voice/assignment?segment=${segment}`)
+    await this.page.getByRole('link', { name: 'Sprawdź fragment', exact: true }).click()
+    await expect(this.page).toHaveURL(new RegExp(segment))
     await expect(this.page.getByRole('form', { name: 'Korekta czasu nagrania' })).toBeVisible()
   }
 
