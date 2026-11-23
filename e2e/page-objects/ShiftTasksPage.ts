@@ -83,4 +83,16 @@ export class ShiftTasksPage {
     await row.getByLabel('Data docelowa').fill(targetDate);
     await row.getByRole('button', { name: 'Potwierdź przeniesienie' }).click();
   }
+
+  voiceEvidence(title: string, quote: string) {
+    return this.task(title).getByText(quote, { exact: true })
+  }
+
+  confirmVoiceEvidence(title: string) {
+    return this.task(title).getByRole('button', { name: 'Potwierdź wykonanie z nagrania' }).click()
+  }
+
+  voiceDecision(evidenceId: string) {
+    return this.page.request.post('/api/staff/shift-tasks/voice', { data: { evidenceId, decision: 'DONE' } })
+  }
 }
