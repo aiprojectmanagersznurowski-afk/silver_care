@@ -129,7 +129,7 @@ function HandoverFacts({ facts }: { facts: HandoverFact[] }) {
         <TableBody>{facts.map((fact) => (
           <TableRow key={`${fact.kind}/${fact.id}`}>
             <TableCell className="whitespace-pre-line">
-              {fact.text ?? 'Treść źródła jest niedostępna'}
+              <span>{fact.text ?? 'Treść źródła jest niedostępna'}</span>
               <span className="block text-xs text-muted-foreground">{fact.residentId ? 'Sprawa podopiecznego' : 'Sprawa placówki'}</span>
             </TableCell>
             <TableCell>

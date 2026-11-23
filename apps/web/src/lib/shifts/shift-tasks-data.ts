@@ -13,7 +13,7 @@ export async function loadShiftTaskData(supabase: SupabaseClient<Database>, shif
   const [tasksRes, residentsRes, rosterRes] = await Promise.all([
     supabase
       .from('shift_tasks')
-      .select('id, title, due_time, source, status, carried_from_task_id, resident_id, cancel_reason, assignee_user_id, created_at, updated_at')
+      .select('id, title, due_time, source, status, carried_from_task_id, resident_id, cancel_reason, assignee_user_id, updated_at')
       .eq('shift_definition_id', shiftId)
       .eq('shift_date', date),
     supabase
@@ -27,9 +27,8 @@ export async function loadShiftTaskData(supabase: SupabaseClient<Database>, shif
   ])
 
   const taskRows = tasksRes.data ?? []
-  const taskIds = taskRows.map((t) => t.id)
   const [copyResult, assignees] = await Promise.all([
-    taskIds.length
+    taskRows.length
       ? supabase.rpc('read_shift_task_carries', { p_shift: shiftId, p_date: date })
       : Promise.resolve({ data: [] as { task_id: string }[] }),
     loadRosterNames(rosterRes.data ?? []),
@@ -58,10 +57,8 @@ export async function loadShiftTaskData(supabase: SupabaseClient<Database>, shif
       assigneeUserId: t.assignee_user_id, assigneeName: assigneeNames.get(t.assignee_user_id ?? '') ?? null,
     }
   })
-  const lastPlanChange = taskRows.reduce((latest, task) => task.status === 'PROPOSED'
-    ? latest : Math.max(latest, Date.parse(task.created_at), Date.parse(task.updated_at)), 0)
   const taskVersions = new Map(taskRows.map(({ id, updated_at }) => [id, updated_at]))
-  return { tasks, taskVersions, carriedOut, options, assignees, lastPlanChange }
+  return { tasks, taskVersions, carriedOut, options, assignees }
 }
 
 export interface ShiftAssigneeOption {
