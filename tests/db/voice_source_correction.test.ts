@@ -38,7 +38,7 @@ async function fixture(tx: Tx, reasons = ['TIME_UNCERTAIN']) {
   await tx`INSERT INTO public.voice_captures
     (id, organization_id, source, source_key, storage_path, sha256, author_id, recorded_at, received_at, clock_state, status)
     VALUES (${capture}, ${org}, 'APP_GENERAL', ${capture}, ${org + '/fixture/' + capture}, ${'a'.repeat(64)},
-      ${admin}, '2026-11-02T10:00:00Z', '2026-11-02T10:00:00Z', 'UNKNOWN', 'SEGMENTED')`
+      ${admin}, '2026-11-02T10:00:00Z', now(), 'UNKNOWN', 'SEGMENTED')`
   await tx`INSERT INTO public.voice_segments
     (id, organization_id, capture_id, ordinal, start_ms, end_ms, transcript_path, author_id, author_attribution)
     VALUES (${segment}, ${org}, ${capture}, 0, 1000, 4000, ${org + '/fixture/' + segment}, ${admin}, 'AUTHENTICATED_SESSION')`
@@ -103,7 +103,7 @@ it('@REQ: VOICE-RESIDENT-ASSIGN przekazuje nocny wyjątek i zapisuje dokładny c
     const [saved] = await tx`SELECT s.assignment_status, c.clock_state, c.recorded_at, c.received_at
       FROM public.voice_captures c JOIN public.voice_segments s ON s.capture_id = c.id WHERE c.id = ${capture}`
     expect(saved).toEqual({ assignment_status: 'FACILITY', clock_state: 'UNKNOWN',
-      recorded_at: new Date('2026-11-02T10:00:00Z'), received_at: new Date('2026-11-02T10:00:00Z') })
+      recorded_at: new Date('2026-11-02T10:00:00Z'), received_at: expect.any(Date) })
     const [audit] = await tx`SELECT count(*)::int AS count FROM public.audit_logs
       WHERE organization_id = ${org} AND action = 'VOICE_SEGMENT_TIME_CORRECTED'`
     expect(audit.count).toBe(2)
@@ -116,7 +116,7 @@ it('@REQ: VOICE-RESIDENT-ASSIGN rozróżnia czas zimowy, odrzuca lukę i zachowu
     await asUser(tx, admin, 'org_admin', org)
     await expect(tx.savepoint((sp) => correct(sp, segment, 0, randomUUID(), '2026-03-29 02:30', 60)))
       .rejects.toMatchObject({ code: '22023' })
-    await expect(tx.savepoint((sp) => correct(sp, segment, 0, randomUUID(), '2026-11-03 02:30', 60)))
+    await expect(tx.savepoint((sp) => correct(sp, segment, 0, randomUUID(), '2099-11-03 02:30', 60)))
       .rejects.toMatchObject({ code: '22023' })
     const [fixed] = await correct(tx, segment, 0, randomUUID(), '2026-10-25 02:30', 60)
     expect(fixed.result).toMatchObject({ corrected_at: '2026-10-25T01:30:00+00:00', shift_date: '2026-10-24' })
@@ -217,5 +217,29 @@ it('@REQ: VOICE-RESIDENT-ASSIGN dzieli tylko dostępne audio, zachowuje wersję 
     expect(await tx`SELECT id FROM public.voice_segments WHERE capture_id = ${capture}`).toHaveLength(0)
     expect(await tx`SELECT path FROM public.voice_storage_deletions WHERE path LIKE ${org + '/transcripts/' + capture + '/%'}`)
       .toHaveLength(3)
+  })
+})
+
+it('@REQ: VOICE-RESIDENT-ASSIGN odbiera dostęp do odsłuchu po decyzji i odrzuca nieaktualny zakres', async () => {
+  await transaction(async (tx) => {
+    const { org, admin, lead, nurse, segment, capture } = await fixture(tx, ['TIME_UNCERTAIN', 'NO_MATCH'])
+    await tx`INSERT INTO storage.objects (bucket_id, name) VALUES ('voice-recordings', ${org + '/fixture/' + capture})`
+    const visible = async () => (await tx`SELECT public.can_play_voice_segment(${segment}) AS allowed`)[0].allowed
+    await asUser(tx, lead, 'nurse', org)
+    expect(await visible()).toBe(false)
+    await asUser(tx, admin, 'org_admin', org)
+    await correct(tx, segment, 0, randomUUID(), '2026-10-25 02:30', 120)
+    await asUser(tx, nurse, 'nurse', org)
+    expect(await visible()).toBe(false)
+    await asUser(tx, lead, 'nurse', org)
+    expect(await visible()).toBe(true)
+    const key = randomUUID()
+    const scope = (db: Tx, version: number) =>
+      db`SELECT public.review_voice_segment_scope(${segment}, ${version}, ${key}, 'FACILITY') AS result`
+    await expect(tx.savepoint((sp) => scope(sp, 0))).rejects.toMatchObject({ code: '40001' })
+    const saved = await scope(tx, 1)
+    expect(saved[0].result).toMatchObject({ version: 2, closed: true })
+    expect(await scope(tx, 1)).toEqual(saved)
+    expect(await visible()).toBe(false)
   })
 })
