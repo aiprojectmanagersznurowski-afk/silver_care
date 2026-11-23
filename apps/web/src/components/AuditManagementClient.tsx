@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { RESIDENT_ASSIGNMENT } from '@silvercare/contracts/src/generated/voice'
 import { SHIFT_POLICY } from '@silvercare/contracts/src/generated/facility'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { Card } from '@/components/ui/card'
@@ -18,6 +19,9 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { BusinessIdBadge } from '@/components/BusinessIdBadge'
 import { StatusBadge } from '@/components/patterns/StatusBadge'
+
+const [timeCorrected, segmentSplit] = RESIDENT_ASSIGNMENT.sourceReview.auditActions
+const voiceDecisionLabels: Record<string, string> = { [timeCorrected]: 'Korekta czasu nagrania', [segmentSplit]: 'Podział fragmentu nagrania' }
 
 interface AuditManagementClientProps {
   initialLogs: AuditLogEntry[]
@@ -209,7 +213,7 @@ export function AuditManagementClient({
                       {formatAuditTimestamp(log.created_at, browserTimeZone)}
                     </TableCell>
                     <TableCell>
-                      <StatusBadge>{log.action}</StatusBadge>
+                      <StatusBadge>{voiceDecisionLabels[log.action] ?? log.action}</StatusBadge>
                     </TableCell>
                     <TableCell>
                       {log.performed_by && log.performed_by.toLowerCase() !== 'system' ? (
@@ -218,8 +222,11 @@ export function AuditManagementClient({
                         <span className="text-muted-foreground italic text-sm">System / Automat</span>
                       )}
                     </TableCell>
-                    <TableCell className="font-mono text-muted-foreground max-w-md truncate">
-                      {log.payload ? JSON.stringify(log.payload) : '—'}
+                    <TableCell className={voiceDecisionLabels[log.action] ? 'max-w-md whitespace-normal' : 'font-mono text-muted-foreground max-w-md truncate'}>
+                      {voiceDecisionLabels[log.action] && log.payload ? <details>
+                        <summary className="min-h-touch min-w-touch cursor-pointer">Metadane decyzji</summary>
+                        <pre className="whitespace-pre-wrap break-all text-xs text-muted-foreground">{JSON.stringify(log.payload, null, 2)}</pre>
+                      </details> : log.payload ? JSON.stringify(log.payload) : '—'}
                     </TableCell>
                   </TableRow>
                 ))}
