@@ -80,9 +80,11 @@ it('@REQ: NUR-SHIFT-CLOSURE approves once, carries open tasks and links a late f
     await s.deny(/SHIFT_HANDOVER_EVIDENCE_REQUIRED/, () => s.approve(draft.revision, 'COMPLETE', null))
     expect(await s.approve(draft.revision)).toBe(1)
     await s.deny(/SHIFT_HANDOVER_STALE/, () => s.approve(draft.revision))
+    await s.claims(s.admin, 'org_admin')
     const [copy] = await tx`SELECT id FROM public.shift_tasks
       WHERE shift_definition_id = ${s.next} AND shift_date = ${date} AND carried_from_task_id = ${task.id}`
     expect(copy?.id).toBeTruthy()
+    await s.claims(s.lead)
     expect(await s.preview()).toMatchObject({ versions: [{ version: 1, previousVersion: null }], facts: [], canApprove: false })
 
     const lateId = await s.amendFact()
@@ -120,5 +122,29 @@ it('@REQ: NUR-SHIFT-CLOSURE enforces tenant, roster, staff role and MFA for prev
     await s.deny(/SHIFT_HANDOVER_FORBIDDEN/, s.preview)
     await s.claims(s.admin, 'org_admin')
     expect(await s.preview()).toMatchObject({ canApprove: true, facts: [], versions: [] })
+  })
+})
+
+it('@REQ: NUR-SHIFT-CLOSURE scopes the task list to roster membership and exposes only the manager’s audit history', async () => {
+  await rollback(async (tx) => {
+    const s = await fixture(tx)
+    await s.claims(s.lead)
+    const [task] = await tx`INSERT INTO public.shift_tasks
+      (organization_id, shift_definition_id, shift_date, title, created_by, status)
+      VALUES (${s.org}, ${s.shift}, ${date}, 'Treść przykładowego zadania', ${s.lead}, 'TODO') RETURNING id`
+    await tx`SELECT public.settle_shift_task(${task.id}, 'DONE', NULL, NULL, NULL)`
+    const [history] = await tx`SELECT public.read_shift_handover_audit(${s.shift}, ${date}::date, 0) AS events`
+    expect(history.events).toEqual(expect.arrayContaining([
+      expect.objectContaining({ action: 'SHIFT_TASK_CREATED', actor: s.lead, taskId: task.id, at: expect.any(String) }),
+      expect.objectContaining({ action: 'SHIFT_TASK_STATUS_CHANGED', actor: s.lead, taskId: task.id, at: expect.any(String), to: 'DONE' }),
+    ]))
+    expect(JSON.stringify(history.events)).not.toContain('Treść przykładowego zadania')
+
+    await s.claims(s.staff)
+    expect(await tx`SELECT id FROM public.shift_tasks WHERE id = ${task.id}`).toHaveLength(0)
+    await s.deny(/SHIFT_HANDOVER_FORBIDDEN/, () => tx`SELECT public.read_shift_handover_audit(${s.shift}, ${date}::date, 0)`)
+    await s.deny(/row-level security/i, () => tx`INSERT INTO public.shift_tasks
+      (organization_id, shift_definition_id, shift_date, title, created_by)
+      VALUES (${s.org}, ${s.shift}, ${date}, 'Zadanie spoza grafiku', ${s.staff})`)
   })
 })

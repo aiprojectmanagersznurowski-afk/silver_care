@@ -22,9 +22,10 @@ export class ShiftTasksPage {
     this.page = page;
     this.heading = page.getByRole('heading', { name: 'Zadania zmiany', exact: true });
     this.groups = page.locator('[data-testid="task-group"]:visible');
-    this.titleInput = page.getByLabel('Treść zadania');
-    this.residentSelect = page.getByLabel('Podopieczny');
-    this.addButton = page.getByRole('button', { name: 'Dodaj zadanie' });
+    const form = page.getByRole('form', { name: 'Nowe zadanie' });
+    this.titleInput = form.getByRole('textbox', { name: 'Treść zadania' });
+    this.residentSelect = form.getByRole('combobox', { name: 'Podopieczny' });
+    this.addButton = form.getByRole('button', { name: 'Dodaj zadanie' });
     this.byRoomLink = page.getByRole('link', { name: 'Według pokoi' });
     this.byResidentLink = page.getByRole('link', { name: 'Według podopiecznych' });
     this.planStatus = page.locator('[data-testid="plan-approval-status"]');
@@ -46,9 +47,11 @@ export class ShiftTasksPage {
     return this.page.locator('[data-testid="task-row"]:visible').filter({ hasText: title });
   }
 
-  async addTask(title: string, residentId?: string) {
+  async addTask(title: string, residentId?: string, assigneeId?: string) {
     await this.titleInput.fill(title);
     if (residentId) await this.residentSelect.selectOption(residentId);
+    if (assigneeId) await this.page.getByRole('form', { name: 'Nowe zadanie' })
+      .getByRole('combobox', { name: 'Przypisanie' }).selectOption(assigneeId);
     await this.addButton.click();
   }
 
@@ -66,7 +69,26 @@ export class ShiftTasksPage {
   }
 
   async markDone(title: string) {
-    await this.task(title).getByRole('button', { name: /^Wykonane:/ }).click();
+    await this.task(title).getByRole('button', { name: /^Oznacz jako wykonane/ }).click();
+  }
+
+  get handover() {
+    return this.page.getByRole('region', { name: 'Zamknięcie zmiany' });
+  }
+
+  async openHandover() {
+    await this.page.getByRole('link', { name: 'Zamknięcie zmiany' }).click();
+    await expect(this.handover).toBeVisible();
+  }
+
+  async approveHandover(reason: string, amendment = false) {
+    await this.handover.getByLabel('Kompletność materiału').selectOption('PARTIAL');
+    await this.handover.getByLabel('Powód częściowego zatwierdzenia').fill(reason);
+    await this.handover.getByRole('button', { name: amendment ? 'Zatwierdź aneks' : 'Zatwierdź przekazanie' }).click();
+  }
+
+  async showMyTasks() {
+    await this.page.getByRole('link', { name: 'Moje zadania' }).click();
   }
 
   async cancel(title: string, reason: string) {
