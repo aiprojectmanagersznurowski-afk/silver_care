@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { SHIFT_LEAD_SCOPE, SHIFT_TASK_VOICE } from '@silvercare/contracts/src/generated/roles'
 import { withAuth } from '@/lib/api-auth'
+import { staffMfaSatisfied } from '@/lib/auth/staff-mfa'
 import { parseAuditDate } from '@/lib/audit-helpers'
 import { validateCancelReason } from '@/lib/shifts/shift-tasks-view'
 
@@ -12,7 +13,7 @@ function fail(error: string, status: number) {
 
 export const POST = withAuth(async (request, { supabase, accessToken }) => {
   const { data: assurance } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel(accessToken)
-  if (assurance?.currentLevel !== SHIFT_TASK_VOICE.requiredAal) {
+  if (!await staffMfaSatisfied(supabase, assurance?.currentLevel, SHIFT_TASK_VOICE.requiredAal)) {
     return fail('Potwierdź drugi składnik uwierzytelniania.', 403)
   }
   const input: unknown = await request.json().catch(() => null)

@@ -1,6 +1,7 @@
 import { OPERATIONAL_REPORT_ENGINE, RESIDENT_ASSIGNMENT, VOICE_RETENTION } from '@silvercare/contracts/src/generated/voice'
 import { NextResponse } from 'next/server'
 import { withAuth } from '@/lib/api-auth'
+import { staffMfaSatisfied } from '@/lib/auth/staff-mfa'
 import { parseAuditDate } from '@/lib/audit-helpers'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { clipVoiceAudio } from '@/lib/voice-audio-clip'
@@ -42,7 +43,7 @@ function mutationError(error: { code: string; message: string }) {
 
 export const POST = withAuth(async (request, { supabase, accessToken }) => {
   const { data: assurance } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel(accessToken)
-  if (assurance?.currentLevel !== review.requiredAal) return fail('Potwierdź drugi składnik uwierzytelniania.', 403)
+  if (!await staffMfaSatisfied(supabase, assurance?.currentLevel, review.requiredAal)) return fail('Potwierdź drugi składnik uwierzytelniania.', 403)
   if (Number(request.headers.get('content-length')) > 4096) return fail(badInput, 413)
   const raw = await request.text().catch(() => '')
   if (raw.length > 4096) return fail(badInput, 413)
@@ -130,7 +131,7 @@ function audioResponse(clip: Blob, range: string | null) {
 
 export const GET = withAuth(async (request, { user, supabase, accessToken }) => {
   const { data: assurance } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel(accessToken)
-  if (assurance?.currentLevel !== review.requiredAal) return fail('Potwierdź drugi składnik uwierzytelniania.', 403)
+  if (!await staffMfaSatisfied(supabase, assurance?.currentLevel, review.requiredAal)) return fail('Potwierdź drugi składnik uwierzytelniania.', 403)
   const id = request.nextUrl.searchParams.get('segment')
   if (!uuid(id) || !user.organizationId) return fail(missingAudio, 404)
   const permission = () => supabase.rpc('can_play_voice_segment', { p_segment_id: id })

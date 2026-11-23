@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto'
 import { NextResponse } from 'next/server'
 import { OPERATIONAL_REPORT_ENGINE, RESIDENT_ASSIGNMENT, VOICE_RETENTION } from '@silvercare/contracts/src/generated/voice'
 import { withAuth } from '@/lib/api-auth'
+import { staffMfaSatisfied } from '@/lib/auth/staff-mfa'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export const runtime = 'nodejs'
@@ -31,7 +32,7 @@ function audioType(declared: string, bytes: ArrayBuffer) {
 
 export const POST = withAuth(async (request, { user, supabase, accessToken }) => {
   const { data: assurance } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel(accessToken)
-  if (assurance?.currentLevel !== 'aal2') return failure('Potwierdź drugi składnik uwierzytelniania.', 403)
+  if (!await staffMfaSatisfied(supabase, assurance?.currentLevel)) return failure('Potwierdź drugi składnik uwierzytelniania.', 403)
   const intendedSize = Number(request.headers.get('content-length'))
   if (intendedSize > maxAudioBytes + 32_768) return failure('Nagranie przekracza dozwolony rozmiar.', 413)
 
