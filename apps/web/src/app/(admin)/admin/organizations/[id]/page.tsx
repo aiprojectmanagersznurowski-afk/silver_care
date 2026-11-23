@@ -11,6 +11,7 @@ import { OrganizationAdminsSection } from '@/components/organizations/Organizati
 import { OrganizationStaffSection } from '@/components/organizations/OrganizationStaffSection'
 import { PageHeader } from '@/components/patterns/PageHeader'
 import { getAppRole, getAppOrganizationId } from '@/lib/auth/app-role'
+import { staffMfaSatisfied } from '@/lib/auth/staff-mfa'
 import { OrganizationFeatureFlagsSection } from '@/components/admin/OrganizationFeatureFlagsSection'
 import { getOrgFeatureFlags } from '@/lib/feature-flags'
 import { getActiveImpersonation, safeGetCookieStore } from '@/lib/impersonation-guards'
@@ -121,7 +122,7 @@ export default async function OrganizationDetailsPage({
         organizationId={id}
         flags={flags}
         isImpersonating={isImpersonating}
-        hasMfa={assurance?.data?.currentLevel === 'aal2'}
+        assuranceAccepted={await staffMfaSatisfied(supabase, assurance?.data?.currentLevel)}
         needsMfaVerification={assurance?.data?.nextLevel === 'aal2'}
       />
 

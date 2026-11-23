@@ -26,16 +26,16 @@ interface Props {
   organizationId: string
   flags: EffectiveFeatureFlags | null
   isImpersonating: boolean
-  hasMfa: boolean
+  assuranceAccepted: boolean
   needsMfaVerification: boolean
 }
 
-export function OrganizationFeatureFlagsSection({ organizationId, flags, isImpersonating, hasMfa, needsMfaVerification }: Props) {
+export function OrganizationFeatureFlagsSection({ organizationId, flags, isImpersonating, assuranceAccepted, needsMfaVerification }: Props) {
   const [pending, startTransition] = useTransition()
   const [confirmation, setConfirmation] = useState<FeatureKey | null>(null)
   const [error, setError] = useState<string>()
   const router = useRouter()
-  const blocked = isImpersonating || !hasMfa
+  const blocked = isImpersonating || !assuranceAccepted
   const activeDependents = (key: FeatureKey) => getDependentFeatureKeys(key).filter((child) => flags?.[child])
 
   function submit(featureKey: FeatureKey, enabled: boolean) {
@@ -55,7 +55,7 @@ export function OrganizationFeatureFlagsSection({ organizationId, flags, isImper
       {isImpersonating && <p role="status" className="rounded-lg border border-border p-4 text-sm">
         Tryb podglądu placówki blokuje zmianę modułów.
       </p>}
-      {!isImpersonating && !hasMfa && <FeatureFlagsMfa needsVerification={needsMfaVerification} />}
+      {!isImpersonating && !assuranceAccepted && <FeatureFlagsMfa needsVerification={needsMfaVerification} />}
       {error && <ListError title={error} />}
       {sections.map(({ title, kind }) => {
         const definitions = FEATURE_FLAGS.filter((flag) => flag.kind === kind)
