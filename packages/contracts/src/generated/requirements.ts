@@ -333,11 +333,11 @@ export const REQUIREMENTS = [
     "risk": "HIGH",
     "source": "SC-ADM-07, NFR-SEC-02",
     "domain": "security",
-    "statement": "Personel loguje się z drugim składnikiem; rodziny bez MFA.",
+    "statement": "Personel potwierdza drugi składnik przed dostępem do chronionych danych i operacji. Konta rodzin logują się bez drugiego składnika.",
     "acceptance": [
-      "Rola z MFA_REQUIRED_ROLES bez potwierdzonego drugiego składnika nie odczyta żadnej tabeli z danymi pensjonariuszy",
-      "Blokada działa na poziomie bazy, nie tylko w interfejsie",
-      "Konta rodzin logują się bez drugiego składnika"
+      "Rola z MFA_REQUIRED_ROLES potrzebuje zweryfikowanej sesji aal2 do chronionych danych podopiecznych, audytu i operacji personelu. Wymóg działa w aplikacji, API i bazie.",
+      "Operator może czasowo wyłączyć wymaganie w odizolowanym środowisku testowym z danymi syntetycznymi. Domyślna i produkcyjna konfiguracja zawsze wymagają aal2.",
+      "Tryb testowy zachowuje rzeczywisty poziom sesji oraz sprawdzanie tożsamości, roli, placówki, zmiany i modułu. Aplikacja i baza stosują tę samą decyzję. Użytkownik aplikacji nie może uruchomić trybu testowego."
     ]
   },
   {

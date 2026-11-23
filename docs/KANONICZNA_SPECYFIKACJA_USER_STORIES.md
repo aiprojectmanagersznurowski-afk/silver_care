@@ -181,6 +181,7 @@
 - **AC1 (Wymuszenie AAL2):** Mechanizm logowania na frontendzie (Next.js) weryfikuje poziom sesji. Jeśli użytkownik ma rolę `nurse` lub `org_admin`, system wymusza podanie 6-cyfrowego kodu TOTP przed dopuszczeniem do jakichkolwiek widoków z danymi podopiecznych.
 - **AC2 (Ekran onboardingu / parowania):** Przy pierwszym logowaniu do systemu pracownik widzi ekran z kodem QR do zeskanowania w aplikacji typu Google Authenticator / Authy.
 - **AC3 (Weryfikacja sesji):** Jeśli pracownik zaloguje się tylko hasłem, backend bazy danych (Supabase RLS) i tak zablokuje mu dostęp do tabel, dopóki nie przejdzie poprawnie weryfikacji MFA. Wyjątkiem są konta rodzin (`family`), które pozostają przy zwykłym logowaniu.
+- **AC4 (Testy):** Operator może czasowo wyłączyć wymóg MFA w odizolowanym środowisku z danymi syntetycznymi. Test nadal korzysta z rzeczywistej tożsamości i dotychczasowych uprawnień użytkownika. Produkcja zawsze wymaga sesji `aal2`.
 
 ### [SC-ADM-08] Wysyłanie bezpiecznych zaproszeń dla rodziny
 🔗 **Kontrakt:** `ADM-INVITE` · **Status:** ✅
