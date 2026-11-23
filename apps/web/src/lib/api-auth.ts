@@ -79,16 +79,6 @@ export function withAuth(handler: ApiRouteHandler, options: WithAuthOptions = {}
       // Rola i placówka wyłącznie z app_metadata (user_metadata użytkownik edytuje sam)
       const role = getAppRole(rawUser) ?? 'authenticated'
 
-      if (mfaRoles.has(role)) {
-        const { data } = await supabase.auth.getClaims(bearerToken)
-        if (data?.claims.sub !== rawUser.id || data.claims.aal !== 'aal2') {
-          return NextResponse.json(
-            { error: 'Potwierdź drugi składnik uwierzytelniania.', code: 'MFA_REQUIRED' },
-            { status: 403 },
-          )
-        }
-      }
-
       const organizationId = getAppOrganizationId(rawUser) ?? undefined
 
       const impersonatorId =
@@ -132,6 +122,16 @@ export function withAuth(handler: ApiRouteHandler, options: WithAuthOptions = {}
           },
           { status: 403 }
         )
+      }
+
+      if (mfaRoles.has(role)) {
+        const { data } = await supabase.auth.getClaims(bearerToken)
+        if (data?.claims.sub !== rawUser.id || data.claims.aal !== 'aal2') {
+          return NextResponse.json(
+            { error: 'Potwierdź drugi składnik uwierzytelniania.', code: 'MFA_REQUIRED' },
+            { status: 403 },
+          )
+        }
       }
 
       // 4. Blokada mutacji w trybie impersonacji (@REQ: SUP-IMPERSONATION)
