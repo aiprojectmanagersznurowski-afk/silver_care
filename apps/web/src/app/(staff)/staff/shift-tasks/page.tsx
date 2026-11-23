@@ -126,13 +126,12 @@ async function TasksSection({
   if (!roster) return <ListEmpty title="Brak dostępu do zadań tej zmiany" description="Wybierz zmianę, na której jesteś w grafiku." />
   const [data, approvalsRes] = await Promise.all([
     loadShiftTaskData(supabase, shiftId, date),
-    supabase.from('shift_plan_approvals').select('version, approved_at').eq('shift_definition_id', shiftId).eq('shift_date', date)
-      .order('version', { ascending: false }).limit(1).maybeSingle(),
+    supabase.rpc('get_shift_plan_status', { p_shift: shiftId, p_date: date }).maybeSingle(),
   ])
-  const { tasks, taskVersions, carriedOut, options, assignees, lastPlanChange } = data
+  const { tasks, taskVersions, carriedOut, options, assignees } = data
   const canSettle = roster.is_shift_lead
   const approval = approvalsRes.data
-  const stale = Boolean(approval && lastPlanChange > Date.parse(approval.approved_at))
+  const stale = approval?.stale ?? false
 
   const voice = canSettle && tasks.some(({ status }) => status === 'TODO')
     ? await loadShiftTaskVoiceEvidence(supabase, organizationId, shiftId, date)

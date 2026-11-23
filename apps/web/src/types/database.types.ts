@@ -1494,6 +1494,7 @@ export interface Database {
           approved_by: string
           approved_at: string
           printed_at: string | null
+          task_fingerprint: string | null
         }
         Insert: {
           id?: string
@@ -1504,6 +1505,7 @@ export interface Database {
           approved_by: string
           approved_at?: string
           printed_at?: string | null
+          task_fingerprint?: string | null
         }
         Update: {
           id?: string
@@ -1514,6 +1516,7 @@ export interface Database {
           approved_by?: string
           approved_at?: string
           printed_at?: string | null
+          task_fingerprint?: string | null
         }
         Relationships: [
           {
@@ -2949,6 +2952,16 @@ export interface Database {
           target_resident_id: string
         }
         Returns: boolean
+      }
+      get_shift_plan_status: {
+        Args: {
+          p_shift: string
+          p_date: string
+        }
+        Returns: {
+          version: number
+          stale: boolean
+        }[]
       }
       is_shift_lead: {
         Args: {

@@ -38,8 +38,7 @@ export default async function ShiftPlanPrintPage({ searchParams }: { searchParam
 
   const [leadRes, approvalRes] = await Promise.all([
     role === 'org_admin' ? Promise.resolve({ data: true }) : supabase.rpc('is_shift_lead', { p_shift_definition_id: shift.id, p_shift_date: date }),
-    supabase.from('shift_plan_approvals').select('version, approved_at').eq('shift_definition_id', shift.id).eq('shift_date', date)
-      .order('version', { ascending: false }).limit(1).maybeSingle(),
+    supabase.rpc('get_shift_plan_status', { p_shift: shift.id, p_date: date }).maybeSingle(),
   ])
   if (leadRes.data !== true) return <ListEmpty title="Brak uprawnień" description="Plan pracy drukuje kierownik zmiany." />
   const approval = approvalRes.data
@@ -47,10 +46,10 @@ export default async function ShiftPlanPrintPage({ searchParams }: { searchParam
     return <ListEmpty title="Najpierw zatwierdź plan zmiany" description="Wydruk jest możliwy po zatwierdzeniu planu na liście zadań." />
   }
 
-  const { tasks, carriedOut, lastPlanChange } = await loadShiftTaskData(supabase, shift.id, date)
-  if (lastPlanChange > Date.parse(approval.approved_at)) {
+  if (approval.stale) {
     return <ListEmpty title="Plan wymaga ponownego zatwierdzenia" description="Wróć do listy zadań i zatwierdź jego aktualną wersję." />
   }
+  const { tasks, carriedOut } = await loadShiftTaskData(supabase, shift.id, date)
   const visible = groupTasks(tasks, 'room', carriedOut).flatMap((g) => g.tasks)
   const sections = buildPrintSections(visible)
 
