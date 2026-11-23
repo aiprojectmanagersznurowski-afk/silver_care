@@ -2499,6 +2499,21 @@ export interface Database {
         }
         Returns: string
       }
+      read_shift_handover_audit: {
+        Args: {
+          p_shift: string
+          p_date: string
+          p_offset: number
+        }
+        Returns: Json
+      }
+      read_shift_task_carries: {
+        Args: {
+          p_shift: string
+          p_date: string
+        }
+        Returns: string[]
+      }
       record_app_voice_task_draft: {
         Args: {
           p_audio_hash: string
@@ -2523,6 +2538,17 @@ export interface Database {
           p_notes?: string | null
         }
         Returns: Json
+      }
+      approve_shift_handover: {
+        Args: {
+          p_shift: string
+          p_date: string
+          p_revision: string
+          p_completeness: string
+          p_reason: string
+          p_expected_source_ids: unknown[]
+        }
+        Returns: number
       }
       approve_operational_report: {
         Args: {
@@ -3010,6 +3036,13 @@ export interface Database {
           r: Database["public"]["Tables"]["rooms"]["Row"]
         }
         Returns: number
+      }
+      preview_shift_handover: {
+        Args: {
+          p_shift: string
+          p_date: string
+        }
+        Returns: Json
       }
       process_ingest_batch: {
         Args: {

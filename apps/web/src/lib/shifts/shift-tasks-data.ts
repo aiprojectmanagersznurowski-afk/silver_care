@@ -30,13 +30,13 @@ export async function loadShiftTaskData(supabase: SupabaseClient<Database>, shif
   const taskIds = taskRows.map((t) => t.id)
   const [copyResult, assignees] = await Promise.all([
     taskIds.length
-      ? supabase.from('shift_tasks').select('carried_from_task_id').in('carried_from_task_id', taskIds)
-      : Promise.resolve({ data: [] as { carried_from_task_id: string | null }[] }),
+      ? supabase.rpc('read_shift_task_carries', { p_shift: shiftId, p_date: date })
+      : Promise.resolve({ data: [] as { task_id: string }[] }),
     loadRosterNames(rosterRes.data ?? []),
   ])
   const copies = copyResult.data
   const assigneeNames = new Map(assignees.map(({ id, name }) => [id, name]))
-  const carriedOut = (copies ?? []).map((c) => c.carried_from_task_id).filter((id): id is string => !!id)
+  const carriedOut = (copies ?? []).map(({ task_id }) => task_id)
 
   const places = new Map<string, { name: string; room: string | null; bed: string | null }>()
   const options: TaskResidentOption[] = []

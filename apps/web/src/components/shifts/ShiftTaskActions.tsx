@@ -47,7 +47,7 @@ export function ShiftTaskActions({ taskId, title, status, shiftDate, targets, as
     }
   }
 
-  const btn = 'min-h-touch'
+  const btn = 'min-h-touch min-w-touch'
   return (
     <div className="flex flex-col items-start gap-2">
       {(assignees.length > 0 || assigneeUserId) && (
@@ -70,7 +70,7 @@ export function ShiftTaskActions({ taskId, title, status, shiftDate, targets, as
           <Button type="button" size="sm" className={btn} disabled={busy} aria-label={`Zatwierdź zadanie: ${title}`} onClick={() => run(() => approveShiftTaskAction(taskId))}>Zatwierdź</Button>
         )}
         {status === 'TODO' && (
-          <Button type="button" size="sm" className={btn} disabled={busy} aria-label={`Wykonane: ${title}`} onClick={() => run(() => settleShiftTaskAction({ taskId, path: 'DONE' }))}>Wykonane</Button>
+          <Button type="button" size="sm" className={btn} disabled={busy} aria-label={`Oznacz jako wykonane: ${title}`} onClick={() => run(() => settleShiftTaskAction({ taskId, path: 'DONE' }))}>Oznacz jako wykonane</Button>
         )}
         <Button type="button" variant="outline" size="sm" className={btn} disabled={busy} aria-label={`Anuluj zadanie: ${title}`} onClick={() => setMode('cancel')}>Anuluj</Button>
         {status === 'TODO' && targets.length > 0 && (
