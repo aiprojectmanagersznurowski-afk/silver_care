@@ -98,6 +98,7 @@ export const RESOURCES = [
   "shift_roster",
   "shift_tasks",
   "shift_plan_approvals",
+  "shift_handover_versions",
   "voice_devices",
   "voice_device_assignments",
   "voice_captures",
@@ -448,6 +449,19 @@ export const MATRIX = [
     "delete": []
   },
   {
+    "resource": "shift_handover_versions",
+    "read": [
+      "org_admin:own",
+      "nurse:shift_lead"
+    ],
+    "create": [
+      "org_admin:own",
+      "nurse:shift_lead"
+    ],
+    "update": [],
+    "delete": []
+  },
+  {
     "resource": "voice_devices",
     "read": [
       "org_admin:own",
@@ -690,6 +704,7 @@ export const SHIFT_LEAD_SCOPE = {
   "resources": [
     "shift_tasks",
     "shift_plan_approvals",
+    "shift_handover_versions",
     "voice_device_assignments",
     "voice_assignment_queue",
     "shift_task_voice_suggestions"
@@ -700,7 +715,8 @@ export const SHIFT_LEAD_SCOPE = {
   ],
   "readResources": [
     "voice_assignment_queue",
-    "shift_task_voice_suggestions"
+    "shift_task_voice_suggestions",
+    "shift_handover_versions"
   ],
   "derivedFrom": {
     "resource": "shift_roster",

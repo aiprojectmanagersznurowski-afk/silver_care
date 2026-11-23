@@ -57,7 +57,7 @@ export const RESOURCES = [
   'external_wearable_links', 'wellness_daily', 'audit_logs', 'security_access_logs',
   'rooms', 'beds', 'bed_assignments',
   'resident_events', 'resident_packages',
-  'shift_definitions', 'shift_roster', 'shift_tasks', 'shift_plan_approvals',
+  'shift_definitions', 'shift_roster', 'shift_tasks', 'shift_plan_approvals', 'shift_handover_versions',
   'voice_devices', 'voice_device_assignments', 'voice_captures', 'voice_segments', 'voice_assignment_queue', 'voice_retention_settings',
   'organization_feature_flags',
   'voice_sanitized_events', 'organization_report_configs', 'operational_reports',
@@ -108,7 +108,9 @@ export const MATRIX = [
   { resource: 'shift_definitions',       read: ['org_admin:own', 'nurse:own'],              create: ['org_admin'],    update: ['org_admin:own'],          delete: [] },
   { resource: 'shift_roster',            read: ['org_admin:own', 'nurse:own'],              create: ['org_admin'],    update: ['org_admin:own'],          delete: ['org_admin:own'] },
   { resource: 'shift_tasks',             read: ['org_admin:own', 'nurse:own'],              create: ['org_admin:own', 'nurse:own'], update: ['org_admin:own', 'nurse:shift_lead'], delete: [] },
+  // Odczyt zadań i akceptacji przez personel wymaga wpisu w grafiku dla klucza danej zmiany.
   { resource: 'shift_plan_approvals',    read: ['org_admin:own', 'nurse:own'],              create: ['org_admin:own', 'nurse:shift_lead'], update: [], delete: [] },
+  { resource: 'shift_handover_versions', read: ['org_admin:own', 'nurse:shift_lead'],       create: ['org_admin:own', 'nurse:shift_lead'], update: [], delete: [] },
 
   // Kanał urządzeń Zero-UI (ADR-022, SC-ADM-24, SC-NUR-18). Bliscy bez dostępu. Nic nie jest usuwane:
   // urządzenie unieważnia się przez revoked_at, wpis wydania zamyka przez ended_at (ewidencja sprzętu,
@@ -148,10 +150,10 @@ export const MATRIX = [
 export const SHIFT_LEAD_SCOPE = {
   qualifier: 'shift_lead',
   role: 'nurse',
-  resources: ['shift_tasks', 'shift_plan_approvals', 'voice_device_assignments', 'voice_assignment_queue', SHIFT_TASK_VOICE.resource],
+  resources: ['shift_tasks', 'shift_plan_approvals', 'shift_handover_versions', 'voice_device_assignments', 'voice_assignment_queue', SHIFT_TASK_VOICE.resource],
   capabilities: ['create', 'update'],
   // Kolejka przypisania (ADR-022) i zredagowany dowód przy zadaniu właściwej zmiany.
-  readResources: ['voice_assignment_queue', SHIFT_TASK_VOICE.resource],
+  readResources: ['voice_assignment_queue', SHIFT_TASK_VOICE.resource, 'shift_handover_versions'],
   derivedFrom: { resource: 'shift_roster', field: 'is_shift_lead' },
   leadsPerShift: 1,
   identity: 'auth.uid() z sesji i organizacja z app_metadata — nigdy z parametrów żądania',
