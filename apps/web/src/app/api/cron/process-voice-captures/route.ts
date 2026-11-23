@@ -1,5 +1,6 @@
 import { createHash, timingSafeEqual } from 'node:crypto'
 import { NextResponse } from 'next/server'
+import { processNextVoiceAssignmentPart } from '@/lib/voice-assignment-worker'
 import { processNextVoiceCapture } from '@/lib/voice-capture-worker'
 import { readSpeechConfiguration } from '@/lib/voice-private-speech'
 import { processNextSelectedVoiceOperationalReport, processNextVoiceProjection } from '@/lib/voice-projection-worker'
@@ -17,13 +18,13 @@ export async function GET(request: Request) {
   }
   try {
     const config = Promise.resolve().then(readSpeechConfiguration)
-    const [capture, projection, selectedWeb, operational, retention] = await Promise.allSettled([
-      config.then(processNextVoiceCapture), config.then(processNextVoiceProjection),
+    const [capture, part, projection, selectedWeb, operational, retention] = await Promise.allSettled([
+      config.then(processNextVoiceCapture), config.then(processNextVoiceAssignmentPart), config.then(processNextVoiceProjection),
       config.then(processNextSelectedVoiceOperationalReport),
       processNextOperationalReport(), removeExpiredVoiceStorage(),
     ])
     const status = (result: typeof capture) => result.status === 'fulfilled' ? result.value : 'failed'
-    const result = { capture: status(capture), projection: status(projection),
+    const result = { capture: status(capture), part: status(part), projection: status(projection),
       selectedWeb: status(selectedWeb), operational: status(operational), retention: status(retention) }
     return NextResponse.json(result, { status: Object.values(result).includes('failed') ? 503 : 200 })
   } catch {
