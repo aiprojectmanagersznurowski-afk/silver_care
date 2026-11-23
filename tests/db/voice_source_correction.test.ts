@@ -153,3 +153,69 @@ it('@REQ: NUR-TASKS-VOICE-COMPLETION używa zweryfikowanego początku do dowodu 
       .toEqual([{ recorded_at: instant }])
   })
 })
+
+it('@REQ: VOICE-RESIDENT-ASSIGN dzieli tylko dostępne audio, zachowuje wersję i niezależnie wznawia dzieci', async () => {
+  await transaction(async (tx) => {
+    const { org, admin, lead, segment, capture, night } = await fixture(tx, ['TIME_UNCERTAIN', 'MIXED_SEGMENT'])
+    const residentA = randomUUID()
+    const residentB = randomUUID()
+    await tx`INSERT INTO public.residents (id, organization_id, first_name, last_name)
+      VALUES (${residentA}, ${org}, 'Anna', 'Testowa'), (${residentB}, ${org}, 'Ewa', 'Próbna')`
+    await asUser(tx, admin, 'org_admin', org)
+    await correct(tx, segment, 0, randomUUID(), '2026-10-25 02:30', 60)
+    const parts = [{ start_ms: 1000, end_ms: 1900 }, { start_ms: 1900, end_ms: 2800 },
+      { start_ms: 2800, end_ms: 3700 }, { start_ms: 3700, end_ms: 4000, excluded: true }]
+    const split = (db: Tx, input: typeof parts, key = randomUUID()) =>
+      db`SELECT public.split_voice_segment(${segment}, 1, ${key}, ${db.json(input)}) AS split`
+    await expect(tx.savepoint((sp) => split(sp, parts))).rejects.toMatchObject({ message: 'VOICE_AUDIO_UNAVAILABLE' })
+    await tx`RESET ROLE`
+    await tx`INSERT INTO storage.objects (bucket_id, name) VALUES ('voice-recordings', ${org + '/fixture/' + capture})`
+    await asUser(tx, lead, 'nurse', org)
+    await expect(tx.savepoint((sp) => split(sp, [{ start_ms: 999, end_ms: 2000 }, parts[1]])))
+      .rejects.toMatchObject({ code: '22023' })
+    await expect(tx.savepoint((sp) => split(sp, [parts[0], { start_ms: 1800, end_ms: 2800 }])))
+      .rejects.toMatchObject({ code: '22023' })
+    const key = randomUUID()
+    const saved = await split(tx, parts, key)
+    expect(await split(tx, parts, key)).toEqual(saved)
+    await expect(tx.savepoint((sp) => split(sp, parts))).rejects.toMatchObject({ code: '40001' })
+    const kids = saved[0].split.children as { segment_id: string; start_ms: number; end_ms: number }[]
+    expect(kids.map(({ start_ms, end_ms }) => [start_ms, end_ms])).toEqual([[1000, 1900], [1900, 2800], [2800, 3700], [3700, 4000]])
+    await tx`SET LOCAL ROLE service_role`
+    expect(await tx`SELECT public.claim_voice_segment_projection(${segment}) AS claim`).toEqual([{ claim: null }])
+    const [notExcluded] = await tx`SELECT public.claim_voice_segment_transcription(${kids[3].segment_id}) AS claim`
+    expect(notExcluded.claim).toBeNull()
+    for (const [index, resident] of [residentA, residentB, null].entries()) {
+      const { segment_id } = kids[index]
+      const [{ claim }] = await tx`SELECT public.claim_voice_segment_transcription(${segment_id}) AS claim`
+      const path = `${org}/transcripts/${capture}/${segment_id}/${claim.token}`
+      const payload = tx.json({ transcript_path: path, scope: resident ? 'RESIDENT' : 'FACILITY',
+        resident_id: resident, reasons: index === 1 ? ['MIXED_SEGMENT'] : [], candidate_ids: [] })
+      // A stale worker cannot complete a lease owned by a different invocation.
+      expect(await tx`SELECT public.finish_voice_segment_transcription(${segment_id}, ${randomUUID()}, ${payload}) AS ok`)
+        .toEqual([{ ok: false }])
+      expect(await tx`SELECT public.finish_voice_segment_transcription(${segment_id}, ${claim.token}, ${payload}) AS ok`)
+        .toEqual([{ ok: true }])
+    }
+    const [ready] = await tx`SELECT public.claim_voice_segment_projection(${kids[0].segment_id}) AS claim`
+    expect(ready.claim).toMatchObject({ resident_id: residentA, scope: 'resident' })
+    expect(await tx`SELECT public.claim_voice_segment_projection(${kids[1].segment_id}) AS claim`).toEqual([{ claim: null }])
+    const [facility] = await tx`SELECT public.claim_voice_segment_projection(${kids[2].segment_id}) AS claim`
+    expect(facility.claim).toMatchObject({ scope: 'facility' })
+    await tx`RESET ROLE`
+    const [open] = await tx`SELECT shift_definition_id, shift_date::text, reasons FROM public.voice_assignment_queue
+      WHERE segment_id = ${kids[1].segment_id} AND decided_at IS NULL`
+    expect(open).toEqual({ shift_definition_id: night, shift_date: '2026-10-24', reasons: ['MIXED_SEGMENT'] })
+    const [parent] = await tx`SELECT assignment_status FROM public.voice_segments WHERE id = ${segment}`
+    expect(parent.assignment_status).toBe('SPLIT')
+    const childIds = kids.map(({ segment_id }) => segment_id)
+    expect(await tx`SELECT DISTINCT capture_id, parent_segment_id FROM public.voice_segments WHERE id IN ${tx(childIds)}`)
+      .toEqual([{ capture_id: capture, parent_segment_id: segment }])
+    await tx`UPDATE public.voice_captures SET received_at = now() - interval '100 days' WHERE id = ${capture}`
+    await tx`SET LOCAL ROLE service_role`
+    await tx`SELECT public.expire_voice_captures()`
+    expect(await tx`SELECT id FROM public.voice_segments WHERE capture_id = ${capture}`).toHaveLength(0)
+    expect(await tx`SELECT path FROM public.voice_storage_deletions WHERE path LIKE ${org + '/transcripts/' + capture + '/%'}`)
+      .toHaveLength(3)
+  })
+})
