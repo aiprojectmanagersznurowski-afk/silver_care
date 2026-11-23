@@ -30,7 +30,7 @@ export async function loadShiftTaskData(supabase: SupabaseClient<Database>, shif
   const [copyResult, assignees] = await Promise.all([
     taskRows.length
       ? supabase.rpc('read_shift_task_carries', { p_shift: shiftId, p_date: date })
-      : Promise.resolve({ data: [] as { task_id: string }[] }),
+      : Promise.resolve({ data: [] as { task_id: string }[], error: null }),
     loadRosterNames(rosterRes.data ?? []),
   ])
   const copies = copyResult.data
@@ -58,7 +58,8 @@ export async function loadShiftTaskData(supabase: SupabaseClient<Database>, shif
     }
   })
   const taskVersions = new Map(taskRows.map(({ id, updated_at }) => [id, updated_at]))
-  return { tasks, taskVersions, carriedOut, options, assignees }
+  const unavailable = Boolean(tasksRes.error || residentsRes.error || rosterRes.error || copyResult.error)
+  return { tasks, taskVersions, carriedOut, options, assignees, unavailable }
 }
 
 export interface ShiftAssigneeOption {

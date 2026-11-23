@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/supabase/current-user'
 import { getAppRole } from '@/lib/auth/app-role'
 import { PageHeader } from '@/components/patterns/PageHeader'
-import { ListEmpty } from '@/components/patterns/ListState'
+import { ListEmpty, ListError } from '@/components/patterns/ListState'
 import { PrintPlanButton } from '@/components/shifts/PrintPlanButton'
 import { formatDayLabel, normalizeDateParam } from '@/lib/shifts/roster-week'
 import { formatShiftRange, trimSeconds } from '@/lib/shifts/shift-definitions'
@@ -41,6 +41,7 @@ export default async function ShiftPlanPrintPage({ searchParams }: { searchParam
     supabase.rpc('get_shift_plan_status', { p_shift: shift.id, p_date: date }).maybeSingle(),
   ])
   if (leadRes.data !== true) return <ListEmpty title="Brak uprawnień" description="Plan pracy drukuje kierownik zmiany." />
+  if (approvalRes.error) return <ListError title="Nie udało się wczytać zatwierdzonego planu" />
   const approval = approvalRes.data
   if (!approval) {
     return <ListEmpty title="Najpierw zatwierdź plan zmiany" description="Wydruk jest możliwy po zatwierdzeniu planu na liście zadań." />
@@ -49,7 +50,8 @@ export default async function ShiftPlanPrintPage({ searchParams }: { searchParam
   if (approval.stale) {
     return <ListEmpty title="Plan wymaga ponownego zatwierdzenia" description="Wróć do listy zadań i zatwierdź jego aktualną wersję." />
   }
-  const { tasks, carriedOut } = await loadShiftTaskData(supabase, shift.id, date)
+  const { tasks, carriedOut, unavailable } = await loadShiftTaskData(supabase, shift.id, date)
+  if (unavailable) return <ListError title="Nie udało się wczytać zadań z zatwierdzonego planu" />
   const visible = groupTasks(tasks, 'room', carriedOut).flatMap((g) => g.tasks)
   const sections = buildPrintSections(visible)
 

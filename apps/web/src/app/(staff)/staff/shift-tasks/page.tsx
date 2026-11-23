@@ -128,6 +128,7 @@ async function TasksSection({
     loadShiftTaskData(supabase, shiftId, date),
     supabase.rpc('get_shift_plan_status', { p_shift: shiftId, p_date: date }).maybeSingle(),
   ])
+  if (data.unavailable || approvalsRes.error) return <ListError title="Nie udało się wczytać zadań i planu zmiany" />
   const { tasks, taskVersions, carriedOut, options, assignees } = data
   const canSettle = roster.is_shift_lead
   const approval = approvalsRes.data
