@@ -21,7 +21,10 @@ describe('POST /api/residents bez publicznego adresu zdjęcia (@REQ: ADM-RESIDEN
     chain.select = () => chain
     chain.single = async () => ({ data: { id: 'r1' }, error: null })
     vi.mocked(createClient).mockResolvedValue({
-      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'u1', app_metadata: { role: 'org_admin', organization_id: 'o1' } } }, error: null }) },
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'u1', app_metadata: { role: 'org_admin', organization_id: 'o1' } } }, error: null }),
+        getClaims: vi.fn().mockResolvedValue({ data: { claims: { sub: 'u1', aal: 'aal2' } } }),
+      },
       rpc: async () => featureSnapshot(),
       from: () => chain,
     } as unknown as Awaited<ReturnType<typeof createClient>>)
