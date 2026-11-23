@@ -603,7 +603,7 @@ if (SHIFT_LEAD_SCOPE) {
   if (!RESOURCES.includes(sc.derivedFrom?.resource)) err('R31-shift-lead', 'Grafik, z którego wynika kierownik zmiany, nie jest zasobem w macierzy.');
   if (sc.leadsPerShift !== 1) err('R31-shift-lead', `Na zmianę musi przypadać dokładnie jeden kierownik (jest: ${sc.leadsPerShift}).`);
   // ADR-022 i NUR-TASKS-VOICE-COMPLETION. Wyjątki nie obejmują dostępu do źródłowych brudnopisów.
-  const scopedReadResources = [RESIDENT_ASSIGNMENT?.queueResource, 'shift_task_voice_suggestions'];
+  const scopedReadResources = [RESIDENT_ASSIGNMENT?.queueResource, 'shift_task_voice_suggestions', 'shift_handover_versions'];
   for (const resource of sc.readResources || []) {
     if (!scopedReadResources.includes(resource)) err('R31-shift-lead', `Odczyt z zakresem ${sc.qualifier} dla "${resource}" jest poza jawnymi wyjątkami.`);
   }
