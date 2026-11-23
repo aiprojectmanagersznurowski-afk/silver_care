@@ -95,4 +95,30 @@ describe('Database Security MFA', () => {
       expect(await tx`SELECT id FROM public.get_family_resident_overview()`).toEqual([{ id: residentId }]);
     });
   });
+
+  it('@REQ: SEC-MFA-STAFF - wyłącznie operator może czasowo dopuścić aal1 bez zmiany roli i zakresu placówki', async () => {
+    await withFixtures(async (tx, { orgId, auditId, foreignAuditId, residentId, userId }) => {
+      await asRole(tx, 'org_admin', orgId, userId, 'aal1');
+      expect((await tx`SELECT public.staff_mfa_satisfied() AS allowed`)[0].allowed).toBe(false);
+      await expect(tx.savepoint((sp) => sp`SELECT id FROM public.audit_logs WHERE id = ${auditId}`))
+        .rejects.toMatchObject({ code: '42501' });
+      await expect(tx.savepoint((sp) => sp`
+        CREATE OR REPLACE FUNCTION private.staff_mfa_disabled_for_tests() RETURNS boolean LANGUAGE sql RETURN true
+      `)).rejects.toMatchObject({ code: '42501' });
+
+      await tx`RESET ROLE`;
+      await tx`CREATE OR REPLACE FUNCTION private.staff_mfa_disabled_for_tests() RETURNS boolean LANGUAGE sql STABLE RETURN true`;
+      await tx`SET LOCAL ROLE authenticated`;
+      expect((await tx`SELECT public.staff_mfa_satisfied() AS allowed`)[0].allowed).toBe(true);
+      expect(await tx`SELECT id FROM public.audit_logs WHERE id IN (${auditId}, ${foreignAuditId})`)
+        .toEqual([{ id: auditId }]);
+      expect(await tx`SELECT id FROM public.residents WHERE id = ${residentId}`).toEqual([{ id: residentId }]);
+      expect((await tx`SELECT auth.jwt()->>'aal' AS level`)[0].level).toBe('aal1');
+
+      await asRole(tx, 'nurse', orgId, userId, 'aal1');
+      expect(await tx`SELECT id FROM public.audit_logs WHERE id = ${auditId}`).toEqual([]);
+      await asRole(tx, 'family', orgId, userId, 'aal1');
+      expect((await tx`SELECT public.staff_mfa_satisfied() AS allowed`)[0].allowed).toBe(false);
+    });
+  });
 });
