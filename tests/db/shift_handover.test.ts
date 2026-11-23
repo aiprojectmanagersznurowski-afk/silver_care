@@ -132,6 +132,9 @@ it('@REQ: NUR-SHIFT-CLOSURE scopes the task list to roster membership and expose
     const [task] = await tx`INSERT INTO public.shift_tasks
       (organization_id, shift_definition_id, shift_date, title, created_by, status)
       VALUES (${s.org}, ${s.shift}, ${date}, 'Treść przykładowego zadania', ${s.lead}, 'TODO') RETURNING id`
+    await s.claims(s.lead, 'nurse', s.org, 'aal1')
+    await s.deny(/SHIFT_TASK_FORBIDDEN/, () => tx`SELECT public.settle_shift_task(${task.id}, 'DONE', NULL, NULL, NULL)`)
+    await s.claims(s.lead)
     await tx`SELECT public.settle_shift_task(${task.id}, 'DONE', NULL, NULL, NULL)`
     const [history] = await tx`SELECT public.read_shift_handover_audit(${s.shift}, ${date}::date, 0) AS events`
     expect(history.events).toEqual(expect.arrayContaining([
