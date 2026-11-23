@@ -116,7 +116,7 @@ Bazowy rozmiar 14px · minimalny kontrast 4.5:1 · cel dotykowy 38px
 | ADM-RESIDENT-PHOTO | residents | HIGH | Zdjęcie podopiecznego jest przechowywane prywatnie i dostępne wyłącznie osobom uprawnionym do danych tego podopiecznego. |
 | ADM-RESIDENT-CARD-VISIBILITY | residents | HIGH | Wspólna karta podopiecznego dla personelu pokazuje każdej roli wyłącznie sekcje z zasobów, które ta rola może czytać według macierzy uprawnień. |
 | ADM-ARCHIVE | residents | HIGH | Archiwizacja odcina dostęp bliskim bez niszczenia śladu audytowego. |
-| SEC-MFA-STAFF | security | HIGH | Personel loguje się z drugim składnikiem; rodziny bez MFA. |
+| SEC-MFA-STAFF | security | HIGH | Personel potwierdza drugi składnik przed dostępem do chronionych danych i operacji. Konta rodzin logują się bez drugiego składnika. |
 | SEC-SESSION | security | MEDIUM | Użytkownik zarządza swoimi sesjami, a sesje personelu wygasają po bezczynności. |
 | CONSENT-GRANTOR | consent | HIGH | Zgodę na przetwarzanie danych o zdrowiu może wyrazić wyłącznie pensjonariusz lub jego opiekun prawny. |
 | CONSENT-REVOKE | consent | HIGH | Cofnięcie zgody natychmiast zatrzymuje przetwarzanie w danym celu. |
