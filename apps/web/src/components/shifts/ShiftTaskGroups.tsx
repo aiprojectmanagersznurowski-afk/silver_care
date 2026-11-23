@@ -3,6 +3,8 @@ import { StatusBadge } from '@/components/patterns/StatusBadge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ShiftTaskActions, type CarryTarget } from '@/components/shifts/ShiftTaskActions'
 import type { ShiftAssigneeOption } from '@/lib/shifts/shift-tasks-data'
+import type { ShiftTaskVoiceEvidence } from '@/lib/shifts/shift-task-voice-evidence'
+import { ShiftTaskVoiceEvidencePanel } from './ShiftTaskVoiceEvidencePanel'
 import { assigneeLabel, sourceLabel, statusLabel, type TaskGroup } from '@/lib/shifts/shift-tasks-view'
 
 interface ShiftTaskGroupsProps {
@@ -11,10 +13,11 @@ interface ShiftTaskGroupsProps {
   canSettle: boolean
   targets: CarryTarget[]
   assignees: ShiftAssigneeOption[]
+  evidenceByTask: Map<string, ShiftTaskVoiceEvidence[]>
 }
 
 /** Zadania zmiany pogrupowane per pokój albo per podopieczny. Źródło widoczne przy każdym zadaniu. */
-export function ShiftTaskGroups({ groups, shiftDate, canSettle, targets, assignees }: ShiftTaskGroupsProps) {
+export function ShiftTaskGroups({ groups, shiftDate, canSettle, targets, assignees, evidenceByTask }: ShiftTaskGroupsProps) {
   return (
     <div className="space-y-4">
       {groups.map((group) => (
@@ -46,6 +49,9 @@ export function ShiftTaskGroups({ groups, shiftDate, canSettle, targets, assigne
                     </TableCell>
                     {canSettle && (
                       <TableCell>
+                        {t.status === 'TODO' && evidenceByTask.has(t.id) && (
+                          <ShiftTaskVoiceEvidencePanel evidence={evidenceByTask.get(t.id) ?? []} targets={targets} shiftDate={shiftDate} />
+                        )}
                         {(t.status === 'PROPOSED' || t.status === 'TODO') && (
                           <ShiftTaskActions key={t.assigneeUserId ?? 'shared'} taskId={t.id} title={t.title} status={t.status} shiftDate={shiftDate}
                             targets={targets} assignees={assignees} assigneeUserId={t.assigneeUserId ?? null} />

@@ -4,15 +4,17 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/supabase/current-user'
-import { getAppRole } from '@/lib/auth/app-role'
+import { getAppOrganizationId, getAppRole } from '@/lib/auth/app-role'
 import { PageHeader } from '@/components/patterns/PageHeader'
-import { ListEmpty } from '@/components/patterns/ListState'
+import { ListEmpty, ListError } from '@/components/patterns/ListState'
 import { ShiftTaskForm } from '@/components/shifts/ShiftTaskForm'
 import { ShiftPlanApproval } from '@/components/shifts/ShiftPlanApproval'
 import { ShiftTaskGroups } from '@/components/shifts/ShiftTaskGroups'
 import { formatDayLabel, normalizeDateParam, shiftDay } from '@/lib/shifts/roster-week'
 import { formatShiftRange, trimSeconds } from '@/lib/shifts/shift-definitions'
 import { loadShiftTaskData } from '@/lib/shifts/shift-tasks-data'
+import { loadShiftTaskVoiceEvidence, type ShiftTaskVoiceEvidence } from '@/lib/shifts/shift-task-voice-evidence'
+import { FeatureFlagsMfa } from '@/components/admin/FeatureFlagsMfa'
 import { groupTasks, normalizeGroupParam, type TaskGroupMode } from '@/lib/shifts/shift-tasks-view'
 
 export const dynamic = 'force-dynamic'
@@ -28,7 +30,8 @@ export default async function ShiftTasksPage({ searchParams }: { searchParams: S
 
   const user = await getCurrentUser()
   const role = getAppRole(user)
-  if (!user || (role !== 'nurse' && role !== 'org_admin')) redirect('/')
+  const organizationId = getAppOrganizationId(user)
+  if (!user || !organizationId || (role !== 'nurse' && role !== 'org_admin')) redirect('/')
 
   const params = await searchParams
   const date = normalizeDateParam(params.date)
@@ -64,7 +67,7 @@ export default async function ShiftTasksPage({ searchParams }: { searchParams: S
             <Link href={qs({ group: 'resident' })} className={group === 'resident' ? activeClass : navClass}>Według podopiecznych</Link>
             <Link href={qs({ group: 'assignee' })} className={group === 'assignee' ? activeClass : navClass}>Według pracowników</Link>
           </nav>
-          <TasksSection shiftId={shift.id} shiftCode={shift.code} date={date} group={group} isAdmin={role === 'org_admin'} targets={shifts.map((s) => ({ id: s.id, name: s.name }))} residentParam={params.resident} />
+          <TasksSection organizationId={organizationId} shiftId={shift.id} shiftCode={shift.code} date={date} group={group} isAdmin={role === 'org_admin'} targets={shifts.map((s) => ({ id: s.id, name: s.name }))} residentParam={params.resident} />
         </>
       )}
     </div>
@@ -72,6 +75,7 @@ export default async function ShiftTasksPage({ searchParams }: { searchParams: S
 }
 
 interface TasksSectionProps {
+  organizationId: string
   shiftId: string
   shiftCode: string
   date: string
@@ -82,7 +86,7 @@ interface TasksSectionProps {
   residentParam?: string
 }
 
-async function TasksSection({ shiftId, shiftCode, date, group, isAdmin, targets, residentParam }: TasksSectionProps) {
+async function TasksSection({ organizationId, shiftId, shiftCode, date, group, isAdmin, targets, residentParam }: TasksSectionProps) {
   const supabase = await createClient()
   const [data, leadRes, approvalsRes] = await Promise.all([
     loadShiftTaskData(supabase, shiftId, date),
@@ -90,21 +94,34 @@ async function TasksSection({ shiftId, shiftCode, date, group, isAdmin, targets,
     supabase.from('shift_plan_approvals').select('version, approved_at').eq('shift_definition_id', shiftId).eq('shift_date', date)
       .order('version', { ascending: false }).limit(1).maybeSingle(),
   ])
-  const { tasks, carriedOut, options, assignees, lastPlanChange } = data
+  const { tasks, taskVersions, carriedOut, options, assignees, lastPlanChange } = data
   const canSettle = leadRes.data === true
   const approval = approvalsRes.data
   const stale = Boolean(approval && lastPlanChange > Date.parse(approval.approved_at))
 
+  const voice = canSettle && tasks.some(({ status }) => status === 'TODO')
+    ? await loadShiftTaskVoiceEvidence(supabase, organizationId, shiftId, date)
+    : { rows: [] }
+  const evidenceByTask = new Map<string, ShiftTaskVoiceEvidence[]>()
+  for (const evidence of voice.rows) {
+    if (taskVersions.get(evidence.task_id) !== evidence.task_updated_at) continue
+    const entries = evidenceByTask.get(evidence.task_id) ?? []
+    entries.push(evidence)
+    evidenceByTask.set(evidence.task_id, entries)
+  }
   const groups = groupTasks(tasks, group, carriedOut)
 
   return (
     <>
       <ShiftPlanApproval shiftDefinitionId={shiftId} shiftDate={date} version={approval?.version ?? null} stale={stale} canApprove={canSettle} printHref={canSettle && approval && !stale ? `/staff/shift-plan/print?shift=${shiftCode}&date=${date}` : null} />
+      {voice.mfa && <FeatureFlagsMfa needsVerification={voice.mfa.needsVerification}
+        description="Potwierdź drugi składnik uwierzytelniania, aby sprawdzić podpowiedzi z nagrań." />}
+      {voice.unavailable && <ListError title="Nie udało się wczytać podpowiedzi z nagrań" />}
       <ShiftTaskForm shiftDefinitionId={shiftId} shiftDate={date} residents={options} defaultResidentId={options.some((o) => o.id === residentParam) ? residentParam : undefined} />
       {groups.length === 0 ? (
         <ListEmpty title="Brak zadań na tę zmianę" description="Dodaj pierwsze zadanie formularzem powyżej." />
       ) : (
-        <ShiftTaskGroups groups={groups} shiftDate={date} canSettle={canSettle} targets={targets} assignees={assignees} />
+        <ShiftTaskGroups groups={groups} shiftDate={date} canSettle={canSettle} targets={targets} assignees={assignees} evidenceByTask={evidenceByTask} />
       )}
     </>
   )
