@@ -124,3 +124,32 @@ it('@REQ: VOICE-RESIDENT-ASSIGN rozróżnia czas zimowy, odrzuca lukę i zachowu
       .toEqual([{ reasons: ['NO_MATCH'] }])
   })
 })
+
+it('@REQ: NUR-TASKS-VOICE-COMPLETION używa zweryfikowanego początku do dowodu i projekcji', async () => {
+  await transaction(async (tx) => {
+    const { org, admin, lead, segment, night } = await fixture(tx)
+    const task = randomUUID()
+    await tx`INSERT INTO public.shift_tasks
+      (id, organization_id, shift_definition_id, shift_date, title, source, status, created_by)
+      VALUES (${task}, ${org}, ${night}, '2026-10-24', 'Przewietrzyć świetlicę', 'MANUAL', 'TODO', ${admin})`
+    await asUser(tx, admin, 'org_admin', org)
+    await correct(tx, segment, 0, randomUUID(), '2026-10-25 02:30', 60)
+    await tx`SET LOCAL ROLE service_role`
+    const [{ claim }] = await tx`SELECT public.claim_voice_segment_projection(${segment}) AS claim`
+    const [{ lookup }] = await tx`SELECT public.sync_voice_task_suggestions(${segment}, NULL, ${claim.token}, NULL) AS lookup`
+    expect(lookup).toEqual([{ id: task, title: 'Przewietrzyć świetlicę', updated_at: expect.any(String) }])
+    const matches = tx.json([{ task_id: task, task_updated_at: lookup[0].updated_at,
+      fragment_index: 0, kind: 'COMPLETED', quote: 'Przewietrzyłam świetlicę.' }])
+    await tx`SELECT public.sync_voice_task_suggestions(${segment}, NULL, ${claim.token}, ${matches})`
+    const facts = tx.json({ behavioral_facts: [], operational_facts: ['Wietrzenie sali wspólnej.'],
+      category_codes: [], restricted_medical: [], proposed_tasks: [] })
+    await tx`SELECT public.complete_voice_segment_projection(${segment}, ${claim.token}, ${facts})`
+    await asUser(tx, lead, 'nurse', org)
+    const instant = new Date('2026-10-25T01:30:00Z')
+    expect(await tx`SELECT recorded_at FROM public.shift_task_voice_suggestions WHERE task_id = ${task}`)
+      .toEqual([{ recorded_at: instant }])
+    await tx`RESET ROLE`
+    expect(await tx`SELECT recorded_at FROM public.voice_sanitized_events WHERE segment_id = ${segment}`)
+      .toEqual([{ recorded_at: instant }])
+  })
+})
