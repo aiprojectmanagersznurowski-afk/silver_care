@@ -239,7 +239,40 @@ export const RESIDENT_ASSIGNMENT = {
   ],
   "onUnconfirmed": "HOLD_BEFORE_CLASSIFY",
   "onUnassignable": "Fragment pozostaje w chronionym źródle do upływu VOICE_RETENTION i jest wyłączony z raportów oraz zadań.",
-  "afterDecision": "Pozycja znika z kolejki. Dostęp do szkiców i materiału źródłowego wynika z ich odrębnych uprawnień.",
+  "afterDecision": "Pozycja znika z kolejki po rozstrzygnięciu wszystkich wyjątków, zamknięciu jako nie do przypisania lub zapisie podziału.",
+  "sourceReview": {
+    "requiredAal": "aal2",
+    "facilityRole": "org_admin",
+    "shiftLeadRole": "nurse",
+    "timeModes": [
+      "SHIFT_ONLY",
+      "VERIFIED_START"
+    ],
+    "bases": [
+      "ROSTER_VERIFIED",
+      "SOURCE_VERIFIED",
+      "STAFF_CONFIRMED"
+    ],
+    "sourceReasons": [
+      "TIME_UNCERTAIN",
+      "MIXED_SEGMENT"
+    ],
+    "auditActions": [
+      "VOICE_SEGMENT_TIME_CORRECTED",
+      "VOICE_SEGMENT_SPLIT"
+    ],
+    "childStates": [
+      "WAITING",
+      "PROCESSING",
+      "READY",
+      "UNAVAILABLE"
+    ],
+    "splitParentStatus": "SPLIT",
+    "splitMaxParts": 12,
+    "maxAudioBytes": 26214400,
+    "queuePageSize": 50,
+    "timeReference": "SHIFT_POLICY.timezone"
+  },
   "oneRecordingOneResident": false,
   "oneSegmentOneResident": true,
   "audit": "audit_logs: identyfikator fragmentu, metoda i czas przypisania, identyfikatory poprzedniego i nowego przypisania oraz osoba przy korekcie ręcznej.",

@@ -611,7 +611,7 @@ export const REQUIREMENTS = [
     "risk": "HIGH",
     "source": "SC-NUR-18, SC-NUR-19, ADR-022",
     "domain": "voice",
-    "statement": "Serwer przypisuje zakres fragmentu nagrania, a kierownik rozstrzyga wyjątki i może skorygować autora.",
+    "statement": "Serwer przypisuje zakres fragmentu nagrania, a kierownik rozstrzyga wyjątki, koryguje autora i czas oraz dzieli materiał mieszany.",
     "acceptance": [
       "Jeden plik może zawierać wiele fragmentów, a każdy fragment ma własny zakres i odnośnik do źródła",
       "Jedno spójne dopasowanie serwera w rejestrze placówki przypisuje podopiecznego na potrzeby szkicu, a jawna sprawa placówki otrzymuje zakres FACILITY",
@@ -619,6 +619,11 @@ export const REQUIREMENTS = [
       "Kolejkę czyta i rozstrzyga wyłącznie kierownik tej zmiany albo kierownik placówki, a bliscy otrzymują zero wierszy",
       "Fragment nierozstrzygnięty albo oznaczony jako nie do przypisania pozostaje poza klasyfikacją i raportami oraz podlega retencji",
       "Audyt zapisuje metodę, czas i identyfikatory źródła oraz zmiany przypisania z osobą przy ręcznej korekcie, bez treści transkryptu",
+      "Wskazanie zmiany bez czasu przekazuje wyjątek kierownikowi tej zmiany i pozostawia blokadę czasową. Zweryfikowany początek usuwa blokadę czasową i zachowuje pozostałe powody",
+      "Czas źródłowy, stan zegara, czas przyjęcia, zweryfikowany początek i czas opisywanego zdarzenia są odrębne. Zmianę wyznacza SHIFT_POLICY z datą początku zmiany nocnej i walidacją czasu lokalnego z przesunięciem UTC",
+      "Odczyt i decyzja wymagają aal2, własnej placówki i aktywnego modułu głosowego. Pozycję bez zmiany oraz przeniesienie na inną zmianę obsługuje kierownik placówki",
+      "Podział waliduje rozłączne granice w oryginalnym pliku. Dzieci mają wspólne źródło i retencję, niezależnie oczekują na prywatną transkrypcję, redakcję i projekcję. Rodzic nie może trafić do projekcji",
+      "Korekta czasu i podział zapisują decyzję atomowo, z wersją kolejki i kluczem ponowienia. Ponowienie zwraca poprzedni wynik, konkurencyjna decyzja wymaga odświeżenia. Audyt zawiera metadane bez transkryptu",
       "Automatyczne przypisanie zasila szkic bez zatwierdzania raportu, publikacji rodzinie ani rozliczania zadań"
     ]
   },

@@ -876,7 +876,7 @@
 #### [SC-NUR-18] Przypisanie fragmentów i kolejka wyjątków
 🔗 **Kontrakt:** `VOICE-RESIDENT-ASSIGN`, `VOICE-ZERO-GUESSING` · **ADR:** ADR-006, ADR-022 · **Status:** 📝 PROPOZYCJA
 
-**User story:** Jako kierownik zmiany chcę rozstrzygać fragmenty, których autora lub zakresu serwer nie mógł ustalić, aby notatki z webu i dyktafonów trafiały do właściwych raportów bez dodatkowej pracy przy jednoznacznych dopasowaniach.
+**User story:** Jako kierownik placówki albo właściwej zmiany chcę ustalić autora, zakres i czas fragmentu oraz podzielić materiał dotyczący wielu spraw, aby wykorzystać rozstrzygnięte części nagrań z webu i dyktafonu.
 
 **Kryteria akceptacji:**
 - **AC1 (Fragment źródłowy):** Każdy fragment ma pozycję w pliku, czas nagrania i przypisaną zmianę albo status do wyjaśnienia. Jeden plik może zawierać sprawy kilku podopiecznych i placówki. Fragment dotyczący wielu spraw można rozdzielić albo przekazać do wyjaśnienia.
@@ -886,6 +886,10 @@
 - **AC5 (Autor):** Widać, czy autor pochodzi z sesji webowej, deklaracji na urządzeniu, ręcznej korekty, czy pozostaje nieustalony. Autor zgłoszenia i osoba, która wykonała zadanie, mają odrębne znaczenie.
 - **AC6 (Audyt):** Przypisanie i korekta zapisują identyfikator fragmentu, metodę, czas oraz identyfikatory poprzedniego i nowego przypisania. Ręczna korekta zapisuje osobę podejmującą decyzję. Rejestr ma historię zdarzeń i nie zawiera transkryptu.
 - **AC7 (Wspólny potok):** Fragment o ustalonym zakresie zasila właściwe szkice po redakcji. Wyjaśnienie jednego fragmentu nie blokuje pozostałych poprawnie przypisanych fragmentów tego pliku. Zasady dostępu do raportów i materiału źródłowego obowiązują niezależnie.
+
+- **AC8 (Korekta czasu):** Kierownik podaje zweryfikowany początek fragmentu z podstawą decyzji albo ustala wyłącznie zmianę i jej datę. W drugim przypadku fragment pozostaje wyjątkiem czasowym i trafia do kierownika wskazanej zmiany. Serwer wyznacza zmianę nocną według daty jej rozpoczęcia. Waliduje przesunięcie UTC, rozróżnia powtórzoną godzinę jesienią i odrzuca czas nieistniejący oraz niespójny z przyjęciem pliku. Źródłowy czas, stan zegara, przyjęcie, zweryfikowany początek i czas opisywanego zdarzenia pozostają odrębne.
+- **AC9 (Uprawnienia):** Kierownik placówki rozpatruje wyjątek bez zmiany i przenosi go między zmianami. Kierownik zmiany rozpatruje tylko wyjątki ze swojej zmiany. Aplikacja i baza sprawdzają placówkę, rolę, moduł głosowy oraz drugi składnik uwierzytelniania.
+- **AC10 (Podział i historia):** Części przechowują identyfikator rodzica, granice w oryginalnym nagraniu oraz jego retencję. Wydzielony materiał podlega prywatnej transkrypcji i redakcji, a rozstrzygnięte części wznawiają obieg niezależnie. Podział wyłącza rodzica z projekcji. Ponowienie zwraca ten sam wynik, a zmiana wersji kolejki wymaga odświeżenia. Rejestr „Zmiany i nagrania” pokazuje korektę i podział z identyfikatorami, czasami, granicami oraz osobą podejmującą decyzję bez treści transkryptu.
 
 #### [SC-NUR-19] Nagranie ogólne w webie
 🔗 **Kontrakt:** `VOICE-ZERO-GUESSING`, `VOICE-RESIDENT-ASSIGN`, `VOICE-OFFLINE` · **Status:** 📝 PROPOZYCJA
