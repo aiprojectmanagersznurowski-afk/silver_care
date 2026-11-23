@@ -12,6 +12,7 @@ import { getAppOrganizationId, getAppRole } from '@/lib/auth/app-role'
 import { requireOrgFeature } from '@/lib/feature-flags'
 import { getCurrentUser } from '@/lib/supabase/current-user'
 import { createClient } from '@/lib/supabase/server'
+import { staffMfaSatisfied } from '@/lib/auth/staff-mfa'
 import type { Json } from '@/types/database.types'
 import { ApproveOperationalReport } from './ApproveOperationalReport'
 
@@ -41,7 +42,7 @@ export default async function OperationalReportsPage({ searchParams }: { searchP
   const header = <PageHeader title="Raporty operacyjne" back={{ href: '/staff/reports', label: 'Wróć do raportów' }} />
   const supabase = await createClient()
   const { data: assurance } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
-  if (assurance?.currentLevel !== 'aal2') {
+  if (!await staffMfaSatisfied(supabase, assurance?.currentLevel)) {
     return <div className="space-y-4">{header}<FeatureFlagsMfa needsVerification={assurance?.nextLevel === 'aal2'}
       description="Potwierdź drugi składnik uwierzytelniania, aby sprawdzić raporty operacyjne." /></div>
   }

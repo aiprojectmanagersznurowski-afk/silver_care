@@ -10,6 +10,7 @@ import { requireOrgFeature } from '@/lib/feature-flags'
 import { formatPersonName } from '@/lib/person-name'
 import { getCurrentUser } from '@/lib/supabase/current-user'
 import { createClient } from '@/lib/supabase/server'
+import { staffMfaSatisfied } from '@/lib/auth/staff-mfa'
 import { VoiceFactDecision } from './VoiceFactDecision'
 
 export const dynamic = 'force-dynamic'
@@ -27,7 +28,7 @@ export default async function VoiceFamilyFactsPage() {
     back={{ href: '/staff/reports', label: 'Wróć do raportów' }} />
   const supabase = await createClient()
   const { data: assurance } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
-  if (assurance?.currentLevel !== 'aal2') {
+  if (!await staffMfaSatisfied(supabase, assurance?.currentLevel)) {
     return <div className="space-y-4">{header}<FeatureFlagsMfa needsVerification={assurance?.nextLevel === 'aal2'}
       description="Potwierdź drugi składnik uwierzytelniania, aby sprawdzić fakty do raportów." /></div>
   }
