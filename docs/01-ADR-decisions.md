@@ -375,7 +375,7 @@ flowchart TD
         H4 --> H5["Przegląd przez osobę przekazującą:<br/>poprawki, „wymaga uwagi”,<br/>akceptacja lub odrzucenie zadań"]
         H5 --> H6[("shift_handover_reports<br/>tylko personel")]
         H5 --> TB[("Zadania: backlog<br/>podopieczny albo placówka,<br/>osoba albo zmiana, termin")]
-        H6 --> H7["Następna zmiana potwierdza odbiór"]
+        H6 --> H7["Następna zmiana korzysta z listy lub zatwierdzonego wydruku"]
     end
 
     subgraph BLISCY["Raz dziennie: bliscy"]
