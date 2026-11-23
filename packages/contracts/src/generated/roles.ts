@@ -710,5 +710,27 @@ export const SHIFT_LEAD_SCOPE = {
   "identity": "auth.uid() z sesji i organizacja z app_metadata — nigdy z parametrów żądania"
 } as const;
 
+export const SHIFT_TASK_VOICE = {
+  "resource": "shift_task_voice_suggestions",
+  "requiredAal": "aal2",
+  "requiredFeatures": [
+    "module_voice_and_reports",
+    "module_shift_tasks"
+  ],
+  "maxQuoteLength": 300,
+  "evidenceKinds": [
+    "COMPLETED",
+    "NOT_COMPLETED",
+    "REFUSED"
+  ],
+  "decisions": [
+    "DONE",
+    "CANCELLED",
+    "CARRIED",
+    "REJECTED"
+  ],
+  "auditAction": "VOICE_SHIFT_TASK_DECIDED"
+} as const;
+
 export type Role = typeof ROLES[number]['id'];
 export type Resource = typeof RESOURCES[number];

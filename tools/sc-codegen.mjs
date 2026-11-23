@@ -37,6 +37,7 @@ files['packages/contracts/src/generated/roles.ts'] = BANNER
   + (roles.DELETE_POLICIES ? emit('DELETE_POLICIES', roles.DELETE_POLICIES) : '')
   + (roles.OFFBOARDING_RETENTION_DAYS ? emit('OFFBOARDING_RETENTION_DAYS', roles.OFFBOARDING_RETENTION_DAYS) : '')
   + (roles.SHIFT_LEAD_SCOPE ? emit('SHIFT_LEAD_SCOPE', roles.SHIFT_LEAD_SCOPE) : '')
+  + (roles.SHIFT_TASK_VOICE ? emit('SHIFT_TASK_VOICE', roles.SHIFT_TASK_VOICE) : '')
   + `export type Role = typeof ROLES[number]['id'];\nexport type Resource = typeof RESOURCES[number];\n`;
 
 files['packages/contracts/src/generated/presentation.ts'] = BANNER
