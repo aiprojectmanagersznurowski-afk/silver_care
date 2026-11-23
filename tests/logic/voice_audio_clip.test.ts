@@ -1,6 +1,15 @@
 import { createHash } from 'node:crypto'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { clipVoiceAudio } from '../../apps/web/src/lib/voice-audio-clip'
+import { processNextVoiceAssignmentPart } from '../../apps/web/src/lib/voice-assignment-worker'
+
+const storage = vi.hoisted(() => ({ download: vi.fn(), upload: vi.fn() }))
+const rpc = vi.hoisted(() => vi.fn())
+vi.mock('@/lib/supabase/admin', () => ({ createAdminClient: () => ({ rpc, storage: { from: () => storage } }) }))
+afterEach(() => {
+  vi.clearAllMocks()
+  vi.unstubAllGlobals()
+})
 
 function source() {
   const size = 32000 * 2
@@ -40,4 +49,30 @@ describe('@REQ: VOICE-RESIDENT-ASSIGN wydzielenie audio do prywatnej transkrypcj
     await expect(clipVoiceAudio(wav, hash, 1900, 2100)).rejects.toThrow('VOICE_AUDIO_UNAVAILABLE')
     await expect(clipVoiceAudio(wav, hash, -100, 200)).rejects.toThrow('VOICE_AUDIO_UNAVAILABLE')
   })
+})
+
+it('wysyła do prywatnej transkrypcji wyłącznie bajty wydzielonej części @REQ: VOICE-RESIDENT-ASSIGN', async () => {
+  const { wav, hash } = source()
+  storage.download.mockResolvedValue({ data: wav })
+  storage.upload.mockResolvedValue({ error: null })
+  rpc.mockResolvedValueOnce({ data: {
+    segment_id: 'child', capture_id: 'capture', organization_id: 'org', storage_path: 'private-original', sha256: hash,
+    token: 'lease', start_ms: 1000, end_ms: 1200, time_certain: true, author_id: 'author',
+    residents: [{ id: 'resident', firstName: 'Anna', lastName: 'Testowa' }],
+  } }).mockResolvedValueOnce({ data: true })
+  const fetcher = vi.fn(async (_url: URL, init: RequestInit) => {
+    const pcm = Buffer.from(await (init.body as Blob).arrayBuffer())
+    expect(pcm.readUInt32LE(40)).toBe(6400)
+    expect(pcm.readInt16LE(44)).toBe(-2000)
+    return Response.json({ segments: [{ start_ms: 0, end_ms: 190, text: 'Anna Testowa zjadła śniadanie.' }] })
+  })
+  vi.stubGlobal('fetch', fetcher)
+  expect(await processNextVoiceAssignmentPart({ url: new URL('https://stt.example.test'), token: 'fake' }))
+    .toBe('processed')
+  expect(fetcher).toHaveBeenCalledOnce()
+  expect(storage.upload).toHaveBeenCalledWith('org/transcripts/capture/child/lease', expect.any(Blob), expect.any(Object))
+  expect(rpc).toHaveBeenLastCalledWith('finish_voice_segment_transcription', expect.objectContaining({
+    p_segment_id: 'child', p_token: 'lease',
+    p_result: expect.objectContaining({ scope: 'RESIDENT', resident_id: 'resident' }),
+  }))
 })
