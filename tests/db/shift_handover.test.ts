@@ -148,3 +148,33 @@ it('@REQ: NUR-SHIFT-CLOSURE scopes the task list to roster membership and expose
       VALUES (${s.org}, ${s.shift}, ${date}, 'Zadanie spoza grafiku', ${s.staff})`)
   })
 })
+
+it('@REQ: NUR-SHIFT-CLOSURE requires receipt evidence and blocks completeness while an expected capture is processing', async () => {
+  await rollback(async (tx) => {
+    const s = await fixture(tx)
+    const capture = async (status: 'RECEIVED' | 'SEGMENTED') => {
+      const key = crypto.randomUUID()
+      const [row] = await tx`INSERT INTO public.voice_captures
+        (organization_id, source, source_key, storage_path, sha256, author_id, recorded_at, status)
+        VALUES (${s.org}, 'APP_GENERAL', ${key}, ${s.org + '/' + key}, repeat('a',64), ${s.staff}, ${insideShift}, ${status})
+        RETURNING id`
+      return row.id as string
+    }
+    const delivered = await capture('SEGMENTED')
+    const inProgress = await capture('RECEIVED')
+    await s.claims(s.lead)
+
+    const partial = await s.preview()
+    await s.deny(/SHIFT_HANDOVER_EVIDENCE_REQUIRED/, () => s.approve(partial.revision, 'COMPLETE', null, [delivered, inProgress]))
+    await s.deny(/SHIFT_HANDOVER_EVIDENCE_REQUIRED/, () => s.approve(partial.revision, 'COMPLETE', null, [delivered]))
+
+    await tx`RESET ROLE`
+    await tx`UPDATE public.voice_captures SET status = 'SEGMENTED' WHERE id = ${inProgress}`
+    await s.claims(s.lead)
+    const complete = await s.preview()
+    expect(await s.approve(complete.revision, 'COMPLETE', null, [delivered, inProgress])).toBe(1)
+    expect(await s.preview()).toMatchObject({
+      versions: [{ completeness: 'COMPLETE', expectedSourceIds: expect.arrayContaining([delivered, inProgress]) }],
+    })
+  })
+})
