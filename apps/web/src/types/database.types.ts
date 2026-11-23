@@ -1577,6 +1577,134 @@ export interface Database {
           },
         ]
       }
+      shift_task_voice_suggestions: {
+        Row: {
+          author_attribution: string
+          author_id: string
+          decided_at: string | null
+          decided_by: string | null
+          decision: string | null
+          draft_id: string | null
+          draft_updated_at: string | null
+          fragment_index: number
+          id: string
+          kind: string
+          organization_id: string
+          quote: string
+          received_at: string
+          recorded_at: string
+          resident_id: string | null
+          result_task_id: string | null
+          segment_id: string | null
+          shift_date: string
+          shift_definition_id: string
+          source_id: string
+          source_kind: string
+          task_id: string
+          task_updated_at: string
+        }
+        Insert: {
+          author_attribution: string
+          author_id: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision?: string | null
+          draft_id?: string | null
+          draft_updated_at?: string | null
+          fragment_index: number
+          id?: string
+          kind: string
+          organization_id: string
+          quote: string
+          received_at: string
+          recorded_at: string
+          resident_id?: string | null
+          result_task_id?: string | null
+          segment_id?: string | null
+          shift_date: string
+          shift_definition_id: string
+          source_id: string
+          source_kind: string
+          task_id: string
+          task_updated_at: string
+        }
+        Update: {
+          author_attribution?: string
+          author_id?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision?: string | null
+          draft_id?: string | null
+          draft_updated_at?: string | null
+          fragment_index?: number
+          id?: string
+          kind?: string
+          organization_id?: string
+          quote?: string
+          received_at?: string
+          recorded_at?: string
+          resident_id?: string | null
+          result_task_id?: string | null
+          segment_id?: string | null
+          shift_date?: string
+          shift_definition_id?: string
+          source_id?: string
+          source_kind?: string
+          task_id?: string
+          task_updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shift_task_voice_suggestions_draft_id_fkey"
+            columns: ["draft_id"]
+            isOneToOne: false
+            referencedRelation: "voice_draft_notes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shift_task_voice_suggestions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shift_task_voice_suggestions_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: false
+            referencedRelation: "resident_sync_status"
+            referencedColumns: ["resident_id"]
+          },
+          {
+            foreignKeyName: "shift_task_voice_suggestions_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: false
+            referencedRelation: "residents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shift_task_voice_suggestions_segment_id_organization_id_fkey"
+            columns: ["segment_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "voice_segments"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "shift_task_voice_suggestions_shift_definition_id_organizat_fkey"
+            columns: ["shift_definition_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "shift_definitions"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "shift_task_voice_suggestions_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "shift_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shift_tasks: {
         Row: {
           id: string
@@ -2306,6 +2434,36 @@ export interface Database {
       }
     }
     Functions: {
+      sync_voice_task_suggestions: {
+        Args: {
+          p_draft_id: string | null
+          p_matches: Json
+          p_segment_id: string | null
+          p_token: string
+        }
+        Returns: Json
+      }
+      decide_shift_task_voice_suggestion: {
+        Args: {
+          p_decision: string
+          p_evidence_id: string
+          p_reason: string | null
+          p_target_date: string | null
+          p_target_definition_id: string | null
+        }
+        Returns: string
+      }
+      record_app_voice_task_draft: {
+        Args: {
+          p_audio_hash: string
+          p_author_id: string
+          p_client_uuid: string
+          p_recorded_at: string
+          p_resident_id: string
+          p_transcript: string
+        }
+        Returns: Json
+      }
       admit_resident_with_bed: {
         Args: {
           p_first_name: string

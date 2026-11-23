@@ -3,6 +3,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { redactPrivately, readRedactionUrl, readSpeechConfiguration } from '@/lib/voice-private-speech'
 import { redactVoiceTranscript } from '@/lib/voice-redactor'
 import { extractNextShiftTaskIntents } from '@/lib/voice-shift-task-intent'
+import { omitVoiceTaskCompletion } from '@/lib/voice-shift-task-completion'
+import { projectVoiceTaskSuggestions } from '@/lib/voice-task-suggestion-projection'
 import { assignVoiceSegment, type AssignmentResident } from '@/lib/voice-segment-assignment'
 import { classifySanitizedVoiceEvent, prepareSanitizedVoiceEvent, type OperationalReportCategory, type VoiceReportRegistry } from '@/lib/voice-report-engine'
 
@@ -52,7 +54,10 @@ export async function processNextVoiceProjection(config: SpeechConfig) {
     const sanitized = prepareSanitizedVoiceEvent({
       source: item.source, scope: item.scope, residentId: item.resident_id, transcript: privateText, registry: item.registry,
     })
-    const result = await classifySanitizedVoiceEvent(sanitized, categories, item.registry)
+    await projectVoiceTaskSuggestions(admin, { ...lease, p_draft_id: null }, sanitized.sanitizedTranscript)
+    const result = await classifySanitizedVoiceEvent({
+      ...sanitized, sanitizedTranscript: omitVoiceTaskCompletion(sanitized.sanitizedTranscript),
+    }, categories, item.registry)
     const proposedTasks = extractNextShiftTaskIntents(sanitized.sanitizedTranscript)
     const familyFacts = result.behavioralFacts.filter((fact) => !proposedTasks.some(
       ({ title, quote }) => quote.includes(fact) || fact.includes(title),
@@ -105,7 +110,10 @@ async function classifySelectedVoiceDraft(admin: AdminClient, config: SpeechConf
   const sanitized = prepareSanitizedVoiceEvent({
     source: 'APP', scope: 'resident', residentId: item.resident_id, transcript: redacted, registry,
   })
-  const classification = await classifySanitizedVoiceEvent(sanitized, categories, registry)
+  await projectVoiceTaskSuggestions(admin, { p_segment_id: null, p_draft_id: item.draft_id, p_token: item.token }, sanitized.sanitizedTranscript)
+  const classification = await classifySanitizedVoiceEvent({
+    ...sanitized, sanitizedTranscript: omitVoiceTaskCompletion(sanitized.sanitizedTranscript),
+  }, categories, registry)
   return { operational_facts: classification.operationalFacts, category_codes: classification.categoryCodes }
 }
 
