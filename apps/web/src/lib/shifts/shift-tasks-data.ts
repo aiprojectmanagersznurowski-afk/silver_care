@@ -60,7 +60,8 @@ export async function loadShiftTaskData(supabase: SupabaseClient<Database>, shif
   })
   const lastPlanChange = taskRows.reduce((latest, task) => task.status === 'PROPOSED'
     ? latest : Math.max(latest, Date.parse(task.created_at), Date.parse(task.updated_at)), 0)
-  return { tasks, carriedOut, options, assignees, lastPlanChange }
+  const taskVersions = new Map(taskRows.map(({ id, updated_at }) => [id, updated_at]))
+  return { tasks, taskVersions, carriedOut, options, assignees, lastPlanChange }
 }
 
 export interface ShiftAssigneeOption {
