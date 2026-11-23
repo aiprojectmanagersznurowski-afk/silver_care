@@ -49,14 +49,17 @@ CREATE POLICY require_staff_mfa ON storage.objects AS RESTRICTIVE FOR ALL TO aut
 USING ((SELECT public.check_mfa_requirement()));
 
 -- Security definer RPCs run with their owner's permissions, so check the request first.
-CREATE FUNCTION public.enforce_staff_mfa()
+CREATE OR REPLACE FUNCTION public.enforce_staff_mfa()
 RETURNS void
 LANGUAGE plpgsql
 STABLE
 SET search_path = ''
 AS $$
 BEGIN
-  PERFORM public.check_mfa_requirement();
+  -- The effective flags RPC contains no resident data and enforces its own role and tenant scope.
+  IF current_setting('request.path', true) IS DISTINCT FROM '/rpc/get_org_feature_flags' THEN
+    PERFORM public.check_mfa_requirement();
+  END IF;
 END;
 $$;
 
