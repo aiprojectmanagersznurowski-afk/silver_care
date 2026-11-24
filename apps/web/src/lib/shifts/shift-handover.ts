@@ -7,10 +7,12 @@ export interface HandoverReceipt {
   id: string
   source: string
   receivedAt: string
+  sourceKey: string
 }
 
-export interface HandoverFact extends HandoverReceipt {
+export interface HandoverFact extends Omit<HandoverReceipt, 'sourceKey'> {
   sourceId: string
+  captureId?: string | null
   kind: 'event' | 'behavior'
   residentId: string | null
   recordedAt: string
@@ -46,6 +48,7 @@ export interface HandoverDraft {
   unknownAuthors: number
   pendingSources: number
   newReceipts: number
+  lateTaskIds: string[]
   facts: HandoverFact[]
   receipts: HandoverReceipt[]
   tasks: HandoverTaskState[]

@@ -68,8 +68,11 @@ export async function ShiftHandoverReview({ supabase, shiftId, date, tasks, audi
             {draft.pendingSources > 0 && <p className="text-sm">Źródła bez pełnego potwierdzenia · {draft.pendingSources}</p>}
             {draft.unknownAuthors > 0 && <p className="text-sm">Brak rozpoznania autora · {draft.unknownAuthors}</p>}
           </div>
-          <HandoverFacts facts={draft.facts} />
-          {!amendment && <HandoverTasks states={draft.tasks} names={taskNames} />}
+          <HandoverFacts facts={draft.facts} shiftId={shiftId} date={date} />
+          {(!amendment || draft.lateTaskIds.length > 0) && (
+            <HandoverTasks states={amendment
+              ? draft.tasks.filter((task) => draft.lateTaskIds.includes(task.id)) : draft.tasks} names={taskNames} />
+          )}
           <ShiftHandoverForm key={draft.revision} shiftId={shiftId} date={date} revision={draft.revision}
             amendment={amendment} receipts={draft.receipts} incompleteSources={draft.exceptions + draft.pendingSources} />
         </div>
@@ -87,7 +90,7 @@ export async function ShiftHandoverReview({ supabase, shiftId, date, tasks, audi
             <p className="break-all text-sm">Dowody przyjęcia · {version.expectedSourceIds.join(', ')}</p>
           )}
           {version.reason && <p className="text-sm">Powód · {version.reason}</p>}
-          <HandoverFacts facts={version.facts} />
+          <HandoverFacts facts={version.facts} shiftId={shiftId} date={date} />
           <HandoverTasks states={version.tasks} names={taskNames} />
         </details>
       ))}
@@ -121,7 +124,7 @@ export async function ShiftHandoverReview({ supabase, shiftId, date, tasks, audi
   )
 }
 
-function HandoverFacts({ facts }: { facts: HandoverFact[] }) {
+function HandoverFacts({ facts, shiftId, date }: { facts: HandoverFact[]; shiftId: string; date: string }) {
   if (facts.length === 0) return <p className="text-sm text-muted-foreground">Brak dopuszczonych faktów w tej wersji.</p>
   return (
     <TableCard title="Dopuszczone fakty">
@@ -135,7 +138,11 @@ function HandoverFacts({ facts }: { facts: HandoverFact[] }) {
             </TableCell>
             <TableCell>
               {handoverSourceLabel(fact.source)} · {formatHandoverTime(fact.recordedAt)}
-              <span className="block text-xs text-muted-foreground">Przyjęto {formatHandoverTime(fact.receivedAt)} · {fact.sourceId}</span>
+              <span className="block text-xs text-muted-foreground">Przyjęto {formatHandoverTime(fact.receivedAt)}</span>
+              <Link className="inline-flex min-h-touch items-center text-sm underline"
+                href={'/staff/shift-tasks/source?' + new URLSearchParams({ shift: shiftId, date, fact: fact.id, kind: fact.kind })}>
+                Zobacz źródło
+              </Link>
             </TableCell>
             <TableCell>{handoverAuthorLabel(fact.attribution)}</TableCell>
           </TableRow>
