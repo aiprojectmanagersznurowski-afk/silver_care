@@ -185,8 +185,9 @@ it('@REQ: NUR-SHIFT-CLOSURE requires the complete delivery manifest and ready pr
     await s.deny(/SHIFT_HANDOVER_EVIDENCE_REQUIRED/,
       () => s.approve(noManifest.revision, 'COMPLETE', null, [delivered.key, inProgress.key]))
     expect(noManifest.audioCompleteness).toBe('UNKNOWN')
-    await s.deny(/permission denied/, () => tx`SELECT public.register_shift_handover_manifest(
-      ${s.org}, ${s.shift}, ${date}::date, 1, gen_random_uuid(), ${[delivered.key]}::uuid[])`)
+    const [acl] = await tx`SELECT has_function_privilege(current_user,
+      'public.register_shift_handover_manifest(uuid,uuid,date,integer,uuid,uuid[])', 'EXECUTE') AS allowed`
+    expect(acl.allowed).toBe(false)
 
     const missing = crypto.randomUUID()
     const firstManifest = crypto.randomUUID()
@@ -345,5 +346,14 @@ it('@REQ: NUR-SHIFT-CLOSURE prepares at the buffer, retries idempotently and ref
     await refresh('19:43')
     await s.claims(s.lead)
     expect(await s.preview()).toMatchObject({ canApprove: false, preparedAt: null, versions: [{ version: 2 }, { version: 1 }] })
+    const nextMorning = async (time: string) => {
+      await tx`SET LOCAL ROLE service_role`
+      await tx`SELECT public.refresh_due_shift_handovers(30, ${'2026-11-19T' + time + ':00+01:00'}, ${s.org})`
+      await s.claims(s.admin, 'org_admin')
+      return (await tx`SELECT public.preview_shift_handover(${s.next}, ${date}::date) AS result`)[0].result
+    }
+    expect(await nextMorning('07:29')).toMatchObject({ preparedAt: null, audioCompleteness: 'UNKNOWN' })
+    expect(await nextMorning('07:30')).toMatchObject({ preparedAt: expect.stringContaining('2026-11-19T06:30:00'),
+      audioCompleteness: 'UNKNOWN', canApprove: true })
   })
 })
