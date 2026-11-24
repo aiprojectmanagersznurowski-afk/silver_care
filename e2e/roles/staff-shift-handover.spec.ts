@@ -14,7 +14,7 @@ test('@REQ: NUR-SHIFT-CLOSURE — dwa dyżury, wydruk i spóźniony aneks', asyn
   const operation = randomUUID()
   const dayCode = 'NUR20-D-' + operation.slice(0, 6)
   const nightCode = 'NUR20-N-' + operation.slice(0, 6)
-  const titles = { done: 'Uporządkować dyżurkę', carried: 'Przygotować świetlicę', personal: 'Sprawdzić zapas ręczników' }
+  const titles = { done: 'Uporządkować dyżurkę', carried: 'Przygotować świetlicę', personal: 'Sprawdzić zapas ręczników', late: 'Sprawdzić wyposażenie' }
   const webText = 'Rozmowa organizacyjna w świetlicy'
   const lateText = 'Dostarczono dodatkowe wyposażenie'
   const [admin] = await sql`SELECT id, raw_app_meta_data->>'organization_id' AS org
@@ -53,7 +53,9 @@ test('@REQ: NUR-SHIFT-CLOSURE — dwa dyżury, wydruk i spóźniony aneks', asyn
     await expect(tasks.task(titles.carried)).toContainText('Zadanie wspólne')
 
     await tasks.openHandover()
-    await expect(tasks.handover.getByText(webText, { exact: true })).toBeVisible()
+    await tasks.openHandoverSource(webText)
+    await tasks.goto(dayCode, day)
+    await tasks.openHandover()
     await tasks.approveHandover('Dyktafon nadal synchronizuje')
     await expect(tasks.handover.getByText('Przekazanie, wersja 1', { exact: true })).toBeVisible()
 
@@ -99,6 +101,8 @@ test('@REQ: NUR-SHIFT-CLOSURE — dwa dyżury, wydruk i spóźniony aneks', asyn
     await loginPage.loginAs('org_admin')
     await tasks.goto(dayCode, day)
     await tasks.openHandover()
+    await tasks.addTask(titles.late)
+    await expect(tasks.handover.getByRole('row').filter({ hasText: titles.late })).toBeVisible()
     await expect(tasks.handover.getByText(lateText, { exact: true })).toBeVisible()
     await tasks.approveHandover('Sprawdzenie pozostałych nagrań trwa', true)
     await expect(tasks.handover.getByText('Aneks, wersja 2', { exact: true })).toBeVisible()
@@ -117,6 +121,9 @@ test('@REQ: NUR-SHIFT-CLOSURE — dwa dyżury, wydruk i spóźniony aneks', asyn
     expect(events.find((e) => e.action === 'SHIFT_PLAN_PRINTED')?.payload.version).toBe(1)
     expect(events.find((e) => e.action === 'SHIFT_HANDOVER_AMENDMENT_APPROVED')?.payload.previous_version).toBe(1)
     expect(JSON.stringify(events)).not.toContain(lateText)
+    await tasks.goto(nightCode, day)
+    await expect(tasks.task(titles.late)).toContainText('Przeniesione z poprzedniej zmiany')
+    await expect(tasks.planStatus).toContainText('Plan wymaga ponownego zatwierdzenia')
   } finally {
     await sql`DELETE FROM private.shift_handover_versions WHERE shift_definition_id = ${first.id}`
       .catch((error) => { if (error.code !== '42P01') throw error })

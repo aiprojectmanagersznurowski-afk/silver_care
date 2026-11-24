@@ -83,6 +83,14 @@ export class ShiftTasksPage {
     await expect(this.handover).toBeVisible();
   }
 
+  async openHandoverSource(fact: string) {
+    const source = this.handover.getByRole('row').filter({ hasText: fact }).getByRole('link', { name: 'Zobacz źródło' });
+    await expect(source).toBeVisible();
+    await source.click();
+    await expect(this.page.getByRole('heading', { name: 'Źródło faktu' })).toBeVisible();
+    await expect(this.page.getByText(fact, { exact: true })).toBeVisible();
+  }
+
   async approveHandover(reason: string, amendment = false) {
     await this.handover.getByLabel('Kompletność materiału').selectOption('PARTIAL');
     await this.handover.getByLabel('Powód częściowego zatwierdzenia').fill(reason);
