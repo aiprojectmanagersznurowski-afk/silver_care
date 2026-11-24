@@ -140,6 +140,7 @@ export const SHIFT_TASK_POLICY = {
   sources: ['MANUAL', 'HANDOVER', 'CARE_PLAN'],
   /** Trzy ścieżki rozliczenia zadania po zmianie. Niewykonane przechodzi dalej, nic nie znika. */
   settlementPaths: ['DONE', 'CANCELLED', 'CARRIED'],
+  settlementMethods: { MANUAL: 'Ręcznie z listy', VOICE: 'Potwierdzenie podpowiedzi głosowej' },
   cancelRequiresReason: true,
   carriedOverMarker: 'z poprzedniej zmiany',
   residentOptional: true,
@@ -154,6 +155,8 @@ export const SHIFT_TASK_POLICY = {
   closure: {
     completeness: ['COMPLETE', 'PARTIAL', 'UNKNOWN'],
     completeRequiresArrivalEvidence: true,
+    completeRequiresIndependentManifest: true,
+    syncBufferMinutes: 30,
     partialRequiresReason: true,
     approveBy: ['org_admin', 'nurse:shift_lead'],
     approvalFinalizesVersion: true,

@@ -229,6 +229,10 @@ export const SHIFT_TASK_POLICY = {
     "CANCELLED",
     "CARRIED"
   ],
+  "settlementMethods": {
+    "MANUAL": "Ręcznie z listy",
+    "VOICE": "Potwierdzenie podpowiedzi głosowej"
+  },
   "cancelRequiresReason": true,
   "carriedOverMarker": "z poprzedniej zmiany",
   "residentOptional": true,
@@ -283,6 +287,8 @@ export const SHIFT_TASK_POLICY = {
       "UNKNOWN"
     ],
     "completeRequiresArrivalEvidence": true,
+    "completeRequiresIndependentManifest": true,
+    "syncBufferMinutes": 30,
     "partialRequiresReason": true,
     "approveBy": [
       "org_admin",
