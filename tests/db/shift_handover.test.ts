@@ -169,31 +169,46 @@ it('@REQ: NUR-SHIFT-CLOSURE requires the complete delivery manifest and ready pr
     const delivered = await capture('READY')
     // The recorder was started on the previous shift. This segment belongs to the reviewed shift.
     const inProgress = await capture('WAITING', '2026-11-18T06:59:00+01:00')
+    const declare = async (version: number, sources: string[], reference = crypto.randomUUID()) => {
+      await tx`SET LOCAL ROLE service_role`
+      await tx`SELECT public.register_shift_handover_manifest(${s.org}, ${s.shift}, ${date}::date,
+        ${version}, ${reference}, ${sources}::uuid[])`
+    }
     await s.claims(s.lead)
-
     const partial = await s.preview()
-    await s.deny(/SHIFT_HANDOVER_EVIDENCE_REQUIRED/, () => s.approve(partial.revision, 'COMPLETE', null, [delivered.id]))
-    await s.deny(/SHIFT_HANDOVER_EVIDENCE_REQUIRED/, () => s.approve(partial.revision, 'COMPLETE', null, [delivered.key, inProgress.key]))
     await s.deny(/SHIFT_HANDOVER_EVIDENCE_REQUIRED/, () => s.approve(partial.revision, 'COMPLETE', null, [delivered.key]))
-
     await tx`RESET ROLE`
     await tx`UPDATE public.voice_segments SET projection_status = 'READY' WHERE id = ${inProgress.segmentId}`
     await s.claims(s.lead)
-    const complete = await s.preview()
-    await s.deny(/SHIFT_HANDOVER_EVIDENCE_REQUIRED/, () => s.approve(complete.revision, 'COMPLETE', null, [delivered.key]))
-    await s.deny(/SHIFT_HANDOVER_EVIDENCE_REQUIRED/, () => s.approve(complete.revision, 'COMPLETE', null, [delivered.key, inProgress.key, crypto.randomUUID()]))
-    expect(await s.approve(complete.revision, 'COMPLETE', null, [delivered.key, inProgress.key])).toBe(1)
-    expect(await s.preview()).toMatchObject({
-      versions: [{ completeness: 'COMPLETE', expectedSourceIds: expect.arrayContaining([delivered.key, inProgress.key]) }],
-    })
+    const noManifest = await s.preview()
+    // Submitting exactly the received keys is not an independent record.
+    await s.deny(/SHIFT_HANDOVER_EVIDENCE_REQUIRED/,
+      () => s.approve(noManifest.revision, 'COMPLETE', null, [delivered.key, inProgress.key]))
+    expect(noManifest.audioCompleteness).toBe('UNKNOWN')
+    await s.deny(/permission denied/, () => tx`SELECT public.register_shift_handover_manifest(
+      ${s.org}, ${s.shift}, ${date}::date, 1, gen_random_uuid(), ${[delivered.key]}::uuid[])`)
+
+    const missing = crypto.randomUUID()
+    const firstManifest = crypto.randomUUID()
+    await declare(1, [delivered.key, inProgress.key, missing], firstManifest)
+    await s.claims(s.lead)
+    const missingSource = await s.preview()
+    expect(missingSource).toMatchObject({ audioCompleteness: 'PARTIAL', missingSources: 1 })
+    await s.deny(/SHIFT_HANDOVER_EVIDENCE_REQUIRED/, () => s.approve(missingSource.revision, 'COMPLETE', null))
+    expect(await s.approve(missingSource.revision, 'PARTIAL', 'Brak pliku z wykazu')).toBe(1)
 
     await tx`RESET ROLE`
     const lateReceipt = await capture('READY')
+    await declare(2, [delivered.key, inProgress.key, lateReceipt.key])
+    await declare(1, [delivered.key, inProgress.key, missing], firstManifest)
     await s.claims(s.lead)
     const amendment = await s.preview()
-    expect(amendment).toMatchObject({ latestVersion: 1, facts: [], canApprove: true, newReceipts: 1 })
-    expect(await s.approve(amendment.revision, 'COMPLETE', null, [delivered.key, inProgress.key, lateReceipt.key])).toBe(2)
-    expect(await s.preview()).toMatchObject({ canApprove: false, newReceipts: 0 })
+    expect(amendment).toMatchObject({ latestVersion: 1, canApprove: true, newReceipts: 1, audioCompleteness: 'COMPLETE' })
+    expect(await s.approve(amendment.revision, 'COMPLETE', null)).toBe(2)
+    expect(await s.preview()).toMatchObject({ canApprove: false, newReceipts: 0,
+      versions: [{ completeness: 'COMPLETE', expectedSourceIds: expect.arrayContaining([delivered.key, inProgress.key, lateReceipt.key]) },
+        { completeness: 'PARTIAL' }],
+    })
   })
 })
 
@@ -233,5 +248,102 @@ it('@REQ: NUR-SHIFT-CLOSURE proposes an amendment for a late task and carries it
     await s.claims(s.admin, 'org_admin')
     expect(await tx`SELECT status, shift_definition_id FROM public.shift_tasks WHERE carried_from_task_id = ${task.id}`)
       .toEqual([{ status: 'TODO', shift_definition_id: s.next }])
+  })
+})
+
+
+it('@REQ: NUR-SHIFT-CLOSURE counts only verified fragments of a shift and applies a clock correction', async () => {
+  await rollback(async (tx) => {
+    const s = await fixture(tx)
+    const at = (time: string) => `${date}T${time}:00+01:00`
+    const [device] = await tx`INSERT INTO public.voice_devices (organization_id, label, token_hash)
+      VALUES (${s.org}, 'Dyktafon testowy', encode(sha256(convert_to(gen_random_uuid()::text, 'UTF8')), 'hex')) RETURNING id`
+    const capture = async (clock: string) => {
+      const key = crypto.randomUUID()
+      const [row] = await tx`INSERT INTO public.voice_captures
+        (organization_id, source, source_key, storage_path, sha256, device_id, session_id, session_seq,
+         recorded_at, received_at, clock_state, status)
+        VALUES (${s.org}, 'DEVICE', ${key}, ${s.org + '/' + key}, repeat('a',64), ${device.id}, gen_random_uuid(),
+          2, ${at('18:58')}, ${at('19:40')}, ${clock}, 'SEGMENTED') RETURNING id`
+      return { id: row.id as string, key }
+    }
+    const addSegment = async (id: string, ordinal: number, at: string | null, projection: string) => {
+      const [row] = await tx`INSERT INTO public.voice_segments
+        (organization_id, capture_id, ordinal, start_ms, end_ms, assignment_status, author_id, author_attribution,
+         derived_start_at, projection_status, transcript_path)
+        VALUES (${s.org}, ${id}, ${ordinal}, ${ordinal * 240000}, ${ordinal * 240000 + 1000},
+          ${at ? 'FACILITY' : 'PENDING'}, ${s.lead}, 'MANUAL_SEGMENT_CORRECTION', ${at}, ${projection},
+          ${s.org + '/test-transcript'}) RETURNING id`
+      return row.id as string
+    }
+    const known = await capture('SYNCED')
+    const day = await addSegment(known.id, 0, at('18:58'), 'READY')
+    const night = await addSegment(known.id, 1, at('19:02'), 'WAITING')
+    const unknown = await capture('UNKNOWN')
+    const corrected = await addSegment(unknown.id, 0, null, 'WAITING')
+    await tx`INSERT INTO public.voice_assignment_queue (organization_id, segment_id, reasons)
+      VALUES (${s.org}, ${corrected}, ARRAY['TIME_UNCERTAIN'])`
+    const addFact = async (id: string, time: string) => {
+      const [row] = await tx`INSERT INTO public.voice_sanitized_events
+        (organization_id, segment_id, capture_source, scope, author_id, sanitized_text, matched_categories, recorded_at, metadata)
+        VALUES (${s.org}, ${id}, 'DEVICE', 'facility', ${s.lead}, 'Fakt testowy', '{}', ${at(time)}, '{"pipeline_stage":"REDACT"}')
+        RETURNING id`
+      return row.id as string
+    }
+    // A stored event timestamp does not override the segment's verified start.
+    const dayFact = await addFact(day, '19:02')
+    await s.claims(s.admin, 'org_admin')
+    const readNight = async () => (await tx`SELECT public.preview_shift_handover(${s.next}, ${date}::date) AS result`)[0].result
+    const dayDraft = await s.preview()
+    expect(dayDraft.facts).toEqual([expect.objectContaining({ id: dayFact, recordedAt: expect.stringContaining('17:58:00') })])
+    expect(dayDraft.receipts).toEqual([expect.objectContaining({ sourceKey: known.key })])
+    expect(dayDraft.pendingSources).toBe(0)
+    expect(await readNight()).toMatchObject({ facts: [], pendingSources: 1, receipts: [] })
+
+    await tx`SELECT public.correct_voice_segment_time(${corrected}, 1, gen_random_uuid(), 'VERIFIED_START',
+      'STAFF_CONFIRMED', ${date + ' 19:03:00'}::timestamp, 60, NULL, NULL)`
+    expect(await readNight()).toMatchObject({ pendingSources: 2 })
+    await tx`RESET ROLE`
+    await tx`UPDATE public.voice_segments SET projection_status = 'READY' WHERE id IN (${night}, ${corrected})`
+    const nightFact = await addFact(night, '19:02')
+    const correctedFact = await addFact(corrected, '18:58')
+    await s.claims(s.admin, 'org_admin')
+    expect(await readNight()).toMatchObject({ pendingSources: 0,
+      facts: [{ id: nightFact }, { id: correctedFact, recordedAt: expect.stringContaining('18:03:00') }],
+      receipts: expect.arrayContaining([expect.objectContaining({ sourceKey: known.key }), expect.objectContaining({ sourceKey: unknown.key })]),
+    })
+    expect((await s.preview()).facts.map((f: { id: string }) => f.id)).toEqual([dayFact])
+  })
+})
+
+it('@REQ: NUR-SHIFT-CLOSURE prepares at the buffer, retries idempotently and refreshes the late amendment', async () => {
+  await rollback(async (tx) => {
+    const s = await fixture(tx)
+    const refresh = async (time: string) => {
+      await tx`SET LOCAL ROLE service_role`
+      const [row] = await tx`SELECT public.refresh_due_shift_handovers(30, ${date + 'T' + time + ':00+01:00'}, ${s.org}) AS count`
+      return row.count
+    }
+    await refresh('19:29')
+    await s.claims(s.lead)
+    let draft = await s.preview()
+    expect(draft).toMatchObject({ preparedAt: null, audioCompleteness: 'UNKNOWN' })
+    expect(await s.approve(draft.revision)).toBe(1)
+
+    await refresh('19:31')
+    await s.claims(s.lead)
+    draft = await s.preview()
+    expect(draft).toMatchObject({ preparedAt: null, latestVersion: 1, canApprove: false })
+    const lateId = await s.amendFact()
+    expect(await refresh('19:42')).toBeGreaterThan(0)
+    expect(await refresh('19:42')).toBe(0)
+    await s.claims(s.lead)
+    draft = await s.preview()
+    expect(draft).toMatchObject({ preparedAt: expect.stringContaining('18:42:00'), latestVersion: 1,
+      facts: [{ id: lateId }], audioCompleteness: 'UNKNOWN' })
+    expect(await s.approve(draft.revision)).toBe(2)
+    await refresh('19:43')
+    await s.claims(s.lead)
+    expect(await s.preview()).toMatchObject({ canApprove: false, preparedAt: null, versions: [{ version: 2 }, { version: 1 }] })
   })
 })
