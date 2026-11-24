@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { Textarea } from '@/components/ui/textarea'
 import {
-  completenessLabels, formatHandoverTime, handoverSourceLabel, type HandoverCompleteness, type HandoverReceipt,
+  completenessLabels, type HandoverCompleteness, type HandoverDraft,
 } from '@/lib/shifts/shift-handover'
 
 interface Props {
@@ -16,13 +16,12 @@ interface Props {
   date: string
   revision: string
   amendment: boolean
-  receipts: HandoverReceipt[]
-  incompleteSources: number
+  evidence: Pick<HandoverDraft, 'audioCompleteness' | 'manifestVersion' | 'missingSources'>
 }
 
-export function ShiftHandoverForm({ shiftId, date, revision, amendment, receipts, incompleteSources }: Props) {
+export function ShiftHandoverForm({ shiftId, date, revision, amendment, evidence }: Props) {
   const router = useRouter()
-  const [completeness, setCompleteness] = useState<HandoverCompleteness>('UNKNOWN')
+  const [completeness, setCompleteness] = useState<HandoverCompleteness>(evidence.audioCompleteness)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string>()
   const complete = completeness === 'COMPLETE'
@@ -36,7 +35,6 @@ export function ShiftHandoverForm({ shiftId, date, revision, amendment, receipts
       const result = await approveShiftHandoverAction({
         shiftId, date, revision, completeness,
         reason: String(fields.get('reason') ?? ''),
-        expectedSourceIds: String(fields.get('sourceManifest') ?? '').split(/[\s,]+/).filter(Boolean),
       })
       if (result.error) setError(result.error)
       else router.refresh()
@@ -53,33 +51,20 @@ export function ShiftHandoverForm({ shiftId, date, revision, amendment, receipts
         Kompletność materiału
         <NativeSelect value={completeness} onChange={(e) => setCompleteness(e.target.value as HandoverCompleteness)}>
           {SHIFT_TASK_POLICY.closure.completeness.map((state) => (
-            <NativeSelectOption key={state} value={state} disabled={state === 'COMPLETE' && (!receipts.length || incompleteSources > 0)}>
+            <NativeSelectOption key={state} value={state} disabled={state === 'COMPLETE' && evidence.audioCompleteness !== 'COMPLETE'
+                || state === 'UNKNOWN' && evidence.audioCompleteness === 'PARTIAL'}>
               {completenessLabels[state]}
             </NativeSelectOption>
           ))}
         </NativeSelect>
       </label>
-      {complete ? (
-        <div className="space-y-3">
-          <label className="flex max-w-xl flex-col gap-1 text-sm font-medium">
-            Identyfikatory oczekiwanych źródeł z rejestru wysyłki
-            <Textarea name="sourceManifest" required aria-describedby="shift-source-manifest-help" />
-          </label>
-          <p id="shift-source-manifest-help" className="text-sm text-muted-foreground">
-            Wpisz pełną listę z rejestru wysyłki. Oddziel identyfikatory przecinkiem lub nową linią.
-          </p>
-          <details className="text-sm">
-            <summary className="min-h-touch cursor-pointer py-2">Potwierdzone przyjęcia</summary>
-            <ul className="space-y-1">
-              {receipts.map((receipt) => (
-                <li key={receipt.id} className="break-all">
-                  {handoverSourceLabel(receipt.source)} · {formatHandoverTime(receipt.receivedAt)} · {receipt.sourceKey}
-                </li>
-              ))}
-            </ul>
-          </details>
-        </div>
-      ) : (
+      {evidence.manifestVersion === null && (
+        <p className="text-sm text-muted-foreground">Brak niezależnego wykazu wysyłki dla tej zmiany.</p>
+      )}
+      {evidence.missingSources > 0 && (
+        <p className="text-sm">Źródła z wykazu bez potwierdzenia przetworzenia · {evidence.missingSources}</p>
+      )}
+      {!complete && (
         <label className="flex max-w-xl flex-col gap-1 text-sm font-medium">
           Powód częściowego zatwierdzenia
           <Textarea name="reason" maxLength={500} required />

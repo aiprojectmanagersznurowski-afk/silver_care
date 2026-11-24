@@ -14,16 +14,14 @@ interface ApprovalInput {
   revision: string
   completeness: HandoverCompleteness
   reason: string
-  expectedSourceIds: string[]
 }
 
 /** @REQ: NUR-SHIFT-CLOSURE */
 export async function approveShiftHandoverAction(input: ApprovalInput) {
-  const { shiftId, date, revision, completeness, reason, expectedSourceIds } = input
+  const { shiftId, date, revision, completeness, reason } = input
   if (!uuid.test(shiftId) || !parseAuditDate(date) || !/^[0-9a-f]{64}$/.test(revision)
     || !SHIFT_TASK_POLICY.closure.completeness.includes(completeness)
-    || typeof reason !== 'string' || reason.length > 500 || !Array.isArray(expectedSourceIds)
-    || expectedSourceIds.length > 500 || expectedSourceIds.some((id) => !uuid.test(id))) {
+    || typeof reason !== 'string' || reason.length > 500) {
     return { error: 'Sprawdź dane przekazania.' }
   }
 
@@ -34,11 +32,12 @@ export async function approveShiftHandoverAction(input: ApprovalInput) {
 
   const { error } = await session.supabase.rpc('approve_shift_handover', {
     p_shift: shiftId, p_date: date, p_revision: revision, p_completeness: completeness,
-    p_reason: reason, p_expected_source_ids: expectedSourceIds,
+    p_reason: reason, p_expected_source_ids: [],
   })
   if (error) {
     if (error.message.includes('SHIFT_HANDOVER_REASON_REQUIRED')) return { error: 'Podaj powód częściowego zatwierdzenia.' }
-    if (error.message.includes('SHIFT_HANDOVER_EVIDENCE_REQUIRED')) return { error: 'Lista oczekiwanych źródeł musi odpowiadać wszystkim przyjętym i przetworzonym nagraniom. Sprawdź rejestr wysyłki i wyjątki.' }
+    if (error.message.includes('SHIFT_HANDOVER_EVIDENCE_REQUIRED')) return { error: 'Kompletność wymaga niezależnego wykazu wysyłki oraz potwierdzenia jego przyjęcia i przetworzenia.' }
+    if (error.message.includes('SHIFT_HANDOVER_KNOWN_GAP')) return { error: 'Wykryto brak w materiale. Zatwierdź wersję częściową z powodem.' }
     if (error.message.includes('SHIFT_HANDOVER_STALE') || error.code === '40P01') {
       return { error: 'Materiał się zmienił. Odśwież stronę i sprawdź aktualną wersję.' }
     }

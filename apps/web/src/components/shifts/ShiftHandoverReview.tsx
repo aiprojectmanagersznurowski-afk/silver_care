@@ -75,7 +75,7 @@ export async function ShiftHandoverReview({ supabase, shiftId, date, tasks, audi
               ? draft.tasks.filter((task) => draft.lateTaskIds.includes(task.id)) : draft.tasks} names={taskNames} />
           )}
           <ShiftHandoverForm key={draft.revision} shiftId={shiftId} date={date} revision={draft.revision}
-            amendment={amendment} receipts={draft.receipts} incompleteSources={draft.exceptions + draft.pendingSources} />
+            amendment={amendment} evidence={draft} />
         </div>
       )}
       {draft.versions.map((version) => (
@@ -88,7 +88,7 @@ export async function ShiftHandoverReview({ supabase, shiftId, date, tasks, audi
           <p className="break-all text-sm">Zatwierdził {version.approvedBy}</p>
           {version.previousVersion !== null && <p className="text-sm">Uzupełnia wersję {version.previousVersion}</p>}
           {version.expectedSourceIds.length > 0 && (
-            <p className="break-all text-sm">Dowody przyjęcia · {version.expectedSourceIds.join(', ')}</p>
+            <p className="break-all text-sm">Oczekiwane źródła z wykazu · {version.expectedSourceIds.join(', ')}</p>
           )}
           {version.reason && <p className="text-sm">Powód · {version.reason}</p>}
           <HandoverFacts facts={version.facts} shiftId={shiftId} date={date} />
