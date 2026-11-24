@@ -110,7 +110,7 @@ test('@REQ: NUR-SHIFT-CLOSURE — dwa dyżury, wydruk i spóźniony aneks', asyn
     await expect(tasks.handover.getByRole('row').filter({ hasText: titles.late })).toBeVisible()
     await expect(tasks.handover.getByText(lateText, { exact: true })).toBeVisible()
     await expect(tasks.handover.getByText(nightText, { exact: true })).toHaveCount(0)
-    await expect(tasks.completeOption).toBeDisabled()
+    await expect(tasks.completeOption).toHaveJSProperty('disabled', true)
     await tasks.openHandoverSource(lateText)
     await tasks.goto(dayCode, day)
     await tasks.openHandover()
