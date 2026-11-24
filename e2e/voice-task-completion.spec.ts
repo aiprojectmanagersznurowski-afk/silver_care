@@ -41,7 +41,7 @@ test('@REQ: NUR-TASKS-VOICE-COMPLETION kierownik z aal2 potwierdza dowód i nie 
     if (!auth.user || error) throw new Error('Cannot create test account')
     const account = auth.user.id
     createdAccounts.push(account)
-    const [{ date }] = await sql`SELECT CURRENT_DATE::text AS date`
+    const [{ date }] = await sql`SELECT (CURRENT_DATE - 1)::text AS date`
     await sql`INSERT INTO public.shift_definitions (id, organization_id, code, name, start_time, end_time)
       VALUES (${shift}, ${organization}, ${code}, 'Zmiana testowa', '07:00', '19:00'),
         (${otherShift}, ${organization}, 'other-shift', 'Druga zmiana testowa', '19:00', '07:00')`
@@ -49,7 +49,8 @@ test('@REQ: NUR-TASKS-VOICE-COMPLETION kierownik z aal2 potwierdza dowód i nie 
       VALUES (${task}, ${organization}, ${shift}, ${date}, ${title}, 'MANUAL', 'TODO', ${account})`
     await sql`INSERT INTO public.voice_captures
       (id, organization_id, source, source_key, storage_path, sha256, author_id, recorded_at, status)
-      VALUES (${capture}, ${organization}, 'APP_GENERAL', ${capture}, ${organization + '/fixture/' + capture}, ${'a'.repeat(64)}, ${account}, now(), 'SEGMENTED')`
+      VALUES (${capture}, ${organization}, 'APP_GENERAL', ${capture}, ${organization + '/fixture/' + capture}, ${'a'.repeat(64)}, ${account},
+        (${date + ' 10:00:00'}::text::timestamp AT TIME ZONE 'Europe/Warsaw'), 'SEGMENTED')`
     await sql`INSERT INTO public.voice_segments
       (id, organization_id, capture_id, ordinal, start_ms, end_ms, assignment_status, author_id, author_attribution)
       VALUES (${segment}, ${organization}, ${capture}, 0, 0, 1000, 'FACILITY', ${account}, 'AUTHENTICATED_SESSION')`
@@ -107,9 +108,14 @@ test('@REQ: NUR-TASKS-VOICE-COMPLETION kierownik z aal2 potwierdza dowód i nie 
     await tasks.goto(code, date)
     await expect(tasks.voiceEvidence(title, quote)).toBeVisible()
     await expect(tasks.task(title)).toContainText('Sesja webowa')
-    const [retry] = await Promise.all([tasks.voiceDecision(evidence), tasks.confirmVoiceEvidence(title)])
-    expect(retry.status()).toBe(200)
+    await tasks.confirmVoiceEvidence(title)
     await expect(tasks.task(title)).toContainText('Wykonane')
+    const retry = await tasks.voiceDecision(evidence)
+    expect(retry.status()).toBe(200)
+    await tasks.openHandover()
+    const history = await tasks.openShiftHistory()
+    await expect(history.getByRole('row', { name: /Zmieniono status zadania/ }).filter({ hasText: title }))
+      .toContainText('Potwierdzenie podpowiedzi głosowej')
     const audits = await sql`SELECT payload FROM public.audit_logs
       WHERE organization_id = ${organization} AND action = 'VOICE_SHIFT_TASK_DECIDED'`
     expect(audits).toHaveLength(1)

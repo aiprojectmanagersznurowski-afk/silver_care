@@ -165,7 +165,8 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
     const tasks = new ShiftTasksPage(page);
 
     await page.goto(`/staff/shift-plan/print?shift=${CODE}&date=${SETTLE_DATE}`);
-    await expect(page.getByText('Najpierw zatwierdź plan zmiany')).toBeVisible();
+    const print = page.getByRole('main');
+    await expect(print.getByText('Najpierw zatwierdź plan zmiany')).toBeVisible();
 
     await tasks.goto(CODE, SETTLE_DATE);
     await tasks.approvePlanButton.click();
@@ -173,8 +174,8 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
     await tasks.printLink.click();
 
     await expect(page).toHaveURL(/shift-plan\/print/);
-    await expect(page.getByText('E2E Zadanie na wydruk')).toBeVisible();
-    await expect(page.getByText('E2E Propozycja poza wydrukiem')).toHaveCount(0);
+    await expect(print.getByText('E2E Zadanie na wydruk')).toBeVisible();
+    await expect(print.getByText('E2E Propozycja poza wydrukiem')).toHaveCount(0);
     const printCount = () => page.evaluate(() => (window as unknown as { __printed: number }).__printed);
     await tasks.printButton.click();
     await expect.poll(printCount).toBe(1);
@@ -202,7 +203,7 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
 
     await page.emulateMedia({ media: 'print' });
     await expect(page.locator('[data-slot=page-header-description]:visible').filter({ hasText: 'Wersja 2' })).toBeVisible();
-    await expect(page.getByText('E2E Zadanie na wydruk')).toBeVisible();
+    await expect(print.getByText('E2E Zadanie na wydruk')).toBeVisible();
     await expect(tasks.printButton).toBeHidden();
   });
 
