@@ -8,7 +8,7 @@ const insideShift = '2026-11-18T10:00:00+01:00'
 
 afterAll(() => db.end())
 
-async function fixture(tx: postgres.TransactionSql) {
+async function fixture(tx: postgres.TransactionSql, shiftDate = date) {
   const [org] = await tx`INSERT INTO public.organizations (name) VALUES ('Test przekazania') RETURNING id`
   const [foreign] = await tx`INSERT INTO public.organizations (name) VALUES ('Test obcej placówki') RETURNING id`
   const user = async (role: string, organizationId = org.id) => {
@@ -29,7 +29,7 @@ async function fixture(tx: postgres.TransactionSql) {
     (organization_id, code, name, start_time, end_time) VALUES
     (${org.id}, 'NIGHT', 'Nocna', '19:00', '07:00') RETURNING id`
   await tx`INSERT INTO public.shift_roster (organization_id, shift_definition_id, shift_date, user_id, is_shift_lead)
-    VALUES (${org.id}, ${shift.id}, ${date}, ${lead}, true), (${org.id}, ${next.id}, ${date}, ${staff}, false)`
+    VALUES (${org.id}, ${shift.id}, ${shiftDate}, ${lead}, true), (${org.id}, ${next.id}, ${shiftDate}, ${staff}, false)`
   const claims = async (actor: string, role = 'nurse', organizationId = org.id, aal = 'aal2') => {
     await tx`SET LOCAL ROLE authenticated`
     await tx`SELECT set_config('request.jwt.claims', ${JSON.stringify({
@@ -40,18 +40,18 @@ async function fixture(tx: postgres.TransactionSql) {
     await tx`RESET ROLE`
     const [row] = await tx`INSERT INTO public.voice_sanitized_events
       (organization_id, capture_source, scope, author_id, sanitized_text, matched_categories, recorded_at, metadata)
-      VALUES (${org.id}, 'APP_GENERAL', 'facility', ${lead}, 'Testowy fakt', '{}', ${insideShift}, '{"pipeline_stage":"REDACT"}')
+      VALUES (${org.id}, 'APP_GENERAL', 'facility', ${lead}, 'Testowy fakt', '{}', ((${shiftDate}::date + TIME '10:00') AT TIME ZONE 'Europe/Warsaw'), '{"pipeline_stage":"REDACT"}')
       RETURNING id`
     await claims(lead)
     return row.id as string
   }
   const preview = async () => {
-    const [row] = await tx`SELECT public.preview_shift_handover(${shift.id}, ${date}::date) AS result`
+    const [row] = await tx`SELECT public.preview_shift_handover(${shift.id}, ${shiftDate}::date) AS result`
     return row.result
   }
   const approve = async (revision: string, completeness = 'UNKNOWN', reason: string | null = 'Trwa synchronizacja', expected: string[] = []) => {
     const [row] = await tx`SELECT public.approve_shift_handover(
-      ${shift.id}, ${date}::date, ${revision}, ${completeness}, ${reason}, ${expected}::uuid[]) AS version`
+      ${shift.id}, ${shiftDate}::date, ${revision}, ${completeness}, ${reason}, ${expected}::uuid[]) AS version`
     return row.version
   }
   const deny = async (expected: RegExp, call: () => Promise<unknown>) => {
@@ -255,8 +255,13 @@ it('@REQ: NUR-SHIFT-CLOSURE proposes an amendment for a late task and carries it
 
 it('@REQ: NUR-SHIFT-CLOSURE counts only verified fragments of a shift and applies a clock correction', async () => {
   await rollback(async (tx) => {
-    const s = await fixture(tx)
-    const at = (time: string) => `${date}T${time}:00+01:00`
+    const [{ day: localDate, offset }] = await tx`
+      SELECT day::text, (extract(epoch FROM ((day + TIME '19:03')
+        - ((day + TIME '19:03') AT TIME ZONE 'Europe/Warsaw' AT TIME ZONE 'UTC'))) / 60)::integer AS offset
+      FROM (SELECT (now() AT TIME ZONE 'Europe/Warsaw')::date - 1 AS day) period`
+    const s = await fixture(tx, localDate)
+    const at = (time: string) => `${localDate}T${time}:00${offset === 120 ? '+02:00' : '+01:00'}`
+    const utc = (time: string) => new Date(at(time)).toISOString().slice(0, 19) + '+00:00'
     const [device] = await tx`INSERT INTO public.voice_devices (organization_id, label, token_hash)
       VALUES (${s.org}, 'Dyktafon testowy', encode(sha256(convert_to(gen_random_uuid()::text, 'UTF8')), 'hex')) RETURNING id`
     const capture = async (clock: string, status = 'SEGMENTED') => {
@@ -303,16 +308,16 @@ it('@REQ: NUR-SHIFT-CLOSURE counts only verified fragments of a shift and applie
     // A stored event timestamp does not override the segment's verified start.
     const dayFact = await addFact(day, '19:02')
     await s.claims(s.admin, 'org_admin')
-    const readNight = async () => (await tx`SELECT public.preview_shift_handover(${s.next}, ${date}::date) AS result`)[0].result
+    const readNight = async () => (await tx`SELECT public.preview_shift_handover(${s.next}, ${localDate}::date) AS result`)[0].result
     const dayDraft = await s.preview()
-    expect(dayDraft.facts).toEqual([expect.objectContaining({ id: dayFact, recordedAt: expect.stringContaining('17:58:00') })])
+    expect(dayDraft.facts).toEqual([expect.objectContaining({ id: dayFact, recordedAt: utc('18:58') })])
     expect(dayDraft.receipts).toEqual([expect.objectContaining({ sourceKey: known.key })])
     expect(dayDraft.pendingSources).toBe(0)
     expect(await readNight()).toMatchObject({ facts: [], pendingSources: 1, receipts: [] })
 
     const [review] = await tx`SELECT public.correct_voice_segment_time(${corrected}, ${queue.version}, gen_random_uuid(), 'VERIFIED_START',
-      'STAFF_CONFIRMED', ${date + ' 19:03:00'}::text::timestamp, 60, NULL, NULL) AS result`
-    expect(review.result).toMatchObject({ corrected_at: date + 'T18:03:00+00:00', shift_definition_id: s.next, shift_date: date, closed: true })
+      'STAFF_CONFIRMED', ${localDate + ' 19:03:00'}::text::timestamp, ${offset}, NULL, NULL) AS result`
+    expect(review.result).toMatchObject({ corrected_at: utc('19:03'), shift_definition_id: s.next, shift_date: localDate, closed: true })
     expect(await readNight()).toMatchObject({ pendingSources: 2 })
     await tx`RESET ROLE`
     await tx`UPDATE public.voice_segments SET projection_status = 'READY' WHERE id IN (${night}, ${corrected})`
@@ -320,7 +325,7 @@ it('@REQ: NUR-SHIFT-CLOSURE counts only verified fragments of a shift and applie
     const correctedFact = await addFact(corrected, '18:58')
     await s.claims(s.admin, 'org_admin')
     expect(await readNight()).toMatchObject({ pendingSources: 0,
-      facts: [{ id: nightFact }, { id: correctedFact, recordedAt: expect.stringContaining('18:03:00') }],
+      facts: [{ id: nightFact }, { id: correctedFact, recordedAt: utc('19:03') }],
       receipts: expect.arrayContaining([expect.objectContaining({ sourceKey: known.key }), expect.objectContaining({ sourceKey: unknown.key })]),
     })
     expect((await s.preview()).facts.map((f: { id: string }) => f.id)).toEqual([dayFact])
