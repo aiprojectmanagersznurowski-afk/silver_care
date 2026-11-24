@@ -1,5 +1,8 @@
 -- @REQ: NUR-SHIFT-CLOSURE
 -- Use the upload identifier from the independently declared manifest.
+CREATE INDEX voice_segments_handover_effective_start
+ON public.voice_segments (organization_id, (COALESCE(corrected_at, derived_start_at)), capture_id);
+
 CREATE OR REPLACE FUNCTION private.shift_handover_voice(
   p_org uuid, p_shift uuid, p_date date, p_start timestamptz, p_end timestamptz
 ) RETURNS jsonb
@@ -30,6 +33,13 @@ LANGUAGE sql STABLE SET search_path = '' AS $$
       WHERE v.organization_id = p_org AND v.shift_definition_id = p_shift AND v.shift_date = p_date
         AND f->>'id' = m.id::text AND COALESCE(f->>'kind', 'event') = m.kind
     )
+  ), shift_capture_ids AS (
+    SELECT c.id FROM public.voice_captures c
+    WHERE c.organization_id = p_org AND c.recorded_at >= p_start AND c.recorded_at < p_end
+    UNION
+    SELECT s.capture_id FROM public.voice_segments s
+    WHERE s.organization_id = p_org AND COALESCE(s.corrected_at, s.derived_start_at) >= p_start
+      AND COALESCE(s.corrected_at, s.derived_start_at) < p_end
   ), capture_states AS (
     SELECT c.id, c.source, c.received_at, c.source_key,
       c.status = 'SEGMENTED' AND c.clock_state <> 'UNKNOWN' AND NOT EXISTS (
@@ -37,8 +47,7 @@ LANGUAGE sql STABLE SET search_path = '' AS $$
           AND (s.assignment_status = 'PENDING' OR
             (s.assignment_status IN ('RESIDENT','FACILITY') AND s.projection_status <> 'READY'))
       ) AS ready
-    FROM public.voice_captures c
-    WHERE c.organization_id = p_org AND c.recorded_at >= p_start AND c.recorded_at < p_end
+    FROM shift_capture_ids scoped JOIN public.voice_captures c ON c.id = scoped.id AND c.organization_id = p_org
     UNION ALL
     SELECT a.draft_id, 'APP', a.received_at, d.client_uuid,
       d.client_uuid IS NOT NULL AND j.completed_at IS NOT NULL
