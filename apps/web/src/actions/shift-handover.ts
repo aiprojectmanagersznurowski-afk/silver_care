@@ -38,7 +38,7 @@ export async function approveShiftHandoverAction(input: ApprovalInput) {
   })
   if (error) {
     if (error.message.includes('SHIFT_HANDOVER_REASON_REQUIRED')) return { error: 'Podaj powód częściowego zatwierdzenia.' }
-    if (error.message.includes('SHIFT_HANDOVER_EVIDENCE_REQUIRED')) return { error: 'Kompletność wymaga dowodów przyjęcia oczekiwanych źródeł i rozstrzygnięcia wyjątków.' }
+    if (error.message.includes('SHIFT_HANDOVER_EVIDENCE_REQUIRED')) return { error: 'Lista oczekiwanych źródeł musi odpowiadać wszystkim przyjętym i przetworzonym nagraniom. Sprawdź rejestr wysyłki i wyjątki.' }
     if (error.message.includes('SHIFT_HANDOVER_STALE') || error.code === '40P01') {
       return { error: 'Materiał się zmienił. Odśwież stronę i sprawdź aktualną wersję.' }
     }

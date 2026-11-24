@@ -36,7 +36,7 @@ export function ShiftHandoverForm({ shiftId, date, revision, amendment, receipts
       const result = await approveShiftHandoverAction({
         shiftId, date, revision, completeness,
         reason: String(fields.get('reason') ?? ''),
-        expectedSourceIds: fields.getAll('source').map(String),
+        expectedSourceIds: String(fields.get('sourceManifest') ?? '').split(/[\s,]+/).filter(Boolean),
       })
       if (result.error) setError(result.error)
       else router.refresh()
@@ -60,16 +60,25 @@ export function ShiftHandoverForm({ shiftId, date, revision, amendment, receipts
         </NativeSelect>
       </label>
       {complete ? (
-        <fieldset className="space-y-1">
-          <legend className="text-sm font-medium">Oczekiwane źródła z dowodem przyjęcia</legend>
-          <p className="text-sm text-muted-foreground">Zaznacz wszystkie oczekiwane źródła, których przyjęcie potwierdza rejestr.</p>
-          {receipts.map((receipt) => (
-            <label key={receipt.id} className="flex min-h-touch items-center gap-2 text-sm">
-              <input name="source" type="checkbox" className="min-h-touch min-w-touch" value={receipt.id} />
-              {handoverSourceLabel(receipt.source)} · {formatHandoverTime(receipt.receivedAt)} · {receipt.id.slice(0, 8)}
-            </label>
-          ))}
-        </fieldset>
+        <div className="space-y-3">
+          <label className="flex max-w-xl flex-col gap-1 text-sm font-medium">
+            Identyfikatory oczekiwanych źródeł z rejestru wysyłki
+            <Textarea name="sourceManifest" required aria-describedby="shift-source-manifest-help" />
+          </label>
+          <p id="shift-source-manifest-help" className="text-sm text-muted-foreground">
+            Wpisz pełną listę z rejestru wysyłki. Oddziel identyfikatory przecinkiem lub nową linią.
+          </p>
+          <details className="text-sm">
+            <summary className="min-h-touch cursor-pointer py-2">Potwierdzone przyjęcia</summary>
+            <ul className="space-y-1">
+              {receipts.map((receipt) => (
+                <li key={receipt.id} className="break-all">
+                  {handoverSourceLabel(receipt.source)} · {formatHandoverTime(receipt.receivedAt)} · {receipt.sourceKey}
+                </li>
+              ))}
+            </ul>
+          </details>
+        </div>
       ) : (
         <label className="flex max-w-xl flex-col gap-1 text-sm font-medium">
           Powód częściowego zatwierdzenia

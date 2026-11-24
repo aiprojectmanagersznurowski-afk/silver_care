@@ -174,6 +174,9 @@ export async function approveShiftPlanAction(input: { shiftDefinitionId: string;
   })
   if (error) {
     if (error.code === '42501') return { error: 'Plan zatwierdza kierownik zmiany.' }
+    if (error.message.includes('SHIFT_PLAN_ASSIGNEE_NOT_ON_ROSTER')) {
+      return { error: 'Zmień przypisania zadań do osób spoza aktualnego grafiku, a następnie zatwierdź plan.' }
+    }
     if (error.code === '23505') return { error: 'Plan został właśnie zatwierdzony przez kogoś innego. Odśwież stronę.' }
     console.error('[SHIFT_PLAN_APPROVE_FAIL]', error.code)
     return { error: 'Nie udało się zatwierdzić planu.' }
