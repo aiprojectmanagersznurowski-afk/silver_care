@@ -310,8 +310,9 @@ it('@REQ: NUR-SHIFT-CLOSURE counts only verified fragments of a shift and applie
     expect(dayDraft.pendingSources).toBe(0)
     expect(await readNight()).toMatchObject({ facts: [], pendingSources: 1, receipts: [] })
 
-    await tx`SELECT public.correct_voice_segment_time(${corrected}, ${queue.version}, gen_random_uuid(), 'VERIFIED_START',
-      'STAFF_CONFIRMED', ${date + ' 19:03:00'}::timestamp, 60, NULL, NULL)`
+    const [review] = await tx`SELECT public.correct_voice_segment_time(${corrected}, ${queue.version}, gen_random_uuid(), 'VERIFIED_START',
+      'STAFF_CONFIRMED', ${date + ' 19:03:00'}::text::timestamp, 60, NULL, NULL) AS result`
+    expect(review.result).toMatchObject({ corrected_at: date + 'T18:03:00+00:00', shift_definition_id: s.next, shift_date: date, closed: true })
     expect(await readNight()).toMatchObject({ pendingSources: 2 })
     await tx`RESET ROLE`
     await tx`UPDATE public.voice_segments SET projection_status = 'READY' WHERE id IN (${night}, ${corrected})`
