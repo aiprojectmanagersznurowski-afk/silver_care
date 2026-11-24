@@ -32,7 +32,7 @@ export async function approveShiftHandoverAction(input: ApprovalInput) {
 
   const { error } = await session.supabase.rpc('approve_shift_handover', {
     p_shift: shiftId, p_date: date, p_revision: revision, p_completeness: completeness,
-    p_reason: reason, p_expected_source_ids: [],
+    p_reason: reason,
   })
   if (error) {
     if (error.message.includes('SHIFT_HANDOVER_REASON_REQUIRED')) return { error: 'Podaj powód częściowego zatwierdzenia.' }

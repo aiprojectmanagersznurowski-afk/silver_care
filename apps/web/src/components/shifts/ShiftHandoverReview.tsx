@@ -61,6 +61,7 @@ export async function ShiftHandoverReview({ supabase, shiftId, date, tasks, audi
       {draft.canApprove && (
         <div className="space-y-4">
           <h3 className="text-sm font-semibold">{amendment ? 'Propozycja aneksu' : 'Przekazanie do zatwierdzenia'}</h3>
+          {draft.preparedAt && <p className="text-sm">Szkic odświeżono · {formatHandoverTime(draft.preparedAt)}</p>}
           <div className="space-y-1">
             <Link href="/voice/assignment" className="inline-flex min-h-touch items-center text-sm underline">
               Fragmenty do sprawdzenia · {draft.exceptions}
@@ -75,7 +76,8 @@ export async function ShiftHandoverReview({ supabase, shiftId, date, tasks, audi
               ? draft.tasks.filter((task) => draft.lateTaskIds.includes(task.id)) : draft.tasks} names={taskNames} />
           )}
           <ShiftHandoverForm key={draft.revision} shiftId={shiftId} date={date} revision={draft.revision}
-            amendment={amendment} evidence={draft} />
+            amendment={amendment} evidence={{ audioCompleteness: draft.audioCompleteness,
+              manifestVersion: draft.manifestVersion, missingSources: draft.missingSources }} />
         </div>
       )}
       {draft.versions.map((version) => (
