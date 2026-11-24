@@ -152,40 +152,85 @@ it('@REQ: NUR-SHIFT-CLOSURE scopes the task list to roster membership and expose
   })
 })
 
-it('@REQ: NUR-SHIFT-CLOSURE requires receipt evidence and blocks completeness while an expected capture is processing', async () => {
+it('@REQ: NUR-SHIFT-CLOSURE requires the complete delivery manifest and ready projections', async () => {
   await rollback(async (tx) => {
     const s = await fixture(tx)
-    const capture = async (status: 'RECEIVED' | 'SEGMENTED') => {
+    const capture = async (projection: 'WAITING' | 'READY') => {
       const key = crypto.randomUUID()
       const [row] = await tx`INSERT INTO public.voice_captures
         (organization_id, source, source_key, storage_path, sha256, author_id, recorded_at, status)
-        VALUES (${s.org}, 'APP_GENERAL', ${key}, ${s.org + '/' + key}, repeat('a',64), ${s.staff}, ${insideShift}, ${status})
+        VALUES (${s.org}, 'APP_GENERAL', ${key}, ${s.org + '/' + key}, repeat('a',64), ${s.staff}, ${insideShift}, 'SEGMENTED')
         RETURNING id`
-      return row.id as string
+      const [segment] = await tx`INSERT INTO public.voice_segments
+        (organization_id, capture_id, ordinal, start_ms, end_ms, assignment_status, author_id, author_attribution, projection_status)
+        VALUES (${s.org}, ${row.id}, 0, 0, 1000, 'FACILITY', ${s.staff}, 'AUTHENTICATED_SESSION', ${projection}) RETURNING id`
+      return { key, id: row.id as string, segmentId: segment.id as string }
     }
-    const delivered = await capture('SEGMENTED')
-    const inProgress = await capture('RECEIVED')
+    const delivered = await capture('READY')
+    const inProgress = await capture('WAITING')
     await s.claims(s.lead)
 
     const partial = await s.preview()
-    await s.deny(/SHIFT_HANDOVER_EVIDENCE_REQUIRED/, () => s.approve(partial.revision, 'COMPLETE', null, [delivered, inProgress]))
-    await s.deny(/SHIFT_HANDOVER_EVIDENCE_REQUIRED/, () => s.approve(partial.revision, 'COMPLETE', null, [delivered]))
+    await s.deny(/SHIFT_HANDOVER_EVIDENCE_REQUIRED/, () => s.approve(partial.revision, 'COMPLETE', null, [delivered.id]))
+    await s.deny(/SHIFT_HANDOVER_EVIDENCE_REQUIRED/, () => s.approve(partial.revision, 'COMPLETE', null, [delivered.key, inProgress.key]))
+    await s.deny(/SHIFT_HANDOVER_EVIDENCE_REQUIRED/, () => s.approve(partial.revision, 'COMPLETE', null, [delivered.key]))
 
     await tx`RESET ROLE`
-    await tx`UPDATE public.voice_captures SET status = 'SEGMENTED' WHERE id = ${inProgress}`
+    await tx`UPDATE public.voice_segments SET projection_status = 'READY' WHERE id = ${inProgress.segmentId}`
     await s.claims(s.lead)
     const complete = await s.preview()
-    expect(await s.approve(complete.revision, 'COMPLETE', null, [delivered, inProgress])).toBe(1)
+    await s.deny(/SHIFT_HANDOVER_EVIDENCE_REQUIRED/, () => s.approve(complete.revision, 'COMPLETE', null, [delivered.key]))
+    await s.deny(/SHIFT_HANDOVER_EVIDENCE_REQUIRED/, () => s.approve(complete.revision, 'COMPLETE', null, [delivered.key, inProgress.key, crypto.randomUUID()]))
+    expect(await s.approve(complete.revision, 'COMPLETE', null, [delivered.key, inProgress.key])).toBe(1)
     expect(await s.preview()).toMatchObject({
-      versions: [{ completeness: 'COMPLETE', expectedSourceIds: expect.arrayContaining([delivered, inProgress]) }],
+      versions: [{ completeness: 'COMPLETE', expectedSourceIds: expect.arrayContaining([delivered.key, inProgress.key]) }],
     })
 
     await tx`RESET ROLE`
-    const lateReceipt = await capture('SEGMENTED')
+    const lateReceipt = await capture('READY')
     await s.claims(s.lead)
     const amendment = await s.preview()
     expect(amendment).toMatchObject({ latestVersion: 1, facts: [], canApprove: true, newReceipts: 1 })
-    expect(await s.approve(amendment.revision, 'COMPLETE', null, [delivered, inProgress, lateReceipt])).toBe(2)
+    expect(await s.approve(amendment.revision, 'COMPLETE', null, [delivered.key, inProgress.key, lateReceipt.key])).toBe(2)
     expect(await s.preview()).toMatchObject({ canApprove: false, newReceipts: 0 })
+  })
+})
+
+it('@REQ: NUR-SHIFT-CLOSURE rejects settling the original once a task has moved', async () => {
+  await rollback(async (tx) => {
+    const s = await fixture(tx)
+    await s.claims(s.lead)
+    const [task] = await tx`INSERT INTO public.shift_tasks
+      (organization_id, shift_definition_id, shift_date, title, created_by, status)
+      VALUES (${s.org}, ${s.shift}, ${date}, 'Zadanie testowe', ${s.lead}, 'TODO') RETURNING id`
+    await s.approve((await s.preview()).revision)
+    await s.deny(/SHIFT_TASK_ALREADY_CARRIED/, () => tx`SELECT public.settle_shift_task(${task.id}, 'DONE', NULL, NULL, NULL)`)
+    await s.deny(/SHIFT_TASK_ALREADY_CARRIED/, () => tx`UPDATE public.shift_tasks SET status = 'DONE' WHERE id = ${task.id}`)
+    await s.deny(/SHIFT_TASK_ALREADY_CARRIED/, () => tx`SELECT public.settle_shift_task(${task.id}, 'CANCELLED', 'Test', NULL, NULL)`)
+    await s.claims(s.admin, 'org_admin')
+    expect(await tx`SELECT status FROM public.shift_tasks WHERE id = ${task.id} OR carried_from_task_id = ${task.id}`)
+      .toEqual([{ status: 'TODO' }, { status: 'TODO' }])
+  })
+})
+
+it('@REQ: NUR-SHIFT-CLOSURE proposes an amendment for a late task and carries it only once', async () => {
+  await rollback(async (tx) => {
+    const s = await fixture(tx)
+    await s.claims(s.lead)
+    await s.approve((await s.preview()).revision)
+    const [task] = await tx`INSERT INTO public.shift_tasks
+      (organization_id, shift_definition_id, shift_date, title, created_by, status)
+      VALUES (${s.org}, ${s.shift}, ${date}, 'Spóźnione zadanie', ${s.lead}, 'TODO') RETURNING id`
+    const draft = await s.preview()
+    expect(draft).toMatchObject({ latestVersion: 1, canApprove: true, facts: [], lateTaskIds: [task.id] })
+    expect(await s.approve(draft.revision)).toBe(2)
+    const approved = await s.preview()
+    expect(approved).toMatchObject({ canApprove: false, lateTaskIds: [], versions: [
+      { version: 2, previousVersion: 1, tasks: [{ id: task.id, carriedToTaskId: expect.any(String) }] },
+      { version: 1, previousVersion: null, tasks: [] },
+    ] })
+    await s.claims(s.admin, 'org_admin')
+    expect(await tx`SELECT status, shift_definition_id FROM public.shift_tasks WHERE carried_from_task_id = ${task.id}`)
+      .toEqual([{ status: 'TODO', shift_definition_id: s.next }])
   })
 })

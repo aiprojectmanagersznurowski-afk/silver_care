@@ -145,4 +145,19 @@ describe('Wydruk planu pracy (NUR-SHIFT-PLAN-PRINT)', () => {
     });
   });
 
+  it('@REQ: NUR-SHIFT-PLAN-PRINT blocks a plan after removing its assignee from the roster', async () => {
+    await rollback(async (tx) => {
+      const s = await seed(tx);
+      await tx`UPDATE shift_tasks SET assignee_user_id = ${s.lead} WHERE shift_definition_id = ${s.dayId}`;
+      await approve(tx, s, s.admin, 1);
+      await tx`DELETE FROM shift_roster WHERE shift_definition_id = ${s.dayId} AND user_id = ${s.lead}`;
+      expect(await tx`SELECT * FROM public.get_shift_plan_status(${s.dayId}, ${DAY}::date)`).toEqual([{ version: 1, stale: true }]);
+      await failsWith(tx, /SHIFT_PLAN_STALE/, (sp) => record(sp, s));
+      await failsWith(tx, /SHIFT_PLAN_ASSIGNEE_NOT_ON_ROSTER/, (sp) => approve(sp, s, s.admin, 2));
+      await tx`UPDATE shift_tasks SET assignee_user_id = NULL WHERE shift_definition_id = ${s.dayId}`;
+      await approve(tx, s, s.admin, 2);
+      expect(await record(tx, s, 2)).toEqual([{ version: 2 }]);
+    });
+  });
+
 });
