@@ -259,13 +259,13 @@ it('@REQ: NUR-SHIFT-CLOSURE counts only verified fragments of a shift and applie
     const at = (time: string) => `${date}T${time}:00+01:00`
     const [device] = await tx`INSERT INTO public.voice_devices (organization_id, label, token_hash)
       VALUES (${s.org}, 'Dyktafon testowy', encode(sha256(convert_to(gen_random_uuid()::text, 'UTF8')), 'hex')) RETURNING id`
-    const capture = async (clock: string) => {
+    const capture = async (clock: string, status = 'SEGMENTED') => {
       const key = crypto.randomUUID()
       const [row] = await tx`INSERT INTO public.voice_captures
         (organization_id, source, source_key, storage_path, sha256, device_id, session_id, session_seq,
          recorded_at, received_at, clock_state, status)
         VALUES (${s.org}, 'DEVICE', ${key}, ${s.org + '/' + key}, repeat('a',64), ${device.id}, gen_random_uuid(),
-          2, ${at('18:58')}, ${at('19:40')}, ${clock}, 'SEGMENTED') RETURNING id`
+          2, ${at('18:58')}, ${at('19:40')}, ${clock}, ${status}) RETURNING id`
       return { id: row.id as string, key }
     }
     const addSegment = async (id: string, ordinal: number, at: string | null, projection: string) => {
@@ -280,10 +280,19 @@ it('@REQ: NUR-SHIFT-CLOSURE counts only verified fragments of a shift and applie
     const known = await capture('SYNCED')
     const day = await addSegment(known.id, 0, at('18:58'), 'READY')
     const night = await addSegment(known.id, 1, at('19:02'), 'WAITING')
-    const unknown = await capture('UNKNOWN')
-    const corrected = await addSegment(unknown.id, 0, null, 'WAITING')
-    await tx`INSERT INTO public.voice_assignment_queue (organization_id, segment_id, reasons)
-      VALUES (${s.org}, ${corrected}, ARRAY['TIME_UNCERTAIN'])`
+    const unknown = await capture('UNKNOWN', 'RECEIVED')
+    await tx`SET LOCAL ROLE service_role`
+    const [lease] = await tx`SELECT processing_token FROM public.claim_voice_capture(${unknown.id})`
+    await tx`SELECT public.finalize_voice_capture(${unknown.id}, ${lease.processing_token}, ${tx.json([{
+      ordinal: 0, start_ms: 0, end_ms: 1000, author_id: s.lead, scope: 'FACILITY',
+      transcript_path: s.org + '/test-transcript', reasons: [],
+    }])})`
+    await tx`RESET ROLE`
+    const [queue] = await tx`SELECT q.segment_id, q.version, q.shift_definition_id, q.reasons
+      FROM public.voice_assignment_queue q JOIN public.voice_segments s ON s.id = q.segment_id
+      WHERE s.capture_id = ${unknown.id}`
+    expect(queue).toMatchObject({ shift_definition_id: null, reasons: ['TIME_UNCERTAIN'] })
+    const corrected = queue.segment_id as string
     const addFact = async (id: string, time: string) => {
       const [row] = await tx`INSERT INTO public.voice_sanitized_events
         (organization_id, segment_id, capture_source, scope, author_id, sanitized_text, matched_categories, recorded_at, metadata)
@@ -301,7 +310,7 @@ it('@REQ: NUR-SHIFT-CLOSURE counts only verified fragments of a shift and applie
     expect(dayDraft.pendingSources).toBe(0)
     expect(await readNight()).toMatchObject({ facts: [], pendingSources: 1, receipts: [] })
 
-    await tx`SELECT public.correct_voice_segment_time(${corrected}, 1, gen_random_uuid(), 'VERIFIED_START',
+    await tx`SELECT public.correct_voice_segment_time(${corrected}, ${queue.version}, gen_random_uuid(), 'VERIFIED_START',
       'STAFF_CONFIRMED', ${date + ' 19:03:00'}::timestamp, 60, NULL, NULL)`
     expect(await readNight()).toMatchObject({ pendingSources: 2 })
     await tx`RESET ROLE`
