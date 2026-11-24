@@ -1,8 +1,5 @@
 -- @REQ: NUR-SHIFT-CLOSURE
 -- @REQ: VOICE-RESIDENT-ASSIGN
-CREATE INDEX voice_sanitized_events_segment ON public.voice_sanitized_events (organization_id, segment_id)
-  WHERE segment_id IS NOT NULL;
-
 CREATE OR REPLACE FUNCTION private.shift_handover_voice(
   p_org uuid, p_shift uuid, p_date date, p_start timestamptz, p_end timestamptz
 ) RETURNS jsonb
@@ -29,6 +26,19 @@ LANGUAGE sql STABLE SET search_path = '' AS $$
     CROSS JOIN LATERAL private.voice_shift_at(p_org, s.started_at) target
     WHERE s.started_at >= p_start AND s.started_at < p_end
       AND target.shift_definition_id = p_shift AND target.shift_date = p_date
+  ), web_events AS (
+    SELECT e.id, e.capture_source, e.recorded_at, e.created_at AS received_at,
+      e.draft_note_id, e.sanitized_text, e.resident_id, e.author_id
+    FROM public.voice_sanitized_events e
+    WHERE e.organization_id = p_org AND e.segment_id IS NULL AND e.capture_source <> 'DEVICE'
+      AND e.recorded_at >= p_start AND e.recorded_at < p_end
+      AND NOT EXISTS (SELECT 1 FROM private.app_voice_task_recordings a WHERE a.draft_id = e.draft_note_id)
+    UNION ALL
+    SELECT e.id, e.capture_source, a.recorded_at, a.received_at,
+      e.draft_note_id, e.sanitized_text, e.resident_id, e.author_id
+    FROM private.app_voice_task_recordings a
+    JOIN public.voice_sanitized_events e ON e.draft_note_id = a.draft_id AND e.organization_id = p_org
+    WHERE a.recorded_at >= p_start AND a.recorded_at < p_end AND e.segment_id IS NULL AND e.capture_source = 'APP'
   ), material AS (
     SELECT e.id, e.capture_source AS source, s.started_at AS recorded_at, c.received_at,
       s.id AS source_id, s.author_attribution AS attribution, e.sanitized_text, e.resident_id,
@@ -37,16 +47,11 @@ LANGUAGE sql STABLE SET search_path = '' AS $$
     JOIN public.voice_captures c ON c.id = s.capture_id AND c.organization_id = p_org
     WHERE s.assignment_status IN ('RESIDENT', 'FACILITY') AND s.projection_status = 'READY'
     UNION ALL
-    SELECT e.id, e.capture_source, COALESCE(app.recorded_at, e.recorded_at),
-      COALESCE(app.received_at, e.created_at), COALESCE(e.draft_note_id, e.id),
+    SELECT e.id, e.capture_source, e.recorded_at, e.received_at, COALESCE(e.draft_note_id, e.id),
       CASE WHEN e.capture_source = 'APP' THEN 'AUTHENTICATED_SESSION' ELSE 'UNKNOWN' END,
       e.sanitized_text, e.resident_id, 'event', NULL, e.author_id
-    FROM public.voice_sanitized_events e
-    LEFT JOIN private.app_voice_task_recordings app ON app.draft_id = e.draft_note_id
-    CROSS JOIN LATERAL private.voice_shift_at(p_org, COALESCE(app.recorded_at, e.recorded_at)) target
-    WHERE e.organization_id = p_org AND e.segment_id IS NULL AND e.capture_source <> 'DEVICE'
-      AND ((e.recorded_at >= p_start AND e.recorded_at < p_end) OR app.draft_id IS NOT NULL)
-      AND target.shift_definition_id = p_shift AND target.shift_date = p_date
+    FROM web_events e CROSS JOIN LATERAL private.voice_shift_at(p_org, e.recorded_at) target
+    WHERE target.shift_definition_id = p_shift AND target.shift_date = p_date
     UNION ALL
     SELECT s.id, c.source, s.started_at, c.received_at, s.id, s.author_attribution,
       array_to_string(p.behavioral_facts, E'\n'), p.resident_id, 'behavior', c.id, p.author_id
