@@ -2549,9 +2549,24 @@ export interface Database {
           p_revision: string
           p_completeness: string
           p_reason: string
-          p_expected_source_ids: unknown[]
+          p_expected_source_ids?: string[]
         }
         Returns: number
+      }
+      refresh_due_shift_handovers: {
+        Args: { p_buffer_minutes: number; p_now?: string; p_org?: string }
+        Returns: number
+      }
+      register_shift_handover_manifest: {
+        Args: {
+          p_org: string
+          p_shift: string
+          p_date: string
+          p_version: number
+          p_manifest_id: string
+          p_source_ids: string[]
+        }
+        Returns: undefined
       }
       approve_operational_report: {
         Args: {

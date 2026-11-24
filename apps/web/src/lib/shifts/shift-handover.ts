@@ -42,6 +42,10 @@ export interface HandoverVersion {
 export interface HandoverDraft {
   revision: string
   latestVersion: number | null
+  preparedAt: string | null
+  audioCompleteness: HandoverCompleteness
+  manifestVersion: number | null
+  missingSources: number
   canApprove: boolean
   nextShift: { id: string | null; code: string | null; name: string | null; date: string }
   exceptions: number
