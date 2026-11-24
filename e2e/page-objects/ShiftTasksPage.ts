@@ -83,6 +83,15 @@ export class ShiftTasksPage {
     await expect(this.handover).toBeVisible();
   }
 
+  async openShiftHistory() {
+    await this.handover.getByText('Historia zmiany', { exact: true }).click();
+    return this.handover.getByRole('table', { name: 'Zdarzenia audytowe' });
+  }
+
+  get completeOption() {
+    return this.handover.getByRole('option', { name: 'Kompletny' });
+  }
+
   async openHandoverSource(fact: string) {
     const source = this.handover.getByRole('row').filter({ hasText: fact }).getByRole('link', { name: 'Zobacz źródło' });
     await expect(source).toBeVisible();

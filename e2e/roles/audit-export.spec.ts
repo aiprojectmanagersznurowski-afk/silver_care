@@ -76,8 +76,8 @@ test('@REQ: NUR-SHIFT-CLOSURE - eksport CSV i JSON obejmuje cały zakres w stref
         jsonb_build_object('test_batch', ${batch}::text, 'test_row', row)
       FROM generate_series(1, 202) row`;
     await sql`INSERT INTO public.audit_logs (organization_id, performed_by, action, created_at, payload) VALUES
-      (${admin.org}, ${admin.id}, 'SHIFT_HANDOVER_ACKNOWLEDGED', '2026-03-28T23:00:00Z',
-        jsonb_build_object('test_batch', ${batch}::text, 'test_ref', ${first}::text)),
+      (${admin.org}, ${admin.id}, 'SHIFT_TASK_STATUS_CHANGED', '2026-03-28T23:00:00Z',
+        jsonb_build_object('test_batch', ${batch}::text, 'test_ref', ${first}::text, 'settlement_method', 'MANUAL')),
       (${other.id}, ${admin.id}, 'SHIFT_HANDOVER_AMENDMENT_APPROVED', '2026-03-29T17:00:00Z',
         jsonb_build_object('test_batch', ${batch}::text, 'test_ref', ${foreign}::text))`;
 
@@ -91,12 +91,13 @@ test('@REQ: NUR-SHIFT-CLOSURE - eksport CSV i JSON obejmuje cały zakres w stref
     const csv = await auditPage.export('csv');
     const json = await auditPage.export('json');
     const csvText = await readFile((await csv.path())!, 'utf8');
-    const exported: { payload: { test_batch?: string; test_ref?: string } }[] = JSON.parse(await readFile((await json.path())!, 'utf8'));
+    const exported: { payload: { test_batch?: string; test_ref?: string; settlement_method_label?: string } }[] = JSON.parse(await readFile((await json.path())!, 'utf8'));
     expect(csvText).toContain(first);
+    expect(csvText).toContain('Ręcznie z listy');
     expect(csvText).not.toContain(foreign);
     const rows = exported.filter((event) => event.payload.test_batch === batch);
     expect(rows).toHaveLength(203);
-    expect(rows.some((event) => event.payload.test_ref === first)).toBe(true);
+    expect(rows.find((event) => event.payload.test_ref === first)?.payload.settlement_method_label).toBe('Ręcznie z listy');
     expect(rows.some((event) => event.payload.test_ref === foreign)).toBe(false);
   } finally {
     await sql.begin(async (tx) => {

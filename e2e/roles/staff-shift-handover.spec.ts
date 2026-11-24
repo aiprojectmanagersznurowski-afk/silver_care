@@ -15,7 +15,8 @@ test('@REQ: NUR-SHIFT-CLOSURE — dwa dyżury, wydruk i spóźniony aneks', asyn
   const dayCode = 'NUR20-D-' + operation.slice(0, 6)
   const nightCode = 'NUR20-N-' + operation.slice(0, 6)
   const titles = { done: 'Uporządkować dyżurkę', carried: 'Przygotować świetlicę', personal: 'Sprawdzić zapas ręczników', late: 'Sprawdzić wyposażenie' }
-  const webText = 'Rozmowa organizacyjna w świetlicy'
+  const nightText = 'Przygotowano dyżurkę nocną'
+  const receivedAt = day + 'T19:40:00+01:00'
   const lateText = 'Dostarczono dodatkowe wyposażenie'
   const [admin] = await sql`SELECT id, raw_app_meta_data->>'organization_id' AS org
     FROM auth.users WHERE email = ${TEST_USERS.org_admin.email}`
@@ -29,18 +30,17 @@ test('@REQ: NUR-SHIFT-CLOSURE — dwa dyżury, wydruk i spóźniony aneks', asyn
   const factIds: string[] = []
   let deviceId: string | undefined
   let captureId: string | undefined
-  const addFact = async (source: 'APP_GENERAL' | 'DEVICE', fact: string, segmentId: string | null = null) => {
+  const addFact = async (fact: string, segmentId: string, recordedAt: string) => {
     const [row] = await sql`INSERT INTO public.voice_sanitized_events
       (organization_id, segment_id, capture_source, scope, author_id, sanitized_text, matched_categories, recorded_at, metadata)
-      VALUES (${admin.org}, ${segmentId}, ${source}, 'facility', ${staff.id}, ${fact}, '{}',
-        ${day + 'T09:00:00+01:00'}, '{"pipeline_stage":"REDACT"}') RETURNING id`
+      VALUES (${admin.org}, ${segmentId}, 'DEVICE', 'facility', ${staff.id}, ${fact}, '{}',
+        ${day + 'T' + recordedAt + ':00+01:00'}, '{"pipeline_stage":"REDACT"}') RETURNING id`
     factIds.push(row.id)
   }
 
   try {
     await sql`INSERT INTO public.shift_roster (organization_id, shift_definition_id, shift_date, user_id)
       VALUES (${admin.org}, ${next.id}, ${day}, ${staff.id})`
-    await addFact('APP_GENERAL', webText)
     await loginPage.loginAs('org_admin')
     await page.addInitScript(() => { window.print = () => { document.documentElement.dataset.printed = 'true' } })
     const tasks = new ShiftTasksPage(page)
@@ -53,9 +53,8 @@ test('@REQ: NUR-SHIFT-CLOSURE — dwa dyżury, wydruk i spóźniony aneks', asyn
     await expect(tasks.task(titles.carried)).toContainText('Zadanie wspólne')
 
     await tasks.openHandover()
-    await tasks.openHandoverSource(webText)
-    await tasks.goto(dayCode, day)
-    await tasks.openHandover()
+    const history = await tasks.openShiftHistory()
+    await expect(history.getByRole('row').filter({ hasText: titles.done })).toContainText('Ręcznie z listy')
     await tasks.approveHandover('Dyktafon nadal synchronizuje')
     await expect(tasks.handover.getByText('Przekazanie, wersja 1', { exact: true })).toBeVisible()
 
@@ -72,6 +71,7 @@ test('@REQ: NUR-SHIFT-CLOSURE — dwa dyżury, wydruk i spóźniony aneks', asyn
     await expect(page.locator('html')).toHaveAttribute('data-printed', 'true')
 
     await page.context().clearCookies()
+    await page.clock.setFixedTime(new Date(day + 'T19:00:00+01:00'))
     await loginPage.loginAs('nurse')
     await tasks.goto(nightCode, day)
     await expect(tasks.task(titles.carried)).toBeVisible()
@@ -88,22 +88,32 @@ test('@REQ: NUR-SHIFT-CLOSURE — dwa dyżury, wydruk i spóźniony aneks', asyn
       VALUES (${admin.org}, ${operation}, encode(sha256(convert_to(${operation}, 'UTF8')), 'hex')) RETURNING id`
     deviceId = device.id
     const [capture] = await sql`INSERT INTO public.voice_captures
-      (organization_id, source, source_key, storage_path, sha256, device_id, session_id, session_seq, recorded_at, status)
+      (organization_id, source, source_key, storage_path, sha256, device_id, session_id, session_seq, recorded_at, received_at, status)
       VALUES (${admin.org}, 'DEVICE', ${operation}, ${admin.org + '/' + operation}, repeat('a',64), ${device.id},
-        gen_random_uuid(), 2, ${day + 'T09:00:00+01:00'}, 'SEGMENTED') RETURNING id`
+        gen_random_uuid(), 2, ${day + 'T18:58:00+01:00'}, ${receivedAt}, 'SEGMENTED') RETURNING id`
     captureId = capture.id
-    const [segment] = await sql`INSERT INTO public.voice_segments
-      (organization_id, capture_id, ordinal, start_ms, end_ms, assignment_status, author_id, author_attribution)
-      VALUES (${admin.org}, ${capture.id}, 0, 0, 1000, 'FACILITY', ${staff.id}, 'MANUAL_SEGMENT_CORRECTION') RETURNING id`
-    await addFact('DEVICE', lateText, segment.id)
+    for (const [ordinal, time, text] of [[0, '18:58', lateText], [1, '19:02', nightText]] as const) {
+      const [segment] = await sql`INSERT INTO public.voice_segments
+        (organization_id, capture_id, ordinal, start_ms, end_ms, assignment_status, author_id,
+         author_attribution, derived_start_at, projection_status)
+        VALUES (${admin.org}, ${capture.id}, ${ordinal}, ${ordinal * 240000}, ${ordinal * 240000 + 1000},
+          'FACILITY', ${staff.id}, 'MANUAL_SEGMENT_CORRECTION', ${day + 'T' + time + ':00+01:00'}, 'READY') RETURNING id`
+      await addFact(text, segment.id, time)
+    }
 
     await page.context().clearCookies()
+    await page.clock.setFixedTime(new Date(receivedAt))
     await loginPage.loginAs('org_admin')
     await tasks.goto(dayCode, day)
     await tasks.openHandover()
     await tasks.addTask(titles.late)
     await expect(tasks.handover.getByRole('row').filter({ hasText: titles.late })).toBeVisible()
     await expect(tasks.handover.getByText(lateText, { exact: true })).toBeVisible()
+    await expect(tasks.handover.getByText(nightText, { exact: true })).toHaveCount(0)
+    await expect(tasks.completeOption).toBeDisabled()
+    await tasks.openHandoverSource(lateText)
+    await tasks.goto(dayCode, day)
+    await tasks.openHandover()
     await tasks.approveHandover('Sprawdzenie pozostałych nagrań trwa', true)
     await expect(tasks.handover.getByText('Aneks, wersja 2', { exact: true })).toBeVisible()
     await expect(tasks.handover.getByText('Przekazanie, wersja 1', { exact: true })).toBeVisible()
@@ -124,6 +134,9 @@ test('@REQ: NUR-SHIFT-CLOSURE — dwa dyżury, wydruk i spóźniony aneks', asyn
     await tasks.goto(nightCode, day)
     await expect(tasks.task(titles.late)).toContainText('Przeniesione z poprzedniej zmiany')
     await expect(tasks.planStatus).toContainText('Plan wymaga ponownego zatwierdzenia')
+    await tasks.openHandover()
+    await expect(tasks.handover.getByText(nightText, { exact: true })).toBeVisible()
+    await expect(tasks.handover.getByText(lateText, { exact: true })).toHaveCount(0)
   } finally {
     await sql`DELETE FROM private.shift_handover_versions WHERE shift_definition_id = ${first.id}`
       .catch((error) => { if (error.code !== '42P01') throw error })
