@@ -54,7 +54,7 @@ test('@REQ: NUR-SHIFT-CLOSURE — dwa dyżury, wydruk i spóźniony aneks', asyn
 
     await tasks.openHandover()
     const history = await tasks.openShiftHistory()
-    await expect(history.getByRole('row').filter({ hasText: titles.done })).toContainText('Ręcznie z listy')
+    await expect(history.getByRole('row', { name: /Zmieniono status zadania/ }).filter({ hasText: titles.done })).toContainText('Ręcznie z listy')
     await tasks.approveHandover('Dyktafon nadal synchronizuje')
     await expect(tasks.handover.getByText('Przekazanie, wersja 1', { exact: true })).toBeVisible()
 
