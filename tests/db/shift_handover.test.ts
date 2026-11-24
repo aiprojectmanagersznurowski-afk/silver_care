@@ -155,19 +155,20 @@ it('@REQ: NUR-SHIFT-CLOSURE scopes the task list to roster membership and expose
 it('@REQ: NUR-SHIFT-CLOSURE requires the complete delivery manifest and ready projections', async () => {
   await rollback(async (tx) => {
     const s = await fixture(tx)
-    const capture = async (projection: 'WAITING' | 'READY') => {
+    const capture = async (projection: 'WAITING' | 'READY', recordedAt = insideShift) => {
       const key = crypto.randomUUID()
       const [row] = await tx`INSERT INTO public.voice_captures
         (organization_id, source, source_key, storage_path, sha256, author_id, recorded_at, status)
-        VALUES (${s.org}, 'APP_GENERAL', ${key}, ${s.org + '/' + key}, repeat('a',64), ${s.staff}, ${insideShift}, 'SEGMENTED')
+        VALUES (${s.org}, 'APP_GENERAL', ${key}, ${s.org + '/' + key}, repeat('a',64), ${s.staff}, ${recordedAt}, 'SEGMENTED')
         RETURNING id`
       const [segment] = await tx`INSERT INTO public.voice_segments
-        (organization_id, capture_id, ordinal, start_ms, end_ms, assignment_status, author_id, author_attribution, projection_status)
-        VALUES (${s.org}, ${row.id}, 0, 0, 1000, 'FACILITY', ${s.staff}, 'AUTHENTICATED_SESSION', ${projection}) RETURNING id`
+        (organization_id, capture_id, ordinal, start_ms, end_ms, assignment_status, author_id, author_attribution, projection_status, derived_start_at)
+        VALUES (${s.org}, ${row.id}, 0, 0, 1000, 'FACILITY', ${s.staff}, 'AUTHENTICATED_SESSION', ${projection}, ${insideShift}) RETURNING id`
       return { key, id: row.id as string, segmentId: segment.id as string }
     }
     const delivered = await capture('READY')
-    const inProgress = await capture('WAITING')
+    // The recorder was started on the previous shift. This segment belongs to the reviewed shift.
+    const inProgress = await capture('WAITING', '2026-11-18T06:59:00+01:00')
     await s.claims(s.lead)
 
     const partial = await s.preview()
