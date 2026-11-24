@@ -14,8 +14,8 @@ export default async function ShiftHandoverSourcePage({ searchParams }: {
   searchParams: Promise<{ shift?: string; date?: string; fact?: string; kind?: string }>
 }) {
   const { shift, fact: factId, kind, date: requestedDate } = await searchParams
-  const date = parseAuditDate(requestedDate)
-  if (!shift || !uuid.test(shift) || !factId || !uuid.test(factId) || !date
+  const date = typeof requestedDate === 'string' ? parseAuditDate(requestedDate) : undefined
+  if (typeof shift !== 'string' || !uuid.test(shift) || typeof factId !== 'string' || !uuid.test(factId) || !date
     || (kind !== 'event' && kind !== 'behavior')) notFound()
 
   const session = await authorizeShiftStaff()
