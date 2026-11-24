@@ -139,7 +139,7 @@ it('@REQ: NUR-SHIFT-CLOSURE scopes the task list to roster membership and expose
     const [history] = await tx`SELECT public.read_shift_handover_audit(${s.shift}, ${date}::date, 0) AS events`
     expect(history.events).toEqual(expect.arrayContaining([
       expect.objectContaining({ action: 'SHIFT_TASK_CREATED', actor: s.lead, taskId: task.id, at: expect.any(String) }),
-      expect.objectContaining({ action: 'SHIFT_TASK_STATUS_CHANGED', actor: s.lead, taskId: task.id, at: expect.any(String), to: 'DONE' }),
+      expect.objectContaining({ action: 'SHIFT_TASK_STATUS_CHANGED', actor: s.lead, taskId: task.id, at: expect.any(String), to: 'DONE', settlementMethod: 'MANUAL' }),
     ]))
     expect(JSON.stringify(history.events)).not.toContain('Treść przykładowego zadania')
 

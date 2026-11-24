@@ -130,7 +130,7 @@ describe('Dowód głosowy rozliczenia zmiany', () => {
 
   it('@REQ: NUR-TASKS-VOICE-COMPLETION rozlicza raz przez kierownika nocnej zmiany i usuwa cytat ze źródłem', async () => {
     await transaction(async (tx) => {
-      const { org, lead, capture, task, evidence } = await fixture(tx)
+      const { org, lead, capture, segment, task, evidence } = await fixture(tx)
       await asUser(tx, lead, 'nurse', org)
       expect(await decide(tx, evidence)).toEqual([{ task_id: task }])
       expect(await decide(tx, evidence)).toEqual([{ task_id: task }])
@@ -143,9 +143,18 @@ describe('Dowód głosowy rozliczenia zmiany', () => {
         performed_by: lead, payload: expect.objectContaining({ task_id: task, evidence_id: evidence, decision: 'DONE' }),
       }])
       expect(JSON.stringify(await audit())).not.toContain(quote)
+      const statusAudit = async () => tx`SELECT performed_by, created_at, payload FROM public.audit_logs
+        WHERE organization_id = ${org} AND action = 'SHIFT_TASK_STATUS_CHANGED'`
+      expect(await statusAudit()).toEqual([{
+        performed_by: lead, created_at: expect.any(Date), payload: expect.objectContaining({
+          task_id: task, from: 'TODO', to: 'DONE', settlement_method: 'VOICE', evidence_id: evidence, source_id: segment,
+        }),
+      }])
+      expect(JSON.stringify(await statusAudit())).not.toContain(quote)
       await tx`DELETE FROM public.voice_captures WHERE id = ${capture}`
       expect(await tx`SELECT id FROM public.shift_task_voice_suggestions WHERE id = ${evidence}`).toEqual([])
       expect(await audit()).toHaveLength(1)
+      expect((await statusAudit())[0]?.payload).toMatchObject({ source_id: segment })
     })
   })
 
