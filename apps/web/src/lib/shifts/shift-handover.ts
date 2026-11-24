@@ -62,6 +62,8 @@ export interface ShiftHandoverAuditEvent {
   actor?: string
   taskId?: string
   sourceTaskId?: string
+  settlementMethod?: keyof typeof SHIFT_TASK_POLICY.settlementMethods
+  sourceId?: string
   version?: number
   previousVersion?: number
   from?: TaskStatus

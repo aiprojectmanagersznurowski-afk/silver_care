@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { SHIFT_TASK_POLICY } from '@silvercare/contracts/src/generated/facility'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database.types'
 import { ListEmpty, ListError } from '@/components/patterns/ListState'
@@ -105,7 +106,14 @@ export async function ShiftHandoverReview({ supabase, shiftId, date, tasks, audi
                 <TableBody>{events.slice(0, 50).map((event) => (
                   <TableRow key={event.id}>
                     <TableCell>{formatHandoverTime(event.at)}</TableCell>
-                    <TableCell>{auditLabels[event.action] ?? event.action}{event.to && ` · ${statusLabel(event.to)}`}</TableCell>
+                    <TableCell>
+                      {auditLabels[event.action] ?? event.action}{event.to && ` · ${statusLabel(event.to)}`}
+                      {event.settlementMethod && (
+                        <span className="block text-xs text-muted-foreground">
+                          {SHIFT_TASK_POLICY.settlementMethods[event.settlementMethod]}
+                        </span>
+                      )}
+                    </TableCell>
                     <TableCell>{event.actor ?? 'System'}</TableCell>
                     <TableCell>{event.taskId ? taskNames.get(event.taskId) ?? event.taskId : '—'}</TableCell>
                     <TableCell>{event.version ?? '—'}</TableCell>

@@ -2,7 +2,7 @@
  * Helpery dla rejestru audytowego (SEC-AUDIT-EXPORT-TIMEZONE, SEC-NO-PII-LOGS)
  */
 
-import { SHIFT_POLICY } from '@silvercare/contracts/src/generated/facility'
+import { SHIFT_POLICY, SHIFT_TASK_POLICY } from '@silvercare/contracts/src/generated/facility'
 
 const auditDateOffset = new Intl.DateTimeFormat('en-GB', {
   timeZone: SHIFT_POLICY.timezone,
@@ -103,6 +103,15 @@ export function sanitizeAuditPayload(payload?: unknown): Record<string, unknown>
   return sanitized
 }
 
+function exportAuditPayload(log: AuditLogEntry) {
+  const payload = sanitizeAuditPayload(log.payload)
+  const method = payload.settlement_method
+  if (log.action === 'SHIFT_TASK_STATUS_CHANGED' && (method === 'MANUAL' || method === 'VOICE')) {
+    payload.settlement_method_label = SHIFT_TASK_POLICY.settlementMethods[method]
+  }
+  return payload
+}
+
 /**
  * Generowanie pliku CSV z audytu zgodnego z RODO (brak PII, czytelny User ID)
  */
@@ -114,7 +123,7 @@ export function formatAuditToCsv(logs: AuditLogEntry[], timeZone?: string): stri
     const utcTime = log.created_at
     const action = log.action
     const actor = log.performed_by || 'System'
-    const safePayload = JSON.stringify(sanitizeAuditPayload(log.payload)).replace(/"/g, '""')
+    const safePayload = JSON.stringify(exportAuditPayload(log)).replace(/"/g, '""')
 
     return `"${localTime}","${utcTime}","${action}","${actor}","${safePayload}"`
   })
@@ -132,7 +141,7 @@ export function formatAuditToJson(logs: AuditLogEntry[], timeZone?: string): str
     timestamp_utc: log.created_at,
     action: log.action,
     performed_by: log.performed_by || 'System',
-    payload: sanitizeAuditPayload(log.payload)
+    payload: exportAuditPayload(log)
   }))
 
   return JSON.stringify(exportItems, null, 2)
