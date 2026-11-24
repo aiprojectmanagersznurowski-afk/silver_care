@@ -28,7 +28,7 @@ export class ShiftTasksPage {
     this.addButton = form.getByRole('button', { name: 'Dodaj zadanie' });
     this.byRoomLink = page.getByRole('link', { name: 'Według pokoi' });
     this.byResidentLink = page.getByRole('link', { name: 'Według podopiecznych' });
-    this.planStatus = page.locator('[data-testid="plan-approval-status"]');
+    this.planStatus = page.getByRole('main').getByTestId('plan-approval-status');
     this.printLink = page.getByRole('link', { name: 'Drukuj plan' });
     this.printButton = page.getByRole('button', { name: 'Drukuj plan' });
     this.approvePlanButton = page.getByRole('button', { name: 'Zatwierdź plan' });
