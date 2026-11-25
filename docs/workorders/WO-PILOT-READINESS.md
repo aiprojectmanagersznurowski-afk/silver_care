@@ -6,12 +6,18 @@ Baza poprawek to `origin/codex/nowe-zmiany` na `2345e1b4`, w zakresie PR #313. G
 |---|---|---|---|
 | 1 | Utrata nagrań i bramka push | Polecenie w zdaniu przedstawienia pozostaje w materiale. Push automatyczny ma jeden jawny cel i refspec. | Gotowe lokalnie. Commit `ca08368b`, 10/10 testów celowanych. |
 | 2 | Wdrożenie i MFA | Błąd publikacji kandydata blokuje migracje stagingu. Alias przechodzi na nową aplikację po migracjach. Publikację uruchamia osoba z uprawnieniami w Vercelu. | Workflow gotowy do próby w uprawnionym środowisku. |
-| 3 | Nagrania webowe i retencja | Odrzucenie techniczne zostawia możliwość ponowienia. Retencja obejmuje audio po niepełnym zapisie, szkice i raporty operacyjne. | Do wykonania |
-| 4 | Izolacja i publikacja | Storage respektuje placówkę i zakres roli. Podgląd importu oraz transkrypcja sprawdzają role. Publikacja egzekwuje indywidualny przegląd oznaczonego szkicu. | Do wykonania |
-| 5 | Zgody i dostęp rodzin | Polityki sprawdzają cel i stan zgody. Cofnięcie natychmiast odcina odpowiednie operacje. Zgodność migracji starszych zgód wymaga decyzji biznesowej, jeśli brakuje udokumentowanej podstawy. | Do wykonania |
+| 3 | Nagrania webowe i retencja | Odrzucenie techniczne zostawia możliwość ponowienia. Retencja obejmuje audio po niepełnym zapisie, szkice i raporty operacyjne. | Gotowe lokalnie. Commity `cee849e6`, `0fbd2c4f`. Chromium 3/3, testy DB retencji 4/4. |
+| 4 | Izolacja i publikacja | Storage respektuje placówkę i zakres roli. Podgląd importu oraz transkrypcja sprawdzają role. Publikacja egzekwuje indywidualny przegląd oznaczonego szkicu. | Gotowe lokalnie. Commity `d1950a05`, `4244230f` i poprawka akcji masowych. |
+| 5 | Zgody i dostęp rodzin | Polityki sprawdzają cel i stan zgody. Cofnięcie natychmiast odcina odpowiednie operacje. Decyzja Darka z 25.11.2026: każdy dostęp po zapisaniu zgody na dany cel. Zachować stare wpisy jako historię. | W toku |
 | 6 | Setup i czas pracy | Oba układy arkusza, pokoje, osoby, przypisania i bezpieczne ponowienie importu w dwóch pustych placówkach. Po dwie opiekunki na zmianę. Pomiar wszystkich minut personelu i kierownika, także korekt i podwójnych wpisów. | Do wykonania |
 | 7 | Urządzenia, środowisko i zgodność | Test urządzenia z odbiorem, retransmisją oraz wykazem wysyłek. Domknięcie #307 i #306, dowód retencji, dostawców, DPIA, szkolenia AI i wymaganej przejrzystości. | Zależności zewnętrzne |
 
 ## Wznowienie
 
 Otwórz worktree gałęzi `fix/pilot-readiness`, sprawdź `git status --short --branch` i zacznij od pierwszego wiersza w stanie „W toku” lub „Do wykonania”. Po każdym pakiecie dopisz wynik, test i commit. Używaj izolowanego Supabase i danych syntetycznych. Publikacja na Vercelu wymaga uprawnionego operatora. Zakres plików sprzętowych jest w #307, a dwa zanonimizowane układy eksportów są potrzebne do odbioru importu. Zmiany treści kontraktu mają osobne okno otwierane przez człowieka.
+
+## Zakres wznowienia po poprawkach bezpieczeństwa
+
+- Zgody. Zgodnie z decyzją wprowadzić odczyt raportów na bazie konkretnego celu, odrębne dopuszczenie metryk i obsługę powiadomień po cofnięciu zgody. Zachować stary rejestr i dać kierownikowi ścieżkę rejestracji potwierdzonych zgód. W próbie sprawdzić, że `family_view_basic` nie odblokowuje żadnego z nowych celów.
+- Import. Doprowadzić do zapisu pokoi, łóżek, osób i przypisań z mapowaniem nagłówków i bezpiecznym ponowieniem. Próba z rzeczywistym układem zależy od dwóch zanonimizowanych eksportów. SC-ADM-13 obejmuje masowy import osób. Jeśli zakres wymaga rozszerzenia kontraktu, zaktualizować story i uzyskać okno od człowieka.
+- Sprzęt. Zweryfikować protokół i odbiór #307. Dziś dokumentacja opisuje rozbieżność między kontraktowym celem COMMIT a modelem `voice_captures`. Produkcyjne STT, dostawca wykazu i wdrożenie wymagają osobnego dowodu.
