@@ -17,9 +17,17 @@ const PURPOSE_LABELS: Record<string, { title: string; desc: string }> = {
     title: 'Wskaźniki aktywności i snu z opaski',
     desc: 'Zbieranie i analiza dobowych kroków, czasu aktywności oraz długości snu pensjonariusza.',
   },
+  family_report_access: {
+    title: 'Udostępnianie raportów bliskim',
+    desc: 'Udostępnianie podsumowań dnia zatwierdzonych przez personel.',
+  },
+  wellness_family_view: {
+    title: 'Udostępnianie aktywności i snu bliskim',
+    desc: 'Wyświetlanie kroków, czasu aktywności oraz długości i godzin snu.',
+  },
   family_view_basic: {
-    title: 'Prezentacja raportów dobowych',
-    desc: 'Udostępnianie zredagowanych przez personel podsumowań dnia w portalu bliskich.',
+    title: 'Dawna zgoda na widok rodzinny',
+    desc: 'Wpis archiwalny. Aktualny dostęp zależy od zgód na poszczególne cele.',
   },
   medical_records_access: {
     title: 'Dokumentacja opiekuńcza w placówce',
