@@ -11,13 +11,18 @@ interface ConsentResult {
   saved: boolean
 }
 
+const uuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i
+
 export async function recordResidentConsent(_previous: ConsentResult, formData: FormData): Promise<ConsentResult> {
   const resident = formData.get('resident')
   const purpose = formData.get('purpose')
-  const grantor = formData.get('grantor')
-  if (typeof resident !== 'string' || !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(resident)
+  const grantorSelection = formData.get('grantor')
+  const grantorAccount = typeof grantorSelection === 'string' && uuid.test(grantorSelection) ? grantorSelection : null
+  const grantor = grantorAccount ? 'legal_guardian' : grantorSelection
+  if (typeof resident !== 'string' || !uuid.test(resident)
     || typeof purpose !== 'string' || !CONSENT_PURPOSES.some(({ id }) => id === purpose)
     || typeof grantor !== 'string' || !CONSENT_GRANTORS.some((id) => id === grantor)
+    || (grantor === 'legal_guardian' && !grantorAccount)
     || formData.get('confirmed') !== 'on') {
     return { saved: false, message: 'Sprawdź cel i potwierdź udokumentowaną zgodę.' }
   }
@@ -35,8 +40,11 @@ export async function recordResidentConsent(_previous: ConsentResult, formData: 
   }
 
   const { error } = await supabase.from('consent_ledger').insert({
-    organization_id: orgId, resident_id: resident, purpose, granted_by: grantor,
+    organization_id: orgId, resident_id: resident, purpose, granted_by: grantor, grantor_user_id: grantorAccount,
   })
+  if (error?.message === 'CONSENT_GRANTOR_UNVERIFIED') {
+    return { saved: false, message: 'Wybierz konto opiekuna prawnego powiązane z podopiecznym.' }
+  }
   if (error) return { saved: false, message: 'Nie udało się potwierdzić zapisu zgody.' }
   revalidatePath('/admin/residents/' + resident)
   return { saved: true, message: 'Zapisano zgodę na wybrany cel.' }

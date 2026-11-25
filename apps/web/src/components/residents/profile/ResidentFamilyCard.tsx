@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useActionState } from 'react'
-import { CONSENT_PURPOSES, CONSENT_GRANTORS } from '@silvercare/contracts/src/generated/roles'
+import { CONSENT_PURPOSES } from '@silvercare/contracts/src/generated/roles'
 import { recordResidentConsent } from '@/actions/resident-consent'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -46,7 +46,7 @@ export function ResidentFamilyCard({
         )}
       </CardHeader>
       <CardContent className="pt-4 space-y-3">
-        <ConsentRecorder residentId={resident.id} />
+        <ConsentRecorder residentId={resident.id} guardians={relativeLinks.filter((link) => link.role === 'legal_guardian')} />
         {relativeLinks.length === 0 ? (
           <div className="p-4 rounded-xl border border-dashed border-border text-center text-sm text-muted-foreground">
             Brak powiązanych kont bliskich.
@@ -96,7 +96,7 @@ const CONSENT_LABELS = {
   wellness_family_view: 'Udostępnianie aktywności i snu bliskim',
 }
 
-function ConsentRecorder({ residentId }: { residentId: string }) {
+function ConsentRecorder({ residentId, guardians }: { residentId: string; guardians: ResidentRelativeLinkItem[] }) {
   const [result, record, pending] = useActionState(recordResidentConsent, { message: '', saved: false })
   const selectClass = 'min-h-touch w-full rounded-md border border-input bg-background px-2 text-sm'
   return (
@@ -115,7 +115,12 @@ function ConsentRecorder({ residentId }: { residentId: string }) {
           Kto wyraził zgodę
           <select name="grantor" className={selectClass} required defaultValue="">
             <option value="" disabled>Wybierz osobę</option>
-            {CONSENT_GRANTORS.map((id) => <option key={id} value={id}>{id === 'resident_self' ? 'Podopieczny' : 'Opiekun prawny'}</option>)}
+            <option value="resident_self">Podopieczny</option>
+            {guardians.map((guardian) => (
+              <option key={guardian.id} value={guardian.relative_user_id}>
+                Opiekun prawny ({guardian.created_at.slice(0, 10)}, {guardian.relative_user_id.slice(-6)})
+              </option>
+            ))}
           </select>
         </label>
         <label className="flex min-h-touch items-center gap-2">

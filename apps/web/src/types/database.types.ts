@@ -221,6 +221,7 @@ export interface Database {
           granted_by: string
           granted_at: string
           revoked_at: string | null
+          grantor_user_id: string | null
         }
         Insert: {
           id?: string
@@ -230,6 +231,7 @@ export interface Database {
           granted_by: string
           granted_at?: string
           revoked_at?: string | null
+          grantor_user_id?: string | null
         }
         Update: {
           id?: string
@@ -239,6 +241,7 @@ export interface Database {
           granted_by?: string
           granted_at?: string
           revoked_at?: string | null
+          grantor_user_id?: string | null
         }
         Relationships: [
           {
