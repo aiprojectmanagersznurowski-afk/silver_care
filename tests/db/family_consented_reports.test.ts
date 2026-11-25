@@ -50,3 +50,25 @@ it('udostępnia raport i metryki niezależnie według ostatniej zgody @REQ: CONS
     throw rollback
   }).catch((error: unknown) => { if (error !== rollback) throw error })
 })
+
+it('rejestruje zgodę potwierdzoną przez kierownika z identyfikatorem aktora @REQ: CONSENT-GRANTOR', async () => {
+  await sql.begin(async (tx) => {
+    const org = randomUUID()
+    const user = randomUUID()
+    const resident = randomUUID()
+    await tx`INSERT INTO public.organizations (id, name) VALUES (${org}, 'Fixture aktor zgody')`
+    await tx`INSERT INTO public.residents (id, organization_id, first_name, last_name)
+      VALUES (${resident}, ${org}, 'Test', 'Rejestr')`
+    await tx`INSERT INTO auth.users (id) VALUES (${user})`
+    await tx`SET LOCAL ROLE authenticated`
+    await tx`SELECT set_config('request.jwt.claims', ${JSON.stringify({
+      sub: user, role: 'authenticated', aal: 'aal2', app_metadata: { role: 'org_admin', organization_id: org },
+    })}, true)`
+    const [consent] = await tx`INSERT INTO public.consent_ledger (resident_id, organization_id, purpose, granted_by)
+      VALUES (${resident}, ${org}, 'family_report_access', 'resident_self') RETURNING id`
+    expect(await tx`SELECT performed_by FROM public.audit_logs
+      WHERE resident_id = ${resident} AND action = 'CONSENT_GRANTED' AND payload->>'consent_id' = ${consent.id}`)
+      .toEqual([{ performed_by: user }])
+    throw rollback
+  }).catch((error: unknown) => { if (error !== rollback) throw error })
+})
