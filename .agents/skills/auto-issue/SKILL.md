@@ -1,63 +1,63 @@
 ---
 name: auto-issue
 description: >-
-  Autonomous technical GitHub issue execution for Silver Care with mandatory Codex
-  healthcheck and user-story queue inspection before start, local Codex plan/test and
-  code reviews, RED/GREEN/VERIFY gating, auto-authorized feature branch push, and PR creation.
-  Use when Darek asks to inspect or automatically execute assigned technical issues.
+  Three-stage interactive-to-autonomous technical GitHub issue workflow for Silver Care:
+  (1) `auto_issue` fetches ALL open issues assigned to Darek and runs local Codex healthcheck,
+  (2) interactive refinement of the chosen single issue until Darek sends `start`,
+  (3) full zero-prompt execution on a new `auto/issue-*` branch with local Codex plan/code gates,
+  RED/GREEN/VERIFY, auto-authorized push, and open GitHub PR ready for merge.
 ---
 
-# Auto-Issue — Autonomous Technical Delivery with Local Codex Gates
+# Auto-Issue — 3-Stage Autonomous Technical Delivery
 
-Use this skill whenever Darek asks to run autonomous issue delivery, verify the technical queue, or execute assigned GitHub issues end-to-end.
+Use this skill whenever Darek invokes `/auto_issue`, `auto_issue`, or asks to inspect his assigned queue and execute an issue after refinement.
 
-## Stage 1 — Mandatory Pre-flight (ALWAYS before execution)
+## Stage 1 — `auto_issue` (Codex Check + Full Assigned List, NO coding yet)
 
-Never skip this stage, even when asked for full autonomy. Before launching any development workflow:
-
-1. Run the pre-flight CLI from the workspace root (pass `--base <branch>` when working off an active branch such as `codex/nowe-zmiany`):
+1. Run from the workspace root:
    ```bash
-   node tools/sc-auto-queue.mjs --include-codex [--base codex/nowe-zmiany]
+   node tools/sc-auto-queue.mjs --include-codex
    ```
-2. **Verify Codex availability first:**
-   - If Codex does not respond (`ok: false` or non-zero exit with Codex error), **STOP immediately** and report the exact diagnostic error. Do not start development without Codex.
-3. **Review queue and canonical stories with Darek:**
-   - Present the Codex health status (`version`, `latencyMs`, `maxRounds`), detected base branch (e.g. `staging`), and contract-window state.
-   - Present the `READY` technical issues table mapped to `docs/KANONICZNA_SPECYFIKACJA_USER_STORIES.md` (with story status emojis and `do-weryfikacji` markers), alongside `NEEDS_CONTRACT` and `EXCLUDED` issues (e.g. `typ:biznes`, `[SPIKE-*]`, open PRs).
-   - Highlight the recommended issue(s) and ask Darek to confirm which issue number(s) and order to execute.
+2. If Codex healthcheck fails (`ok: false` or Codex error), **STOP immediately** and report the error.
+3. Present Codex status, detected `baseBranch`, contract-window state, and **ALL open issues assigned to Darek** (READY technical table mapped to `docs/KANONICZNA_SPECYFIKACJA_USER_STORIES.md`, plus `Wymagają okna kontraktowego` and `Pozostałe przypisane`).
+4. Ask Darek to pick **one** issue number for refinement. Do NOT create branches or edit files yet.
 
-## Stage 2 — Full Autonomy (after Darek confirms queue)
+## Stage 2 — Refinement (Interactive & Read-Only until `start`)
 
-Once Darek confirms the issue number(s), execute **with zero intermediate approval prompts**:
+Once Darek picks an issue `<nr>`:
 
-1. Launch `run_workflow` using:
-   - `ScriptPath`: `<workspace-root>/.agents/skills/auto-issue/scripts/auto_issue.py`
-   - `Description`: `"Autonomous delivery for Silver Care issues: <numbers>"`
-   - `Args`:
-     ```json
-     {
-       "issues": [245],
-       "base_branch": "staging",
-       "reviewer": "aiprojectmanagersznurowski-afk",
-       "max_rounds": 3
-     }
-     ```
-2. Inside the workflow, each issue runs sequentially in an isolated shared worktree on branch `auto/issue-<nr>-<slug>`:
-   - **Plan & Tests** → verified locally by `node tools/sc-codex-gate.mjs plan-review` (up to 3 rounds).
-   - **RED** → write `@REQ`-tagged tests (Playwright POM in `e2e/` for `apps/web`), confirm failure, run `node tools/sc-phase.mjs red`, commit.
-   - **GREEN + VERIFY** → implement (≤ 250 LOC/file, MDR/UI rules), pass tests, run `node tools/sc-phase.mjs green`, commit, pass `bash scripts/verify.sh --full` (+ `pnpm test:e2e` for web changes).
-   - **Code Review** → verified locally by `node tools/sc-codex-gate.mjs code-review` (up to 3 rounds). On `APPROVED`, writes a commit-bound receipt (`sc-codex-approved.json`) in the worktree git dir.
-   - **Ship** → pushes `auto/issue-<nr>-<slug>` (auto-allowed by `.agents/hooks/ag-guard.mjs` when receipt matches `HEAD` SHA) and opens a GitHub PR targeting `base_branch` with `@aiprojectmanagersznurowski-afk` as reviewer.
+1. Inspect full issue + comments and relevant code/stories/contracts (read-only):
+   ```bash
+   gh issue view <nr> --json number,title,body,labels,comments,url
+   ```
+2. Discuss and refine with Darek until aligned:
+   - exact scope and acceptance criteria;
+   - impacted files (≤ 250 LOC limit) and contract / MDR / RODO Art. 9 constraints;
+   - `@REQ` tags and concrete tests (unit + Playwright POM in `e2e/` for `apps/web` changes).
+3. Present a concise **Refinement Summary** and ask Darek to reply **`start`** (or request tweaks). Wait explicitly for `start` before launching execution.
 
-## Hard Safety Boundaries
+## Stage 3 — `start` (Full Zero-Prompt Autonomy until Open PR)
 
-- **Never merge** any PR to `staging` or `main` (human review only).
-- **Never edit `contracts/*`** or open a contract window autonomously; block and comment on the GitHub issue instead.
-- **Never push** to `main`, `master`, or `staging`, and never use `--force`.
+Only after Darek explicitly says **`start`**, launch `run_workflow` with zero further confirmations:
 
-## Required Antigravity Project Settings (for zero-prompt background runs)
+- `ScriptPath`: `<workspace-root>/.agents/skills/auto-issue/scripts/auto_issue.py`
+- `Description`: `"Autonomous delivery for Silver Care #<nr>"`
+- `Args`:
+  ```json
+  {
+    "issue": 245,
+    "base_branch": "<detected-baseBranch>",
+    "reviewer": "aiprojectmanagersznurowski-afk",
+    "refined_spec": "<concise agreed refinement brief>",
+    "max_rounds": 3
+  }
+  ```
 
-Because `run_workflow` rejects tool calls that prompt for confirmation, configure **Settings → Projects → `silver-care` → Permission Preset** (or the permissions picker above the chat box):
+Inside the workflow: creates isolated worktree & branch `auto/issue-<nr>-<slug>` → Codex `plan-review` (max 3 rounds) → RED (`sc-phase red`, commit) → GREEN + `sc-phase green` + `bash scripts/verify.sh --full` (+ `pnpm test:e2e` for web) → Codex `code-review` (max 3 rounds, writes `sc-codex-approved.json`) → `git -C <wt> push -u origin <branch>` (auto-allowed by `.agents/hooks/ag-guard.mjs`) → `gh pr create` (NEVER merge). Present the PR link for final human merge decision.
 
-- **Recommended (`Turbo`)**: disables the terminal sandbox and allows external binary/config access (`codex` in `/Applications/ChatGPT.app/...`, `~/.codex`, `gh` Keychain/network, worktrees). Silver Care safety rules and `git push` restrictions remain enforced by `.agents/hooks/ag-guard.mjs`.
-- **Stricter alternative (`Auto`)**: keep `Auto` preset and add explicit project **Allow** rules: `command(git)`, `command(gh)`, `command(node)`, `command(pnpm)`, `command(bash scripts/verify.sh)`, `command(/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex)`, `read_file(/Users/Darek/.codex)`, `read_file(/Users/Darek/projekty/silver-care/.env.local)`.
+## Hard Safety Boundaries & Project Settings
+
+- **Never merge** any PR to `staging` or `main`, never push protected branches, never use `--force`, never edit `contracts/*`.
+- For zero-prompt background execution, configure **Settings → Projects → `silver-care` → Permission Preset**:
+  - **Recommended:** `Turbo` (disables sandbox blocking `codex`, `~/.codex`, `gh`, worktrees; `.agents/hooks/ag-guard.mjs` still enforces Silver Care push/bash safety).
+  - **Alternative:** `Auto` + Allow rules for `command(git)`, `command(gh)`, `command(node)`, `command(pnpm)`, `command(bash scripts/verify.sh)`, `command(/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex)`, `read_file(/Users/Darek/.codex)`, `read_file(/Users/Darek/projekty/silver-care/.env.local)`.

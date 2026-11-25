@@ -15,7 +15,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { checkWrite, checkBash, projectRoot } from '../../tools/guard-core.mjs';
-import { isAutoIssuePushAllowed } from '../../tools/lib/auto-issue-core.mjs';
+import { isAutoIssuePushAllowed, isGitPushCommand } from '../../tools/lib/auto-issue-core.mjs';
 
 const out = (decision, reason) => {
   process.stdout.write(JSON.stringify(reason ? { decision, reason } : { decision }));
@@ -82,7 +82,7 @@ if (name === 'run_command') {
   if (/\b(pnpm\s+publish|vercel|supabase\s+db\s+push|supabase\s+functions\s+deploy|prisma\s+migrate\s+deploy)\b/.test(cmd)) {
     out('force_ask', 'Operacja wychodząca poza maszynę lokalną — decyzja należy do człowieka.');
   }
-  if (/\bgit\b[\s\S]*\bpush\b/.test(cmd)) {
+  if (isGitPushCommand(cmd)) {
     const res = tryAuthorizeAutoPush(cmd, process.env.SC_PROJECT_DIR || projectRoot);
     if (res.allowed) out('allow');
     if (res.hardDeny) out('deny', `BRAMKA SILVER CARE — ${res.reason}`);

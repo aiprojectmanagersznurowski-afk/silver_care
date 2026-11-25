@@ -17,54 +17,19 @@ STANDING_INSTRUCTIONS = (
     "and use Playwright POM in e2e/ for apps/web changes. Do not ask for human approval."
 )
 
-PLAN_SCHEMA = {
-    "type": "object",
-    "required": ["worktree_path", "status", "reason", "plan_markdown", "test_plan_markdown", "req_ids", "touches_web"],
-    "properties": {
-        "worktree_path": {"type": "string"},
-        "status": {"type": "string", "enum": ["READY", "BLOCKED_CONTRACT", "BLOCKED_AMBIGUOUS"]},
-        "reason": {"type": "string"},
-        "plan_markdown": {"type": "string"},
-        "test_plan_markdown": {"type": "string"},
-        "req_ids": {"type": "array", "items": {"type": "string"}},
-        "touches_web": {"type": "boolean"},
-    },
-}
-REVISE_PLAN_SCHEMA = {
-    "type": "object",
-    "required": ["plan_markdown", "test_plan_markdown", "req_ids", "touches_web"],
-    "properties": {
-        "plan_markdown": {"type": "string"},
-        "test_plan_markdown": {"type": "string"},
-        "req_ids": {"type": "array", "items": {"type": "string"}},
-        "touches_web": {"type": "boolean"},
-    },
-}
-RED_SCHEMA = {
-    "type": "object",
-    "required": ["ok", "reason", "test_files", "commit_sha"],
-    "properties": {
-        "ok": {"type": "boolean"},
-        "reason": {"type": "string"},
-        "test_files": {"type": "array", "items": {"type": "string"}},
-        "commit_sha": {"type": "string"},
-    },
-}
-GREEN_SCHEMA = {
-    "type": "object",
-    "required": ["verify_passed", "e2e_ran", "verify_summary", "commit_sha"],
-    "properties": {
-        "verify_passed": {"type": "boolean"},
-        "e2e_ran": {"type": "boolean"},
-        "verify_summary": {"type": "string"},
-        "commit_sha": {"type": "string"},
-    },
-}
-SHIP_SCHEMA = {
-    "type": "object",
-    "required": ["pr_url", "branch"],
-    "properties": {"pr_url": {"type": "string"}, "branch": {"type": "string"}},
-}
+def obj_schema(props):
+    return {"type": "object", "required": list(props), "properties": props}
+
+
+STR, BOOL, STR_ARR = {"type": "string"}, {"type": "boolean"}, {"type": "array", "items": {"type": "string"}}
+PLAN_SCHEMA = obj_schema({
+    "worktree_path": STR, "status": {"type": "string", "enum": ["READY", "BLOCKED_CONTRACT", "BLOCKED_AMBIGUOUS"]},
+    "reason": STR, "plan_markdown": STR, "test_plan_markdown": STR, "req_ids": STR_ARR, "touches_web": BOOL,
+})
+REVISE_PLAN_SCHEMA = obj_schema({"plan_markdown": STR, "test_plan_markdown": STR, "req_ids": STR_ARR, "touches_web": BOOL})
+RED_SCHEMA = obj_schema({"ok": BOOL, "reason": STR, "test_files": STR_ARR, "commit_sha": STR})
+GREEN_SCHEMA = obj_schema({"verify_passed": BOOL, "e2e_ran": BOOL, "verify_summary": STR, "commit_sha": STR})
+SHIP_SCHEMA = obj_schema({"pushed": BOOL, "branch": STR})
 
 
 def run_cmd(cmd, cwd=ROOT, check=True):
@@ -88,11 +53,41 @@ def compute_branch(issue_num, title):
     return run_cmd(["node", "--input-type=module", "-e", js, CORE_JS, str(issue_num), title]).stdout.strip()
 
 
-async def process_issue(issue_num, base_branch, reviewer, max_rounds):
+def create_pr(issue, base_branch, branch, reviewer, refined_spec, verify_summary, plan_verdict, code_verdict):
+    title = f"[#{issue['number']}] {issue['title']}"[:120]
+    sections = [
+        f"Closes #{issue['number']}",
+        "",
+        "## Weryfikacja i bramki",
+        f"- `bash scripts/verify.sh --full`: {verify_summary}",
+        f"- Codex `plan-review`: `{plan_verdict['verdict']}` — {plan_verdict['summary']}",
+        f"- Codex `code-review`: `{code_verdict['verdict']}` — {code_verdict['summary']}",
+    ]
+    if refined_spec:
+        sections.extend(["", "## Uzgodniony refinement", refined_spec])
+    body_text = "\n".join(sections) + "\n"
+    with tempfile.NamedTemporaryFile("w", suffix=".md", delete=False) as tf:
+        tf.write(body_text)
+        body_path = tf.name
+    try:
+        base_cmd = ["gh", "pr", "create", "--base", base_branch, "--head", branch, "--title", title, "--body-file", body_path]
+        res = run_cmd([*base_cmd, "--reviewer", reviewer], check=False)
+        if res.returncode != 0:
+            with open(body_path, "w") as f:
+                f.write(body_text + f"\nReviewer: @{reviewer}\n")
+            res = run_cmd(base_cmd, check=True)
+        return res.stdout.strip().splitlines()[-1].strip()
+    finally:
+        if os.path.exists(body_path):
+            os.unlink(body_path)
+
+
+async def process_issue(issue_num, base_branch, reviewer, max_rounds, refined_spec=""):
     phase(f"Issue #{issue_num}")
     issue = json.loads(run_cmd(["gh", "issue", "view", str(issue_num), "--json", "number,title,body,labels,url"]).stdout)
     branch = compute_branch(issue_num, issue["title"])
     log(f"Starting #{issue_num}: {issue['title']} -> branch {branch}")
+    ref_block = f"\n\n=== AGREED REFINEMENT ===\n{refined_spec}" if refined_spec else ""
 
     worker = agent(STANDING_INSTRUCTIONS, role=f"Issue #{issue_num}", workspace="share")
     try:
@@ -102,8 +97,8 @@ async def process_issue(issue_num, base_branch, reviewer, max_rounds):
             f"2. If `.env.local` is missing, locate main repo via `git rev-parse --git-common-dir` parent and copy `.env.local` if present. "
             f"If `node_modules` is missing, run `pnpm install --frozen-lockfile --prefer-offline`.\n"
             f"3. Inspect codebase, `docs/KANONICZNA_SPECYFIKACJA_USER_STORIES.md`, and `contracts/` for Issue #{issue_num}:\n"
-            f"Title: {issue['title']}\nBody:\n{issue['body'] or '(empty)'}\n\n"
-            f"4. Produce a detailed implementation plan and test specification (@REQ tags, Playwright POM if apps/web).\n"
+            f"Title: {issue['title']}\nBody:\n{issue['body'] or '(empty)'}{ref_block}\n\n"
+            f"4. Produce a detailed implementation plan and test specification (@REQ tags, Playwright POM if apps/web) honoring the agreed refinement.\n"
             f"Return status BLOCKED_CONTRACT if contracts/* edits are required, BLOCKED_AMBIGUOUS on contract contradiction, else READY.",
             PLAN_SCHEMA,
         )
@@ -119,6 +114,8 @@ async def process_issue(issue_num, base_branch, reviewer, max_rounds):
             plan_file = os.path.join(tmpdir, "plan.md")
             with open(issue_file, "w") as f:
                 f.write(f"# #{issue_num} {issue['title']}\n\n{issue['body'] or ''}\n")
+                if refined_spec:
+                    f.write(f"\n## Agreed Refinement Decisions\n{refined_spec}\n")
 
             plan_verdict = None
             for rnd in range(1, max_rounds + 1):
@@ -194,25 +191,27 @@ async def process_issue(issue_num, base_branch, reviewer, max_rounds):
 
         ship = await worker(
             f"SHIP PHASE for #{issue_num}:\n"
-            f"1. Run `git push -u origin {branch}` (Codex receipt is ready in git dir).\n"
-            f"2. Open a GitHub PR with `gh pr create --base {base_branch} --head {branch} --reviewer {reviewer}`.\n"
-            f"   If `gh pr create` fails on `--reviewer`, retry without `--reviewer` and mention `@{reviewer}` in the PR body.\n"
-            f"   Include `Closes #{issue_num}`, plan/test summary, `verify.sh --full` result ({verify_summary}), and Codex verdicts.\n"
-            f"3. NEVER merge the PR.",
+            f"Run ONLY: `git -C {wt} push -u origin {branch}` (Codex receipt is ready in git dir).\n"
+            f"Do NOT create or merge any PR yourself.",
             SHIP_SCHEMA,
         )
-        return {"issue": issue_num, "status": "SHIPPED", "branch": ship["branch"], "pr_url": ship["pr_url"], "verify": verify_summary}
+        if not ship["pushed"]:
+            raise RuntimeError(f"Push failed for branch {branch}")
+        pr_url = create_pr(issue, base_branch, branch, reviewer, refined_spec, verify_summary, plan_verdict, code_verdict)
+        return {"issue": issue_num, "status": "SHIPPED", "branch": ship["branch"], "pr_url": pr_url, "verify": verify_summary}
     finally:
         del worker
 
 
 async def main():
-    issues = [int(i) for i in args.get("issues", [])]
+    raw_issues = [args["issue"]] if args.get("issue") is not None else args.get("issues", [])
+    issues = [int(i) for i in raw_issues]
     if not issues:
-        raise ValueError("args['issues'] must contain at least one GitHub issue number.")
+        raise ValueError("Provide args['issue'] or non-empty args['issues'].")
     base_branch = args.get("base_branch", "staging")
     reviewer = args.get("reviewer", "aiprojectmanagersznurowski-afk")
     max_rounds = int(args.get("max_rounds", 3))
+    refined_spec = str(args.get("refined_spec", "")).strip()
 
     phase("Pre-flight Codex")
     health = run_codex_gate("healthcheck", [])
@@ -220,7 +219,7 @@ async def main():
         raise RuntimeError(f"Codex healthcheck failed: {health}")
     log(f"Codex healthy: {health.get('version')} ({health.get('latencyMs')}ms)")
 
-    results = await pipeline(issues, lambda num: process_issue(num, base_branch, reviewer, max_rounds))
+    results = await pipeline(issues, lambda num: process_issue(num, base_branch, reviewer, max_rounds, refined_spec))
     phase("Session Report")
     completed = [r for r in results if r["status"] == "SHIPPED"]
     blocked = [r for r in results if r["status"] != "SHIPPED"]
