@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { MFA_REQUIRED_ROLES } from '@silvercare/contracts/src/generated/roles'
+import { DEVICE_INGEST_PROTOCOL } from '@silvercare/contracts/src/generated/integration'
 import { getAppRole } from '@/lib/auth/app-role'
 import { staffMfaSatisfied } from '@/lib/auth/staff-mfa'
 
@@ -11,6 +12,10 @@ export async function updateSession(request: NextRequest) {
     request,
   })
 
+  const path = request.nextUrl.pathname
+  // These handlers verify the recorder credential independently of user sessions.
+  if (DEVICE_INGEST_PROTOCOL.wire.requests.some((step) => step.path === path)) return supabaseResponse
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
 
@@ -18,7 +23,6 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse
   }
 
-  const path = request.nextUrl.pathname
   const isApi = path.startsWith('/api/')
   const authorization = request.headers.get('authorization')
   const bearer = isApi ? authorization?.match(/^Bearer\s+(.+)$/i)?.[1]?.trim() : undefined
