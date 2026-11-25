@@ -1,3 +1,5 @@
+import { requireOrgFeature } from '@/lib/feature-flags'
+import { FeatureDisabledState } from '@/components/patterns/FeatureDisabledState'
 import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@/lib/supabase/current-user'
 
@@ -8,6 +10,8 @@ export default async function StaffMessagesRedirectPage({
 }: {
   searchParams: Promise<{ residentId?: string }>
 }) {
+  if (!(await requireOrgFeature('module_family_portal')).allowed) return <FeatureDisabledState />
+
   const user = await getCurrentUser()
 
   if (!user) {

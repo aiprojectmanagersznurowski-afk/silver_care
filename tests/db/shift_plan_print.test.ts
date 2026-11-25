@@ -58,7 +58,8 @@ const approve = (tx: Tx, s: Seed, by: string, version: number) =>
   tx`INSERT INTO shift_plan_approvals (organization_id, shift_definition_id, shift_date, version, approved_by, approved_at)
      VALUES (${s.orgId}, ${s.dayId}, ${DAY}, ${version}, ${by}, now() + interval '1 second' * ${version * 10})`;
 
-const record = (tx: Tx, s: Seed) => tx`SELECT public.record_shift_plan_print(${s.dayId}, ${DAY}::date) AS version`;
+const record = (tx: Tx, s: Seed, version = 1) =>
+  tx`SELECT public.record_shift_plan_print(${s.dayId}, ${DAY}::date, ${version}) AS version`;
 
 describe('Wydruk planu pracy (NUR-SHIFT-PLAN-PRINT)', () => {
   afterAll(async () => {
@@ -91,6 +92,20 @@ describe('Wydruk planu pracy (NUR-SHIFT-PLAN-PRINT)', () => {
     });
   }, 30000);
 
+  it('@REQ: NUR-SHIFT-PLAN-PRINT - podgląd starszej wersji nie zapisuje wydruku żadnej wersji', async () => {
+    await rollback(async (tx) => {
+      const s = await seed(tx);
+      await approve(tx, s, s.admin, 1);
+      await approve(tx, s, s.admin, 2);
+
+      await failsWith(tx, /SHIFT_PLAN_VERSION_MISMATCH/, (sp) => record(sp, s, 1));
+      const approvals = await tx`SELECT printed_at FROM shift_plan_approvals WHERE shift_definition_id = ${s.dayId}`;
+      expect(approvals).toEqual([{ printed_at: null }, { printed_at: null }]);
+      const audit = await tx`SELECT id FROM audit_logs WHERE action = 'SHIFT_PLAN_PRINTED' AND organization_id = ${s.orgId}`;
+      expect(audit).toHaveLength(0);
+    });
+  }, 30000);
+
   it('@REQ: NUR-SHIFT-PLAN-PRINT - zwykła pielęgniarka nie drukuje planu', async () => {
     await rollback(async (tx) => {
       const s = await seed(tx);
@@ -114,8 +129,35 @@ describe('Wydruk planu pracy (NUR-SHIFT-PLAN-PRINT)', () => {
 
       await tx`INSERT INTO shift_plan_approvals (organization_id, shift_definition_id, shift_date, version, approved_by, approved_at)
         VALUES (${s.orgId}, ${s.dayId}, ${DAY}, 2, ${s.lead}, now() + interval '2 hours')`;
-      const [{ version }] = await record(tx, s);
+      const [{ version }] = await record(tx, s, 2);
       expect(version).toBe(2);
     });
   }, 30000);
+  it('@REQ: NUR-SHIFT-CLOSURE - zmiana przypisania blokuje wydruk nawet w tej samej transakcji co akceptacja', async () => {
+    await rollback(async (tx) => {
+      const s = await seed(tx);
+      await approve(tx, s, s.admin, 1);
+      await tx`UPDATE shift_tasks SET assignee_user_id = ${s.lead}
+        WHERE shift_definition_id = ${s.dayId} AND shift_date = ${DAY}`;
+      await failsWith(tx, /SHIFT_PLAN_STALE/, (sp) => record(sp, s));
+      await approve(tx, s, s.admin, 2);
+      expect(await record(tx, s, 2)).toEqual([{ version: 2 }]);
+    });
+  });
+
+  it('@REQ: NUR-SHIFT-PLAN-PRINT blocks a plan after removing its assignee from the roster', async () => {
+    await rollback(async (tx) => {
+      const s = await seed(tx);
+      await tx`UPDATE shift_tasks SET assignee_user_id = ${s.lead} WHERE shift_definition_id = ${s.dayId}`;
+      await approve(tx, s, s.admin, 1);
+      await tx`DELETE FROM shift_roster WHERE shift_definition_id = ${s.dayId} AND user_id = ${s.lead}`;
+      expect(await tx`SELECT * FROM public.get_shift_plan_status(${s.dayId}, ${DAY}::date)`).toEqual([{ version: 1, stale: true }]);
+      await failsWith(tx, /SHIFT_PLAN_STALE/, (sp) => record(sp, s));
+      await failsWith(tx, /SHIFT_PLAN_ASSIGNEE_NOT_ON_ROSTER/, (sp) => approve(sp, s, s.admin, 2));
+      await tx`UPDATE shift_tasks SET assignee_user_id = NULL WHERE shift_definition_id = ${s.dayId}`;
+      await approve(tx, s, s.admin, 2);
+      expect(await record(tx, s, 2)).toEqual([{ version: 2 }]);
+    });
+  });
+
 });

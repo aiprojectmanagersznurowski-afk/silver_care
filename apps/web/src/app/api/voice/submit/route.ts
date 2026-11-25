@@ -1,120 +1,51 @@
-import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { withAuth } from '@/lib/api-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
 
 export const runtime = 'nodejs'
 
-export async function POST(req: Request) {
-  try {
-    const authHeader = req.headers.get('authorization')
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7).trim() : undefined
-    const supabase = await createClient(token)
-
-    let user = null
-    if (token) {
-      const { data: authData } = await supabase.auth.getUser(token)
-      user = authData?.user || null
-    }
-    if (!user) {
-      const { data: cookieAuthData } = await supabase.auth.getUser()
-      user = cookieAuthData?.user || null
-    }
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const cookieStore = await cookies()
-    if (isImpersonationSessionActive(cookieStore, user)) {
-      return NextResponse.json({ error: 'Operacja niedozwolona w trybie podglądu' }, { status: 403 })
-    }
-
-    const role = user.app_metadata?.role
-    if (role !== 'nurse' && role !== 'org_admin' && role !== 'super_admin') {
-      return NextResponse.json({ error: 'Tylko personel może przesyłać nagrania' }, { status: 403 })
-    }
-
-    const body = await req.json().catch(() => ({}))
-    const residentId = body.resident_id
-    const clientUuid = body.client_uuid || null
-    const audioUrl = body.audio_url || 'local-pending-storage'
-
-    if (!residentId) {
-      return NextResponse.json({ error: 'Brak identyfikatora podopiecznego' }, { status: 400 })
-    }
-
-    const adminClient = createAdminClient()
-
-    // Weryfikacja izolacji organizacji (ORG-ISOLATION)
-    const userOrgId = user.app_metadata?.organization_id as string | undefined
-    if (userOrgId && role !== 'super_admin') {
-      const { data: resData } = await adminClient
-        .from('residents')
-        .select('organization_id')
-        .eq('id', residentId)
-        .single()
-      if (!resData || resData.organization_id !== userOrgId) {
-        return NextResponse.json({ error: 'Podopieczny nie należy do Twojej placówki' }, { status: 403 })
-      }
-    }
-
-    // 1. Sprawdzamy czy istnieje już wpis dla client_uuid (idempotencja VOICE-OFFLINE)
-    if (clientUuid) {
-      const { data: existing } = await adminClient
-        .from('voice_draft_notes')
-        .select('id, async_status')
-        .eq('client_uuid', clientUuid)
-        .single()
-
-      if (existing) {
-        return NextResponse.json(
-          {
-            success: true,
-            draftId: existing.id,
-            status: existing.async_status,
-            message: 'Zadanie zostało już wcześniej zarejestrowane (idempotency)',
-          },
-          { status: 202 }
-        )
-      }
-    }
-
-    // 2. Utworzenie nowego draftu ze statusem kolejki QUEUED
-    const { data: newDraft, error: insertErr } = await adminClient
-      .from('voice_draft_notes')
-      .insert({
-        resident_id: residentId,
-        nurse_id: user.id,
-        audio_url: audioUrl,
-        client_uuid: clientUuid,
-        status: 'DRAFT',
-        async_status: 'QUEUED',
-      })
-      .select('id, async_status')
-      .single()
-
-    if (insertErr || !newDraft) {
-      return NextResponse.json(
-        { error: 'Błąd tworzenia zadania przetwarzania notatki: ' + (insertErr?.message || '') },
-        { status: 500 }
-      )
-    }
-
-    // 3. Natychmiastowa odpowiedź HTTP 202 (<1.5s) zwalniająca interfejs personelu
-    return NextResponse.json(
-      {
-        success: true,
-        draftId: newDraft.id,
-        status: newDraft.async_status,
-        message: 'Nagranie przyjęte do asynchronicznego przetworzenia w tle',
-      },
-      { status: 202 }
-    )
-  } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : String(error)
-    console.error('Submit voice job error:', msg)
-    return NextResponse.json({ error: 'Wewnętrzny błąd serwera' }, { status: 500 })
-  }
+function accepted(draft: { id: string; async_status: string | null }) {
+  return NextResponse.json({
+    success: true, draftId: draft.id, status: draft.async_status,
+    message: 'Nagranie przyjęte do asynchronicznego przetworzenia w tle',
+  }, { status: 202 })
 }
+
+export const POST = withAuth(async (req, { user }) => {
+  const body: { resident_id?: unknown; client_uuid?: unknown; audio_url?: unknown } | null = await req.json().catch(() => null)
+  const residentId = body?.resident_id
+  if (typeof residentId !== 'string' || !residentId.trim()) {
+    return NextResponse.json({ error: 'Brak identyfikatora podopiecznego' }, { status: 400 })
+  }
+  const clientUuid = typeof body?.client_uuid === 'string' ? body.client_uuid : null
+  const audioUrl = typeof body?.audio_url === 'string' ? body.audio_url : 'local-pending-storage'
+  const admin = createAdminClient()
+
+  if (user.role !== 'super_admin') {
+    const { data: resident } = await admin.from('residents').select('organization_id').eq('id', residentId).single()
+    if (!resident || resident.organization_id !== user.organizationId) {
+      return NextResponse.json({ error: 'Podopieczny nie należy do Twojej placówki' }, { status: 403 })
+    }
+  }
+
+  const findPrevious = () => admin.from('voice_draft_notes').select('id, async_status')
+    .match({ client_uuid: clientUuid, nurse_id: user.id, resident_id: residentId }).maybeSingle()
+  if (clientUuid) {
+    const { data } = await findPrevious()
+    if (data) return accepted(data)
+  }
+
+  const { data, error } = await admin.from('voice_draft_notes').insert({
+    resident_id: residentId, nurse_id: user.id, audio_url: audioUrl,
+    client_uuid: clientUuid, status: 'DRAFT', async_status: 'QUEUED',
+  }).select('id, async_status').single()
+  if (!error && data) return accepted(data)
+
+  if (clientUuid && error?.code === '23505') {
+    const { data: previous } = await findPrevious()
+    if (previous) return accepted(previous)
+    return NextResponse.json({ error: 'Identyfikator nagrania jest już używany.' }, { status: 409 })
+  }
+  return NextResponse.json({ error: 'Nie udało się potwierdzić zapisu nagrania.' }, { status: 500 })
+}, { roles: ['nurse', 'org_admin', 'super_admin'], requireOrganization: true,
+  blockImpersonation: true, requiredFeature: 'module_voice_and_reports' })

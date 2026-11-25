@@ -1,3 +1,4 @@
+import { assertOrgFeatureForApi } from '@/lib/feature-flags'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { checkRateLimit } from '@/lib/rate-limiter'
@@ -29,6 +30,9 @@ export async function POST(req: Request) {
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const featureDenied = await assertOrgFeatureForApi(supabase, user, '/api/polar/sync')
+    if (featureDenied) return featureDenied
 
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1'
     const rateCheck = checkRateLimit(`polar-sync:${user.id || ip}`, 20, 60000)

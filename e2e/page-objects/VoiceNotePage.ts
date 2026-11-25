@@ -34,6 +34,12 @@ export class VoiceNotePage {
     await this.page.goto('/voice');
   }
 
+  async openGeneralRecording() {
+    await this.page.getByRole('link', { name: 'Nagranie ogólne' }).click();
+    await expect(this.page.getByRole('heading', { name: 'Nagranie ogólne' })).toBeVisible();
+    await expect(this.page.getByRole('button', { name: 'Rozpocznij nagrywanie' })).toBeEnabled();
+  }
+
   async expectResidentSelectionVisible() {
     await expect(this.heading).toBeVisible();
     await expect(this.searchInput).toBeVisible();

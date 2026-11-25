@@ -54,6 +54,21 @@ export const REQUIREMENTS = [
     ]
   },
   {
+    "id": "SUP-FEATURE-FLAGS",
+    "status": "TODO",
+    "risk": "HIGH",
+    "source": "SC-SUP-06",
+    "domain": "tenancy",
+    "statement": "Administrator platformy włącza i wyłącza duże moduły systemowe oraz flagi delegacji uprawnień per placówka z pełnym egzekwowaniem w UI, API, Server Actions i RLS, bez wpływu na niewyłączalny Rdzeń (w tym obowiązkowy rejestr audytowy RODO).",
+    "acceptance": [
+      "Lista 9 modułów, 2 flag delegacji, wartości domyślne i acykliczny graf zależności istnieją wyłącznie w contracts/features.contract.mjs",
+      "Flagi są przechowywane w tabeli organization_feature_flags (nie organizations.settings); bezpośredni INSERT/UPDATE/DELETE z sesji aplikacyjnych jest zablokowany (wyłącznie atomowy RPC set_organization_feature_flag), a zapis w trybie faktycznej impersonacji (sc_impersonation + sesja DB + claim JWT impersonator_id) oraz przez role inne niż super_admin jest odrzucany",
+      "Wyłączenie modułu dla placówki A ukrywa jego nawigację i widoki oraz jest egzekwowane w UI, API (z regułą REQUIRE_ALL_MATCHING dla tras wieloflagowych, np. /api/residents/[id]/report/latest), Server Actions oraz w politykach RLS i domenowych RPC (m.in. daily_reports i get_family_resident_overview), bez wpływu na placówkę B i bez wyłączania obowiązkowego audytu RODO",
+      "Włączenie flagi bez aktywnego modułu nadrzędnego jest blokowane (FEATURE_DEPENDENCY_DISABLED), a wyłączenie modułu nadrzędnego dezaktywuje wszystkie flagi zależne w jednej transakcji",
+      "Każda zmiana flagi (w tym kaskadowa) odkłada niemutowalny wpis ORG_FEATURE_FLAG_UPDATED w audit_logs w tej samej transakcji bez PII"
+    ]
+  },
+  {
     "id": "ADM-RESIDENT-ADD",
     "status": "TODO",
     "risk": "HIGH",
@@ -147,7 +162,7 @@ export const REQUIREMENTS = [
       "Na jedną zmianę przypada najwyżej jeden kierownik zmiany",
       "Uprawnienia kierownika zmiany (akceptacja planu, rozliczenie) dotyczą tylko zadań jego zmiany, a poza nią działa jak zwykły personel",
       "Tożsamość i placówka kierownika zmiany pochodzą z sesji i app_metadata, nigdy z parametrów żądania",
-      "Zakres shift_lead w macierzy dotyczy wyłącznie zasobów z kluczem zmiany i nigdy odczytu"
+      "Zakres shift_lead w macierzy dotyczy wyłącznie zasobów z kluczem zmiany. Odczyt jest dozwolony w jawnych wyjątkach R31"
     ]
   },
   {
@@ -160,7 +175,7 @@ export const REQUIREMENTS = [
     "acceptance": [
       "Każde zadanie ma źródło widoczne dla użytkownika: z przekazania, standardowe (plan opieki), ręczne albo przeniesione z poprzedniej zmiany",
       "Anulowanie zadania wymaga powodu, a niewykonane zadanie przechodzi na kolejną zmianę zamiast znikać",
-      "Lista jest grupowana per pokój albo per podopieczny",
+      "Lista jest grupowana według pokoju, podopiecznego lub pracownika; brak przypisania oznacza zadanie wspólne",
       "Zadania są niedostępne dla ról bliskich i nie trafiają do planu dnia współdzielonego z rodziną",
       "Każda zmiana statusu zadania zapisuje wpis w audit_logs bez treści zadania"
     ]
@@ -176,6 +191,42 @@ export const REQUIREMENTS = [
       "Wydruk jest dostępny dopiero po akceptacji planu i niesie wersję planu",
       "Wydruk zawiera wyłącznie pola z SHIFT_TASK_POLICY.printFields, bez PESEL i kontaktów",
       "Każdy wydruk zapisuje wpis w audit_logs: kto, kiedy i którą wersję planu wydrukował"
+    ]
+  },
+  {
+    "id": "NUR-TASKS-VOICE-COMPLETION",
+    "status": "TODO",
+    "risk": "HIGH",
+    "source": "SC-NUR-16/AC1–AC5, SC-NUR-20/AC3, SC-NUR-20/AC6",
+    "domain": "staff",
+    "statement": "Kierownik placówki albo właściwej zmiany może rozliczyć istniejące zadanie na podstawie zredagowanej podpowiedzi głosowej.",
+    "acceptance": [
+      "APP, APP_GENERAL i DEVICE stosują wspólne reguły po redakcji, bez dodatkowego wywołania modelu. Dowód wymaga ustalonego autora, czasu nagrania i jednoznacznego zadania TODO w tej samej placówce, zmianie i zakresie podopiecznego albo placówki",
+      "Reguły rozróżniają wykonanie, negację i odmowę. Wypowiedź warunkowa, przyszłe polecenie i konflikt blokują podpowiedź do rozliczenia",
+      "Odczyt cytatu i decyzja wymagają aal2, obu aktywnych modułów i zakresu placówki lub właściwej zmiany zgodnie z R31. Źródłowy brudnopis zachowuje własne ograniczenia",
+      "Decyzja kierownika, rozliczenie przez settle_shift_task i audyt metadanych są atomowe. Powtórzenie źródła lub równoległa decyzja nie powiela rozliczenia ani audytu",
+      "Cytat jest dostępny wyłącznie z aktywnym źródłem w jego okresie retencji. Audyt zachowuje metadane bez cytatu. Dowód nie trafia do raportu rodzinnego ani logów technicznych",
+      "Worker wykorzystuje istniejące rezerwacje i limit pracy. Zapytania ograniczają się do danej placówki i zmiany, a lista zadań pobiera podpowiedzi zbiorczo"
+    ]
+  },
+  {
+    "id": "NUR-SHIFT-CLOSURE",
+    "status": "TODO",
+    "risk": "HIGH",
+    "source": "SC-NUR-20",
+    "domain": "staff",
+    "statement": "Kierownik rozlicza zmianę i zatwierdza wersję przekazania lub aneksu, kończąc jej obieg. Następna zmiana korzysta z listy zadań lub wydruku zatwierdzonego planu.",
+    "acceptance": [
+      "Kierownik placówki albo grafikowy kierownik danej zmiany dodaje zadanie ręczne dla podopiecznego lub placówki i może przypisać otwarte zadanie osobie z grafiku docelowej zmiany. Puste przypisanie oznacza zadanie wspólne. Zmiana planu, także przypisania, wymaga nowej akceptacji przed wydrukiem",
+      "Domyślna tabela w dyżurce pokazuje wszystkie zadania zmiany z przypisaniami i statusami. Filtr Moje zadania pokazuje wyłącznie zadania przypisane zalogowanej osobie. Widoki według podopiecznego i pracownika korzystają z tej samej listy",
+      "Kierownik rozlicza otwarte zadanie przez settle_shift_task ręcznie w tabeli albo potwierdzając podpowiedź głosową. Każda ścieżka wystarcza samodzielnie. Plan pracy można zatwierdzić i wydrukować bez audio. Anulowanie wymaga powodu. Otwarte sprawy przechodzą do planu następnej zmiany, a przeniesiony oryginał jest zamknięty na dalsze rozliczenie",
+      "Przekazanie łączy dopuszczone fakty z webu i dyktafonu z ich źródłami, rozliczonymi zadaniami i otwartymi sprawami. Brak rozpoznania autora jest jawny, a nierozstrzygnięte fragmenty pozostają w kolejce wyjątków. Głosowe wykonanie jest podpowiedzią do decyzji kierownika. Raport rodzinny i incydenty mają oddzielne obiegi",
+      "COMPLETE wymaga niezależnie zapisanego wykazu oczekiwanych źródeł oraz dowodu przyjęcia i przetworzenia materiału właściwego dyżuru. Identyfikatory podane przy zatwierdzeniu nie są dowodem. Bez niezależnego wykazu stan jest UNKNOWN, a przy znanym braku PARTIAL. Kierownik może zatwierdzić oba stany z powodem",
+      "Zweryfikowany początek fragmentu wyznacza dyżur według grafiku placówki, nawet dla fragmentów z jednego pliku przypadających na różne dyżury. Datą zmiany nocnej jest data jej rozpoczęcia. Nieustalony czas trafia do kolejki wyjątków, a po weryfikacji obowiązuje skorygowany czas i gotowość fragmentów właściwego dyżuru",
+      "Planista po domyślnym buforze 30 minut od końca zmiany przygotowuje lub odświeża szkic. Ponowienie i opóźnienie są bezpieczne. Lista zadań jest dostępna od początku następnej zmiany, a kierownik może wcześniej zatwierdzić dostępny materiał. Bufor sam nie potwierdza kompletności",
+      "Spóźniony dopuszczony materiał uzupełnia otwarty szkic lub tworzy propozycję aneksu powiązaną z wcześniejszą wersją właściwego dyżuru. Zatwierdzenie kończy obieg aneksu. Poprzednie wersje i istniejące wpisy audytowe pozostają dostępne",
+      "Dodanie i rozliczenie zadania, zmiana przypisania, przeniesienie, zatwierdzenie planu i przekazania, wydruk oraz zatwierdzenie aneksu mają transakcyjny ślad identyfikatorów, aktora, czasu i wersji tam, gdzie dotyczy. Wpis zmiany statusu utrwala metodę rozliczenia i źródło podpowiedzi głosowej, bez treści nagrań, zadań i raportów. Historia zmiany i eksport audytu pokazują metodę",
+      "Kierownik placówki może odczytać i wyeksportować zdarzenia zmian za wybrany okres w strefie placówki. Kierownik zmiany czyta wyłącznie historię właściwego przekazania w zakresie grafiku"
     ]
   },
   {
@@ -286,11 +337,11 @@ export const REQUIREMENTS = [
     "risk": "HIGH",
     "source": "SC-ADM-07, NFR-SEC-02",
     "domain": "security",
-    "statement": "Personel loguje się z drugim składnikiem; rodziny bez MFA.",
+    "statement": "Personel potwierdza drugi składnik przed dostępem do chronionych danych i operacji. Konta rodzin logują się bez drugiego składnika.",
     "acceptance": [
-      "Rola z MFA_REQUIRED_ROLES bez potwierdzonego drugiego składnika nie odczyta żadnej tabeli z danymi pensjonariuszy",
-      "Blokada działa na poziomie bazy, nie tylko w interfejsie",
-      "Konta rodzin logują się bez drugiego składnika"
+      "Rola z MFA_REQUIRED_ROLES potrzebuje zweryfikowanej sesji aal2 do chronionych danych podopiecznych, audytu i operacji personelu. Wymóg działa w aplikacji, API i bazie.",
+      "Operator może czasowo wyłączyć wymaganie w odizolowanym środowisku testowym z danymi syntetycznymi. Domyślna i produkcyjna konfiguracja zawsze wymagają aal2.",
+      "Tryb testowy zachowuje rzeczywisty poziom sesji oraz sprawdzanie tożsamości, roli, placówki, zmiany i modułu. Aplikacja i baza stosują tę samą decyzję. Użytkownik aplikacji nie może uruchomić trybu testowego."
     ]
   },
   {
@@ -455,15 +506,14 @@ export const REQUIREMENTS = [
     "id": "VOICE-ZERO-GUESSING",
     "status": "TODO",
     "risk": "HIGH",
-    "source": "SC-NUR-02/AC2, ADR-006, ADR-022",
+    "source": "SC-NUR-02/AC2, SC-NUR-18, SC-NUR-19, ADR-006, ADR-022",
     "domain": "voice",
-    "statement": "Model nigdy nie ustala tożsamości pensjonariusza z nagrania.",
+    "statement": "Model raportowy nigdy nie ustala tożsamości podopiecznego z nagrania.",
     "acceptance": [
-      "Żądanie nagrania z aplikacji zawiera resident_id jako UUID z frontendu",
-      "Transkrypt wysyłany do modelu nie zawiera imienia, nazwiska ani identyfikatora",
-      "Złączenie treści z tożsamością następuje w pamięci funkcji brzegowej przed zapisem",
-      "Brak resident_id w żądaniu z aplikacji kończy się odmową, nie próbą rozpoznania",
-      "Nagranie z urządzenia bez podopiecznego potwierdzonego przez człowieka nie dociera do CLASSIFY ani do modelu"
+      "Tryb nagrania o podopiecznym wymaga resident_id jako UUID z aplikacji i zachowuje wybrany zakres, a sprzeczna wzmianka wymaga wyjaśnienia",
+      "Tryb nagrania ogólnego przyjmuje audio bez resident_id, a autor pochodzi z uwierzytelnionej sesji",
+      "Serwer ustala zakres fragmentu w rejestrze tej samej placówki przed klasyfikacją, a przypadek niejednoznaczny oczekuje w kolejce",
+      "Transkrypt wysyłany do modelu raportowego nie zawiera imienia, nazwiska ani identyfikatora, a system łączy wynik z tożsamością przed zapisem"
     ]
   },
   {
@@ -549,10 +599,10 @@ export const REQUIREMENTS = [
       "Ponowna wysyłka tej samej pary device_id i client_capture_id zwraca DUPLICATE bez drugiego wpisu",
       "Urządzenie kasuje nagranie wyłącznie po ACCEPTED albo DUPLICATE",
       "Żądanie z resident_id, imieniem, PESEL albo transkryptem jest odrzucane jako FORBIDDEN_FIELD",
-      "Autorem nagrań sesji jest osoba, która przedstawiła się w pierwszym nagraniu sesji",
+      "Przedstawienie z pierwszego nagrania to deklaracja autora sesji, którą kierownik może skorygować dla wybranego fragmentu",
       "Przedstawienie dopasowuje serwer bez modelu do personelu placówki; brak albo kilka dopasowań wybiera kierownik zmiany",
       "Bezczynność urządzenia powyżej 3 godzin automatycznie otwiera nową sesję, chroniąc prywatność brudnopisów między osobami",
-      "Gdy nagrania z session_seq > 1 dotrą przed session_seq 1 (np. po retry), serwer retroaktywnie uzupełnia autora całej sesji po dotarciu session_seq 1",
+      "Gdy później dotrze session_seq 1, serwer uzupełnia brakującą deklarację autora z zachowaniem ręcznych korekt",
       "Nagranie z czasem spoza okna synchronizacji dostaje oznaczenie TIME_UNCERTAIN",
       "Każda odpowiedź protokołu niesie server_time, z którego urządzenie bez RTC ustawia zegar",
       "Nagranie z clock_state RELATIVE dostaje recorded_at równe chwili przyjęcia INIT minus age_ms",
@@ -563,17 +613,22 @@ export const REQUIREMENTS = [
     "id": "VOICE-RESIDENT-ASSIGN",
     "status": "TODO",
     "risk": "HIGH",
-    "source": "SC-NUR-18, ADR-022",
+    "source": "SC-NUR-18, SC-NUR-19, ADR-022",
     "domain": "voice",
-    "statement": "Nagranie bez podopiecznego trafia do kolejki, w której serwer podsuwa kandydatów, a człowiek potwierdza.",
+    "statement": "Serwer przypisuje zakres fragmentu nagrania, a kierownik rozstrzyga wyjątki, koryguje autora i czas oraz dzieli materiał mieszany.",
     "acceptance": [
-      "Kandydatów wyznacza serwer na rejestrze tej placówki, bez udziału modelu",
-      "Bez potwierdzenia człowieka nagranie nie przechodzi do etapu CLASSIFY",
-      "Kolejkę czyta i rozstrzyga wyłącznie kierownik tej zmiany albo kierownik placówki",
-      "Po decyzji pozycja znika z kolejki, a voice_draft_notes czyta dalej tylko autor",
-      "Nagranie oznaczone jako nie do przypisania nie trafia do modelu i podlega retencji",
-      "Każda decyzja zapisuje w audit_logs kandydatów podsuniętych i wybór człowieka",
-      "Konto bliskiego otrzymuje zero wierszy z kolejki przypisania"
+      "Jeden plik może zawierać wiele fragmentów, a każdy fragment ma własny zakres i odnośnik do źródła",
+      "Jedno spójne dopasowanie serwera w rejestrze placówki przypisuje podopiecznego na potrzeby szkicu, a jawna sprawa placówki otrzymuje zakres FACILITY",
+      "Brak lub konflikt dopasowania, nieustalony autor albo niepewny czas trafiają do kolejki z powodem, bez zatrzymywania poprawnie rozstrzygniętych fragmentów",
+      "Kolejkę czyta i rozstrzyga wyłącznie kierownik tej zmiany albo kierownik placówki, a bliscy otrzymują zero wierszy",
+      "Fragment nierozstrzygnięty albo oznaczony jako nie do przypisania pozostaje poza klasyfikacją i raportami oraz podlega retencji",
+      "Audyt zapisuje metodę, czas i identyfikatory źródła oraz zmiany przypisania z osobą przy ręcznej korekcie, bez treści transkryptu",
+      "Wskazanie zmiany bez czasu przekazuje wyjątek kierownikowi tej zmiany i pozostawia blokadę czasową. Zweryfikowany początek usuwa blokadę czasową i zachowuje pozostałe powody",
+      "Czas źródłowy, stan zegara, czas przyjęcia, zweryfikowany początek i czas opisywanego zdarzenia są odrębne. Zmianę wyznacza SHIFT_POLICY z datą początku zmiany nocnej i walidacją czasu lokalnego z przesunięciem UTC",
+      "Odczyt i decyzja wymagają aal2, własnej placówki i aktywnego modułu głosowego. Pozycję bez zmiany oraz przeniesienie na inną zmianę obsługuje kierownik placówki",
+      "Podział waliduje rozłączne granice w oryginalnym pliku. Dzieci mają wspólne źródło i retencję, niezależnie oczekują na prywatną transkrypcję, redakcję i projekcję. Rodzic nie może trafić do projekcji",
+      "Korekta czasu i podział zapisują decyzję atomowo, z wersją kolejki i kluczem ponowienia. Ponowienie zwraca poprzedni wynik, konkurencyjna decyzja wymaga odświeżenia. Audyt zawiera metadane bez transkryptu",
+      "Automatyczne przypisanie zasila szkic bez zatwierdzania raportu, publikacji rodzinie ani rozliczania zadań"
     ]
   },
   {
@@ -582,7 +637,7 @@ export const REQUIREMENTS = [
     "risk": "MEDIUM",
     "source": "SC-ADM-24, ADR-022",
     "domain": "voice",
-    "statement": "Kierownik placówki prowadzi rejestr urządzeń placówki. Urządzenia są wspólne: autora nagrań ustala przedstawienie w sesji, a wpis wydania jest opcjonalną ewidencją sprzętu.",
+    "statement": "Kierownik placówki prowadzi rejestr urządzeń placówki. Urządzenia są wspólne: przedstawienie określa deklarowanego autora sesji, a wpis wydania jest opcjonalną ewidencją sprzętu.",
     "acceptance": [
       "Token urządzenia jest pokazywany jeden raz przy rejestracji",
       "Unieważnienie ustawia revoked_at zamiast usuwać wiersz",
@@ -617,6 +672,24 @@ export const REQUIREMENTS = [
       "Zgłoszenie wymaga wyboru kategorii z AI_FEEDBACK_CATEGORIES",
       "Zapisywana jest migawka tekstu i wersja promptu",
       "Zgłoszenie blokuje publikację raportu"
+    ]
+  },
+  {
+    "id": "VOICE-DOCK-REPORTS",
+    "status": "TODO",
+    "risk": "HIGH",
+    "source": "SC-SUP-06, SC-NUR-12, ADR-023",
+    "domain": "reports",
+    "statement": "Potok głosowy w module module_voice_and_reports zapisuje po etapie ASSIGN i REDACT niemutowalne, zanonimizowane zdarzenia (voice_sanitized_events) i kieruje je do konfigurowalnych per placówka kategorii raportów operacyjnych (organization_report_configs, operational_reports) bez ujawniania strumienia MEDICAL ani dopuszczania ról bliskich.",
+    "acceptance": [
+      "Tryb APP zachowuje resident_id wybranego podopiecznego. APP_GENERAL i DEVICE zapisują zdarzenia z fragmentów o zakresie RESIDENT lub FACILITY rozstrzygniętym według VOICE-RESIDENT-ASSIGN. Do wdrożenia przypisania fragmentów te ścieżki działają w trybie fail-closed",
+      "Przed klasyfikacją domenową i generowaniem raportów wycinane są dane medyczne (MEDICAL_CATEGORIES) oraz maskowane są PESEL, telefon, e-mail, imiona, nazwiska, numery pokoi i etykiety łóżek",
+      "Każda placówka ma domyślne kategorie operacyjne (audit_operational, technical_maintenance, catering_kitchen), a super_admin może dodawać i archiwizować dodatkowe kategorie per placówka wyłącznie przez RPC z blokadą impersonacji i śladem w audit_logs",
+      "Flaga allow_org_admin_report_config deleguje Kierownikowi placówki wyłącznie konfigurację istniejących kategorii własnej placówki (włączenie, harmonogram, dozwolone sekcje, role odbiorców org_admin/nurse, retencja 30–1825 dni z globalnym domyślnym 365 dni), a nie tworzenie kategorii ani zmianę reguł redakcji",
+      "Zasoby voice_sanitized_events, organization_report_configs i operational_reports są niedostępne dla ról family i legal_guardian (0 wierszy w RLS); super_admin nie czyta treści voice_sanitized_events ani operational_reports",
+      "Zapis voice_sanitized_events oraz generowanych szkiców operational_reports odbywa się wyłącznie z zaufanego potoku serwerowego (service_role po redakcji i post-filtrze MDR, create: [] dla sesji klienckich), natomiast sesje authenticated mają wyłącznie RPC konfiguracji kategorii i zatwierdzania raportu",
+      "Trigger niemutowalności voice_sanitized_events blokuje ręczną edycję treści, zezwalając wyłącznie na wyzerowanie draft_note_id (ON DELETE SET NULL) przy retencji voice_draft_notes, kaskadowe usunięcie przy wymazaniu podopiecznego (RODO art. 17) oraz usunięcie po upływie retencji placówki (cleanup_expired_operational_reports, domyślnie 365 dni); wymazanie podopiecznego cofa powiązany raport operacyjny do status = DRAFT (lub no_data: true przy utracie wszystkich źródeł)",
+      "Przy braku zdarzeń w okresie raportu generator zwraca jawny komunikat o braku danych bez fabrykowania faktów, a fakty operacyjne/placówkowe nie są wstrzykiwane do raportu rodzinnego daily_reports"
     ]
   },
   {

@@ -2,9 +2,11 @@
  * Widok zadań zmiany (NUR-TASKS, SC-NUR-13/15): etykiety źródła i statusu, grupowanie, walidacja nowego zadania.
  * Zadania są poleceniami personelu — żadnej oceny stanu zdrowia ani koloru niosącego ocenę.
  */
+import { SHIFT_TASK_POLICY } from '@silvercare/contracts/src/generated/facility'
+
 export type TaskSource = 'MANUAL' | 'HANDOVER' | 'CARE_PLAN'
 export type TaskStatus = 'PROPOSED' | 'TODO' | 'DONE' | 'CANCELLED'
-export type TaskGroupMode = 'room' | 'resident'
+export type TaskGroupMode = (typeof SHIFT_TASK_POLICY.groupBy)[number]
 
 export interface TaskView {
   id: string
@@ -18,6 +20,8 @@ export interface TaskView {
   room: string | null
   bed: string | null
   cancelReason: string | null
+  assigneeUserId?: string | null
+  assigneeName?: string | null
 }
 
 export interface TaskGroup {
@@ -51,7 +55,12 @@ export function statusLabel(status: TaskStatus): string {
 }
 
 export function normalizeGroupParam(value: string | undefined): TaskGroupMode {
-  return value === 'resident' ? 'resident' : 'room'
+  return SHIFT_TASK_POLICY.groupBy.find((mode) => mode === value) ?? SHIFT_TASK_POLICY.groupBy[0]
+}
+
+export function assigneeLabel(task: Pick<TaskView, 'assigneeUserId' | 'assigneeName'>): string {
+  if (!task.assigneeUserId) return 'Zadania wspólne'
+  return task.assigneeName ?? `Pracownik ${task.assigneeUserId.slice(0, 8)}`
 }
 
 export function validateTaskInput(input: { title: string; dueTime: string }): string | null {
@@ -91,7 +100,11 @@ export function groupTasks(tasks: TaskView[], mode: TaskGroupMode, carriedOutIds
     let key: string
     let label: string
     let sort: string
-    if (!t.residentId) {
+    if (mode === 'assignee') {
+      key = t.assigneeUserId ? `assignee:${t.assigneeUserId}` : 'shared'
+      label = assigneeLabel(t)
+      sort = t.assigneeUserId ? label : '￿'
+    } else if (!t.residentId) {
       key = 'facility'; label = 'Zadania placówki'; sort = '￿'
     } else if (mode === 'room') {
       key = `room:${t.room ?? ''}`

@@ -1,5 +1,6 @@
 'use server'
 
+import { featureDisabledMessage, isOrgFeatureEnabled } from '@/lib/feature-flags'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
@@ -81,6 +82,10 @@ export async function updateResidentInlineAction(
 
   if (role !== 'super_admin' && resident.organization_id !== orgId) {
     return { success: false, error: 'Brak dostępu do podopiecznego z innej placówki.' }
+  }
+
+  if (!(await isOrgFeatureEnabled(supabase, resident.organization_id, 'module_residents_management'))) {
+    return { success: false, error: featureDisabledMessage }
   }
 
   // Przygotowanie bezpiecznego payloadu (tylko dozwolone kolumny)

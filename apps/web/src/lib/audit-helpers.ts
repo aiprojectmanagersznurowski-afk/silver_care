@@ -2,6 +2,28 @@
  * Helpery dla rejestru audytowego (SEC-AUDIT-EXPORT-TIMEZONE, SEC-NO-PII-LOGS)
  */
 
+import { SHIFT_POLICY, SHIFT_TASK_POLICY } from '@silvercare/contracts/src/generated/facility'
+
+const auditDateOffset = new Intl.DateTimeFormat('en-GB', {
+  timeZone: SHIFT_POLICY.timezone,
+  timeZoneName: 'longOffset',
+})
+
+export function parseAuditDate(value: string | undefined): string | undefined {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value) || value.startsWith('0000')) return undefined
+  const date = new Date(`${value}T00:00:00Z`)
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value ? value : undefined
+}
+
+export function auditDayBoundary(date: string, nextDay = false): string {
+  const reference = new Date(`${date}T00:00:00Z`)
+  if (nextDay) reference.setUTCDate(reference.getUTCDate() + 1)
+  const iso = reference.toISOString()
+  // Północ UTC wypada w Warszawie godzinę lub dwie po północy lokalnej, przed zmianą czasu.
+  const offset = auditDateOffset.formatToParts(reference).find((part) => part.type === 'timeZoneName')?.value
+  return new Date(`${iso.slice(0, iso.indexOf('T'))}T00:00:00${offset?.slice(3) || 'Z'}`).toISOString()
+}
+
 export interface AuditLogEntry {
   id: string
   organization_id: string | null
@@ -81,6 +103,15 @@ export function sanitizeAuditPayload(payload?: unknown): Record<string, unknown>
   return sanitized
 }
 
+function exportAuditPayload(log: AuditLogEntry) {
+  const payload = sanitizeAuditPayload(log.payload)
+  const method = payload.settlement_method
+  if (log.action === 'SHIFT_TASK_STATUS_CHANGED' && (method === 'MANUAL' || method === 'VOICE')) {
+    payload.settlement_method_label = SHIFT_TASK_POLICY.settlementMethods[method]
+  }
+  return payload
+}
+
 /**
  * Generowanie pliku CSV z audytu zgodnego z RODO (brak PII, czytelny User ID)
  */
@@ -92,7 +123,7 @@ export function formatAuditToCsv(logs: AuditLogEntry[], timeZone?: string): stri
     const utcTime = log.created_at
     const action = log.action
     const actor = log.performed_by || 'System'
-    const safePayload = JSON.stringify(sanitizeAuditPayload(log.payload)).replace(/"/g, '""')
+    const safePayload = JSON.stringify(exportAuditPayload(log)).replace(/"/g, '""')
 
     return `"${localTime}","${utcTime}","${action}","${actor}","${safePayload}"`
   })
@@ -110,7 +141,7 @@ export function formatAuditToJson(logs: AuditLogEntry[], timeZone?: string): str
     timestamp_utc: log.created_at,
     action: log.action,
     performed_by: log.performed_by || 'System',
-    payload: sanitizeAuditPayload(log.payload)
+    payload: exportAuditPayload(log)
   }))
 
   return JSON.stringify(exportItems, null, 2)

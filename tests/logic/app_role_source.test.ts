@@ -22,7 +22,10 @@ const asUser = (app: Record<string, unknown>, meta: Record<string, unknown> = {}
 
 function mockSession(user: unknown) {
   vi.mocked(createClient).mockResolvedValueOnce({
-    auth: { getUser: vi.fn().mockResolvedValueOnce({ data: { user }, error: null }) },
+    auth: {
+      getUser: vi.fn().mockResolvedValueOnce({ data: { user }, error: null }),
+      getClaims: vi.fn().mockResolvedValue({ data: { claims: { sub: 'u1', aal: 'aal2' } } }),
+    },
   } as unknown as Awaited<ReturnType<typeof createClient>>)
 }
 

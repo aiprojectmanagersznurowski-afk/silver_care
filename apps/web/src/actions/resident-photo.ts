@@ -1,5 +1,6 @@
 'use server'
 
+import { featureDisabledMessage, isOrgFeatureEnabled } from '@/lib/feature-flags'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
@@ -35,6 +36,10 @@ export async function setResidentPhotoAction(residentId: string, path: string): 
   const orgId = user.app_metadata?.organization_id as string | undefined
   if (user.app_metadata?.role !== 'org_admin' || !orgId) {
     return { success: false, error: 'Zdjęcie podopiecznego zmienia wyłącznie kierownik placówki.' }
+  }
+
+  if (!(await isOrgFeatureEnabled(supabase, orgId, 'module_residents_management'))) {
+    return { success: false, error: featureDisabledMessage }
   }
 
   const [folderOrg, folderSubject, fileName, ...rest] = (path || '').split('/')

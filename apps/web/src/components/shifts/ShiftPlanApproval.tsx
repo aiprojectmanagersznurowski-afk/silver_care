@@ -10,12 +10,13 @@ interface ShiftPlanApprovalProps {
   shiftDefinitionId: string
   shiftDate: string
   version: number | null
+  stale: boolean
   canApprove: boolean
   printHref: string | null
 }
 
 /** Stan akceptacji planu zmiany. Zatwierdza kierownik zmiany albo kierownik placówki; każda akceptacja to nowa wersja. */
-export function ShiftPlanApproval({ shiftDefinitionId, shiftDate, version, canApprove, printHref }: ShiftPlanApprovalProps) {
+export function ShiftPlanApproval({ shiftDefinitionId, shiftDate, version, stale, canApprove, printHref }: ShiftPlanApprovalProps) {
   const router = useRouter()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -32,7 +33,7 @@ export function ShiftPlanApproval({ shiftDefinitionId, shiftDate, version, canAp
   return (
     <div className="flex flex-wrap items-center gap-3">
       <p data-testid="plan-approval-status" className="text-sm text-foreground">
-        {version ? `Plan zatwierdzony, wersja ${version}` : 'Plan nie został zatwierdzony'}
+        {stale ? 'Plan wymaga ponownego zatwierdzenia' : version ? `Plan zatwierdzony, wersja ${version}` : 'Plan nie został zatwierdzony'}
       </p>
       {canApprove && (
         <Button type="button" variant="outline" size="sm" className="min-h-touch" disabled={busy} onClick={approve}>Zatwierdź plan</Button>

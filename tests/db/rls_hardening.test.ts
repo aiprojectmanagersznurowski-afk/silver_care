@@ -69,10 +69,10 @@ describe('RLS Hardening & Tenant Isolation (MIG-RLS-HARDENING)', () => {
       const adminDelete = await tx`DELETE FROM organizations WHERE id = ${orgA.id} RETURNING id`;
       expect(adminDelete.length).toBe(0);
 
-      // 3. Switch back to super_admin and delete Org B
+      // 3. Switch back to super_admin — organizations delete is forbidden by MATRIX (delete: [])
       await tx`SELECT set_config('request.jwt.claims', '{"app_metadata": {"role": "super_admin"}, "aal": "aal2"}', true)`;
-      const [deletedB] = await tx`DELETE FROM organizations WHERE id = ${orgB.id} RETURNING id`;
-      expect(deletedB.id).toBe(orgB.id);
+      const superDelete = await tx`DELETE FROM organizations WHERE id = ${orgB.id} RETURNING id`;
+      expect(superDelete.length).toBe(0);
 
       throw new Error('ROLLBACK');
     }).catch((e) => {

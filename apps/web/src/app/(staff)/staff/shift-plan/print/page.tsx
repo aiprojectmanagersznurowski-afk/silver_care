@@ -1,9 +1,11 @@
+import { requireOrgFeature } from '@/lib/feature-flags'
+import { FeatureDisabledState } from '@/components/patterns/FeatureDisabledState'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/supabase/current-user'
 import { getAppRole } from '@/lib/auth/app-role'
 import { PageHeader } from '@/components/patterns/PageHeader'
-import { ListEmpty } from '@/components/patterns/ListState'
+import { ListEmpty, ListError } from '@/components/patterns/ListState'
 import { PrintPlanButton } from '@/components/shifts/PrintPlanButton'
 import { formatDayLabel, normalizeDateParam } from '@/lib/shifts/roster-week'
 import { formatShiftRange, trimSeconds } from '@/lib/shifts/shift-definitions'
@@ -17,6 +19,8 @@ type SearchParams = Promise<{ shift?: string; date?: string }>
 
 /** Plan pracy zmiany do wydruku A4 (NUR-SHIFT-PLAN-PRINT, SC-NUR-16): tylko zatwierdzony plan, pola bez PESEL i kontaktów. */
 export default async function ShiftPlanPrintPage({ searchParams }: { searchParams: SearchParams }) {
+  if (!(await requireOrgFeature('module_shift_tasks')).allowed) return <FeatureDisabledState />
+
   const user = await getCurrentUser()
   const role = getAppRole(user)
   if (!user || (role !== 'nurse' && role !== 'org_admin')) redirect('/')
@@ -32,26 +36,32 @@ export default async function ShiftPlanPrintPage({ searchParams }: { searchParam
     .maybeSingle()
   if (!shift) return <ListEmpty title="Nie znaleziono zmiany" description="Wróć do listy zadań i wybierz zmianę." />
 
-  const [leadRes, approvalsRes] = await Promise.all([
+  const [leadRes, approvalRes] = await Promise.all([
     role === 'org_admin' ? Promise.resolve({ data: true }) : supabase.rpc('is_shift_lead', { p_shift_definition_id: shift.id, p_shift_date: date }),
-    supabase.from('shift_plan_approvals').select('version').eq('shift_definition_id', shift.id).eq('shift_date', date),
+    supabase.rpc('get_shift_plan_status', { p_shift: shift.id, p_date: date }).maybeSingle(),
   ])
   if (leadRes.data !== true) return <ListEmpty title="Brak uprawnień" description="Plan pracy drukuje kierownik zmiany." />
-  if (!(approvalsRes.data ?? []).length) {
+  if (approvalRes.error) return <ListError title="Nie udało się wczytać zatwierdzonego planu" />
+  const approval = approvalRes.data
+  if (!approval) {
     return <ListEmpty title="Najpierw zatwierdź plan zmiany" description="Wydruk jest możliwy po zatwierdzeniu planu na liście zadań." />
   }
 
-  const { tasks, carriedOut } = await loadShiftTaskData(supabase, shift.id, date)
+  if (approval.stale) {
+    return <ListEmpty title="Plan wymaga ponownego zatwierdzenia" description="Wróć do listy zadań i zatwierdź jego aktualną wersję." />
+  }
+  const { tasks, carriedOut, unavailable } = await loadShiftTaskData(supabase, shift.id, date)
+  if (unavailable) return <ListError title="Nie udało się wczytać zadań z zatwierdzonego planu" />
   const visible = groupTasks(tasks, 'room', carriedOut).flatMap((g) => g.tasks)
   const sections = buildPrintSections(visible)
 
   return (
     <div className="space-y-6">
-      <style>{'@media print { @page { size: A4; margin: 12mm } header, [data-slot^="sidebar"] { display: none !important } }'}</style>
+      <style>{'@media print { @page { size: A4; margin: 12mm } header, [data-slot="sidebar"] { display: none !important } }'}</style>
       <PageHeader
         title="Plan pracy zmiany"
-        description={`${formatDayLabel(date)} · ${shift.name}, ${formatShiftRange(trimSeconds(shift.start_time), trimSeconds(shift.end_time))}`}
-        actions={<PrintPlanButton shiftDefinitionId={shift.id} shiftDate={date} />}
+        description={`${formatDayLabel(date)} · ${shift.name}, ${formatShiftRange(trimSeconds(shift.start_time), trimSeconds(shift.end_time))} · Wersja ${approval.version}`}
+        actions={<PrintPlanButton shiftDefinitionId={shift.id} shiftDate={date} planVersion={approval.version} />}
       />
       {sections.length === 0 ? (
         <ListEmpty title="Brak zadań do wydruku" description="Na tej zmianie nie ma zadań ze statusem „Do zrobienia”." />
@@ -63,7 +73,7 @@ export default async function ShiftPlanPrintPage({ searchParams }: { searchParam
               <thead>
                 <tr className="border-b text-left text-muted-foreground">
                   <th className="py-1 pr-2">Podopieczny</th><th className="py-1 pr-2">Zadanie</th><th className="py-1 pr-2">Godzina</th>
-                  <th className="py-1 pr-2">Źródło</th><th className="py-1">Wykonano</th>
+                  <th className="py-1 pr-2">Źródło</th><th className="py-1 pr-2">Przypisanie</th><th className="py-1">Wykonano</th>
                 </tr>
               </thead>
               <tbody>
@@ -73,6 +83,7 @@ export default async function ShiftPlanPrintPage({ searchParams }: { searchParam
                     <td className="py-1 pr-2">{row.title}</td>
                     <td className="py-1 pr-2">{row.dueTime || '—'}</td>
                     <td className="py-1 pr-2">{row.source}</td>
+                    <td className="py-1 pr-2">{row.assignee}</td>
                     <td className="py-1"><span aria-hidden>☐</span></td>
                   </tr>
                 ))}

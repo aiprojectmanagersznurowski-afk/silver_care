@@ -80,7 +80,7 @@ describe('Database RLS: organizations (ORG-ISOLATION)', () => {
       
       await tx`SET LOCAL ROLE authenticated`;
       // Pokoje dodaje kierownik placówki (rooms_org_admin_insert, od 20261024120000); test sprawdza dziedziczenie placówki z tokenu
-      await tx`SELECT set_config('request.jwt.claims', ${JSON.stringify({ app_metadata: { role: 'org_admin', organization_id: orgIdA } })}, true)`;
+      await tx`SELECT set_config('request.jwt.claims', ${JSON.stringify({ sub: '44444444-4444-4444-8444-444444444444', app_metadata: { role: 'org_admin', organization_id: orgIdA }, aal: 'aal2' })}, true)`;
 
       // Try to insert a room without explicitly providing organization_id
       const [room] = await tx`INSERT INTO rooms (number, floor) VALUES ('Room 101', '1') RETURNING *`;

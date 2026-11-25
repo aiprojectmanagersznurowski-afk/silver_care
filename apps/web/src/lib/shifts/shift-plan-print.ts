@@ -1,10 +1,11 @@
-import { sourceLabel, type TaskView } from '@/lib/shifts/shift-tasks-view'
+import { SHIFT_TASK_POLICY } from '@silvercare/contracts/src/generated/facility'
+import { assigneeLabel, sourceLabel, type TaskView } from '@/lib/shifts/shift-tasks-view'
 
 /**
  * Wydruk planu pracy (NUR-SHIFT-PLAN-PRINT, SC-NUR-16): pola wyłącznie z SHIFT_TASK_POLICY.printFields —
  * bez PESEL, kontaktów i danych z karty (minimalizacja danych, RODO art. 9). Na wydruku tylko zadania „Do zrobienia”.
  */
-export const PRINT_FIELDS = ['resident_name', 'room', 'bed', 'task_title', 'due_time', 'source_label', 'assignee'] as const
+export const PRINT_FIELDS = SHIFT_TASK_POLICY.printFields
 
 export interface PrintRow {
   resident: string
@@ -38,7 +39,7 @@ export function buildPrintSections(tasks: TaskView[]): PrintSection[] {
       title: t.title,
       dueTime: t.dueTime ? t.dueTime.slice(0, 5) : '',
       source: sourceLabel(t.source, t.carriedFromTaskId),
-      assignee: 'Cała zmiana',
+      assignee: t.assigneeUserId ? assigneeLabel(t) : 'Cała zmiana',
     })
     sections.set(key, section)
   }

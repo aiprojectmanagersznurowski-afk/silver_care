@@ -23,7 +23,7 @@ describe('Database FAM-MESSAGES (Family Messages RLS)', () => {
       const org = await tx`INSERT INTO organizations (name) VALUES ('Test Org Messages') RETURNING id`;
       const orgId = org[0].id;
 
-      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
+      await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "25d86622-328d-4925-8fc7-4a5459f3eda8", "app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
       
       const res1 = await tx`INSERT INTO residents (organization_id, first_name, last_name, pesel_hash) VALUES (${orgId}, 'Jan', 'Kowalski', 'hash-1') RETURNING id`;
       const res2 = await tx`INSERT INTO residents (organization_id, first_name, last_name, pesel_hash) VALUES (${orgId}, 'Adam', 'Nowak', 'hash-2') RETURNING id`;
@@ -95,7 +95,7 @@ describe('Database FAM-MESSAGES (Family Messages RLS)', () => {
       expect(errNurseInsert).not.toBeNull();
 
       // 5. Switch to org_admin and verify admin can see both messages
-      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
+      await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "25d86622-328d-4925-8fc7-4a5459f3eda8", "app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
       const adminView = await tx`SELECT id, content FROM family_messages WHERE organization_id = ${orgId} ORDER BY created_at ASC`;
       expect(adminView).toHaveLength(2);
       expect(adminView.map(m => m.content)).toEqual(['Message to Jan', 'Message from Guardian']);

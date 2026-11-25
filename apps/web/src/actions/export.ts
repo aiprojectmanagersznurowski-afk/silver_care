@@ -1,5 +1,6 @@
 'use server'
 
+import { featureDisabledMessage, isOrgFeatureEnabled } from '@/lib/feature-flags'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { cookies } from 'next/headers'
@@ -59,6 +60,10 @@ export async function exportResidentsDataAction(options: ExportFilterOptions): P
   const role = user.app_metadata?.role
   if (role !== 'org_admin' && role !== 'super_admin') {
     return { error: 'Tylko kierownik placówki ma uprawnienia do eksportu danych.' }
+  }
+
+  if (!(await isOrgFeatureEnabled(supabase, orgId, 'module_residents_management'))) {
+    return { error: featureDisabledMessage }
   }
 
   const adminClient = createAdminClient()

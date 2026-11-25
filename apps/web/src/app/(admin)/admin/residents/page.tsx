@@ -1,3 +1,5 @@
+import { requireOrgFeature } from '@/lib/feature-flags'
+import { FeatureDisabledState } from '@/components/patterns/FeatureDisabledState'
 import { createClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
 import { Card } from '@/components/ui/card'
@@ -13,6 +15,8 @@ import { getCurrentUser } from '@/lib/supabase/current-user'
 import { residentPhotoUrls } from '@/lib/resident-photo'
 
 export default async function AdminResidentsPage() {
+  if (!(await requireOrgFeature('module_residents_management')).allowed) return <FeatureDisabledState />
+
   const supabase = await createClient()
   const user = await getCurrentUser()
   const cookieStore = await cookies()

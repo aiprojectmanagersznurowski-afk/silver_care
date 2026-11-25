@@ -1,9 +1,11 @@
+import { getAppRole } from '@/lib/auth/app-role'
+import { assertOrgFeatureForApi } from '@/lib/feature-flags'
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { maskPhysiologicalData } from '@/lib/dashboard';
 
 export async function GET(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -14,17 +16,20 @@ export async function GET(
       return NextResponse.json({ error: 'Brak autoryzacji' }, { status: 401 });
     }
 
+    const featureDenied = await assertOrgFeatureForApi(supabase, user, '/api/residents/[id]/report/latest')
+    if (featureDenied) return featureDenied
+
     const { id } = await params;
     if (!id) {
       return NextResponse.json({ error: 'Brak identyfikatora podopiecznego' }, { status: 400 });
     }
 
-    // Pobieranie najnowszego raportu
-    // RLS zadba o to, żeby rodzina widziała tylko status='PUBLISHED'
-    const { data, error } = await supabase
-      .from('daily_reports')
-      .select('id, content, status, created_at')
-      .eq('resident_id', id)
+    const role = getAppRole(user)
+    const query = role === 'family' || role === 'legal_guardian'
+      ? supabase.rpc('get_family_daily_reports', { p_resident_id: id })
+      : supabase.from('daily_reports').select('id, content, status, created_at').eq('resident_id', id)
+
+    const { data, error } = await query
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();

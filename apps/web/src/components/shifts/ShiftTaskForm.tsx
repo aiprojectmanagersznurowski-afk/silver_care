@@ -16,16 +16,18 @@ interface ShiftTaskFormProps {
   shiftDefinitionId: string
   shiftDate: string
   residents: TaskResidentOption[]
+  assignees?: readonly { id: string; name: string }[]
   /** Podopieczny wybrany z góry (przejście z karty podopiecznego). */
   defaultResidentId?: string
 }
 
 /** Dodawanie zadania ręcznego do zmiany. Bez podopiecznego zadanie dotyczy placówki. */
-export function ShiftTaskForm({ shiftDefinitionId, shiftDate, residents, defaultResidentId = '' }: ShiftTaskFormProps) {
+export function ShiftTaskForm({ shiftDefinitionId, shiftDate, residents, assignees, defaultResidentId = '' }: ShiftTaskFormProps) {
   const router = useRouter()
   const [title, setTitle] = useState('')
   const [dueTime, setDueTime] = useState('')
   const [residentId, setResidentId] = useState(defaultResidentId)
+  const [assignee, setAssignee] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -33,7 +35,7 @@ export function ShiftTaskForm({ shiftDefinitionId, shiftDate, residents, default
     e.preventDefault()
     setBusy(true)
     setError(null)
-    const res = await addShiftTaskAction({ shiftDefinitionId, shiftDate, residentId: residentId || null, title, dueTime })
+    const res = await addShiftTaskAction({ shiftDefinitionId, shiftDate, residentId: residentId || null, assigneeUserId: assignee || null, title, dueTime })
     setBusy(false)
     if (res.error) {
       setError(res.error)
@@ -42,6 +44,7 @@ export function ShiftTaskForm({ shiftDefinitionId, shiftDate, residents, default
     setTitle('')
     setDueTime('')
     setResidentId(defaultResidentId)
+    setAssignee('')
     router.refresh()
   }
 
@@ -64,6 +67,15 @@ export function ShiftTaskForm({ shiftDefinitionId, shiftDate, residents, default
         Godzina
         <Input type="time" value={dueTime} onChange={(e) => setDueTime(e.target.value)} className="min-h-touch" />
       </label>
+      {assignees && (
+        <label className="flex flex-col gap-1 text-sm font-medium">
+          Przypisanie
+          <NativeSelect value={assignee} onChange={(e) => setAssignee(e.target.value)}>
+            <NativeSelectOption value="">Zadanie wspólne</NativeSelectOption>
+            {assignees.map(({ id, name }) => <NativeSelectOption key={id} value={id}>{name}</NativeSelectOption>)}
+          </NativeSelect>
+        </label>
+      )}
       <Button type="submit" className="min-h-touch" disabled={busy}>Dodaj zadanie</Button>
       {error && <p role="alert" className="w-full text-sm text-destructive">{error}</p>}
     </form>

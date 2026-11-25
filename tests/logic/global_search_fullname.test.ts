@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { featureSnapshot } from '../helpers/feature-snapshot.test.fixture'
 
 vi.mock('@/lib/supabase/server', () => ({ createClient: vi.fn() }))
 
@@ -19,6 +20,7 @@ type Call = { table: string; method: string; args: unknown[] }
 function mockStaff(role = 'org_admin') {
   const calls: Call[] = []
   vi.mocked(createClient).mockResolvedValue({
+    rpc: async () => featureSnapshot(),
     auth: {
       getUser: vi.fn().mockResolvedValue({
         data: { user: { id: 'u-1', app_metadata: { role, organization_id: 'org-1' }, user_metadata: {} } },

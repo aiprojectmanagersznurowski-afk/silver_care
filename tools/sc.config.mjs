@@ -167,5 +167,9 @@ export const config = {
     { re: 'TRUNCATE\\s+', msg: 'Czyszczenie tabeli z danymi art. 9.' },
     { re: 'rm\\s+-rf\\s+/(?!tmp)', msg: 'Usuwanie poza katalogiem tymczasowym.' },
     { re: 'vercel\\s+(deploy|--prod)', msg: 'Wdrożenie należy do człowieka.' },
+    {
+      re: '(?:^|[;&|\\n])\\s*(?:[A-Za-z_][A-Za-z0-9_]*=[^\\s;|&]+\\s+)*(?:(?:[^\\s;|&]*\\/)?pnpm\\s+(?:(?:--filter|-F)\\s+[^\\s;|&]+\\s+)?(?:run\\s+)?test(?::[a-z0-9:_-]+)?|(?:(?:npx|pnpm\\s+exec)\\s+)?(?:[^\\s;|&]*\\/)?playwright\\s+test)(?:\\s+[^\\s;|&]+)*\\s+--(?:\\s|$)',
+      msg: 'pnpm v10 przekazuje separator `--` dosłownie do Playwrighta i Vitesta, przez co filtr pliku i `--project` są ignorowane i uruchamia się cała suita testów. Przekazuj argumenty bez `--` (np. `pnpm test:e2e e2e/plik.spec.ts --project=chromium`, `pnpm test:db tests/db/plik.test.ts`).',
+    },
   ],
 };

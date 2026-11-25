@@ -1,5 +1,6 @@
 'use server'
 
+import { featureDisabledMessage, isOrgFeatureEnabled } from '@/lib/feature-flags'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
@@ -35,6 +36,10 @@ export async function getBedSuggestionsAction(residentGender: 'M' | 'F', careLev
 
   const orgId = user.app_metadata?.organization_id
   if (!orgId) return { error: 'Brak identyfikatora placówki.' }
+
+  if (!(await isOrgFeatureEnabled(supabase, orgId, 'module_residents_management'))) {
+    return { error: featureDisabledMessage }
+  }
 
   const adminClient = createAdminClient()
 
@@ -130,6 +135,10 @@ export async function admitResidentAction(formData: FormData) {
   // ADM-CAPACITY-LIMIT: przyjęcie ponad limit miejsc dopiero po świadomym potwierdzeniu (SC-ADM-22/AC3).
   // Liczymy podopiecznych przebywających w placówce, bo przyjęcie jest możliwe także bez łóżka.
   const orgId = user.app_metadata?.organization_id as string | undefined
+  if (!(await isOrgFeatureEnabled(supabase, orgId, 'module_residents_management'))) {
+    return { error: featureDisabledMessage }
+  }
+
   let capacity: ReturnType<typeof evaluateCapacity> | null = null
   if (orgId) {
     const [{ data: org }, { data: residents }] = await Promise.all([

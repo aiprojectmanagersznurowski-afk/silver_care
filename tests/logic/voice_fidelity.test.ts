@@ -142,6 +142,8 @@ describe('Voice Fidelity & Medical Stripping (VOICE-MEDICAL-STRIP, VOICE-ZERO-GU
     expect(isEuEndpoint('https://api.europe.openai.com/v1')).toBe(false)
     expect(isEuEndpoint('https://api.groq.com/openai/v1')).toBe(false)
     expect(isEuEndpoint('https://api.x.ai/v1')).toBe(false)
+    expect(isEuEndpoint('http://gateway.example.eu/v1')).toBe(false)
+    expect(isEuEndpoint('https://name:secret@gateway.example.eu/v1')).toBe(false)
     expect(isEuEndpoint('invalid-url')).toBe(false)
   })
 

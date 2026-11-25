@@ -94,8 +94,7 @@ describe('FAM-ONBOARDING Logic', () => {
     const withConsentsGuardian = determineConsentsForRole(guardianInvite.role, true);
     expect(withConsentsGuardian.allowed).toBe(true);
     expect(withConsentsGuardian.canGrantArt9).toBe(true);
-    expect(withConsentsGuardian.purposes).toContain('wellness_data_ingest');
-    expect(withConsentsGuardian.purposes).toContain('family_view_basic');
+    expect(withConsentsGuardian.purposes).toEqual(['wellness_data_ingest']);
 
     const withConsentsFamily = determineConsentsForRole('family', true);
     expect(withConsentsFamily.allowed).toBe(true);

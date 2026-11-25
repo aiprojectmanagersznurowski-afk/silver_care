@@ -1,3 +1,6 @@
+import { assertTargetOrgFeatureForApi } from '@/lib/feature-flags'
+import { getAppRole } from '@/lib/auth/app-role'
+import { getActiveImpersonation, safeGetCookieStore } from '@/lib/impersonation-guards'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { exchangePolarCodeForToken, registerPolarUser } from '@/lib/polar-client'
@@ -31,14 +34,25 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Niekompletny stan autoryzacji' }, { status: 400 })
     }
 
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Brak autoryzacji' }, { status: 401 })
+    if (!['org_admin', 'super_admin'].includes(getAppRole(user) ?? '')
+      || getActiveImpersonation(await safeGetCookieStore(), user)) {
+      return NextResponse.json({ error: 'Brak uprawnień do połączenia opaski' }, { status: 403 })
+    }
+
+    const { data: resident } = await supabase.from('residents').select('organization_id').eq('id', stateObj.residentId)
+      .eq('organization_id', stateObj.orgId).is('archived_at', null).maybeSingle()
+    if (!resident) return NextResponse.json({ error: 'Nie znaleziono podopiecznego' }, { status: 404 })
+    const featureDenied = await assertTargetOrgFeatureForApi(supabase, resident.organization_id, '/api/polar/callback', user.id)
+    if (featureDenied) return featureDenied
+
     // 1. Wymień kod na token z użyciem Basic Auth (zgodnie z OAUTH_CONFIG)
     const tokenRes = await exchangePolarCodeForToken(code)
 
     // 2. Zarejestruj użytkownika w Polar AccessLink API
     await registerPolarUser(tokenRes.accessToken, stateObj.residentId)
-
-    // 3. Połącz z bazą Supabase
-    const supabase = await createClient()
 
     // 4. Utwórz / zaktualizuj powiązanie w external_wearable_links (R06-core-decoupled)
     const { data: link, error: linkErr } = await supabase

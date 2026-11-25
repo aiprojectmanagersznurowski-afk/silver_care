@@ -1,5 +1,6 @@
 'use server'
 
+import { featureDisabledMessage, isOrgFeatureEnabled } from '@/lib/feature-flags'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
@@ -31,15 +32,12 @@ export async function setPrimaryRelativeAction(linkId: string, residentId: strin
   const adminClient = createAdminClient()
 
   const orgId = user.app_metadata?.organization_id
-  if (orgId && role !== 'super_admin') {
-    const { data: resData } = await adminClient
-      .from('residents')
-      .select('organization_id')
-      .eq('id', residentId)
-      .single()
-    if (!resData || resData.organization_id !== orgId) {
-      return { error: 'Podopieczny nie należy do Twojej placówki' }
-    }
+  const { data: resident } = await adminClient.from('residents').select('organization_id').eq('id', residentId).maybeSingle()
+  if (!resident || (role !== 'super_admin' && resident.organization_id !== orgId)) {
+    return { error: 'Podopieczny nie należy do Twojej placówki' }
+  }
+  if (!(await isOrgFeatureEnabled(supabase, resident.organization_id, 'module_residents_management'))) {
+    return { error: featureDisabledMessage }
   }
 
   const { error } = await adminClient

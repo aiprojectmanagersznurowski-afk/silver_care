@@ -18,7 +18,7 @@ const sql = postgres(process.env.DATABASE_URL as string, { prepare: false });
 type Tx = postgres.TransactionSql;
 
 const claims = (role: string, orgId?: string) =>
-  JSON.stringify({ app_metadata: { role, ...(orgId ? { organization_id: orgId } : {}) }, aal: 'aal2' });
+  JSON.stringify({ sub: '44444444-4444-4444-8444-444444444444', app_metadata: { role, ...(orgId ? { organization_id: orgId } : {}) }, aal: 'aal2' });
 
 async function rollback(fn: (tx: Tx) => Promise<void>) {
   await sql.begin(async (tx) => {

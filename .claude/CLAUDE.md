@@ -96,6 +96,7 @@ Każde nowe story, widok, formularz lub zmiana interakcji w warstwie UI musi pos
 - Faza **RED** obejmuje utworzenie lub rozszerzenie testu w `e2e/` (lub dedykowanego zestawu roli w `e2e/roles/`) w oparciu o Page Object Model (`e2e/page-objects/`) ze znacznikiem `@REQ: <ID>`. Test musi być najpierw czerwony.
 - Faza **GREEN** doprowadza test do zieleni bez modyfikacji asercji testowych.
 - Faza **VERIFY** przed zamknięciem zadania wymaga potwierdzenia wykonania `pnpm test:e2e`.
+- **Zakaz separatora `--` w komendach testowych (`pnpm` v10):** `pnpm` v10 przekazuje samodzielne `--` dosłownie do Playwrighta i Vitesta, przez co `pnpm test:e2e -- e2e/<plik>.spec.ts --project=chromium` ignoruje filtr pliku i projektu oraz uruchamia całą suitę (666 testów na `workers: 1`). Argumenty przekazuj zawsze **bez `--`**: `pnpm test:e2e e2e/<plik>.spec.ts --project=chromium`, `pnpm test:db tests/db/<plik>.test.ts`, `pnpm test tests/logic/<plik>.test.ts` (albo `pnpm exec playwright test ...`).
 
 ## Zanim zamkniesz zadanie (INFRA-SDLC-WORKFLOW)
 

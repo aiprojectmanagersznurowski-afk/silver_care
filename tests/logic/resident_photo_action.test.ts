@@ -28,6 +28,7 @@ function chain(target: string, result: () => unknown) {
 function client() {
   return {
     auth: { getUser: vi.fn(async () => ({ data: { user: { id: 'u1', app_metadata: { role: state.role, organization_id: 'o1' } } }, error: null })) },
+    rpc: vi.fn(async () => ({ data: true, error: null })),
     from: (table: string) => chain(table, () => (table === 'residents' ? { data: state.resident, error: null } : { data: null, error: null })),
     storage: {
       from: (bucket: string) => ({

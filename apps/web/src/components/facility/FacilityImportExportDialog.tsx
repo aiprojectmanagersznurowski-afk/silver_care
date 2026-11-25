@@ -11,12 +11,11 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { FileSpreadsheet, Download, Upload, Check, AlertCircle, Loader2, ArrowUpDown } from 'lucide-react'
-import { RawFacilityRoomRow, FacilityDryRunResult } from '@/lib/facility-helpers'
+import { FacilityDryRunResult } from '@/lib/facility-helpers'
 import { analyzeFacilityImportAction, commitFacilityImportAction } from '@/actions/facility'
-import * as XLSX from 'xlsx'
 import { FacilityExportTab } from './FacilityExportTab'
 import { FacilityDryRunTable } from './FacilityDryRunTable'
-import { generateFacilityStructureTemplate } from '@/lib/facility-import-template'
+import { generateFacilityStructureTemplate, parseFacilityStructure } from '@/lib/facility-import-template'
 
 interface FacilityImportExportDialogProps {
   onStructureChanged?: () => void
@@ -45,36 +44,17 @@ export function FacilityImportExportDialog({ onStructureChanged }: FacilityImpor
     setImportLoading(true)
     setImportError(null)
     setImportSuccess(null)
+    setDryRunResult(null)
+    setCapacityWarning(null)
+    setCapacityConfirmed(false)
     try {
-      const buffer = await file.arrayBuffer()
-      const wb = XLSX.read(buffer, { type: 'array' })
-      const ws = wb.Sheets[wb.SheetNames[0]]
-      const jsonData: unknown[][] = XLSX.utils.sheet_to_json(ws, { header: 1 })
-      if (jsonData.length < 2) {
-        setImportError('Plik jest pusty lub zawiera tylko nagłówki.')
-        setImportLoading(false)
-        return
-      }
-      const rows: RawFacilityRoomRow[] = []
-      for (let i = 1; i < jsonData.length; i++) {
-        const row = jsonData[i]
-        if (!row || row.length === 0 || row.every((c) => c === undefined || c === null || c === '')) continue
-        rows.push({
-          floor: row[0] != null ? String(row[0]) : undefined,
-          number: row[1] != null ? String(row[1]) : undefined,
-          sector: row[2] != null ? String(row[2]) : undefined,
-          bedCount: row[3] != null ? (typeof row[3] === 'number' ? row[3] : String(row[3])) : undefined,
-          bedLabels: row[4] != null ? String(row[4]) : undefined,
-        })
-      }
+      const rows = parseFacilityStructure(await file.arrayBuffer())
       if (rows.length === 0) {
         setImportError('Nie znaleziono wierszy z danymi w arkuszu.')
-        setImportLoading(false)
         return
       }
       const res = await analyzeFacilityImportAction(rows)
       setCapacityWarning(res.capacityWarning ?? null)
-      setCapacityConfirmed(false)
       if (res.error) setImportError(res.error)
       else if (res.result) setDryRunResult(res.result)
     } catch (err: unknown) {

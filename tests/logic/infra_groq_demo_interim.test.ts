@@ -116,6 +116,18 @@ describe('Tryb demo Groq dla CLASSIFY/GENERATE (@REQ: INFRA-GROQ-DEMO-INTERIM)',
     expect(fetchCalls).toBe(0)
   })
 
+  it('AC4: błędny endpoint blokuje również fallback bez klucza EU @REQ: INFRA-GROQ-DEMO-INTERIM', async () => {
+    let fetchCalls = 0
+    globalThis.fetch = async () => {
+      fetchCalls++
+      return Response.json({ choices: [{ message: { content: 'Odpowiedź testowa' } }] })
+    }
+    await withEnv({ EU_LLM_ENDPOINT: 'https://example.com/v1', GROQ_API_KEY: 'test_groq_key', ALLOW_DEMO_GROQ_FALLBACK: 'true' }, async () => {
+      await expect(callEuLlmCompletion([{ role: 'user', content: 'test' }])).rejects.toThrow(/EU-LLM-REGION/)
+    })
+    expect(fetchCalls).toBe(0)
+  })
+
   it('AC2: ALLOW_DEMO_GROQ_FALLBACK bez GROQ_API_KEY nie aktywuje trybu demo @REQ: INFRA-GROQ-DEMO-INTERIM', async () => {
     let fetchCalls = 0
     globalThis.fetch = (async () => {

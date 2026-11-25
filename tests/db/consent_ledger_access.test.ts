@@ -52,8 +52,8 @@ async function seed(tx: Tx) {
   const [r2] = await tx`INSERT INTO residents (organization_id, first_name, last_name, pesel_hash) VALUES (${orgA.id}, 'Jan', 'Obcy', 'hash-zgody-2') RETURNING id`;
   await tx`INSERT INTO resident_relative_links (resident_id, relative_user_id, relationship_code, role) VALUES
     (${r1.id}, ${guardian}, 'GUARDIAN', 'legal_guardian'), (${r1.id}, ${family}, 'SON', 'family')`;
-  const [c1] = await tx`INSERT INTO consent_ledger (organization_id, resident_id, purpose, granted_by)
-    VALUES (${orgA.id}, ${r1.id}, 'wellness_data_ingest', 'legal_guardian') RETURNING id`;
+  const [c1] = await tx`INSERT INTO consent_ledger (organization_id, resident_id, purpose, granted_by, grantor_user_id)
+    VALUES (${orgA.id}, ${r1.id}, 'wellness_data_ingest', 'legal_guardian', ${guardian}) RETURNING id`;
   const [c2] = await tx`INSERT INTO consent_ledger (organization_id, resident_id, purpose, granted_by)
     VALUES (${orgA.id}, ${r2.id}, 'wellness_data_ingest', 'resident_self') RETURNING id`;
   await tx`SET LOCAL ROLE authenticated`;

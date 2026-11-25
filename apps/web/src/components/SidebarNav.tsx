@@ -1,5 +1,7 @@
 'use client'
 
+import { FEATURE_FLAGS } from '@silvercare/contracts/src/generated/features'
+import type { EffectiveFeatureFlags } from '@/lib/feature-flags'
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -40,6 +42,24 @@ export interface SidebarNavItem {
 export interface SidebarNavGroup {
   label?: string
   items: SidebarNavItem[]
+}
+
+export function filterFeatureNavigation(groups: SidebarNavGroup[], flags: EffectiveFeatureFlags | null | undefined) {
+  if (flags === undefined) return groups
+  const allowed = (href: string) => {
+    const path = href.split(/[?#]/, 1)[0].replace(/\/$/, '')
+    return !FEATURE_FLAGS.some((feature) => !flags?.[feature.key] &&
+      feature.routes.some((route) => path === route || (route !== '/staff' && path.startsWith(`${route}/`))),
+    )
+  }
+  return groups.flatMap((group) => {
+    const items = group.items.flatMap((item) => {
+      if (!item.children) return allowed(item.href) ? [item] : []
+      const children = item.children.filter((child) => allowed(child.href))
+      return children.length ? [{ ...item, children }] : []
+    })
+    return items.length ? [{ ...group, items }] : []
+  })
 }
 
 function isActivePath(pathname: string, item: Pick<SidebarNavItem, 'href' | 'exact'>) {

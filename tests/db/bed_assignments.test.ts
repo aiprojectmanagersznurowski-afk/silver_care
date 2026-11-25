@@ -22,7 +22,7 @@ describe('Database Bed Assignments (ADM-BED-ASSIGNMENT)', () => {
       const org = await tx`INSERT INTO organizations (name) VALUES ('Test Org Assignments') RETURNING id`;
       const orgId = org[0].id;
 
-      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
+      await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "44444444-4444-4444-8444-444444444444", "app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
       const room = await tx`INSERT INTO rooms (number, floor, organization_id) VALUES ('Pokoj 101', '1', ${orgId}) RETURNING id`;
       const bed1 = await tx`INSERT INTO beds (room_id, label) VALUES (${room[0].id}, 'Lozko 1') RETURNING id`;
       const bed2 = await tx`INSERT INTO beds (room_id, label) VALUES (${room[0].id}, 'Lozko 2') RETURNING id`;
@@ -62,7 +62,7 @@ describe('Database Bed Assignments (ADM-BED-ASSIGNMENT)', () => {
       const org = await tx`INSERT INTO organizations (name) VALUES ('Test Org Assignments') RETURNING id`;
       const orgId = org[0].id;
 
-      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
+      await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "44444444-4444-4444-8444-444444444444", "app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
       const room = await tx`INSERT INTO rooms (number, floor, organization_id) VALUES ('Pokoj 101', '1', ${orgId}) RETURNING id`;
       const bed = await tx`INSERT INTO beds (room_id, label) VALUES (${room[0].id}, 'Lozko 1') RETURNING id`;
       
@@ -97,7 +97,7 @@ describe('Database Bed Assignments (ADM-BED-ASSIGNMENT)', () => {
       const org = await tx`INSERT INTO organizations (name) VALUES ('Test Org Assignments') RETURNING id`;
       const orgId = org[0].id;
 
-      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
+      await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "44444444-4444-4444-8444-444444444444", "app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
       const room = await tx`INSERT INTO rooms (number, floor, organization_id) VALUES ('Pokoj 101', '1', ${orgId}) RETURNING id`;
       const bed1 = await tx`INSERT INTO beds (room_id, label) VALUES (${room[0].id}, 'Lozko 1') RETURNING id`;
       const bed2 = await tx`INSERT INTO beds (room_id, label) VALUES (${room[0].id}, 'Lozko 2') RETURNING id`;

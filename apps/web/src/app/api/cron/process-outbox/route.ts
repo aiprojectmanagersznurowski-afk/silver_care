@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { canNotifyFamilyOfReport } from '@/lib/report-consent'
 import { renderReportPublishedEmail, renderReportPublishedSms } from '@/lib/notification-templates'
 import { renderCapacityExceededEmail, selectCapacityRecipients, CapacityNotificationId } from '@/lib/capacity-notifications'
 
@@ -102,13 +103,25 @@ export async function GET(request: Request) {
     const smsapiToken = process.env.SMSAPI_TOKEN
     const mailtrapToken = process.env.EMAIL_PROVIDER_KEY
 
+    const familyPortalByOrg = new Map<string, boolean>()
+    const hasFamilyPortal = async (organizationId: string) => {
+      const known = familyPortalByOrg.get(organizationId)
+      if (known !== undefined) return known
+      const { data, error } = await adminClient.rpc('has_org_feature', {
+        p_org_id: organizationId, p_feature_key: 'module_family_portal',
+      })
+      if (error || data == null) throw new Error('FEATURE_FLAGS_UNAVAILABLE')
+      familyPortalByOrg.set(organizationId, data)
+      return data
+    }
+
     // Iterujemy po atomowo zarezerwowanych powiadomieniach
     for (const notification of records) {
       let success = true
       let errorMessage: string | null = null
 
       try {
-        if (notification.entity_type === 'report') {
+        if (notification.entity_type === 'report' && await hasFamilyPortal(notification.organization_id)) {
           // Pobierz resident_id z raportu
           const { data: report, error: reportErr } = await adminClient
             .from('daily_reports')
@@ -129,7 +142,7 @@ export async function GET(request: Request) {
 
           const links = (familyLinks as unknown as FamilyLinkRecord[]) || []
 
-          if (links.length > 0) {
+          if (links.length > 0 && await canNotifyFamilyOfReport(adminClient, notification.organization_id, report.resident_id)) {
             const host = request.headers.get('host') || 'localhost:3000'
             const protocol = request.headers.get('x-forwarded-proto') || 'http'
             const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || `${protocol}://${host}`
@@ -206,6 +219,8 @@ export async function GET(request: Request) {
           }
         } else if (notification.entity_type === 'capacity_exceeded') {
           await deliverCapacityExceeded(adminClient, notification, mailtrapToken, request)
+        } else if (notification.entity_type === 'report') {
+          console.info(`[OUTBOX_SKIPPED_FEATURE_DISABLED] notification_id=${notification.id} org_id=${notification.organization_id}`)
         } else {
           // Nieznany typ nie może być oznaczony jako wysłany bez wysyłki
           throw new Error(`Unsupported outbox entity_type: ${notification.entity_type}`)

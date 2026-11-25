@@ -90,6 +90,7 @@ describe('API Auth Wrapper & Error Handling (@REQ: SEC-SESSION, @REQ: SEC-NO-PII
   it('passes authenticated user context and organization to handler @REQ: ORG-ISOLATION', async () => {
     vi.mocked(createClient).mockResolvedValueOnce({
       auth: {
+        getClaims: vi.fn().mockResolvedValue({ data: { claims: { sub: 'u-admin-1', aal: 'aal2' } } }),
         getUser: vi.fn().mockResolvedValueOnce({
           data: {
             user: {
@@ -121,5 +122,47 @@ describe('API Auth Wrapper & Error Handling (@REQ: SEC-SESSION, @REQ: SEC-NO-PII
     expect(json.role).toBe('org_admin')
     expect(json.orgId).toBe('org-42')
     expect(handler).toHaveBeenCalledTimes(1)
+  })
+
+  it('requires a verified second factor for the same Bearer identity @REQ: SEC-MFA-STAFF', async () => {
+    const getUser = vi.fn().mockResolvedValue({
+      data: { user: { id: 'u-admin-1', app_metadata: { role: 'org_admin', organization_id: 'org-42' } } },
+    })
+    const handler = vi.fn()
+    const wrapped = withAuth(handler, { roles: ['org_admin'] })
+    const request = new NextRequest('http://localhost/api/admin-endpoint', {
+      headers: { authorization: 'Bearer access-token' },
+    })
+
+    for (const claims of [{ sub: 'u-admin-1', aal: 'aal1' }, { sub: 'different-user', aal: 'aal2' }]) {
+      const getClaims = vi.fn().mockResolvedValue({ data: { claims } })
+      vi.mocked(createClient).mockResolvedValueOnce({
+        auth: { getUser, getClaims },
+        rpc: vi.fn().mockResolvedValue({ data: false }),
+      } as unknown as Awaited<ReturnType<typeof createClient>>)
+      const response = await wrapped(request)
+      expect(response.status).toBe(403)
+      expect((await response.json()).code).toBe('MFA_REQUIRED')
+      expect(getUser).toHaveBeenLastCalledWith('access-token')
+      expect(getClaims).toHaveBeenCalledWith('access-token')
+    }
+
+    expect(handler).not.toHaveBeenCalled()
+  })
+
+  it('honors the database decision for a verified test session @REQ: SEC-MFA-STAFF', async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: true })
+    vi.mocked(createClient).mockResolvedValueOnce({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'tester', app_metadata: { role: 'nurse' } } } }),
+        getClaims: vi.fn().mockResolvedValue({ data: { claims: { sub: 'tester', aal: 'aal1' } } }),
+      },
+      rpc,
+    } as unknown as Awaited<ReturnType<typeof createClient>>)
+    const response = await withAuth(() => NextResponse.json({ ok: true }))(
+      new NextRequest('http://localhost/api/test'),
+    )
+    expect(response.status).toBe(200)
+    expect(rpc).toHaveBeenCalledWith('staff_mfa_satisfied')
   })
 })

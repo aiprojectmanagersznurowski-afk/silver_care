@@ -5,14 +5,14 @@ import { Button } from '@/components/ui/button'
 import { recordShiftPlanPrintAction } from '@/actions/shift-tasks'
 
 /** Najpierw zapis śladu wydruku w audycie, potem okno drukowania przeglądarki. */
-export function PrintPlanButton({ shiftDefinitionId, shiftDate }: { shiftDefinitionId: string; shiftDate: string }) {
+export function PrintPlanButton(props: { shiftDefinitionId: string; shiftDate: string; planVersion: number }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const print = async () => {
     setBusy(true)
     setError(null)
-    const res = await recordShiftPlanPrintAction({ shiftDefinitionId, shiftDate })
+    const res = await recordShiftPlanPrintAction(props)
     setBusy(false)
     if (res.error) setError(res.error)
     else window.print()

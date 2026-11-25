@@ -9,11 +9,17 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/staging' }}
 
 jobs:
+  database:
+    if: github.event_name == 'pull_request' && (github.base_ref == 'staging' || github.base_ref == 'codex/nowe-zmiany')
+    uses: ./.github/workflows/db-promotion.yml
+
   verify:
     name: Silver Care Verification & Gate
+    needs: database
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     env:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://example.supabase.co' }}
@@ -21,6 +27,16 @@ jobs:
       PESEL_HASH_SALT: ${{ secrets.PESEL_HASH_SALT || 'ci-test-salt-32-chars-long-secret' }}
 
     steps:
+      - name: Require promotion database checks
+        if: github.event_name == 'pull_request' && (github.base_ref == 'staging' || github.base_ref == 'codex/nowe-zmiany')
+        env:
+          DATABASE_CHECKS: ${{ needs.database.result }}
+        run: |
+          if [[ "$DATABASE_CHECKS" != success ]]; then
+            echo "::error::Database promotion checks must pass before review."
+            exit 1
+          fi
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -43,22 +59,19 @@ jobs:
       - name: Full Verification Gate (10/10 Stages + Linter + Next.js Build)
         run: bash scripts/verify.sh --full
 
-  # Wdrożenie na Vercel tokenem właściciela projektu (VERCEL_TOKEN), niezależnie od autora commita.
-  # Automatyczne wdrożenia z integracji Git są wyłączone w apps/web/vercel.json.
-  # push na main → produkcja; push na staging → podgląd „staging”; PR z tego repozytorium → podgląd.
-  # Tylko po zielonej bramce.
+  # PR sprawdza kod. Wdrożenie wymaga uprawnień projektu Vercel.
   deploy:
     name: Vercel Deploy
     needs: verify
-    if: >-
-      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')) ||
-      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+    if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging') }}
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
     runs-on: ubuntu-latest
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      TARGET: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') && 'production' || (github.ref == 'refs/heads/staging' && 'staging (podgląd)' || 'preview') }}
+      TARGET: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') && 'production' || 'staging (podgląd)' }}
       PROD_FLAG: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') && '--prod' || '' }}
 
     steps:
@@ -79,25 +92,54 @@ jobs:
       # Build na serwerach Vercela, nie w Actions: zmienne typu Sensitive nie dają się pobrać
       # przez `vercel pull` (CLI wpisuje "[SENSITIVE]"), a build z --prebuilt wkompilował ten
       # napis jako adres Supabase — produkcja 500 od 2026-10-28. Sekrety nie opuszczają Vercela.
-      # Bez .git: Vercel Hobby blokuje publikację, gdy autor commita (np. merge Darka) nie jest
-      # w zespole Vercela — CLI wysyła metadane Gita z katalogu. Runner jest jednorazowy.
+      # Staging zachowuje metadane commita do weryfikacji uprawnień przez Vercel.
+      # Ścieżka produkcyjna zachowuje dotychczasowe przygotowanie katalogu.
       - name: Deploy
         id: deploy
         run: |
-          rm -rf .git
+          if [ "$GITHUB_REF" = 'refs/heads/main' ]; then
+            rm -rf .git
+          fi
           url=$(pnpm dlx vercel@65.5.0 deploy --yes $PROD_FLAG --token="$VERCEL_TOKEN")
           echo "Wdrożenie ($TARGET): $url" >> "$GITHUB_STEP_SUMMARY"
           echo "url=$url" >> "$GITHUB_OUTPUT"
 
-      # Stały adres stagingu (Site URL i Redirect URLs w Supabase stagingu).
-      # Tylko push na staging; produkcja i podglądy PR zostają bez aliasu.
-      # Bezpośrednie REST API Vercela zamiast `vercel alias set`: CLI w `alias` woła
-      # bezwarunkowo GET /v2/user (bez allowOwnerLookupFallback obecnego w `deploy`)
-      # i kończy się błędem „User not found (404)” dla tokenu projektowego/zespołowego.
-      - name: Alias stagingu
-        if: github.event_name == 'push' && github.ref == 'refs/heads/staging'
+      # Zielony job ma znaczyć działającą aplikację, nie tylko udaną publikację.
+      # Podglądy są za ochroną Vercela (302), więc sprawdzamy stały adres produkcji.
+      - name: Smoke test produkcji
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
-          DEPLOY_URL: ${{ steps.deploy.outputs.url }}
+          SMOKE_URL: https://silver-care-six.vercel.app/login
+        run: |
+          for i in 1 2 3 4 5 6; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" "$SMOKE_URL")
+            echo "próba $i: HTTP $code"
+            [ "$code" = "200" ] && exit 0
+            sleep 10
+          done
+          echo "::error::$SMOKE_URL nie odpowiada 200 po publikacji — przywróć poprzednie wdrożenie (Instant Rollback)"
+          exit 1
+
+
+  migrate_staging:
+    name: Apply staging migrations
+    needs: deploy
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/staging' }}
+    uses: ./.github/workflows/migrate.yml
+    secrets: inherit
+
+  promote_staging:
+    name: Promote staging alias
+    needs: [deploy, migrate_staging]
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/staging' }}
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+    steps:
+      - name: Alias stagingu
+        env:
+          DEPLOY_URL: ${{ needs.deploy.outputs.url }}
         run: |
           host="${DEPLOY_URL#https://}"
           host="${host%/}"
@@ -116,24 +158,8 @@ jobs:
             "https://api.vercel.com/v2/deployments/${dpl_id}/aliases${qs}")
           cat /tmp/alias.json
           echo ""
-          if [ "$code" != "200" ] && [ "$code" != "409" ]; then
+          if [ "$code" != "200" ] && [ "$code" != "201" ]; then
             echo "::error::Przypisanie aliasu zwróciło HTTP $code"
             exit 1
           fi
           echo "Alias stagingu: https://silver-care-staging.vercel.app" >> "$GITHUB_STEP_SUMMARY"
-
-      # Zielony job ma znaczyć działającą aplikację, nie tylko udaną publikację.
-      # Podglądy są za ochroną Vercela (302), więc sprawdzamy stały adres produkcji.
-      - name: Smoke test produkcji
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        env:
-          SMOKE_URL: https://silver-care-six.vercel.app/login
-        run: |
-          for i in 1 2 3 4 5 6; do
-            code=$(curl -s -o /dev/null -w "%{http_code}" "$SMOKE_URL")
-            echo "próba $i: HTTP $code"
-            [ "$code" = "200" ] && exit 0
-            sleep 10
-          done
-          echo "::error::$SMOKE_URL nie odpowiada 200 po publikacji — przywróć poprzednie wdrożenie (Instant Rollback)"
-          exit 1

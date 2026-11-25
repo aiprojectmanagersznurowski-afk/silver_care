@@ -28,8 +28,7 @@ describe('Staff Management & Role Invitations (@REQ: ADM-INVITE, @REQ: CONSENT-G
     const guardianEvaluation = determineConsentsForRole('legal_guardian', true);
     expect(guardianEvaluation.allowed).toBe(true);
     expect(guardianEvaluation.canGrantArt9).toBe(true);
-    expect(guardianEvaluation.purposes).toContain('wellness_data_ingest');
-    expect(guardianEvaluation.purposes).toContain('family_view_basic');
+    expect(guardianEvaluation.purposes).toEqual(['wellness_data_ingest']);
 
     // 2. Członek rodziny / Obserwator (family) NIE ma prawa do wyrażania zgód Art. 9 RODO
     const familyEvaluation = determineConsentsForRole('family', true);
