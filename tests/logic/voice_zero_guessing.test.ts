@@ -3,6 +3,7 @@ import {
   validateVoiceDraftInput,
   STAFF_REVIEW_FALLBACK_NOTICE,
   sanitizeReportAndVerifySafety,
+  buildFamilyReportInput,
 } from '../../apps/web/src/lib/voice-redactor'
 import { extractJson } from '../../apps/web/src/lib/voice-helpers'
 import { ZERO_GUESSING_DIRECTIVE, FAMILY_REPORT_PROMPT } from '../../packages/contracts/src/prompts'
@@ -73,6 +74,13 @@ describe('VOICE-ZERO-GUESSING Logic', () => {
 
     // Family report prompt zabrania zgadywania imienia pensjonariusza
     expect(FAMILY_REPORT_PROMPT).toMatch(/never guess identity|nigdy nie zgaduj tożsamości|anonimow/i)
+  })
+
+  it('puste strumienie raportu nie dostarczają generatorowi faktów @REQ: VOICE-FOLLOWUP', () => {
+    expect(buildFamilyReportInput({ behavioral: ' ', discomfort: 'null' })).toBeNull()
+    expect(buildFamilyReportInput({ behavioral: null, discomfort: 'Zmęczenie po spacerze' }))
+      .toBe('Dyskomfort: Zmęczenie po spacerze')
+    expect(FAMILY_REPORT_PROMPT).toContain('Brak danych do raportu')
   })
 
 })
