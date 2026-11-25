@@ -5,12 +5,13 @@ import { createClient } from '@/lib/supabase/server'
 import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
 import { callEuLlmCompletion } from '@/lib/eu-llm-client'
 import { extractJson } from '@/lib/voice-helpers'
-import { VOICE_PROMPT_VERSION } from '@silvercare/contracts/src/prompts'
+import { NO_FAMILY_REPORT_DATA, VOICE_PROMPT_VERSION } from '@silvercare/contracts/src/prompts'
 import { 
   redactVoiceTranscript, 
   validateVoiceDraftInput, 
   buildClassifierSystemPrompt,
   buildFamilyReportSystemPrompt,
+  buildFamilyReportInput,
   sanitizeReportAndVerifySafety,
   MedicationEvent,
 } from '@/lib/voice-redactor'
@@ -179,12 +180,13 @@ export async function POST(req: Request) {
     }
 
     // 3. GENERATE (Krok 2: Raport dla Bliskich) — ETAP REDACT: classified.medical ZOSTANIE POMINIĘTY
-    const userPrompt2 = `Informacje o zachowaniu: ${classified.behavioral || 'Brak szczególnych uwag'}\nInformacje o dyskomforcie: ${classified.discomfort || 'Brak'}`
-
-    const raw2 = await callEuLlmCompletion([
-      { role: 'system', content: buildFamilyReportSystemPrompt() },
-      { role: 'user', content: userPrompt2 }
-    ], 0.4, 600)
+    const reportFacts = buildFamilyReportInput(classified)
+    const raw2 = reportFacts
+      ? await callEuLlmCompletion([
+        { role: 'system', content: buildFamilyReportSystemPrompt() },
+        { role: 'user', content: reportFacts },
+      ], 0.4, 600)
+      : NO_FAMILY_REPORT_DATA
 
     // Weryfikacja bezpieczeństwa (MDR-NO-INTERPRETATION, AI Act) — dane o lekach należą do strumienia MEDICAL (wyłącznie daily_logs)
     const { reportText: finalText, requiresStaffReview } = sanitizeReportAndVerifySafety(raw2)
