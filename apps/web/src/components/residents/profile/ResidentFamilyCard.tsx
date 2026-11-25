@@ -1,6 +1,9 @@
 'use client'
 
-import React from 'react'
+import React, { useActionState } from 'react'
+import { CONSENT_PURPOSES, CONSENT_GRANTORS } from '@silvercare/contracts/src/generated/roles'
+import { recordResidentConsent } from '@/actions/resident-consent'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Users, UserCheck } from 'lucide-react'
 import { InviteFamilyDialog } from '@/components/InviteFamilyDialog'
@@ -43,6 +46,7 @@ export function ResidentFamilyCard({
         )}
       </CardHeader>
       <CardContent className="pt-4 space-y-3">
+        <ConsentRecorder residentId={resident.id} />
         {relativeLinks.length === 0 ? (
           <div className="p-4 rounded-xl border border-dashed border-border text-center text-sm text-muted-foreground">
             Brak powiązanych kont bliskich.
@@ -82,5 +86,45 @@ export function ResidentFamilyCard({
         )}
       </CardContent>
     </Card>
+  )
+}
+
+
+const CONSENT_LABELS = {
+  wellness_data_ingest: 'Pobieranie danych z opaski',
+  family_report_access: 'Udostępnianie raportów bliskim',
+  wellness_family_view: 'Udostępnianie aktywności i snu bliskim',
+}
+
+function ConsentRecorder({ residentId }: { residentId: string }) {
+  const [result, record, pending] = useActionState(recordResidentConsent, { message: '', saved: false })
+  const selectClass = 'min-h-touch w-full rounded-md border border-input bg-background px-2 text-sm'
+  return (
+    <details className="rounded-lg border border-border px-3">
+      <summary className="min-h-touch cursor-pointer py-2 text-sm font-medium">Zarejestruj udokumentowaną zgodę</summary>
+      <form action={record} className="grid gap-3 pb-3 text-sm">
+        <input type="hidden" name="resident" value={residentId} />
+        <label className="grid gap-1">
+          Cel zgody
+          <select name="purpose" className={selectClass} required defaultValue="">
+            <option value="" disabled>Wybierz cel</option>
+            {CONSENT_PURPOSES.map(({ id }) => <option key={id} value={id}>{CONSENT_LABELS[id]}</option>)}
+          </select>
+        </label>
+        <label className="grid gap-1">
+          Kto wyraził zgodę
+          <select name="grantor" className={selectClass} required defaultValue="">
+            <option value="" disabled>Wybierz osobę</option>
+            {CONSENT_GRANTORS.map((id) => <option key={id} value={id}>{id === 'resident_self' ? 'Podopieczny' : 'Opiekun prawny'}</option>)}
+          </select>
+        </label>
+        <label className="flex min-h-touch items-center gap-2">
+          <input type="checkbox" name="confirmed" required />
+          Mam udokumentowaną zgodę na wybrany cel.
+        </label>
+        <div><Button type="submit" disabled={pending}>Zapisz zgodę</Button></div>
+        {result.message && <p role={result.saved ? 'status' : 'alert'}>{result.message}</p>}
+      </form>
+    </details>
   )
 }
