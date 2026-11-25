@@ -3,6 +3,8 @@
 import { featureDisabledMessage, isOrgFeatureEnabled } from '@/lib/feature-flags'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { staffMfaSatisfied } from '@/lib/auth/staff-mfa'
+import type { User } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { isImpersonationSessionActive, assertMutationAllowedDuringImpersonation } from '@/lib/impersonation-guards'
@@ -16,6 +18,12 @@ import {
 import { hashNationalId } from '@/lib/national-id-hash'
 import { countPresentResidents, RESIDENT_PRESENCE_COLUMNS, ResidentPresenceFields } from '@/lib/capacity-limit'
 
+async function canManageBulkImport(supabase: Awaited<ReturnType<typeof createClient>>, user: User) {
+  if (user.app_metadata?.role !== 'org_admin') return false
+  const { data } = await supabase.auth.getClaims()
+  return data?.claims.sub === user.id && await staffMfaSatisfied(supabase, data.claims.aal)
+}
+
 export async function analyzeBulkImportAction(rows: RawResidentRow[]): Promise<{
   error?: string
   result?: DryRunResult
@@ -24,6 +32,9 @@ export async function analyzeBulkImportAction(rows: RawResidentRow[]): Promise<{
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) return { error: 'Brak autoryzacji sesji.' }
+  if (!await canManageBulkImport(supabase, user)) {
+    return { error: 'Import wymaga konta kierownika placówki i potwierdzenia MFA.' }
+  }
   const orgId = user.app_metadata?.organization_id
   if (!orgId) return { error: 'Brak przypisanej placówki.' }
 
@@ -77,6 +88,9 @@ export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) return { error: 'Brak autoryzacji sesji.' }
+  if (!await canManageBulkImport(supabase, user)) {
+    return { error: 'Import wymaga konta kierownika placówki i potwierdzenia MFA.' }
+  }
 
   const cookieStore = await cookies()
   const guard = assertMutationAllowedDuringImpersonation(isImpersonationSessionActive(cookieStore, user))
@@ -85,11 +99,6 @@ export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[
   }
   const orgId = user.app_metadata?.organization_id
   if (!orgId) return { error: 'Brak przypisanej placówki.' }
-
-  const role = user.app_metadata?.role
-  if (role !== 'org_admin' && role !== 'super_admin') {
-    return { error: 'Tylko kierownik placówki może wykonywać masowy import.' }
-  }
 
   const validRows = rowsToImport.filter((r) => r.isValid)
   if (validRows.length === 0) {
