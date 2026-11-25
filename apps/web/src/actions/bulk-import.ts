@@ -60,7 +60,7 @@ export async function analyzeBulkImportAction(rows: RawResidentRow[]): Promise<{
     .eq('id', orgId)
     .single()
 
-  const residentLimit = Number(orgData?.resident_limit || 50)
+  const residentLimit = Number(orgData?.resident_limit ?? 50)
   // Miejsce zajmują tylko podopieczni przebywający w placówce (ADM-CAPACITY-LIMIT, decyzja Michała 2026-10-29)
   const currentActiveCount = countPresentResidents((existing || []) as unknown as ResidentPresenceFields[])
   const existingHashes = new Set<string>(
@@ -78,10 +78,11 @@ export async function analyzeBulkImportAction(rows: RawResidentRow[]): Promise<{
   }
 }
 
-export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[]): Promise<{
+export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[], confirmCapacity = false): Promise<{
   error?: string
   importedCount?: number
   capacityExceeded?: { residentLimit: number; activeResidents: number }
+  capacityConfirmationRequired?: boolean
 }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -109,11 +110,7 @@ export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[
     return { error: featureDisabledMessage }
   }
 
-  const adminClient = createAdminClient()
-
-  // Przygotowanie rekordów do wstawienia
   const records = rows.map((r) => ({
-    organization_id: orgId,
     first_name: r.firstName,
     last_name: r.lastName,
     pesel_hash: hashNationalId(r.nationalId),
@@ -125,72 +122,29 @@ export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[
     admission_date: r.admissionDate || new Date().toISOString().substring(0, 10),
   }))
 
-  // Jeden INSERT zapewnia wspólną transakcję dla całej paczki.
-  const { data: inserted, error: insertErr } = await adminClient
-    .from('residents').insert(records).select('id')
-
-  if (insertErr) {
-    const error = insertErr.code === '23505'
-      ? 'Co najmniej jeden podopieczny już istnieje. Uruchom podgląd ponownie.'
-      : 'Nie udało się potwierdzić zapisu importu. Uruchom podgląd przed ponowieniem.'
-    return { error }
-  }
-  const totalImported = inserted?.length ?? 0
-
-  // Limit miejsc zmienia wyłącznie super admin (CAPACITY_POLICY, ADM-CAPACITY-LIMIT) — import go nie podnosi,
-  // tylko odnotowuje przekroczenie w audycie
-  const { data: presentRows } = await adminClient
-    .from('residents')
-    .select(RESIDENT_PRESENCE_COLUMNS)
-    .eq('organization_id', orgId)
-    .is('archived_at', null)
-
-  const activeTotal = countPresentResidents((presentRows || []) as ResidentPresenceFields[]) || totalImported
-
-  const { data: orgRecord } = await adminClient
-    .from('organizations')
-    .select('resident_limit')
-    .eq('id', orgId)
-    .single()
-
-  const currentLimit = Number(orgRecord?.resident_limit || 50)
-  const capacityExceeded = activeTotal > currentLimit
-    ? { residentLimit: currentLimit, activeResidents: activeTotal }
-    : undefined
-
-  if (capacityExceeded) {
-    await adminClient.from('audit_logs').insert({
-      organization_id: orgId,
-      resident_id: null,
-      action: 'ORGANIZATION_CAPACITY_EXCEEDED',
-      performed_by: user.id,
-      payload: {
-        operation: 'resident_bulk_import',
-        resident_limit: currentLimit,
-        active_resident_count: activeTotal,
-      },
-    })
-  }
-
-  // Wpis do audit_logs dla masowego importu
-  await adminClient.from('audit_logs').insert({
-    organization_id: orgId,
-    resident_id: null,
-    action: 'RESIDENTS_BULK_IMPORT',
-    performed_by: user.id,
-    payload: {
-      imported_count: totalImported,
-      source: 'excel_csv_import',
-      capacity_exceeded: Boolean(capacityExceeded),
-    },
+  const { data, error } = await supabase.rpc('commit_resident_import', {
+    p_rows: records, p_confirm_capacity: confirmCapacity,
   })
+  if (error?.message === 'RESIDENT_IMPORT_CAPACITY_CONFIRMATION') {
+    return { error: 'Import wymaga potwierdzenia aktualnego limitu miejsc. Odśwież podgląd.', capacityConfirmationRequired: true }
+  }
+  if (error?.code === '23505') {
+    return { error: 'Co najmniej jeden podopieczny już istnieje. Uruchom podgląd ponownie.' }
+  }
+  if (error || !data || typeof data !== 'object' || Array.isArray(data)
+    || typeof data.importedCount !== 'number' || typeof data.residentLimit !== 'number'
+    || typeof data.activeResidents !== 'number') {
+    return { error: 'Nie udało się potwierdzić zapisu importu. Uruchom podgląd przed ponowieniem.' }
+  }
 
   revalidatePath('/admin/residents')
   revalidatePath('/admin/organizations')
   revalidatePath(`/admin/organizations/${orgId}`)
 
   return {
-    importedCount: totalImported,
-    capacityExceeded,
+    importedCount: data.importedCount,
+    capacityExceeded: data.activeResidents > data.residentLimit
+      ? { residentLimit: data.residentLimit, activeResidents: data.activeResidents }
+      : undefined,
   }
 }

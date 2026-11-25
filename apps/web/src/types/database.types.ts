@@ -2646,6 +2646,13 @@ export interface Database {
         }
         Returns: Json
       }
+      commit_resident_import: {
+        Args: {
+          p_rows: Json
+          p_confirm_capacity: boolean
+        }
+        Returns: Json
+      }
       complete_operational_report_job: {
         Args: {
           p_token: string
