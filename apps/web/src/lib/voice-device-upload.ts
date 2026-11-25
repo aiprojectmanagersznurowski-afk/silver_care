@@ -32,8 +32,6 @@ type PendingUpload = {
 type UploadState = PendingUpload | { status: 'DUPLICATE'; sha256: string }
   | { status: 'AUTHENTICATED' | 'DEVICE_REVOKED' | 'HASH_MISMATCH' | 'RETRY_LATER' }
 
-const hash = (data: string | Uint8Array) => createHash('sha256').update(data).digest('hex')
-
 function reply(code: Code, extra: Record<string, string> = {}) {
   const status = protocol.responses.find((response) => response.code === code)!.http
   const retry = code === 'RETRY_LATER' ? { retry_after_s: retryAfterSeconds } : {}
@@ -125,15 +123,33 @@ async function sign(admin: Admin, upload: PendingUpload) {
     : reply('RETRY_LATER')
 }
 
+async function matchesUpload(stream: ReadableStream<Uint8Array>, upload: PendingUpload) {
+  const reader = stream.getReader()
+  const sha256 = createHash('sha256')
+  let size = 0
+  try {
+    for (let chunk = await reader.read(); !chunk.done; chunk = await reader.read()) {
+      size += chunk.value.byteLength
+      if (size > upload.size_bytes || size > maxAudioBytes) {
+        await reader.cancel()
+        return false
+      }
+      sha256.update(chunk.value)
+    }
+    return size === upload.size_bytes && sha256.digest('hex') === upload.sha256
+  } finally {
+    reader.releaseLock()
+  }
+}
+
 async function commit(admin: Admin, tokenHash: string, captureId: string, sha256: string, upload: PendingUpload) {
   if (upload.sha256 !== sha256) return reply('HASH_MISMATCH')
-  const { data: file, error } = await admin.storage.from(VOICE_RETENTION.storageBucket).download(upload.path)
+  const { data: stream, error } = await admin.storage.from(VOICE_RETENTION.storageBucket).download(upload.path).asStream()
   if (error) {
     const status = 'statusCode' in error ? String(error.statusCode) : ''
     return reply(status === '404' ? 'HASH_MISMATCH' : 'RETRY_LATER')
   }
-  if (!file || file.size !== upload.size_bytes || file.size > maxAudioBytes
-    || hash(new Uint8Array(await file.arrayBuffer())) !== upload.sha256) return reply('HASH_MISMATCH')
+  if (!stream || !await matchesUpload(stream, upload)) return reply('HASH_MISMATCH')
 
   const result = await admin.rpc('commit_voice_device_upload', {
     p_token_hash: tokenHash, p_capture_id: captureId, p_attempt_id: upload.attempt_id, p_sha256: sha256,
@@ -153,7 +169,7 @@ export async function handleVoiceDeviceUpload(request: Request, step: Step) {
   try {
     const body = await readJson(request)
     const admin = createAdminClient()
-    const tokenHash = hash(token)
+    const tokenHash = createHash('sha256').update(token).digest('hex')
     const forbidden = body && protocol.fields.forbidden.some((field) => Object.hasOwn(body, field))
     const allowed = body && Object.keys(body).length === steps[step].size
       && Object.keys(body).every((key) => steps[step].has(key))
