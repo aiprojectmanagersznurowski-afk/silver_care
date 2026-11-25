@@ -1,9 +1,13 @@
 'use client'
 
 import React from 'react'
-import { Zap, LayoutGrid, Table as TableIcon, X } from 'lucide-react'
+import Link from 'next/link'
+import { Mic, Zap, LayoutGrid, Table as TableIcon, X } from 'lucide-react'
 import { PageHeader } from '@/components/patterns/PageHeader'
 import { ViewToggle } from '@/components/patterns/ViewToggle'
+import { buttonVariants } from '@/components/ui/button'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
 
 export type StaffBoardViewMode = 'table' | 'rounds' | 'standard'
 
@@ -33,6 +37,21 @@ export function StaffBoardHeader({
       description="Szybki obchód dyżurny, bezpośrednie dyktowanie i bieżący stan podopiecznych."
       actions={
         <>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link
+                href="/voice/general"
+                aria-label="Nagranie ogólne"
+                className={cn(
+                  buttonVariants({ variant: 'outline', size: 'icon' }),
+                  'min-h-touch min-w-touch text-primary hover:text-primary'
+                )}
+              >
+                <Mic className="size-4" aria-hidden="true" />
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent>Nagranie ogólne — dyktuj bez wyboru podopiecznego</TooltipContent>
+          </Tooltip>
           <ViewToggle value={viewMode} onChange={onViewModeChange} options={STAFF_BOARD_OPTIONS} />
           {activeFiltersCount > 0 && (
             <button
@@ -41,7 +60,7 @@ export function StaffBoardHeader({
               className="inline-flex items-center gap-1.5 rounded-lg bg-muted/50 px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-muted hover:text-foreground transition-colors min-h-touch"
             >
               Wyczyść ({activeFiltersCount})
-              <X className="h-3.5 w-3.5" />
+              <X className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
           )}
         </>
