@@ -99,9 +99,10 @@ export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[
   const orgId = user.app_metadata?.organization_id
   if (!orgId) return { error: 'Brak przypisanej placówki.' }
 
-  const validRows = rowsToImport.filter((r) => r.isValid)
-  if (validRows.length === 0) {
-    return { error: 'Brak poprawnych wierszy do zaimportowania.' }
+  const selectedRows = rowsToImport.filter((r) => r.isValid)
+  const { rows, validRowsCount } = validateResidentRows(selectedRows)
+  if (validRowsCount === 0 || validRowsCount !== selectedRows.length) {
+    return { error: 'Wiersze importu są niepoprawne lub powtórzone. Sprawdź podgląd ponownie.' }
   }
 
   if (!(await isOrgFeatureEnabled(supabase, orgId, 'module_residents_management'))) {
@@ -111,7 +112,7 @@ export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[
   const adminClient = createAdminClient()
 
   // Przygotowanie rekordów do wstawienia
-  const records = validRows.map((r) => ({
+  const records = rows.map((r) => ({
     organization_id: orgId,
     first_name: r.firstName,
     last_name: r.lastName,
@@ -124,22 +125,17 @@ export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[
     admission_date: r.admissionDate || new Date().toISOString().substring(0, 10),
   }))
 
-  // Wstawianie w batchach po 50 rekordów
-  const batchSize = 50
-  let totalImported = 0
+  // Jeden INSERT zapewnia wspólną transakcję dla całej paczki.
+  const { data: inserted, error: insertErr } = await adminClient
+    .from('residents').insert(records).select('id')
 
-  for (let i = 0; i < records.length; i += batchSize) {
-    const batch = records.slice(i, i + batchSize)
-    const { data: inserted, error: insertErr } = await adminClient
-      .from('residents')
-      .insert(batch)
-      .select('id')
-
-    if (insertErr) {
-      return { error: `Błąd podczas zapisu partii rekordów: ${insertErr.message}` }
-    }
-    totalImported += (inserted || []).length
+  if (insertErr) {
+    const error = insertErr.code === '23505'
+      ? 'Co najmniej jeden podopieczny już istnieje. Uruchom podgląd ponownie.'
+      : 'Nie udało się potwierdzić zapisu importu. Uruchom podgląd przed ponowieniem.'
+    return { error }
   }
+  const totalImported = inserted?.length ?? 0
 
   // Limit miejsc zmienia wyłącznie super admin (CAPACITY_POLICY, ADM-CAPACITY-LIMIT) — import go nie podnosi,
   // tylko odnotowuje przekroczenie w audycie
