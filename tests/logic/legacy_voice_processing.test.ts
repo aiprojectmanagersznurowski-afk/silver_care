@@ -2,9 +2,10 @@ import { NextRequest } from 'next/server'
 import { beforeEach, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
-  createClient: vi.fn(), from: vi.fn(), complete: vi.fn(), redact: vi.fn(), save: vi.fn(),
+  createClient: vi.fn(), from: vi.fn(), adminFrom: vi.fn(), complete: vi.fn(), redact: vi.fn(), save: vi.fn(),
 }))
 vi.mock('@/lib/supabase/server', () => ({ createClient: mocks.createClient }))
+vi.mock('@/lib/supabase/admin', () => ({ createAdminClient: () => ({ from: mocks.adminFrom }) }))
 vi.mock('@/lib/feature-flags', () => ({ assertOrgFeatureForApi: async () => null, isOrgFeatureEnabled: async () => true }))
 vi.mock('@/lib/impersonation-guards', () => ({ isImpersonationSessionActive: () => false, safeGetCookieStore: async () => ({}) }))
 vi.mock('next/headers', () => ({ cookies: async () => ({}) }))
@@ -14,6 +15,7 @@ vi.mock('@/lib/voice-private-speech', () => ({ readSpeechConfiguration: () => ({
 vi.mock('@/lib/voice-process-persistence', () => ({ saveProcessedVoiceDraft: mocks.save }))
 
 import { POST } from '../../apps/web/src/app/api/voice/process/route'
+import { POST as submit } from '../../apps/web/src/app/api/voice/submit/route'
 
 const user = { id: 'staff-1', app_metadata: { role: 'nurse', organization_id: 'our-site' } }
 const draft = { id: 'draft-1', resident_id: 'resident-1', transcript: 'Anna Testowa zjadła obiad.', status: 'DRAFT' }
@@ -61,4 +63,30 @@ it('przekazuje klasyfikatorowi tekst po prywatnej redakcji @REQ: VOICE-ZERO-GUES
     .mockResolvedValueOnce('Twój bliski zjadł obiad.')
   expect((await POST(request(), route)).status).toBe(200)
   expect(mocks.complete.mock.calls[0][0][1].content).toBe('Podopieczna zjadła obiad.')
+})
+
+function submission() {
+  return new NextRequest('http://localhost/api/voice/submit', {
+    method: 'POST', headers: { authorization: 'Bearer fixture' },
+    body: JSON.stringify({ resident_id: draft.resident_id, client_uuid: 'client-1' }),
+  })
+}
+
+it('odrzuca wysłanie dawnego szkicu bez MFA @REQ: SEC-MFA-STAFF', async () => {
+  session('aal1')
+  const post = submit as typeof POST
+  expect((await post(submission(), route)).status).toBe(403)
+  expect(mocks.adminFrom).not.toHaveBeenCalled()
+})
+
+it('szuka poprzedniego zgłoszenia tylko dla autora i podopiecznego @REQ: VOICE-DRAFT-ISOLATION', async () => {
+  session('aal2')
+  const existing = { id: draft.id, async_status: 'QUEUED' }
+  const match = vi.fn(() => ({ maybeSingle: async () => ({ data: existing }) }))
+  mocks.adminFrom.mockImplementation((table: string) => table === 'residents' ? {
+    select: () => ({ eq: () => ({ single: async () => ({ data: { organization_id: 'our-site' } }) }) }),
+  } : { select: () => ({ match }) })
+  const post = submit as typeof POST
+  expect((await post(submission(), route)).status).toBe(202)
+  expect(match).toHaveBeenCalledWith({ client_uuid: 'client-1', nurse_id: user.id, resident_id: draft.resident_id })
 })
