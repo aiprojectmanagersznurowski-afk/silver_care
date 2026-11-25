@@ -72,3 +72,34 @@ it('rejestruje zgodę potwierdzoną przez kierownika z identyfikatorem aktora @R
     throw rollback
   }).catch((error: unknown) => { if (error !== rollback) throw error })
 })
+
+it('wymaga konta powiązanego opiekuna prawnego dla zgody @REQ: CONSENT-GRANTOR', async () => {
+  await sql.begin(async (tx) => {
+    const org = randomUUID()
+    const user = randomUUID()
+    const guardian = randomUUID()
+    const family = randomUUID()
+    const resident = randomUUID()
+    await tx`INSERT INTO public.organizations (id, name) VALUES (${org}, 'Fixture opiekuna')`
+    await tx`INSERT INTO public.residents (id, organization_id, first_name, last_name) VALUES (${resident}, ${org}, 'Test', 'Opiekun')`
+    await tx`INSERT INTO auth.users (id, raw_app_meta_data) VALUES (${user}, '{}'::jsonb),
+      (${guardian}, ${tx.json({ role: 'legal_guardian', organization_id: org })}),
+      (${family}, ${tx.json({ role: 'family', organization_id: org })})`
+    await tx`INSERT INTO public.resident_relative_links (resident_id, relative_user_id, relationship_code, role)
+      VALUES (${resident}, ${guardian}, 'GUARDIAN', 'legal_guardian'), (${resident}, ${family}, 'SON', 'family')`
+    await tx`SET LOCAL ROLE authenticated`
+    await tx`SELECT set_config('request.jwt.claims', ${JSON.stringify({
+      sub: user, role: 'authenticated', aal: 'aal2', app_metadata: { role: 'org_admin', organization_id: org },
+    })}, true)`
+    const grant = (connection: typeof tx, account: string | null) => connection`INSERT INTO public.consent_ledger
+      (organization_id, resident_id, purpose, granted_by, grantor_user_id)
+      VALUES (${org}, ${resident}, 'family_report_access', 'legal_guardian', ${account}) RETURNING id`
+    await expect(tx.savepoint((sp) => grant(sp, null))).rejects.toMatchObject({ message: 'CONSENT_GRANTOR_UNVERIFIED' })
+    await expect(tx.savepoint((sp) => grant(sp, family))).rejects.toMatchObject({ message: 'CONSENT_GRANTOR_UNVERIFIED' })
+    const [consent] = await grant(tx, guardian)
+    expect(await tx`SELECT performed_by, payload->>'grantor_user_id' AS grantor FROM public.audit_logs
+      WHERE resident_id = ${resident} AND action = 'CONSENT_GRANTED' AND payload->>'consent_id' = ${consent.id}`)
+      .toEqual([{ performed_by: user, grantor: guardian }])
+    throw rollback
+  }).catch((error: unknown) => { if (error !== rollback) throw error })
+})
