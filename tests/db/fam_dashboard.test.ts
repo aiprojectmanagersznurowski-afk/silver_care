@@ -39,11 +39,13 @@ describe('Database FAM-DASHBOARD (Family Report View)', () => {
       // Link family
       const familyUid = '11111111-1111-1111-1111-111111111111';
       await tx`INSERT INTO resident_relative_links (resident_id, relative_user_id, relationship_code, role) VALUES (${resId}, ${familyUid}, 'SON', 'family')`;
+      await tx`INSERT INTO consent_ledger (organization_id, resident_id, purpose, granted_by)
+        VALUES (${orgId}, ${resId}, 'family_report_access', 'resident_self')`;
 
       // Query as family
       await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "${familyUid}", "app_metadata": {"role": "family", "organization_id": "${orgId}"}, "aal": "aal1"}`}, true)`;
 
-      const results = await tx`SELECT content, status FROM daily_reports WHERE resident_id = ${resId}`;
+      const results = await tx`SELECT content, status FROM get_family_daily_reports(${resId})`;
       
       expect(results).toHaveLength(1);
       expect(results[0].status).toBe('PUBLISHED');
