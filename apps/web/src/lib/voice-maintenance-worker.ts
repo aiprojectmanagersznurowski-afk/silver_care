@@ -51,16 +51,21 @@ export async function processNextOperationalReport() {
 
 export async function removeExpiredVoiceStorage() {
   const admin = createAdminClient()
-  const expired = await admin.rpc('expire_voice_captures')
+  const [expired, reports] = await Promise.all([
+    admin.rpc('expire_voice_captures'),
+    admin.rpc('cleanup_expired_operational_reports'),
+  ])
   if (expired.error) throw new Error('VOICE_EXPIRATION_FAILED')
   const claim = await admin.rpc('claim_voice_storage_deletions')
   if (claim.error) throw new Error('VOICE_STORAGE_DELETE_CLAIM_FAILED')
   const token = claim.data?.[0]?.lease_token
-  if (!token) return 'idle'
 
-  const result = await admin.storage.from(VOICE_RETENTION.storageBucket).remove(claim.data.map(({ path }) => path))
-  if (result.error) throw new Error('VOICE_STORAGE_DELETE_FAILED')
-  const finished = await admin.rpc('finish_voice_storage_deletions', { p_token: token })
-  if (finished.error) throw new Error('VOICE_STORAGE_DELETE_RELEASE_FAILED')
-  return 'processed'
+  if (token) {
+    const result = await admin.storage.from(VOICE_RETENTION.storageBucket).remove(claim.data.map(({ path }) => path))
+    if (result.error) throw new Error('VOICE_STORAGE_DELETE_FAILED')
+    const finished = await admin.rpc('finish_voice_storage_deletions', { p_token: token })
+    if (finished.error) throw new Error('VOICE_STORAGE_DELETE_RELEASE_FAILED')
+  }
+  if (reports.error) throw new Error('OPERATIONAL_REPORT_EXPIRATION_FAILED')
+  return token || expired.data ? 'processed' : 'idle'
 }
