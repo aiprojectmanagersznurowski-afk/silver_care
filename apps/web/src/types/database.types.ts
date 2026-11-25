@@ -2875,6 +2875,18 @@ export interface Database {
         }
         Returns: number
       }
+      get_family_daily_reports: {
+        Args: {
+          p_resident_id: string
+        }
+        Returns: {
+          id: string
+          resident_id: string
+          created_at: string
+          status: string
+          content: Json
+        }[]
+      }
       get_family_resident_overview: {
         Args: Record<PropertyKey, never>
         Returns: {
