@@ -10,9 +10,10 @@ vi.mock('@/lib/impersonation-guards', () => ({
   safeGetCookieStore: () => ({}),
 }))
 vi.mock('next/headers', () => ({ cookies: async () => ({}) }))
+vi.mock('next/headers.js', () => ({ cookies: async () => ({}) }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 
-import { analyzeBulkImportAction } from '@/actions/bulk-import'
+import { analyzeBulkImportAction, commitBulkImportAction } from '@/actions/bulk-import'
 import { bulkPublishReportsAction } from '@/actions/bulk-reports'
 
 function session(role: string, aal = 'aal2') {
@@ -55,4 +56,35 @@ describe('Uprawnienia operacji masowych @REQ: ORG-ISOLATION', () => {
     expect(update).not.toHaveBeenCalled()
     expect(result).toMatchObject({ success: false })
   })
+})
+
+it('zapisuje wszystkie 60 rekordów jednym wywołaniem bazy @REQ: ADM-RESIDENT-ADD', async () => {
+  session('org_admin')
+  mocks.feature.mockResolvedValue(true)
+  const rows = Array.from({ length: 60 }, (_, index) => {
+    const stem = '400101' + String(index).padStart(4, '0')
+    const weights = [1, 3, 7, 9, 1, 3, 7, 9, 1, 3]
+    const sum = [...stem].reduce((total, digit, position) => total + Number(digit) * weights[position], 0)
+    return {
+      rowNumber: index + 2, firstName: 'Test', lastName: String(index),
+      nationalId: stem + String((10 - sum % 10) % 10),
+      gender: 'M' as const, birthDate: '1940-01-01', careLevel: 'walking' as const,
+      isZsn: false, notes: null, admissionDate: null, isValid: true, errors: [],
+    }
+  })
+  const insert = vi.fn((batch: unknown[]) => ({ select: async () => ({
+    data: batch.map((_, index) => ({ id: String(index) })), error: null,
+  }) }))
+  mocks.createAdminClient.mockReturnValue({
+    from: (table: string) => table === 'residents' ? {
+      insert,
+      select: () => ({ eq: () => ({ is: async () => ({ data: [] }) }) }),
+    } : {
+      select: () => ({ eq: () => ({ single: async () => ({ data: { resident_limit: 60 } }) }) }),
+      insert: async () => ({}),
+    },
+  })
+  await commitBulkImportAction(rows).catch((error: unknown) => { if (!insert.mock.calls.length) throw error })
+  expect(insert).toHaveBeenCalledTimes(1)
+  expect(insert.mock.calls[0][0]).toHaveLength(60)
 })
