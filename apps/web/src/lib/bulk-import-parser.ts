@@ -39,7 +39,7 @@ function dataHeader(sheet: XLSX.WorkSheet) {
 
 export async function parseBulkImportFile(file: File): Promise<{ rows?: RawResidentRow[]; error?: string }> {
   try {
-    const workbook = XLSX.read(await file.arrayBuffer(), { type: 'array' })
+    const workbook = XLSX.read(await file.arrayBuffer(), { type: 'array', codepage: 65001 })
     const candidates = workbook.SheetNames.map((name) => dataHeader(workbook.Sheets[name])).filter((sheet) => sheet !== null)
     if (!candidates.length) return { error: 'Nie znaleziono nagłówków: Imię, Nazwisko i PESEL. Sprawdź format pliku.' }
     if (candidates.length > 1) return { error: 'Kilka arkuszy zawiera dane podopiecznych. Wgraj jeden arkusz naraz.' }
