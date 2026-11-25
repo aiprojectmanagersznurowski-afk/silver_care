@@ -1,8 +1,6 @@
-import { assertOrgFeatureForApi, isOrgFeatureEnabled } from '@/lib/feature-flags'
-import { cookies } from 'next/headers'
+import { isOrgFeatureEnabled } from '@/lib/feature-flags'
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { isImpersonationSessionActive } from '@/lib/impersonation-guards'
+import { withAuth } from '@/lib/api-auth'
 import { callEuLlmCompletion } from '@/lib/eu-llm-client'
 import { extractJson } from '@/lib/voice-helpers'
 import { NO_FAMILY_REPORT_DATA, VOICE_PROMPT_VERSION } from '@silvercare/contracts/src/prompts'
@@ -17,46 +15,15 @@ import {
 } from '@/lib/voice-redactor'
 import { saveProcessedVoiceDraft } from '@/lib/voice-process-persistence'
 import { omitVoiceTaskCompletion } from '@/lib/voice-shift-task-completion'
-import { getAppOrganizationId } from '@/lib/auth/app-role'
 import { SHIFT_TASK_VOICE } from '@silvercare/contracts/src/generated/roles'
+import { readSpeechConfiguration, redactPrivately } from '@/lib/voice-private-speech'
 
 export const runtime = 'nodejs'
 
 const REPORT_LLM_MODEL = process.env.REPORT_LLM_MODEL || process.env.EU_LLM_MODEL || 'mistralai/mistral-small-24b-instruct-2501'
 
-export async function POST(req: Request) {
+export const POST = withAuth(async (req, { supabase, user }) => {
   try {
-    const authHeader = req.headers.get('authorization')
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7).trim() : undefined
-    const supabase = await createClient(token)
-
-    let user = null
-    if (token) {
-      const { data: authData } = await supabase.auth.getUser(token)
-      user = authData?.user || null
-    }
-    if (!user) {
-      const { data: cookieAuthData } = await supabase.auth.getUser()
-      user = cookieAuthData?.user || null
-    }
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const featureDenied = await assertOrgFeatureForApi(supabase, user, '/api/voice/process')
-    if (featureDenied) return featureDenied
-
-    const cookieStore = await cookies()
-    if (isImpersonationSessionActive(cookieStore, user)) {
-      return NextResponse.json({ error: 'Operacja niedozwolona w trybie podglądu' }, { status: 403 })
-    }
-
-    const role = user.app_metadata?.role as string | undefined
-    if (role !== 'nurse') {
-      return NextResponse.json({ error: 'Brak uprawnień personelu' }, { status: 403 })
-    }
-
     const { draftId, editedTranscription } = await req.json()
     if (!draftId) {
       return NextResponse.json({ error: 'Brak draftId' }, { status: 400 })
@@ -116,7 +83,7 @@ export async function POST(req: Request) {
     const { cleanedTranscript: redacted, extractedMedical } = redactVoiceTranscript(transcription)
     const remaining = omitVoiceTaskCompletion(redacted)
     const tasksEnabled = remaining !== redacted.trim()
-      && await isOrgFeatureEnabled(supabase, getAppOrganizationId(user), SHIFT_TASK_VOICE.requiredFeatures[1])
+      && await isOrgFeatureEnabled(supabase, user.organizationId, SHIFT_TASK_VOICE.requiredFeatures[1])
     const cleanedTranscript = tasksEnabled ? remaining : redacted
     if (tasksEnabled && !cleanedTranscript && !extractedMedical.length) {
       const { error } = await supabase.from('voice_draft_notes')
@@ -126,13 +93,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true, taskNote: true, report: null })
     }
 
-    // Europejski LLM w EOG (Krok 1: Klasyfikator i Redakcja Medyczna ze strukturą medication_event)
-    const raw1 = await callEuLlmCompletion([
+    let reportInput = ''
+    if (cleanedTranscript.trim()) {
+      try {
+        const privateText = await redactPrivately(readSpeechConfiguration(), cleanedTranscript)
+        reportInput = redactVoiceTranscript(privateText).cleanedTranscript.trim()
+      } catch {
+        return NextResponse.json({ error: 'Redakcja nagrania jest chwilowo niedostępna. Szkic został zachowany.' }, { status: 503 })
+      }
+    }
+    const raw1 = reportInput ? await callEuLlmCompletion([
       { role: 'system', content: buildClassifierSystemPrompt() },
-      { role: 'user', content: cleanedTranscript }
-    ], 0.1, 800)
-
-    const classified = extractJson(raw1, cleanedTranscript)
+      { role: 'user', content: reportInput },
+    ], 0.1, 800) : '{}'
+    const classified = extractJson(raw1)
 
     if (classified._parseError) {
       await supabase.from('voice_draft_notes')
@@ -224,4 +198,4 @@ export async function POST(req: Request) {
     const errMsg = error instanceof Error ? error.message : 'Wystąpił nieoczekiwany błąd'
     return NextResponse.json({ error: errMsg }, { status: 500 })
   }
-}
+}, { roles: ['nurse'], requireOrganization: true, blockImpersonation: true, requiredFeature: 'module_voice_and_reports' })
