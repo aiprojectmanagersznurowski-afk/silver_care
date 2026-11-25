@@ -12,8 +12,14 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/staging' }}
 
 jobs:
+  database:
+    if: github.event_name == 'pull_request' && (github.base_ref == 'staging' || github.base_ref == 'codex/nowe-zmiany')
+    uses: ./.github/workflows/db-promotion.yml
+
   verify:
     name: Silver Care Verification & Gate
+    needs: database
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     env:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://example.supabase.co' }}
@@ -21,6 +27,16 @@ jobs:
       PESEL_HASH_SALT: ${{ secrets.PESEL_HASH_SALT || 'ci-test-salt-32-chars-long-secret' }}
 
     steps:
+      - name: Require promotion database checks
+        if: github.event_name == 'pull_request' && (github.base_ref == 'staging' || github.base_ref == 'codex/nowe-zmiany')
+        env:
+          DATABASE_CHECKS: ${{ needs.database.result }}
+        run: |
+          if [[ "$DATABASE_CHECKS" != success ]]; then
+            echo "::error::Database promotion checks must pass before review."
+            exit 1
+          fi
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:

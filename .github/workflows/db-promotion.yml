@@ -1,8 +1,7 @@
 name: Database promotion checks
 
 on:
-  pull_request:
-    branches: [staging, 'codex/nowe-zmiany']
+  workflow_call:
 
 jobs:
   migrations:
