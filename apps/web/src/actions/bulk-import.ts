@@ -6,8 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { staffMfaSatisfied } from '@/lib/auth/staff-mfa'
 import type { User } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
-import { cookies } from 'next/headers'
-import { isImpersonationSessionActive, assertMutationAllowedDuringImpersonation } from '@/lib/impersonation-guards'
+import { isImpersonationSessionActive, assertMutationAllowedDuringImpersonation, safeGetCookieStore } from '@/lib/impersonation-guards'
 import {
   RawResidentRow,
   validateResidentRows,
@@ -92,7 +91,7 @@ export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[
     return { error: 'Import wymaga konta kierownika placówki i potwierdzenia MFA.' }
   }
 
-  const cookieStore = await cookies()
+  const cookieStore = await safeGetCookieStore()
   const guard = assertMutationAllowedDuringImpersonation(isImpersonationSessionActive(cookieStore, user))
   if (!guard.allowed) {
     return { error: guard.error }
