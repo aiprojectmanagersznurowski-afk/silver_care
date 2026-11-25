@@ -128,7 +128,7 @@ export const DEVICE_AUTH = {
 
 /**
  * Protokół przyjęcia nagrania z urządzenia (SC-NUR-17, ADR-022 pkt 3).
- * Plik idzie prosto do Storage pod podpisany adres, endpoint obsługuje tylko metadane.
+ * Urządzenie wysyła plik prosto do prywatnego Storage pod podpisany adres.
  * Urządzenie kasuje nagranie wyłącznie po odpowiedzi z deviceMayDelete: true.
  */
 export const DEVICE_INGEST_PROTOCOL = {
@@ -139,7 +139,7 @@ export const DEVICE_INGEST_PROTOCOL = {
   steps: [
     { id: 'INIT',   desc: 'Urządzenie wysyła token i metadane nagrania. Serwer zwraca podpisany adres zapisu w Storage albo DUPLICATE, jeśli nagranie już przyjęto.' },
     { id: 'UPLOAD', desc: 'Urządzenie wysyła plik prosto do Storage pod podpisany adres.' },
-    { id: 'COMMIT', desc: 'Urządzenie potwierdza zapis. Serwer sprawdza skrót pliku i tworzy voice_draft_notes ze źródłem DEVICE, bez resident_id, z pozycją w kolejce przypisania.' },
+    { id: 'COMMIT', desc: 'Serwer ponownie uwierzytelnia urządzenie, sprawdza rozmiar i SHA-256 pliku oraz zapisuje nagranie w voice_captures ze źródłem DEVICE. Potok asynchroniczny transkrybuje i przypisuje fragmenty; wyjątki trafiają do kolejki „Do przypisania”.' },
   ],
   idempotencyKey: ['device_id', 'client_capture_id'],
   fields: {
