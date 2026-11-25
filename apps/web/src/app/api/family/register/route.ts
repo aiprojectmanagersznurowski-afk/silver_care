@@ -98,6 +98,7 @@ export async function POST(request: Request) {
         resident_id: invitation.resident_id,
         purpose,
         granted_by: 'legal_guardian',
+        grantor_user_id: userId,
       }));
 
       const { error: consentError } = await adminClient

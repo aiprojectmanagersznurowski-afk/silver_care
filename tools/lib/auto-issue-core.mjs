@@ -154,11 +154,9 @@ const FORBIDDEN_PUSH_FLAGS = new Set([
   '-f', '--force', '--force-with-lease', '--force-if-includes',
   '-d', '--delete', '--all', '--tags', '--mirror', '--no-verify', '-n',
 ]);
-const SAFE_VALUE_FLAGS = new Set(['-o', '--push-option', '--repo', '--receive-pack']);
 const SAFE_BOOL_FLAGS = new Set(['-u', '--set-upstream', '--porcelain', '-q', '--quiet', '-v', '--verbose', '--progress']);
 
 function resolveTargetBranch(ref, currentBranch) {
-  if (!ref) return { branch: currentBranch };
   if (ref.startsWith('+') || ref.startsWith(':')) return { error: `Niedozwolony refspec push: ${ref}` };
   if (ref.includes(':')) {
     const [src, dst, ...extra] = ref.split(':');
@@ -185,18 +183,17 @@ export function isAutoIssuePushAllowed({ commandLine = '', currentBranch = '', h
     if (FORBIDDEN_PUSH_FLAGS.has(t) || t.startsWith('--force') || t.startsWith('--delete')) {
       return { allowed: false, hardDeny: true, reason: `Niedozwolona flaga push: ${t}` };
     }
-    if (SAFE_BOOL_FLAGS.has(t) || t.startsWith('--push-option=') || t.startsWith('--repo=')) continue;
-    if (SAFE_VALUE_FLAGS.has(t)) { idx += 1; continue; }
+    if (SAFE_BOOL_FLAGS.has(t)) continue;
     if (t.startsWith('-')) return { allowed: false, reason: `Nieobsługiwana flaga push: ${t}` };
     positional.push(t);
   }
-  if (positional.length > 2) return { allowed: false, reason: 'Dozwolony push maksymalnie jednego refspeca.' };
-  const remote = positional[0] || 'origin';
+  if (positional.length !== 2) return { allowed: false, reason: 'Podaj jawnie origin i jeden refspec.' };
+  const [remote, refspec] = positional;
   if (remote !== 'origin') return { allowed: false, reason: `Remote musi być origin (otrzymano: ${remote}).` };
   if (!currentBranch || PROTECTED_BRANCHES.has(currentBranch) || !AUTO_BRANCH_RE.test(currentBranch)) {
     return { allowed: false, reason: `Bieżąca gałąź '${currentBranch}' nie jest gałęzią auto/issue-*.` };
   }
-  const resolved = resolveTargetBranch(positional[1], currentBranch);
+  const resolved = resolveTargetBranch(refspec, currentBranch);
   if (resolved.error) return { allowed: false, reason: resolved.error };
   if (PROTECTED_BRANCHES.has(resolved.branch) || !AUTO_BRANCH_RE.test(resolved.branch) || resolved.branch !== currentBranch) {
     return { allowed: false, reason: `Gałąź docelowa '${resolved.branch}' nie zgadza się z '${currentBranch}'.` };

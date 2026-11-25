@@ -221,6 +221,7 @@ export interface Database {
           granted_by: string
           granted_at: string
           revoked_at: string | null
+          grantor_user_id: string | null
         }
         Insert: {
           id?: string
@@ -230,6 +231,7 @@ export interface Database {
           granted_by: string
           granted_at?: string
           revoked_at?: string | null
+          grantor_user_id?: string | null
         }
         Update: {
           id?: string
@@ -239,6 +241,7 @@ export interface Database {
           granted_by?: string
           granted_at?: string
           revoked_at?: string | null
+          grantor_user_id?: string | null
         }
         Relationships: [
           {
@@ -2648,6 +2651,20 @@ export interface Database {
         }
         Returns: string
       }
+      commit_facility_structure: {
+        Args: {
+          p_rooms: Json
+          p_confirm_capacity: boolean
+        }
+        Returns: Json
+      }
+      commit_resident_import: {
+        Args: {
+          p_rows: Json
+          p_confirm_capacity: boolean
+        }
+        Returns: Json
+      }
       complete_operational_report_job: {
         Args: {
           p_token: string
@@ -2883,6 +2900,18 @@ export interface Database {
           r: Database["public"]["Tables"]["rooms"]["Row"]
         }
         Returns: number
+      }
+      get_family_daily_reports: {
+        Args: {
+          p_resident_id: string
+        }
+        Returns: {
+          id: string
+          resident_id: string
+          created_at: string
+          status: string
+          content: Json
+        }[]
       }
       get_family_resident_overview: {
         Args: Record<PropertyKey, never>

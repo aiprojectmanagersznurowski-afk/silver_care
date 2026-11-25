@@ -16,6 +16,9 @@ it('wiąże rezerwację z urządzeniem, utrwala czas i przyjmuje jedną kopię @
     const device = randomUUID()
     const otherDevice = randomUUID()
     const capture = randomUUID()
+    const resident = randomUUID()
+    const nurse = randomUUID()
+    const appUpload = `${org}/app_general/${nurse}/${randomUUID()}`
     const token = 'a'.repeat(64)
     const otherToken = 'b'.repeat(64)
     const sha256 = 'c'.repeat(64)
@@ -31,6 +34,13 @@ it('wiąże rezerwację z urządzeniem, utrwala czas i przyjmuje jedną kopię @
       public.commit_voice_device_upload(${hash}, ${capture}, ${attempt}, ${sha256}) AS result`)[0].result
 
     await tx`INSERT INTO public.organizations (id, name) VALUES (${org}, 'Fixture urządzenia'), (${otherOrg}, 'Inna placówka')`
+    await tx`INSERT INTO auth.users (id) VALUES (${nurse})`
+    await tx`INSERT INTO public.residents (id, organization_id, first_name, last_name)
+      VALUES (${resident}, ${org}, 'Test', 'Retencja')`
+    const [draft] = await tx`INSERT INTO public.voice_draft_notes (resident_id, nurse_id, audio_url, created_at)
+      VALUES (${resident}, ${nurse}, 'local-only', now() - interval '32 days') RETURNING id`
+    await tx`INSERT INTO storage.objects (bucket_id, name, created_at)
+      VALUES ('voice-recordings', ${appUpload}, now() - interval '31 days')`
     await tx`INSERT INTO public.voice_devices (id, organization_id, label, token_hash)
       VALUES (${device}, ${org}, 'Dyktafon testowy', ${token}), (${otherDevice}, ${otherOrg}, 'Inny dyktafon', ${otherToken})`
     expect(await tx`SELECT
@@ -64,8 +74,11 @@ it('wiąże rezerwację z urządzeniem, utrwala czas i przyjmuje jedną kopię @
     expect(await commit(retry.attempt_id)).toBe('DEVICE_REVOKED')
     await tx`SELECT public.expire_voice_captures()`
     await tx`RESET ROLE`
-    expect(await tx`SELECT path FROM public.voice_storage_deletions WHERE path IN (${first.path}, ${retry.path})`)
-      .toEqual([{ path: first.path }])
+    // @REQ: VOICE-RETENTION — jedno wywołanie zachowuje obie ścieżki sprzątania.
+    const removed = await tx`SELECT path FROM public.voice_storage_deletions
+      WHERE path IN (${first.path}, ${retry.path}, ${appUpload})`
+    expect(removed.map(({ path }) => path).sort()).toEqual([first.path, appUpload].sort())
+    expect(await tx`SELECT id FROM public.voice_draft_notes WHERE id = ${draft.id}`).toEqual([])
     throw rollback
   }).catch((error: unknown) => { if (error !== rollback) throw error })
 })

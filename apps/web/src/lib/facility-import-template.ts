@@ -1,4 +1,45 @@
 import * as XLSX from 'xlsx'
+import type { RawFacilityRoomRow } from './facility-helpers'
+
+const headers = ['Piętro', 'Numer pokoju', 'Sektor', 'Liczba łóżek', 'Etykiety łóżek']
+const aliases = headers.map((header, index) => {
+  if (index === 1) return [header, 'Pokój']
+  if (index === 4) return [header, 'Etykiety']
+  return [header]
+})
+
+function normalizedHeader(value: unknown) {
+  return typeof value === 'string' ? value.trim().replace(/\s+/g, ' ').toLocaleLowerCase('pl') : ''
+}
+
+export function parseFacilityStructure(buffer: ArrayBuffer): RawFacilityRoomRow[] {
+  const workbook = XLSX.read(buffer, { type: 'array', raw: true, codepage: 65001 })
+  const candidates = workbook.SheetNames.flatMap((name) => {
+    const rows = XLSX.utils.sheet_to_json<unknown[]>(workbook.Sheets[name], { header: 1, raw: false })
+    for (const [index, row] of rows.entries()) {
+      const cells = row.map(normalizedHeader)
+      const columns = aliases.map((values) => {
+        const names = values.map(normalizedHeader)
+        return cells.flatMap((cell, column) => names.includes(cell) ? [column] : [])
+      })
+      if (columns[0].length && columns[1].length) return [{ rows: rows.slice(index + 1), columns }]
+    }
+    return []
+  })
+  if (!candidates.length) throw new Error('Nie znaleziono nagłówków Piętro i Numer pokoju.')
+  if (candidates.length > 1) throw new Error('Plik zawiera kilka arkuszy z pokojami. Wgraj jeden naraz.')
+  const { rows, columns } = candidates[0]
+  if (columns.some((column) => column.length > 1)) throw new Error('Plik zawiera powtórzone nagłówki importu.')
+
+  return rows.flatMap((row) => {
+    const [floor, number, sector, bedCount, bedLabels] = columns.map(([column]) => {
+      const value = row[column]
+      return value == null ? undefined : String(value).trim() || undefined
+    })
+    if (![floor, number, sector, bedCount, bedLabels].some(Boolean)) return []
+    return [{ floor, number, sector, bedCount, bedLabels }]
+  })
+}
 
 export function generateFacilityStructureTemplate(
   fileName = 'formatka_struktury_placowki.xlsx',
@@ -6,7 +47,7 @@ export function generateFacilityStructureTemplate(
   save = true
 ) {
   const wsData = [
-    ['Piętro', 'Numer pokoju', 'Sektor', 'Liczba łóżek', 'Etykiety łóżek'],
+    headers,
     ['Parter', '101', 'Skrzydło A', '2', 'A, B'],
     ['Parter', '102', 'Skrzydło A', '1', '1'],
     ['1', '201', 'Skrzydło B', '3', '1, 2, 3'],

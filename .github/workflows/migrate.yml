@@ -1,7 +1,7 @@
 name: Migrate Supabase
 
 # Migracje na zdalne bazy wyłącznie przez CI (nigdy z laptopa).
-# push na staging → baza stagingowa; push na main → baza produkcyjna
+# Staging wywołuje Silver Care CI po publikacji kandydata. Push na main uruchamia produkcję.
 # (środowisko "production" wymaga zatwierdzenia przez Required reviewers).
 #
 # Uruchomienie ręczne (workflow_dispatch) służy do diagnozy i naprawy historii migracji (#275):
@@ -11,10 +11,11 @@ name: Migrate Supabase
 # Nigdy nie używamy db push --include-all: wykonuje starszy plik po nowszych i może cofnąć ich zmiany.
 on:
   push:
-    branches: [ main, staging ]
+    branches: [ main ]
     paths:
       - "supabase/migrations/**"
       - ".github/workflows/migrate.yml"
+  workflow_call:
   workflow_dispatch:
     inputs:
       dry_run:
@@ -31,6 +32,7 @@ permissions:
 
 jobs:
   migrate:
+    if: ${{ github.ref == 'refs/heads/main' || (github.ref == 'refs/heads/staging' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.dry_run))) }}
     name: Migrate (${{ github.ref_name == 'main' && 'production' || 'staging' }})
     runs-on: ubuntu-latest
     environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
@@ -58,7 +60,7 @@ jobs:
         run: supabase migration list --linked
 
       - name: Naprawa historii (tylko uruchomienie ręczne)
-        if: github.event_name == 'workflow_dispatch' && inputs.repair_applied != ''
+        if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.repair_applied != ''
         env:
           REPAIR_VERSIONS: ${{ inputs.repair_applied }}
         run: |

@@ -80,4 +80,21 @@ test.describe('Zarządzanie strukturą pokoi i łóżek (@REQ: ADM-FACILITY-MANA
     await expect(facilityPage.importTabButton).toBeVisible();
     await expect(facilityPage.voiceTabButton).not.toBeVisible();
   });
+
+  test('@REQ: ADM-FACILITY-MANAGE - podgląd odczytuje pokoje według nagłówków', async ({ loginPage, page }) => {
+    await loginPage.loginAs('org_admin');
+    const facilityPage = new FacilityPage(page);
+    await facilityPage.goto();
+
+    await facilityPage.uploadFacilityCsv('struktura.csv', [
+      'Numery pokoi pilotażu',
+      'Etykiety łóżek,Numer pokoju,Liczba łóżek,Piętro,Sektor',
+      '"A,B",PILOT-017,2,Parter,Skrzydło B',
+    ].join('\n'));
+
+    const row = page.getByRole('row').filter({ hasText: 'PILOT-017' });
+    await expect(row.getByRole('cell', { name: 'Parter', exact: true })).toBeVisible();
+    await expect(row.getByRole('cell', { name: 'Skrzydło B', exact: true })).toBeVisible();
+    await expect(row.getByRole('cell', { name: '2', exact: true })).toBeVisible();
+  });
 });

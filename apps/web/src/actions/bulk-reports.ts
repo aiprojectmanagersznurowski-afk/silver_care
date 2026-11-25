@@ -53,7 +53,7 @@ export async function bulkPublishReportsAction(reportIds: string[]): Promise<Bul
   // Pobierz raporty aby zweryfikować stan DRAFT oraz przynależność do placówki
   const { data: reports, error: fetchErr } = await adminClient
     .from('daily_reports')
-    .select('id, resident_id, status, residents!inner(organization_id)')
+    .select('id, resident_id, status, content, residents!inner(organization_id)')
     .in('id', reportIds)
 
   if (fetchErr || !reports) {
@@ -63,6 +63,11 @@ export async function bulkPublishReportsAction(reportIds: string[]): Promise<Bul
   const drafts = reports.filter((report) =>
     report.status === 'DRAFT' && (role === 'super_admin' || (orgId && report.residents?.organization_id === orgId)),
   )
+  if (drafts.some(({ content }) => content && typeof content === 'object'
+    && !Array.isArray(content) && content.requires_staff_review === true)) {
+    return { success: false, error: 'Wybrany raport wymaga indywidualnego sprawdzenia przed publikacją.' }
+  }
+
   const targetOrganizations = [...new Set(drafts.map((report) => report.residents?.organization_id))]
   const enabled = await Promise.all(targetOrganizations.map((targetOrg) =>
     isOrgFeatureEnabled(supabase, targetOrg, 'module_voice_and_reports'),
@@ -74,7 +79,7 @@ export async function bulkPublishReportsAction(reportIds: string[]): Promise<Bul
     return { success: false, error: 'Żaden z wybranych raportów nie kwalifikuje się do publikacji (muszą być szkicami).' }
   }
 
-  const { error: updateErr } = await adminClient
+  const { data: updated, error: updateErr } = await adminClient
     .from('daily_reports')
     .update({
       status: 'PUBLISHED',
@@ -82,9 +87,17 @@ export async function bulkPublishReportsAction(reportIds: string[]): Promise<Bul
       approved_by: user.id,
     })
     .in('id', validDraftIds)
+    .eq('status', 'DRAFT')
+    .or('content->>requires_staff_review.is.null,content->>requires_staff_review.neq.true')
+    .select('id')
 
   if (updateErr) {
     return { success: false, error: `Błąd podczas publikacji raportów: ${updateErr.message}` }
+  }
+
+  const publishedIds = (updated ?? []).map(({ id }) => id)
+  if (publishedIds.length === 0) {
+    return { success: false, error: 'Stan wybranych szkiców zmienił się. Odśwież listę i sprawdź raporty.' }
   }
 
   // Zapis do audit_logs
@@ -94,13 +107,13 @@ export async function bulkPublishReportsAction(reportIds: string[]): Promise<Bul
     action: 'REPORTS_BULK_PUBLISHED',
     payload: {
       target_table: 'daily_reports',
-      target_id: validDraftIds[0],
-      published_count: validDraftIds.length,
-      report_ids: validDraftIds,
+      target_id: publishedIds[0],
+      published_count: publishedIds.length,
+      report_ids: publishedIds,
     },
   })
 
   revalidatePath('/staff/reports')
-  return { success: true, publishedCount: validDraftIds.length }
+  return { success: true, publishedCount: publishedIds.length }
 }
 

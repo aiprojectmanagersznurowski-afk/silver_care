@@ -77,10 +77,7 @@ export default async function FamilyDashboard(props: { searchParams: Promise<{ d
 
   // Pobieramy raporty tylko dla wybranego podopiecznego
   const { data: reports } = await supabase
-    .from('daily_reports')
-    .select('id, resident_id, created_at, content')
-    .eq('resident_id', activeResident.id)
-    .eq('status', 'PUBLISHED')
+    .rpc('get_family_daily_reports', { p_resident_id: activeResident.id })
     .order('created_at', { ascending: false })
 
   type Report = {

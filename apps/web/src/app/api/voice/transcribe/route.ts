@@ -5,7 +5,7 @@ import { assertOrgFeatureForApi } from '@/lib/feature-flags'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { getAppRole } from '@/lib/auth/app-role'
+import { getAppOrganizationId, getAppRole } from '@/lib/auth/app-role'
 import { checkRateLimit } from '@/lib/rate-limiter'
 import { transcribeWithGroq } from '@/lib/voice-helpers'
 import type { TablesInsert, TablesUpdate } from '@/types/database.types'
@@ -32,6 +32,15 @@ export async function POST(req: Request) {
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const role = getAppRole(user)
+    if (role !== 'nurse' && role !== 'org_admin') {
+      return NextResponse.json({ error: 'Brak uprawnień do transkrypcji.' }, { status: 403 })
+    }
+    const { data: session } = await supabase.auth.getClaims(token)
+    if (session?.claims.sub !== user.id || !await staffMfaSatisfied(supabase, session.claims.aal, SHIFT_TASK_VOICE.requiredAal)) {
+      return NextResponse.json({ error: 'Potwierdź drugi składnik uwierzytelniania.' }, { status: 403 })
     }
 
     const featureDenied = await assertOrgFeatureForApi(supabase, user, '/api/voice/transcribe')
@@ -64,6 +73,27 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Brak pliku dźwiękowego' }, { status: 400 })
     }
 
+    if ((residentId !== null && (typeof residentId !== 'string' || !uuid.test(residentId)))
+      || (draftId !== null && (!residentId || typeof draftId !== 'string' || !uuid.test(draftId)))) {
+      return NextResponse.json({ error: 'Nieprawidłowe powiązanie nagrania.' }, { status: 400 })
+    }
+    if (residentId) {
+      const orgId = getAppOrganizationId(user)
+      if (!orgId) return NextResponse.json({ error: 'Brak przypisanej placówki.' }, { status: 403 })
+      const { data: resident, error } = await supabase.from('residents').select('id')
+        .match({ id: residentId, organization_id: orgId }).is('archived_at', null).maybeSingle()
+      if (error || !resident) return NextResponse.json({ error: 'Podopieczny jest niedostępny w tej placówce.' }, { status: 403 })
+    }
+
+    const draftScope = draftId && residentId ? { id: draftId, resident_id: residentId, nurse_id: user.id } : null
+    let previousTranscript = ''
+    if (draftScope) {
+      const { data: draft, error } = await supabase.from('voice_draft_notes').select('transcript')
+        .match(draftScope).neq('status', 'PROCESSED').maybeSingle()
+      if (error || !draft) return NextResponse.json({ error: 'Szkic jest niedostępny do uzupełnienia.' }, { status: 403 })
+      previousTranscript = (draft.transcript || '').trim()
+    }
+
     // Monitor Groq rate limits (INFRA-GROQ-TRANSCRIPTION: 2000 req/day, 8h audio/day)
     console.log('[INFRA-GROQ-TRANSCRIPTION] Audio conversion request dispatched')
 
@@ -77,8 +107,7 @@ export async function POST(req: Request) {
         typeof err === 'object' && err !== null && 'status' in err && typeof (err as { status: unknown }).status === 'number'
           ? (err as { status: number }).status
           : 502
-      const message = err instanceof Error ? err.message : 'Błąd podczas transkrypcji Groq'
-      return NextResponse.json({ error: message }, { status })
+      return NextResponse.json({ error: 'Nie udało się przetranskrybować nagrania.' }, { status })
     }
 
     // Jeśli brak resident_id (np. czat personelu lub czysty test STT), zwracamy sam wynik transkrypcji
@@ -94,16 +123,9 @@ export async function POST(req: Request) {
     let finalDraftId = draftId
     let finalTranscript = transcription
 
-    if (draftId) {
-      const { data: oldDraft } = await supabase
-        .from('voice_draft_notes')
-        .select('transcript')
-        .eq('id', draftId)
-        .single()
-
-      const oldText = (oldDraft?.transcript || '').trim()
-      finalTranscript = oldText
-        ? `${oldText}\n\n[UZUPEŁNIENIE:] ${transcription}`
+    if (draftScope) {
+      finalTranscript = previousTranscript
+        ? `${previousTranscript}\n\n[UZUPEŁNIENIE:] ${transcription}`
         : transcription
 
       const draftUpdate: TablesUpdate<'voice_draft_notes'> = {
@@ -112,20 +134,19 @@ export async function POST(req: Request) {
         followup_question: null,
       }
 
-      const { error: updateError } = await supabase
+      const { data: updated, error: updateError } = await supabase
         .from('voice_draft_notes')
         .update(draftUpdate)
-        .eq('id', draftId)
+        .match(draftScope).neq('status', 'PROCESSED').select('id').maybeSingle()
 
       if (updateError) {
         return NextResponse.json({ error: 'Błąd aktualizacji transkrypcji' }, { status: 500 })
       }
+      if (!updated) return NextResponse.json({ error: 'Szkic zmienił się w czasie transkrypcji.' }, { status: 409 })
     } else {
       const canRegisterAudio = typeof clientUuid === 'string' && uuid.test(clientUuid) && uuid.test(residentId)
-        && hasRecordingTime && getAppRole(user) === 'nurse'
-      const assurance = canRegisterAudio ? await supabase.auth.mfa.getAuthenticatorAssuranceLevel(token) : null
-      if (clientUuid && canRegisterAudio
-        && await staffMfaSatisfied(supabase, assurance?.data?.currentLevel, SHIFT_TASK_VOICE.requiredAal)) {
+        && hasRecordingTime && role === 'nurse'
+      if (clientUuid && canRegisterAudio) {
         const { data, error } = await createAdminClient().rpc('record_app_voice_task_draft', {
           p_author_id: user.id, p_resident_id: residentId, p_client_uuid: clientUuid, p_transcript: transcription,
           p_recorded_at: new Date(recordedAt).toISOString(),

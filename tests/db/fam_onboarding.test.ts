@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { randomUUID } from 'node:crypto';
 import postgres from 'postgres';
 import * as dotenv from 'dotenv';
 
@@ -44,23 +45,19 @@ describe('Database Family Onboarding Flow (FAM-ONBOARDING, CONSENT-GRANTOR)', ()
       expect(updated[0].claimed_at).not.toBeNull();
 
       // 4. Create relative link with role 'legal_guardian'
-      const fakeUserId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+      const fakeUserId = randomUUID();
+      await tx`INSERT INTO auth.users (id, raw_app_meta_data) VALUES (${fakeUserId},
+        ${tx.json({ role: 'legal_guardian', organization_id: orgId })})`;
       const link = await tx`INSERT INTO resident_relative_links (resident_id, relative_user_id, relationship_code, role)
                             VALUES (${residentId}, ${fakeUserId}, 'legal_guardian', 'legal_guardian')
                             RETURNING id, role, relationship_code`;
       expect(link[0].role).toBe('legal_guardian');
 
       // 5. Legal guardian grants Art. 9 consent in consent_ledger
-      const consent1 = await tx`INSERT INTO consent_ledger (organization_id, resident_id, purpose, granted_by)
-                               VALUES (${orgId}, ${residentId}, 'wellness_data_ingest', 'legal_guardian')
-                               RETURNING id, purpose, granted_by`;
-      expect(consent1[0].purpose).toBe('wellness_data_ingest');
-      expect(consent1[0].granted_by).toBe('legal_guardian');
-
-      const consent2 = await tx`INSERT INTO consent_ledger (organization_id, resident_id, purpose, granted_by)
-                               VALUES (${orgId}, ${residentId}, 'family_view_basic', 'legal_guardian')
-                               RETURNING id, purpose, granted_by`;
-      expect(consent2[0].purpose).toBe('family_view_basic');
+      const consent = await tx`INSERT INTO consent_ledger (organization_id, resident_id, purpose, granted_by, grantor_user_id)
+        VALUES (${orgId}, ${residentId}, 'wellness_data_ingest', 'legal_guardian', ${fakeUserId})
+        RETURNING purpose, granted_by, grantor_user_id`;
+      expect(consent).toEqual([{ purpose: 'wellness_data_ingest', granted_by: 'legal_guardian', grantor_user_id: fakeUserId }]);
 
       // 6. Audit log without PII
       const audit = await tx`INSERT INTO audit_logs (organization_id, resident_id, action, payload)

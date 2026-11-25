@@ -35,8 +35,12 @@ export function GeneralVoiceRecorder({ authorId }: { authorId: string }) {
         {submitted && 'Nagranie przyjęto do przetworzenia.'}
       </div>
       {recorder.error && !recorder.isQueued && <p role="alert" className="text-sm text-destructive">{recorder.error}</p>}
-      {recorder.fallbackAudioBlob && <Button
-        type="button" variant="outline" onClick={recorder.downloadFallbackAudio}>Pobierz nagranie lokalnie</Button>}
+      {recorder.fallbackAudioBlob && (
+        <div className="flex flex-wrap gap-3">
+          <Button type="button" onClick={() => void recorder.retryFallbackAudio()}>Ponów wysyłkę</Button>
+          <Button type="button" variant="outline" onClick={recorder.downloadFallbackAudio}>Pobierz nagranie lokalnie</Button>
+        </div>
+      )}
     </div>
   )
 }

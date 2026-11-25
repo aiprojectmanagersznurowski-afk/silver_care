@@ -111,3 +111,40 @@ it('wygasza źródło po retencji i zleca usunięcie nagrania oraz transkryptu w
     throw rollback
   }).catch((error: unknown) => { if (error !== rollback) throw error })
 })
+
+it('kolejkuje tylko wygasłe niepowiązane pliki z nagrań ogólnych @REQ: VOICE-RETENTION', async () => {
+  await sql.begin(async (tx) => {
+    const org = randomUUID()
+    const user = randomUUID()
+    const resident = randomUUID()
+    const capture = randomUUID()
+    const path = (key: string) => org + '/app_general/' + user + '/' + key
+    const expired = path(randomUUID())
+    const current = path(randomUUID())
+    const linked = path(capture)
+    const unrelated = org + '/fixture/' + randomUUID()
+    await tx`INSERT INTO public.organizations (id, name) VALUES (${org}, 'Fixture retencji uploadu')`
+    await tx`INSERT INTO auth.users (id, aud, role, raw_app_meta_data)
+      VALUES (${user}, 'authenticated', 'authenticated',
+        jsonb_build_object('role', 'org_admin', 'organization_id', ${org}::uuid))`
+    await tx`INSERT INTO public.residents (id, organization_id, first_name, last_name)
+      VALUES (${resident}, ${org}, 'Test', 'Retencja')`
+    await tx`INSERT INTO public.voice_captures
+      (id, organization_id, source, source_key, storage_path, sha256, author_id, recorded_at)
+      VALUES (${capture}, ${org}, 'APP_GENERAL', ${capture}, ${linked}, ${'a'.repeat(64)}, ${user}, now())`
+    const [draft] = await tx`INSERT INTO public.voice_draft_notes (resident_id, nurse_id, audio_url, created_at)
+      VALUES (${resident}, ${user}, 'local-only', now() - interval '32 days') RETURNING id`
+    await tx`INSERT INTO storage.objects (bucket_id, name, created_at) VALUES
+      ('voice-recordings', ${expired}, now() - interval '31 days'),
+      ('voice-recordings', ${linked}, now() - interval '31 days'),
+      ('voice-recordings', ${unrelated}, now() - interval '31 days'),
+      ('voice-recordings', ${current}, now())`
+    await tx`SET LOCAL ROLE service_role`
+    await tx`SELECT public.expire_voice_captures()`
+    await tx`SELECT public.expire_voice_captures()`
+    expect(await tx`SELECT path FROM public.voice_storage_deletions
+      WHERE path IN (${expired}, ${linked}, ${unrelated}, ${current})`).toEqual([{ path: expired }])
+    expect(await tx`SELECT id FROM public.voice_draft_notes WHERE id = ${draft.id}`).toHaveLength(0)
+    throw rollback
+  }).catch((error: unknown) => { if (error !== rollback) throw error })
+})

@@ -10,7 +10,7 @@ import {
 } from '@/lib/facility-helpers'
 import { requireOrgAdmin } from '@/lib/facility-auth'
 import { formatPersonName } from '@/lib/person-name'
-import { evaluateCapacity, buildCapacityExceededAudit, capacityWarningMessage, CapacityEvaluation } from '@/lib/capacity-limit'
+import { evaluateCapacity, capacityWarningMessage, CapacityEvaluation } from '@/lib/capacity-limit'
 
 type FacilityAdminClient = Awaited<ReturnType<typeof requireOrgAdmin>>['adminClient']
 
@@ -152,7 +152,7 @@ export async function commitFacilityImportAction(
   confirmCapacityExceed = false
 ): Promise<{ error?: string; importedRooms?: number; importedBeds?: number; capacityExceeded?: boolean }> {
   try {
-    const { user, orgId, adminClient } = await requireOrgAdmin()
+    const { supabase, orgId, adminClient } = await requireOrgAdmin()
 
     // ADM-CAPACITY-LIMIT: ponowna ocena po stronie serwera — bez potwierdzenia nic nie jest zapisywane
     const capacity = await evaluateImportCapacity(adminClient, orgId, validRows)
@@ -163,75 +163,24 @@ export async function commitFacilityImportAction(
       }
     }
 
-    let importedRooms = 0
-    let importedBeds = 0
+    const payload = validRows.filter((row) => row.isValid).map(({ number, floor, sector, bedLabels }) => ({
+      number, floor, sector, bedLabels,
+    }))
+    if (payload.length === 0) return { error: 'Brak poprawnych pokoi do zaimportowania.' }
 
-    for (const r of validRows) {
-      if (!r.isValid) continue
-
-      // Wstaw pokój
-      const { data: room, error: roomErr } = await adminClient
-        .from('rooms')
-        .insert({
-          organization_id: orgId,
-          number: r.number,
-          floor: r.floor,
-          sector: r.sector,
-          is_active: true,
-        })
-        .select('id')
-        .single()
-
-      if (roomErr) {
-        return { error: `Błąd podczas tworzenia pokoju ${r.number}: ${roomErr.message}` }
-      }
-      importedRooms++
-
-      // Wstaw łóżka dla tego pokoju
-      if (r.bedLabels && r.bedLabels.length > 0) {
-        const bedInserts = r.bedLabels.map((lbl) => ({
-          room_id: room.id,
-          label: lbl,
-          is_active: true,
-        }))
-
-        const { data: beds, error: bedErr } = await adminClient
-          .from('beds')
-          .insert(bedInserts)
-          .select('id')
-
-        if (bedErr) {
-          return { error: `Błąd podczas tworzenia łóżek w pokoju ${r.number}: ${bedErr.message}` }
-        }
-        importedBeds += (beds || []).length
-      }
-    }
-
-    // Zapis audytu
-    await adminClient.from('audit_logs').insert({
-      organization_id: orgId,
-      resident_id: null,
-      action: 'FACILITY_SCHEMA_IMPORTED',
-      performed_by: user.id,
-      payload: {
-        imported_rooms: importedRooms,
-        imported_beds: importedBeds,
-      },
+    const { data, error } = await supabase.rpc('commit_facility_structure', {
+      p_rooms: payload, p_confirm_capacity: confirmCapacityExceed,
     })
-
-    if (capacity.exceeds) {
-      const audit = buildCapacityExceededAudit(capacity)
-      await adminClient.from('audit_logs').insert({
-        organization_id: orgId,
-        resident_id: null,
-        action: audit.action,
-        performed_by: user.id,
-        payload: audit.payload,
-      })
+    if (error?.message === 'FACILITY_IMPORT_CAPACITY_CONFIRMATION') {
+      return { error: 'Limit miejsc lub liczba łóżek zmieniły się. Uruchom podgląd ponownie.', capacityExceeded: true }
+    }
+    if (error || !data || typeof data !== 'object' || Array.isArray(data)
+      || typeof data.rooms !== 'number' || typeof data.beds !== 'number') {
+      return { error: 'Nie udało się potwierdzić zapisu pokoi i łóżek. Uruchom podgląd przed ponowieniem.' }
     }
 
     revalidatePath('/admin/facility')
-    return { importedRooms, importedBeds }
+    return { importedRooms: data.rooms, importedBeds: data.beds, capacityExceeded: data.capacityExceeded === true }
   } catch (err: unknown) {
     return { error: err instanceof Error ? err.message : 'Wystąpił błąd podczas importu' }
   }
