@@ -2,6 +2,7 @@ import postgres from 'postgres';
 import { test, expect } from '../fixtures/base-test';
 import { FacilityPage } from '../page-objects/FacilityPage';
 import { AdmissionWizardPage } from '../page-objects/AdmissionWizardPage';
+import { AdminResidentsExportImportPage } from '../page-objects/AdminResidentsExportImportPage';
 import { TEST_USERS } from '../fixtures/test-users';
 
 /**
@@ -180,5 +181,22 @@ test.describe('Limit miejsc przy dodawaniu łóżka (@REQ: ADM-CAPACITY-LIMIT)',
       WHERE organization_id = ${MAIN_ORG_ID} AND action = 'ORGANIZATION_CAPACITY_EXCEEDED'
       ORDER BY created_at DESC LIMIT 1`;
     expect(audit.payload).toMatchObject({ operation: 'resident_admit', counts: 'residents', excess: 1 });
+  });
+  test('@REQ: ADM-CAPACITY-LIMIT - import podopiecznych wymaga potwierdzenia limitu', async ({ loginPage, page }) => {
+    await sql`UPDATE public.organizations SET resident_limit = 0 WHERE id = ${MAIN_ORG_ID}`;
+
+    await loginPage.loginAs('org_admin');
+    const residents = new AdminResidentsExportImportPage(page);
+    await residents.goto();
+    await residents.openBulkImportDialog();
+    await residents.bulkFileInput.setInputFiles({
+      name: 'podopieczni.csv', mimeType: 'text/csv',
+      buffer: Buffer.from(`Imię,Nazwisko,PESEL\nAnna,TestLimitu,${randomValidPesel()}\n`),
+    });
+
+    await expect(residents.capacityWarningBanner).toBeVisible();
+    await expect(residents.bulkCommitButton).toBeDisabled();
+    await residents.capacityWarningBanner.getByRole('checkbox').check();
+    await expect(residents.bulkCommitButton).toBeEnabled();
   });
 });
