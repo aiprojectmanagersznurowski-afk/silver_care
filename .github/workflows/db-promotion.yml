@@ -1,0 +1,69 @@
+name: Database promotion checks
+
+on:
+  pull_request:
+    branches: [staging, 'codex/nowe-zmiany']
+
+jobs:
+  migrations:
+    name: Database migrations (${{ matrix.mode }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [fresh, upgrade]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.117.0
+      - name: Apply migrations on isolated Supabase
+        env:
+          MODE: ${{ matrix.mode }}
+          BASE_REF: ${{ github.base_ref }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          candidate="$RUNNER_TEMP/candidate"
+          baseline="$RUNNER_TEMP/baseline"
+          mkdir -p "$candidate" "$baseline/supabase"
+          supabase init --workdir "$candidate"
+          ln -s "$GITHUB_WORKSPACE/supabase/migrations" "$candidate/supabase/migrations"
+
+          omit=studio,postgres-meta,imgproxy,edge-runtime,logflare,vector,realtime,supavisor
+          if [[ "$MODE" == upgrade ]]; then
+            # Feature branches are not deployed. For promotion use the exact staging base of this PR.
+            if [[ "$BASE_REF" == staging ]]; then
+              deployed="$BASE_SHA"
+            else
+              deployed=origin/staging
+            fi
+            cp "$candidate/supabase/config.toml" "$baseline/supabase/config.toml"
+            git archive "$deployed" supabase/migrations | tar -x -C "$baseline"
+            supabase start --workdir "$baseline" -x "$omit" > "$RUNNER_TEMP/supabase-start.log" 2>&1
+            supabase db push --dry-run --local --workdir "$candidate"
+            supabase migration up --local --workdir "$candidate"
+          else
+            supabase start --workdir "$candidate" -x "$omit" > "$RUNNER_TEMP/supabase-start.log" 2>&1
+          fi
+      - name: Check voice retention and device receipt
+        env:
+          TEST_DB: 'true'
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+        run: pnpm exec vitest run tests/db/voice_device_uploads.test.ts tests/db/voice_capture_retention.test.ts
+      - name: Stop isolated Supabase
+        if: always()
+        run: |
+          if [[ -f "$RUNNER_TEMP/candidate/supabase/config.toml" ]]; then
+            supabase stop --workdir "$RUNNER_TEMP/candidate"
+          fi
