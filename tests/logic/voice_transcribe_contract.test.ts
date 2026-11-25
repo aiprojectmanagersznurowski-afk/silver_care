@@ -46,6 +46,25 @@ describe('Kontrakt endpointu /api/voice/transcribe (3 kształty żądania)', () 
     vi.restoreAllMocks()
   })
 
+  it.each([
+    ['family', 'aal2'],
+    ['nurse', 'aal1'],
+  ])('odrzuca rolę %s przy sesji %s przed wysłaniem audio @REQ: SEC-MFA-STAFF', async (role, aal) => {
+    vi.mocked(createClient).mockResolvedValueOnce({
+      rpc: vi.fn(async (name: string) => name === 'staff_mfa_satisfied'
+        ? { data: false, error: null } : featureSnapshot()),
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'staff-gate', app_metadata: { role, organization_id: 'org-a' } } } }),
+        getClaims: vi.fn().mockResolvedValue({ data: { claims: { sub: 'staff-gate', aal } } }),
+      },
+    } as unknown as Awaited<ReturnType<typeof createClient>>)
+    const form = new FormData()
+    form.append('file', new Blob(['synthetic'], { type: 'audio/webm' }), 'recording.webm')
+    const response = await POST(new Request('http://localhost/api/voice/transcribe', { method: 'POST', body: form }))
+    expect(response.status).toBe(403)
+    expect(globalThis.fetch).not.toHaveBeenCalled()
+  })
+
   it('Kształt 1: żądanie z resident_id tworzy nowy szkic w voice_draft_notes i zwraca draftId @REQ: VOICE-DRAFT-ISOLATION', async () => {
     const mockInsert = vi.fn().mockReturnValue({
       select: vi.fn().mockReturnValue({
@@ -57,6 +76,7 @@ describe('Kontrakt endpointu /api/voice/transcribe (3 kształty żądania)', () 
       rpc: async () => featureSnapshot(),
       auth: {
         getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'nurse-uuid-456', app_metadata: { role: 'nurse', organization_id: 'org-a' } } }, error: null }),
+        getClaims: vi.fn().mockResolvedValue({ data: { claims: { sub: 'nurse-uuid-456', aal: 'aal2' } }, error: null }),
       },
       from: vi.fn((table: string) => {
         if (table === 'voice_draft_notes') {
@@ -105,6 +125,7 @@ describe('Kontrakt endpointu /api/voice/transcribe (3 kształty żądania)', () 
       rpc: async () => featureSnapshot(),
       auth: {
         getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'nurse-uuid-456', app_metadata: { role: 'nurse', organization_id: 'org-a' } } }, error: null }),
+        getClaims: vi.fn().mockResolvedValue({ data: { claims: { sub: 'nurse-uuid-456', aal: 'aal2' } }, error: null }),
       },
       from: mockFrom,
     } as unknown as Awaited<ReturnType<typeof createClient>>)
@@ -148,6 +169,7 @@ describe('Kontrakt endpointu /api/voice/transcribe (3 kształty żądania)', () 
       rpc: async () => featureSnapshot(),
       auth: {
         getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'nurse-uuid-456', app_metadata: { role: 'nurse', organization_id: 'org-a' } } }, error: null }),
+        getClaims: vi.fn().mockResolvedValue({ data: { claims: { sub: 'nurse-uuid-456', aal: 'aal2' } }, error: null }),
       },
       from: vi.fn((table: string) => {
         if (table === 'voice_draft_notes') {
