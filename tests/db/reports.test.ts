@@ -47,11 +47,13 @@ describe('Database Reports (REPORT-APPROVAL, CARE-REPORTS-CORE)', () => {
       // Setup the link first via postgres
       await tx`SET LOCAL ROLE postgres`;
       await tx`INSERT INTO resident_relative_links (resident_id, relative_user_id, relationship_code, role) VALUES (${resId}, ${familySub}, 'son', 'family')`;
+      await tx`INSERT INTO consent_ledger (organization_id, resident_id, purpose, granted_by)
+        VALUES (${orgId}, ${resId}, 'family_report_access', 'resident_self')`;
 
       await tx`SET LOCAL ROLE authenticated`;
       await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "${familySub}", "app_metadata": {"role": "family", "organization_id": "${orgId}"}}`}, true)`;
-      const readFamilyDraft = await tx`SELECT * FROM daily_reports WHERE id = ${report[0].id}`;
-      expect(readFamilyDraft.length).toBe(0); // Should return nothing due to RLS
+      const readFamilyDraft = await tx`SELECT id FROM get_family_daily_reports(${resId}) WHERE id = ${report[0].id}`;
+      expect(readFamilyDraft.length).toBe(0);
 
       // 4. Nurse publishes report
       await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "${nurseSub}", "app_metadata": {"role": "nurse", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
@@ -59,7 +61,7 @@ describe('Database Reports (REPORT-APPROVAL, CARE-REPORTS-CORE)', () => {
 
       // 5. Family can read published report
       await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "${familySub}", "app_metadata": {"role": "family", "organization_id": "${orgId}"}}`}, true)`;
-      const readFamilyPub = await tx`SELECT * FROM daily_reports WHERE id = ${report[0].id}`;
+      const readFamilyPub = await tx`SELECT id FROM get_family_daily_reports(${resId}) WHERE id = ${report[0].id}`;
       expect(readFamilyPub.length).toBe(1);
 
       await tx`ROLLBACK`;

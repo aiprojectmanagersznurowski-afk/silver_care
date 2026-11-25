@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { canNotifyFamilyOfReport } from '@/lib/report-consent'
 import { renderReportPublishedEmail, renderReportPublishedSms } from '@/lib/notification-templates'
 import { renderCapacityExceededEmail, selectCapacityRecipients, CapacityNotificationId } from '@/lib/capacity-notifications'
 
@@ -141,7 +142,7 @@ export async function GET(request: Request) {
 
           const links = (familyLinks as unknown as FamilyLinkRecord[]) || []
 
-          if (links.length > 0) {
+          if (links.length > 0 && await canNotifyFamilyOfReport(adminClient, notification.organization_id, report.resident_id)) {
             const host = request.headers.get('host') || 'localhost:3000'
             const protocol = request.headers.get('x-forwarded-proto') || 'http'
             const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || `${protocol}://${host}`

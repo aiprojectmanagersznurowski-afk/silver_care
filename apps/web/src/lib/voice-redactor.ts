@@ -19,6 +19,7 @@ import {
 import {
   VOICE_PROCESSING_PROMPT,
   FAMILY_REPORT_PROMPT,
+  NO_FAMILY_REPORT_DATA,
   ZERO_GUESSING_DIRECTIVE,
 } from '@silvercare/contracts/src/prompts'
 import { AI_DISCLOSURE_LABEL } from '@silvercare/contracts/src/generated/presentation'
@@ -103,9 +104,17 @@ Reguły:
 2. Zastosowanie określenia na literę p jest bezwzględnie zakazane.
 3. Zakaz wymieniania leków, dawek, wyników badań i terminów medycznych.
 4. Zakaz oceniania parametrów ("w normie", "poza normą", "podwyższone", "obniżone").
-5. DIGNITY TRANSLATION: Opisuj dyskomfort ogólnie, dodając reakcję personelu i bieżący stan.
-6. NO FABRICATION: Przy pustych danych napisz: "Personel placówki sprawował opiekę nad Twoim bliskim przez cały dzień. Nie odnotowano zdarzeń wymagających osobnego opisania w tym raporcie."
+5. DIGNITY TRANSLATION: Opisuj dyskomfort ogólnie. Dodaj reakcję personelu i bieżący stan tylko, gdy je odnotowano.
+6. NO FABRICATION: Przy pustych danych napisz: "${NO_FAMILY_REPORT_DATA}"
 7. Dołącz etykietę: "${AI_DISCLOSURE_LABEL}".`
+}
+
+export function buildFamilyReportInput({ behavioral, discomfort }: { behavioral: string | null; discomfort: string | null }) {
+  const facts = [['Zachowanie', behavioral], ['Dyskomfort', discomfort]].flatMap(([label, stream]) => {
+    const text = stream?.trim()
+    return text && text.toLowerCase() !== 'null' ? [`${label}: ${text}`] : []
+  })
+  return facts.length ? facts.join('\n') : null
 }
 
 export function sanitizeReportAndVerifySafety(rawReport: string): {

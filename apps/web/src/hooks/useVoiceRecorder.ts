@@ -122,10 +122,12 @@ export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}) {
       }
       const data: TranscribeResponse = await res.json().catch(() => ({}))
       if (res.status === 401 && data.error === 'Unauthorized') {
+        setFallbackAudioBlob(blob)
         const msg = 'Sesja wygasła. Zaloguj się ponownie.'
         setError(msg); setState('error'); onError?.(msg); return
       }
       if (!res.ok || data.error || !data.success) {
+        setFallbackAudioBlob(blob)
         const msg = data.error || 'Wystąpił błąd podczas transkrypcji.'
         setError(msg); setState('error'); onError?.(msg); return
       }

@@ -1,42 +1,74 @@
 import * as XLSX from 'xlsx'
-import { RawResidentRow } from './bulk-import-helpers'
+import type { RawResidentRow } from './bulk-import-helpers'
+
+const aliases = {
+  firstName: ['IMIE'],
+  lastName: ['NAZWISKO'],
+  nationalId: ['PESEL', 'NUMER PESEL', 'NR PESEL'],
+  careLevel: ['STAN', 'PROFIL SPRAWNOSCI'],
+  isZsn: ['ZSN'],
+  notes: ['UWAGI'],
+} satisfies Partial<Record<keyof RawResidentRow, string[]>>
+type Column = keyof typeof aliases
+
+const requiredColumns: Column[] = ['firstName', 'lastName', 'nationalId']
+const allColumns = Object.keys(aliases) as Column[]
+
+function normalizeHeader(value: unknown) {
+  return typeof value === 'string'
+    ? value.trim().toLocaleUpperCase('pl').normalize('NFD').replace(/\p{M}/gu, '').replace(/Ł/g, 'L').replace(/\s+/g, ' ')
+    : ''
+}
+
+function matchHeader(row: unknown[]) {
+  const values = row.map(normalizeHeader)
+  const columns = Object.fromEntries(allColumns.map((key) => [
+    key, values.flatMap((value, index) => aliases[key].includes(value) ? [index] : []),
+  ])) as Record<Column, number[]>
+  return requiredColumns.every((key) => columns[key].length > 0) ? columns : null
+}
+
+function dataHeader(sheet: XLSX.WorkSheet) {
+  const raw = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1 })
+  for (const [index, row] of raw.entries()) {
+    const columns = matchHeader(row)
+    if (columns) return { sheet, raw, index, columns }
+  }
+  return null
+}
 
 export async function parseBulkImportFile(file: File): Promise<{ rows?: RawResidentRow[]; error?: string }> {
   try {
-    const buffer = await file.arrayBuffer()
-    const wb = XLSX.read(buffer, { type: 'array' })
-    const firstSheetName = wb.SheetNames[0]
-    const ws = wb.Sheets[firstSheetName]
-    const jsonData: unknown[][] = XLSX.utils.sheet_to_json(ws, { header: 1 })
+    const workbook = XLSX.read(await file.arrayBuffer(), { type: 'array', codepage: 65001 })
+    const candidates = workbook.SheetNames.map((name) => dataHeader(workbook.Sheets[name])).filter((sheet) => sheet !== null)
+    if (!candidates.length) return { error: 'Nie znaleziono nagłówków: Imię, Nazwisko i PESEL. Sprawdź format pliku.' }
+    if (candidates.length > 1) return { error: 'Kilka arkuszy zawiera dane podopiecznych. Wgraj jeden arkusz naraz.' }
 
-    if (jsonData.length < 2) {
-      return { error: 'Plik jest pusty lub zawiera tylko nagłówki.' }
+    const { sheet, raw, index, columns } = candidates[0]
+    if (allColumns.some((key) => columns[key].length > 1)) {
+      return { error: 'Arkusz zawiera powtórzone nagłówki importu. Zostaw po jednej kolumnie na pole.' }
     }
 
+    const formatted = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, raw: false })
     const rows: RawResidentRow[] = []
-    for (let i = 1; i < jsonData.length; i++) {
-      const row = jsonData[i]
-      if (!row || row.length === 0 || row.every((c) => c === undefined || c === null || c === '')) {
-        continue
-      }
+    for (let i = index + 1; i < raw.length; i++) {
+      const row = raw[i]
+      if (!allColumns.some((key) => row[columns[key][0]] != null && row[columns[key][0]] !== '')) continue
+      const value = (key: Column) => row[columns[key][0]]
+      const asString = (key: Column) => value(key) != null ? String(value(key)) : undefined
+      const nationalId = formatted[i]?.[columns.nationalId[0]]
+      const zsn = value('isZsn')
       rows.push({
-        firstName: row[0] != null ? String(row[0]) : undefined,
-        lastName: row[1] != null ? String(row[1]) : undefined,
-        nationalId: row[2] != null ? String(row[2]) : undefined,
-        careLevel: row[3] != null ? String(row[3]) : undefined,
-        isZsn: row[4] != null ? (typeof row[4] === 'boolean' ? row[4] : String(row[4])) : undefined,
-        notes: row[5] != null ? String(row[5]) : undefined,
+        firstName: asString('firstName'),
+        lastName: asString('lastName'),
+        nationalId: typeof nationalId === 'string' && /^\d{11}$/.test(nationalId) ? nationalId : asString('nationalId'),
+        careLevel: asString('careLevel'),
+        isZsn: typeof zsn === 'boolean' ? zsn : asString('isZsn'),
+        notes: asString('notes'),
       })
     }
-
-    if (rows.length === 0) {
-      return { error: 'Nie znaleziono wierszy z danymi w arkuszu.' }
-    }
-
-    return { rows }
-  } catch (err: unknown) {
-    return {
-      error: 'Błąd przetwarzania pliku: ' + (err instanceof Error ? err.message : 'Nieznany błąd.'),
-    }
+    return rows.length ? { rows } : { error: 'Nie znaleziono wierszy z danymi w arkuszu.' }
+  } catch {
+    return { error: 'Nie udało się odczytać pliku. Sprawdź format i spróbuj ponownie.' }
   }
 }

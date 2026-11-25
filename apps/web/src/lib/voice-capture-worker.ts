@@ -12,7 +12,10 @@ type SpeechConfig = ReturnType<typeof readSpeechConfiguration>
 const maxStoredAudioBytes = 25 * 1024 * 1024
 
 function onlyIntroduction(text: string) {
-  return text.replace(/[.!?;\n]+$/u, '').split(/[.!?;\n]+/u).length === 1
+  const statement = text.trim()
+    .replace(/^(?:cześć|dzień dobry)[,\s]+/iu, '')
+    .replace(/[,!.?;\s]+$/u, '')
+  return !/[,!.?;\n]/u.test(statement)
 }
 
 function safelyAttributed(

@@ -518,9 +518,9 @@
 **Kryteria akceptacji:**
 - **AC1:** Dry-run: parsowanie `.xlsx`/`.csv`, walidacja PESEL, wykrycie duplikatów w pliku i w placówce.
 - **AC2:** Podgląd wierszy poprawnych i błędnych z opisem problemu.
-- **AC3:** Zapis wyłącznie poprawnych wierszy, w chunkach, z wpisem w `audit_logs` (liczba rekordów, bez PII).
+- **AC3:** Zapis wyłącznie poprawnych wierszy w jednej transakcji z wpisem w `audit_logs` (liczba rekordów, bez PII). Konflikt przy zapisie pozostawia bazę w stanie sprzed importu.
 - **AC4:** Szablon pliku do pobrania z panelu.
-- **AC5:** Jeśli import przekracza zadeklarowaną pojemność placówki (`resident_limit`), interfejs wyświetla ostrzeżenie dla administratora w kroku podglądu, a po zatwierdzeniu importu limit pojemności placówki (`organizations.resident_limit`) jest automatycznie aktualizowany do rzeczywistej liczby pensjonariuszy, co odzwierciedla się w widoku u Super Administratora.
+- **AC5:** Jeśli import przekracza limit miejsc placówki (`resident_limit`), kierownik widzi ostrzeżenie i świadomie potwierdza zapis. Przekroczenie trafia do audytu i powiadamia kierownika i administratora platformy. Limit zmienia wyłącznie administrator platformy zgodnie z `ADM-CAPACITY-LIMIT`.
 
 #### [SC-ADM-14] Bezpieczny eksport danych placówki
 🔗 **Kontrakt:** `ADM-FACILITY-MANAGE`, `SEC-NO-PII-LOGS`, `MDR-VOCABULARY` · **WO:** [`ADM-DATA-EXPORT`](workorders/ADM-DATA-EXPORT.md) · **Status:** ✅ 📝 — zrealizowane w `ExportDataDialog`, testy w `data_export.test.ts` oraz E2E w `admin-export-import.spec.ts`

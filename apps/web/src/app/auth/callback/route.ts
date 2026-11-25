@@ -138,12 +138,13 @@ export async function GET(request: Request) {
 
       // 4. Rejestracja zgód Art. 9 RODO w consent_ledger dla opiekuna prawnego (CONSENT-GRANTOR)
       if (claimEvaluation.requiresConsentLedgerInsert) {
-        const consentPurposes = ['wellness_data_ingest', 'family_view_basic']
+        const consentPurposes = ['wellness_data_ingest']
         const consentInserts = consentPurposes.map(purpose => ({
           organization_id: invitation.organization_id,
           resident_id: invitation.resident_id,
           purpose,
           granted_by: 'legal_guardian',
+          grantor_user_id: user.id,
         }))
 
         const { error: consentError } = await adminClient

@@ -67,13 +67,16 @@ export function getEuLlmConfig(): EuLlmConfig {
  * nie może uczynić endpointu „europejskim". Lokalny mock deweloperski jest dozwolony.
  */
 export function isEuEndpoint(endpoint: string): boolean {
-  let host: string
+  let url: URL
   try {
-    host = new URL(endpoint).hostname.toLowerCase()
+    url = new URL(endpoint)
   } catch {
     return false
   }
-  if (host === 'localhost' || host === '127.0.0.1') return true
+  if (url.username || url.password) return false
+  const host = url.hostname.toLowerCase()
+  if (host === 'localhost' || host === '127.0.0.1') return ['http:', 'https:'].includes(url.protocol)
+  if (url.protocol !== 'https:') return false
   return (
     host === 'mistral.ai' ||
     host.endsWith('.mistral.ai') ||
@@ -85,7 +88,7 @@ export function isEuEndpoint(endpoint: string): boolean {
 function ensureEnvLoaded() {
   if (typeof process === 'undefined' || !process.env) return
   if (process.env.VITEST) return // nie nadpisuj w testach izolowanych vitest
-  if (process.env.ALLOW_DEMO_GROQ_FALLBACK && process.env.GROQ_API_KEY) return
+  if (process.env.ALLOW_DEMO_GROQ_FALLBACK === 'true' && process.env.GROQ_API_KEY) return
 
   try {
     const candidates = [
@@ -228,7 +231,7 @@ export async function callEuLlmCompletion(
   const euConfig = getEuLlmConfig()
   const hasEuKey = !!euConfig.apiKey && euConfig.apiKey !== 'mock_eu_llm_key'
   let config: EuLlmConfig = euConfig
-  if (!hasEuKey) {
+  if (!hasEuKey && isEuEndpoint(euConfig.endpoint)) {
     const demo = getDemoGroqFallbackConfig()
     if (demo) {
       config = demo

@@ -79,6 +79,8 @@ async function familyFixture(tx: Tx) {
     VALUES (${org}, ${resident.id}, ${family}, 'Wiadomość testowa')`
   const [report] = await tx`INSERT INTO daily_reports (resident_id, author_id, status, content)
     VALUES (${resident.id}, ${rootUser}, 'DRAFT', '{}'::jsonb) RETURNING id`
+  await tx`INSERT INTO consent_ledger (organization_id, resident_id, purpose, granted_by)
+    VALUES (${org}, ${resident.id}, 'family_report_access', 'resident_self')`
   return { org, family, resident: resident.id, report: report.id }
 }
 
@@ -182,7 +184,8 @@ describe('@REQ: SUP-FEATURE-FLAGS', () => {
     expect(audit.action).toBe(auditAction)
     for (const [fixture, expected] of [[a, 0], [b, 1]] as const) {
       await asUser(tx, 'family', fixture.org, fixture.family)
-      expect(await tx`SELECT id FROM daily_reports WHERE id = ${fixture.report}`).toHaveLength(expected)
+      expect(await tx`SELECT id FROM public.get_family_daily_reports(${fixture.resident})
+        WHERE id = ${fixture.report}`).toHaveLength(expected)
       expect(await tx`SELECT id FROM family_messages WHERE organization_id = ${fixture.org}`).toHaveLength(expected)
       expect(await tx`SELECT id FROM agenda_items WHERE organization_id = ${fixture.org}`).toHaveLength(expected)
       expect(await tx`SELECT id FROM resident_media WHERE resident_id = ${fixture.resident}`).toHaveLength(expected)
