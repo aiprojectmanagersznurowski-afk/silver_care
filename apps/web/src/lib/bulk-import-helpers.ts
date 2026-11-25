@@ -7,8 +7,8 @@ export interface RawResidentRow {
   nationalId?: string
   careLevel?: string
   isZsn?: boolean | string
-  notes?: string
-  admissionDate?: string
+  notes?: string | null
+  admissionDate?: string | null
 }
 
 export interface ValidatedResidentRow {
