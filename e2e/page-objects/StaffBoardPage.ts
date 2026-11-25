@@ -14,6 +14,7 @@ export class StaffBoardPage {
   readonly familyMessagesLinks: Locator;
   readonly buttonsNestedInLinks: Locator;
   readonly dictateLinks: Locator;
+  readonly generalVoiceButton: Locator;
   /** Nazwisko podopiecznego jako link do jego karty w części personelu (SC-ADM-20). */
   readonly residentCardLinks: Locator;
   readonly tableRows: Locator;
@@ -32,6 +33,7 @@ export class StaffBoardPage {
     this.familyMessagesLinks = page.locator('a[href^="/admin/messages?residentId="]');
     this.buttonsNestedInLinks = page.locator('a button');
     this.dictateLinks = page.locator('a[href^="/voice?resident="]');
+    this.generalVoiceButton = page.locator('main').getByRole('link', { name: 'Nagranie ogólne' });
     this.residentCardLinks = page.locator('main a[href^="/staff/residents/"]:visible');
     this.tableRows = page.locator('main [data-slot="table-body"] [data-slot="table-row"]');
     this.paginationSummary = page.locator('[data-testid="list-pagination-summary"]');
@@ -81,6 +83,12 @@ export class StaffBoardPage {
   async navigateToReports() {
     await this.reportsLink.click();
     await this.page.waitForURL('**/staff/reports');
+  }
+
+  async openGeneralRecording() {
+    await this.generalVoiceButton.click();
+    await expect(this.page).toHaveURL(/\/voice\/general$/);
+    await expect(this.page.getByRole('heading', { name: 'Nagranie ogólne' })).toBeVisible();
   }
 
   async logout() {
