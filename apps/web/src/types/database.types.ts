@@ -2639,6 +2639,15 @@ export interface Database {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      commit_voice_device_upload: {
+        Args: {
+          p_token_hash: string
+          p_capture_id: string
+          p_attempt_id: string
+          p_sha256: string
+        }
+        Returns: string
+      }
       complete_operational_report_job: {
         Args: {
           p_token: string
@@ -3064,6 +3073,14 @@ export interface Database {
           r: Database["public"]["Tables"]["rooms"]["Row"]
         }
         Returns: number
+      }
+      prepare_voice_device_upload: {
+        Args: {
+          p_token_hash: string
+          p_capture_id?: string | null
+          p_metadata?: Json | null
+        }
+        Returns: Json
       }
       preview_shift_handover: {
         Args: {
