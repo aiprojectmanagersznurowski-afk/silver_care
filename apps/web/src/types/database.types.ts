@@ -2639,6 +2639,13 @@ export interface Database {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      commit_facility_structure: {
+        Args: {
+          p_rooms: Json
+          p_confirm_capacity: boolean
+        }
+        Returns: Json
+      }
       complete_operational_report_job: {
         Args: {
           p_token: string
