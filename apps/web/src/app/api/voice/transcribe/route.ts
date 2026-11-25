@@ -34,6 +34,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const role = getAppRole(user)
+    if (role !== 'nurse' && role !== 'org_admin') {
+      return NextResponse.json({ error: 'Brak uprawnień do transkrypcji.' }, { status: 403 })
+    }
+    const { data: session } = await supabase.auth.getClaims(token)
+    if (session?.claims.sub !== user.id || !await staffMfaSatisfied(supabase, session.claims.aal, SHIFT_TASK_VOICE.requiredAal)) {
+      return NextResponse.json({ error: 'Potwierdź drugi składnik uwierzytelniania.' }, { status: 403 })
+    }
+
     const featureDenied = await assertOrgFeatureForApi(supabase, user, '/api/voice/transcribe')
     if (featureDenied) return featureDenied
 
@@ -122,10 +131,8 @@ export async function POST(req: Request) {
       }
     } else {
       const canRegisterAudio = typeof clientUuid === 'string' && uuid.test(clientUuid) && uuid.test(residentId)
-        && hasRecordingTime && getAppRole(user) === 'nurse'
-      const assurance = canRegisterAudio ? await supabase.auth.mfa.getAuthenticatorAssuranceLevel(token) : null
-      if (clientUuid && canRegisterAudio
-        && await staffMfaSatisfied(supabase, assurance?.data?.currentLevel, SHIFT_TASK_VOICE.requiredAal)) {
+        && hasRecordingTime && role === 'nurse'
+      if (clientUuid && canRegisterAudio) {
         const { data, error } = await createAdminClient().rpc('record_app_voice_task_draft', {
           p_author_id: user.id, p_resident_id: residentId, p_client_uuid: clientUuid, p_transcript: transcription,
           p_recorded_at: new Date(recordedAt).toISOString(),
