@@ -12,6 +12,15 @@ vi.mock('@/lib/rate-limiter', () => ({
 import { createClient } from '@/lib/supabase/server'
 import { POST } from '../../apps/web/src/app/api/voice/transcribe/route'
 
+const residentId = 'c17c419d-f28a-42b9-bd4d-bda951177633'
+const draftId = '8748d565-199a-48a5-bdac-991f0d978503'
+
+function residentQuery(found = true) {
+  return { select: () => ({ match: () => ({ is: () => ({
+    maybeSingle: async () => ({ data: found ? { id: residentId } : null, error: null }),
+  }) }) }) }
+}
+
 /**
  * @REQ: VOICE-DRAFT-ISOLATION
  * @REQ: VOICE-ZERO-GUESSING
@@ -65,6 +74,23 @@ describe('Kontrakt endpointu /api/voice/transcribe (3 kształty żądania)', () 
     expect(globalThis.fetch).not.toHaveBeenCalled()
   })
 
+  it('odrzuca podopiecznego spoza zakresu przed przesłaniem nagrania @REQ: ORG-ISOLATION', async () => {
+    vi.mocked(createClient).mockResolvedValueOnce({
+      rpc: async () => featureSnapshot(),
+      auth: {
+        getUser: async () => ({ data: { user: { id: 'staff-gate', app_metadata: { role: 'nurse', organization_id: 'org-a' } } } }),
+        getClaims: async () => ({ data: { claims: { sub: 'staff-gate', aal: 'aal2' } } }),
+      },
+      from: (table: string) => table === 'residents' ? residentQuery(false) : {},
+    } as unknown as Awaited<ReturnType<typeof createClient>>)
+    const form = new FormData()
+    form.set('file', new File(['synthetic'], 'recording.webm', { type: 'audio/webm' }))
+    form.set('resident_id', residentId)
+    const response = await POST(new Request('http://localhost/api/voice/transcribe', { method: 'POST', body: form }))
+    expect(response.status).toBe(403)
+    expect(globalThis.fetch).not.toHaveBeenCalled()
+  })
+
   it('Kształt 1: żądanie z resident_id tworzy nowy szkic w voice_draft_notes i zwraca draftId @REQ: VOICE-DRAFT-ISOLATION', async () => {
     const mockInsert = vi.fn().mockReturnValue({
       select: vi.fn().mockReturnValue({
@@ -82,13 +108,13 @@ describe('Kontrakt endpointu /api/voice/transcribe (3 kształty żądania)', () 
         if (table === 'voice_draft_notes') {
           return { insert: mockInsert }
         }
-        return {}
+        return residentQuery()
       }),
     } as unknown as Awaited<ReturnType<typeof createClient>>)
 
     const formData = new FormData()
     formData.append('file', new Blob(['fake-audio-bytes'], { type: 'audio/webm' }), 'recording.webm')
-    formData.append('resident_id', 'resident-uuid-789')
+    formData.append('resident_id', residentId)
     formData.append('client_uuid', 'client-offline-uuid-111')
 
     const req = new Request('http://localhost:3000/api/voice/transcribe', {
@@ -110,7 +136,7 @@ describe('Kontrakt endpointu /api/voice/transcribe (3 kształty żądania)', () 
     // Weryfikacja zapisu do bazy z resident_id, nurse_id i client_uuid
     expect(mockInsert).toHaveBeenCalledWith(
       expect.objectContaining({
-        resident_id: 'resident-uuid-789',
+        resident_id: residentId,
         nurse_id: 'nurse-uuid-456',
         transcript: 'Senior zjadł pełny obiad i odpoczywał w ogrodzie.',
         client_uuid: 'client-offline-uuid-111',
@@ -157,12 +183,10 @@ describe('Kontrakt endpointu /api/voice/transcribe (3 kształty żądania)', () 
   it('Kształt 3: żądanie z draft_id pobiera stary transkrypt, dopisuje uzupełnienie i aktualizuje szkic @REQ: VOICE-FOLLOWUP @REQ: VOICE-OFFLINE', async () => {
     const existingDraftText = 'Senior zjadł śniadanie o 08:30.'
     const mockUpdate = vi.fn().mockReturnValue({
-      eq: vi.fn().mockResolvedValue({ error: null }),
+      match: () => ({ neq: () => ({ select: () => ({ maybeSingle: async () => ({ data: { id: draftId }, error: null }) }) }) }),
     })
     const mockSelect = vi.fn().mockReturnValue({
-      eq: vi.fn().mockReturnValue({
-        single: vi.fn().mockResolvedValue({ data: { transcript: existingDraftText }, error: null }),
-      }),
+      match: () => ({ neq: () => ({ maybeSingle: async () => ({ data: { transcript: existingDraftText }, error: null }) }) }),
     })
 
     vi.mocked(createClient).mockResolvedValueOnce({
@@ -178,14 +202,14 @@ describe('Kontrakt endpointu /api/voice/transcribe (3 kształty żądania)', () 
             update: mockUpdate,
           }
         }
-        return {}
+        return residentQuery()
       }),
     } as unknown as Awaited<ReturnType<typeof createClient>>)
 
     const formData = new FormData()
     formData.append('file', new Blob(['fake-audio-bytes'], { type: 'audio/webm' }), 'followup.webm')
-    formData.append('resident_id', 'resident-uuid-789')
-    formData.append('draft_id', 'existing-draft-999')
+    formData.append('resident_id', residentId)
+    formData.append('draft_id', draftId)
     formData.append('client_uuid', 'client-offline-uuid-222')
 
     const req = new Request('http://localhost:3000/api/voice/transcribe', {
@@ -199,7 +223,7 @@ describe('Kontrakt endpointu /api/voice/transcribe (3 kształty żądania)', () 
 
     const json = await res.json()
     expect(json.success).toBe(true)
-    expect(json.draftId).toBe('existing-draft-999')
+    expect(json.draftId).toBe(draftId)
     expect(json.newChunk).toBe('Senior zjadł pełny obiad i odpoczywał w ogrodzie.')
     expect(json.text).toContain('Senior zjadł śniadanie o 08:30.')
     expect(json.text).toContain('[UZUPEŁNIENIE:] Senior zjadł pełny obiad i odpoczywał w ogrodzie.')
