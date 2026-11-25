@@ -29,7 +29,7 @@
       },
       {
         "id": "COMMIT",
-        "desc": "Urządzenie potwierdza zapis. Serwer sprawdza skrót pliku i tworzy voice_draft_notes ze źródłem DEVICE, bez resident_id, z pozycją w kolejce przypisania."
+        "desc": "Serwer ponownie uwierzytelnia urządzenie, sprawdza rozmiar i SHA-256 pliku oraz zapisuje nagranie w voice_captures ze źródłem DEVICE. Potok asynchroniczny transkrybuje i przypisuje fragmenty; wyjątki trafiają do kolejki „Do przypisania”."
       }
     ],
     "idempotencyKey": [
