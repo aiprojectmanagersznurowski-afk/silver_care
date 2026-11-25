@@ -63,7 +63,8 @@ jobs:
   deploy:
     name: Vercel Deploy
     needs: verify
-    if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging') }}
+    # Joby bez funkcji statusu dziedziczą pominięcie `database` (tylko PR) przez łańcuch needs.
+    if: ${{ !cancelled() && needs.verify.result == 'success' && github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging') }}
     outputs:
       url: ${{ steps.deploy.outputs.url }}
     runs-on: ubuntu-latest
@@ -124,14 +125,14 @@ jobs:
   migrate_staging:
     name: Apply staging migrations
     needs: deploy
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/staging' }}
+    if: ${{ !cancelled() && needs.deploy.result == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/staging' }}
     uses: ./.github/workflows/migrate.yml
     secrets: inherit
 
   promote_staging:
     name: Promote staging alias
     needs: [deploy, migrate_staging]
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/staging' }}
+    if: ${{ !cancelled() && needs.deploy.result == 'success' && needs.migrate_staging.result == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/staging' }}
     runs-on: ubuntu-latest
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
