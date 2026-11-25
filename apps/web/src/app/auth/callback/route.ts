@@ -144,6 +144,7 @@ export async function GET(request: Request) {
           resident_id: invitation.resident_id,
           purpose,
           granted_by: 'legal_guardian',
+          grantor_user_id: user.id,
         }))
 
         const { error: consentError } = await adminClient
