@@ -8,7 +8,6 @@ import { POST as init } from '../../apps/web/src/app/api/voice/device/route'
 import { POST as commit } from '../../apps/web/src/app/api/voice/device/commit/route'
 
 const mocks = vi.hoisted(() => ({ rpc: vi.fn(), bucket: vi.fn(), sign: vi.fn(), download: vi.fn() }))
-vi.mock('@supabase/ssr', () => ({ createServerClient: () => { throw new Error('Zbędna sesja użytkownika') } }))
 vi.mock('@/lib/supabase/admin', () => ({ createAdminClient: () => ({
   rpc: mocks.rpc,
   storage: { from: mocks.bucket },
@@ -30,11 +29,13 @@ const req = (step: 'INIT' | 'COMMIT', data: object, secret = token) => new Reque
   { method: 'POST', headers: { [DEVICE_AUTH.header]: secret }, body: JSON.stringify(data) },
 )
 const commitBody = { client_capture_id: capture, sha256 }
+const downloadable = (data: ReadableStream<Uint8Array>) => ({ asStream: async () => ({ data }) })
+const readable = (bytes: Uint8Array<ArrayBuffer>) => new Blob([bytes]).stream()
 
 beforeEach(() => {
   vi.resetAllMocks()
   mocks.bucket.mockReturnValue({ createSignedUploadUrl: mocks.sign, download: mocks.download })
-  mocks.download.mockResolvedValue({ data: new Blob([new Uint8Array(audio)], { type: 'audio/ogg' }) })
+  mocks.download.mockImplementation(() => downloadable(readable(new Uint8Array(audio))))
   mocks.rpc.mockResolvedValue({ data: {
     status: 'PENDING', attempt_id: attempt, path, sha256, size_bytes: audio.length, codec: 'OPUS',
     expires_at: new Date(Date.now() + 2.5 * 3600000).toISOString(),
@@ -49,7 +50,7 @@ it('przepuszcza wyłącznie trasy urządzenia bez sesji użytkownika @REQ: VOICE
       const request = new NextRequest('https://app.test' + path, { method: 'POST' })
       expect((await updateSession(request)).headers.get('x-middleware-next')).toBe('1')
     }
-    await expect(updateSession(new NextRequest('https://app.test/api/voice/devices'))).rejects.toThrow('Zbędna sesja')
+    expect((await updateSession(new NextRequest('https://app.test/api/voice/devices'))).status).toBe(401)
   } finally {
     vi.unstubAllEnvs()
   }
@@ -95,10 +96,21 @@ it('weryfikuje bajty przed rejestracją i nie powtarza zapisu po utracie ACK @RE
 })
 
 it('odrzuca plik o błędnym rozmiarze albo skrócie bez rejestracji nagrania @REQ: VOICE-DEVICE-INGEST', async () => {
-  mocks.download.mockResolvedValueOnce({ data: new Blob(['short']) })
-    .mockResolvedValueOnce({ data: new Blob([new Uint8Array(audio.length)]) })
+  mocks.download.mockReturnValueOnce(downloadable(readable(new TextEncoder().encode('short'))))
+    .mockReturnValueOnce(downloadable(readable(new Uint8Array(audio.length))))
   for (let i = 0; i < 2; i++) {
     expect(await (await commit(req('COMMIT', commitBody))).json()).toMatchObject({ code: 'HASH_MISMATCH' })
   }
   expect(mocks.rpc.mock.calls.map(([name]) => name)).toEqual(['prepare_voice_device_upload', 'prepare_voice_device_upload'])
+})
+
+it('przerywa pobieranie po przekroczeniu zadeklarowanego rozmiaru @REQ: VOICE-DEVICE-INGEST', async () => {
+  const cancel = vi.fn()
+  mocks.download.mockReturnValue(downloadable(new ReadableStream({
+    start(controller) { controller.enqueue(new Uint8Array(audio.length + 1)) },
+    cancel,
+  })))
+  expect(await (await commit(req('COMMIT', commitBody))).json()).toMatchObject({ code: 'HASH_MISMATCH' })
+  expect(cancel).toHaveBeenCalledOnce()
+  expect(mocks.rpc).toHaveBeenCalledTimes(1)
 })

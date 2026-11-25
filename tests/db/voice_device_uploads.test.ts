@@ -33,9 +33,10 @@ it('wiąże rezerwację z urządzeniem, utrwala czas i przyjmuje jedną kopię @
     await tx`INSERT INTO public.organizations (id, name) VALUES (${org}, 'Fixture urządzenia'), (${otherOrg}, 'Inna placówka')`
     await tx`INSERT INTO public.voice_devices (id, organization_id, label, token_hash)
       VALUES (${device}, ${org}, 'Dyktafon testowy', ${token}), (${otherDevice}, ${otherOrg}, 'Inny dyktafon', ${otherToken})`
-    await tx`SET LOCAL ROLE authenticated`
-    await expect(tx.savepoint((sp) => sp`SELECT public.prepare_voice_device_upload(${token}, ${capture}, ${metadata})`))
-      .rejects.toMatchObject({ code: '42501' })
+    expect(await tx`SELECT
+      has_function_privilege('authenticated', 'public.prepare_voice_device_upload(text,uuid,jsonb)', 'EXECUTE') AS "canPrepare",
+      has_function_privilege('anon', 'public.commit_voice_device_upload(text,uuid,uuid,text)', 'EXECUTE') AS "canCommit"`)
+      .toEqual([{ canPrepare: false, canCommit: false }])
     await tx`SET LOCAL ROLE service_role`
     const first = await reserve()
     const retry = await reserve()
