@@ -16,13 +16,13 @@ vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 import { analyzeBulkImportAction, commitBulkImportAction } from '@/actions/bulk-import'
 import { bulkPublishReportsAction } from '@/actions/bulk-reports'
 
-function session(role: string, aal = 'aal2') {
+function session(role: string, aal = 'aal2', rpc: unknown = vi.fn(async () => ({ data: false, error: null }))) {
   mocks.createClient.mockResolvedValue({
     auth: {
       getUser: async () => ({ data: { user: { id: 'auth-user', app_metadata: { role, organization_id: 'our-org' } } } }),
       getClaims: async () => ({ data: { claims: { sub: 'auth-user', aal } } }),
     },
-    rpc: async () => ({ data: false, error: null }),
+    rpc,
   })
 }
 
@@ -59,7 +59,6 @@ describe('Uprawnienia operacji masowych @REQ: ORG-ISOLATION', () => {
 })
 
 it('zapisuje wszystkie 60 rekordów jednym wywołaniem bazy @REQ: ADM-RESIDENT-ADD', async () => {
-  session('org_admin')
   mocks.feature.mockResolvedValue(true)
   const rows = Array.from({ length: 60 }, (_, index) => {
     const stem = '400101' + String(index).padStart(4, '0')
@@ -72,19 +71,16 @@ it('zapisuje wszystkie 60 rekordów jednym wywołaniem bazy @REQ: ADM-RESIDENT-A
       isZsn: false, notes: null, admissionDate: null, isValid: true, errors: [],
     }
   })
-  const insert = vi.fn((batch: unknown[]) => ({ select: async () => ({
-    data: batch.map((_, index) => ({ id: String(index) })), error: null,
-  }) }))
-  mocks.createAdminClient.mockReturnValue({
-    from: (table: string) => table === 'residents' ? {
-      insert,
-      select: () => ({ eq: () => ({ is: async () => ({ data: [] }) }) }),
-    } : {
-      select: () => ({ eq: () => ({ single: async () => ({ data: { resident_limit: 60 } }) }) }),
-      insert: async () => ({}),
-    },
+  const rpc = vi.fn<(name: string, args: { p_rows: unknown[] }) => Promise<unknown>>()
+    .mockResolvedValue({ data: { importedCount: 60, residentLimit: 60, activeResidents: 60 }, error: null })
+  session('org_admin', 'aal2', rpc)
+  const result = await commitBulkImportAction(rows).catch((error: unknown) => {
+    if (!(error instanceof Error) || !error.message.includes('static generation store missing in revalidatePath')) throw error
+    return null
   })
-  await commitBulkImportAction(rows).catch((error: unknown) => { if (!insert.mock.calls.length) throw error })
-  expect(insert).toHaveBeenCalledTimes(1)
-  expect(insert.mock.calls[0][0]).toHaveLength(60)
+  if (result) expect(result.importedCount).toBe(60)
+  expect(rpc).toHaveBeenCalledTimes(1)
+  expect(rpc).toHaveBeenCalledWith('commit_resident_import', { p_rows: expect.any(Array), p_confirm_capacity: false })
+  const [[, args]] = rpc.mock.calls
+  expect(args.p_rows).toHaveLength(60)
 })
