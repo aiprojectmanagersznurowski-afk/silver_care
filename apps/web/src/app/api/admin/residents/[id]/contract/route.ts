@@ -42,8 +42,10 @@ export async function POST(
     const body = await request.json()
     const { storage_path, file_name, content_type } = body
 
-    if (!storage_path || typeof storage_path !== 'string') {
-      return NextResponse.json({ error: 'Brak lub niepoprawna ścieżka do pliku' }, { status: 400 })
+    const pathParts = typeof storage_path === 'string' ? storage_path.split('/') : []
+    if (pathParts.length !== 3 || pathParts[0] !== 'contracts' || pathParts[1] !== id
+      || !/^\d+_[A-Za-z0-9._-]+$/.test(pathParts[2])) {
+      return NextResponse.json({ error: 'Niepoprawna ścieżka dokumentu podopiecznego.' }, { status: 400 })
     }
 
     // 1. Sprawdź czy podopieczny należy do placówki administratora
