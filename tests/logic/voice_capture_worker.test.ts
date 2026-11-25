@@ -19,6 +19,24 @@ describe('Plan fragmentów nagrania @REQ: VOICE-RESIDENT-ASSIGN', () => {
     expect(plan.segments).toEqual([expect.objectContaining({ scope: 'RESIDENT', resident_id: 'resident', author_id: 'one', ordinal: 1 })])
   })
 
+  it('zachowuje treść po przedstawieniu w tym samym zdaniu @REQ: VOICE-RESIDENT-ASSIGN', () => {
+    const plan = planCaptureSegments({ source: 'DEVICE', author_id: null, clock_state: 'SYNCED',
+      session_seq: 1, selected_resident_id: null }, registry, [
+      clip('Cześć, tu mówi Łucja Żak, Maria Las skończyła śniadanie.'),
+    ])
+    expect(plan.declaration).toBe('one')
+    expect(plan.segments).toEqual([
+      expect.objectContaining({ scope: 'RESIDENT', resident_id: 'resident', author_id: 'one', ordinal: 0 }),
+    ])
+  })
+
+  it('pomija samo powitanie i przedstawienie @REQ: VOICE-RESIDENT-ASSIGN', () => {
+    const plan = planCaptureSegments({ source: 'DEVICE', author_id: null, clock_state: 'SYNCED',
+      session_seq: 1, selected_resident_id: null }, registry, [clip('Dzień dobry, tu mówi Łucja Żak.')])
+    expect(plan.declaration).toBe('one')
+    expect(plan.segments).toHaveLength(0)
+  })
+
   it('wstrzymuje jawną deklarację bez dopasowania w już rozpoczętej sesji @REQ: VOICE-RESIDENT-ASSIGN', () => {
     const plan = planCaptureSegments({ source: 'DEVICE', author_id: null, clock_state: 'SYNCED',
       session_seq: 2, selected_resident_id: null }, { ...registry, declared_author_id: 'one' },

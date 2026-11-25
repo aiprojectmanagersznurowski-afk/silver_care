@@ -109,6 +109,9 @@ describe('Autonomous Issue Automation Core (@REQ: INFRA-EU-REGION)', () => {
     ).toBe(true);
 
     const rejected = [
+      ['git push origin', 'auto/issue-245-dup-sectors', 'abc1234', receipt],
+      ['git push --repo=unapproved origin auto/issue-245-dup-sectors', 'auto/issue-245-dup-sectors', 'abc1234', receipt],
+      ['git push --receive-pack=custom origin auto/issue-245-dup-sectors', 'auto/issue-245-dup-sectors', 'abc1234', receipt],
       ['git push origin staging', 'auto/issue-245-dup-sectors', 'abc1234', receipt],
       ['git push origin main', 'main', 'abc1234', receipt],
       ['git push origin feat/other', 'feat/other', 'abc1234', receipt],
