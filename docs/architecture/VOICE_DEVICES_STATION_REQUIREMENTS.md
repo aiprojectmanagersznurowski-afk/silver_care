@@ -201,7 +201,7 @@ sequenceDiagram
 | D7 | Opóźnienie alertu | Domyślnie 60 minut, zakres 30–180 | Wymaganie Michała: godzina po końcu zmiany. Zakres pozwala placówce dopasować alert do przekazania zmiany. | do potwierdzenia |
 | D8 | Numery odbiorców | Do 5, z potwierdzeniem kodem. W pierwszej kolejności telefony służbowe: dyżurny zmiany i Kierownik placówki. | Telefon prywatny tylko za zgodą pracownika (art. 22¹a KP). Oczekiwanie reakcji na SMS wieczorem na prywatnym telefonie może być traktowane jak dyżur (art. 151⁵ KP). | do potwierdzenia |
 | D9 | Link w SMS | Bez linku | Ochrona przed smishingiem i nawyk „nie klikam linków z SMS-ów”. | do potwierdzenia |
-| D10 | Kto wprowadza urządzenie na rynek | Pilotaż: egzemplarze testowe Silver Care, po opinii prawnika. Start komercyjny: Silver Care jako producent. Opcje i uzasadnienie w sekcji 4.1. | Od tej decyzji zależą obowiązki z sekcji 7. | otwarte, do prawnika (#345 F6) |
+| D10 | Kto wprowadza urządzenie na rynek | Pilotaż: egzemplarze testowe Silver Care, po opinii prawnika. Start komercyjny: Silver Care jako producent. Opcje i uzasadnienie w sekcji 4.1. | Od tej decyzji zależą obowiązki z sekcji 7. | otwarte, pytania do prawnika w #348 (P1) |
 | D11 | Klucz testowy | Osobny klucz Secure Boot dla egzemplarzy testowych | Secure Boot V2 jest nieodwracalny. Egzemplarz testowy z kluczem produkcyjnym to dodatkowa kopia ryzyka. | do potwierdzenia |
 | D12 | Podwójne ID `SC-ADM-24` | Przenumerować „Rejestr urządzeń nagrywających” na `SC-ADM-26` w oknie kontraktowym (`VOICE-DEVICE-REGISTRY.source`). Nowe story alertu ma `SC-ADM-27`. | W specyfikacji `SC-ADM-24` oznacza i „Źródło finansowania”, i „Rejestr urządzeń”. | do potwierdzenia |
 | D13 | Sieć stacji | Własny router z osobną siecią (rekomendacja). Alternatywa: osobny SSID w sieci placówki. | Izolacja urządzeń, kontrola ruchu wychodzącego, łatwa zmiana hasła po zgubieniu urządzenia. | silver-care-devices#14 D1 |
@@ -209,7 +209,7 @@ sequenceDiagram
 
 ### 4.1 D10: kto wprowadza urządzenia na rynek
 
-Analiza robocza do rozmowy z prawnikiem, nie opinia prawna.
+Analiza robocza do rozmowy z prawnikiem, nie opinia prawna. **Decyzja zapada w #348** (P1), w issue zbierającym wszystkie pytania do prawnika.
 
 | Opcja | Na czym polega | Obowiązki Silver Care | Plusy | Minusy |
 |---|---|---|---|---|
@@ -366,7 +366,7 @@ Issue wciąż ma status **OPEN**, choć kod jest gotowy. PR #331 (Darek) ma `Clo
 
 ## 7. Zgodność z przepisami
 
-Analiza inżynierska, do potwierdzenia przez IOD albo prawnika. Kolumna „Dotyczy” to ocena robocza.
+Analiza inżynierska, do potwierdzenia przez IOD albo prawnika. Kolumna „Dotyczy” to ocena robocza. Otwarte pytania prawne zbieramy w #348.
 
 | Akt | Dotyczy | Co wynika dla urządzeń i stacji | Działanie | Termin |
 |---|---|---|---|---|
