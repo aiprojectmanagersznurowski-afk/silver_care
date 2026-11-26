@@ -57,13 +57,14 @@ Procedura dotyczy urządzeń nagrywających Silver Care (M5Stack StickS3), na kt
 flowchart TD
     A["SMS albo zgłoszenie: urządzenie nie wróciło do stacji"] --> B["Kierownik zmiany: szukanie do końca zmiany"]
     B -->|znalezione| C["Odłożenie do stacji i notatka w raporcie zmiany"]
-    B -->|nie znalezione albo kradzież| D["Kierownik placówki stwierdza zaginięcie, start 72 h"]
+    A -.->|rozsądna pewność naruszenia, np. potwierdzone wyniesienie| W["W: start 72 h z art. 33 RODO, zapis godziny"]
+    B -->|nie znalezione albo kradzież| D["Kierownik placówki stwierdza zaginięcie (S); W najpóźniej teraz"]
     D --> E["Unieważnienie urządzenia w panelu"]
     E --> F["Zgłoszenie do Silver Care i IOD placówki"]
     F --> G["Silver Care: karta faktów w ciągu 24 h"]
     G --> H{"Urządzenie zabezpieczone w trybie produkcyjnym?"}
     H -->|tak, bez sygnałów ataku| I["Wpis w rejestrze naruszeń"]
-    H -->|nie albo są sygnały ataku| J["Ocena IOD i zgłoszenie do UODO w 72 h"]
+    H -->|nie albo są sygnały ataku| J["Ocena IOD i zgłoszenie do UODO bez zbędnej zwłoki, w miarę możliwości do W + 72 h"]
     I --> K["Hasło sieci, urządzenie zastępcze, wnioski"]
     J --> K
 ```
@@ -72,12 +73,13 @@ flowchart TD
 |---|---|---|
 | **T0:** SMS albo zgłoszenie | kierownik zmiany | rozpoczyna szukanie (6.1) |
 | do końca bieżącej zmiany, najpóźniej 12 h od T0 | kierownik zmiany | szuka i przekazuje wynik Kierownikowi placówki |
-| **S:** stwierdzenie zaginięcia | Kierownik placówki | zapisuje datę i godzinę; od tej chwili biegnie 72 h z art. 33 RODO |
+| **W:** rozsądna pewność naruszenia | kierownik zmiany albo Kierownik placówki, kto pierwszy | zapisuje datę i godzinę; **od tej chwili biegnie 72 h z art. 33 ust. 1 RODO**. W może nastąpić przed S, np. przy potwierdzonym wyniesieniu albo kradzieży urządzenia z danymi albo po informacji od Silver Care (7.5), najpóźniej w chwili S |
+| **S:** stwierdzenie zaginięcia | Kierownik placówki | zapisuje datę i godzinę; od S liczą się terminy operacyjne poniżej. Jeśli W nie zapisano wcześniej, W = S |
 | S + 1 h | Kierownik placówki | unieważnia urządzenie w panelu |
 | S + 4 h | Kierownik placówki | zgłasza sprawę do Silver Care i IOD placówki |
 | zgłoszenie + 4 h robocze | Silver Care | potwierdza przyjęcie zgłoszenia |
 | zgłoszenie + 24 h | Silver Care | przekazuje kartę faktów |
-| S + 72 h | IOD placówki i placówka | decyzja: wpis w rejestrze albo zgłoszenie do UODO |
+| bez zbędnej zwłoki, w miarę możliwości do W + 72 h | IOD placówki i placówka | decyzja: wpis w rejestrze albo zgłoszenie do UODO; zgłoszenie po 72 h z uzasadnieniem opóźnienia (art. 33 ust. 1) |
 | S + 7 dni | placówka i Silver Care | zamknięcie: hasło sieci, urządzenie zastępcze, wnioski |
 
 Terminy są rekomendacją do wpisania w umowie powierzenia [nr umowy, załącznik o incydentach].
@@ -107,9 +109,10 @@ Sprawdź po kolei:
 
 ### 6.2 Stwierdzenie zaginięcia i unieważnienie (Kierownik placówki)
 
-1. Kierownik placówki stwierdza zaginięcie, gdy szukanie nie przyniosło wyniku, a przy kradzieży od razu. **Zapisz datę i godzinę**, bo od niej liczy się 72 godziny.
-2. W panelu Silver Care: **Urządzenia → [etykieta] → Unieważnij.** Unieważnienie działa od razu, a historia urządzenia zostaje.
-3. Unieważnienie nie kasuje notatek na urządzeniu. Zostają zaszyfrowane, a jeśli urządzenie się znajdzie, można je odzyskać (sekcja 9).
+1. Kierownik placówki stwierdza zaginięcie (S), gdy szukanie nie przyniosło wyniku, a przy kradzieży od razu. **Zapisz datę i godzinę S** — od niej liczą się terminy operacyjne z tabeli w sekcji 5.
+2. **Zapisz osobno chwilę W**, gdy placówka uzyskała rozsądną pewność naruszenia. To od W biegnie 72 godziny z art. 33 RODO. Jeśli wcześniej było wiadomo, że urządzenie z danymi opuściło placówkę albo zostało skradzione, W jest wcześniejsze niż S i liczy się od tamtej chwili. Jeśli nie, W = S.
+3. W panelu Silver Care: **Urządzenia → [etykieta] → Unieważnij.** Unieważnienie działa od razu, a historia urządzenia zostaje.
+4. Unieważnienie nie kasuje notatek na urządzeniu. Zostają zaszyfrowane, a jeśli urządzenie się znajdzie, można je odzyskać (sekcja 9).
 
 Jeśli Kierownik placówki nie ma dostępu do panelu, poproś Silver Care o unieważnienie w imieniu placówki (pisemnie, e-mailem) [do potwierdzenia: uprawnienie Silver Care w rejestrze urządzeń].
 
@@ -160,7 +163,8 @@ Zgubienie urządzenia z danymi to naruszenie ochrony danych, bo RODO obejmuje ta
 | Urządzenie **odnalezione w ciągu zmiany** na terenie placówki, w miejscu bez dostępu osób postronnych | Zwykle brak naruszenia | Brak utraty | Notatka w dzienniku incydentów. IOD ocenia, czy doszło do naruszenia. |
 
 Uwagi:
-- 72 godziny liczy się od chwili, gdy placówka ma rozsądną pewność, że doszło do naruszenia (wytyczne EDPB 9/2022). Dlatego zapisujemy godzinę stwierdzenia zaginięcia.
+- 72 godziny liczy się od chwili W, gdy placówka ma rozsądną pewność, że doszło do naruszenia (art. 33 ust. 1 RODO, wytyczne EDPB 9/2022, pkt 30–35). W nie musi czekać na formalne stwierdzenie zaginięcia (S): potwierdzone wyniesienie albo kradzież urządzenia z danymi, a także informacja od Silver Care jako podmiotu przetwarzającego, dają tę pewność wcześniej. Dlatego zapisujemy obie godziny, W i S. Zgłoszenie następuje bez zbędnej zwłoki, w miarę możliwości do W + 72 h; zgłoszenie późniejsze wymaga uzasadnienia opóźnienia.
+- Krótki czas na szukanie (sekcja 6.1) to ustalanie faktów, które według wytycznych EDPB może poprzedzać W. Nie przedłuża jednak terminu, gdy pewność naruszenia jest już wcześniej.
 - Karta faktów podaje, ile notatek czekało na wysłanie przy ostatnim zgłoszeniu urządzenia w stacji. Liczba notatek nagranych później nie jest znana, zwykle to jedna zmiana. Pozwala to oszacować, ilu podopiecznych mogło dotyczyć zdarzenie.
 
 ## 9. Urządzenie odnalezione po unieważnieniu
@@ -211,7 +215,8 @@ Temat: Zaginione urządzenie nagrywające – [nazwa placówki] – [etykieta ur
 
 Placówka: [nazwa]
 Urządzenie: [etykieta, np. Stick 02]
-Stwierdzenie zaginięcia: [data, godzina]
+Rozsądna pewność naruszenia (W, start 72 h): [data, godzina]
+Stwierdzenie zaginięcia (S): [data, godzina]
 Ostatnio widziane: [data, godzina, miejsce]
 Okoliczności: zgubione / kradzież / zniszczone / wyniesione / inne: [opis bez danych podopiecznych]
 Unieważnione w panelu: tak, [godzina] / nie (prośba o unieważnienie)
@@ -238,7 +243,9 @@ Osoba kontaktowa: [imię i nazwisko, telefon]
 
 | Pole | Do wpisania |
 |---|---|
-| Data stwierdzenia | [data, godzina] |
+| Data uzyskania rozsądnej pewności naruszenia (W) | [data, godzina] — od niej 72 h z art. 33 ust. 1 |
+| Data stwierdzenia zaginięcia (S) | [data, godzina] |
+| Data zgłoszenia do UODO i uzasadnienie opóźnienia | [data, godzina; uzasadnienie, jeśli po W + 72 h] / nie dotyczy |
 | Opis | zaginięcie / kradzież / zniszczenie urządzenia nagrywającego [etykieta] |
 | Kategorie danych | notatki głosowe personelu, które mogą zawierać dane o zdrowiu podopiecznych (art. 9); głos personelu |
 | Przybliżona liczba osób | podopieczni objęci notatkami zmiany [szacunek z karty faktów] |
@@ -264,3 +271,4 @@ Osoba kontaktowa: [imię i nazwisko, telefon]
 | Wersja | Data | Zmiana |
 |---|---|---|
 | 1.0 | 2026-11-26 | Pierwsza wersja (propozycja) |
+| 1.1 | 2026-11-27 | Po review #347: rozdzielenie W (rozsądna pewność naruszenia, start 72 h z art. 33 ust. 1) od S (formalne stwierdzenie zaginięcia, terminy operacyjne) w diagramie, tabeli, 6.2, sekcji 8 i wzorach 12.2 i 12.4 |
