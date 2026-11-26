@@ -248,6 +248,7 @@
 - **AC1:** W momencie generowania draftów system zapisuje metadane modelu AI (`ai_model`, `ai_prompt_version`), aby zapewnić „AI Provenance" dla celów audytowych.
 - **AC2:** Kliknięcie „Zatwierdź" ustawia `status = 'published'` oraz zapisuje `approved_by`. Dopiero wtedy RLS udostępnia raport w widoku `family_daily_reports`.
 - **AC3 (EU AI Act):** Raport dla rodziny musi posiadać etykietę: „Podsumowanie generowane przy wsparciu AI, zatwierdzone przez personel placówki".
+- **AC4 (Wspólny szkic dobowy):** Notatki o podopiecznym oraz zatwierdzone fakty z nagrań ogólnych i z urządzeń zasilają jeden szkic w `daily_reports` na podopiecznego i dobę w strefie `Europe/Warsaw`. Uprawniony personel tej placówki dopisuje własne źródła przez RPC. Autorstwo każdego źródła jest zachowane. Ręczna korekta zabezpiecza szkic przed automatycznym nadpisaniem, a po publikacji zapis głosowy nie tworzy drugiego raportu za tę samą dobę.
 
 ### [SC-NUR-04] Obsługa braku sieci w dyktafonie PWA (offline-first)
 🔗 **Kontrakt:** `VOICE-OFFLINE` · **Status:** ✅
