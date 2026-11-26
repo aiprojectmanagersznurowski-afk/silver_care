@@ -64,7 +64,7 @@ jobs:
     name: Vercel Deploy
     needs: verify
     # Joby bez funkcji statusu dziedziczą pominięcie `database` (tylko PR) przez łańcuch needs.
-    if: ${{ !cancelled() && needs.verify.result == 'success' && github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging') }}
+    if: ${{ !cancelled() && needs.verify.result == 'success' && github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/feature/verify-vercel-ffmpeg-341') }}
     outputs:
       url: ${{ steps.deploy.outputs.url }}
     runs-on: ubuntu-latest
@@ -72,7 +72,7 @@ jobs:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      TARGET: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') && 'production' || 'staging (podgląd)' }}
+      TARGET: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') && 'production' || 'podgląd' }}
       PROD_FLAG: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') && '--prod' || '' }}
 
     steps:
