@@ -15,6 +15,18 @@ describe('Database Audit Retention (SEC-RETENTION)', () => {
     await sql.end();
   });
 
+  it('limits RPC execution to trusted server roles @REQ: SEC-RETENTION', async () => {
+    const signature = 'public.enforce_retention_policy(integer)';
+    const [privileges] = await sql`
+      SELECT
+        has_function_privilege('anon', ${signature}, 'EXECUTE') AS anonymous,
+        has_function_privilege('authenticated', ${signature}, 'EXECUTE') AS authenticated,
+        has_function_privilege('service_role', ${signature}, 'EXECUTE') AS service_role
+    `;
+
+    expect(privileges).toEqual({ anonymous: false, authenticated: false, service_role: true });
+  });
+
   it('enforce_retention_policy purges old audit logs but leaves anonymized traces @REQ: SEC-RETENTION', async () => {
     await sql.begin(async (tx) => {
       await tx`SET LOCAL ROLE authenticated`;
@@ -38,7 +50,9 @@ describe('Database Audit Retention (SEC-RETENTION)', () => {
       await tx`SELECT set_config('audit.allow_redact', 'false', true)`;
 
       // Call the RPC that cleans up logs older than 5 years
+      await tx`SET LOCAL ROLE service_role`;
       await tx`SELECT public.enforce_retention_policy(5)`;
+      await tx`SET LOCAL ROLE authenticated`;
 
       // Old log should be hard-deleted or completely redacted/stripped
       const logs = await tx`SELECT * FROM audit_logs WHERE resident_id = ${resId}`;
