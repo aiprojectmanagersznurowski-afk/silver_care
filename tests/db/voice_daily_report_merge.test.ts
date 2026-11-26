@@ -19,7 +19,7 @@ const AI_DISCLOSURE = 'Podsumowanie generowane przy wsparciu AI, zatwierdzone pr
 afterAll(() => sql.end())
 
 async function createProjectedGeneralSegment(
-  tx: postgres.TransactionSql,
+  tx: postgres.Sql | postgres.TransactionSql,
   params: { org: string; author: string; resident: string; recordedAt: string; behavioralFacts: string[] }
 ) {
   const capture = randomUUID()
@@ -31,8 +31,7 @@ async function createProjectedGeneralSegment(
     (id, organization_id, capture_id, ordinal, start_ms, end_ms, transcript_path, assignment_status, author_id, author_attribution, resident_id)
     VALUES (${segment}, ${params.org}, ${capture}, 0, 0, 1000, ${params.org + '/fixture/' + segment}, 'RESIDENT', ${params.author}, 'AUTHENTICATED_SESSION', ${params.resident})`
 
-  await tx`SET LOCAL ROLE service_role`
-  const [claimed] = await tx`SELECT public.claim_voice_segment_projection(${segment}) AS result`
+  const [claimed] = await tx`SELECT set_config('role', 'service_role', true), public.claim_voice_segment_projection(${segment}) AS result`
   const payload = tx.json({
     behavioral_facts: params.behavioralFacts,
     operational_facts: [],
@@ -41,6 +40,7 @@ async function createProjectedGeneralSegment(
     proposed_tasks: [],
   })
   await tx`SELECT public.complete_voice_segment_projection(${segment}, ${claimed.result.token}, ${payload}::jsonb)`
+  await tx`RESET ROLE`
   return segment
 }
 
@@ -123,14 +123,14 @@ describe('Mergowanie raportów dobowych z notatki ogólnej i notatki podopieczne
     })
   })
 
-  it('łączy wcześniejszą notatkę o podopiecznym, nagranie ogólne i kolejną notatkę o podopiecznym z zachowaniem ochrony ręcznej edycji @REQ: REPORT-APPROVAL @REQ: VOICE-DOCK-REPORTS @REQ: VOICE-RESIDENT-ASSIGN', async () => {
+  it('chroni ręczną korektę szkicu w całej sekwencji: ręczna korekta -> kolejna notatka o podopiecznym -> akceptacja kolejnego fragmentu ogólnego @REQ: REPORT-APPROVAL @REQ: VOICE-DOCK-REPORTS @REQ: VOICE-RESIDENT-ASSIGN', async () => {
     await sql.begin(async (tx) => {
       const org = randomUUID()
       const author = randomUUID()
       const resident = randomUUID()
       const nowIso = new Date().toISOString()
 
-      await tx`INSERT INTO public.organizations (id, name) VALUES (${org}, 'Fixture merge resident->general')`
+      await tx`INSERT INTO public.organizations (id, name) VALUES (${org}, 'Fixture manual edit sequence')`
       await tx`INSERT INTO auth.users (id, aud, role, raw_app_meta_data)
         VALUES (${author}, 'authenticated', 'authenticated',
           jsonb_build_object('role', 'nurse', 'organization_id', ${org}::uuid))`
@@ -180,50 +180,336 @@ describe('Mergowanie raportów dobowych z notatki ogólnej i notatki podopieczne
       const [rev1] = await tx`SELECT public.review_voice_family_facts(${segment1}, true) AS report_id`
       expect(rev1.report_id).toBe(res1.res.report_id)
 
+      // Krok 1: Ręczna korekta szkicu przez personel
+      const manualText = 'Ręcznie zredagowany przez opiekunkę raport dnia — nie nadpisywać.'
+      await tx`UPDATE public.daily_reports
+        SET content = ${tx.json({ text: manualText })}::jsonb
+        WHERE id = ${res1.res.report_id}`
+
+      // Krok 2: Kolejna notatka o podopiecznym — musi uszanować ręczną edycję (nie nadpisywać ani nie resetować odcisku)
       const [draft2] = await tx`INSERT INTO public.voice_draft_notes (resident_id, nurse_id, audio_url, transcript)
         VALUES (${resident}, ${author}, 'local-pending-storage', 'Popołudnie spędził na czytaniu.')
         RETURNING id`
 
-      const [res2] = await tx`SELECT public.process_voice_draft_atomic(
-        ${draft2.id},
-        ${resident},
-        ${author},
-        ${tx.json({ draft_id: draft2.id, medical: null, medication_event: 'none' })},
-        ${tx.json({
-          draft_id: draft2.id,
-          text: `Popołudnie spędził na czytaniu.\n\n${AI_DISCLOSURE}`,
-          requires_staff_review: false,
-        })}
-      ) AS res`
+      await tx`SAVEPOINT sp_app_after_manual`
+      let appAfterManualErr: { code?: string; message?: string } | null = null
+      try {
+        await tx`SELECT public.process_voice_draft_atomic(
+          ${draft2.id},
+          ${resident},
+          ${author},
+          ${tx.json({ draft_id: draft2.id, medical: null, medication_event: 'none' })},
+          ${tx.json({
+            draft_id: draft2.id,
+            text: `Popołudnie spędził na czytaniu.\n\n${AI_DISCLOSURE}`,
+            requires_staff_review: false,
+          })}
+        )`
+      } catch (err) {
+        appAfterManualErr = err as { code?: string; message?: string }
+        await tx`ROLLBACK TO SAVEPOINT sp_app_after_manual`
+      }
+      expect(appAfterManualErr?.message).toContain('VOICE_FAMILY_DRAFT_ALREADY_REVIEWED')
 
-      expect(res2.res.report_id).toBe(res1.res.report_id)
-
-      const reports = await tx`SELECT id, status, content FROM public.daily_reports WHERE resident_id = ${resident}`
-      expect(reports).toHaveLength(1)
-      const mergedText = String(reports[0].content.text)
-      expect(mergedText).toContain('Rano wypił ciepłą herbatę.')
-      expect(mergedText).toContain('W południe zjadł zupę pomidorową.')
-      expect(mergedText).toContain('Popołudnie spędził na czytaniu.')
-      expect(mergedText.split(AI_DISCLOSURE).length - 1).toBe(1)
-
-      // Ręczna edycja szkicu przez personel blokuje ciche nadpisanie przez review_voice_family_facts
-      await tx`UPDATE public.daily_reports
-        SET content = jsonb_build_object('text', 'Ręcznie zredagowany tekst raportu.')
-        WHERE id = ${res1.res.report_id}`
-
-      await tx`SAVEPOINT sp_manual_edit`
-      let manualEditError: { message?: string } | null = null
+      // Krok 3: Akceptacja kolejnego fragmentu ogólnego — nadal musi odrzucić przebudowę i zachować ręczną korektę
+      await tx`SAVEPOINT sp_general_after_manual`
+      let generalAfterManualErr: { code?: string; message?: string } | null = null
       try {
         await tx`SELECT public.review_voice_family_facts(${segment2}, true)`
       } catch (err) {
-        manualEditError = err as { message?: string }
-        await tx`ROLLBACK TO SAVEPOINT sp_manual_edit`
+        generalAfterManualErr = err as { code?: string; message?: string }
+        await tx`ROLLBACK TO SAVEPOINT sp_general_after_manual`
       }
-      expect(manualEditError?.message).toContain('VOICE_FAMILY_DRAFT_ALREADY_REVIEWED')
+      expect(generalAfterManualErr?.message).toContain('VOICE_FAMILY_DRAFT_ALREADY_REVIEWED')
+
+      const finalReports = await tx`SELECT id, status, content FROM public.daily_reports WHERE resident_id = ${resident}`
+      expect(finalReports).toHaveLength(1)
+      expect(finalReports[0].id).toBe(res1.res.report_id)
+      expect(finalReports[0].content.text).toBe(manualText)
 
       throw rollback
     }).catch((error: unknown) => {
       if (error !== rollback) throw error
     })
+  })
+
+  it('adoptuje szkice sprzed migracji (bez wpisu w family_voice_report_provenance) z zachowaniem treści, ID oraz ochrony edycji, publikacji i RLS nurse:own @REQ: REPORT-APPROVAL @REQ: VOICE-DOCK-REPORTS @REQ: VOICE-DRAFT-ISOLATION', async () => {
+    await sql.begin(async (tx) => {
+      const org = randomUUID()
+      const author = randomUUID()
+      const otherNurse = randomUUID()
+      const resUnedited = randomUUID()
+      const resEdited = randomUUID()
+      const resPublished = randomUUID()
+      const resForeign = randomUUID()
+      const nowIso = new Date().toISOString()
+
+      await tx`INSERT INTO public.organizations (id, name) VALUES (${org}, 'Fixture pre-migration drafts')`
+      await tx`INSERT INTO auth.users (id, aud, role, raw_app_meta_data)
+        VALUES
+          (${author}, 'authenticated', 'authenticated', jsonb_build_object('role', 'nurse', 'organization_id', ${org}::uuid)),
+          (${otherNurse}, 'authenticated', 'authenticated', jsonb_build_object('role', 'nurse', 'organization_id', ${org}::uuid))`
+      await tx`INSERT INTO public.residents (id, organization_id, first_name, last_name)
+        VALUES
+          (${resUnedited}, ${org}, 'Irena', 'Szkicowa'),
+          (${resEdited}, ${org}, 'Zofia', 'Edytowana'),
+          (${resPublished}, ${org}, 'Jan', 'Opublikowany'),
+          (${resForeign}, ${org}, 'Piotr', 'Obcy')`
+
+      const legacyDraftId = randomUUID()
+      const createdTs = nowIso
+
+      // A. Nieedytowany szkic sprzed migracji (brak wiersza w family_voice_report_provenance)
+      const [legacyClean] = await tx`INSERT INTO public.daily_reports
+        (resident_id, author_id, content, status, ai_generated, created_at, updated_at)
+        VALUES (
+          ${resUnedited},
+          ${author},
+          ${tx.json({
+            draft_id: legacyDraftId,
+            text: `Notatka sprzed migracji o śniadaniu.\n\n${AI_DISCLOSURE}`,
+            requires_staff_review: true,
+          })},
+          'DRAFT',
+          true,
+          ${createdTs},
+          ${createdTs}
+        )
+        RETURNING id`
+
+      // B. Ręcznie edytowany szkic sprzed migracji (brak draft_id po zapisie z ReportCard, brak provenance)
+      const [legacyEdited] = await tx`INSERT INTO public.daily_reports
+        (resident_id, author_id, content, status, ai_generated, created_at, updated_at)
+        VALUES (
+          ${resEdited},
+          ${author},
+          ${tx.json({ text: 'Ręcznie poprawiony szkic sprzed migracji.' })},
+          'DRAFT',
+          true,
+          ${createdTs},
+          ${createdTs}
+        )
+        RETURNING id`
+
+      // C. Opublikowany raport sprzed migracji (brak provenance)
+      const [legacyPublished] = await tx`INSERT INTO public.daily_reports
+        (resident_id, author_id, content, status, ai_generated, created_at, updated_at)
+        VALUES (
+          ${resPublished},
+          ${author},
+          ${tx.json({ draft_id: randomUUID(), text: 'Opublikowany raport sprzed migracji.' })},
+          'PUBLISHED',
+          true,
+          ${createdTs},
+          ${createdTs}
+        )
+        RETURNING id`
+
+      // D. Szkic sprzed migracji należący do innej opiekunki (nurse:own)
+      await tx`INSERT INTO public.daily_reports
+        (resident_id, author_id, content, status, ai_generated, created_at, updated_at)
+        VALUES (
+          ${resForeign},
+          ${otherNurse},
+          ${tx.json({ draft_id: randomUUID(), text: 'Szkic innej opiekunki.' })},
+          'DRAFT',
+          true,
+          ${createdTs},
+          ${createdTs}
+        )`
+
+      const [provBefore] = await tx`SELECT count(*)::int AS cnt FROM public.family_voice_report_provenance
+        WHERE resident_id IN (${resUnedited}, ${resEdited}, ${resPublished}, ${resForeign})`
+      expect(provBefore.cnt).toBe(0)
+
+      const segClean = await createProjectedGeneralSegment(tx, {
+        org,
+        author,
+        resident: resUnedited,
+        recordedAt: nowIso,
+        behavioralFacts: ['Po południu grała w szachy.'],
+      })
+      const segEdited = await createProjectedGeneralSegment(tx, {
+        org,
+        author,
+        resident: resEdited,
+        recordedAt: nowIso,
+        behavioralFacts: ['Spacerowała po korytarzu.'],
+      })
+      const segPublished = await createProjectedGeneralSegment(tx, {
+        org,
+        author,
+        resident: resPublished,
+        recordedAt: nowIso,
+        behavioralFacts: ['Obejrzał film przyrodniczy.'],
+      })
+      const segForeign = await createProjectedGeneralSegment(tx, {
+        org,
+        author,
+        resident: resForeign,
+        recordedAt: nowIso,
+        behavioralFacts: ['Wypił kompot.'],
+      })
+
+      await tx`SET LOCAL ROLE authenticated`
+      await tx`SELECT set_config('request.jwt.claims', ${JSON.stringify({
+        sub: author,
+        role: 'authenticated',
+        aal: 'aal2',
+        session_id: randomUUID(),
+        app_metadata: { role: 'nurse', organization_id: org },
+      })}, true)`
+
+      // A: adopcja szkicu sprzed migracji — ten sam ID, zachowana treść i metadane, brak drugiego wiersza
+      const [adopted] = await tx`SELECT public.review_voice_family_facts(${segClean}, true) AS report_id`
+      expect(adopted.report_id).toBe(legacyClean.id)
+
+      const cleanReports = await tx`SELECT id, content FROM public.daily_reports WHERE resident_id = ${resUnedited}`
+      expect(cleanReports).toHaveLength(1)
+      expect(cleanReports[0].id).toBe(legacyClean.id)
+      expect(cleanReports[0].content.draft_id).toBe(legacyDraftId)
+      expect(cleanReports[0].content.requires_staff_review).toBe(true)
+      expect(String(cleanReports[0].content.text)).toContain('Notatka sprzed migracji o śniadaniu.')
+      expect(String(cleanReports[0].content.text)).toContain('Po południu grała w szachy.')
+      expect(String(cleanReports[0].content.text).split(AI_DISCLOSURE).length - 1).toBe(1)
+
+      // B: ochrona edycji dla szkicu sprzed migracji
+      await tx`SAVEPOINT sp_legacy_edited`
+      let legacyEditErr: { message?: string } | null = null
+      try {
+        await tx`SELECT public.review_voice_family_facts(${segEdited}, true)`
+      } catch (err) {
+        legacyEditErr = err as { message?: string }
+        await tx`ROLLBACK TO SAVEPOINT sp_legacy_edited`
+      }
+      expect(legacyEditErr?.message).toContain('VOICE_FAMILY_DRAFT_ALREADY_REVIEWED')
+      const [editedAfter] = await tx`SELECT content FROM public.daily_reports WHERE id = ${legacyEdited.id}`
+      expect(editedAfter.content.text).toBe('Ręcznie poprawiony szkic sprzed migracji.')
+
+      // C: ochrona publikacji dla raportu sprzed migracji
+      await tx`SAVEPOINT sp_legacy_pub`
+      let legacyPubErr: { message?: string } | null = null
+      try {
+        await tx`SELECT public.review_voice_family_facts(${segPublished}, true)`
+      } catch (err) {
+        legacyPubErr = err as { message?: string }
+        await tx`ROLLBACK TO SAVEPOINT sp_legacy_pub`
+      }
+      expect(legacyPubErr?.message).toContain('VOICE_FAMILY_DRAFT_ALREADY_REVIEWED')
+      const pubReports = await tx`SELECT id, status FROM public.daily_reports WHERE resident_id = ${resPublished}`
+      expect(pubReports).toEqual([{ id: legacyPublished.id, status: 'PUBLISHED' }])
+
+      // D: izolacja nurse:own dla cudzego szkicu sprzed migracji
+      await tx`SAVEPOINT sp_legacy_foreign`
+      let foreignErr: { code?: string } | null = null
+      try {
+        await tx`SELECT public.review_voice_family_facts(${segForeign}, true)`
+      } catch (err) {
+        foreignErr = err as { code?: string }
+        await tx`ROLLBACK TO SAVEPOINT sp_legacy_foreign`
+      }
+      expect(foreignErr?.code).toBe('42501')
+
+      throw rollback
+    }).catch((error: unknown) => {
+      if (error !== rollback) throw error
+    })
+  })
+
+  it('koordynuje równoległy pierwszy zapis na dwóch połączeniach wspólną blokadą podopieczny-dzień @REQ: REPORT-APPROVAL @REQ: VOICE-DOCK-REPORTS @REQ: VOICE-RESIDENT-ASSIGN', async () => {
+    const conn1 = postgres(database.toString(), { max: 1, prepare: false })
+    const conn2 = postgres(database.toString(), { max: 1, prepare: false })
+    const org = randomUUID()
+    const author = randomUUID()
+    const resident = randomUUID()
+    const nowIso = new Date().toISOString()
+
+    try {
+      await sql`INSERT INTO public.organizations (id, name) VALUES (${org}, 'Fixture concurrent first write')`
+      await sql`INSERT INTO auth.users (id, aud, role, raw_app_meta_data)
+        VALUES (${author}, 'authenticated', 'authenticated',
+          jsonb_build_object('role', 'nurse', 'organization_id', ${org}::uuid))`
+      await sql`INSERT INTO public.residents (id, organization_id, first_name, last_name)
+        VALUES (${resident}, ${org}, 'Kazimierz', 'Równoległy')`
+
+      const segment = await sql.begin((setupTx) =>
+        createProjectedGeneralSegment(setupTx, {
+          org,
+          author,
+          resident,
+          recordedAt: nowIso,
+          behavioralFacts: ['Zjadł drugie śniadanie.'],
+        })
+      )
+      const [draft] = await sql`INSERT INTO public.voice_draft_notes (resident_id, nurse_id, audio_url, transcript)
+        VALUES (${resident}, ${author}, 'local-pending-storage', 'Uczestniczył w gimnastyce porannej.')
+        RETURNING id`
+
+      const claims = JSON.stringify({
+        sub: author,
+        role: 'authenticated',
+        aal: 'aal2',
+        session_id: randomUUID(),
+        app_metadata: { role: 'nurse', organization_id: org },
+      })
+
+      let notifyConn1Locked!: () => void
+      const conn1Locked = new Promise<void>((resolve) => {
+        notifyConn1Locked = resolve
+      })
+
+      // Połączenie 1 otwiera transakcję, wywołuje review_voice_family_facts (pierwszy zapis)
+      // i wstrzymuje commit na 80 ms, podczas gdy połączenie 2 startuje równolegle process_voice_draft_atomic.
+      const tx1Promise = conn1.begin(async (tx1) => {
+        await tx1`SET LOCAL ROLE authenticated`
+        await tx1`SELECT set_config('request.jwt.claims', ${claims}, true)`
+        const [rev] = await tx1`SELECT public.review_voice_family_facts(${segment}, true) AS report_id`
+        notifyConn1Locked()
+        await new Promise((r) => setTimeout(r, 80))
+        return rev.report_id as string
+      })
+
+      const tx2Promise = (async () => {
+        await conn1Locked
+        return conn2.begin(async (tx2) => {
+          await tx2`SET LOCAL ROLE authenticated`
+          await tx2`SELECT set_config('request.jwt.claims', ${claims}, true)`
+          const [app] = await tx2`SELECT public.process_voice_draft_atomic(
+            ${draft.id},
+            ${resident},
+            ${author},
+            ${tx2.json({ draft_id: draft.id, medical: null, medication_event: 'none' })},
+            ${tx2.json({
+              draft_id: draft.id,
+              text: `Uczestniczył w gimnastyce porannej.\n\n${AI_DISCLOSURE}`,
+              requires_staff_review: false,
+            })},
+            'model',
+            'v1',
+            ${nowIso}
+          ) AS res`
+          return app.res.report_id as string
+        })
+      })()
+
+      const [reportId1, reportId2] = await Promise.all([tx1Promise, tx2Promise])
+      expect(reportId2).toBe(reportId1)
+
+      const reports = await sql`SELECT id, status, content FROM public.daily_reports WHERE resident_id = ${resident}`
+      expect(reports).toHaveLength(1)
+      expect(reports[0].id).toBe(reportId1)
+      expect(String(reports[0].content.text)).toContain('Zjadł drugie śniadanie.')
+      expect(String(reports[0].content.text)).toContain('Uczestniczył w gimnastyce porannej.')
+      expect(String(reports[0].content.text).split(AI_DISCLOSURE).length - 1).toBe(1)
+    } finally {
+      await conn1.end()
+      await conn2.end()
+      await sql.begin(async (cleanup) => {
+        await cleanup`SELECT set_config('audit.allow_redact', 'true', true)`
+        await cleanup`DELETE FROM public.voice_captures WHERE organization_id = ${org}`
+        await cleanup`DELETE FROM public.organizations WHERE id = ${org}`
+        await cleanup`DELETE FROM auth.users WHERE id = ${author}`
+      })
+    }
   })
 })
