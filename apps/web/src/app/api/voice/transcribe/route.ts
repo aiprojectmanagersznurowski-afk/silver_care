@@ -6,6 +6,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getAppOrganizationId, getAppRole } from '@/lib/auth/app-role'
+import { isVoiceRealDataPilot } from '@/lib/eu-llm-client'
 import { checkRateLimit } from '@/lib/rate-limiter'
 import { transcribeWithGroq } from '@/lib/voice-helpers'
 import type { TablesInsert, TablesUpdate } from '@/types/database.types'
@@ -45,6 +46,13 @@ export async function POST(req: Request) {
 
     const featureDenied = await assertOrgFeatureForApi(supabase, user, '/api/voice/transcribe')
     if (featureDenied) return featureDenied
+
+    if (isVoiceRealDataPilot()) {
+      return NextResponse.json(
+        { error: 'Starsza transkrypcja jest wyłączona w trybie pilotażu.' },
+        { status: 503 },
+      )
+    }
 
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1'
     const rateCheck = checkRateLimit(`transcribe:${user.id || ip}`, 30, 60000)
