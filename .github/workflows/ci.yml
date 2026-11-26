@@ -60,10 +60,13 @@ jobs:
         run: bash scripts/verify.sh --full
 
   # PR sprawdza kod. Wdrożenie wymaga uprawnień projektu Vercel.
+  # `database` działa tylko dla PR-ów, więc na pushu jest pominięte. Bez `!cancelled()` GitHub Actions
+  # dokłada niejawne success() dla wszystkich przodków i pomija cały łańcuch (#343). Wynik
+  # bezpośrednich zależności sprawdzamy jawnie (test: tests/logic/ci_push_pipeline.test.ts).
   deploy:
     name: Vercel Deploy
     needs: verify
-    if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging') }}
+    if: ${{ !cancelled() && needs.verify.result == 'success' && github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging') }}
     outputs:
       url: ${{ steps.deploy.outputs.url }}
     runs-on: ubuntu-latest
@@ -124,14 +127,14 @@ jobs:
   migrate_staging:
     name: Apply staging migrations
     needs: deploy
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/staging' }}
+    if: ${{ !cancelled() && needs.deploy.result == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/staging' }}
     uses: ./.github/workflows/migrate.yml
     secrets: inherit
 
   promote_staging:
     name: Promote staging alias
     needs: [deploy, migrate_staging]
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/staging' }}
+    if: ${{ !cancelled() && needs.deploy.result == 'success' && needs.migrate_staging.result == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/staging' }}
     runs-on: ubuntu-latest
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}

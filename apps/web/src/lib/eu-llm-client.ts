@@ -123,6 +123,10 @@ function ensureEnvLoaded() {
   }
 }
 
+export function isVoiceRealDataPilot(): boolean {
+  return process.env.VOICE_REAL_DATA_PILOT === 'true'
+}
+
 /**
  * ADR-015: tymczasowy fallback CLASSIFY/GENERATE na Groq, wyłącznie na czas demo,
  * przed podpisaniem DPA z Groq na te etapy (PROVIDERS.GROQ_DEMO_LLM w
@@ -134,7 +138,7 @@ function ensureEnvLoaded() {
  */
 function getDemoGroqFallbackConfig(): EuLlmConfig | null {
   ensureEnvLoaded()
-  if (process.env.ALLOW_DEMO_GROQ_FALLBACK !== 'true') return null
+  if (isVoiceRealDataPilot() || process.env.ALLOW_DEMO_GROQ_FALLBACK !== 'true') return null
   const apiKey = process.env.GROQ_API_KEY
   if (!apiKey) return null
   const model = process.env.GROQ_LLM_MODEL || 'llama-3.3-70b-versatile'
