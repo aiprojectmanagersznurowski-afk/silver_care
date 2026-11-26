@@ -5,7 +5,8 @@
 --
 -- Wspólny szkic dobowy daily_reports per (resident_id, report_day w strefie Europe/Warsaw)
 -- dla nagrań ogólnych (review_voice_family_facts) oraz notatek o podopiecznym (process_voice_draft_atomic),
--- z zachowaniem RLS nurse:own, blokady nadpisania PUBLISHED, trwałej ochrony ręcznej edycji w obu ścieżkach,
+-- dla uprawnionych osób z tej samej placówki. Bezpośredni dostęp zachowuje RLS nurse:own.
+-- Zapis zachowuje blokadę PUBLISHED i trwałą ochronę ręcznej edycji w obu ścieżkach,
 -- obsługi szkiców sprzed migracji oraz wspólnej blokady transakcyjnej dla równoległego pierwszego zapisu.
 
 ALTER TABLE public.family_voice_report_provenance
@@ -54,6 +55,7 @@ SELECT DISTINCT ON (d.resident_id, (d.created_at AT TIME ZONE 'Europe/Warsaw')::
     THEN pg_catalog.jsonb_build_array(
       pg_catalog.jsonb_build_object(
         'draft_id', pg_catalog.btrim(d.content->>'draft_id'),
+        'author_id', d.author_id,
         'body', pg_catalog.btrim(pg_catalog.replace(
           COALESCE(d.content->>'text', ''),
           'Podsumowanie generowane przy wsparciu AI, zatwierdzone przez personel placówki',
@@ -84,8 +86,8 @@ SET log_parameter_max_length_on_error = 0
 AS $$
 DECLARE
   c_disclosure CONSTANT text := 'Podsumowanie generowane przy wsparciu AI, zatwierdzone przez personel placówki';
-  v_is_auto boolean := pg_catalog.current_setting('sc.voice_auto_merge', true) = 'true';
-  v_is_facts boolean := pg_catalog.current_setting('sc.voice_family_facts_merge', true) = 'true';
+  v_is_auto boolean := COALESCE(pg_catalog.current_setting('sc.voice_auto_merge', true) = 'true', false);
+  v_is_facts boolean := COALESCE(pg_catalog.current_setting('sc.voice_family_facts_merge', true) = 'true', false);
   v_day date;
   v_draft_id text;
   v_draft_body text;
@@ -152,14 +154,14 @@ BEGIN
       v_old_body := pg_catalog.btrim(pg_catalog.replace(COALESCE(OLD.content->>'text', ''), c_disclosure, ''));
       IF v_old_draft_id IS NOT NULL AND v_old_draft_id IS DISTINCT FROM v_draft_id AND v_old_body <> '' THEN
         v_updated_entries := pg_catalog.jsonb_build_array(
-          pg_catalog.jsonb_build_object('draft_id', v_old_draft_id, 'body', v_old_body)
+          pg_catalog.jsonb_build_object('draft_id', v_old_draft_id, 'author_id', OLD.author_id, 'body', v_old_body)
         );
       END IF;
     END IF;
 
     IF v_draft_id IS NOT NULL AND v_draft_body <> '' THEN
       v_updated_entries := v_updated_entries || pg_catalog.jsonb_build_array(
-        pg_catalog.jsonb_build_object('draft_id', v_draft_id, 'body', v_draft_body)
+        pg_catalog.jsonb_build_object('draft_id', v_draft_id, 'author_id', auth.uid(), 'body', v_draft_body)
       );
     END IF;
 
@@ -184,7 +186,7 @@ BEGIN
 
     IF v_draft_id IS NOT NULL AND v_draft_body <> '' THEN
       v_updated_entries := v_updated_entries || pg_catalog.jsonb_build_array(
-        pg_catalog.jsonb_build_object('draft_id', v_draft_id, 'body', v_draft_body)
+        pg_catalog.jsonb_build_object('draft_id', v_draft_id, 'author_id', auth.uid(), 'body', v_draft_body)
       );
     END IF;
 
@@ -201,7 +203,9 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM public.daily_reports d WHERE d.id = v_prev_report_id) THEN
     v_updated_entries := CASE
       WHEN v_draft_id IS NOT NULL AND v_draft_body <> '' THEN
-        pg_catalog.jsonb_build_array(pg_catalog.jsonb_build_object('draft_id', v_draft_id, 'body', v_draft_body))
+        pg_catalog.jsonb_build_array(
+          pg_catalog.jsonb_build_object('draft_id', v_draft_id, 'author_id', auth.uid(), 'body', v_draft_body)
+        )
       ELSE '[]'::jsonb
     END;
 
@@ -239,8 +243,11 @@ CREATE OR REPLACE FUNCTION public.process_voice_draft_atomic(
 )
 RETURNS JSONB
 LANGUAGE plpgsql
-SECURITY INVOKER
-SET search_path = public
+-- Uprawnienia do wspólnego zapisu dotyczą wyłącznie tego RPC. Własność źródła,
+-- placówka, rola, MFA i aktywny moduł są sprawdzane przed odczytem i zapisem.
+SECURITY DEFINER
+SET search_path = ''
+SET log_parameter_max_length_on_error = 0
 AS $$
 DECLARE
     c_disclosure CONSTANT TEXT := 'Podsumowanie generowane przy wsparciu AI, zatwierdzone przez personel placówki';
@@ -250,8 +257,6 @@ DECLARE
     v_effective_org_id UUID;
     v_effective_ts TIMESTAMPTZ;
     v_draft_status TEXT;
-    v_draft_resident_id UUID;
-    v_draft_org_id UUID;
     v_existing_report_id UUID;
     v_existing_report_status TEXT;
     v_existing_report_content JSONB;
@@ -299,18 +304,7 @@ BEGIN
         RAISE EXCEPTION 'Draft resident/organization mismatch' USING ERRCODE = '42501';
     END IF;
 
-    -- 1. Sprawdź istnienie szkicu, zgodność resident_id oraz organization_id
-    SELECT vdn.status, vdn.resident_id, r.organization_id
-    INTO v_draft_status, v_draft_resident_id, v_draft_org_id
-    FROM public.voice_draft_notes vdn
-    JOIN public.residents r ON r.id = vdn.resident_id
-    WHERE vdn.id = p_draft_id;
-
-    IF v_draft_status IS NULL
-       OR v_draft_resident_id IS DISTINCT FROM p_resident_id
-       OR v_draft_org_id IS DISTINCT FROM v_effective_org_id THEN
-        RAISE EXCEPTION 'Draft resident/organization mismatch' USING ERRCODE = '42501';
-    END IF;
+    PERFORM private.require_report_staff(v_effective_org_id, ARRAY['nurse'], true);
 
     v_effective_ts := COALESCE(p_ai_generated_at, NOW());
     v_report_day := (v_effective_ts AT TIME ZONE 'Europe/Warsaw')::date;
@@ -322,14 +316,22 @@ BEGIN
         hashtextextended(concat('voice-family/', p_resident_id::text, '/', to_char(v_report_day, 'YYYY-MM-DD')), 0)
     );
 
-    -- Odśwież status szkicu po uzyskaniu blokady (idempotencja)
+    -- Rola wykonująca RPC widzi wyłącznie wynik dla swojego źródła i swojej placówki.
     SELECT vdn.status INTO v_draft_status
     FROM public.voice_draft_notes vdn
-    WHERE vdn.id = p_draft_id
-    FOR UPDATE;
+    JOIN public.residents r ON r.id = vdn.resident_id
+    WHERE vdn.id = p_draft_id AND vdn.nurse_id = v_caller_uid
+      AND r.id = p_resident_id AND r.organization_id = v_effective_org_id
+      AND r.archived_at IS NULL
+    FOR UPDATE OF vdn FOR KEY SHARE OF r;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Draft resident/organization mismatch' USING ERRCODE = '42501';
+    END IF;
 
     IF v_draft_status = 'PROCESSED' THEN
-        SELECT id, content INTO v_existing_report_id, v_existing_report_content
+        SELECT id, CASE WHEN author_id = v_caller_uid THEN content END
+        INTO v_existing_report_id, v_existing_report_content
         FROM public.daily_reports
         WHERE resident_id = p_resident_id
           AND (
@@ -347,10 +349,17 @@ BEGIN
         );
     END IF;
 
+    IF jsonb_typeof(p_daily_log_data) IS DISTINCT FROM 'object'
+       OR jsonb_typeof(p_report_content) IS DISTINCT FROM 'object' THEN
+        RAISE EXCEPTION 'Voice processing expects JSON objects' USING ERRCODE = '22023';
+    END IF;
+    p_daily_log_data := p_daily_log_data || jsonb_build_object('draft_id', p_draft_id);
+
     -- 2. Zapis / aktualizacja daily_logs (dane medyczne dla personelu)
     SELECT id INTO v_log_id
     FROM public.daily_logs
     WHERE resident_id = p_resident_id
+      AND nurse_id = v_caller_uid
       AND data @> jsonb_build_object('draft_id', p_draft_id::text)
     LIMIT 1;
 
@@ -365,39 +374,21 @@ BEGIN
         RETURNING id INTO v_log_id;
     END IF;
 
-    -- 3A. Sprawdź, czy ten konkretny p_draft_id jest już przypisany do raportu (blokada nadpisania PUBLISHED)
-    SELECT id, status, content
+    -- 3. Wybierz kanoniczny raport dobowy, niezależnie od autora pierwszego źródła.
+    -- Opublikowany raport zamyka dobę także wtedy, gdy istnieje starszy drugi szkic.
+    SELECT d.id, d.status, d.content
     INTO v_report_id, v_existing_report_status, v_existing_report_content
-    FROM public.daily_reports
-    WHERE resident_id = p_resident_id
-      AND (
-        content @> jsonb_build_object('draft_id', p_draft_id::text)
-        OR content @> jsonb_build_object('draft_ids', jsonb_build_array(p_draft_id::text))
-      )
-    ORDER BY created_at DESC
+    FROM public.daily_reports d
+    LEFT JOIN public.family_voice_report_provenance p
+      ON p.resident_id = d.resident_id AND p.report_day = v_report_day
+    WHERE d.resident_id = p_resident_id
+      AND d.created_at >= v_day_start AND d.created_at < v_day_end
+    ORDER BY (d.status = 'PUBLISHED') DESC, (d.id = p.report_id) DESC NULLS LAST, d.created_at DESC, d.id DESC
     LIMIT 1
-    FOR UPDATE;
+    FOR UPDATE OF d;
 
     IF v_report_id IS NOT NULL AND v_existing_report_status = 'PUBLISHED' THEN
         RAISE EXCEPTION 'Cannot overwrite published daily report' USING ERRCODE = '42501';
-    END IF;
-
-    -- 3B. Jeśli brak raportu dla tego p_draft_id, poszukaj raportu tego podopiecznego z tego samego dnia (Europe/Warsaw)
-    IF v_report_id IS NULL THEN
-        SELECT id, status, content
-        INTO v_report_id, v_existing_report_status, v_existing_report_content
-        FROM public.daily_reports
-        WHERE resident_id = p_resident_id
-          AND author_id = p_nurse_id
-          AND created_at >= v_day_start
-          AND created_at < v_day_end
-        ORDER BY created_at DESC, id DESC
-        LIMIT 1
-        FOR UPDATE;
-
-        IF v_report_id IS NOT NULL AND v_existing_report_status = 'PUBLISHED' THEN
-            RAISE EXCEPTION 'Cannot overwrite published daily report' USING ERRCODE = '42501';
-        END IF;
     END IF;
 
     -- Ochronę ręcznej edycji egzekwuje atomowo trigger SECURITY DEFINER private.sync_app_voice_family_provenance()
@@ -457,7 +448,6 @@ BEGIN
             OR COALESCE((p_report_content->>'requires_staff_review')::boolean, false);
 
         v_final_content := COALESCE(v_existing_report_content, '{}'::jsonb)
-            || p_report_content
             || jsonb_build_object(
                 'text', v_combined_text,
                 'draft_id', p_draft_id::text,
@@ -472,8 +462,11 @@ BEGIN
         WHERE id = v_report_id
           AND status <> 'PUBLISHED';
     ELSE
-        v_final_content := p_report_content || jsonb_build_object(
-            'draft_ids', jsonb_build_array(p_draft_id::text)
+        v_final_content := jsonb_build_object(
+            'text', v_new_raw_text,
+            'draft_id', p_draft_id,
+            'draft_ids', jsonb_build_array(p_draft_id),
+            'requires_staff_review', COALESCE((p_report_content->>'requires_staff_review')::boolean, false)
         );
 
         INSERT INTO public.daily_reports (
@@ -504,8 +497,7 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.process_voice_draft_atomic FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.process_voice_draft_atomic FROM anon;
+REVOKE ALL ON FUNCTION public.process_voice_draft_atomic FROM PUBLIC, anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.process_voice_draft_atomic TO authenticated;
 
 CREATE OR REPLACE FUNCTION public.review_voice_family_facts(p_segment_id uuid, p_accept boolean)
@@ -569,13 +561,20 @@ BEGIN
   SELECT report_id, last_generated_fingerprint, COALESCE(app_draft_entries, '[]'::jsonb), COALESCE(manually_edited, false)
     INTO v_report_id, v_generated_fingerprint, v_app_entries, v_manually_edited
     FROM public.family_voice_report_provenance
-    WHERE resident_id = v_prop.resident_id AND report_day = v_day
-    FOR UPDATE;
+    WHERE resident_id = v_prop.resident_id AND report_day = v_day;
   IF v_prop.family_decision IS NOT NULL THEN
     IF v_prop.family_decision <> v_decision THEN
       RAISE EXCEPTION 'VOICE_FAMILY_FACT_ALREADY_REVIEWED' USING ERRCODE = '23514';
     END IF;
     RETURN CASE WHEN p_accept THEN v_report_id ELSE NULL END;
+  END IF;
+
+  IF p_accept AND EXISTS (
+    SELECT 1 FROM public.daily_reports d
+    WHERE d.resident_id = v_prop.resident_id AND d.status = 'PUBLISHED'
+      AND d.created_at >= v_start AND d.created_at < v_end
+  ) THEN
+    RAISE EXCEPTION 'VOICE_FAMILY_DRAFT_ALREADY_REVIEWED' USING ERRCODE = '23514';
   END IF;
 
   UPDATE public.voice_segment_proposals SET family_decision = v_decision,
@@ -598,9 +597,6 @@ BEGIN
       FOR UPDATE;
 
     IF FOUND THEN
-      IF v_role = 'nurse' AND v_report_author IS DISTINCT FROM auth.uid() THEN
-        RAISE EXCEPTION 'VOICE_FAMILY_FACT_ACCESS_DENIED' USING ERRCODE = '42501';
-      END IF;
       IF private.is_legacy_daily_report_reviewed(v_status, v_legacy_ai, v_existing_content, v_legacy_created, v_legacy_updated) THEN
         RAISE EXCEPTION 'VOICE_FAMILY_DRAFT_ALREADY_REVIEWED' USING ERRCODE = '23514';
       END IF;
@@ -611,7 +607,7 @@ BEGIN
       v_legacy_body := pg_catalog.btrim(pg_catalog.replace(COALESCE(v_existing_content->>'text', ''), c_disclosure, ''));
       IF v_legacy_draft_id IS NOT NULL AND v_legacy_body <> '' THEN
         v_app_entries := pg_catalog.jsonb_build_array(
-          pg_catalog.jsonb_build_object('draft_id', v_legacy_draft_id, 'body', v_legacy_body)
+          pg_catalog.jsonb_build_object('draft_id', v_legacy_draft_id, 'author_id', v_report_author, 'body', v_legacy_body)
         );
       END IF;
       IF v_legacy_draft_id IS NOT NULL AND NOT (v_existing_content ? 'draft_ids') THEN
@@ -677,14 +673,17 @@ BEGIN
     )
     RETURNING id INTO v_report_id;
   ELSE
-    SELECT d.status, d.author_id, pg_catalog.md5(COALESCE(d.content->>'text', '')), COALESCE(v_existing_content, '{}'::jsonb) || COALESCE(d.content, '{}'::jsonb)
-      INTO v_status, v_report_author, v_fingerprint, v_existing_content
+    SELECT d.status, pg_catalog.md5(COALESCE(d.content->>'text', '')), COALESCE(v_existing_content, '{}'::jsonb) || COALESCE(d.content, '{}'::jsonb)
+      INTO v_status, v_fingerprint, v_existing_content
       FROM public.daily_reports d
       WHERE d.id = v_report_id
       FOR UPDATE;
 
-    IF v_role = 'nurse' AND v_report_author IS DISTINCT FROM auth.uid() THEN
-      RAISE EXCEPTION 'VOICE_FAMILY_FACT_ACCESS_DENIED' USING ERRCODE = '42501';
+    -- Blokada wiersza raportu poprzedza ponowny odczyt znacznika ustawianego przez ręczną edycję.
+    SELECT p.manually_edited INTO v_manually_edited
+      FROM public.family_voice_report_provenance p WHERE p.report_id = v_report_id;
+    IF NOT FOUND THEN
+      v_manually_edited := false;
     END IF;
     IF v_manually_edited OR v_status IS DISTINCT FROM 'DRAFT' OR v_fingerprint IS DISTINCT FROM v_generated_fingerprint THEN
       RAISE EXCEPTION 'VOICE_FAMILY_DRAFT_ALREADY_REVIEWED' USING ERRCODE = '23514';
