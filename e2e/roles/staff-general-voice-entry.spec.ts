@@ -99,13 +99,15 @@ test.describe('Nagranie ogólne — szybki dostęp z tablicy dyżuru i /voice (@
     await withAuthenticatedNurse(page, loginPage, async () => {
       await voiceNotePage.goto();
       await voiceNotePage.expectResidentSelectionVisible();
+      await expect(voiceNotePage.residentButtons.first()).toBeVisible();
 
       const generalLink = page.getByRole('link', { name: 'Nagranie ogólne' });
       await expect(generalLink).toBeVisible();
       await expect(generalLink.locator('svg.lucide-mic')).toBeVisible();
 
+      await voiceNotePage.searchInput.hover();
       await generalLink.hover();
-      await expect(page.getByRole('tooltip')).toBeVisible();
+      await expect(page.getByRole('tooltip')).toContainText('dyktuj bez wyboru podopiecznego');
 
       await voiceNotePage.openGeneralRecording();
     });
