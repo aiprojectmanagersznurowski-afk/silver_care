@@ -128,7 +128,17 @@ export const REQUIREMENTS = [
     'Automatyczne przypisanie zasila szkic bez zatwierdzania raportu, publikacji rodzinie ani rozliczania zadań',
   ], risk: 'HIGH' }),
   R('VOICE-DEVICE-REGISTRY', { source: 'SC-ADM-24, ADR-022', domain: 'voice', statement: 'Kierownik placówki prowadzi rejestr urządzeń placówki. Urządzenia są wspólne: przedstawienie określa deklarowanego autora sesji, a wpis wydania jest opcjonalną ewidencją sprzętu.', acceptance: ['Token urządzenia jest pokazywany jeden raz przy rejestracji', 'Unieważnienie ustawia revoked_at zamiast usuwać wiersz', 'Jedno urządzenie ma w danej chwili najwyżej jeden aktywny wpis wydania', 'Wpis wydania tworzy kierownik zmiany albo kierownik placówki i nie wyznacza autora nagrań', 'Rejestracja, unieważnienie i wpis wydania trafiają do audit_logs', 'Konto bliskiego nie widzi urządzeń ani wpisów wydania'] }),
-  R('REPORT-APPROVAL', { source: 'SC-NUR-03', domain: 'reports', statement: 'Raport trafia do bliskich dopiero po zatwierdzeniu przez personel.', acceptance: ['Status published i approved_by ustawiane w jednej operacji', 'Przed zatwierdzeniem RLS nie udostępnia raportu bliskim', 'Raport nosi etykietę o udziale AI wymaganą przez EU AI Act', 'Metadane modelu i wersji promptu zapisane przy generowaniu'], risk: 'HIGH' }),
+  R('REPORT-APPROVAL', {
+    source: 'SC-NUR-03', domain: 'reports', statement: 'Raport trafia do bliskich dopiero po zatwierdzeniu przez personel.',
+    acceptance: [
+      'Status published i approved_by ustawiane w jednej operacji',
+      'Przed zatwierdzeniem RLS nie udostępnia raportu bliskim',
+      'Raport nosi etykietę o udziale AI wymaganą przez EU AI Act',
+      'Metadane modelu i wersji promptu zapisane przy generowaniu',
+      'Uprawniony personel tej samej placówki dopisuje własne notatki oraz zatwierdzone fakty głosowe do jednego szkicu na podopiecznego i dobę w strefie Europe/Warsaw przez RPC; dostęp do źródeł i bezpośredni dostęp do tabel pozostają zgodne z MATRIX',
+      'Zapis głosowy zachowuje autorstwo źródeł oraz wymóg ręcznej weryfikacji, nie nadpisuje ręcznie zmienionego szkicu ani nie tworzy drugiego raportu po publikacji za tę samą dobę',
+    ], risk: 'HIGH',
+  }),
   R('REPORT-AI-FEEDBACK', { source: 'SC-COMP-01', domain: 'reports', statement: 'Personel może zgłosić błąd w raporcie wygenerowanym przez AI.', acceptance: ['Zgłoszenie wymaga wyboru kategorii z AI_FEEDBACK_CATEGORIES', 'Zapisywana jest migawka tekstu i wersja promptu', 'Zgłoszenie blokuje publikację raportu'] }),
   R('VOICE-DOCK-REPORTS', {
     source: 'SC-SUP-06, SC-NUR-12, ADR-023',
@@ -143,6 +153,7 @@ export const REQUIREMENTS = [
       'Zapis voice_sanitized_events oraz generowanych szkiców operational_reports odbywa się wyłącznie z zaufanego potoku serwerowego (service_role po redakcji i post-filtrze MDR, create: [] dla sesji klienckich), natomiast sesje authenticated mają wyłącznie RPC konfiguracji kategorii i zatwierdzania raportu',
       'Trigger niemutowalności voice_sanitized_events blokuje ręczną edycję treści, zezwalając wyłącznie na wyzerowanie draft_note_id (ON DELETE SET NULL) przy retencji voice_draft_notes, kaskadowe usunięcie przy wymazaniu podopiecznego (RODO art. 17) oraz usunięcie po upływie retencji placówki (cleanup_expired_operational_reports, domyślnie 365 dni); wymazanie podopiecznego cofa powiązany raport operacyjny do status = DRAFT (lub no_data: true przy utracie wszystkich źródeł)',
       'Przy braku zdarzeń w okresie raportu generator zwraca jawny komunikat o braku danych bez fabrykowania faktów, a fakty operacyjne/placówkowe nie są wstrzykiwane do raportu rodzinnego daily_reports',
+      'Dopuszczone fakty o podopiecznym z APP_GENERAL i DEVICE mogą zasilać wspólny szkic rodzinny wyłącznie po decyzji uprawnionego personelu, według REPORT-APPROVAL',
     ],
     risk: 'HIGH',
   }),

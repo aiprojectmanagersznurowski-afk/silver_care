@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
+import { buttonVariants } from '@/components/ui/button'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { Mic, Square, Loader2, Sparkles } from 'lucide-react'
 import { useVoiceRecorder } from '@/hooks/useVoiceRecorder'
 import { VoiceResidentSelect } from './VoiceResidentSelect'
@@ -12,6 +14,7 @@ import { VoiceReportReview } from './VoiceReportReview'
 import { VoiceTranscriptionEditor } from './VoiceTranscriptionEditor'
 import { PageHeader } from '@/components/patterns/PageHeader'
 import { formatPersonName } from '@/lib/person-name'
+import { cn } from '@/lib/utils'
 
 function VoiceNoteContent() {
   const searchParams = useSearchParams()
@@ -132,17 +135,19 @@ function VoiceNoteContent() {
           title="Notatka głosowa"
           description="Wybierz podopiecznego, dla którego chcesz nagrać notatkę ze statusu dnia."
         />
-        <nav className="flex flex-wrap gap-2" aria-label="Nagrania">
-          <Link href="/voice/general" className="inline-flex min-h-touch items-center rounded-md border px-3 text-sm">Nagranie ogólne</Link>
-          <Link href="/voice/assignment" className="inline-flex min-h-touch items-center rounded-md border px-3 text-sm">Fragmenty do sprawdzenia</Link>
+        <nav className="flex flex-wrap items-center gap-2" aria-label="Nagrania">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link href="/voice/general" className={cn(buttonVariants({ variant: 'default' }), 'min-h-touch gap-2')}>
+                <Mic className="size-4 shrink-0" aria-hidden="true" />
+                Nagranie ogólne
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent>Nagranie ogólne — dyktuj bez wyboru podopiecznego</TooltipContent>
+          </Tooltip>
+          <Link href="/voice/assignment" className={cn(buttonVariants({ variant: 'outline' }), 'min-h-touch')}>Fragmenty do sprawdzenia</Link>
         </nav>
-        <VoiceResidentSelect
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          residentsList={residentsList}
-          loadingResidents={loadingResidents}
-          onSelectResident={(r) => { setActiveResidentId(r.id); setResident(r) }}
-        />
+        <VoiceResidentSelect searchQuery={searchQuery} setSearchQuery={setSearchQuery} residentsList={residentsList} loadingResidents={loadingResidents} onSelectResident={(r) => { setActiveResidentId(r.id); setResident(r) }} />
       </div>
     )
   }
@@ -213,24 +218,13 @@ function VoiceNoteContent() {
 
           {taskNote && <p role="status" className="text-sm">Zapisano notatkę o zadaniach zmiany.</p>}
           {transcription && !finalReport && !isGenerating && (
-            <VoiceTranscriptionEditor
-              transcription={transcription}
-              setTranscription={setTranscription}
-              followupQuestion={followupQuestion}
-              onGenerateReport={generateAIReport}
-              onResetNote={resetNote}
-              isGenerating={isGenerating}
-              isBusy={recorder.isTranscribing || recorder.isRecording}
-            />
+            <VoiceTranscriptionEditor transcription={transcription} setTranscription={setTranscription} followupQuestion={followupQuestion}
+              onGenerateReport={generateAIReport} onResetNote={resetNote} isGenerating={isGenerating} isBusy={recorder.isTranscribing || recorder.isRecording} />
           )}
 
           {finalReport && (
-            <VoiceReportReview
-              finalReport={finalReport}
-              onResetNote={resetNote}
-              medicationEvent={medicationEvent}
-              requiresMedicationConfirmation={requiresMedConfirm}
-            />
+            <VoiceReportReview finalReport={finalReport} onResetNote={resetNote}
+              medicationEvent={medicationEvent} requiresMedicationConfirmation={requiresMedConfirm} />
           )}
         </CardContent>
       </Card>

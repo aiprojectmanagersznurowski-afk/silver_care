@@ -7,7 +7,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildQueueReport, parseStoriesMarkdown } from './lib/auto-issue-core.mjs';
+import { AUTO_BRANCH_RE, buildQueueReport, parseStoriesMarkdown } from './lib/auto-issue-core.mjs';
 
 const ROOT = process.env.SC_PROJECT_DIR || join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -26,6 +26,13 @@ function parseArgs(argv) {
 }
 
 function getBaseBranch() {
+  try {
+    const cur = execFileSync('git', ['-C', ROOT, 'branch', '--show-current'], { encoding: 'utf8' }).trim();
+    if (cur && !AUTO_BRANCH_RE.test(cur)) {
+      const hasRemote = spawnSync('git', ['-C', ROOT, 'rev-parse', '--verify', '--quiet', `refs/remotes/origin/${cur}`], { encoding: 'utf8' });
+      if (hasRemote.status === 0) return cur;
+    }
+  } catch { /* fallback to origin/HEAD */ }
   try {
     const ref = execFileSync('git', ['-C', ROOT, 'symbolic-ref', '--short', 'refs/remotes/origin/HEAD'], { encoding: 'utf8' }).trim();
     return ref.replace(/^origin\//, '') || 'staging';
@@ -73,10 +80,11 @@ function formatMarkdown(data) {
       ? `**Codex lokalny:** OK (${c.version}, ${c.latencyMs}ms, max rund: ${c.maxRounds})`
       : `**Codex lokalny:** BŁĄD — ${c.error || 'nie odpowiada'}`);
   }
-  lines.push(`**Gałąź bazowa:** \`${data.baseBranch}\` · **Okno kontraktowe:** ${data.contractWindowOpen ? 'OTWARTE' : 'zamknięte'}`);
+  const totalAssigned = data.ready.length + data.needsContract.length + data.excluded.length;
+  lines.push(`**Gałąź bazowa:** \`${data.baseBranch}\` · **Okno kontraktowe:** ${data.contractWindowOpen ? 'OTWARTE' : 'zamknięte'} · **Wszystkie zadania przypisane do Ciebie:** ${totalAssigned}`);
   lines.push('');
 
-  lines.push(`### Kolejka techniczna READY (${data.ready.length})`);
+  lines.push(`### READY techniczne (${data.ready.length})`);
   if (!data.ready.length) {
     lines.push('_Brak gotowych technicznych issues bez blokerów._');
   } else {
@@ -100,7 +108,7 @@ function formatMarkdown(data) {
 
   if (data.excluded.length) {
     lines.push('');
-    lines.push(`### Wykluczone z automatyzacji (${data.excluded.length})`);
+    lines.push(`### Pozostałe przypisane — biznes / spike / otwarty PR (${data.excluded.length})`);
     for (const item of data.excluded) {
       lines.push(`- #${item.number} ${item.title} — [${item.category}] ${item.reason}`);
     }
@@ -120,7 +128,7 @@ const contractWindowOpen = isContractWindowOpen();
 
 const issuesRaw = execFileSync(
   'gh',
-  ['issue', 'list', '--assignee', assignee, '--state', 'open', '--limit', '50', '--json', 'number,title,body,labels,url,createdAt'],
+  ['issue', 'list', '--assignee', assignee, '--state', 'open', '--limit', '100', '--json', 'number,title,body,labels,url,createdAt'],
   { cwd: ROOT, encoding: 'utf8' },
 );
 const prsRaw = execFileSync(

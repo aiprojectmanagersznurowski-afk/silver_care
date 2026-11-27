@@ -5,6 +5,7 @@ import {
   parseStoriesMarkdown,
   classifyIssue,
   buildQueueReport,
+  isGitPushCommand,
   isAutoIssuePushAllowed,
   validateCodexVerdict,
 } from '../../tools/lib/auto-issue-core.mjs';
@@ -130,6 +131,26 @@ describe('Autonomous Issue Automation Core (@REQ: INFRA-EU-REGION)', () => {
       const res = isAutoIssuePushAllowed({ commandLine: cmd, currentBranch: branch, headSha: sha, receipt: rec, nowMs });
       expect(res.allowed, `expected reject for: ${cmd}`).toBe(false);
     }
+  });
+
+  it('detects actual git push invocations without false positives in strings', () => {
+    const pushes = [
+      'git push',
+      'git push -u origin auto/issue-245-dup-sectors',
+      'git -C /tmp/wt push origin HEAD:auto/issue-245-dup-sectors',
+      'echo ok && git push origin staging',
+      'bash -c "git push origin main"',
+    ];
+    for (const cmd of pushes) expect(isGitPushCommand(cmd), cmd).toBe(true);
+
+    const nonPushes = [
+      'git commit -m "fix git push hook"',
+      'gh pr create --title "Auto" --body "pushed via git push"',
+      'node -e \'console.log("git push origin staging")\'',
+      'git status',
+      'git fetch origin codex/nowe-zmiany',
+    ];
+    for (const cmd of nonPushes) expect(isGitPushCommand(cmd), cmd).toBe(false);
   });
 
   it('validates structured Codex verdicts for plan-review and code-review', () => {

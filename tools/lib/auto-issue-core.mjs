@@ -150,6 +150,8 @@ function tokenizeCommand(cmd) {
 }
 
 const BAD_SHELL_RE = /&&|\|\||[;|`<>]|\$\(|[\r\n]/;
+const GIT_PUSH_CMD_RE = /(?:^|[;&|\n`]|&&|\|\||\$\()\s*(?:[A-Za-z_][A-Za-z0-9_]*=\S+\s+)*(?:\/\S+\/)?git(?:\s+(?:-[Cc]\s+\S+|--git-dir(?:=\S+|\s+\S+)|--work-tree(?:=\S+|\s+\S+)))*\s+push\b/;
+const SHELL_C_PUSH_RE = /(?:^|[;&|\n])\s*(?:ba|z)?sh\s+-[a-z]*c\b[\s\S]*\bgit\b[\s\S]*\bpush\b/;
 const FORBIDDEN_PUSH_FLAGS = new Set([
   '-f', '--force', '--force-with-lease', '--force-if-includes',
   '-d', '--delete', '--all', '--tags', '--mirror', '--no-verify', '-n',
@@ -165,6 +167,12 @@ function resolveTargetBranch(ref, currentBranch) {
     return { branch: dst.replace(/^refs\/heads\//, '') };
   }
   return { branch: ref === 'HEAD' ? currentBranch : ref.replace(/^refs\/heads\//, '') };
+}
+
+export function isGitPushCommand(commandLine = '') {
+  const cmd = String(commandLine || '');
+  const unquoted = cmd.replace(/'[^']*'|"[^"]*"/g, '""');
+  return GIT_PUSH_CMD_RE.test(unquoted) || SHELL_C_PUSH_RE.test(cmd);
 }
 
 export function isAutoIssuePushAllowed({ commandLine = '', currentBranch = '', headSha = '', receipt = null, nowMs = Date.now() } = {}) {
