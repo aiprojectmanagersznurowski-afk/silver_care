@@ -21,13 +21,16 @@ if (fs.existsSync(rootEnv)) {
   }
 }
 
+// Trace the binary in pnpm's store so the function bundle uses its physical path.
+const ffmpegBinary = `../../node_modules/.pnpm/ffmpeg-static@*/node_modules/ffmpeg-static/ffmpeg${process.platform === 'win32' ? '.exe' : ''}`;
+
 const nextConfig: NextConfig = {
   transpilePackages: ['@silvercare/contracts'],
   serverExternalPackages: ['ffmpeg-static'],
   outputFileTracingRoot: path.resolve(__dirname, '../..'),
   outputFileTracingIncludes: {
-    '/api/cron/process-voice-captures': ['./node_modules/ffmpeg-static/ffmpeg'],
-    '/api/voice/assignment': ['./node_modules/ffmpeg-static/ffmpeg'],
+    '/api/cron/process-voice-captures': [ffmpegBinary],
+    '/api/voice/assignment': [ffmpegBinary],
   },
   env: {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || '',
