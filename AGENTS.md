@@ -49,8 +49,9 @@ W całym systemie obowiązuje jedna, niesprzeczna norma UI:
 
 ## Potok głosowy
 
-Architektura potoku: maskowanie PII (PESEL/tel/email) przed modelem → klasyfikacja w modelu UE (DPA, zero retencji) ze strukturą `medication_event` (trafia wyłącznie do `daily_logs` i alertu dla personelu `MedicationAlertBanner`, nigdy do `daily_reports`) → post-filtr MDR przed zapisem.
-Trzy strumienie **przed** wejściem do modelu: `MEDICAL` (usuwany, zostaje wyłącznie w brudnopisie personelu `daily_logs`), `DISCOMFORT` (ogólny opis w raporcie), `BEHAVIORAL` (podstawa raportu `daily_reports`). Model nigdy nie ustala tożsamości z nagrania — `resident_id` przychodzi z frontendu jako UUID.
+Przed modelem maskuj PII, w tym PESEL, telefon i e-mail. Strumień `MEDICAL` pozostaje w ograniczonym obiegu personelu w `daily_logs`, a `medication_event` zasila tam także `MedicationAlertBanner`. Do modelu raportowego w EOG (DPA, zero retencji) trafiają wyłącznie zredagowane fakty. `DISCOMFORT` daje ogólny opis, a `BEHAVIORAL` jest podstawą szkicu w `daily_reports`. Przed zapisem treści raportu stosuj post-filtr MDR.
+
+W trybie `APP` aplikacja przekazuje UUID wybranego podopiecznego. W `APP_GENERAL` i `DEVICE` serwer dopasowuje fragment do rejestru właściwej placówki zgodnie z `RESIDENT_ASSIGNMENT`. Jedno spójne dopasowanie przypisuje szkic, a wyjątki rozstrzyga uprawniony kierownik. Tożsamość pochodzi z wyboru w aplikacji, rejestru lub ręcznej decyzji. Model pracuje na przygotowanych faktach bez danych identyfikujących.
 
 ## Rdzeń i integracja
 
@@ -64,6 +65,13 @@ Rdzeń: `organizations`, `residents`. Identyfikatory dostawców żyją w `extern
 - Każde story ma linię `🔗 Kontrakt` z ID `@REQ` albo `brak REQ`; nowe wymaganie w kontrakcie wskazuje story w polu `source`.
 - Zmiana zakresu funkcji = aktualizacja story w tym samym PR co kod.
 
+## Przepływ Git
+
+- Każde standardowe zadanie zaczynaj od pobrania aktualnego `origin/staging` (`git fetch origin staging`) i utworzenia z niego osobnej gałęzi roboczej.
+- Wypchnij gałąź roboczą na GitHub i otwórz PR do `staging`. PR scala druga osoba z zespołu po pozytywnym review.
+- Zmiany zebrane na `staging` trafiają na produkcję zbiorczym PR-em `staging → main`, scalanym commitem scalającym.
+- Pilna poprawka produkcyjna ma osobną ścieżkę opisaną w [instrukcjach projektu](.claude/CLAUDE.md).
+
 ## Pętla
 
 ```
@@ -74,6 +82,8 @@ PLAN → CONTRACT (jeśli trzeba) → RED → GREEN → VERIFY → REVIEW → PR
 
 Dla zmian i scenariuszy w warstwie frontendu (`apps/web`): faza RED wymaga testów Playwright E2E w `e2e/` z Page Object Model, a weryfikacja obejmuje `pnpm test:e2e`.
 
+**Zakaz separatora `--` w komendach testowych (`pnpm` v10):** `pnpm` v10 przekazuje samodzielne `--` dosłownie do Playwrighta i Vitesta, przez co `pnpm test:e2e -- e2e/<plik>.spec.ts --project=chromium` ignoruje filtr pliku i projektu i uruchamia całą suitę (666 testów na `workers: 1`). Argumenty przekazuj zawsze **bez `--`**: `pnpm test:e2e e2e/<plik>.spec.ts --project=chromium`, `pnpm test:db tests/db/<plik>.test.ts`, `pnpm test tests/logic/<plik>.test.ts` (albo `pnpm exec playwright test ...`).
+
 ## Przed zamknięciem zadania (INFRA-SDLC-WORKFLOW)
 
 1. Bramka jakościowa:
@@ -82,13 +92,15 @@ bash scripts/verify.sh --full
 ```
 Etap POMINIĘTY to brak dowodu, nie sukces.
 
-2. Przekazanie do review (Handoff):
+2. Przekazanie do review (Handoff)
+
+Zadania prowadź w GitHub Issues i na tablicy GitHub Projects „Silver Care”. Otwórz lub zaktualizuj pull request, powiąż go z numerem issue i przekaż kompletne zadanie drugiej osobie (Darek ↔ Michał).
+
 ```bash
-node tools/sc-pr-handoff.mjs <CARD-ID>
+node tools/sc-pr-handoff.mjs <NUMER_ISSUE> --pr <NUMER_PR>
 ```
-Zawsze na koniec pracy:
-- Przenieś kartę na Trello do listy **PR Created / In Review** i przypisz ją do drugiej osoby (Darek ↔ Michał).
-- Otwórz lub zaktualizuj Pull Request na GitHubie i przypisz partnera jako recenzenta.
+
+Skrypt przypisuje recenzenta, aktualizuje status GitHub Project na **PR Created / In Review** i dodaje `Closes #<NUMER_ISSUE>`. Przy częściowej integracji użyj `Refs #<NUMER_ISSUE>`. Handoff obejmuje PR, który dostarcza cały zakres issue.
 
 ## Zasada pytań i obsługa sprzeczności (Koniec zasady „Zero Pytań”)
 
@@ -99,4 +111,4 @@ Nowa reguła nadrzędna:
 ## Czego nie robisz sam
 
 Otwarcie okna kontraktowego i publikacja raportu do bliskich należą do człowieka.
-**Zakaz samodzielnego merge do gałęzi głównej (`main`):** Autor nigdy nie wykonuje merge własnego Pull Requesta. Merge'a i przeniesienia karty do 'Done' dokonuje wyłącznie druga osoba z zespołu (Darek lub Michał) po pozytywnym Code Review.
+**Zakaz samodzielnego merge do gałęzi głównej (`main`):** Autor nigdy nie wykonuje merge własnego Pull Requesta. Merge'a i przeniesienia issue do statusu Done w GitHub Projects dokonuje wyłącznie druga osoba z zespołu (Darek lub Michał) po pozytywnym Code Review.

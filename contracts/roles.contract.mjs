@@ -39,6 +39,17 @@ export const CONSENT_PURPOSES = [
   { id: 'wellness_family_view', desc: 'Prezentacja metryk behawioralnych bliskim (wariant B).', article9: true },
 ];
 
+/** Podpowiedź głosowa jest wewnętrznym dowodem zgodnym z NUR-TASKS-VOICE-COMPLETION. */
+export const SHIFT_TASK_VOICE = {
+  resource: 'shift_task_voice_suggestions',
+  requiredAal: 'aal2',
+  requiredFeatures: ['module_voice_and_reports', 'module_shift_tasks'],
+  maxQuoteLength: 300,
+  evidenceKinds: ['COMPLETED', 'NOT_COMPLETED', 'REFUSED'],
+  decisions: ['DONE', 'CANCELLED', 'CARRIED', 'REJECTED'],
+  auditAction: 'VOICE_SHIFT_TASK_DECIDED',
+};
+
 export const RESOURCES = [
   'organizations', 'profiles', 'residents', 'resident_relative_links',
   'consent_ledger', 'daily_logs', 'daily_reports', 'daily_agenda',
@@ -46,7 +57,12 @@ export const RESOURCES = [
   'external_wearable_links', 'wellness_daily', 'audit_logs', 'security_access_logs',
   'rooms', 'beds', 'bed_assignments',
   'resident_events', 'resident_packages',
-  'shift_definitions', 'shift_roster', 'shift_tasks', 'shift_plan_approvals',
+  'shift_definitions', 'shift_roster', 'shift_tasks', 'shift_plan_approvals', 'shift_handover_versions',
+  'voice_devices', 'voice_device_assignments', 'voice_captures', 'voice_segments', 'voice_assignment_queue', 'voice_retention_settings',
+  'organization_feature_flags',
+  'voice_sanitized_events', 'organization_report_configs', 'operational_reports',
+  'voice_segment_proposals', 'family_voice_report_provenance', 'operational_report_jobs', 'voice_storage_deletions',
+  'voice_app_report_jobs', SHIFT_TASK_VOICE.resource,
 ];
 
 /**
@@ -92,19 +108,52 @@ export const MATRIX = [
   { resource: 'shift_definitions',       read: ['org_admin:own', 'nurse:own'],              create: ['org_admin'],    update: ['org_admin:own'],          delete: [] },
   { resource: 'shift_roster',            read: ['org_admin:own', 'nurse:own'],              create: ['org_admin'],    update: ['org_admin:own'],          delete: ['org_admin:own'] },
   { resource: 'shift_tasks',             read: ['org_admin:own', 'nurse:own'],              create: ['org_admin:own', 'nurse:own'], update: ['org_admin:own', 'nurse:shift_lead'], delete: [] },
+  // Odczyt zadań i akceptacji przez personel wymaga wpisu w grafiku dla klucza danej zmiany.
   { resource: 'shift_plan_approvals',    read: ['org_admin:own', 'nurse:own'],              create: ['org_admin:own', 'nurse:shift_lead'], update: [], delete: [] },
+  { resource: 'shift_handover_versions', read: ['org_admin:own', 'nurse:shift_lead'],       create: ['org_admin:own', 'nurse:shift_lead'], update: [], delete: [] },
+
+  // Kanał urządzeń Zero-UI (ADR-022, SC-ADM-24, SC-NUR-18). Bliscy bez dostępu. Nic nie jest usuwane:
+  // urządzenie unieważnia się przez revoked_at, wpis wydania zamyka przez ended_at (ewidencja sprzętu,
+  // nie autorstwo — od 2026-11-19 autora ustala przedstawienie w sesji).
+  // Kolejka „Do przypisania” to jedyne miejsce, w którym kierownicy czytają cudze nagranie, i tylko do czasu decyzji.
+  // voice_draft_notes zostaje prywatne dla autora (decyzja Michała z 2026-11-17).
+  { resource: 'voice_devices',           read: ['org_admin:own', 'nurse:own'],              create: ['org_admin'],    update: ['org_admin:own'],          delete: [] },
+  { resource: 'voice_device_assignments', read: ['org_admin:own', 'nurse:own'],             create: ['org_admin:own', 'nurse:shift_lead'], update: ['org_admin:own', 'nurse:shift_lead'], delete: [] },
+  // Surowy materiał jest dostępny przez niezależne, kontrolowane ścieżki autora i kierownika.
+  { resource: 'voice_captures',          read: [], create: [], update: [], delete: [] },
+  { resource: 'voice_segments',          read: [], create: [], update: [], delete: [] },
+  { resource: 'voice_assignment_queue',  read: ['org_admin:own', 'nurse:shift_lead'],       create: [],               update: ['org_admin:own', 'nurse:shift_lead'], delete: [] },
+  // Retencja nagrań placówki (SC-NUR-02/AC4, VOICE_RETENTION.setBy). Osobny zasób, bo kierownik placówki nie edytuje organizations.
+  { resource: 'voice_retention_settings', read: ['org_admin:own', 'super_admin'],           create: ['org_admin:own', 'super_admin'], update: ['org_admin:own', 'super_admin'], delete: [] },
+  // Wielomodułowość platformy (SC-SUP-06, SUP-FEATURE-FLAGS): odizolowane od organizations.settings, zapis wyłącznie super_admin.
+  { resource: 'organization_feature_flags', read: ['super_admin', 'org_admin:own', 'nurse:own', 'legal_guardian:own', 'family:own'], create: ['super_admin'], update: ['super_admin'], delete: ['super_admin'] },
+  // Silnik raportów operacyjnych i zredagowanych zdarzeń głosowych (VOICE-DOCK-REPORTS, ADR-023).
+  // Bliscy bez dostępu (0 wierszy). super_admin zarządza kategoriami per placówka, ale nie czyta treści opieki.
+  { resource: 'voice_sanitized_events',      read: ['org_admin:own', 'nurse:own'],              create: [], update: [],                                 delete: [] },
+  { resource: 'organization_report_configs', read: ['super_admin', 'org_admin:own', 'nurse:own'], create: ['super_admin'],              update: ['super_admin', 'org_admin:own'],   delete: [] },
+  { resource: 'operational_reports',         read: ['org_admin:own', 'nurse:own'],              create: [], update: ['org_admin:own', 'nurse:own'],     delete: [] },
+  // Personel czyta fakty własnego autorstwa, kierownik placówki fakty w ustalonym zakresie placówki.
+  // Decyzja o faktach jest wykonywana tylko przez audytowany RPC; powiązania raportu zostają po stronie potoku.
+  { resource: 'voice_segment_proposals',       read: ['org_admin:own', 'nurse:own'], create: [], update: ['org_admin:own', 'nurse:own'], delete: [] },
+  { resource: 'family_voice_report_provenance', read: [], create: [], update: [], delete: [] },
+  { resource: 'operational_report_jobs',        read: [], create: [], update: [], delete: [] },
+  { resource: 'voice_storage_deletions',        read: [], create: [], update: [], delete: [] },
+  { resource: 'voice_app_report_jobs',         read: [], create: [], update: [], delete: [] },
+  { resource: SHIFT_TASK_VOICE.resource, read: ['org_admin:own', 'nurse:shift_lead'], create: [], update: ['org_admin:own', 'nurse:shift_lead'], delete: [] },
 ];
 
 /**
  * Zakres „kierownik zmiany” (wariant B, decyzja Michała 2026-10-30): rola personelu opiekuńczego z dodatkowymi
  * uprawnieniami wyłącznie na zmianie, na której grafik wskazuje ją jako kierownika. Poza tą zmianą działa jak zwykły
- * personel. Zakres dotyczy tylko zasobów z kluczem zmiany i nigdy odczytu — odczyt ma każdy personel placówki.
+ * personel. Zakres dotyczy wyłącznie zasobów z kluczem zmiany. Odczyt jest ograniczony do readResources.
  */
 export const SHIFT_LEAD_SCOPE = {
   qualifier: 'shift_lead',
   role: 'nurse',
-  resources: ['shift_tasks', 'shift_plan_approvals'],
+  resources: ['shift_tasks', 'shift_plan_approvals', 'shift_handover_versions', 'voice_device_assignments', 'voice_assignment_queue', SHIFT_TASK_VOICE.resource],
   capabilities: ['create', 'update'],
+  // Kolejka przypisania (ADR-022) i zredagowany dowód przy zadaniu właściwej zmiany.
+  readResources: ['voice_assignment_queue', SHIFT_TASK_VOICE.resource, 'shift_handover_versions'],
   derivedFrom: { resource: 'shift_roster', field: 'is_shift_lead' },
   leadsPerShift: 1,
   identity: 'auth.uid() z sesji i organizacja z app_metadata — nigdy z parametrów żądania',
@@ -137,7 +186,7 @@ export const DELETE_POLICIES = [
     strategy: 'SOFT_ARCHIVE_THEN_RETENTION',
     rationale: 'archived_at odcina rodzinę natychmiast; twardy DELETE dopiero po retencji albo na żądanie z art. 17.',
     familyOffboardingRetentionDays: OFFBOARDING_RETENTION_DAYS,
-    cascades: ['daily_logs', 'daily_reports', 'voice_draft_notes', 'wellness_daily'],
+    cascades: ['daily_logs', 'daily_reports', 'voice_draft_notes', 'voice_assignment_queue', 'voice_sanitized_events', 'wellness_daily'],
   },
   { entity: 'resident_relative_links', strategy: 'REVOKE_NOT_DELETE', rationale: 'Cofnięcie dostępu musi zostawić ślad kto i kiedy — usunięcie wiersza kasuje dowód.', cascades: [] },
 ];

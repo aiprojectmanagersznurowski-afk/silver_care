@@ -1,9 +1,14 @@
+import { requireOrgFeature } from '@/lib/feature-flags'
+import { FeatureDisabledState } from '@/components/patterns/FeatureDisabledState'
 import { createClient } from '@/lib/supabase/server'
 import { StaffBoardClient } from '@/components/StaffBoardClient'
+import { residentPhotoUrls } from '@/lib/resident-photo'
 
 export const dynamic = 'force-dynamic'
 
 export default async function StaffDashboard() {
+  if (!(await requireOrgFeature('module_residents_management')).allowed) return <FeatureDisabledState />
+
   const supabase = await createClient()
 
   const residentsRes = await supabase
@@ -13,6 +18,7 @@ export default async function StaffDashboard() {
       first_name,
       last_name,
       avatar_url,
+      photo_path,
       archived_at,
       bed_assignments (
         unassigned_at,
@@ -37,7 +43,10 @@ export default async function StaffDashboard() {
     .is('archived_at', null)
     .order('last_name', { ascending: true })
 
-  const residents = residentsRes.data || []
+  // SC-ADM-25: zdjęcia z prywatnego bucketu przez podpisane linki; bez photo_path zostaje dotychczasowe zdjęcie
+  const rows = residentsRes.data || []
+  const photoUrls = await residentPhotoUrls(supabase, rows.map((r) => r.photo_path))
+  const residents = rows.map((r) => (r.photo_path ? { ...r, avatar_url: photoUrls[r.photo_path] ?? null } : r))
 
   // Extract unique floors for filter
   const floorSet = new Set<string>()

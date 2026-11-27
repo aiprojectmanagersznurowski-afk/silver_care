@@ -40,8 +40,10 @@ export const E2E_PASSWORD = process.env.E2E_USER_PASSWORD || 'SilverTest123!';
 
 export async function setupE2EUsers() {
   console.log('🔄 Przygotowywanie kont testowych E2E...');
-  const orgs = await sql`SELECT id FROM public.organizations LIMIT 1`;
-  const mainOrgId = orgs.length > 0 ? orgs[0].id : '9d9b1de9-8f38-48c8-8b5b-721901fed8ff';
+  const preferredOrgId = process.env.E2E_MAIN_ORG_ID || '9d9b1de9-8f38-48c8-8b5b-721901fed8ff';
+  const [mainOrg] = await sql`SELECT id FROM public.organizations
+    ORDER BY (id = ${preferredOrgId}::uuid) DESC, created_at, id LIMIT 1`;
+  const mainOrgId = mainOrg?.id ?? preferredOrgId;
 
   const testUsers = buildTestUsers(mainOrgId);
   const { data: existingUsersData, error: listErr } = await supabase.auth.admin.listUsers({ page: 1, perPage: 100 });

@@ -22,7 +22,7 @@ describe('Database FAM-DASHBOARD (Family Report View)', () => {
       const org = await tx`INSERT INTO organizations (name) VALUES ('Org Dashboard Test') RETURNING id`;
       const orgId = org[0].id;
 
-      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
+      await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "44444444-4444-4444-8444-444444444444", "app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
       
       const res = await tx`INSERT INTO residents (organization_id, first_name, last_name, pesel_hash) VALUES (${orgId}, 'Jan', 'Kowalski', 'hash-res') RETURNING id`;
       const resId = res[0].id;
@@ -35,15 +35,17 @@ describe('Database FAM-DASHBOARD (Family Report View)', () => {
       await tx`INSERT INTO daily_reports (resident_id, author_id, content, status) VALUES (${resId}, ${nurseId}, '{"msg": "This is published"}', 'PUBLISHED')`;
 
       // Org admin again for linking
-      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
+      await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "44444444-4444-4444-8444-444444444444", "app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
       // Link family
       const familyUid = '11111111-1111-1111-1111-111111111111';
       await tx`INSERT INTO resident_relative_links (resident_id, relative_user_id, relationship_code, role) VALUES (${resId}, ${familyUid}, 'SON', 'family')`;
+      await tx`INSERT INTO consent_ledger (organization_id, resident_id, purpose, granted_by)
+        VALUES (${orgId}, ${resId}, 'family_report_access', 'resident_self')`;
 
       // Query as family
       await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "${familyUid}", "app_metadata": {"role": "family", "organization_id": "${orgId}"}, "aal": "aal1"}`}, true)`;
 
-      const results = await tx`SELECT content, status FROM daily_reports WHERE resident_id = ${resId}`;
+      const results = await tx`SELECT content, status FROM get_family_daily_reports(${resId})`;
       
       expect(results).toHaveLength(1);
       expect(results[0].status).toBe('PUBLISHED');

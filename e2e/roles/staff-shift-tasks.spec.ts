@@ -34,6 +34,10 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
     await sql`DELETE FROM public.shift_definitions WHERE organization_id = ${orgId} AND name LIKE ${PREFIX + '%'}`;
     await sql`INSERT INTO public.shift_definitions (organization_id, code, name, start_time, end_time, order_index)
       VALUES (${orgId}, ${CODE}, ${PREFIX + 'Zadania'}, '07:00', '19:00', 903), (${orgId}, ${CODE_2}, ${PREFIX + 'Zadania nocna'}, '19:00', '07:00', 904)`;
+    await sql`INSERT INTO public.shift_roster (organization_id, shift_definition_id, shift_date, user_id)
+      SELECT ${orgId}, d.id, slots.day, u.id FROM public.shift_definitions d CROSS JOIN auth.users u
+      CROSS JOIN (VALUES (${DATE}::date), (${SETTLE_DATE}::date)) slots(day)
+      WHERE d.organization_id = ${orgId} AND d.code = ${CODE} AND u.email = ${TEST_USERS.nurse.email}`;
   });
 
   test.afterAll(async () => {
@@ -51,7 +55,7 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
     await expect(tasks.task('E2E Zmierzyć ilość płynów')).toContainText('Ręczne');
 
     await tasks.addTask('E2E Przewietrzyć świetlicę');
-    await expect(tasks.group('Zadania placówki')).toContainText('E2E Przewietrzyć świetlicę');
+    await expect(tasks.task('E2E Przewietrzyć świetlicę')).toContainText('Zadanie wspólne');
   });
 
   test('@REQ: NUR-TASKS - lista grupuje się według pokoi albo podopiecznych', async ({ loginPage, page }) => {
@@ -59,6 +63,7 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
     const tasks = new ShiftTasksPage(page);
     await tasks.goto(CODE, DATE);
 
+    await tasks.byRoomLink.click();
     await expect(tasks.group(/Pokój|Zadania placówki/).first()).toBeVisible();
     await tasks.byResidentLink.click();
     await expect(page).toHaveURL(/group=resident/);
@@ -77,10 +82,10 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
   });
 
   /** Zadania do rozliczenia wstawia baza, żeby test nie zależał od kolejności poprzednich. */
-  async function seedTask(title: string, status: 'PROPOSED' | 'TODO') {
+  async function seedTask(title: string, status: 'PROPOSED' | 'TODO', date = SETTLE_DATE) {
     const [admin] = await sql`SELECT id FROM auth.users WHERE email = ${TEST_USERS.org_admin.email}`;
     await sql`INSERT INTO public.shift_tasks (organization_id, shift_definition_id, shift_date, title, source, status, created_by)
-      SELECT ${orgId}, id, ${SETTLE_DATE}, ${title}, 'MANUAL', ${status}, ${admin.id} FROM public.shift_definitions
+      SELECT ${orgId}, id, ${date}, ${title}, 'MANUAL', ${status}, ${admin.id} FROM public.shift_definitions
       WHERE organization_id = ${orgId} AND code = ${CODE}`;
   }
 
@@ -149,13 +154,19 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
   test('@REQ: NUR-SHIFT-PLAN-PRINT - wydruk planu wymaga akceptacji, pokazuje tylko zadania do zrobienia i zostawia ślad w audycie', async ({ loginPage, page }) => {
     await seedTask('E2E Zadanie na wydruk', 'TODO');
     await seedTask('E2E Propozycja poza wydrukiem', 'PROPOSED');
-    await sql`DELETE FROM public.shift_plan_approvals WHERE organization_id = ${orgId} AND shift_date = ${PRINT_DATE}`;
+    const [shift] = await sql`SELECT id FROM public.shift_definitions WHERE organization_id = ${orgId} AND code = ${CODE}`;
+    await sql`DELETE FROM public.shift_plan_approvals WHERE shift_definition_id = ${shift.id} AND shift_date = ${PRINT_DATE}`;
+    const printAudits = () => sql`SELECT (payload->>'version')::int AS version FROM public.audit_logs
+      WHERE organization_id = ${orgId} AND action = 'SHIFT_PLAN_PRINTED'
+        AND payload->>'shift_definition_id' = ${shift.id} AND payload->>'shift_date' = ${PRINT_DATE}
+      ORDER BY version`;
     await loginPage.loginAs('org_admin');
     await page.addInitScript(() => { (window as unknown as { __printed: number }).__printed = 0; window.print = () => { (window as unknown as { __printed: number }).__printed++; }; });
     const tasks = new ShiftTasksPage(page);
 
     await page.goto(`/staff/shift-plan/print?shift=${CODE}&date=${SETTLE_DATE}`);
-    await expect(page.getByText('Najpierw zatwierdź plan zmiany')).toBeVisible();
+    const print = page.getByRole('main');
+    await expect(print.getByText('Najpierw zatwierdź plan zmiany')).toBeVisible();
 
     await tasks.goto(CODE, SETTLE_DATE);
     await tasks.approvePlanButton.click();
@@ -163,11 +174,79 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
     await tasks.printLink.click();
 
     await expect(page).toHaveURL(/shift-plan\/print/);
-    await expect(page.getByText('E2E Zadanie na wydruk')).toBeVisible();
-    await expect(page.getByText('E2E Propozycja poza wydrukiem')).toHaveCount(0);
+    await expect(print.getByText('E2E Zadanie na wydruk')).toBeVisible();
+    await expect(print.getByText('E2E Propozycja poza wydrukiem')).toHaveCount(0);
+    const printCount = () => page.evaluate(() => (window as unknown as { __printed: number }).__printed);
     await tasks.printButton.click();
-    await expect.poll(() => page.evaluate(() => (window as unknown as { __printed: number }).__printed)).toBe(1);
-    const [row] = await sql`SELECT count(*)::int AS n FROM public.audit_logs WHERE organization_id = ${orgId} AND action = 'SHIFT_PLAN_PRINTED'`;
-    expect(row.n).toBeGreaterThan(0);
+    await expect.poll(printCount).toBe(1);
+    expect(await printAudits()).toEqual([{ version: 1 }]);
+
+    const otherPage = await page.context().newPage();
+    const otherTasks = new ShiftTasksPage(otherPage);
+    await otherTasks.goto(CODE, PRINT_DATE);
+    await otherTasks.approvePlanButton.click();
+    await expect(otherTasks.planStatus).toContainText('Plan zatwierdzony, wersja 2');
+    await otherPage.close();
+
+    await tasks.printButton.click();
+    const outdatedPreview = 'Zatwierdzono nowszą wersję planu. Odśwież podgląd przed wydrukiem.';
+    await expect(page.getByRole('alert').filter({ hasText: outdatedPreview })).toBeVisible();
+    expect(await printCount()).toBe(1);
+    expect(await printAudits()).toEqual([{ version: 1 }]);
+    await expect(page.locator('[data-slot=page-header-description]:visible').filter({ hasText: 'Wersja 1' })).toBeVisible();
+
+    await page.reload();
+    await expect(page.locator('[data-slot=page-header-description]:visible').filter({ hasText: 'Wersja 2' })).toBeVisible();
+    await tasks.printButton.click();
+    await expect.poll(printCount).toBe(1);
+    expect(await printAudits()).toEqual([{ version: 1 }, { version: 2 }]);
+
+    await page.emulateMedia({ media: 'print' });
+    await expect(page.locator('[data-slot=page-header-description]:visible').filter({ hasText: 'Wersja 2' })).toBeVisible();
+    await expect(print.getByText('E2E Zadanie na wydruk')).toBeVisible();
+    await expect(tasks.printButton).toBeHidden();
   });
+
+  test('@REQ: NUR-SHIFT-CLOSURE - kierownik przypisuje z grafiku, a personel widzi pracownika i zadania wspólne', async ({ loginPage, page }) => {
+    const date = '2026-11-11';
+    const assigned = 'E2E Zadanie przypisane';
+    const shared = 'E2E Zadanie wspólne';
+    await seedTask(assigned, 'TODO', date);
+    await seedTask(shared, 'TODO', date);
+    const [nurse] = await sql`SELECT id, raw_app_meta_data AS metadata FROM auth.users WHERE email = ${TEST_USERS.nurse.email}`;
+    try {
+      await sql`UPDATE auth.users SET raw_app_meta_data = raw_app_meta_data || '{"is_active":true}'::jsonb WHERE id = ${nurse.id}`;
+      await sql`INSERT INTO public.shift_roster (organization_id, shift_definition_id, shift_date, user_id)
+        SELECT ${orgId}, id, ${date}, ${nurse.id} FROM public.shift_definitions WHERE organization_id = ${orgId} AND code = ${CODE}`;
+
+      await loginPage.loginAs('org_admin');
+      const tasks = new ShiftTasksPage(page);
+      await tasks.goto(CODE, date);
+      const option = tasks.assigneeSelect(assigned).locator(`option[value="${nurse.id}"]`);
+      await expect(option).toHaveCount(1);
+      const name = (await option.textContent())!;
+      await tasks.approvePlanButton.click();
+      await expect(tasks.planStatus).toContainText('Plan zatwierdzony, wersja 1');
+      await tasks.assign(assigned, nurse.id);
+      await expect(tasks.planStatus).toContainText('Plan wymaga ponownego zatwierdzenia');
+      await expect(tasks.printLink).toHaveCount(0);
+      await page.getByRole('link', { name: 'Według pracowników' }).click();
+      await expect(tasks.group(name)).toContainText(assigned);
+      await expect(tasks.group('Zadania wspólne')).toContainText(shared);
+      await tasks.approvePlanButton.click();
+      await expect(tasks.planStatus).toContainText('Plan zatwierdzony, wersja 2');
+      await tasks.printLink.click();
+      await expect(page.getByRole('row').filter({ hasText: assigned })).toContainText(name);
+
+      await page.context().clearCookies();
+      await loginPage.loginAs('nurse');
+      await tasks.goto(CODE, date);
+      await page.getByRole('link', { name: 'Według pracowników' }).click();
+      await expect(tasks.group(name)).toContainText(assigned);
+      await expect(tasks.assigneeSelect(assigned)).toHaveCount(0);
+    } finally {
+      await sql`UPDATE auth.users SET raw_app_meta_data = ${sql.json(nurse.metadata)} WHERE id = ${nurse.id}`;
+    }
+  });
+
 });

@@ -96,7 +96,7 @@ export function validateInvitationState(
 export interface ConsentsEvaluation {
   allowed: boolean;
   canGrantArt9: boolean;
-  purposes: ('wellness_data_ingest' | 'family_view_basic')[];
+  purposes: 'wellness_data_ingest'[];
   error?: string;
 }
 
@@ -121,7 +121,7 @@ export function determineConsentsForRole(
     return {
       allowed: true,
       canGrantArt9: true,
-      purposes: ['wellness_data_ingest', 'family_view_basic'],
+      purposes: ['wellness_data_ingest'],
     };
   }
 

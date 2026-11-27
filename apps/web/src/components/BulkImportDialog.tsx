@@ -29,6 +29,7 @@ export function BulkImportDialog() {
   const [dryRunResult, setDryRunResult] = useState<DryRunResult | null>(null)
   const [importCount, setImportCount] = useState<number>(0)
   const [onlyValid, setOnlyValid] = useState(true)
+  const [capacityConfirmed, setCapacityConfirmed] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleDownloadTemplate = () => {
@@ -41,6 +42,7 @@ export function BulkImportDialog() {
 
     setLoading(true)
     setError(null)
+    setCapacityConfirmed(false)
 
     const parsed = await parseBulkImportFile(file)
     if (parsed.error || !parsed.rows) {
@@ -72,11 +74,12 @@ export function BulkImportDialog() {
     setError(null)
 
     const rowsToProcess = onlyValid ? dryRunResult.rows.filter((r) => r.isValid) : dryRunResult.rows
-    const res = await commitBulkImportAction(rowsToProcess)
+    const res = await commitBulkImportAction(rowsToProcess, capacityConfirmed)
     setLoading(false)
 
     if (res.error) {
       setError(res.error)
+      if (res.capacityConfirmationRequired) setStep('upload')
     } else {
       setImportCount(res.importedCount || 0)
       setStep('success')
@@ -169,6 +172,10 @@ export function BulkImportDialog() {
                   <p className="text-sm text-muted-foreground">
                     Limit miejsc pozostanie bez zmian — zmienia go wyłącznie Administrator platformy. Przekroczenie zostanie odnotowane w rejestrze audytowym.
                   </p>
+                  <label className="flex min-h-touch cursor-pointer items-center gap-2">
+                    <input type="checkbox" checked={capacityConfirmed} onChange={(event) => setCapacityConfirmed(event.target.checked)} />
+                    Potwierdzam import ponad limit miejsc
+                  </label>
                 </div>
               </div>
             )}
@@ -218,7 +225,8 @@ export function BulkImportDialog() {
               size="sm"
               data-testid="bulk-commit-button"
               onClick={handleCommitImport}
-              disabled={loading || (dryRunResult?.validRowsCount === 0 && onlyValid)}
+              disabled={loading || (dryRunResult?.validRowsCount === 0 && onlyValid)
+                || Boolean(dryRunResult?.willExceedLimit && !capacityConfirmed)}
               className="bg-primary hover:bg-primary text-white gap-2 w-full sm:w-auto"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}

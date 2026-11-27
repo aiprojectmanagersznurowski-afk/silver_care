@@ -1,5 +1,6 @@
 'use server'
 
+import { featureDisabledMessage, isOrgFeatureEnabled } from '@/lib/feature-flags'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
@@ -77,6 +78,10 @@ export async function dischargeResidentAction(payload: DischargePayloadInput): P
     return { success: false, error: 'Brak uprawnień do zasobów innej placówki.' }
   }
   if (currentResident.death_date) return { success: false, error: 'Dla tego podopiecznego zarejestrowano już fakt zgonu.' }
+
+  if (!(await isOrgFeatureEnabled(supabase, currentResident.organization_id, 'module_residents_management'))) {
+    return { success: false, error: featureDisabledMessage }
+  }
 
   const { activeAssignment, bedLabel } = await resolveActiveBed(adminClient, residentId)
 
@@ -186,6 +191,10 @@ export async function initiateDeathDischargeAction(payload: DeathInitiationPaylo
   if (fetchErr || !currentResident) return { success: false, error: 'Nie znaleziono wskazanego podopiecznego.' }
   if (currentResident.organization_id !== orgId) return { success: false, error: 'Brak uprawnień do zasobów innej placówki.' }
   if (currentResident.death_date) return { success: false, error: 'Dla tego podopiecznego zarejestrowano już fakt zgonu.' }
+  if (!(await isOrgFeatureEnabled(supabase, currentResident.organization_id, 'module_residents_management'))) {
+    return { success: false, error: featureDisabledMessage }
+  }
+
   const existingReport = Array.isArray(currentResident.resident_death_reports)
     ? currentResident.resident_death_reports[0]
     : currentResident.resident_death_reports

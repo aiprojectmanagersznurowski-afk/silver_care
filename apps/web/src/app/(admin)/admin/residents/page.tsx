@@ -1,3 +1,5 @@
+import { requireOrgFeature } from '@/lib/feature-flags'
+import { FeatureDisabledState } from '@/components/patterns/FeatureDisabledState'
 import { createClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
 import { Card } from '@/components/ui/card'
@@ -10,8 +12,11 @@ import { isImpersonationSessionActive, maskResidentListForImpersonation } from '
 import { AdminResidentsClient, type ResidentWithAssignments } from '@/components/AdminResidentsClient'
 import { ADMIN_RESIDENT_LIST_SELECT } from '@/lib/admin-resident-columns'
 import { getCurrentUser } from '@/lib/supabase/current-user'
+import { residentPhotoUrls } from '@/lib/resident-photo'
 
 export default async function AdminResidentsPage() {
+  if (!(await requireOrgFeature('module_residents_management')).allowed) return <FeatureDisabledState />
+
   const supabase = await createClient()
   const user = await getCurrentUser()
   const cookieStore = await cookies()
@@ -23,8 +28,12 @@ export default async function AdminResidentsPage() {
     .select(ADMIN_RESIDENT_LIST_SELECT)
     .order('created_at', { ascending: false })
 
+  // SC-ADM-25: zdjęcia z prywatnego bucketu przez podpisane linki (jedno zapytanie); bez photo_path zostaje dotychczasowe zdjęcie
+  const photoUrls = await residentPhotoUrls(supabase, (rawResidents || []).map((r) => r.photo_path))
+  const withPhotos = (rawResidents || []).map((r) => (r.photo_path ? { ...r, avatar_url: photoUrls[r.photo_path] ?? null } : r))
+
   const { residents, masked, count } = maskResidentListForImpersonation(
-    rawResidents || [],
+    withPhotos,
     isImpersonating
   )
 

@@ -144,7 +144,7 @@ export async function transcribeWithGroq(
 
   const defaultExt = getExtensionFromMimeType(file.type || 'audio/webm')
   const defaultName = `recording.${defaultExt}`
-  const filename = options?.filename || (file instanceof File && file.name ? file.name : defaultName)
+  const filename = options?.filename || defaultName
 
   const groqFormData = new FormData()
   groqFormData.append('file', file, filename)

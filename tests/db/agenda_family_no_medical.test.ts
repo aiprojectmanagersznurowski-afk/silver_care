@@ -30,7 +30,7 @@ async function seed(tx: Tx) {
   await tx`SET LOCAL ROLE authenticated`;
   await tx`SELECT set_config('request.jwt.claims', '{"app_metadata": {"role": "super_admin"}, "aal": "aal2"}', true)`;
   const [org] = await tx`INSERT INTO organizations (name) VALUES ('Placowka Plan Bez Lekow') RETURNING id`;
-  await tx`SELECT set_config('request.jwt.claims', ${JSON.stringify({ app_metadata: { role: 'org_admin', organization_id: org.id }, aal: 'aal2' })}, true)`;
+  await tx`SELECT set_config('request.jwt.claims', ${JSON.stringify({ sub: '44444444-4444-4444-8444-444444444444', app_metadata: { role: 'org_admin', organization_id: org.id }, aal: 'aal2' })}, true)`;
   const [res] = await tx`INSERT INTO residents (organization_id, first_name, last_name, pesel_hash) VALUES (${org.id}, 'Jan', 'Testowy', 'hash-agenda-med') RETURNING id`;
   await tx`INSERT INTO resident_relative_links (resident_id, relative_user_id, relationship_code, role) VALUES (${res.id}, ${FAMILY_UID}, 'family', 'family')`;
   return { orgId: org.id as string, residentId: res.id as string };

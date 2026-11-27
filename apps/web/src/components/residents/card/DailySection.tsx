@@ -15,14 +15,14 @@ interface DailySectionProps {
   reports: Row[]
   agenda: Row[]
   /** Pełna lista raportów w części aplikacji właściwej dla roli. */
-  reportsHref: string
+  reportsHref?: string
 }
 
 /** Raporty i plan dnia podopiecznego: ostatnie wpisy jako fakty (data, status, godzina, tytuł). */
 export function DailySection({ reports, agenda, reportsHref }: DailySectionProps) {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <Card>
+      {reportsHref && <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-2">
           <CardTitle>Ostatnie raporty</CardTitle>
           <Link href={reportsHref} className={buttonVariants({ variant: 'outline' })}>
@@ -45,7 +45,7 @@ export function DailySection({ reports, agenda, reportsHref }: DailySectionProps
             </ul>
           )}
         </CardContent>
-      </Card>
+      </Card>}
 
       <Card>
         <CardHeader>

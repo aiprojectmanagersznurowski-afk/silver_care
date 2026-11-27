@@ -1,3 +1,4 @@
+import { assertTargetOrgFeatureForApi } from '@/lib/feature-flags'
 import { NextResponse, NextRequest } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { validateInvitationState } from '@/lib/onboarding';
@@ -31,6 +32,9 @@ export async function GET(request: NextRequest) {
     if (!validation.valid) {
       return NextResponse.json(validation, { status: 400 });
     }
+
+    const featureDenied = await assertTargetOrgFeatureForApi(adminClient, invitation.organization_id, '/api/family/invite/validate');
+    if (featureDenied) return featureDenied;
 
     return NextResponse.json({
       success: true,

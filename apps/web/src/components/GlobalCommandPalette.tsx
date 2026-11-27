@@ -3,16 +3,16 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search, Command, X, Loader2 } from 'lucide-react'
-import { SearchCategoryKey, SearchResultItem } from '@/lib/global-search-helpers'
+import { SEARCH_CATEGORIES, type SearchCategoryKey, type SearchResultItem } from '@/lib/global-search-helpers'
 import { CommandPaletteResults } from '@/components/search/CommandPaletteResults'
 import { useCommandPalette, LISTBOX_ID, optionId } from '@/components/search/useCommandPalette'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 
 interface GlobalCommandPaletteProps {
-  userRole?: string | null
+  categories: SearchCategoryKey[]
 }
 
-export function GlobalCommandPalette({ userRole }: GlobalCommandPaletteProps) {
+export function GlobalCommandPalette({ categories }: GlobalCommandPaletteProps) {
   const [isOpen, setIsOpen] = useState(false)
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -56,15 +56,9 @@ export function GlobalCommandPalette({ userRole }: GlobalCommandPaletteProps) {
     if (isOpen) void Promise.resolve().then(() => resetSearch())
   }, [isOpen])
 
-  const isSuperAdmin = userRole === 'super_admin'
-
   const availableCategories: Array<{ key: SearchCategoryKey | 'all'; label: string }> = [
     { key: 'all', label: 'Wszystko' },
-    { key: 'residents', label: 'Podopieczni' },
-    { key: 'facility', label: 'Pokoje i łóżka' },
-    { key: 'agenda', label: 'Plan dnia' },
-    { key: 'reports', label: 'Raporty' },
-    ...(isSuperAdmin ? [{ key: 'organizations' as const, label: 'Placówki' }] : []),
+    ...categories.map((key) => ({ key, label: SEARCH_CATEGORIES[key].label })),
   ]
 
   return (
@@ -102,7 +96,7 @@ export function GlobalCommandPalette({ userRole }: GlobalCommandPaletteProps) {
               aria-expanded={results.length > 0}
               aria-controls={LISTBOX_ID}
               aria-activedescendant={activeOptionId}
-              placeholder="Szukaj podopiecznego, numeru pokoju, zadania lub raportu..."
+              placeholder="Szukaj w dostępnych kategoriach…"
               value={query}
               onChange={(e) => handleQueryChange(e.target.value)}
               onKeyDown={handleKeyDownList}

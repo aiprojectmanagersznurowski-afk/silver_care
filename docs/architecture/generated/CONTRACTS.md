@@ -32,8 +32,9 @@ Dane są zbierane i dostępne personelowi. Zakaz dotyczy prezentacji bliskim, ni
 
 | Etap | Wykonawca | Wejście | Wyjście |
 |---|---|---|---|
-| CAPTURE | nurse | audio + resident_id (UUID) | voice_draft_notes |
+| CAPTURE | nurse | audio oraz resident_id (UUID) wyłącznie w trybie o podopiecznym | nagranie źródłowe |
 | TRANSCRIBE | system | audio | transkrypt tekstowy |
+| ASSIGN | nurse | fragment transkryptu + rejestr tej placówki | zakres fragmentu i źródło przypisania albo kolejka wyjątków |
 | CLASSIFY | system | transkrypt | trzy strumienie |
 | REDACT | system | strumień MEDICAL | transkrypt bez danych medycznych |
 | GENERATE | llm | transkrypt zredagowany, anonimowy | draft raportu |
@@ -88,7 +89,7 @@ Krój: `-apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui, sans-
 
 Bazowy rozmiar 14px · minimalny kontrast 4.5:1 · cel dotykowy 38px
 
-## Wymagania (64)
+## Wymagania (72)
 
 | ID | Domena | Ryzyko | Treść |
 |---|---|---|---|
@@ -96,6 +97,7 @@ Bazowy rozmiar 14px · minimalny kontrast 4.5:1 · cel dotykowy 38px
 | ORG-PROVISION | tenancy | MEDIUM | Utworzenie placówki tworzy pierwszego org_admin i wysyła mu zaproszenie. |
 | SUP-IMPERSONATION | tenancy | HIGH | Super admin może działać jako administrator placówki w celu diagnostyki. |
 | SUP-IAM-PANEL | tenancy | HIGH | Super admin (Power Admin) posiada panel do zarządzania uprawnieniami, rolami użytkowników i ogólnym dostępem do systemu. |
+| SUP-FEATURE-FLAGS | tenancy | HIGH | Administrator platformy włącza i wyłącza duże moduły systemowe oraz flagi delegacji uprawnień per placówka z pełnym egzekwowaniem w UI, API, Server Actions i RLS, bez wpływu na niewyłączalny Rdzeń (w tym obowiązkowy rejestr audytowy RODO). |
 | ADM-RESIDENT-ADD | residents | HIGH | Administrator dodaje pensjonariusza, przypisuje bliskich i przypisuje łóżko. |
 | ADM-FACILITY-MANAGE | facility | MEDIUM | Administrator zarządza rejestrem pokoi i łóżek placówki. |
 | ADM-BED-ASSIGNMENT | facility | HIGH | Jedno łóżko ma co najwyżej jednego aktywnego pensjonariusza; jeden pensjonariusz ma co najwyżej jedno aktywne łóżko. |
@@ -105,13 +107,16 @@ Bazowy rozmiar 14px · minimalny kontrast 4.5:1 · cel dotykowy 38px
 | NUR-SHIFT-LEAD | staff | HIGH | Kierownik zmiany to osoba z personelu opiekuńczego wyznaczona w grafiku, z dodatkowymi uprawnieniami wyłącznie na swojej zmianie. |
 | NUR-TASKS | staff | HIGH | Zadania zmiany (dla podopiecznego albo placówki) przechodzą akceptację planu przez kierownika zmiany i są rozliczane jako wykonane, anulowane z powodem albo przeniesione na kolejną zmianę. |
 | NUR-SHIFT-PLAN-PRINT | staff | HIGH | Kierownik zmiany drukuje zaakceptowany plan pracy zmiany, aby opiekunki pracowały bez obsługi komputera. |
+| NUR-TASKS-VOICE-COMPLETION | staff | HIGH | Kierownik placówki albo właściwej zmiany może rozliczyć istniejące zadanie na podstawie zredagowanej podpowiedzi głosowej. |
+| NUR-SHIFT-CLOSURE | staff | HIGH | Kierownik rozlicza zmianę i zatwierdza wersję przekazania lub aneksu, kończąc jej obieg. Następna zmiana korzysta z listy zadań lub wydruku zatwierdzonego planu. |
 | ADM-RESIDENT-CARD-TASKS | residents | MEDIUM | Karta podopiecznego ma sekcję „Zadania” z otwartymi i niedawno wykonanymi zadaniami podopiecznego. |
 | ADM-CARE-PLAN-TASKS | residents | HIGH | Zadania standardowe pochodzą z szablonów planu opieki definiowanych przez placówkę, a nie z rekomendacji systemu. |
 | ADM-CAPACITY-LIMIT | facility | HIGH | Limit miejsc placówki (liczba łóżek = maks. liczba aktywnych podopiecznych) ustala wyłącznie super admin; kierownik może go przekroczyć po potwierdzeniu, a przekroczenie powiadamia kierownika i super admina. |
 | ADM-RESIDENT-FUNDING | residents | HIGH | Kierownik placówki zapisuje źródło finansowania pobytu podopiecznego, oddzielnie od źródła pozyskania. |
+| ADM-RESIDENT-PHOTO | residents | HIGH | Zdjęcie podopiecznego jest przechowywane prywatnie i dostępne wyłącznie osobom uprawnionym do danych tego podopiecznego. |
 | ADM-RESIDENT-CARD-VISIBILITY | residents | HIGH | Wspólna karta podopiecznego dla personelu pokazuje każdej roli wyłącznie sekcje z zasobów, które ta rola może czytać według macierzy uprawnień. |
 | ADM-ARCHIVE | residents | HIGH | Archiwizacja odcina dostęp bliskim bez niszczenia śladu audytowego. |
-| SEC-MFA-STAFF | security | HIGH | Personel loguje się z drugim składnikiem; rodziny bez MFA. |
+| SEC-MFA-STAFF | security | HIGH | Personel potwierdza drugi składnik przed dostępem do chronionych danych i operacji. Konta rodzin logują się bez drugiego składnika. |
 | SEC-SESSION | security | MEDIUM | Użytkownik zarządza swoimi sesjami, a sesje personelu wygasają po bezczynności. |
 | CONSENT-GRANTOR | consent | HIGH | Zgodę na przetwarzanie danych o zdrowiu może wyrazić wyłącznie pensjonariusz lub jego opiekun prawny. |
 | CONSENT-REVOKE | consent | HIGH | Cofnięcie zgody natychmiast zatrzymuje przetwarzanie w danym celu. |
@@ -124,14 +129,18 @@ Bazowy rozmiar 14px · minimalny kontrast 4.5:1 · cel dotykowy 38px
 | UI-ACCESSIBILITY | presentation | MEDIUM | Interfejs spełnia WCAG 2.1 na poziomie AA. |
 | UI-TERMINOLOGY | presentation | MEDIUM | Ta sama rzecz nazywa się w całym interfejsie tak samo, według słownika UI_TERMINOLOGY. |
 | UI-TEMPLATE-ALIGNMENT | presentation | MEDIUM | Interfejs używa komponentów, układu i wygladu szablonu shadcn-admin (styl nova) — promień, cień, odstępy, jeden styl przycisków i filtrów — z tekstem min. 14px i celem dotykowym 38px (ADR-016, ADR-018), z tokenami generowanymi z kontraktu. |
-| VOICE-ZERO-GUESSING | voice | HIGH | Model nigdy nie ustala tożsamości pensjonariusza z nagrania. |
+| VOICE-ZERO-GUESSING | voice | HIGH | Model raportowy nigdy nie ustala tożsamości podopiecznego z nagrania. |
 | VOICE-MEDICAL-STRIP | voice | HIGH | Dane medyczne są usuwane z transkryptu przed wysłaniem do modelu. |
 | VOICE-DRAFT-ISOLATION | voice | HIGH | Brudnopis personelu jest niedostępny dla bliskich. |
-| VOICE-RETENTION | voice | MEDIUM | Surowe nagrania są usuwane po trzydziestu dniach. |
+| VOICE-RETENTION | voice | MEDIUM | Surowe nagrania są usuwane po terminie retencji placówki, domyślnie po trzydziestu dniach. |
 | VOICE-OFFLINE | voice | MEDIUM | Dyktafon działa bez łączności i synchronizuje się po jej odzyskaniu. |
 | VOICE-FOLLOWUP | voice | MEDIUM | Przy zbyt ubogiej notatce asystent dopytuje zamiast uzupełniać treść samodzielnie. |
+| VOICE-DEVICE-INGEST | voice | HIGH | Urządzenie z ekranem tylko ze stanem (bez treści nagrań i nazwisk) przekazuje nagrania przez uwierzytelniony, idempotentny protokół z potwierdzeniem odbioru i czasem serwera. |
+| VOICE-RESIDENT-ASSIGN | voice | HIGH | Serwer przypisuje zakres fragmentu nagrania, a kierownik rozstrzyga wyjątki, koryguje autora i czas oraz dzieli materiał mieszany. |
+| VOICE-DEVICE-REGISTRY | voice | MEDIUM | Kierownik placówki prowadzi rejestr urządzeń placówki. Urządzenia są wspólne: przedstawienie określa deklarowanego autora sesji, a wpis wydania jest opcjonalną ewidencją sprzętu. |
 | REPORT-APPROVAL | reports | HIGH | Raport trafia do bliskich dopiero po zatwierdzeniu przez personel. |
 | REPORT-AI-FEEDBACK | reports | MEDIUM | Personel może zgłosić błąd w raporcie wygenerowanym przez AI. |
+| VOICE-DOCK-REPORTS | reports | HIGH | Potok głosowy w module module_voice_and_reports zapisuje po etapie ASSIGN i REDACT niemutowalne, zanonimizowane zdarzenia (voice_sanitized_events) i kieruje je do konfigurowalnych per placówka kategorii raportów operacyjnych (organization_report_configs, operational_reports) bez ujawniania strumienia MEDICAL ani dopuszczania ról bliskich. |
 | INT-CORE-DECOUPLED | integration | HIGH | Identyfikatory zewnętrzne nie występują na tabelach rdzenia. |
 | INT-INGEST-PRECONDITIONS | integration | HIGH | Ingest zapisuje dane wyłącznie przy spełnieniu wszystkich warunków wstępnych. |
 | INT-NORMALIZATION | integration | MEDIUM | Dane dostawcy są normalizowane do pól kanonicznych. |
@@ -156,3 +165,23 @@ Bazowy rozmiar 14px · minimalny kontrast 4.5:1 · cel dotykowy 38px
 | INFRA-EU-REGION | infra | HIGH | Dane nie opuszczają Europejskiego Obszaru Gospodarczego, poza jawnie udokumentowanymi wyjątkami. |
 | INFRA-GROQ-TRANSCRIPTION | infra | HIGH | Transkrypcja surowego audio odbywa się przez Groq (USA, transfer na bazie SCC) wyłącznie na etapie TRANSCRIBE, przed redakcją danych medycznych. |
 | INFRA-GROQ-DEMO-INTERIM | infra | HIGH | Gdy brak klucza modelu EU, CLASSIFY, GENERATE oraz etapy przekazania zmiany (HANDOVER_STRUCTURE, TASK_PROPOSE) mogą tymczasowo korzystać z Groq wyłącznie w jawnie włączonym trybie demo (ALLOW_DEMO_GROQ_FALLBACK=true), przed podpisaniem DPA, ograniczone do danych syntetycznych. |
+
+## Modułowość i flagi placówki (SC-SUP-06)
+
+**Niewyłączalny Rdzeń:** `auth_sessions`, `rbac_mfa`, `organization_isolation`, `user_profile`, `mandatory_rodo_audit_logs`.
+
+**Zasady polityki:** zapis `RPC_ONLY`, impersonacja `APP_COOKIE_AND_DB_SESSION`, trasy wieloflagowe `REQUIRE_ALL_MATCHING`, egzekwowanie RLS/RPC: tak.
+
+| Klucz | Rodzaj | Domyślnie | Zależności | Nazwa |
+|---|---|---|---|---|
+| `module_facility_management` | `module` | włączony | — | Zarządzanie placówką |
+| `module_residents_management` | `module` | włączony | — | Zarządzanie podopiecznymi |
+| `module_voice_and_reports` | `module` | włączony | — | Nagrywanie i budowanie raportów |
+| `module_shift_tasks` | `module` | włączony | — | Lista zadań i praca zmianowa |
+| `module_audit_compliance` | `module` | wyłączony | — | Rozszerzone audytowanie aktywności |
+| `module_family_portal` | `module` | włączony | `module_residents_management` | Portal rodziny i komunikacja |
+| `module_documents_contracts` | `module` | włączony | `module_residents_management` | Umowy i dokumenty |
+| `module_finance_budget` | `module` | wyłączony | `module_facility_management` | Budżetowanie i rentowność |
+| `module_wearables_iot` | `module` | włączony | `module_residents_management` | Opaski i sensory IoT |
+| `allow_org_admin_report_config` | `delegation` | wyłączony | `module_voice_and_reports` | Konfiguracja raportów przez Kierownika placówki |
+| `allow_org_admin_contract_templates` | `delegation` | wyłączony | `module_documents_contracts` | Szablony umów przez Kierownika placówki |

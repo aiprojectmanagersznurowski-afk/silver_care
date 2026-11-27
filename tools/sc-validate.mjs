@@ -16,13 +16,15 @@ const { ROLES, STAFF_ROLES, RELATIVE_ROLES, MFA_REQUIRED_ROLES, CONSENT_GRANTORS
 const { FAMILY_VISIBLE_METRICS, PHYSIOLOGICAL_FIELDS, FORBIDDEN_UI_TERMS, MDR_GUARDRAILS,
         REQUIRED_UI_STATES, RESIDENT_CARD_SECTIONS = [], AGENDA_FAMILY_EXCLUSION, UI_TERMINOLOGY } = await load('presentation.contract.mjs');
 const { TRANSCRIPT_STREAMS, MEDICAL_CATEGORIES, PIPELINE_STAGES, VOICE_RETENTION,
-        AI_PROVENANCE_FIELDS, AI_FEEDBACK_CATEGORIES } = await load('voice.contract.mjs');
-const { PROVIDERS, WEARABLE_LINK, ORG_LINK, FIELD_MAPPINGS, INGEST_PRECONDITIONS, SYNC_STALENESS } = await load('integration.contract.mjs');
+        AI_PROVENANCE_FIELDS, AI_FEEDBACK_CATEGORIES, CAPTURE_SOURCES = [], RESIDENT_ASSIGNMENT, OPERATIONAL_REPORT_ENGINE } = await load('voice.contract.mjs');
+const { PROVIDERS, WEARABLE_LINK, ORG_LINK, FIELD_MAPPINGS, INGEST_PRECONDITIONS, SYNC_STALENESS,
+        DEVICE_AUTH, DEVICE_INGEST_PROTOCOL } = await load('integration.contract.mjs');
 const { NOTIFICATIONS, FORBIDDEN_TRIGGERS, CHANNELS, RECIPIENTS, QUEUE_POLICY } = await load('notifications.contract.mjs');
 const { REQUIREMENTS, REQUIREMENTS_BY_ID } = await load('requirements.contract.mjs');
 const { DECISION_CLASSES, ESCALATION_TRIGGERS, DEFAULTS, RETRY_POLICY, SESSION_REPORT_SECTIONS } = await load('autonomy.contract.mjs');
 const { FACILITY_HIERARCHY, ROOM_SHAPE, BED_SHAPE, BED_ASSIGNMENT_SHAPE, OCCUPANCY_GUARDS, OCCUPANCY_VIEW, CAPACITY_POLICY, SHIFT_POLICY, SHIFT_TASK_POLICY } = await load('facility.contract.mjs');
 const { TYPOGRAPHY, COLORS, SPACING, ACCESSIBILITY, LAYOUT_PRINCIPLES } = await load('design.contract.mjs');
+const { CORE_CAPABILITIES, FEATURE_FLAGS, FEATURE_FLAG_POLICY } = await load('features.contract.mjs');
 
 const errors = [];
 const warns = [];
@@ -158,6 +160,42 @@ const rejoin = PIPELINE_STAGES.find((s) => s.id === 'REJOIN');
 if (rejoin && stageOrder.indexOf('REJOIN') < iGenerate) {
   err('R08-zero-guessing', 'Złączenie z tożsamością następuje przed generowaniem — transkrypt nie byłby anonimowy.');
 }
+// ADR-022: zakres fragmentu musi być rozstrzygnięty przed CLASSIFY.
+const RESIDENT_ID_MODES = ['AT_CAPTURE', 'AT_ASSIGN'];
+for (const src of CAPTURE_SOURCES) {
+  if (!RESIDENT_ID_MODES.includes(src.residentId)) {
+    err('R08-zero-guessing', `Źródło nagrań "${src.id}" ustala podopiecznego sposobem "${src.residentId}". Dozwolone: ${RESIDENT_ID_MODES.join(', ')} — nigdy z treści nagrania.`);
+  }
+}
+const deferredSources = CAPTURE_SOURCES.filter((s) => s.residentId === 'AT_ASSIGN');
+if (deferredSources.length) {
+  const assign = PIPELINE_STAGES.find((s) => s.id === 'ASSIGN');
+  const iAssign = stageOrder.indexOf('ASSIGN');
+  const ra = RESIDENT_ASSIGNMENT;
+  if (!assign) err('R08-zero-guessing', `Źródła ${deferredSources.map((s) => s.id).join(', ')} nie mają resident_id, a potok nie ma etapu ASSIGN.`);
+  else {
+    if (iClassify !== -1 && iAssign > iClassify) err('R08-zero-guessing', 'Etap ASSIGN występuje po CLASSIFY — nagranie bez podopiecznego trafiłoby do klasyfikacji.');
+    if (assign.actor !== 'nurse' && assign.actor !== 'org_admin') err('R08-zero-guessing', `Etap ASSIGN wskazuje "${assign.actor}". Wyjątki rozstrzyga personel.`);
+  }
+  if (!ra) err('R08-zero-guessing', 'Brak RESIDENT_ASSIGNMENT dla nagrań bez resident_id.');
+  else {
+    if (ra.llmIdentifies !== false || ra.suggestedBy !== 'server') err('R08-zero-guessing', 'Kandydatów na podopiecznego wyznacza serwer, nigdy model.');
+    const auto = ra.autoAssign;
+    if (assign?.automaticActor !== 'system' || auto?.actor !== 'system'
+      || auto.condition !== 'SINGLE_CONSISTENT_REGISTRY_MATCH' || auto.output !== 'DRAFT_ONLY') {
+      err('R08-zero-guessing', 'Automatyczne przypisanie wykonuje serwer wyłącznie przy jednym spójnym dopasowaniu i tylko na potrzeby szkicu.');
+    }
+    if (ra.oneRecordingOneResident !== false || ra.oneSegmentOneResident !== true) {
+      err('R08-zero-guessing', 'Nagranie może zawierać wiele fragmentów. Każdy fragment dotyczy najwyżej jednego podopiecznego.');
+    }
+    if (ra.onUnconfirmed !== 'HOLD_BEFORE_CLASSIFY') err('R08-zero-guessing', `Nagranie bez potwierdzenia: "${ra.onUnconfirmed}". Ma czekać przed CLASSIFY.`);
+    for (const s of deferredSources) if (!(ra.appliesTo || []).includes(s.id)) err('R08-zero-guessing', `RESIDENT_ASSIGNMENT nie obejmuje źródła "${s.id}".`);
+    for (const c of ra.confirmedBy || []) {
+      if (!STAFF_ROLES.includes(c.split(':')[0])) err('R08-zero-guessing', `Przypisanie potwierdza "${c}" — tylko personel.`);
+    }
+    if (!(ra.confirmedBy || []).length) err('R08-zero-guessing', 'Nikt nie potwierdza przypisania podopiecznego.');
+  }
+}
 
 // R09 — publikacja raportu wymaga człowieka
 const approve = PIPELINE_STAGES.find((s) => s.id === 'APPROVE');
@@ -274,6 +312,31 @@ for (const must of ['active_consent', 'resident_active', 'idempotency']) {
 // R17 — retencja i TTL zadeklarowane
 if (!VOICE_RETENTION.ttlDays) err('R17-retention', 'Brak TTL dla surowych nagrań głosowych.');
 if (VOICE_RETENTION.ttlDays > 90) warn('R17-retention', `TTL nagrań ${VOICE_RETENTION.ttlDays} dni — długo jak na surowe audio z danymi wrażliwymi.`);
+// Retencja ustawiana per placówka (SC-NUR-02/AC4): domyślna w zakresie, ustawia tylko kierownik placówki albo super admin.
+{
+  const vr = VOICE_RETENTION;
+  if (vr.minDays !== undefined || vr.maxDays !== undefined || vr.setBy) {
+    if (!(vr.minDays >= 1 && vr.minDays <= vr.ttlDays && vr.ttlDays <= vr.maxDays)) {
+      err('R17-retention', `Domyślna retencja ${vr.ttlDays} dni poza zakresem ${vr.minDays}–${vr.maxDays} (minimum 1 dzień).`);
+    }
+    if (vr.maxDays > 90) warn('R17-retention', `Placówka może ustawić retencję do ${vr.maxDays} dni — długo jak na surowe audio z danymi wrażliwymi.`);
+    if (!vr.storageBucket) err('R17-retention', 'Retencja nie obejmuje plików nagrań w Storage.');
+    for (const e of vr.setBy || []) {
+      if (!['org_admin', 'super_admin'].includes(e.split(':')[0])) err('R17-retention', `Retencję nagrań ustawia "${e}". Wyłącznie kierownik placówki albo super admin.`);
+    }
+    const row = MATRIX.find((m) => m.resource === vr.settingsResource);
+    if (!row) err('R17-retention', `Brak wiersza macierzy dla ustawień retencji "${vr.settingsResource}".`);
+    else {
+      for (const cap of ['create', 'update']) {
+        for (const e of row[cap] || []) if (!(vr.setBy || []).includes(e)) err('R17-retention', `${vr.settingsResource}.${cap}: "${e}" spoza VOICE_RETENTION.setBy.`);
+      }
+      for (const cap of ['read', 'create', 'update', 'delete']) {
+        for (const e of row[cap] || []) if (RELATIVE_ROLES.includes(e.split(':')[0])) err('R17-retention', `${vr.settingsResource}.${cap} dostępne roli "${e}".`);
+      }
+      if ((row.delete || []).length) err('R17-retention', `${vr.settingsResource}: usuwanie ustawienia zamiast zmiany z wpisem w audit_logs.`);
+    }
+  }
+}
 
 // R18 — słownictwo i stany interfejsu
 if (!FORBIDDEN_UI_TERMS.find((t) => t.term === 'pacjent')) {
@@ -533,12 +596,23 @@ if (UI_TERMINOLOGY) {
 }
 
 // R31 — zakres „kierownik zmiany” (SC-NUR-12/AC1a, decyzja Michała 2026-10-30): uprawnienia na swojej zmianie,
-// nigdy odczyt, tylko dla zasobów z kluczem zmiany i tylko dla roli wskazanej w kontrakcie.
+// dla zasobów z kluczem zmiany i tylko dla roli wskazanej w kontrakcie. Odczyt ma jawne wyjątki.
 if (SHIFT_LEAD_SCOPE) {
   const sc = SHIFT_LEAD_SCOPE;
   if (!roleIds.includes(sc.role)) err('R31-shift-lead', `Zakres ${sc.qualifier} wskazuje nieistniejącą rolę "${sc.role}".`);
   if (!RESOURCES.includes(sc.derivedFrom?.resource)) err('R31-shift-lead', 'Grafik, z którego wynika kierownik zmiany, nie jest zasobem w macierzy.');
   if (sc.leadsPerShift !== 1) err('R31-shift-lead', `Na zmianę musi przypadać dokładnie jeden kierownik (jest: ${sc.leadsPerShift}).`);
+  // ADR-022 i NUR-TASKS-VOICE-COMPLETION. Wyjątki nie obejmują dostępu do źródłowych brudnopisów.
+  const scopedReadResources = [RESIDENT_ASSIGNMENT?.queueResource, 'shift_task_voice_suggestions', 'shift_handover_versions'];
+  for (const resource of sc.readResources || []) {
+    if (!scopedReadResources.includes(resource)) err('R31-shift-lead', `Odczyt z zakresem ${sc.qualifier} dla "${resource}" jest poza jawnymi wyjątkami.`);
+  }
+  const voiceSuggestions = MATRIX.find(({ resource }) => resource === 'shift_task_voice_suggestions');
+  if (voiceSuggestions && (voiceSuggestions.read.length !== 2
+    || !voiceSuggestions.read.includes('org_admin:own')
+    || !voiceSuggestions.read.includes(`${sc.role}:${sc.qualifier}`))) {
+    err('R31-shift-lead', 'Podpowiedzi głosowe czytają wyłącznie kierownik placówki i kierownik właściwej zmiany.');
+  }
   for (const row of MATRIX) {
     for (const cap of ['read', 'create', 'update', 'delete']) {
       for (const entry of row[cap] || []) {
@@ -546,7 +620,8 @@ if (SHIFT_LEAD_SCOPE) {
         if (qualifier !== sc.qualifier) continue;
         if (role !== sc.role) err('R31-shift-lead', `MATRIX ${row.resource}.${cap}: zakres ${sc.qualifier} tylko dla roli "${sc.role}" (jest "${role}").`);
         if (!sc.resources.includes(row.resource)) err('R31-shift-lead', `MATRIX ${row.resource}.${cap}: zakres ${sc.qualifier} poza zasobami z kluczem zmiany (${sc.resources.join(', ')}).`);
-        if (!sc.capabilities.includes(cap)) err('R31-shift-lead', `MATRIX ${row.resource}.${cap}: zakres ${sc.qualifier} nie obejmuje "${cap}" — odczyt ma każdy personel placówki.`);
+        const capAllowed = cap === 'read' ? (sc.readResources || []).includes(row.resource) : sc.capabilities.includes(cap);
+        if (!capAllowed) err('R31-shift-lead', `MATRIX ${row.resource}.${cap}: zakres ${sc.qualifier} nie obejmuje "${cap}" — odczyt ma każdy personel placówki.`);
       }
     }
   }
@@ -581,6 +656,381 @@ if (SHIFT_POLICY && SHIFT_TASK_POLICY) {
 }
 
 // ── raport ────────────────────────────────────────────────────────────────
+// R33 — kanał urządzeń (ADR-022): bliscy bez dostępu, nic nie jest usuwane, brudnopis zostaje prywatny dla autora,
+// kolejkę przypisania czytają i rozstrzygają wyłącznie osoby z RESIDENT_ASSIGNMENT.confirmedBy.
+if (RESIDENT_ASSIGNMENT) {
+  const ra = RESIDENT_ASSIGNMENT;
+  for (const res of ['voice_devices', 'voice_device_assignments', ra.queueResource]) {
+    const row = MATRIX.find((m) => m.resource === res);
+    if (!row) { err('R33-voice-devices', `Brak wiersza macierzy dla "${res}".`); continue; }
+    for (const cap of ['read', 'create', 'update', 'delete']) {
+      for (const entry of row[cap] || []) {
+        if (RELATIVE_ROLES.includes(entry.split(':')[0])) err('R33-voice-devices', `${res}.${cap} dostępne roli "${entry}". Kanał urządzeń jest wyłącznie dla personelu.`);
+      }
+    }
+    if ((row.delete || []).length) err('R33-voice-devices', `${res}: usuwanie zamiast revoked_at / ended_at kasuje historię.`);
+  }
+  const devRow = MATRIX.find((m) => m.resource === 'voice_devices');
+  if (devRow && (devRow.create || []).some((e) => e.split(':')[0] !== 'org_admin')) err('R33-voice-devices', 'Urządzenia rejestruje wyłącznie kierownik placówki.');
+  const qRow = MATRIX.find((m) => m.resource === ra.queueResource);
+  if (qRow) {
+    const allowedQ = new Set(ra.confirmedBy || []);
+    for (const cap of ['read', 'update']) {
+      for (const entry of qRow[cap] || []) if (!allowedQ.has(entry)) err('R33-voice-devices', `${ra.queueResource}.${cap}: "${entry}" spoza RESIDENT_ASSIGNMENT.confirmedBy.`);
+    }
+    for (const c of ra.confirmedBy || []) if (!(qRow.update || []).includes(c)) err('R33-voice-devices', `"${c}" potwierdza przypisanie według kontraktu, a macierz nie daje mu update kolejki.`);
+  }
+  const vRow = MATRIX.find((m) => m.resource === 'voice_draft_notes');
+  if (vRow) {
+    for (const entry of vRow.read || []) {
+      if (entry !== 'nurse:own') err('R33-voice-devices', `voice_draft_notes czytelne dla "${entry}". Brudnopis czyta tylko autor; kierownicy widzą wyłącznie kolejkę przypisania.`);
+    }
+  }
+}
+
+// R34 — protokół urządzeń (SC-NUR-17): skrót tokenu, brak tożsamości w żądaniu, kasowanie tylko po przyjęciu.
+if (DEVICE_INGEST_PROTOCOL) {
+  const pr = DEVICE_INGEST_PROTOCOL;
+  if (!DEVICE_AUTH || DEVICE_AUTH.storedAs !== 'token_hash') err('R34-device-ingest', 'Token urządzenia musi być przechowywany wyłącznie jako skrót (token_hash).');
+  if (DEVICE_AUTH && (DEVICE_AUTH.sessionAccess !== false || DEVICE_AUTH.serviceRoleOnDevice !== false)) err('R34-device-ingest', 'Token urządzenia nie może dawać sesji użytkownika ani klucza service_role.');
+  for (const f of ['resident_id', 'pesel']) {
+    if (!(pr.fields?.forbidden || []).includes(f)) err('R34-device-ingest', `Pole "${f}" nie jest zakazane w żądaniu urządzenia — urządzenie nie zna podopiecznego (ADR-022).`);
+  }
+  for (const f of pr.fields?.required || []) {
+    if ((pr.fields?.forbidden || []).includes(f)) err('R34-device-ingest', `Pole "${f}" jest jednocześnie wymagane i zakazane.`);
+  }
+  for (const k of ['device_id', 'client_capture_id']) {
+    if (!(pr.idempotencyKey || []).includes(k)) err('R34-device-ingest', `Klucz idempotencji bez "${k}" — ponowna wysyłka utworzyłaby drugi wpis.`);
+  }
+  if (pr.storageRegion !== 'EU') err('R34-device-ingest', `Nagrania w regionie "${pr.storageRegion}". Storage musi być w UE.`);
+  // Format żądań (wire, 1.1.0): kody tylko z responses, żadne pole zakazane w treści żądania.
+  const knownCodes = new Set((pr.responses || []).map((r) => r.code));
+  for (const rq of pr.wire?.requests || []) {
+    for (const c of rq.responses || []) if (!knownCodes.has(c)) err('R34-device-ingest', `Żądanie ${rq.step} zwraca kod "${c}" spoza DEVICE_INGEST_PROTOCOL.responses.`);
+    for (const f of rq.body || []) if ((pr.fields?.forbidden || []).includes(f)) err('R34-device-ingest', `Żądanie ${rq.step} wysyła pole zakazane "${f}".`);
+  }
+  for (const c of Object.keys(pr.wire?.responseBody || {})) {
+    if (c !== 'always' && !knownCodes.has(c)) err('R34-device-ingest', `wire.responseBody opisuje nieznany kod "${c}".`);
+  }
+  // Zegar (1.2.0): StickS3 nie ma RTC — czas tylko z server_time, a utrata zasilania daje TIME_UNCERTAIN.
+  if (!(pr.wire?.responseBody?.always || []).includes('server_time')) err('R34-device-ingest', 'Odpowiedzi protokołu bez server_time — urządzenie bez RTC nie ma skąd ustawić zegara.');
+  const clockStates = new Set((pr.clock?.states || []).map((st) => st.id));
+  for (const st of pr.clock?.uncertainStates || []) if (!clockStates.has(st)) err('R34-device-ingest', `clock.uncertainStates zawiera nieznany stan "${st}".`);
+  if (!clockStates.has('UNKNOWN') || !(pr.clock?.uncertainStates || []).includes('UNKNOWN')) err('R34-device-ingest', 'Stan zegara UNKNOWN (utrata zasilania) musi istnieć i dawać TIME_UNCERTAIN.');
+  const initReq = (pr.wire?.requests || []).find((rq) => rq.step === 'INIT');
+  for (const f of ['clock_state', 'age_ms']) {
+    if (initReq && !(initReq.body || []).includes(f)) err('R34-device-ingest', `INIT bez pola "${f}" — serwer nie oceni wiarygodności czasu nagrania.`);
+  }
+  // Autorstwo (1.2.0): wspólne urządzenia, autor z przedstawienia w sesji — serwer dopasowuje, człowiek rozstrzyga.
+  const au = pr.authorship || {};
+  if (au.source === 'SELF_INTRODUCTION') {
+    for (const f of ['session_id', 'session_seq']) {
+      if (initReq && !(initReq.body || []).includes(f)) err('R34-device-ingest', `INIT bez pola "${f}" — bez sesji nie da się ustalić autora z przedstawienia.`);
+    }
+    if (au.llmIdentifies !== false || au.matchedBy !== 'server') err('R34-device-ingest', 'Autora z przedstawienia dopasowuje serwer, nigdy model AI.');
+    const resolvers = au.ambiguousResolvedBy || [];
+    if (!resolvers.length || resolvers.some((r) => !String(r).includes(':') && r !== 'super_admin')) err('R34-device-ingest', 'Niejednoznacznego autora wybiera człowiek (rola:zakres), nie system.');
+    if (!Number.isFinite(au.sessionInactivityTimeoutMinutes) || au.sessionInactivityTimeoutMinutes <= 0 || au.sessionInactivityTimeoutMinutes > 240) {
+      err('R34-device-ingest', 'Sesja SELF_INTRODUCTION wymaga timeoutu bezczynności (1–240 min), aby zapobiec sklejeniu brudnopisów dwóch osób.');
+    }
+    if (au.outOfOrderPolicy !== 'RETROACTIVE_ON_SEQ_1') {
+      err('R34-device-ingest', 'Sesja SELF_INTRODUCTION wymaga retroaktywnego uzupełniania autora po dotarciu session_seq 1 (RETROACTIVE_ON_SEQ_1).');
+    }
+  }
+  const mayDelete = (pr.responses || []).filter((r) => r.deviceMayDelete).map((r) => r.code);
+  for (const c of mayDelete) {
+    if (!['ACCEPTED', 'DUPLICATE'].includes(c)) err('R34-device-ingest', `Urządzenie kasuje nagranie po "${c}". Wolno wyłącznie po ACCEPTED albo DUPLICATE.`);
+  }
+}
+
+// R35 — modułowość i flagi placówki (SC-SUP-06, SUP-FEATURE-FLAGS): kompletność Rdzenia i katalogu, typy tras, mapowania wieloflagowe, acykliczny graf, zapis wyłącznie super_admin przez RPC.
+{
+  const REQUIRED_CORE_CAPABILITIES = [
+    'auth_sessions',
+    'rbac_mfa',
+    'organization_isolation',
+    'user_profile',
+    'mandatory_rodo_audit_logs',
+  ];
+  const REQUIRED_MODULES = [
+    'module_facility_management',
+    'module_residents_management',
+    'module_voice_and_reports',
+    'module_shift_tasks',
+    'module_audit_compliance',
+    'module_family_portal',
+    'module_documents_contracts',
+    'module_finance_budget',
+    'module_wearables_iot',
+  ];
+  const REQUIRED_DELEGATIONS = [
+    'allow_org_admin_report_config',
+    'allow_org_admin_contract_templates',
+  ];
+
+  if (!Array.isArray(CORE_CAPABILITIES)) {
+    err('R35-feature-flags', 'CORE_CAPABILITIES musi być tablicą.');
+  } else {
+    const seenCore = new Set();
+    for (const cap of CORE_CAPABILITIES) {
+      if (typeof cap !== 'string' || cap.trim().length === 0) {
+        err('R35-feature-flags', 'CORE_CAPABILITIES może zawierać wyłącznie niepuste ciągi znaków.');
+      } else if (seenCore.has(cap)) {
+        err('R35-feature-flags', `Zduplikowany element CORE_CAPABILITIES: "${cap}".`);
+      } else {
+        seenCore.add(cap);
+      }
+    }
+    for (const reqCap of REQUIRED_CORE_CAPABILITIES) {
+      if (!seenCore.has(reqCap)) {
+        err('R35-feature-flags', `CORE_CAPABILITIES musi zawierać "${reqCap}" — obowiązkowy element Rdzenia nie może zostać usunięty.`);
+      }
+    }
+  }
+
+  if (!Array.isArray(FEATURE_FLAGS) || FEATURE_FLAGS.length === 0) {
+    err('R35-feature-flags', 'Katalog FEATURE_FLAGS nie może być pusty.');
+  } else {
+    const flagsByKey = new Map();
+    for (const flag of FEATURE_FLAGS) {
+      if (!flag.key || typeof flag.key !== 'string') {
+        err('R35-feature-flags', 'Flaga bez poprawnego klucza key.');
+        continue;
+      }
+      if (flagsByKey.has(flag.key)) err('R35-feature-flags', `Zduplikowany klucz flagi "${flag.key}".`);
+      flagsByKey.set(flag.key, flag);
+      if (!['module', 'delegation'].includes(flag.kind)) {
+        err('R35-feature-flags', `Flaga "${flag.key}" ma nieznany rodzaj "${flag.kind}".`);
+      }
+      if (!flag.label || typeof flag.label !== 'string' || !flag.description || typeof flag.description !== 'string') {
+        err('R35-feature-flags', `Flaga "${flag.key}" musi mieć label i description.`);
+      }
+      if (typeof flag.defaultEnabled !== 'boolean') {
+        err('R35-feature-flags', `Flaga "${flag.key}" musi mieć boolean defaultEnabled.`);
+      }
+      if (!Array.isArray(flag.dependsOn)) {
+        err('R35-feature-flags', `Flaga "${flag.key}" musi mieć tablicę dependsOn.`);
+      }
+      if (!Array.isArray(flag.routes)) {
+        err('R35-feature-flags', `Flaga "${flag.key}" musi mieć tablicę routes.`);
+      } else {
+        const seenRoutes = new Set();
+        for (const route of flag.routes) {
+          if (typeof route !== 'string' || route.trim().length === 0 || !route.startsWith('/')) {
+            err('R35-feature-flags', `Flaga "${flag.key}" ma niepoprawną trasę w routes: "${String(route)}". Wymagany prefiks "/".`);
+          } else if (seenRoutes.has(route)) {
+            err('R35-feature-flags', `Flaga "${flag.key}" ma zduplikowaną trasę w routes: "${route}".`);
+          } else {
+            seenRoutes.add(route);
+          }
+        }
+      }
+      if (!Array.isArray(flag.apiPrefixes)) {
+        err('R35-feature-flags', `Flaga "${flag.key}" musi mieć tablicę apiPrefixes.`);
+      } else {
+        const seenApi = new Set();
+        for (const prefix of flag.apiPrefixes) {
+          if (typeof prefix !== 'string' || prefix.trim().length === 0 || !prefix.startsWith('/api/')) {
+            err('R35-feature-flags', `Flaga "${flag.key}" ma niepoprawny wzorzec w apiPrefixes: "${String(prefix)}". Wymagany prefiks "/api/".`);
+          } else if (seenApi.has(prefix)) {
+            err('R35-feature-flags', `Flaga "${flag.key}" ma zduplikowany wzorzec w apiPrefixes: "${prefix}".`);
+          } else {
+            seenApi.add(prefix);
+          }
+        }
+      }
+    }
+
+    for (const modKey of REQUIRED_MODULES) {
+      const mod = flagsByKey.get(modKey);
+      if (!mod || mod.kind !== 'module') {
+        err('R35-feature-flags', `Katalog FEATURE_FLAGS musi zawierać moduł "${modKey}" (kind: 'module').`);
+      }
+    }
+    for (const delKey of REQUIRED_DELEGATIONS) {
+      const del = flagsByKey.get(delKey);
+      if (!del || del.kind !== 'delegation') {
+        err('R35-feature-flags', `Katalog FEATURE_FLAGS musi zawierać delegację "${delKey}" (kind: 'delegation').`);
+      }
+    }
+
+    const familyPortal = flagsByKey.get('module_family_portal');
+    const requiredFamilyApi = [
+      '/api/residents/[id]/report/latest',
+      '/api/residents/[id]/agenda',
+      '/api/admin/residents/[id]/messages',
+    ];
+    if (familyPortal && Array.isArray(familyPortal.apiPrefixes)) {
+      for (const ep of requiredFamilyApi) {
+        if (!familyPortal.apiPrefixes.includes(ep)) {
+          err('R35-feature-flags', `module_family_portal.apiPrefixes musi jawnie zawierać "${ep}" (kanoniczne mapowanie endpointu).`);
+        }
+      }
+    }
+    const docsContracts = flagsByKey.get('module_documents_contracts');
+    if (docsContracts && Array.isArray(docsContracts.apiPrefixes)) {
+      if (!docsContracts.apiPrefixes.includes('/api/admin/residents/[id]/contract')) {
+        err('R35-feature-flags', 'module_documents_contracts.apiPrefixes musi zawierać "/api/admin/residents/[id]/contract".');
+      }
+    }
+
+    for (const flag of FEATURE_FLAGS) {
+      for (const dep of Array.isArray(flag.dependsOn) ? flag.dependsOn : []) {
+        if (dep === flag.key) err('R35-feature-flags', `Flaga "${flag.key}" zależy od samej siebie.`);
+        else if (!flagsByKey.has(dep)) err('R35-feature-flags', `Flaga "${flag.key}" zależy od nieistniejącej flagi "${dep}".`);
+      }
+      if (flag.kind === 'delegation') {
+        const deps = Array.isArray(flag.dependsOn) ? flag.dependsOn : [];
+        if (deps.length === 0) {
+          err('R35-feature-flags', `Flaga delegująca "${flag.key}" musi zależeć od modułu nadrzędnego.`);
+        } else if (!deps.some((d) => flagsByKey.get(d)?.kind === 'module')) {
+          err('R35-feature-flags', `Flaga delegująca "${flag.key}" nie wskazuje żadnego modułu nadrzędnego (kind: 'module').`);
+        }
+        if (flag.defaultEnabled !== false) {
+          err('R35-feature-flags', `Flaga delegująca "${flag.key}" musi mieć defaultEnabled: false.`);
+        }
+      }
+    }
+
+    // Wykrywanie cykli w grafie dependsOn (DFS 3-kolorowy: 0 nieodwiedzony, 1 w trakcie, 2 zamknięty)
+    const color = new Map();
+    const hasCycle = (key) => {
+      const state = color.get(key) || 0;
+      if (state === 1) return true;
+      if (state === 2) return false;
+      color.set(key, 1);
+      for (const dep of Array.isArray(flagsByKey.get(key)?.dependsOn) ? flagsByKey.get(key).dependsOn : []) {
+        if (flagsByKey.has(dep) && hasCycle(dep)) return true;
+      }
+      color.set(key, 2);
+      return false;
+    };
+    for (const key of flagsByKey.keys()) {
+      if (hasCycle(key)) {
+        err('R35-feature-flags', `Wykryto cykl zależności w grafie dependsOn (węzeł "${key}").`);
+        break;
+      }
+    }
+  }
+
+  const fp = FEATURE_FLAG_POLICY || {};
+  if (fp.storageTable !== 'organization_feature_flags' || fp.storageTable === 'organizations.settings') {
+    err('R35-feature-flags', 'Flagi muszą mieszkać w tabeli organization_feature_flags, nigdy w organizations.settings.');
+  }
+  if (!Array.isArray(fp.managedBy) || fp.managedBy.length !== 1 || fp.managedBy[0] !== 'super_admin') {
+    err('R35-feature-flags', 'Zarządzanie flagami placówki należy wyłącznie do super_admin.');
+  }
+  if (fp.writePathPolicy !== 'RPC_ONLY') {
+    err('R35-feature-flags', 'FEATURE_FLAG_POLICY.writePathPolicy musi wynosić "RPC_ONLY" (brak bezpośredniego zapisu w sesjach aplikacyjnych).');
+  }
+  if (fp.impersonationVerification !== 'APP_COOKIE_AND_DB_SESSION') {
+    err('R35-feature-flags', 'FEATURE_FLAG_POLICY.impersonationVerification musi wynosić "APP_COOKIE_AND_DB_SESSION".');
+  }
+  if (fp.rlsEnforcementRequired !== true) {
+    err('R35-feature-flags', 'FEATURE_FLAG_POLICY.rlsEnforcementRequired musi wynosić true.');
+  }
+  if (fp.multiFlagRoutePolicy !== 'REQUIRE_ALL_MATCHING') {
+    err('R35-feature-flags', 'FEATURE_FLAG_POLICY.multiFlagRoutePolicy musi wynosić "REQUIRE_ALL_MATCHING".');
+  }
+  if (fp.hasFeatureCrossTenantDenied !== true) {
+    err('R35-feature-flags', 'FEATURE_FLAG_POLICY.hasFeatureCrossTenantDenied musi wynosić true.');
+  }
+  if (
+    !Array.isArray(fp.hasFeatureExecuteRoles)
+    || !fp.hasFeatureExecuteRoles.includes('authenticated')
+    || !fp.hasFeatureExecuteRoles.includes('service_role')
+    || fp.hasFeatureExecuteRoles.includes('anon')
+    || fp.hasFeatureExecuteRoles.includes('public')
+  ) {
+    err('R35-feature-flags', 'FEATURE_FLAG_POLICY.hasFeatureExecuteRoles musi obejmować authenticated oraz service_role bez anon i public.');
+  }
+  if (fp.blockImpersonation !== true || fp.cascadeDisableDependents !== true || fp.requireParentEnabled !== true || fp.failClosedUnknownKey !== true || fp.coreAuditImmutable !== true) {
+    err('R35-feature-flags', 'Polityka FEATURE_FLAG_POLICY musi wymuszać blockImpersonation, cascadeDisableDependents, requireParentEnabled, failClosedUnknownKey i coreAuditImmutable.');
+  }
+
+  const ffRow = MATRIX.find((m) => m.resource === 'organization_feature_flags');
+  if (!ffRow) {
+    err('R35-feature-flags', 'Brak zasobu organization_feature_flags w MATRIX.');
+  } else {
+    for (const cap of ['create', 'update', 'delete']) {
+      for (const entry of ffRow[cap] || []) {
+        if (entry !== 'super_admin') {
+          err('R35-feature-flags', `organization_feature_flags.${cap}: niedozwolony wpis "${entry}". Zapis ma wyłącznie super_admin.`);
+        }
+      }
+    }
+    for (const entry of ffRow.read || []) {
+      if (entry !== 'super_admin' && !entry.endsWith(':own')) {
+        err('R35-feature-flags', `organization_feature_flags.read: rola "${entry}" spoza super_admin musi być ograniczona do :own.`);
+      }
+    }
+  }
+}
+
+// R36 — konfigurowalny silnik kategorii raportów operacyjnych per placówka (VOICE-DOCK-REPORTS, ADR-023)
+{
+  const ore = OPERATIONAL_REPORT_ENGINE;
+  const req = REQUIREMENTS_BY_ID?.['VOICE-DOCK-REPORTS'] ?? REQUIREMENTS.find((r) => r.id === 'VOICE-DOCK-REPORTS');
+  if (!req) {
+    err('R36-operational-reports', 'Brak wymagania VOICE-DOCK-REPORTS w rejestrze wymagań.');
+  } else if (req.risk !== 'HIGH') {
+    err('R36-operational-reports', 'VOICE-DOCK-REPORTS musi mieć ryzyko HIGH — dotyczy granic MDR i danych art. 9.');
+  }
+  if (!ore) {
+    err('R36-operational-reports', 'Brak eksportu OPERATIONAL_REPORT_ENGINE w voice.contract.mjs.');
+  } else {
+    const defCodes = new Set((ore.defaultCategories || []).map((c) => c.code));
+    for (const must of ['audit_operational', 'technical_maintenance', 'catering_kitchen']) {
+      if (!defCodes.has(must)) err('R36-operational-reports', `Brak domyślnej kategorii operacyjnej "${must}" w OPERATIONAL_REPORT_ENGINE.`);
+    }
+    if (ore.writePathPolicy !== 'RPC_ONLY') err('R36-operational-reports', 'OPERATIONAL_REPORT_ENGINE.writePathPolicy musi wynosić "RPC_ONLY".');
+    if (ore.blockImpersonation !== true) err('R36-operational-reports', 'OPERATIONAL_REPORT_ENGINE.blockImpersonation musi wynosić true.');
+    if (ore.medicalStreamExcluded !== true) err('R36-operational-reports', 'Strumień MEDICAL musi być wyłączony z raportów operacyjnych (medicalStreamExcluded: true).');
+    if (ore.superAdminReadsReportContent !== false) err('R36-operational-reports', 'super_admin nie może czytać treści raportów operacyjnych ani zdarzeń placówki.');
+    if (ore.noFabricationOnEmpty !== true) err('R36-operational-reports', 'OPERATIONAL_REPORT_ENGINE.noFabricationOnEmpty musi wynosić true.');
+    for (const r of ore.allowedRecipientRoles || []) {
+      if (RELATIVE_ROLES.includes(r)) err('R36-operational-reports', `Rola bliskich "${r}" w allowedRecipientRoles raportów operacyjnych.`);
+    }
+    for (const res of ['voice_sanitized_events', 'organization_report_configs', 'operational_reports']) {
+      if (!RESOURCES.includes(res)) err('R36-operational-reports', `Brak zasobu "${res}" w RESOURCES.`);
+      const row = MATRIX.find((m) => m.resource === res);
+      if (!row) { err('R36-operational-reports', `Brak wiersza macierzy dla "${res}".`); continue; }
+      for (const cap of ['read', 'create', 'update', 'delete']) {
+        for (const entry of row[cap] || []) {
+          if (RELATIVE_ROLES.includes(entry.split(':')[0])) {
+            err('R36-operational-reports', `${res}.${cap}: dostępne dla roli bliskich "${entry}".`);
+          }
+        }
+      }
+      if ((row.delete || []).length) err('R36-operational-reports', `${res}: dozwolone delete — użyj archiwizacji/retencji zamiast kasowania.`);
+    }
+    for (const res of ['voice_sanitized_events', 'operational_reports']) {
+      const row = MATRIX.find((m) => m.resource === res);
+      if (row && (row.read || []).some((e) => e.split(':')[0] === 'super_admin')) {
+        err('R36-operational-reports', `${res}.read: super_admin nie czyta treści opieki placówki.`);
+      }
+    }
+    const cfgRow = MATRIX.find((m) => m.resource === 'organization_report_configs');
+    if (cfgRow && (cfgRow.create || []).some((e) => e.split(':')[0] !== 'super_admin')) {
+      err('R36-operational-reports', 'Tworzenie nowych kategorii raportów (organization_report_configs.create) należy wyłącznie do super_admin.');
+    }
+    const resPolicy = DELETE_POLICIES.find((d) => d.entity === 'residents');
+    if (!resPolicy || !(resPolicy.cascades || []).includes('voice_sanitized_events')) {
+      err('R36-operational-reports', 'DELETE_POLICIES dla residents musi kaskadować do voice_sanitized_events (RODO art. 17).');
+    }
+    if (!(VOICE_RETENTION?.keeps || []).includes('voice_sanitized_events') || !(VOICE_RETENTION?.keeps || []).includes('operational_reports')) {
+      err('R36-operational-reports', 'VOICE_RETENTION.keeps musi chronić voice_sanitized_events i operational_reports przy wygaśnięciu surowych nagrań.');
+    }
+    const rr = ore.reportRetention || {};
+    if (rr.defaultDays !== 365 || rr.minDays !== 30 || rr.maxDays !== 1825) {
+      err('R36-operational-reports', 'OPERATIONAL_REPORT_ENGINE.reportRetention musi mieć defaultDays: 365, minDays: 30, maxDays: 1825.');
+    }
+    if (ore.onResidentErasure !== 'REVERT_TO_DRAFT_OR_NO_DATA') {
+      err('R36-operational-reports', 'OPERATIONAL_REPORT_ENGINE.onResidentErasure musi wynosić "REVERT_TO_DRAFT_OR_NO_DATA" (RODO art. 17).');
+    }
+  }
+}
+
 console.log(`\n  role: ${ROLES.length} | zasoby: ${RESOURCES.length} | powiadomienia: ${NOTIFICATIONS.length} | wymagania: ${REQUIREMENTS.length}`);
 console.log(`  pokoje: hierarchia ${FACILITY_HIERARCHY.join(' → ')}, guardów obłożenia: ${OCCUPANCY_GUARDS.length}`);
 console.log(`  klasy decyzji: ${DECISION_CLASSES.length} | wyzwalacze eskalacji: ${ESCALATION_TRIGGERS.length} | domyślne: ${DEFAULTS.length}`);

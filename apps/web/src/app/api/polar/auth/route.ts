@@ -1,3 +1,4 @@
+import { assertOrgFeatureForApi } from '@/lib/feature-flags'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { buildPolarAuthUrl } from '@/lib/polar-client'
@@ -23,6 +24,9 @@ export async function GET(req: Request) {
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const featureDenied = await assertOrgFeatureForApi(supabase, user, '/api/polar/auth')
+    if (featureDenied) return featureDenied
 
     const { searchParams } = new URL(req.url)
     const residentId = searchParams.get('residentId')

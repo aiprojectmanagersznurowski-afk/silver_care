@@ -3,6 +3,8 @@
  * Zapewnia bezpieczny fallback in-memory dla środowisk Node / Vitest / SSR bez natywnego IDB.
  */
 
+export type VoiceQueuePurpose = 'resident_note' | 'staff_message' | 'facility_import' | 'general_note'
+
 export interface StoredVoiceItem {
   client_uuid: string
   resident_id: string
@@ -10,7 +12,8 @@ export interface StoredVoiceItem {
   audioBase64?: string
   mimeType?: string
   ext?: string
-  purpose?: 'resident_note' | 'staff_message' | 'facility_import'
+  purpose?: VoiceQueuePurpose
+  author_id?: string
   createdAt: number
   attempts: number
   status: 'pending' | 'failed_permanent'

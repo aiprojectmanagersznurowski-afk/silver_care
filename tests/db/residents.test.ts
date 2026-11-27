@@ -44,7 +44,7 @@ describe('Database Residents (ADM-RESIDENT-ADD)', () => {
       const orgId = org[0].id;
 
       // Switch to org_admin
-      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
+      await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "44444444-4444-4444-8444-444444444444", "app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
 
       // Wstawmy testowy pokój i łóżko
       const room = await tx`INSERT INTO rooms (number, floor, organization_id) VALUES ('Pokoj 101', '1', ${orgId}) RETURNING id`;
@@ -83,7 +83,7 @@ describe('Database Residents (ADM-RESIDENT-ADD)', () => {
       const orgId = org[0].id;
 
       // Switch to org_admin
-      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
+      await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "44444444-4444-4444-8444-444444444444", "app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
       
       const resident = await tx`INSERT INTO residents (organization_id, first_name, last_name, pesel_hash) VALUES (${orgId}, 'Jan', 'Kowalski', 'hash1') RETURNING id`;
       

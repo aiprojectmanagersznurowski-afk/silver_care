@@ -54,7 +54,7 @@ export const GET = withAuth(async (_request, { supabase }) => {
   })
 
   return NextResponse.json({ rooms: enrichedRooms })
-})
+}, { requiredFeature: 'module_facility_management' })
 
 export const POST = withAuth(
   async (request, { supabase, user }) => {
@@ -94,5 +94,5 @@ export const POST = withAuth(
 
     return NextResponse.json({ room })
   },
-  { roles: ['org_admin', 'super_admin'], blockImpersonation: true }
+  { roles: ['org_admin', 'super_admin'], blockImpersonation: true, requiredFeature: 'module_facility_management' }
 )

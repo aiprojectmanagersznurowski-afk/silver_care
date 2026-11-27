@@ -97,7 +97,24 @@ export const RESOURCES = [
   "shift_definitions",
   "shift_roster",
   "shift_tasks",
-  "shift_plan_approvals"
+  "shift_plan_approvals",
+  "shift_handover_versions",
+  "voice_devices",
+  "voice_device_assignments",
+  "voice_captures",
+  "voice_segments",
+  "voice_assignment_queue",
+  "voice_retention_settings",
+  "organization_feature_flags",
+  "voice_sanitized_events",
+  "organization_report_configs",
+  "operational_reports",
+  "voice_segment_proposals",
+  "family_voice_report_provenance",
+  "operational_report_jobs",
+  "voice_storage_deletions",
+  "voice_app_report_jobs",
+  "shift_task_voice_suggestions"
 ] as const;
 
 export const MATRIX = [
@@ -430,6 +447,204 @@ export const MATRIX = [
     ],
     "update": [],
     "delete": []
+  },
+  {
+    "resource": "shift_handover_versions",
+    "read": [
+      "org_admin:own",
+      "nurse:shift_lead"
+    ],
+    "create": [
+      "org_admin:own",
+      "nurse:shift_lead"
+    ],
+    "update": [],
+    "delete": []
+  },
+  {
+    "resource": "voice_devices",
+    "read": [
+      "org_admin:own",
+      "nurse:own"
+    ],
+    "create": [
+      "org_admin"
+    ],
+    "update": [
+      "org_admin:own"
+    ],
+    "delete": []
+  },
+  {
+    "resource": "voice_device_assignments",
+    "read": [
+      "org_admin:own",
+      "nurse:own"
+    ],
+    "create": [
+      "org_admin:own",
+      "nurse:shift_lead"
+    ],
+    "update": [
+      "org_admin:own",
+      "nurse:shift_lead"
+    ],
+    "delete": []
+  },
+  {
+    "resource": "voice_captures",
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  {
+    "resource": "voice_segments",
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  {
+    "resource": "voice_assignment_queue",
+    "read": [
+      "org_admin:own",
+      "nurse:shift_lead"
+    ],
+    "create": [],
+    "update": [
+      "org_admin:own",
+      "nurse:shift_lead"
+    ],
+    "delete": []
+  },
+  {
+    "resource": "voice_retention_settings",
+    "read": [
+      "org_admin:own",
+      "super_admin"
+    ],
+    "create": [
+      "org_admin:own",
+      "super_admin"
+    ],
+    "update": [
+      "org_admin:own",
+      "super_admin"
+    ],
+    "delete": []
+  },
+  {
+    "resource": "organization_feature_flags",
+    "read": [
+      "super_admin",
+      "org_admin:own",
+      "nurse:own",
+      "legal_guardian:own",
+      "family:own"
+    ],
+    "create": [
+      "super_admin"
+    ],
+    "update": [
+      "super_admin"
+    ],
+    "delete": [
+      "super_admin"
+    ]
+  },
+  {
+    "resource": "voice_sanitized_events",
+    "read": [
+      "org_admin:own",
+      "nurse:own"
+    ],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  {
+    "resource": "organization_report_configs",
+    "read": [
+      "super_admin",
+      "org_admin:own",
+      "nurse:own"
+    ],
+    "create": [
+      "super_admin"
+    ],
+    "update": [
+      "super_admin",
+      "org_admin:own"
+    ],
+    "delete": []
+  },
+  {
+    "resource": "operational_reports",
+    "read": [
+      "org_admin:own",
+      "nurse:own"
+    ],
+    "create": [],
+    "update": [
+      "org_admin:own",
+      "nurse:own"
+    ],
+    "delete": []
+  },
+  {
+    "resource": "voice_segment_proposals",
+    "read": [
+      "org_admin:own",
+      "nurse:own"
+    ],
+    "create": [],
+    "update": [
+      "org_admin:own",
+      "nurse:own"
+    ],
+    "delete": []
+  },
+  {
+    "resource": "family_voice_report_provenance",
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  {
+    "resource": "operational_report_jobs",
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  {
+    "resource": "voice_storage_deletions",
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  {
+    "resource": "voice_app_report_jobs",
+    "read": [],
+    "create": [],
+    "update": [],
+    "delete": []
+  },
+  {
+    "resource": "shift_task_voice_suggestions",
+    "read": [
+      "org_admin:own",
+      "nurse:shift_lead"
+    ],
+    "create": [],
+    "update": [
+      "org_admin:own",
+      "nurse:shift_lead"
+    ],
+    "delete": []
   }
 ] as const;
 
@@ -468,6 +683,8 @@ export const DELETE_POLICIES = [
       "daily_logs",
       "daily_reports",
       "voice_draft_notes",
+      "voice_assignment_queue",
+      "voice_sanitized_events",
       "wellness_daily"
     ]
   },
@@ -486,11 +703,20 @@ export const SHIFT_LEAD_SCOPE = {
   "role": "nurse",
   "resources": [
     "shift_tasks",
-    "shift_plan_approvals"
+    "shift_plan_approvals",
+    "shift_handover_versions",
+    "voice_device_assignments",
+    "voice_assignment_queue",
+    "shift_task_voice_suggestions"
   ],
   "capabilities": [
     "create",
     "update"
+  ],
+  "readResources": [
+    "voice_assignment_queue",
+    "shift_task_voice_suggestions",
+    "shift_handover_versions"
   ],
   "derivedFrom": {
     "resource": "shift_roster",
@@ -498,6 +724,28 @@ export const SHIFT_LEAD_SCOPE = {
   },
   "leadsPerShift": 1,
   "identity": "auth.uid() z sesji i organizacja z app_metadata — nigdy z parametrów żądania"
+} as const;
+
+export const SHIFT_TASK_VOICE = {
+  "resource": "shift_task_voice_suggestions",
+  "requiredAal": "aal2",
+  "requiredFeatures": [
+    "module_voice_and_reports",
+    "module_shift_tasks"
+  ],
+  "maxQuoteLength": 300,
+  "evidenceKinds": [
+    "COMPLETED",
+    "NOT_COMPLETED",
+    "REFUSED"
+  ],
+  "decisions": [
+    "DONE",
+    "CANCELLED",
+    "CARRIED",
+    "REJECTED"
+  ],
+  "auditAction": "VOICE_SHIFT_TASK_DECIDED"
 } as const;
 
 export type Role = typeof ROLES[number]['id'];

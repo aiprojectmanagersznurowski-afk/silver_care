@@ -11,8 +11,11 @@
  * Ścieżki kontraktowe wymagają otwartego okna (tools/sc-contract-window.mjs),
  * a cykl wykonania pilnowany jest przez narzędzia fazowe (tools/sc-phase.mjs).
  */
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { resolve } from 'node:path';
 import { checkWrite, checkBash, projectRoot } from '../../tools/guard-core.mjs';
+import { isAutoIssuePushAllowed } from '../../tools/lib/auto-issue-core.mjs';
 
 const out = (decision, reason) => {
   process.stdout.write(JSON.stringify(reason ? { decision, reason } : { decision }));
@@ -49,17 +52,42 @@ if (name === 'write_to_file' || name === 'replace_file_content' || name === 'mul
   out('allow');
 }
 
+function extractRepoDir(cmd, fallbackDir) {
+  const m = /(?:^|\s)git\s+-C\s+(?:"([^"]+)"|'([^']+)'|([^\s]+))/.exec(cmd);
+  const raw = m ? (m[1] || m[2] || m[3]) : null;
+  return raw ? resolve(fallbackDir, raw) : fallbackDir;
+}
+function tryAuthorizeAutoPush(cmd, fallbackDir) {
+  const repoDir = extractRepoDir(cmd, fallbackDir);
+  try {
+    const git = (a) => execFileSync('git', ['-C', repoDir, ...a], { encoding: 'utf8' }).trim();
+    const currentBranch = git(['branch', '--show-current']);
+    const headSha = git(['rev-parse', 'HEAD']);
+    const receiptPath = resolve(repoDir, git(['rev-parse', '--git-dir']), 'sc-codex-approved.json');
+    let receipt = null;
+    if (existsSync(receiptPath)) {
+      try { receipt = JSON.parse(readFileSync(receiptPath, 'utf8')); } catch { receipt = null; }
+    }
+    return isAutoIssuePushAllowed({ commandLine: cmd, currentBranch, headSha, receipt });
+  } catch (err) {
+    return { allowed: false, reason: `Błąd odczytu stanu git: ${err?.message || 'nieznany błąd'}` };
+  }
+}
+
 // ── Komenda w terminalu ───────────────────────────────────────────────────
 if (name === 'run_command') {
   const cmd = args.CommandLine || '';
   const verdict = checkBash(cmd);
   if (verdict.blocked) out('deny', `BRAMKA SILVER CARE — ${verdict.reason}`);
-
-  // Komendy nieodwracalne i wdrożeniowe zawsze przez człowieka, nawet w trybie Turbo
-  if (/\b(git\s+push|pnpm\s+publish|vercel|supabase\s+db\s+push|supabase\s+functions\s+deploy|prisma\s+migrate\s+deploy)\b/.test(cmd)) {
+  if (/\b(pnpm\s+publish|vercel|supabase\s+db\s+push|supabase\s+functions\s+deploy|prisma\s+migrate\s+deploy)\b/.test(cmd)) {
     out('force_ask', 'Operacja wychodząca poza maszynę lokalną — decyzja należy do człowieka.');
+  }
+  if (/\bgit\b[\s\S]*\bpush\b/.test(cmd)) {
+    const res = tryAuthorizeAutoPush(cmd, process.env.SC_PROJECT_DIR || projectRoot);
+    if (res.allowed) out('allow');
+    if (res.hardDeny) out('deny', `BRAMKA SILVER CARE — ${res.reason}`);
+    out('force_ask', `Operacja wychodząca poza maszynę lokalną — ${res.reason}`);
   }
   out('allow');
 }
-
 out('allow');

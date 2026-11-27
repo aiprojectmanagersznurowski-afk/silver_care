@@ -22,7 +22,7 @@ describe('Database Resident Invitations (ADM-INVITE)', () => {
       const org = await tx`INSERT INTO organizations (name) VALUES ('Test Org Invite') RETURNING id`;
       const orgId = org[0].id;
 
-      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
+      await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "25d86622-328d-4925-8fc7-4a5459f3eda8", "app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
       const resident = await tx`INSERT INTO residents (organization_id, first_name, last_name, pesel_hash) VALUES (${orgId}, 'Jan', 'Kowalski', 'hash_inv') RETURNING id`;
 
       // 1. Insert invitation

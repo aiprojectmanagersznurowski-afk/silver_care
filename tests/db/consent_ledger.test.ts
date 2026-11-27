@@ -22,7 +22,7 @@ describe('Consent Ledger Constraints (CONSENT-GRANTOR, CONSENT-REVOKE)', () => {
       const resId = res[0].id;
 
       // valid
-      await tx`INSERT INTO consent_ledger (organization_id, resident_id, purpose, granted_by) VALUES (${orgId}, ${resId}, 'wellness_data_ingest', 'legal_guardian')`;
+      await tx`INSERT INTO consent_ledger (organization_id, resident_id, purpose, granted_by) VALUES (${orgId}, ${resId}, 'wellness_data_ingest', 'resident_self')`;
 
       // invalid
       await expect(

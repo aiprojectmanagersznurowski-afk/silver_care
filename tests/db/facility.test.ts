@@ -22,7 +22,7 @@ describe('Database Facility Management (ADM-FACILITY-MANAGE)', () => {
       const org = await tx`INSERT INTO organizations (name) VALUES ('Test Org Facility') RETURNING id`;
       const orgId = org[0].id;
 
-      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
+      await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "44444444-4444-4444-8444-444444444444", "app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
 
       await tx`INSERT INTO rooms (number, floor, organization_id) VALUES ('Pokoj 1', '1', ${orgId})`;
 
@@ -41,7 +41,7 @@ describe('Database Facility Management (ADM-FACILITY-MANAGE)', () => {
       // Check different org can have same room name
       await tx`SELECT set_config('request.jwt.claims', '{"app_metadata": {"role": "super_admin"}, "aal": "aal2"}', true)`;
       const org2 = await tx`INSERT INTO organizations (name) VALUES ('Other Org') RETURNING id`;
-      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${org2[0].id}"}, "aal": "aal2"}`}, true)`;
+      await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "44444444-4444-4444-8444-444444444444", "app_metadata": {"role": "org_admin", "organization_id": "${org2[0].id}"}, "aal": "aal2"}`}, true)`;
       
       // Should not throw
       await tx`INSERT INTO rooms (number, floor, organization_id) VALUES ('Pokoj 1', '1', ${org2[0].id})`;
@@ -59,7 +59,7 @@ describe('Database Facility Management (ADM-FACILITY-MANAGE)', () => {
       const org = await tx`INSERT INTO organizations (name) VALUES ('Test Org') RETURNING id`;
       const orgId = org[0].id;
 
-      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
+      await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "44444444-4444-4444-8444-444444444444", "app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
       const room = await tx`INSERT INTO rooms (number, floor, organization_id) VALUES ('Pokoj 2', '1', ${orgId}) RETURNING id`;
 
       await tx`INSERT INTO beds (room_id, label) VALUES (${room[0].id}, 'Lozko A')`;
@@ -93,7 +93,7 @@ describe('Database Facility Management (ADM-FACILITY-MANAGE)', () => {
       const org = await tx`INSERT INTO organizations (name) VALUES ('Test Org') RETURNING id`;
       const orgId = org[0].id;
 
-      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
+      await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "44444444-4444-4444-8444-444444444444", "app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
       const room = await tx`INSERT INTO rooms (number, floor, organization_id) VALUES ('Pokoj', '1', ${orgId}) RETURNING id`;
       const bed = await tx`INSERT INTO beds (room_id, label) VALUES (${room[0].id}, 'Lozko A') RETURNING id`;
       
@@ -129,7 +129,7 @@ describe('Database Facility Management (ADM-FACILITY-MANAGE)', () => {
       const org = await tx`INSERT INTO organizations (name) VALUES ('Test Org') RETURNING id`;
       const orgId = org[0].id;
 
-      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
+      await tx`SELECT set_config('request.jwt.claims', ${`{"sub": "44444444-4444-4444-8444-444444444444", "app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
       const room = await tx`INSERT INTO rooms (number, floor, organization_id) VALUES ('Pokoj', '1', ${orgId}) RETURNING id`;
       
       let res = await tx`SELECT id, number, bed_count(rooms) FROM rooms WHERE id = ${room[0].id}`;

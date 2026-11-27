@@ -375,7 +375,7 @@ flowchart TD
         H4 --> H5["Przegląd przez osobę przekazującą:<br/>poprawki, „wymaga uwagi”,<br/>akceptacja lub odrzucenie zadań"]
         H5 --> H6[("shift_handover_reports<br/>tylko personel")]
         H5 --> TB[("Zadania: backlog<br/>podopieczny albo placówka,<br/>osoba albo zmiana, termin")]
-        H6 --> H7["Następna zmiana potwierdza odbiór"]
+        H6 --> H7["Następna zmiana korzysta z listy lub zatwierdzonego wydruku"]
     end
 
     subgraph BLISCY["Raz dziennie: bliscy"]
@@ -424,3 +424,81 @@ Personel ma trudności z obsługą komputera, więc praca opiekunek odbywa się 
 3. **Cykl zmiany:** przegląd → akceptacja planu → wydruk (`SC-NUR-15`) → praca na wydruku → notatki głosowe „co wykonano” → podpowiedzi „wykonane?” (`SC-NUR-16`, decyduje człowiek) → rozliczenie każdego zadania: wykonane / anulowane z powodem / przechodzi na kolejną zmianę.
 4. **Źródło zadania widoczne zawsze** (ekran i wydruk): z przekazania, standardowe (plan opieki), ręczne, przeniesione z poprzedniej zmiany. Lista grupowana per pokój albo per podopieczny.
 5. **Plan opieki jako osobny komponent** (`SC-ADM-23`): rejestr źródeł zadań standardowych z typem źródła. Pierwszy etap: szablony placówki per profil opieki albo per podopieczny. **Zalecenia lekarza i harmonogram leków** są zarezerwowane jako kolejne typy źródła, ale wymagają osobnego ADR i oceny prawnej (dane art. 9, granica MDR): system tylko odwzorowuje zalecenia wprowadzone przez uprawnioną osobę, bez wyliczania dawek, sprawdzania interakcji i alertów.
+
+---
+
+## ADR-022 — Kanał urządzeń Zero-UI: StickS3, nagrania bez `resident_id` i kolejka przypisania (Status: PROPOZYCJA — wymaga potwierdzenia Darka) 📝
+
+**Kontekst.** Architektura potoku (`docs/architecture/VOICE_SHIFT_REPORTING_PIPELINE.md`) dodaje drugi kanał wejścia: urządzenie przypięte do fartucha, obsługiwane jednym przyciskiem. Jego ekran pokazuje wyłącznie stan (nagrywanie, liczba notatek, bateria, wysyłanie), nigdy treści nagrań ani nazwisk (decyzja Michała z 2026-11-19, makieta ekranów w `silver-care-devices`). Urządzenie nie zna podopiecznego w chwili nagrania, a ADR-006 i reguła `R08-zero-guessing` każą odrzucić żądanie bez `resident_id`. ADR-021 pkt 4 rozwiązał to samo dla odcinków przekazania zmiany. Brakowało decyzji dla notatek z urządzeń.
+
+**Decyzja (Michał, 2026-11-16 i 2026-11-17; Darek: do potwierdzenia).**
+1. **Urządzenie: M5Stack StickS3** (SKU `K150`, ESP32-S3) zamiast M5StickC PLUS2. PLUS2 zostaje wariantem zapasowym (kompendium §1).
+2. **Rozszerzenie ADR-006 na kanał urządzeń: serwer podsuwa, człowiek potwierdza.** Nagranie z urządzenia przychodzi bez `resident_id` i trafia do kolejki „Do przypisania”. Po transkrypcji **serwer, nie model**, porównuje nazwisko, numer pokoju i łóżka z rejestrem tej placówki i podsuwa kandydatów. Kierownik zmiany albo kierownik placówki potwierdza osobę, wybiera „Sprawa placówki” albo „Nie do przypisania”. Bez potwierdzenia nagranie nie przechodzi do maskowania, klasyfikacji ani modelu. Model nadal nigdy nie ustala tożsamości.
+3. **Endpoint w Next.js, plik prosto do Storage.** `/api/voice/device` (Vercel `fra1`) uwierzytelnia token urządzenia i wydaje podpisany adres zapisu w Supabase Storage (UE). Urządzenie wysyła plik bezpośrednio do Storage i potwierdza zapis. Nagranie kasuje się z urządzenia dopiero po potwierdzeniu przyjęcia. Jeden stos z `/api/voice/*`, bez limitu rozmiaru żądania funkcji.
+4. **Urządzenia wspólne, autor z przedstawienia** (decyzja Michała z 2026-11-19, zastępuje stały przydział z 2026-11-17). Opiekunka bierze dowolne urządzenie, np. gdy na jej własnym zabraknie miejsca, i w pierwszej notatce sesji mówi „Jestem …”. Serwer, bez modelu AI, dopasowuje imię i nazwisko z transkryptu do personelu placówki i przypisuje tej osobie wszystkie notatki sesji (przy dostarczeniu `session_seq > 1` przed `session_seq 1` w wyniku ponowienia wysyłki serwer przypisuje autora całej sesji retroaktywnie po dotarciu `session_seq 1`). Brak dopasowania albo kilka osób: kierownik zmiany wybiera autora w kolejce. Sesja zaczyna się po opróżnieniu urządzenia w stacji, po geście „Nowa osoba” albo automatycznie po 3 godzinach bezczynności (`sessionInactivityTimeoutMinutes: 180`). Wpis wydania urządzenia (`voice_device_assignments`) zostaje opcjonalną ewidencją sprzętu i nie wyznacza autora. Protokół 1.2.0: `session_id`, `session_seq`.
+5. **Jeden model nagrania.** Rozszerzamy `voice_draft_notes` o źródło (`APP`, `DEVICE`), urządzenie i opcjonalny `resident_id`. Zostają obecna idempotencja i RLS. Od 2026-11-17 audio z obu kanałów trafia do prywatnego bucketu `voice-recordings` (UE). Retencję pliku i wiersza ustawia kierownik placówki albo super admin, 7–90 dni, domyślnie 30 (`VOICE_RETENTION`, zasób `voice_retention_settings`, kontrakt zmieniony 2026-11-17).
+6. **Firmware i stacja w osobnym repozytorium** `silver-care-devices`. Protokół (token urządzenia, idempotencja, potwierdzenie, kody błędów) mieszka w `integration.contract.mjs`. Repo urządzeń przypina wygenerowaną wersję schematu i nie przepisuje wartości.
+
+**Przebieg.**
+
+```mermaid
+sequenceDiagram
+    participant U as StickS3
+    participant A as /api/voice/device
+    participant S as Storage (UE)
+    participant Q as Kolejka „Do przypisania”
+    actor K as Kierownik zmiany
+
+    U->>A: Token urządzenia, recorded_at, skrót pliku
+    A->>A: Weryfikacja tokenu i idempotencja
+    A-->>U: Podpisany adres zapisu
+    U->>S: Plik nagrania
+    U->>A: Potwierdzenie zapisu
+    A-->>U: ACK, urządzenie kasuje nagranie
+    A->>Q: voice_draft_notes (DEVICE, bez resident_id)
+    Q->>Q: Transkrypcja i podpowiedź serwera
+    K->>Q: Potwierdza osobę albo „Sprawa placówki”
+    Note over Q,K: Dopiero teraz maskowanie, klasyfikacja i model
+```
+
+**Co wymaga okna kontraktowego (otwiera człowiek).**
+- `voice.contract.mjs`: etap `CAPTURE` z dwoma źródłami (`APP` z `resident_id`, `DEVICE` bez niego) i nowy etap `ASSIGN` przed `CLASSIFY`. Reguła `R08-zero-guessing` w `tools/sc-validate.mjs` sprawdza wtedy, że `resident_id` jest znany przed `CLASSIFY`, a nie na wejściu `CAPTURE`.
+- `roles.contract.mjs`: zasoby `voice_devices` i `voice_device_assignments`. Rejestr urządzeń prowadzi kierownik placówki, przydział robi kierownik zmiany albo kierownik placówki, potwierdzenie przypisania nagrania należy do `nurse:shift_lead` i `org_admin`. Bliscy bez dostępu.
+- `integration.contract.mjs`: uwierzytelnienie urządzenia (token per urządzenie, w bazie tylko skrót, unieważnienie przez `revoked_at`) i protokół przyjęcia nagrania.
+- `requirements.contract.mjs`: `VOICE-DEVICE-INGEST`, `VOICE-RESIDENT-ASSIGN`, `VOICE-DEVICE-REGISTRY` ze `source` wskazującym `SC-NUR-17`, `SC-NUR-18`, `SC-ADM-24`. Korekta kryteriów `VOICE-ZERO-GUESSING`.
+
+**Konsekwencje.**
+- Transkrypcja nagrania bez przypisania idzie przez Groq (ADR-009) tak samo jak dziś: surowe audio przed maskowaniem. Zasięg wyjątku z ADR-009 się nie zmienia, ale obejmuje więcej nagrań.
+- Kierownik zmiany dostaje pracę przy kolejce. Okno rozliczenia (architektura, pytanie 9) trzeba sprawdzić w pilotażu.
+- Otwarte: dzielenie jednego nagrania na kilka osób (pytanie 8), zegar RTC w StickS3 (kompendium §1) i zgody personelu na nagrywanie głosu (odłożone w ADR-021).
+
+### Uzupełnienie 2026-11-22 — przypisanie fragmentów przed przygotowaniem szkicu
+
+- Tryb webowy o podopiecznym nadal przekazuje wybrany `resident_id`. Tryb nagrania ogólnego oraz przyjęte audio z urządzenia przekazują zakres do ustalenia po transkrypcji.
+- Jeden plik może zawierać wiele fragmentów. Każdy fragment ma jedno przypisanie do podopiecznego albo placówki. Serwer automatycznie przypisuje jedno spójne dopasowanie w rejestrze placówki do szkicu. Fragmenty wymagające wyjaśnienia trafiają do kolejki kierownika.
+- Przedstawienie na dyktafonie deklaruje autora sesji. Kierownik może ustalić lub skorygować autora fragmentu, także gdy urządzenie zmieniło użytkownika w tej samej sesji. Opóźniona deklaracja zachowuje wcześniejsze korekty.
+- Zatwierdzenie raportu lub zadania pozostaje osobną decyzją. Szczegóły procesu opisują `SC-NUR-18`, `SC-NUR-19` i `SC-NUR-20`. Kontrakt rozstrzyga zasady przypisania i dostępu.
+
+---
+
+## ADR-023 — Dekompozycja potoku głosowego i konfigurowalny silnik kategorii raportów per placówka w module `module_voice_and_reports` (Status: PROPOZYCJA — decyzja Darka 2026-11-21) 📝
+
+**Kontekst.** Dotychczasowy potok głosowy (`apps/web/src/lib/voice-process-persistence.ts`) był sztywno sprzężony z jednym atomowym zapisem `process_voice_draft_atomic` (wyłącznie `daily_logs` + `daily_reports`). Jednocześnie z wejściem stacji dokującej Zero-UI (`ADR-022`, `DEVICE_INGEST_PROTOCOL`) oraz modułowości platformy (`SC-SUP-06`, `module_voice_and_reports`) pojawiła się potrzeba zasilania z jednego strumienia nagrań elastycznego zestawu raportów operacyjnych (raport audytowy, dla działu technicznego, o kuchni/cateringu oraz kolejne kategorie dodawane per placówka), bez naruszania granic MDR/RODO i bez mieszania ścieżek `APP` i `DEVICE`.
+
+**Decyzja (Darek, 2026-11-21).**
+1. **Jeden wspólny moduł `module_voice_and_reports` i 3 odsprzęglone warstwy potoku:**
+   - **Warstwa 1 (`Ingest, Assign & Hard Redact` → `voice_sanitized_events`):** wspólny, niemutowalny artefakt zanonimizowanych zdarzeń. Tryb `APP` korzysta z podopiecznego wybranego przed nagraniem. `APP_GENERAL` i `DEVICE` przekazują fragmenty do rozstrzygnięcia zgodnie z uzupełnieniem ADR-022. Każde zdarzenie ma zakres podopiecznego albo placówki i powiązanie ze źródłem. Przed zapisem i wysyłką do LLM wycinane są dane `MEDICAL_CATEGORIES` (strumień `MEDICAL` zostaje wyłącznie w `daily_logs`) oraz maskowane są PESEL, telefon, e-mail, imiona/nazwiska podopiecznych, numery pokoi i etykiety łóżek.
+   - **Warstwa 2 (`Dynamic Domain Classifier & Router` w EOG):** pobiera aktywne kategorie placówki (`organization_report_configs`) i w jednym wywołaniu EU LLM kieruje zanonimizowane fakty do kategorii operacyjnych placówki (obok istniejącej ścieżki raportu dobowego `daily_reports`). Fakty operacyjne/placówkowe nie są wstrzykiwane do `daily_reports`.
+   - **Warstwa 3 (`Pluggable Report Generators & Sinks` → `organization_report_configs`, `operational_reports`):** wspólny interfejs generatorów (`OperationalCategoryReportGenerator`) napędzany definicją kategorii placówki, z post-filtrem MDR (`sanitizeReportAndVerifySafety`), AI Provenance i zakazem fabrykowania przy braku zdarzeń.
+2. **Kategorie raportów definiowane per placówka przez `super_admin` i delegacja flagą:**
+   - Każda placówka otrzymuje 3 domyślne kategorie operacyjne (`audit_operational`, `technical_maintenance`, `catering_kitchen`).
+   - `super_admin` może dodawać, edytować i archiwizować kolejne kategorie per `organization_id` wyłącznie przez RPC (`upsert_organization_report_category`) z wymogiem MFA (`aal2`), blokadą faktycznej impersonacji oraz śladem w `audit_logs` bez PII. Zgodnie z separacją ról `super_admin` nie czyta treści `voice_sanitized_events` ani `operational_reports`.
+   - Flaga `allow_org_admin_report_config` deleguje Kierownikowi placówki (`org_admin`) wyłącznie konfigurację istniejących kategorii własnej placówki (`configure_organization_report_category`: włączenie, harmonogram `manual`/`per_shift`/`daily`/`weekly`, sekcje z białej listy kontraktu, odbiorcy spośród `org_admin`/`nurse`, retencja `retention_days` w zakresie `30–1825` dni przy globalnej wartości domyślnej `365` dni), nigdy tworzenie nowych kategorii ani zmianę reguł redakcji czy dostępów bliskich (`family`/`legal_guardian` mają zawsze `0` wierszy).
+   - Generowanie i zatwierdzanie raportów operacyjnych należy do `org_admin` i `nurse` własnej placówki przy aktywnym `module_voice_and_reports`: zapis zredagowanych zdarzeń (`voice_sanitized_events`), generowanych szkiców (`operational_reports`) oraz czyszczenie po terminie retencji (`cleanup_expired_operational_reports`) wykonuje wyłącznie zaufany potok serwerowy (`service_role` po redakcji i post-filtrze MDR, brak bezpośredniego tworzenia z sesji klienckich), a zatwierdzanie raportu (`DRAFT` → `APPROVED`) odbywa się przez kontrolowane RPC.
+3. **Retencja nagrań, retencja raportów i wymazywanie RODO art. 17:**
+   - Trigger niemutowalności `voice_sanitized_events` blokuje ręczną modyfikację treści i usuwanie, ale zezwala na wyzerowanie `draft_note_id` (`ON DELETE SET NULL`) przy wygaśnięciu retencyjnym `voice_draft_notes` (`VOICE_RETENTION.keeps`), kaskadowe usunięcie przy twardym wymazaniu podopiecznego (`DELETE_POLICIES` dla `residents`) oraz usunięcie wygasłych zdarzeń/raportów przez `cleanup_expired_operational_reports` po upływie `retention_days` (`365` dni domyślnie, `30–1825` per placówka i kategoria).
+   - Przy wymazaniu podopiecznego (RODO art. 17, `onResidentErasure: 'REVERT_TO_DRAFT_OR_NO_DATA'`) każdy raport zawierający usunięte zdarzenie jest cofany do `status = 'DRAFT'` (`approved_by = NULL`, `approved_at = NULL`), traci zsyntetyzowaną narrację / sekcje o usuniętych źródłach (lub przechodzi w stan `no_data: true` przy utracie wszystkich źródeł) i wymaga ponownego wygenerowania oraz zatwierdzenia.
+
+**Konsekwencje.**
+- Przekazanie zmiany (`shift_handover`) pozostaje w osobnym przepływie `SC-NUR-12` (nie jest nadpisywane przez generatory operacyjne w `#304`).
+- Zasoby `voice_sanitized_events`, `organization_report_configs`, `operational_reports` oraz wymaganie `VOICE-DOCK-REPORTS` i `OPERATIONAL_REPORT_ENGINE` stają się częścią kontraktu (`R36-operational-reports`).

@@ -1,6 +1,9 @@
 'use client'
 
-import React from 'react'
+import React, { useActionState } from 'react'
+import { CONSENT_PURPOSES } from '@silvercare/contracts/src/generated/roles'
+import { recordResidentConsent } from '@/actions/resident-consent'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Users, UserCheck } from 'lucide-react'
 import { InviteFamilyDialog } from '@/components/InviteFamilyDialog'
@@ -10,6 +13,7 @@ import { FullResidentData, ResidentRelativeLinkItem } from './profile-types'
 interface ResidentFamilyCardProps {
   resident: FullResidentData
   relativeLinks: ResidentRelativeLinkItem[]
+  canInvite: boolean
 }
 
 const RELATION_LABELS: Record<string, string> = {
@@ -24,6 +28,7 @@ const RELATION_LABELS: Record<string, string> = {
 export function ResidentFamilyCard({
   resident,
   relativeLinks,
+  canInvite,
 }: ResidentFamilyCardProps) {
   return (
     <Card>
@@ -32,16 +37,19 @@ export function ResidentFamilyCard({
           <Users className="h-5 w-5 text-primary" />
           Bliscy i kontakty ({relativeLinks.length})
         </CardTitle>
-        <InviteFamilyDialog
-          residents={[{ id: resident.id, first_name: resident.first_name, last_name: resident.last_name }]}
-          defaultResidentId={resident.id}
-          triggerLabel="Zaproś bliskiego"
-        />
+        {canInvite && (
+          <InviteFamilyDialog
+            residents={[{ id: resident.id, first_name: resident.first_name, last_name: resident.last_name }]}
+            defaultResidentId={resident.id}
+            triggerLabel="Zaproś bliskiego"
+          />
+        )}
       </CardHeader>
       <CardContent className="pt-4 space-y-3">
+        <ConsentRecorder residentId={resident.id} guardians={relativeLinks.filter((link) => link.role === 'legal_guardian')} />
         {relativeLinks.length === 0 ? (
           <div className="p-4 rounded-xl border border-dashed border-border text-center text-sm text-muted-foreground">
-            Brak powiązanych kont bliskich. Użyj przycisku &bdquo;Zaproś bliskiego&rdquo;, aby nadać dostęp do portalu rodziny.
+            Brak powiązanych kont bliskich.
           </div>
         ) : (
           <div className="space-y-2.5">
@@ -78,5 +86,50 @@ export function ResidentFamilyCard({
         )}
       </CardContent>
     </Card>
+  )
+}
+
+
+const CONSENT_LABELS = {
+  wellness_data_ingest: 'Pobieranie danych z opaski',
+  family_report_access: 'Udostępnianie raportów bliskim',
+  wellness_family_view: 'Udostępnianie aktywności i snu bliskim',
+}
+
+function ConsentRecorder({ residentId, guardians }: { residentId: string; guardians: ResidentRelativeLinkItem[] }) {
+  const [result, record, pending] = useActionState(recordResidentConsent, { message: '', saved: false })
+  const selectClass = 'min-h-touch w-full rounded-md border border-input bg-background px-2 text-sm'
+  return (
+    <details className="rounded-lg border border-border px-3">
+      <summary className="min-h-touch cursor-pointer py-2 text-sm font-medium">Zarejestruj udokumentowaną zgodę</summary>
+      <form action={record} className="grid gap-3 pb-3 text-sm">
+        <input type="hidden" name="resident" value={residentId} />
+        <label className="grid gap-1">
+          Cel zgody
+          <select name="purpose" className={selectClass} required defaultValue="">
+            <option value="" disabled>Wybierz cel</option>
+            {CONSENT_PURPOSES.map(({ id }) => <option key={id} value={id}>{CONSENT_LABELS[id]}</option>)}
+          </select>
+        </label>
+        <label className="grid gap-1">
+          Kto wyraził zgodę
+          <select name="grantor" className={selectClass} required defaultValue="">
+            <option value="" disabled>Wybierz osobę</option>
+            <option value="resident_self">Podopieczny</option>
+            {guardians.map((guardian) => (
+              <option key={guardian.id} value={guardian.relative_user_id}>
+                Opiekun prawny ({guardian.created_at.slice(0, 10)}, {guardian.relative_user_id.slice(-6)})
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex min-h-touch items-center gap-2">
+          <input type="checkbox" name="confirmed" required />
+          Mam udokumentowaną zgodę na wybrany cel.
+        </label>
+        <div><Button type="submit" disabled={pending}>Zapisz zgodę</Button></div>
+        {result.message && <p role={result.saved ? 'status' : 'alert'}>{result.message}</p>}
+      </form>
+    </details>
   )
 }

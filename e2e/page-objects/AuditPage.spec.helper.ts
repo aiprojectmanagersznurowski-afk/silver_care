@@ -11,14 +11,16 @@ export class AuditPage {
   readonly startDateInput: Locator;
   readonly endDateInput: Locator;
   readonly filterButton: Locator;
+  readonly scopeSelect: Locator;
   readonly exportCsvButton: Locator;
   readonly exportJsonButton: Locator;
   readonly userIdHeaders: Locator;
 
   constructor(page: Page) {
     this.page = page;
-    this.heading = page.locator(':is(h1, h2):has-text("Rejestr Audytowy")');
-    this.table = page.locator('table');
+    this.heading = page.getByRole('heading', { name: 'Rejestr audytowy', exact: true });
+    this.table = page.getByRole('table', { name: 'Tabela rejestru audytowego' });
+    this.scopeSelect = page.getByLabel('Zakres zdarzeń');
     this.startDateInput = page.locator('input#audit-date-from, input[name="startDate"]');
     this.endDateInput = page.locator('input#audit-date-to, input[name="endDate"]');
     this.filterButton = page.locator('button:has-text("Filtruj")');
@@ -29,6 +31,18 @@ export class AuditPage {
 
   async goto() {
     await this.page.goto('/admin/audit');
+  }
+
+  async filterShiftEvents(startDate: string, endDate: string) {
+    await this.scopeSelect.selectOption('shift');
+    await this.startDateInput.fill(startDate);
+    await this.endDateInput.fill(endDate);
+    await this.filterButton.click();
+  }
+
+  export(format: 'csv' | 'json') {
+    const button = format === 'csv' ? this.exportCsvButton : this.exportJsonButton;
+    return Promise.all([this.page.waitForEvent('download'), button.click()]).then(([download]) => download);
   }
 
   async expectLoaded() {

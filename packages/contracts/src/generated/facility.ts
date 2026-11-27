@@ -229,13 +229,31 @@ export const SHIFT_TASK_POLICY = {
     "CANCELLED",
     "CARRIED"
   ],
+  "settlementMethods": {
+    "MANUAL": "Ręcznie z listy",
+    "VOICE": "Potwierdzenie podpowiedzi głosowej"
+  },
   "cancelRequiresReason": true,
   "carriedOverMarker": "z poprzedniej zmiany",
   "residentOptional": true,
   "groupBy": [
     "room",
-    "resident"
+    "resident",
+    "assignee"
   ],
+  "board": {
+    "defaultView": "table",
+    "defaultFilter": "all",
+    "mineFilter": "mine"
+  },
+  "assignment": {
+    "rosterOnly": true,
+    "sharedWhenUnassigned": true,
+    "statuses": [
+      "PROPOSED",
+      "TODO"
+    ]
+  },
   "visibleToRelatives": false,
   "planApproval": {
     "requiredBeforePrint": true,
@@ -255,9 +273,44 @@ export const SHIFT_TASK_POLICY = {
     "assignee"
   ],
   "audit": [
+    "SHIFT_TASK_CREATED",
     "SHIFT_TASK_STATUS_CHANGED",
+    "SHIFT_TASK_ASSIGNEE_CHANGED",
+    "SHIFT_TASK_CARRIED",
     "SHIFT_PLAN_APPROVED",
     "SHIFT_PLAN_PRINTED"
-  ]
+  ],
+  "closure": {
+    "completeness": [
+      "COMPLETE",
+      "PARTIAL",
+      "UNKNOWN"
+    ],
+    "completeRequiresArrivalEvidence": true,
+    "completeRequiresIndependentManifest": true,
+    "syncBufferMinutes": 30,
+    "partialRequiresReason": true,
+    "approveBy": [
+      "org_admin",
+      "nurse:shift_lead"
+    ],
+    "approvalFinalizesVersion": true,
+    "amendmentsReferencePriorVersion": true,
+    "audit": {
+      "events": [
+        "SHIFT_HANDOVER_APPROVED",
+        "SHIFT_HANDOVER_AMENDMENT_APPROVED"
+      ],
+      "historicalEvents": [
+        "SHIFT_HANDOVER_ACKNOWLEDGED"
+      ],
+      "voiceEvents": [
+        "VOICE_CAPTURE_RECEIVED",
+        "VOICE_SEGMENT_AUTHOR_DECLARED",
+        "VOICE_SEGMENT_ASSIGNED",
+        "VOICE_SEGMENT_RESOLVED"
+      ]
+    }
+  }
 } as const;
 

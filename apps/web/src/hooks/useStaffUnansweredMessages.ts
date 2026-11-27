@@ -13,7 +13,7 @@ import {
  *
  * Hook do monitorowania oczekujących wiadomości od rodzin w panelu personelu.
  */
-export function useStaffUnansweredMessages() {
+export function useStaffUnansweredMessages(enabled = true) {
   const [awaitingThreads, setAwaitingThreads] = useState<MessageThread[]>([]);
   const [unansweredCount, setUnansweredCount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
@@ -39,6 +39,7 @@ export function useStaffUnansweredMessages() {
   }, []);
 
   useEffect(() => {
+    if (!enabled) return;
     void Promise.resolve().then(() => fetchUnanswered());
 
     const interval = setInterval(fetchUnanswered, 30000);
@@ -55,7 +56,7 @@ export function useStaffUnansweredMessages() {
       window.removeEventListener('staff-messages-updated', handleUpdate);
       window.removeEventListener('focus', handleUpdate);
     };
-  }, [fetchUnanswered]);
+  }, [enabled, fetchUnanswered]);
 
   return {
     awaitingThreads,

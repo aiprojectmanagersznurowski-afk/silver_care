@@ -1,7 +1,9 @@
+import type { EffectiveFeatureFlags } from '@/lib/feature-flags'
 import type { SupabaseClient, User } from '@supabase/supabase-js'
 import type { ResidentCardSection } from '@silvercare/contracts/src/generated/presentation'
 import { resolveCardAccess, sectionsFor, residentSelect, type CardAccess } from './card-access'
 import { RESIDENT_TASK_SELECT, summarizeResidentTasks, type ResidentTaskRow, type ResidentTasksSummary } from './resident-tasks'
+import { residentPhotoUrls } from '@/lib/resident-photo'
 
 type Row = Record<string, unknown>
 type QueryResult = { data: unknown; error: { code?: string } | null }
@@ -15,6 +17,7 @@ export type ResidentCardResult =
       access: CardAccess
       sections: ResidentCardSection[]
       resident: Row
+      canInviteFamily: boolean
       wearable: Row | null
       daily: { reports: Row[]; agenda: Row[] } | null
       /** Sekcja „Zadania” (SC-ADM-21); null, gdy rola jej nie ma. */
@@ -33,11 +36,19 @@ export async function getResidentCard(
   supabase: SupabaseClient,
   residentId: string,
   user: User,
-  isImpersonating: boolean
+  isImpersonating: boolean,
+  flags?: EffectiveFeatureFlags,
 ): Promise<ResidentCardResult> {
   const access = resolveCardAccess(user.app_metadata?.role as string | undefined, isImpersonating)
   if (!access) return { status: 'forbidden' }
-  const sections = sectionsFor(access)
+  const sections = sectionsFor(access).filter((section) => (
+    !flags || (
+      (section !== 'tasks' || flags.module_shift_tasks)
+      && (section !== 'wearable' || flags.module_wearables_iot)
+      && (section !== 'contract' || flags.module_documents_contracts)
+      && (section !== 'bed' || flags.module_facility_management)
+    )
+  ))
   const orgId = user.app_metadata?.organization_id as string | undefined
 
   let residentQuery = supabase.from('residents').select(residentSelect(sections)).eq('id', residentId)
@@ -54,7 +65,7 @@ export async function getResidentCard(
     sections.includes('wearable')
       ? supabase.from('external_wearable_links').select('id, provider, external_user_id, created_at').eq('resident_id', residentId).eq('provider', 'POLAR').maybeSingle()
       : { data: null, error: null },
-    sections.includes('daily')
+    sections.includes('daily') && flags?.module_voice_and_reports !== false
       ? supabase.from('daily_reports').select('id, status, created_at, approved_at').eq('resident_id', residentId).order('created_at', { ascending: false }).limit(5)
       : { data: [], error: null },
     sections.includes('daily')
@@ -71,11 +82,21 @@ export async function getResidentCard(
   }
   if (!resident.data) return { status: 'not_found' }
 
+  // SC-ADM-25: zdjęcie z prywatnego bucketu przez podpisany link (RLS storage decyduje o dostępie).
+  // Pole avatar_url niesie adres do wyświetlenia; bez photo_path zostaje dotychczasowe zdjęcie do czasu przeniesienia plików.
+  const row = resident.data as Row
+  const photoPath = typeof row.photo_path === 'string' ? row.photo_path : null
+  if (photoPath) {
+    const urls = await residentPhotoUrls(supabase, [photoPath])
+    row.avatar_url = urls[photoPath] ?? null
+  }
+
   return {
     status: 'ok',
     access,
     sections,
-    resident: resident.data as Row,
+    resident: row,
+    canInviteFamily: sections.includes('family') && !access.readOnly && Boolean(flags?.module_family_portal),
     wearable: (wearable.data as Row | null) ?? null,
     daily: sections.includes('daily') ? { reports: (reports.data as Row[]) ?? [], agenda: (agenda.data as Row[]) ?? [] } : null,
     tasks: sections.includes('tasks') ? summarizeResidentTasks((tasks.data as ResidentTaskRow[]) ?? [], new Date()) : null,

@@ -1,10 +1,12 @@
 'use server'
 
+import { featureDisabledMessage, isOrgFeatureEnabled } from '@/lib/feature-flags'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { staffMfaSatisfied } from '@/lib/auth/staff-mfa'
+import type { User } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
-import { cookies } from 'next/headers'
-import { isImpersonationSessionActive, assertMutationAllowedDuringImpersonation } from '@/lib/impersonation-guards'
+import { isImpersonationSessionActive, assertMutationAllowedDuringImpersonation, safeGetCookieStore } from '@/lib/impersonation-guards'
 import {
   RawResidentRow,
   validateResidentRows,
@@ -15,6 +17,12 @@ import {
 import { hashNationalId } from '@/lib/national-id-hash'
 import { countPresentResidents, RESIDENT_PRESENCE_COLUMNS, ResidentPresenceFields } from '@/lib/capacity-limit'
 
+async function canManageBulkImport(supabase: Awaited<ReturnType<typeof createClient>>, user: User) {
+  if (user.app_metadata?.role !== 'org_admin') return false
+  const { data } = await supabase.auth.getClaims()
+  return data?.claims.sub === user.id && await staffMfaSatisfied(supabase, data.claims.aal)
+}
+
 export async function analyzeBulkImportAction(rows: RawResidentRow[]): Promise<{
   error?: string
   result?: DryRunResult
@@ -23,8 +31,15 @@ export async function analyzeBulkImportAction(rows: RawResidentRow[]): Promise<{
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) return { error: 'Brak autoryzacji sesji.' }
+  if (!await canManageBulkImport(supabase, user)) {
+    return { error: 'Import wymaga konta kierownika placówki i potwierdzenia MFA.' }
+  }
   const orgId = user.app_metadata?.organization_id
   if (!orgId) return { error: 'Brak przypisanej placówki.' }
+
+  if (!(await isOrgFeatureEnabled(supabase, orgId, 'module_residents_management'))) {
+    return { error: featureDisabledMessage }
+  }
 
   const adminClient = createAdminClient()
 
@@ -45,7 +60,7 @@ export async function analyzeBulkImportAction(rows: RawResidentRow[]): Promise<{
     .eq('id', orgId)
     .single()
 
-  const residentLimit = Number(orgData?.resident_limit || 50)
+  const residentLimit = Number(orgData?.resident_limit ?? 50)
   // Miejsce zajmują tylko podopieczni przebywający w placówce (ADM-CAPACITY-LIMIT, decyzja Michała 2026-10-29)
   const currentActiveCount = countPresentResidents((existing || []) as unknown as ResidentPresenceFields[])
   const existingHashes = new Set<string>(
@@ -63,17 +78,21 @@ export async function analyzeBulkImportAction(rows: RawResidentRow[]): Promise<{
   }
 }
 
-export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[]): Promise<{
+export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[], confirmCapacity = false): Promise<{
   error?: string
   importedCount?: number
   capacityExceeded?: { residentLimit: number; activeResidents: number }
+  capacityConfirmationRequired?: boolean
 }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) return { error: 'Brak autoryzacji sesji.' }
+  if (!await canManageBulkImport(supabase, user)) {
+    return { error: 'Import wymaga konta kierownika placówki i potwierdzenia MFA.' }
+  }
 
-  const cookieStore = await cookies()
+  const cookieStore = await safeGetCookieStore()
   const guard = assertMutationAllowedDuringImpersonation(isImpersonationSessionActive(cookieStore, user))
   if (!guard.allowed) {
     return { error: guard.error }
@@ -81,21 +100,17 @@ export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[
   const orgId = user.app_metadata?.organization_id
   if (!orgId) return { error: 'Brak przypisanej placówki.' }
 
-  const role = user.app_metadata?.role
-  if (role !== 'org_admin' && role !== 'super_admin') {
-    return { error: 'Tylko kierownik placówki może wykonywać masowy import.' }
+  const selectedRows = rowsToImport.filter((r) => r.isValid)
+  const { rows, validRowsCount } = validateResidentRows(selectedRows)
+  if (validRowsCount === 0 || validRowsCount !== selectedRows.length) {
+    return { error: 'Wiersze importu są niepoprawne lub powtórzone. Sprawdź podgląd ponownie.' }
   }
 
-  const validRows = rowsToImport.filter((r) => r.isValid)
-  if (validRows.length === 0) {
-    return { error: 'Brak poprawnych wierszy do zaimportowania.' }
+  if (!(await isOrgFeatureEnabled(supabase, orgId, 'module_residents_management'))) {
+    return { error: featureDisabledMessage }
   }
 
-  const adminClient = createAdminClient()
-
-  // Przygotowanie rekordów do wstawienia
-  const records = validRows.map((r) => ({
-    organization_id: orgId,
+  const records = rows.map((r) => ({
     first_name: r.firstName,
     last_name: r.lastName,
     pesel_hash: hashNationalId(r.nationalId),
@@ -107,77 +122,29 @@ export async function commitBulkImportAction(rowsToImport: ValidatedResidentRow[
     admission_date: r.admissionDate || new Date().toISOString().substring(0, 10),
   }))
 
-  // Wstawianie w batchach po 50 rekordów
-  const batchSize = 50
-  let totalImported = 0
-
-  for (let i = 0; i < records.length; i += batchSize) {
-    const batch = records.slice(i, i + batchSize)
-    const { data: inserted, error: insertErr } = await adminClient
-      .from('residents')
-      .insert(batch)
-      .select('id')
-
-    if (insertErr) {
-      return { error: `Błąd podczas zapisu partii rekordów: ${insertErr.message}` }
-    }
-    totalImported += (inserted || []).length
-  }
-
-  // Limit miejsc zmienia wyłącznie super admin (CAPACITY_POLICY, ADM-CAPACITY-LIMIT) — import go nie podnosi,
-  // tylko odnotowuje przekroczenie w audycie
-  const { data: presentRows } = await adminClient
-    .from('residents')
-    .select(RESIDENT_PRESENCE_COLUMNS)
-    .eq('organization_id', orgId)
-    .is('archived_at', null)
-
-  const activeTotal = countPresentResidents((presentRows || []) as ResidentPresenceFields[]) || totalImported
-
-  const { data: orgRecord } = await adminClient
-    .from('organizations')
-    .select('resident_limit')
-    .eq('id', orgId)
-    .single()
-
-  const currentLimit = Number(orgRecord?.resident_limit || 50)
-  const capacityExceeded = activeTotal > currentLimit
-    ? { residentLimit: currentLimit, activeResidents: activeTotal }
-    : undefined
-
-  if (capacityExceeded) {
-    await adminClient.from('audit_logs').insert({
-      organization_id: orgId,
-      resident_id: null,
-      action: 'ORGANIZATION_CAPACITY_EXCEEDED',
-      performed_by: user.id,
-      payload: {
-        operation: 'resident_bulk_import',
-        resident_limit: currentLimit,
-        active_resident_count: activeTotal,
-      },
-    })
-  }
-
-  // Wpis do audit_logs dla masowego importu
-  await adminClient.from('audit_logs').insert({
-    organization_id: orgId,
-    resident_id: null,
-    action: 'RESIDENTS_BULK_IMPORT',
-    performed_by: user.id,
-    payload: {
-      imported_count: totalImported,
-      source: 'excel_csv_import',
-      capacity_exceeded: Boolean(capacityExceeded),
-    },
+  const { data, error } = await supabase.rpc('commit_resident_import', {
+    p_rows: records, p_confirm_capacity: confirmCapacity,
   })
+  if (error?.message === 'RESIDENT_IMPORT_CAPACITY_CONFIRMATION') {
+    return { error: 'Import wymaga potwierdzenia aktualnego limitu miejsc. Odśwież podgląd.', capacityConfirmationRequired: true }
+  }
+  if (error?.code === '23505') {
+    return { error: 'Co najmniej jeden podopieczny już istnieje. Uruchom podgląd ponownie.' }
+  }
+  if (error || !data || typeof data !== 'object' || Array.isArray(data)
+    || typeof data.importedCount !== 'number' || typeof data.residentLimit !== 'number'
+    || typeof data.activeResidents !== 'number') {
+    return { error: 'Nie udało się potwierdzić zapisu importu. Uruchom podgląd przed ponowieniem.' }
+  }
 
   revalidatePath('/admin/residents')
   revalidatePath('/admin/organizations')
   revalidatePath(`/admin/organizations/${orgId}`)
 
   return {
-    importedCount: totalImported,
-    capacityExceeded,
+    importedCount: data.importedCount,
+    capacityExceeded: data.activeResidents > data.residentLimit
+      ? { residentLimit: data.residentLimit, activeResidents: data.activeResidents }
+      : undefined,
   }
 }

@@ -1,99 +1,124 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { randomUUID } from 'node:crypto';
+import { afterAll, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
-import * as dotenv from 'dotenv';
-
-dotenv.config({ path: '.env.local' });
 
 const sql = postgres(process.env.DATABASE_URL!, { prepare: false });
+const rollback = new Error('rollback security fixtures');
 
-describe('Database Security MFA (SEC-MFA-STAFF)', () => {
-  beforeAll(async () => {
-    await sql`RESET ROLE`;
+async function asRole(tx: postgres.TransactionSql, role: string, organizationId: string, userId: string, aal: string) {
+  await tx`SELECT set_config('request.jwt.claims', ${JSON.stringify({
+    sub: userId,
+    role: 'authenticated',
+    app_metadata: { role, organization_id: organizationId },
+    aal,
+  })}, true)`;
+}
+
+async function withFixtures(check: (tx: postgres.TransactionSql, ids: {
+  orgId: string;
+  residentId: string;
+  auditId: string;
+  foreignAuditId: string;
+  userId: string;
+}) => Promise<void>) {
+  await sql.begin(async (tx) => {
+    const [org] = await tx`INSERT INTO public.organizations (name) VALUES ('MFA fixtures') RETURNING id`;
+    const [foreignOrg] = await tx`INSERT INTO public.organizations (name) VALUES ('MFA other facility') RETURNING id`;
+    const [resident] = await tx`
+      INSERT INTO public.residents (organization_id, first_name, last_name)
+      VALUES (${org.id}, 'Jan', 'Testowy') RETURNING id
+    `;
+    const [audit] = await tx`
+      INSERT INTO public.audit_logs (organization_id, resident_id, action)
+      VALUES (${org.id}, ${resident.id}, 'mfa_fixture') RETURNING id
+    `;
+    const [foreignAudit] = await tx`
+      INSERT INTO public.audit_logs (organization_id, action)
+      VALUES (${foreignOrg.id}, 'mfa_fixture') RETURNING id
+    `;
+    const userId = randomUUID();
+    await tx`
+      INSERT INTO public.resident_relative_links (resident_id, relative_user_id, relationship_code, role)
+      VALUES (${resident.id}, ${userId}, 'SON', 'family')
+    `;
+
+    await tx`SET LOCAL ROLE authenticated`;
+    await check(tx, {
+      orgId: org.id,
+      residentId: resident.id,
+      auditId: audit.id,
+      foreignAuditId: foreignAudit.id,
+      userId,
+    });
+    throw rollback;
+  }).catch((error: unknown) => {
+    if (error !== rollback) throw error;
+  });
+}
+
+describe('Database Security MFA', () => {
+  afterAll(() => sql.end());
+
+  it('@REQ: SEC-MFA-STAFF - personel odczytuje podopiecznego po potwierdzeniu drugiego składnika', async () => {
+    await withFixtures(async (tx, { orgId, residentId, userId }) => {
+      for (const role of ['org_admin', 'nurse']) {
+        await asRole(tx, role, orgId, userId, 'aal1');
+        await expect(tx.savepoint((sp) => sp`SELECT id FROM public.residents WHERE id = ${residentId}`))
+          .rejects.toMatchObject({ code: '42501' });
+
+        await asRole(tx, role, orgId, userId, 'aal2');
+        expect(await tx`SELECT id FROM public.residents WHERE id = ${residentId}`).toEqual([{ id: residentId }]);
+      }
+    });
   });
 
-  afterAll(async () => {
-    await sql.end();
+  it('@REQ: SEC-MFA-STAFF - odczyt audytu wymaga drugiego składnika i zachowuje zakres roli', async () => {
+    await withFixtures(async (tx, { orgId, auditId, foreignAuditId, userId }) => {
+      for (const role of ['org_admin', 'super_admin']) {
+        await asRole(tx, role, orgId, userId, 'aal1');
+        await expect(tx.savepoint((sp) => sp`SELECT id FROM public.audit_logs WHERE id = ${auditId}`))
+          .rejects.toMatchObject({ code: '42501' });
+      }
+
+      await asRole(tx, 'org_admin', orgId, userId, 'aal2');
+      expect(await tx`SELECT id FROM public.audit_logs WHERE id IN (${auditId}, ${foreignAuditId})`)
+        .toEqual([{ id: auditId }]);
+      await asRole(tx, 'super_admin', orgId, userId, 'aal2');
+      expect(await tx`SELECT id FROM public.audit_logs WHERE id IN (${auditId}, ${foreignAuditId})`)
+        .toEqual(expect.arrayContaining([{ id: auditId }, { id: foreignAuditId }]));
+    });
   });
 
-  it('rejects staff queries if MFA (aal2) is not present, allows family without MFA @REQ: SEC-MFA-STAFF', async () => {
-    await sql.begin(async (tx) => {
-      await tx`
-        CREATE OR REPLACE FUNCTION public.check_mfa_requirement()
-        RETURNS boolean AS $$
-        DECLARE
-            claims jsonb;
-            user_role text;
-            user_aal text;
-        BEGIN
-            claims := current_setting('request.jwt.claims', true)::jsonb;
-            IF claims IS NULL THEN
-                RETURN true;
-            END IF;
+  it('@REQ: SEC-MFA-STAFF - bliski ma odczyt powiązanego podopiecznego w widoku rodzin bez drugiego składnika', async () => {
+    await withFixtures(async (tx, { orgId, residentId, userId }) => {
+      await asRole(tx, 'family', orgId, userId, 'aal1');
+      expect(await tx`SELECT id FROM public.get_family_resident_overview()`).toEqual([{ id: residentId }]);
+    });
+  });
 
-            user_role := COALESCE(claims->'app_metadata'->>'role', '');
-            user_aal := COALESCE(claims->>'aal', 'aal1');
+  it('@REQ: SEC-MFA-STAFF - wyłącznie operator może czasowo dopuścić aal1 bez zmiany roli i zakresu placówki', async () => {
+    await withFixtures(async (tx, { orgId, auditId, foreignAuditId, residentId, userId }) => {
+      await asRole(tx, 'org_admin', orgId, userId, 'aal1');
+      expect((await tx`SELECT public.staff_mfa_satisfied() AS allowed`)[0].allowed).toBe(false);
+      await expect(tx.savepoint((sp) => sp`SELECT id FROM public.audit_logs WHERE id = ${auditId}`))
+        .rejects.toMatchObject({ code: '42501' });
+      await expect(tx.savepoint((sp) => sp`
+        CREATE OR REPLACE FUNCTION private.staff_mfa_disabled_for_tests() RETURNS boolean LANGUAGE sql RETURN true
+      `)).rejects.toMatchObject({ code: '42501' });
 
-            IF user_role IN ('super_admin', 'org_admin', 'nurse') AND user_aal != 'aal2' THEN
-                RAISE EXCEPTION 'MFA (aal2) required for staff roles';
-            END IF;
-
-            RETURN true;
-        END;
-        $$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
-      `;
-
-      await tx`
-        CREATE POLICY "mfa_enforcement_residents" ON public.residents
-        AS RESTRICTIVE FOR ALL
-        USING (public.check_mfa_requirement());
-      `;
-
+      await tx`RESET ROLE`;
+      await tx`CREATE OR REPLACE FUNCTION private.staff_mfa_disabled_for_tests() RETURNS boolean LANGUAGE sql STABLE RETURN true`;
       await tx`SET LOCAL ROLE authenticated`;
-      
-      // Super admin setup for org
-      await tx`SELECT set_config('request.jwt.claims', '{"app_metadata": {"role": "super_admin"}, "aal": "aal2"}', true)`;
-      const org = await tx`INSERT INTO organizations (name) VALUES ('MFA Test Org') RETURNING id`;
-      const orgId = org[0].id;
-      
-      // Setup resident as org_admin (with aal2 because current system allows it before MFA is enforced, but let's be safe)
-      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
-      await tx`INSERT INTO residents (organization_id, first_name, last_name, pesel_hash) VALUES (${orgId}, 'Jan', 'Nowak', 'hash') RETURNING id`;
+      expect((await tx`SELECT public.staff_mfa_satisfied() AS allowed`)[0].allowed).toBe(true);
+      expect(await tx`SELECT id FROM public.audit_logs WHERE id IN (${auditId}, ${foreignAuditId})`)
+        .toEqual([{ id: auditId }]);
+      expect(await tx`SELECT id FROM public.residents WHERE id = ${residentId}`).toEqual([{ id: residentId }]);
+      expect((await tx`SELECT auth.jwt()->>'aal' AS level`)[0].level).toBe('aal1');
 
-      // 1. org_admin WITHOUT MFA (aal1) should fail to read residents
-      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal1"}`}, true)`;
-      
-      let err1;
-      await tx`SAVEPOINT no_mfa_staff`;
-      try {
-        await tx`SELECT * FROM residents`;
-      } catch (e) {
-        err1 = e;
-        await tx`ROLLBACK TO no_mfa_staff`;
-      }
-      expect(err1).toBeDefined();
-      expect((err1 as any).message).toMatch(/MFA \(aal2\) required for staff/);
-
-      // 2. org_admin WITH MFA (aal2) should succeed
-      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "org_admin", "organization_id": "${orgId}"}, "aal": "aal2"}`}, true)`;
-      const res1 = await tx`SELECT * FROM residents`;
-      expect(res1.length).toBe(1);
-
-      // 3. legal_guardian WITHOUT MFA (aal1) should succeed
-      await tx`SELECT set_config('request.jwt.claims', ${`{"app_metadata": {"role": "legal_guardian", "organization_id": "${orgId}"}, "aal": "aal1"}`}, true)`;
-      
-      let err3;
-      await tx`SAVEPOINT no_mfa_family`;
-      try {
-        await tx`SELECT * FROM residents`;
-      } catch (e) {
-        err3 = e;
-        await tx`ROLLBACK TO no_mfa_family`;
-      }
-      expect(err3).toBeUndefined(); // Should NOT throw!
-
-      throw new Error('ROLLBACK');
-    }).catch(e => {
-      if (e.message !== 'ROLLBACK') throw e;
+      await asRole(tx, 'nurse', orgId, userId, 'aal1');
+      expect(await tx`SELECT id FROM public.audit_logs WHERE id = ${auditId}`).toEqual([]);
+      await asRole(tx, 'family', orgId, userId, 'aal1');
+      expect((await tx`SELECT public.staff_mfa_satisfied() AS allowed`)[0].allowed).toBe(false);
     });
   });
 });
