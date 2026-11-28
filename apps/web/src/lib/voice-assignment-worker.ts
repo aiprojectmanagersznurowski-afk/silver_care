@@ -15,6 +15,7 @@ interface PartClaim {
   end_ms: number
   time_certain: boolean
   author_id: string | null
+  selected_resident_id?: string | null
   residents: AssignmentResident[]
 }
 
@@ -41,6 +42,7 @@ export async function processNextVoiceAssignmentPart(config: ReturnType<typeof r
     if (!text) throw new VoiceAudioUnavailable()
     const assignment = assignVoiceSegment({
       text, authorId: part.author_id, timeCertain: part.time_certain,
+      selectedResidentId: part.selected_resident_id ?? undefined,
     }, part.residents)
     const path = `${part.organization_id}/transcripts/${part.capture_id}/${part.segment_id}/${part.token}`
     attemptedPath = path

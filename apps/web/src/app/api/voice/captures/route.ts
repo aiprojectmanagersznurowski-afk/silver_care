@@ -4,11 +4,13 @@ import { OPERATIONAL_REPORT_ENGINE, RESIDENT_ASSIGNMENT, VOICE_RETENTION } from 
 import { withAuth } from '@/lib/api-auth'
 import { staffMfaSatisfied } from '@/lib/auth/staff-mfa'
 import { createAdminClient } from '@/lib/supabase/admin'
+import type { Tables } from '@/types/database.types'
 
 export const runtime = 'nodejs'
 
 const uuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i
 const maxAudioBytes = 4 * 1024 * 1024
+type CaptureReceipt = Pick<Tables<'voice_captures'>, 'id' | 'sha256' | 'source' | 'selected_resident_id'>
 const sha256 = (data: ArrayBuffer) => createHash('sha256').update(new Uint8Array(data)).digest('hex')
 
 function failure(message: string, status: number) {
@@ -38,9 +40,12 @@ export const POST = withAuth(async (request, { user, supabase, accessToken }) =>
 
   const data = await request.formData().catch(() => null)
   const file = data?.get('file')
-  const sourceKey = data?.get('client_uuid')
+  const clientUuid = data?.get('client_uuid')
+  const selected = data?.get('purpose') === 'resident_capture'
+  const resident = data?.get('resident_id')
   if (!data || !(file instanceof File) || !file.size || file.size > maxAudioBytes
-    || typeof sourceKey !== 'string' || !uuid.test(sourceKey) || !user.organizationId) {
+    || typeof clientUuid !== 'string' || !uuid.test(clientUuid) || !user.organizationId
+    || (selected ? typeof resident !== 'string' || !uuid.test(resident) : resident !== null)) {
     return failure('Nieprawidłowe nagranie.', 400)
   }
   if (data.get('author_id') !== user.id) return failure('Nagranie należy do innej sesji personelu.', 403)
@@ -49,19 +54,30 @@ export const POST = withAuth(async (request, { user, supabase, accessToken }) =>
   if (!mimeType) return failure('Nieprawidłowy format nagrania.', 400)
 
   const orgId = user.organizationId
+  const source = selected ? RESIDENT_ASSIGNMENT.selectedResidentReview.source : 'APP_GENERAL'
+  const sourceKey = clientUuid.toLowerCase()
+  const residentId = typeof resident === 'string' ? resident.toLowerCase() : null
+  if (residentId) {
+    const permitted = await supabase.from('residents').select('id')
+      .eq('id', residentId).eq('organization_id', orgId).is('archived_at', null).maybeSingle()
+    if (permitted.error) return failure('Nie udało się sprawdzić dostępu do karty podopiecznego.', 503)
+    if (!permitted.data) return failure('Podopieczny jest niedostępny w tej placówce.', 403)
+  }
   const hash = sha256(bytes)
-  const path = `${orgId}/app_general/${user.id}/${sourceKey}`
+  const path = `${orgId}/${source.toLowerCase()}/${user.id}/${sourceKey}`
   const admin = createAdminClient()
   const storage = admin.storage.from(VOICE_RETENTION.storageBucket)
   const captures = () => admin.from(RESIDENT_ASSIGNMENT.captureResource)
-  const findCapture = () => captures().select('id, sha256')
+  const findCapture = () => captures().select('id, sha256, source, selected_resident_id')
     .eq('organization_id', orgId).eq('author_id', user.id).eq('source_key', sourceKey)
-    .eq('source', 'APP_GENERAL').maybeSingle()
+    .neq('source', 'DEVICE').maybeSingle()
+  const replay = (capture: CaptureReceipt) =>
+    capture.sha256 === hash && capture.source === source && capture.selected_resident_id === residentId
+      ? accepted(capture.id) : failure('Ten identyfikator należy do innego nagrania.', 409)
 
   const previous = await findCapture()
   if (previous.error) return failure('Nie udało się potwierdzić zapisu nagrania.', 503)
-  if (previous.data) return previous.data.sha256 === hash
-    ? accepted(previous.data.id) : failure('Ten identyfikator należy do innego nagrania.', 409)
+  if (previous.data) return replay(previous.data)
 
   const stored = await storage.upload(path, bytes, { contentType: mimeType, upsert: false })
   if (stored.error) {
@@ -77,7 +93,7 @@ export const POST = withAuth(async (request, { user, supabase, accessToken }) =>
   const received = Date.now()
   const synced = Number.isFinite(recorded) && recorded <= received + 60_000
   const result = await captures().insert({
-    organization_id: orgId, author_id: user.id, source: 'APP_GENERAL', source_key: sourceKey,
+    organization_id: orgId, author_id: user.id, source, source_key: sourceKey, selected_resident_id: residentId,
     storage_path: path, sha256: hash, recorded_at: new Date(synced ? recorded : received).toISOString(),
     clock_state: synced ? 'SYNCED' : 'UNKNOWN',
   }).select('id').single()
@@ -85,8 +101,7 @@ export const POST = withAuth(async (request, { user, supabase, accessToken }) =>
 
   if (result.error?.code === '23505') {
     const other = await findCapture()
-    if (other.data?.sha256 === hash) return accepted(other.data.id)
-    if (other.data) return failure('Ten identyfikator należy do innego nagrania.', 409)
+    if (other.data) return replay(other.data)
   }
   return failure('Nagranie czeka na ponowienie zapisu.', 503)
 }, {

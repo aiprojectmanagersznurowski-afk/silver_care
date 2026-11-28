@@ -5,18 +5,21 @@ import { Mic, Square } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useVoiceRecorder } from '@/hooks/useVoiceRecorder'
 
-export function GeneralVoiceRecorder({ authorId }: { authorId: string }) {
+export function VoiceCaptureRecorder({ authorId, residentId }: { authorId: string; residentId?: string }) {
   const [submitted, setSubmitted] = useState(false)
   const recorder = useVoiceRecorder({
     endpoint: '/api/voice/captures',
-    purpose: 'general_note',
+    purpose: residentId ? 'resident_capture' : 'general_note',
+    getExtraFormData: residentId ? () => ({ resident_id: residentId }) : undefined,
     authorId,
     onSuccess: () => setSubmitted(true),
   })
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">Nagraj notatkę o przebiegu zmiany lub sprawie placówki.</p>
+      <p className="text-sm text-muted-foreground">{residentId
+        ? 'Nagraj notatkę o wybranym podopiecznym.'
+        : 'Nagraj notatkę o przebiegu zmiany lub sprawie placówki.'}</p>
       {recorder.isRecording ? (
         <div className="flex flex-wrap items-center gap-3">
           <Button type="button" onClick={recorder.stopRecording}><Square aria-hidden />Zakończ nagranie</Button>
@@ -24,7 +27,7 @@ export function GeneralVoiceRecorder({ authorId }: { authorId: string }) {
           <span aria-label="Czas nagrania" className="text-sm tabular-nums">{recorder.duration} s</span>
         </div>
       ) : (
-        <Button type="button" disabled={recorder.isTranscribing} onClick={() => {
+        <Button type="button" disabled={recorder.isTranscribing || Boolean(residentId && recorder.fallbackAudioBlob)} onClick={() => {
           setSubmitted(false)
           void recorder.startRecording()
         }}><Mic aria-hidden />Rozpocznij nagrywanie</Button>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   getOfflineQueueStats,
   flushOfflineVoiceQueue,
@@ -10,62 +10,56 @@ import {
 import { CloudOff, RefreshCw, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 
-export function StaffVoiceSyncListener() {
-  const [stats, setStats] = useState<VoiceQueueStats>({ pendingCount: 0, failedCount: 0 })
+export function StaffVoiceSyncListener({ authorId }: { authorId: string }) {
+  const [stats, setStats] = useState<VoiceQueueStats>({ pendingCount: 0, failedCount: 0, pendingResidentCaptureCount: 0 })
   const [isSyncing, setIsSyncing] = useState(false)
+  const syncing = useRef(false)
 
-  const handleSync = useCallback(async () => {
-    if (isSyncing || !isOnline()) return
+  const handleSync = useCallback(async (residentOnly = false) => {
+    if (syncing.current || !isOnline()) return
+    syncing.current = true
     setIsSyncing(true)
     try {
-      const res = await flushOfflineVoiceQueue()
+      const res = await flushOfflineVoiceQueue(undefined, { authorId, purpose: residentOnly ? 'resident_capture' : undefined })
       if (res.synced > 0) {
         toast.success(`Zsynchronizowano nagrania offline (${res.synced}).`)
-      } else if (res.failed > 0) {
+      } else if (res.failed > 0 && !residentOnly) {
         toast.error(`Nie udało się wysłać części nagrań (${res.failed}). Sprawdź połączenie.`)
       }
     } catch {
       toast.error('Błąd podczas próby synchronizacji nagrań.')
     } finally {
+      syncing.current = false
       setIsSyncing(false)
-      const current = await getOfflineQueueStats().catch(() => null)
-      if (current) setStats(current)
     }
-  }, [isSyncing])
+  }, [authorId])
 
   useEffect(() => {
     let active = true
+    let retry: ReturnType<typeof setTimeout> | undefined
 
-    getOfflineQueueStats()
-      .then((data) => {
-        if (active) setStats(data)
-      })
-      .catch(() => {})
-
-    const onQueueChange = (e: Event) => {
-      const custom = e as CustomEvent<VoiceQueueStats>
-      if (custom.detail) {
-        setStats(custom.detail)
-      } else {
-        void getOfflineQueueStats().then((data) => {
-          if (active) setStats(data)
-        })
+    const refresh = async () => {
+      const data = await getOfflineQueueStats(authorId).catch(() => null)
+      if (!active || !data) return
+      setStats(data)
+      clearTimeout(retry)
+      if (data.pendingResidentCaptureCount > 0 && isOnline()) {
+        retry = setTimeout(() => void handleSync(true), 5000)
       }
     }
+    const onQueueChange = () => void refresh()
+    const onOnline = () => void handleSync()
 
-    const onOnline = () => {
-      void handleSync()
-    }
-
+    onQueueChange()
     window.addEventListener('sc-offline-queue-change', onQueueChange)
     window.addEventListener('online', onOnline)
-
     return () => {
       active = false
+      clearTimeout(retry)
       window.removeEventListener('sc-offline-queue-change', onQueueChange)
       window.removeEventListener('online', onOnline)
     }
-  }, [handleSync])
+  }, [authorId, handleSync])
 
   const totalCount = stats.pendingCount + stats.failedCount
   if (totalCount === 0) return null

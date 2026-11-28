@@ -38,6 +38,7 @@ export interface OfflineVoiceItem {
 export interface VoiceQueueStats {
   pendingCount: number
   failedCount: number
+  pendingResidentCaptureCount: number
 }
 
 export function generateClientUuid(): string {
@@ -56,18 +57,22 @@ export function isOnline(): boolean {
     : true
 }
 
-export async function getOfflineQueueStats(): Promise<VoiceQueueStats> {
+const belongsToSession = (item: OfflineVoiceItem, authorId?: string) =>
+  !authorId || !item.author_id || item.author_id === authorId
+
+export async function getOfflineQueueStats(authorId?: string): Promise<VoiceQueueStats> {
   const queue = await idbGetAllItems()
-  let pendingCount = 0
-  let failedCount = 0
+  const stats = { pendingCount: 0, failedCount: 0, pendingResidentCaptureCount: 0 }
   for (const item of queue) {
+    if (!belongsToSession(item, authorId)) continue
     if (item.status === 'failed_permanent') {
-      failedCount++
+      stats.failedCount++
     } else {
-      pendingCount++
+      stats.pendingCount++
+      if (item.purpose === 'resident_capture') stats.pendingResidentCaptureCount++
     }
   }
-  return { pendingCount, failedCount }
+  return stats
 }
 
 export async function notifyOfflineQueueChange(stats?: VoiceQueueStats): Promise<VoiceQueueStats> {
@@ -143,8 +148,8 @@ export async function sendOfflineVoiceItemToServer(item: OfflineVoiceItem): Prom
     formData.append('client_uuid', item.client_uuid)
     if (item.resident_id) formData.append('resident_id', item.resident_id)
     formData.append('purpose', item.purpose || 'resident_note')
-    const general = item.purpose === 'general_note'
-    if (general) {
+    const privateCapture = item.purpose === 'general_note' || item.purpose === 'resident_capture'
+    if (privateCapture) {
       if (!item.author_id) return false
       formData.append('author_id', item.author_id)
     }
@@ -153,7 +158,7 @@ export async function sendOfflineVoiceItemToServer(item: OfflineVoiceItem): Prom
     const ext = item.ext || (mime.includes('mp4') || mime.includes('m4a') ? 'm4a' : 'webm')
     formData.append('file', blob, `offline-${item.client_uuid}.${ext}`)
 
-    const res = await fetch(general ? '/api/voice/captures' : '/api/voice/transcribe', {
+    const res = await fetch(privateCapture ? '/api/voice/captures' : '/api/voice/transcribe', {
       method: 'POST',
       body: formData,
     })
@@ -175,10 +180,12 @@ export async function sendOfflineVoiceItemToServer(item: OfflineVoiceItem): Prom
 }
 
 export async function flushOfflineVoiceQueue(
-  syncFn?: (item: OfflineVoiceItem) => Promise<boolean>
+  syncFn?: (item: OfflineVoiceItem) => Promise<boolean>,
+  options?: { purpose?: VoiceQueuePurpose; authorId?: string },
 ): Promise<{ synced: number; failed: number }> {
   const queue = await idbGetAllItems()
-  const pendingItems = queue.filter((q) => q.status !== 'failed_permanent')
+  const pendingItems = queue.filter((item) => item.status !== 'failed_permanent'
+    && belongsToSession(item, options?.authorId) && (!options?.purpose || item.purpose === options.purpose))
   if (pendingItems.length === 0) return { synced: 0, failed: 0 }
 
   let synced = 0
@@ -191,7 +198,11 @@ export async function flushOfflineVoiceQueue(
       if (ok) {
         synced++
         await idbDeleteItem(item.client_uuid)
+        if (item.purpose === 'resident_capture' && typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('sc-resident-capture-synced', { detail: item.client_uuid }))
+        }
       } else {
+        if (item.purpose === 'resident_capture' && !isOnline()) break
         failed++
         const attempts = (item.attempts || 0) + 1
         item.attempts = attempts

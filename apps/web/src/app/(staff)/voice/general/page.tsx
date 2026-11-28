@@ -8,7 +8,7 @@ import { staffMfaSatisfied } from '@/lib/auth/staff-mfa'
 import { requireOrgFeature } from '@/lib/feature-flags'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/supabase/current-user'
-import { GeneralVoiceRecorder } from './GeneralVoiceRecorder'
+import { VoiceCaptureRecorder } from '../VoiceCaptureRecorder'
 
 export default async function GeneralVoicePage() {
   const user = await getCurrentUser()
@@ -25,7 +25,7 @@ export default async function GeneralVoicePage() {
         <FeatureFlagsMfa needsVerification={assurance?.nextLevel === 'aal2'}
           description="Potwierdź drugi składnik uwierzytelniania, aby przesłać nagrania." />
       )}
-      <GeneralVoiceRecorder authorId={user.id} />
+      <VoiceCaptureRecorder authorId={user.id} />
     </div>
   )
 }
