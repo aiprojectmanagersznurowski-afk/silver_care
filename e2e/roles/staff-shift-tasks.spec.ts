@@ -82,10 +82,10 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
   });
 
   /** Zadania do rozliczenia wstawia baza, żeby test nie zależał od kolejności poprzednich. */
-  async function seedTask(title: string, status: 'PROPOSED' | 'TODO', date = SETTLE_DATE) {
+  async function seedTask(title: string, status: 'PROPOSED' | 'TODO', date = SETTLE_DATE, residentId: string | null = null) {
     const [admin] = await sql`SELECT id FROM auth.users WHERE email = ${TEST_USERS.org_admin.email}`;
-    await sql`INSERT INTO public.shift_tasks (organization_id, shift_definition_id, shift_date, title, source, status, created_by)
-      SELECT ${orgId}, id, ${date}, ${title}, 'MANUAL', ${status}, ${admin.id} FROM public.shift_definitions
+    await sql`INSERT INTO public.shift_tasks (organization_id, shift_definition_id, shift_date, title, source, status, created_by, resident_id)
+      SELECT ${orgId}, id, ${date}, ${title}, 'MANUAL', ${status}, ${admin.id}, ${residentId} FROM public.shift_definitions
       WHERE organization_id = ${orgId} AND code = ${CODE}`;
   }
 
@@ -151,10 +151,19 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
     await expect(tasks.approvePlanButton).toHaveCount(0);
   });
 
-  test('@REQ: NUR-SHIFT-PLAN-PRINT - wydruk planu wymaga akceptacji, pokazuje tylko zadania do zrobienia i zostawia ślad w audycie', async ({ loginPage, page }) => {
+  test('@REQ: NUR-SHIFT-PLAN-PRINT - wydruk pokazuje zatwierdzoną wersję w obu układach i wiąże ją z audytem', async ({ loginPage, page, browserName }, testInfo) => {
+    test.slow();
     await seedTask('E2E Zadanie na wydruk', 'TODO');
-    await seedTask('E2E Propozycja poza wydrukiem', 'PROPOSED');
+    await seedTask('E2E Propozycja poza wydrukiem', 'PROPOSED', PRINT_DATE, resident.id);
+    await sql`INSERT INTO public.shift_tasks (organization_id, shift_definition_id, shift_date, title, source, status, created_by, resident_id)
+      SELECT ${orgId}, d.id, ${PRINT_DATE}, 'E2E Próbka ' || lpad(n::text, 3, '0') ||
+        ' Sprawdzić przygotowanie pokoju i uzupełnić materiały na kolejną zmianę. ' ||
+        'Zostawić uporządkowane miejsce pracy i przekazać brakujące materiały do uzupełnienia.',
+        'MANUAL', 'TODO', u.id, ${resident.id}
+      FROM public.shift_definitions d CROSS JOIN auth.users u CROSS JOIN generate_series(1, 65) AS n
+      WHERE d.organization_id = ${orgId} AND d.code = ${CODE} AND u.email = ${TEST_USERS.org_admin.email}`;
     const [shift] = await sql`SELECT id FROM public.shift_definitions WHERE organization_id = ${orgId} AND code = ${CODE}`;
+    const [facility] = await sql`SELECT name FROM public.organizations WHERE id = ${orgId}`;
     await sql`DELETE FROM public.shift_plan_approvals WHERE shift_definition_id = ${shift.id} AND shift_date = ${PRINT_DATE}`;
     const printAudits = () => sql`SELECT (payload->>'version')::int AS version FROM public.audit_logs
       WHERE organization_id = ${orgId} AND action = 'SHIFT_PLAN_PRINTED'
@@ -164,21 +173,35 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
     await page.addInitScript(() => { (window as unknown as { __printed: number }).__printed = 0; window.print = () => { (window as unknown as { __printed: number }).__printed++; }; });
     const tasks = new ShiftTasksPage(page);
 
-    await page.goto(`/staff/shift-plan/print?shift=${CODE}&date=${SETTLE_DATE}`);
-    const print = page.getByRole('main');
+    await tasks.gotoPrint(CODE, PRINT_DATE);
+    const print = tasks.printPreview;
     await expect(print.getByText('Najpierw zatwierdź plan zmiany')).toBeVisible();
+    await expect(tasks.printButton).toHaveCount(0);
 
-    await tasks.goto(CODE, SETTLE_DATE);
+    await tasks.goto(CODE, PRINT_DATE, 'room');
     await tasks.approvePlanButton.click();
     await expect(tasks.planStatus).toContainText('Plan zatwierdzony');
-    await tasks.printLink.click();
-
-    await expect(page).toHaveURL(/shift-plan\/print/);
-    await expect(print.getByText('E2E Zadanie na wydruk')).toBeVisible();
-    await expect(print.getByText('E2E Propozycja poza wydrukiem')).toHaveCount(0);
+    for (const groupBy of ['room', 'resident'] as const) {
+      await tasks.goto(CODE, PRINT_DATE, groupBy);
+      await tasks.printLink.click();
+      await expect(page).toHaveURL(new RegExp(`shift-plan/print\\?.*groupBy=${groupBy}`));
+      await expect(print.getByRole('heading', { name: groupBy === 'resident' ? new RegExp(resident.name) : /^(Pokój |Bez pokoju)/ })).toBeVisible();
+      await expect(print.getByRole('heading', { name: 'Zadania placówki' })).toBeVisible();
+      await expect(print.getByText('E2E Zadanie na wydruk')).toBeVisible();
+      await expect(print.getByText('E2E Propozycja poza wydrukiem')).toHaveCount(0);
+      await expect(print.getByText(facility.name, { exact: true })).toBeVisible();
+      await expect(print.getByText(/E2E Zadania, 07:00.*19:00.*Wersja 1/)).toBeVisible();
+      await expect(print.getByText(/10 listopada 2026/)).toBeVisible();
+      await expect(print.getByText('Podpis kierownika zmiany', { exact: true })).toBeVisible();
+      await expect(print.getByText('Dokument wewnętrzny placówki — nie przekazywać osobom trzecim')).toBeVisible();
+    }
     const printCount = () => page.evaluate(() => (window as unknown as { __printed: number }).__printed);
+    await page.emulateMedia({ media: 'print' });
+    await expect(print.getByText('E2E Zadanie na wydruk')).toBeHidden();
+    await page.emulateMedia({ media: 'screen' });
     await tasks.printButton.click();
     await expect.poll(printCount).toBe(1);
+    await expect(print.getByText(/Data wydruku.*\d{2}:\d{2}/)).toBeVisible();
     expect(await printAudits()).toEqual([{ version: 1 }]);
 
     const otherPage = await page.context().newPage();
@@ -205,6 +228,24 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
     await expect(page.locator('[data-slot=page-header-description]:visible').filter({ hasText: 'Wersja 2' })).toBeVisible();
     await expect(print.getByText('E2E Zadanie na wydruk')).toBeVisible();
     await expect(tasks.printButton).toBeHidden();
+    await expect(page.getByRole('banner')).toBeHidden();
+    await expect(page.locator('[data-slot="sidebar"]:visible')).toHaveCount(0);
+    if (browserName === 'chromium' && testInfo.project.name === 'chromium') {
+      await page.pdf({ path: testInfo.outputPath('shift-plan-a4.pdf'), preferCSSPageSize: true });
+    }
+
+    await seedTask('E2E Zadanie dodane po zatwierdzeniu', 'TODO', PRINT_DATE);
+    await page.emulateMedia({ media: 'screen' });
+    await tasks.printButton.click();
+    await expect(page.getByRole('alert').filter({ hasText: 'Zadania zmieniły się po akceptacji.' })).toBeVisible();
+    expect(await printCount()).toBe(1);
+    await tasks.gotoPrint(CODE, PRINT_DATE, 'resident');
+    await expect(print.getByText('Plan wymaga ponownego zatwierdzenia')).toBeVisible();
+    await expect(tasks.printButton).toHaveCount(0);
+    await tasks.returnToApproval.click();
+    await expect(page).toHaveURL(new RegExp(`/staff/shift-tasks\\?shift=${CODE}&date=${PRINT_DATE}`));
+    await expect(tasks.approvePlanButton).toBeVisible();
+    expect(await printAudits()).toEqual([{ version: 1 }, { version: 2 }]);
   });
 
   test('@REQ: NUR-SHIFT-CLOSURE - kierownik przypisuje z grafiku, a personel widzi pracownika i zadania wspólne', async ({ loginPage, page }) => {
