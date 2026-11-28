@@ -226,8 +226,9 @@ export async function flushOfflineVoiceQueue(
     const resident = item.purpose === 'resident_capture'
     if (resident && !isOnline() && item.status !== 'failed_permanent') break
     failed++
-    item.attempts += 1
-    if (resident && item.status === 'pending') {
+    item.attempts = (item.attempts ?? 0) + 1
+    if (resident && item.status !== 'failed_permanent') {
+      item.status = 'pending'
       item.nextAttemptAt = Date.now() + Math.min(120_000, firstRetryDelayMs * 2 ** Math.min(item.attempts, 5))
     } else if (item.attempts >= 3) {
       item.status = 'failed_permanent'
