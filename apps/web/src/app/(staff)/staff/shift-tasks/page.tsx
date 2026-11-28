@@ -149,10 +149,12 @@ async function TasksSection({
   const grouped = groupTasks(filtered, showResident ? 'room' : group, carriedOut)
   const allTasks = grouped.flatMap((entry) => entry.tasks)
   const groups = showResident && allTasks.length ? [{ key: 'all', label: 'Wszystkie zadania', tasks: allTasks }] : grouped
+  const printQuery = new URLSearchParams({ shift: shiftCode, date, groupBy: group === 'resident' ? group : 'room' })
+  const printHref = canSettle && approval && !stale ? `/staff/shift-plan/print?${printQuery}` : null
 
   return (
     <>
-      <ShiftPlanApproval shiftDefinitionId={shiftId} shiftDate={date} version={approval?.version ?? null} stale={stale} canApprove={canSettle} printHref={canSettle && approval && !stale ? `/staff/shift-plan/print?shift=${shiftCode}&date=${date}` : null} />
+      <ShiftPlanApproval shiftDefinitionId={shiftId} shiftDate={date} version={approval?.version ?? null} stale={stale} canApprove={canSettle} printHref={printHref} />
       {voice.mfa && <FeatureFlagsMfa needsVerification={voice.mfa.needsVerification}
         description="Potwierdź drugi składnik uwierzytelniania, aby sprawdzić podpowiedzi z nagrań." />}
       {voice.unavailable && <ListError title="Nie udało się wczytać podpowiedzi z nagrań" />}
