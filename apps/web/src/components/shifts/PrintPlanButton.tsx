@@ -18,24 +18,44 @@ export function PrintPlanButton(props: { shiftDefinitionId: string; shiftDate: s
   const [error, setError] = useState<string | null>(null)
   const [printedAt, setPrintedAt] = useState<Date | null>(null)
   const controls = useRef<HTMLDivElement>(null)
+  const awaitingPrint = useRef(false)
 
   useEffect(() => {
-    const reset = () => setPrintedAt(null)
+    const consume = () => {
+      if (!awaitingPrint.current) flushSync(() => setPrintedAt(null))
+      awaitingPrint.current = false
+    }
+    const reset = () => {
+      awaitingPrint.current = false
+      setPrintedAt(null)
+    }
+    window.addEventListener('beforeprint', consume)
     window.addEventListener('afterprint', reset)
-    return () => window.removeEventListener('afterprint', reset)
+    return () => {
+      window.removeEventListener('beforeprint', consume)
+      window.removeEventListener('afterprint', reset)
+    }
   }, [])
 
   const print = async () => {
     setBusy(true)
     setError(null)
     setPrintedAt(null)
+    awaitingPrint.current = false
     const res = await recordShiftPlanPrintAction(props).catch(() => ({ error: 'Nie udało się zapisać wydruku.' }))
     if (res.error) {
       setError(res.error)
-    } else {
+    } else if (controls.current) {
       // Przeglądarka pobiera układ synchronicznie po otwarciu dialogu.
+      awaitingPrint.current = true
       flushSync(() => setPrintedAt(new Date()))
-      if (controls.current) window.print()
+      try {
+        if (controls.current) window.print()
+      } catch {
+        awaitingPrint.current = false
+        setPrintedAt(null)
+        setError('Nie udało się otworzyć okna drukowania.')
+      }
     }
     setBusy(false)
   }
