@@ -142,6 +142,40 @@ test.describe('Notatka głosowa personelu opiekuńczego (@REQ: VOICE-ZERO-GUESSI
     }
   });
 
+  test('kierownik wznawia nagranie po powrocie na kartę w panelu administracyjnym @REQ: VOICE-OFFLINE', async ({
+    loginPage, voiceNotePage, page,
+  }) => {
+    await loginPage.loginAs('org_admin');
+    const card = new ResidentProfilePage(page);
+    const id = await card.firstResidentIdFromStaffBoard();
+    await card.openAdminCard(id);
+    await card.voiceNoteLink.click();
+    const payloads: string[] = [];
+    await page.route('**/api/voice/captures', async (route) => {
+      payloads.push(route.request().postData() || '');
+      if (!page.url().includes('/admin/residents/')) {
+        await route.fulfill({ status: 503, json: {} });
+      } else if (payloads.length < 3) {
+        await route.fulfill({ status: 403, json: { error: 'Sesja wymaga potwierdzenia.' } });
+      } else {
+        await route.fulfill({ status: 202, json: { success: true, captureId: 'fixture' } });
+      }
+    });
+
+    await voiceNotePage.startRecording();
+    await voiceNotePage.stopRecording();
+    await expect(page.getByText('Nagranie zapisano w kolejce offline.', { exact: true })).toBeVisible();
+    await page.getByRole('link', { name: 'Wróć do karty podopiecznego' }).click();
+    await expect(page).toHaveURL(new RegExp(`/admin/residents/${id}`));
+    await expect(page.getByText('Nagrania wymagające ponowienia: 1', { exact: true })).toBeVisible({ timeout: 12_000 });
+    await page.getByRole('button', { name: 'Synchronizuj teraz' }).click();
+    await expect(page.getByText('Zsynchronizowano nagrania offline (1).', { exact: true })).toBeVisible();
+    expect(payloads).toHaveLength(3);
+    const keys = payloads.map((body) => body.match(/name="client_uuid"\r\n\r\n([a-f0-9-]+)/i)?.[1]);
+    expect(keys[0]).toBeTruthy();
+    expect(new Set(keys).size).toBe(1);
+  });
+
   test('@REQ: VOICE-ZERO-GUESSING - Personel wybiera podopiecznego, nagrywa notatkę i widzi przetranskrybowaną treść', async ({
     loginPage,
     voiceNotePage,
