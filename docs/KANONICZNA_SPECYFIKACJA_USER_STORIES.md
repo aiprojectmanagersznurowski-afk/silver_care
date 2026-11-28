@@ -827,7 +827,7 @@
 **User story:** Jako kierownik zmiany chcę wydrukować zaakceptowany plan pracy zmiany, pogrupowany per pokój albo per podopieczny, aby opiekunki pracowały z kartką, bez obsługi komputera.
 
 **Kryteria akceptacji:**
-- **AC1 (Format):** A4, czytelny wydruk (bez tła i elementów nawigacji), nagłówek: placówka, data, zmiana (godziny), kierownik zmiany, data i godzina wydruku, wersja planu. Każda zmiana planu, w tym przypisania, wymaga ponownej akceptacji przed wydrukiem.
+- **AC1 (Format):** Czytelny wydruk A4 bez tła i elementów nawigacji. Nagłówek zawiera nazwę placówki, datę planu, nazwę i godziny zmiany, datę i godzinę wydruku oraz zatwierdzoną wersję planu. Kierownik zmiany może podpisać wydruk w pustym polu przewidzianym w stopce. Każda zmiana planu, w tym przypisania, wymaga ponownej akceptacji przed wydrukiem.
 - **AC2 (Treść):** Grupy per pokój albo per podopieczny (jak `SC-NUR-13/AC6`); przy każdym zadaniu: pole ☐ do odhaczenia długopisem, godzina, treść, rodzaj źródła (słownie: „z przekazania”, „standardowe”, „przeniesione”, „ręczne”), osoba (jeśli przypisana). Na dole miejsce na podpis kierownika zmiany.
 - **AC3 (Minimalizacja danych):** Na wydruku imię, nazwisko i pokój podopiecznego oraz treść zadania — bez PESEL, bez danych kontaktowych, bez innych danych z karty. Wydruk zawiera dopisek „Dokument wewnętrzny placówki — nie przekazywać osobom trzecim”.
 - **AC4 (Ślad):** Każdy wydruk zapisuje w `audit_logs` kto, kiedy i którą wersję planu wydrukował (bez treści planu).
