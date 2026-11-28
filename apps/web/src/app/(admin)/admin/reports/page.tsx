@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto'
+import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { NextRequest, NextResponse } from 'next/server'
 import type { User } from '@supabase/supabase-js'
@@ -13,18 +15,19 @@ import { withAuth } from '@/lib/api-auth'
 import { getAppOrganizationId, getAppRole } from '@/lib/auth/app-role'
 import { staffMfaSatisfied } from '@/lib/auth/staff-mfa'
 import { getCurrentFeatureFlags, isOrgFeatureEnabled } from '@/lib/feature-flags'
-import { getActiveImpersonation, safeGetCookieStore } from '@/lib/impersonation-guards'
+import { getActiveImpersonation } from '@/lib/impersonation-guards'
 import { getCurrentUser } from '@/lib/supabase/current-user'
 import { createClient } from '@/lib/supabase/server'
 
 const { minDays, ttlDays, maxDays } = VOICE_RETENTION
 const reportsPath = '/admin/reports'
+const voiceRetentionFeedbackCookie = 'sc_voice_retention_feedback'
 
-async function saveVoiceRetention(organizationId: string, formData: FormData) {
+async function saveVoiceRetention(organizationId: string, actorId: string, formData: FormData) {
   'use server'
 
   const save = withAuth(async (_request, { user, supabase }) => {
-    if ((user.role === 'org_admin' && user.organizationId !== organizationId)
+    if (user.id !== actorId || (user.role === 'org_admin' && user.organizationId !== organizationId)
       || !await isOrgFeatureEnabled(supabase, organizationId, OPERATIONAL_REPORT_ENGINE.moduleKey)) {
       return new NextResponse(null, { status: 403 })
     }
@@ -45,7 +48,12 @@ async function saveVoiceRetention(organizationId: string, formData: FormData) {
   // The wrapper uses the current Server Action's cookies for authentication.
   const request = new NextRequest(new URL(reportsPath, 'http://localhost'), { method: 'POST' })
   const response = await save(request, { params: Promise.resolve({}) })
-  const voiceRetention = response.ok ? 'saved' : response.status === 422 ? 'invalid' : 'error'
+  const result = response.ok ? 'saved' : response.status === 422 ? 'invalid' : 'error'
+  const voiceRetention = randomUUID()
+  const store = await cookies()
+  store.set(voiceRetentionFeedbackCookie, [voiceRetention, actorId, organizationId, result].join('.'), {
+    path: reportsPath, httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 60,
+  })
   redirect(`${reportsPath}?${new URLSearchParams({ organizationId, voiceRetention })}`)
 }
 
@@ -72,7 +80,7 @@ async function VoiceRetentionCard({ organizationId, user }: { organizationId: st
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form action={saveVoiceRetention.bind(null, organizationId)} className="space-y-3">
+        <form action={saveVoiceRetention.bind(null, organizationId, user.id)} className="space-y-3">
           <div className="grid max-w-xs gap-1">
             <label htmlFor="voice-retention-days" className="text-sm font-medium">
               Okres przechowywania nagrań w dniach
@@ -107,7 +115,10 @@ export default async function AdminReportsPage({ searchParams }: {
   if (!user || (role !== 'super_admin' && role !== 'org_admin')) redirect('/')
 
   const { organizationId, voiceRetention } = await searchParams
-  const isPlatformAdmin = role === 'super_admin' && !getActiveImpersonation(await safeGetCookieStore(), user)
+  const store = await cookies()
+  const [nonce, actorId, targetId, result] = store.get(voiceRetentionFeedbackCookie)?.value.split('.') ?? []
+  const feedback = nonce === voiceRetention && actorId === user.id && targetId === organizationId ? result : undefined
+  const isPlatformAdmin = role === 'super_admin' && !getActiveImpersonation(store, user)
   let panel
   if (isPlatformAdmin) {
     const supabase = await createClient()
@@ -146,7 +157,7 @@ export default async function AdminReportsPage({ searchParams }: {
   return (
     <div className="space-y-6">
       <PageHeader title="Konfiguracja raportów operacyjnych" />
-      <VoiceRetentionFeedback result={voiceRetention} />
+      <VoiceRetentionFeedback result={feedback} />
       {panel}
     </div>
   )
