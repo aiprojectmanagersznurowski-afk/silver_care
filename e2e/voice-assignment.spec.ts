@@ -259,3 +259,71 @@ test('@REQ: VOICE-RESIDENT-ASSIGN kierownik koryguje czas i dzieli prywatny mate
     await sql.end()
   }
 })
+
+test('potwierdza wyłącznie podopiecznego z karty i blokuje potwierdzenie po archiwizacji @REQ: VOICE-ZERO-GUESSING @REQ: VOICE-RESIDENT-ASSIGN', async ({ page }) => {
+  test.setTimeout(90_000)
+  const dbUrl = process.env.DATABASE_URL!
+  const apiUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL)!
+  if (![dbUrl, apiUrl].every((url) => ['127.0.0.1', 'localhost'].includes(new URL(url).hostname))) {
+    throw new Error('Tests require local Supabase')
+  }
+  const sql = postgres(dbUrl, { prepare: false })
+  const api = createClient(apiUrl, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  })
+  const [org, resident, capture, first, second] = Array.from({ length: 5 }, () => randomUUID())
+  const email = `voice-card-${randomUUID()}@example.test`
+  const password = `Test-${randomUUID()}!`
+  const path = (ordinal: number) => `${org}/transcripts/${capture}/fixture/${ordinal}`
+  let manager: string | undefined
+  try {
+    await sql`INSERT INTO public.organizations (id, name) VALUES (${org}, 'Fixture rozstrzygnięcia z karty')`
+    await sql`INSERT INTO public.residents (id, organization_id, first_name, last_name)
+      VALUES (${resident}, ${org}, 'Anna', 'Wybrana')`
+    const result = await api.auth.admin.createUser({
+      email, password, email_confirm: true, app_metadata: { role: 'org_admin', organization_id: org },
+    })
+    manager = result.data.user?.id
+    if (!manager || result.error) throw new Error('Cannot create fixture account')
+    await sql`INSERT INTO public.voice_captures
+      (id, organization_id, source, source_key, storage_path, sha256, author_id, selected_resident_id, recorded_at, status)
+      VALUES (${capture}, ${org}, 'APP', ${capture}, ${org + '/app/' + manager + '/' + capture},
+        ${'a'.repeat(64)}, ${manager}, ${resident}, now(), 'SEGMENTED')`
+    for (const [ordinal, id] of [first, second].entries()) {
+      const upload = await api.storage.from('voice-recordings').upload(path(ordinal), 'Syntetyczna niejasna wzmianka.')
+      if (upload.error) throw upload.error
+      await sql`INSERT INTO public.voice_segments
+        (id, organization_id, capture_id, ordinal, start_ms, end_ms, transcript_path, author_id, author_attribution)
+        VALUES (${id}, ${org}, ${capture}, ${ordinal}, ${ordinal * 1000}, ${(ordinal + 1) * 1000}, ${path(ordinal)},
+          ${manager}, 'AUTHENTICATED_SESSION')`
+      await sql`INSERT INTO public.voice_assignment_queue (segment_id, organization_id, reasons)
+        VALUES (${id}, ${org}, ARRAY['CONFLICTING_EVIDENCE'])`
+    }
+
+    const login = new LoginPage(page)
+    await login.goto()
+    await login.login(email, password)
+    const mfa = new StaffMfaPage(page)
+    await mfa.expectChallenge()
+    await mfa.enrollTotp()
+    await page.waitForURL((url) => !url.pathname.includes('/login'))
+
+    const assignments = new VoiceAssignmentPage(page)
+    await assignments.openSegment(first)
+    await assignments.expectSelectedResident('Wybrana Anna', true)
+    await assignments.saveSelectedResident()
+    expect(await sql`SELECT assignment_status, resident_id, author_id FROM public.voice_segments WHERE id = ${first}`)
+      .toEqual([{ assignment_status: 'RESIDENT', resident_id: resident, author_id: manager }])
+    await sql`UPDATE public.residents SET archived_at = now() WHERE id = ${resident}`
+    await assignments.openSegment(second)
+    await assignments.expectSelectedResident('Wybrana Anna', false)
+  } finally {
+    await api.storage.from('voice-recordings').remove([path(0), path(1)])
+    await sql`DELETE FROM public.voice_captures WHERE id = ${capture}`
+    await sql`DELETE FROM public.residents WHERE id = ${resident}`
+    if (manager) await api.auth.admin.deleteUser(manager)
+    await sql`DELETE FROM public.organizations WHERE id = ${org}
+      AND NOT EXISTS (SELECT 1 FROM public.audit_logs WHERE organization_id = ${org})`
+    await sql.end()
+  }
+})

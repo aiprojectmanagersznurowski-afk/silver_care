@@ -32,7 +32,7 @@ export default async function StaffLayout({ children }: { children: ReactNode })
         <SystemAlertBanner role={role} />
         <AppHeader search={<GlobalCommandPalette categories={availableSearchCategories(role, flags)} />} />
         <div className="flex-1 p-4 md:p-6">
-          {flags?.module_voice_and_reports && <StaffVoiceSyncListener />}
+          {flags?.module_voice_and_reports && <StaffVoiceSyncListener key={user.id} authorId={user.id} />}
           <div className="mx-auto w-full max-w-screen-2xl">{children}</div>
         </div>
       </SidebarInset>

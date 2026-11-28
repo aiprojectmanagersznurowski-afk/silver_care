@@ -112,13 +112,13 @@ it('wygasza źródło po retencji i zleca usunięcie nagrania oraz transkryptu w
   }).catch((error: unknown) => { if (error !== rollback) throw error })
 })
 
-it('kolejkuje tylko wygasłe niepowiązane pliki z nagrań ogólnych @REQ: VOICE-RETENTION', async () => {
+it.each(['APP_GENERAL', 'APP'])('kolejkuje tylko wygasłe niepowiązane pliki z nagrań %s @REQ: VOICE-RETENTION', async (source) => {
   await sql.begin(async (tx) => {
     const org = randomUUID()
     const user = randomUUID()
     const resident = randomUUID()
     const capture = randomUUID()
-    const path = (key: string) => org + '/app_general/' + user + '/' + key
+    const path = (key: string) => org + '/' + source.toLowerCase() + '/' + user + '/' + key
     const expired = path(randomUUID())
     const current = path(randomUUID())
     const linked = path(capture)
@@ -130,8 +130,9 @@ it('kolejkuje tylko wygasłe niepowiązane pliki z nagrań ogólnych @REQ: VOICE
     await tx`INSERT INTO public.residents (id, organization_id, first_name, last_name)
       VALUES (${resident}, ${org}, 'Test', 'Retencja')`
     await tx`INSERT INTO public.voice_captures
-      (id, organization_id, source, source_key, storage_path, sha256, author_id, recorded_at)
-      VALUES (${capture}, ${org}, 'APP_GENERAL', ${capture}, ${linked}, ${'a'.repeat(64)}, ${user}, now())`
+      (id, organization_id, source, source_key, storage_path, sha256, author_id, selected_resident_id, recorded_at)
+      VALUES (${capture}, ${org}, ${source}, ${capture}, ${linked}, ${'a'.repeat(64)}, ${user},
+        ${source === 'APP' ? resident : null}, now())`
     const [draft] = await tx`INSERT INTO public.voice_draft_notes (resident_id, nurse_id, audio_url, created_at)
       VALUES (${resident}, ${user}, 'local-only', now() - interval '32 days') RETURNING id`
     await tx`INSERT INTO storage.objects (bucket_id, name, created_at) VALUES

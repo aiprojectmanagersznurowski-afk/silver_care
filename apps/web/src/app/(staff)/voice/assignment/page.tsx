@@ -140,7 +140,7 @@ async function AssignmentDetails({ orgId, item, shifts, facilityManager, queueHr
   const sessionDb = await createClient()
   const [details, audio] = await Promise.all([
     admin.from(RESIDENT_ASSIGNMENT.segmentResource)
-      .select('transcript_path, author_id, author_attribution, start_ms, end_ms, corrected_at, derived_start_at, event_occurred_at, transcription_status, voice_captures(recorded_at, received_at, clock_state)')
+      .select('transcript_path, author_id, author_attribution, start_ms, end_ms, corrected_at, derived_start_at, event_occurred_at, transcription_status, voice_captures(recorded_at, received_at, clock_state, source, selected_resident_id)')
       .eq('organization_id', orgId).eq('id', segmentId).eq('assignment_status', 'PENDING').maybeSingle(),
     mixed ? sessionDb.rpc('can_play_voice_segment', { p_segment_id: segmentId }) : null,
   ])
@@ -160,8 +160,12 @@ async function AssignmentDetails({ orgId, item, shifts, facilityManager, queueHr
 
   const transcriptBody = transcript?.data?.size ? transcript.data : null
   const unassignableOnly = !transcriptBody || review.sourceReasons.some((reason) => item.reasons.includes(reason))
-  const residents = unassignableOnly ? null : await sessionDb.from('residents').select('id, first_name, last_name')
-    .eq('organization_id', orgId).order('last_name').limit(1000)
+  const fixedResident = capture.source === RESIDENT_ASSIGNMENT.selectedResidentReview.source
+    ? capture.selected_resident_id : null
+  const residentQuery = sessionDb.from('residents').select('id, first_name, last_name').eq('organization_id', orgId)
+  const residents = await (fixedResident
+    ? residentQuery.eq('id', fixedResident).is('archived_at', null)
+    : unassignableOnly ? null : residentQuery.order('last_name').limit(1000))
   const author = staff.find(({ id }) => id === segment.author_id)?.label
   const attribution = attributionLabels[segment.author_attribution as keyof typeof attributionLabels]
   return (
@@ -185,7 +189,8 @@ async function AssignmentDetails({ orgId, item, shifts, facilityManager, queueHr
       {mixed && <VoiceSplitReview key={`split:${key}`} position={position} startMs={segment.start_ms}
         endMs={segment.end_ms} audioAvailable={audio?.data === true} />}
       {residents?.error ? <ListError title="Nie udało się pobrać podopiecznych" /> : <ResolveVoiceForm key={`scope:${key}`}
-        position={position} author={segment.author_id} unassignableOnly={unassignableOnly}
+        position={position} author={segment.author_id} fixedResident={fixedResident}
+        unassignableOnly={unassignableOnly || Boolean(fixedResident && !residents?.data?.length)}
         residents={(residents?.data ?? []).map(({ id, first_name, last_name }) => ({ id, label: `${last_name} ${first_name}` }))}
         staff={staff} />}
     </section>

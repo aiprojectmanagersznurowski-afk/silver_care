@@ -7,7 +7,10 @@ import {
   generateClientUuid,
   enqueueOfflineVoiceItem,
   isOnline,
-  VoiceQueuePurpose,
+  isTransientCaptureStatus,
+  residentCaptureTimeoutMs,
+  type VoiceQueuePurpose,
+  type ResidentCaptureSyncState,
 } from '@/lib/voice-offline-queue'
 
 export type VoiceRecorderState = 'idle' | 'recording' | 'transcribing' | 'queued' | 'error'
@@ -58,6 +61,24 @@ export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}) {
     }
   }, [cleanup])
 
+  useEffect(() => {
+    if (purpose !== 'resident_capture') return
+    const onCaptureStatus = (event: Event) => {
+      const { clientUuid, status } = (event as CustomEvent<ResidentCaptureSyncState>).detail
+      if (clientUuid !== clientUuidRef.current) return
+      if (status === 'blocked') {
+        setState('error')
+        setError('Nagranie wymaga ponowienia. Wybierz „Synchronizuj teraz” na pasku nagrań.')
+        return
+      }
+      setState('idle')
+      setError(null)
+      void onSuccess?.({ success: true })
+    }
+    window.addEventListener('sc-resident-capture-status', onCaptureStatus)
+    return () => window.removeEventListener('sc-resident-capture-status', onCaptureStatus)
+  }, [onSuccess, purpose])
+
   const reset = useCallback(() => {
     cleanup()
     audioChunksRef.current = []
@@ -93,34 +114,39 @@ export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}) {
     setState('transcribing'); setError(null); setFallbackAudioBlob(null)
     const clientUuid = clientUuidRef.current ??= generateClientUuid()
     const recordedAt = recordedAtRef.current
-    let residentId = ''
+    const extra = getExtraFormData?.() ?? {}
+    const residentId = extra.resident_id ?? ''
     try {
+      if (!isOnline()) {
+        await handleQueueAudio(blob, ext, clientUuid, residentId, recordedAt, 'Brak połączenia z siecią. Nagranie zapisano w kolejce offline.')
+        return
+      }
       const supabase = createClient()
       const { data: { session } } = await supabase.auth.getSession()
       const formData = new FormData()
       formData.append('file', blob, `recording.${ext}`)
       formData.append('client_uuid', clientUuid)
+      formData.append('purpose', purpose)
       if (authorId) formData.append('author_id', authorId)
       if (recordedAt > 0) formData.append('recorded_at', new Date(recordedAt).toISOString())
-      if (getExtraFormData) {
-        const extra = getExtraFormData()
-        for (const [key, val] of Object.entries(extra)) {
-          if (val !== undefined && val !== null) formData.append(key, val)
-        }
-      }
-      residentId = (formData.get('resident_id') as string) || ''
-      if (!isOnline()) {
-        await handleQueueAudio(blob, ext, clientUuid, residentId, recordedAt, 'Brak połączenia z siecią. Nagranie zapisano w kolejce offline.')
-        return
+      for (const [key, val] of Object.entries(extra)) {
+        if (val !== undefined && val !== null) formData.append(key, val)
       }
       const headers: Record<string, string> = {}
       if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`
-      const res = await fetch(endpoint, { method: 'POST', headers, body: formData })
-      if (res.status >= 500) {
+      const residentCapture = purpose === 'resident_capture'
+      const res = await fetch(endpoint, {
+        method: 'POST', headers, body: formData,
+        signal: residentCapture ? AbortSignal.timeout?.(residentCaptureTimeoutMs) : undefined,
+      })
+      if (residentCapture ? isTransientCaptureStatus(res.status) : res.status >= 500) {
         await handleQueueAudio(blob, ext, clientUuid, residentId, recordedAt, `Serwer placówki niedostępny (HTTP ${res.status}). Zapisano w kolejce offline.`)
         return
       }
-      const data: TranscribeResponse = await res.json().catch(() => ({}))
+      const data: TranscribeResponse = await res.json().catch((error: unknown) => {
+        if (residentCapture && res.ok) throw error
+        return {}
+      })
       if (res.status === 401 && data.error === 'Unauthorized') {
         setFallbackAudioBlob(blob)
         const msg = 'Sesja wygasła. Zaloguj się ponownie.'
@@ -135,7 +161,7 @@ export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}) {
     } catch {
       await handleQueueAudio(blob, ext, clientUuid, residentId, recordedAt, 'Błąd sieci podczas wysyłania. Nagranie zabezpieczono w kolejce offline.')
     }
-  }, [authorId, endpoint, getExtraFormData, handleQueueAudio, onError, onSuccess])
+  }, [authorId, endpoint, getExtraFormData, handleQueueAudio, onError, onSuccess, purpose])
 
   const downloadFallbackAudio = useCallback(() => {
     if (!fallbackAudioBlob || typeof window === 'undefined') return
@@ -160,6 +186,7 @@ export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}) {
       setError(msg); setState('error'); onError?.(msg); return
     }
     reset()
+    clientUuidRef.current = generateClientUuid()
     try {
       const format = detectSupportedAudioFormat()
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
@@ -182,7 +209,6 @@ export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}) {
         await sendAudio(audioBlob, format.ext)
       }
       recordedAtRef.current = Date.now()
-      clientUuidRef.current = null
       recorder.start(1000); setState('recording'); setDuration(0)
       timerRef.current = setInterval(() => setDuration((prev) => prev + 1), 1000)
     } catch {

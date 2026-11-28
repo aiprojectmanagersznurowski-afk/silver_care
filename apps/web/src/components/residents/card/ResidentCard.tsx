@@ -102,7 +102,7 @@ export function ResidentCard({ card, backHref, backLabel, reportsHref, voiceEnab
         backLabel={backLabel}
         activeAssignment={activeAssignment}
         needsAttention={card.tasks?.needsAttention ?? false}
-        voiceNoteHref={card.access.readOnly || !voiceEnabled ? undefined : `/voice?resident=${resident.id}`}
+        voiceNoteHref={card.access.readOnly || !voiceEnabled ? undefined : `/voice/capture?resident=${resident.id}`}
       />
       <ResidentProfileTabs
         overviewLabel={labelOf('overview')}

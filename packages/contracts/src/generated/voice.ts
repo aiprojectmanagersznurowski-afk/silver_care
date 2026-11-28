@@ -70,7 +70,7 @@ export const PIPELINE_STAGES = [
     "actor": "nurse",
     "input": "audio oraz resident_id (UUID) wyłącznie w trybie o podopiecznym",
     "output": "nagranie źródłowe",
-    "desc": "Tryb APP z wybranym podopiecznym zachowuje dotychczasowe wejście. APP_GENERAL i DEVICE przyjmują nagranie głosowe do przypisania fragmentów."
+    "desc": "Tryb APP zachowuje podopiecznego wybranego przed nagraniem. APP_GENERAL i DEVICE przyjmują nagranie głosowe do przypisania fragmentów."
   },
   {
     "id": "TRANSCRIBE",
@@ -194,9 +194,18 @@ export const CAPTURE_SOURCES = [
 
 export const RESIDENT_ASSIGNMENT = {
   "appliesTo": [
+    "APP",
     "APP_GENERAL",
     "DEVICE"
   ],
+  "selectedResidentReview": {
+    "source": "APP",
+    "outcomes": [
+      "RESIDENT",
+      "UNASSIGNABLE"
+    ],
+    "rule": "Spójny fragment pozostaje przy podopiecznym wybranym w aplikacji. Sprzeczne lub niejednoznaczne wskazanie czeka na decyzję przed klasyfikacją. Rozstrzygnięcie zachowuje wybranego podopiecznego i autora sesji albo wyłącza fragment z przetwarzania."
+  },
   "captureResource": "voice_captures",
   "segmentResource": "voice_segments",
   "queueResource": "voice_assignment_queue",

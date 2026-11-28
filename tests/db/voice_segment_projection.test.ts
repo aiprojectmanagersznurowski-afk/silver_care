@@ -3,13 +3,13 @@ import postgres from 'postgres'
 import { afterAll, expect, it } from 'vitest'
 
 const database = new URL(process.env.DATABASE_URL!)
-if (!['127.0.0.1', 'localhost'].includes(database.hostname) || database.port !== '54322'
+if (!['127.0.0.1', 'localhost'].includes(database.hostname)
   || database.username !== 'postgres' || database.pathname !== '/postgres') throw new Error('Local database required')
 const sql = postgres(database.toString(), { prepare: false })
 const rollback = Symbol('rollback')
 afterAll(() => sql.end())
 
-it('zapisuje wyłącznie powiązane propozycje, z chronionym strumieniem medycznym @REQ: VOICE-DOCK-REPORTS @REQ: NUR-TASKS', async () => {
+it.each(['APP_GENERAL', 'APP'])('%s zapisuje wyłącznie powiązane propozycje, z chronionym strumieniem medycznym @REQ: VOICE-DOCK-REPORTS @REQ: NUR-TASKS', async (source) => {
   await sql.begin(async (tx) => {
     const org = randomUUID()
     const author = randomUUID()
@@ -27,8 +27,9 @@ it('zapisuje wyłącznie powiązane propozycje, z chronionym strumieniem medyczn
       (organization_id, code, name, start_time, end_time, order_index)
       VALUES (${org}, 'FIXTURE-NIGHT', 'Testowa nocna', '19:00', '07:00', 900) RETURNING id`
     await tx`INSERT INTO public.voice_captures
-      (id, organization_id, source, source_key, storage_path, sha256, author_id, recorded_at, status)
-      VALUES (${capture}, ${org}, 'APP_GENERAL', ${capture}, ${org + '/fixture/' + capture}, ${'a'.repeat(64)}, ${author}, '2026-11-22T09:00:00Z', 'SEGMENTED')`
+      (id, organization_id, source, source_key, storage_path, sha256, author_id, selected_resident_id, recorded_at, status)
+      VALUES (${capture}, ${org}, ${source}, ${capture}, ${org + '/fixture/' + capture}, ${'a'.repeat(64)}, ${author},
+        ${source === 'APP' ? resident : null}, '2026-11-22T09:00:00Z', 'SEGMENTED')`
     await tx`INSERT INTO public.voice_segments
       (id, organization_id, capture_id, ordinal, start_ms, end_ms, transcript_path, assignment_status, author_id, author_attribution, resident_id)
       VALUES (${segment}, ${org}, ${capture}, 0, 0, 1000, ${org + '/fixture/text'}, 'RESIDENT', ${author}, 'AUTHENTICATED_SESSION', ${resident})`
@@ -41,7 +42,7 @@ it('zapisuje wyłącznie powiązane propozycje, z chronionym strumieniem medyczn
       proposed_tasks: [{ title: 'przygotować świeże kubki', quote: 'Na następną zmianę: przygotować świeże kubki.' }] })
     await tx`SELECT public.complete_voice_segment_projection(${segment}, ${claimed.result.token}, ${payload}::jsonb)`
     const [event] = await tx`SELECT * FROM public.voice_sanitized_events WHERE segment_id = ${segment}`
-    expect(event).toMatchObject({ sanitized_text: 'Brakuje kubków.', scope: 'resident' })
+    expect(event).toMatchObject({ sanitized_text: 'Brakuje kubków.', scope: 'resident', capture_source: source })
     const [task] = await tx`SELECT shift_definition_id, shift_date::text, source, status, resident_id, source_quote
       FROM public.shift_tasks WHERE source_ref = ${'voice-segment/' + segment}`
     expect(task).toMatchObject({ shift_definition_id: target.id, shift_date: day, status: 'PROPOSED',

@@ -69,8 +69,8 @@ test.describe('Karta podopiecznego — działania personelu (@REQ: ADM-RESIDENT-
     const id = await card.firstResidentIdFromStaffBoard();
     await card.openStaffCard(id);
 
-    await expect(card.voiceNoteLink).toHaveAttribute('href', `/voice?resident=${id}`);
+    await expect(card.voiceNoteLink).toHaveAttribute('href', `/voice/capture?resident=${id}`);
     await card.voiceNoteLink.click();
-    await page.waitForURL(new RegExp(`/voice\\?resident=${id}`));
+    await page.waitForURL(new RegExp(`/voice/capture\\?resident=${id}`));
   });
 });
