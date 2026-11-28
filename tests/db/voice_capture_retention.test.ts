@@ -14,7 +14,6 @@ const rollback = Symbol('rollback')
 const { minDays, ttlDays, maxDays } = VOICE_RETENTION
 afterAll(() => sql.end())
 type Connection = postgres.Sql | postgres.TransactionSql
-
 async function seedOrganization(db: Connection) {
   const org = randomUUID()
   const user = randomUUID()
@@ -23,7 +22,6 @@ async function seedOrganization(db: Connection) {
     jsonb_build_object('role', 'org_admin', 'organization_id', ${org}::uuid))`
   return { org, user }
 }
-
 async function seedCapture(db: Connection, org: string, user: string, id: string, path: string,
   { age = 0, offset = 0, status = 'RECEIVED' } = {}) {
   await db`INSERT INTO public.voice_captures
@@ -36,7 +34,6 @@ async function withRollback(action: (tx: postgres.TransactionSql) => Promise<voi
   await sql.begin(async (tx) => { await action(tx); throw rollback })
     .catch((error: unknown) => { if (error !== rollback) throw error })
 }
-
 async function assumeRetentionRole(tx: postgres.TransactionSql, user: string, org: string,
   role = 'org_admin', aal = 'aal2', impersonatorId?: string) {
   await tx`SET LOCAL ROLE authenticated`
@@ -50,12 +47,16 @@ it('zachowuje zatwierdzony transkrypt i bezpiecznie ponawia sprzątanie wygasłe
     const { org, user } = await seedOrganization(tx)
     const active = randomUUID()
     const expired = randomUUID()
+    const upload = (key: string) => `${org}/app_general/${user}/${key}`
+    const uploadPaths = [upload(randomUUID()), upload(randomUUID()), upload(active), `${org}/fixture/${randomUUID()}`]
     const transcript = (capture: string) => `${org}/transcripts/${capture}/${randomUUID()}/0`
     const [draft, committed, other, late] = [active, active, randomUUID(), expired].map(transcript)
-    await seedCapture(tx, org, user, active, `${org}/fixture/${active}`, { status: 'SEGMENTED' })
+    await seedCapture(tx, org, user, active, uploadPaths[2], { status: 'SEGMENTED' })
     await seedCapture(tx, org, user, expired, `${org}/fixture/${expired}`, { age: ttlDays + 1, status: 'SEGMENTED' })
-    await tx`INSERT INTO storage.objects (bucket_id, name)
-      SELECT ${VOICE_RETENTION.storageBucket}, path FROM unnest(${[draft, committed]}::text[]) AS p(path)`
+    await tx`INSERT INTO storage.objects (bucket_id, name, created_at)
+      SELECT ${VOICE_RETENTION.storageBucket}, path, now() - CASE WHEN path = ANY(${[uploadPaths[0], ...uploadPaths.slice(2)]}::text[])
+        THEN make_interval(days => ${ttlDays + 1}) ELSE interval '0 days' END
+      FROM unnest(${[draft, committed, ...uploadPaths]}::text[]) AS upload(path)`
     await tx`INSERT INTO public.voice_segments (organization_id, capture_id, ordinal, start_ms, end_ms, transcript_path)
       VALUES (${org}, ${active}, 0, 0, 1000, ${committed})`
     const signature = 'public.queue_abandoned_voice_transcripts(uuid,text[])'
@@ -66,7 +67,7 @@ it('zachowuje zatwierdzony transkrypt i bezpiecznie ponawia sprzątanie wygasłe
     expect(await tx`SELECT path FROM public.voice_storage_deletions WHERE path IN (${draft}, ${committed}, ${other})`)
       .toEqual([{ path: draft }])
     await tx`SELECT public.expire_voice_captures()`
-    expect(await tx`SELECT id FROM public.voice_captures WHERE id = ${expired}`).toEqual([])
+    expect(await tx`SELECT path FROM public.voice_storage_deletions WHERE path = ANY(${uploadPaths}::text[])`).toEqual([{ path: uploadPaths[0] }])
     expect(await tx`SELECT path FROM public.voice_storage_deletions WHERE path = ${late}`).toEqual([])
     await tx`RESET ROLE`
     await tx`INSERT INTO storage.objects (bucket_id, name) VALUES (${VOICE_RETENTION.storageBucket}, ${late})`
@@ -200,12 +201,11 @@ it.runIf(Boolean(storageWorkdir))('usuwa wygasłe pliki, potwierdza kolejkę i z
     if (!['127.0.0.1', 'localhost'].includes(api.hostname) || stackDb.host !== database.host || !status.SERVICE_ROLE_KEY) {
       throw new Error('Storage and SQL must use the same disposable local Supabase stack')
     }
-    const [fixtureState] = await sql`SELECT EXISTS (SELECT 1 FROM public.voice_captures
+    expect(await sql`SELECT EXISTS (SELECT 1 FROM public.voice_captures
       UNION ALL SELECT 1 FROM public.voice_storage_deletions UNION ALL SELECT 1 FROM public.voice_draft_notes
       UNION ALL SELECT 1 FROM private.voice_device_uploads UNION ALL SELECT 1 FROM public.operational_reports
       UNION ALL SELECT 1 FROM public.voice_sanitized_events
-      UNION ALL SELECT 1 FROM storage.objects WHERE bucket_id = ${VOICE_RETENTION.storageBucket}) AS has_data`
-    expect(fixtureState.has_data).toBe(false)
+      UNION ALL SELECT 1 FROM storage.objects WHERE bucket_id = ${VOICE_RETENTION.storageBucket}) AS has_data`).toEqual([{ has_data: false }])
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', api.href)
     vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', status.SERVICE_ROLE_KEY)
     const { createAdminClient } = await import('@/lib/supabase/admin')
@@ -220,17 +220,18 @@ it.runIf(Boolean(storageWorkdir))('usuwa wygasłe pliki, potwierdza kolejkę i z
     const paths = [expiredAudio, expiredTranscript, freshAudio]
     try {
       await sql`INSERT INTO public.voice_retention_settings (organization_id, retention_days) VALUES (${org}, ${minDays})`
+      await seedCapture(sql, org, user, expired, expiredAudio, { age: minDays + 1 })
+      await seedCapture(sql, org, user, retained, freshAudio)
       for (const path of paths) {
         expect((await storage.upload(path, new Uint8Array([1, 2, 3]))).error).toBeNull()
         expect((await storage.download(path)).data).not.toBeNull()
       }
       expect(await sql`SELECT name FROM storage.objects WHERE bucket_id = ${VOICE_RETENTION.storageBucket}
         AND name = ANY(${paths}::text[])`).toHaveLength(paths.length)
-      await seedCapture(sql, org, user, expired, expiredAudio, { age: minDays + 1 })
-      await seedCapture(sql, org, user, retained, freshAudio)
       await sql`INSERT INTO public.voice_segments
         (organization_id, capture_id, ordinal, start_ms, end_ms, transcript_path)
         VALUES (${org}, ${expired}, 0, 0, 1000, ${expiredTranscript})`
+      expect(await sql`SELECT path FROM public.voice_storage_deletions WHERE path = ANY(${paths}::text[])`).toHaveLength(0)
       expect(await removeExpiredVoiceStorage()).toBe('processed')
       for (const path of [expiredAudio, expiredTranscript]) {
         expect(await storage.download(path)).toMatchObject({ data: null, error: { message: expect.stringMatching(/not found/i) } })
@@ -244,7 +245,6 @@ it.runIf(Boolean(storageWorkdir))('usuwa wygasłe pliki, potwierdza kolejkę i z
       await sql`DELETE FROM public.voice_captures WHERE organization_id = ${org}`
       await sql`DELETE FROM public.voice_storage_deletions WHERE path = ANY(${paths}::text[])`
       await sql`DELETE FROM auth.users WHERE id = ${user}`
-      await sql`DELETE FROM public.organizations o WHERE o.id = ${org}
-        AND NOT EXISTS (SELECT 1 FROM public.audit_logs a WHERE a.organization_id = o.id)`
+      await sql`DELETE FROM public.voice_retention_settings WHERE organization_id = ${org}`
     }
   })
