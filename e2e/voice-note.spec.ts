@@ -125,6 +125,7 @@ test.describe('Notatka głosowa personelu opiekuńczego (@REQ: VOICE-ZERO-GUESSI
       await expect.poll(() => attempts).toEqual([
         { status: 202, captureId }, { status: 202, captureId },
       ]);
+      await expect(page.getByRole('status').getByText('Nagranie przyjęto do przetworzenia.')).toBeVisible();
       expect(await db`
         SELECT c.source, c.selected_resident_id, b.public AS bucket_public
         FROM public.voice_captures c
