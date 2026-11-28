@@ -163,9 +163,9 @@ async function AssignmentDetails({ orgId, item, shifts, facilityManager, queueHr
   const fixedResident = capture.source === RESIDENT_ASSIGNMENT.selectedResidentReview.source
     ? capture.selected_resident_id : null
   const residentQuery = sessionDb.from('residents').select('id, first_name, last_name').eq('organization_id', orgId)
-  const residents = unassignableOnly ? null : await (fixedResident
+  const residents = await (fixedResident
     ? residentQuery.eq('id', fixedResident).is('archived_at', null)
-    : residentQuery.order('last_name').limit(1000))
+    : unassignableOnly ? null : residentQuery.order('last_name').limit(1000))
   const author = staff.find(({ id }) => id === segment.author_id)?.label
   const attribution = attributionLabels[segment.author_attribution as keyof typeof attributionLabels]
   return (

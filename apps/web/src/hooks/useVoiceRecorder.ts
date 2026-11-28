@@ -172,6 +172,7 @@ export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}) {
       setError(msg); setState('error'); onError?.(msg); return
     }
     reset()
+    clientUuidRef.current = generateClientUuid()
     try {
       const format = detectSupportedAudioFormat()
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
@@ -194,7 +195,6 @@ export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}) {
         await sendAudio(audioBlob, format.ext)
       }
       recordedAtRef.current = Date.now()
-      clientUuidRef.current = generateClientUuid()
       recorder.start(1000); setState('recording'); setDuration(0)
       timerRef.current = setInterval(() => setDuration((prev) => prev + 1), 1000)
     } catch {
