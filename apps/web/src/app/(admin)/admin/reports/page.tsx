@@ -117,13 +117,15 @@ export default async function AdminReportsPage({ searchParams }: {
   const { organizationId, voiceRetention } = await searchParams
   const store = await cookies()
   const [nonce, actorId, targetId, result] = store.get(voiceRetentionFeedbackCookie)?.value.split('.') ?? []
-  const feedback = nonce === voiceRetention && actorId === user.id && targetId === organizationId ? result : undefined
   const isPlatformAdmin = role === 'super_admin' && !getActiveImpersonation(store, user)
+  let panelOrganizationId: string | undefined
   let panel
   if (isPlatformAdmin) {
     const supabase = await createClient()
     const { data: organizations, error } = await supabase.from('organizations').select('id, name').order('name')
     const selected = organizations?.find((org) => org.id === organizationId) ?? organizations?.[0]
+    const voiceEnabled = !error && selected && await isOrgFeatureEnabled(supabase, selected.id, OPERATIONAL_REPORT_ENGINE.moduleKey)
+    if (voiceEnabled) panelOrganizationId = selected?.id
     panel = error ? <ListError /> : selected ? (
       <>
         <form className="flex flex-wrap items-end gap-3">
@@ -135,7 +137,7 @@ export default async function AdminReportsPage({ searchParams }: {
           </label>
           <Button type="submit" variant="outline">Pokaż ustawienia</Button>
         </form>
-        {await isOrgFeatureEnabled(supabase, selected.id, OPERATIONAL_REPORT_ENGINE.moduleKey)
+        {voiceEnabled
           ? <>
             <VoiceRetentionCard key={`voice-retention-${selected.id}`} organizationId={selected.id} user={user} />
             <OrganizationReportConfigsPanel key={selected.id} organizationId={selected.id} editMode="platform" />
@@ -145,6 +147,9 @@ export default async function AdminReportsPage({ searchParams }: {
     ) : <ListEmpty title="Brak placówek" />
   } else {
     const context = await getCurrentFeatureFlags()
+    if (context?.flags[OPERATIONAL_REPORT_ENGINE.moduleKey] && role === 'org_admin' && !user.app_metadata?.impersonator_id) {
+      panelOrganizationId = context.organizationId
+    }
     panel = !context?.flags[OPERATIONAL_REPORT_ENGINE.moduleKey] ? <FeatureDisabledState />
       : role === 'super_admin' || user.app_metadata?.impersonator_id
         ? <ListEmpty title="Tryb podglądu" description="Konfiguracja kategorii jest dostępna po zakończeniu podglądu." />
@@ -154,6 +159,8 @@ export default async function AdminReportsPage({ searchParams }: {
             editMode={context.flags[OPERATIONAL_REPORT_ENGINE.delegationFlagKey] ? 'delegated' : 'read-only'} />
         </>
   }
+  const feedback = nonce === voiceRetention && actorId === user.id && targetId === organizationId
+    && (result !== 'saved' || targetId === panelOrganizationId) ? result : undefined
   return (
     <div className="space-y-6">
       <PageHeader title="Konfiguracja raportów operacyjnych" />
