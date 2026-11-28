@@ -708,8 +708,30 @@
 - **AC2 (Unieważnienie):** Kierownik placówki unieważnia token zgubionego albo wymienianego urządzenia. Historia zostaje: unieważnienie to `revoked_at`, nie usunięcie wiersza.
 - **AC3 (Ewidencja wydania, opcjonalna):** Kierownik placówki albo kierownik zmiany może zapisać, komu wydał urządzenie, np. przy wydaniu na dłużej. Wpis ma początek i koniec, a jedno urządzenie ma w danej chwili najwyżej jeden aktywny wpis. Wpis nie wyznacza autora nagrań (ADR-022 pkt 4, decyzja Michała z 2026-11-19, zastępuje stały przydział z 2026-11-17).
 - **AC4 (Urządzenia wspólne):** Urządzenia leżą w stacji. Każda osoba z personelu może wziąć dowolne, bez rejestrowania tego w systemie.
-- **AC5 (Stan urządzeń):** Kierownik placówki widzi przy urządzeniu ostatni zrzut i liczbę przyjętych nagrań, opisowo i bez alarmów. Personel widzi własne wpisy wydania. Bliscy nie mają dostępu.
+- **AC5 (Stan urządzeń):** Kierownik placówki widzi przy urządzeniu ostatni zrzut i liczbę przyjętych nagrań, opisowo. Jedyny alarm dotyczy sprzętu, który nie wrócił do stacji (`SC-ADM-27`). Personel widzi własne wpisy wydania. Bliscy nie mają dostępu.
 - **AC6 (Audyt):** Rejestracja, unieważnienie i każdy wpis wydania trafiają do `audit_logs`.
+
+> ⚠️ ID `SC-ADM-24` jest nadane dwukrotnie: także story „Źródło finansowania pobytu podopiecznego”. Propozycja: przenumerować to story na `SC-ADM-26` w oknie kontraktowym (`VOICE-DEVICE-REGISTRY.source`). Decyzja D12 w [VOICE_DEVICES_STATION_REQUIREMENTS.md](architecture/VOICE_DEVICES_STATION_REQUIREMENTS.md).
+
+#### [SC-ADM-27] Urządzenie nie wróciło do stacji: SMS do wskazanych numerów
+🔗 **Kontrakt:** brak REQ (proponowane nowe: `VOICE-DEVICE-CHECKIN`, `VOICE-DEVICE-RETURN-ALERT`; powiadomienie `A6` w `NOTIFICATIONS`) · **ADR:** ADR-022, ADR-005 (powiadomienie o sprzęcie, nie o podopiecznym) · **Status:** 📝 PROPOZYCJA
+
+> ℹ️ Wymagania i decyzje: [VOICE_DEVICES_STATION_REQUIREMENTS.md](architecture/VOICE_DEVICES_STATION_REQUIREMENTS.md), sekcje 3.3 i 3.4. Postępowanie po alercie: [procedury/ZGUBIENIE_URZADZENIA.md](procedury/ZGUBIENIE_URZADZENIA.md).
+
+**User story:** Jako kierownik placówki chcę dostać SMS, gdy urządzenie nagrywające nie wróci do stacji godzinę po końcu zmiany, aby szybko je odnaleźć albo unieważnić, zanim zgubienie stanie się problemem z danymi.
+
+**Kryteria akceptacji:**
+- **AC1 (Zgłoszenie obecności):** Urządzenie w stacji zgłasza się serwerowi po odłożeniu i co 5 minut. Zgłoszenie zawiera tylko dane techniczne: baterię, liczbę niewysłanych notatek, wersję firmware'u i stan zegara.
+- **AC2 (Liczenie):** Panel kierownika placówki pokazuje „W stacji: X z Y aktywnych” oraz przy każdym urządzeniu ostatnie zgłoszenie. Urządzenie jest „w stacji”, gdy zgłosiło się w ciągu ostatnich 15 minut.
+- **AC3 (Reguła):** Po każdej zmianie z grafiku placówki, po ustawionym opóźnieniu (domyślnie 60 minut, zakres 30–180), system sprawdza urządzenia aktywne. Urządzenie bez zgłoszenia od 60 minut przed końcem zmiany trafia do SMS-a. Urządzenia unieważnione i oznaczone „w rezerwie” są pomijane. Strefa `Europe/Warsaw`, zmiana nocna przez północ i zmiana czasu działają poprawnie.
+- **AC4 (Jeden SMS):** Każdy numer dostaje jeden SMS na zmianę, z listą wszystkich brakujących urządzeń. Gdy nie zgłosiło się żadne urządzenie, SMS mówi o możliwej awarii stacji albo sieci.
+- **AC5 (Treść):** SMS zawiera etykiety urządzeń, nazwę zmiany i godzinę. Nie zawiera danych osobowych, nazwisk personelu ani linku.
+- **AC6 (Konfiguracja):** Kierownik placówki włącza i wyłącza powiadomienia, ustawia opóźnienie i dodaje do 5 numerów z etykietą. Każdy numer potwierdza kodem SMS, a SMS testowy wysyła na żądanie. Numery widzi wyłącznie kierownik placówki, po zapisie zamaskowane. Usunięcie numeru kasuje go z bazy.
+- **AC7 (Audyt):** Zmiany konfiguracji i każda wysyłka trafiają do `audit_logs` z identyfikatorem odbiorcy, bez numeru telefonu.
+- **AC8 (Kanały zapasowe):** Kierownik placówki dostaje równolegle powiadomienie w aplikacji. Gdy SMS się nie powiedzie, dostaje e-mail.
+- **AC9 (Unieważnione urządzenie):** Zgłoszenie unieważnionego urządzenia w stacji wysyła kierownikowi placówki powiadomienie w aplikacji i e-mail.
+- **AC10 (Sprzęt, nie ludzie):** Alert nie wskazuje, kto miał urządzenie, i nie trafia do żadnych zestawień o pracownikach.
+- **AC11 (Dostawca):** Dostawca SMS działa w EOG, ma umowę powierzenia i jest na wykazie integratorów UKE.
 
 ### Domena 2 — Personel
 
@@ -873,6 +895,7 @@
 - **AC8 (Unieważnione urządzenie):** Urządzenie z unieważnionym tokenem dostaje odmowę, a nagrania zostają zaszyfrowane na urządzeniu.
 - **AC9 (Restart nie kasuje notatek):** Restart, wyłączenie ani rozładowanie nie usuwa zapisanych notatek. Nagranie trafia do zaszyfrowanej pamięci w trakcie mówienia, a po starcie urządzenie odtwarza kolejkę i licznik z tej pamięci. Nagranie przerwane restartem zostaje do miejsca przerwania.
 - **AC10 (Przypadkowe kliknięcie):** Pojedyncze kliknięcie przycisku zasilania nie restartuje urządzenia, tylko wybudza ekran (M5PM1 `SINGLE_RST_DIS`, ustawiane przy każdym starcie).
+- **AC11 (Aktualizacje, 📝 PROPOZYCJA, decyzja Michała z 2026-11-26):** Urządzenie w stacji instaluje aktualizacje oprogramowania przez Wi-Fi z Silver Care, bez udziału opiekunki i tylko wtedy, gdy są podpisane przez Silver Care. Nieudana aktualizacja wraca do poprzedniej wersji, a notatki na urządzeniu zostają. Proponowany REQ: `VOICE-DEVICE-FIRMWARE-UPDATE`. Szczegóły: [VOICE_DEVICES_STATION_REQUIREMENTS.md](architecture/VOICE_DEVICES_STATION_REQUIREMENTS.md), sekcja 3.7.
 
 #### [SC-NUR-18] Przypisanie fragmentów i kolejka wyjątków
 🔗 **Kontrakt:** `VOICE-RESIDENT-ASSIGN`, `VOICE-ZERO-GUESSING` · **ADR:** ADR-006, ADR-022 · **Status:** 📝 PROPOZYCJA
