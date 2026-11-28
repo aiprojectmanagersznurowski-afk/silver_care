@@ -1,35 +1,40 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   getOfflineQueueStats,
   flushOfflineVoiceQueue,
   isOnline,
-  VoiceQueueStats,
+  type VoiceQueueStats,
+  type VoiceSyncMode,
 } from '@/lib/voice-offline-queue'
 import { CloudOff, RefreshCw, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 
-export function StaffVoiceSyncListener({ authorId }: { authorId: string }) {
-  const [stats, setStats] = useState<VoiceQueueStats>({ pendingCount: 0, failedCount: 0, pendingResidentCaptureCount: 0 })
-  const [isSyncing, setIsSyncing] = useState(false)
-  const syncing = useRef(false)
+// Crossing from the recorder to the admin layout may remount the listener before a request ends.
+let syncInProgress = false
 
-  const handleSync = useCallback(async (residentOnly = false) => {
-    if (syncing.current || !isOnline()) return
-    syncing.current = true
+export function StaffVoiceSyncListener({ authorId }: { authorId: string }) {
+  const [stats, setStats] = useState<VoiceQueueStats>({
+    pendingCount: 0, failedCount: 0, blockedResidentCaptureCount: 0, nextResidentRetryAt: null,
+  })
+  const [isSyncing, setIsSyncing] = useState(false)
+
+  const handleSync = useCallback(async (mode?: VoiceSyncMode) => {
+    if (syncInProgress || !isOnline()) return
+    syncInProgress = true
     setIsSyncing(true)
     try {
-      const res = await flushOfflineVoiceQueue(undefined, { authorId, purpose: residentOnly ? 'resident_capture' : undefined })
+      const res = await flushOfflineVoiceQueue(undefined, { authorId, mode })
       if (res.synced > 0) {
         toast.success(`Zsynchronizowano nagrania offline (${res.synced}).`)
-      } else if (res.failed > 0 && !residentOnly) {
+      } else if (res.failed > 0 && mode !== 'scheduled') {
         toast.error(`Nie udało się wysłać części nagrań (${res.failed}). Sprawdź połączenie.`)
       }
     } catch {
       toast.error('Błąd podczas próby synchronizacji nagrań.')
     } finally {
-      syncing.current = false
+      syncInProgress = false
       setIsSyncing(false)
     }
   }, [authorId])
@@ -43,8 +48,8 @@ export function StaffVoiceSyncListener({ authorId }: { authorId: string }) {
       if (!active || !data) return
       setStats(data)
       clearTimeout(retry)
-      if (data.pendingResidentCaptureCount > 0 && isOnline()) {
-        retry = setTimeout(() => void handleSync(true), 5000)
+      if (data.nextResidentRetryAt !== null && isOnline()) {
+        retry = setTimeout(() => void handleSync('scheduled'), Math.max(0, data.nextResidentRetryAt - Date.now()))
       }
     }
     const onQueueChange = () => void refresh()
@@ -80,9 +85,14 @@ export function StaffVoiceSyncListener({ authorId }: { authorId: string }) {
           <p className="text-sm font-semibold">
             Oczekujące nagrania offline: {stats.pendingCount}
           </p>
-          {stats.failedCount > 0 && (
+          {stats.blockedResidentCaptureCount > 0 && (
             <p className="text-sm font-medium text-destructive">
-              Wymaga uwagi personelu (błąd wysyłki): {stats.failedCount}
+              Nagrania wymagające ponowienia: {stats.blockedResidentCaptureCount}
+            </p>
+          )}
+          {stats.failedCount > stats.blockedResidentCaptureCount && (
+            <p className="text-sm font-medium text-destructive">
+              Wymaga uwagi personelu (błąd wysyłki): {stats.failedCount - stats.blockedResidentCaptureCount}
             </p>
           )}
         </div>
@@ -91,8 +101,8 @@ export function StaffVoiceSyncListener({ authorId }: { authorId: string }) {
       <div className="flex items-center gap-2">
         <button
           type="button"
-          onClick={() => void handleSync()}
-          disabled={isSyncing || stats.pendingCount === 0}
+          onClick={() => void handleSync('manual')}
+          disabled={isSyncing || !(stats.pendingCount || stats.blockedResidentCaptureCount)}
           className="inline-flex min-h-touch min-w-touch items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
         >
           <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />

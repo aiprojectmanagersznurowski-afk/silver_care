@@ -16,6 +16,7 @@ export interface StoredVoiceItem {
   author_id?: string
   createdAt: number
   attempts: number
+  nextAttemptAt?: number
   status: 'pending' | 'failed_permanent'
   lastError?: string
 }

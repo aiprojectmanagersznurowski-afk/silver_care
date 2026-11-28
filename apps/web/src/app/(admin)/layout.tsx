@@ -11,6 +11,7 @@ import { getActiveImpersonation } from '@/lib/impersonation-guards'
 import { availableSearchCategories } from '@/lib/global-search-features'
 import { GlobalCommandPalette } from '@/components/GlobalCommandPalette'
 import { StaffNotificationBell } from '@/components/StaffNotificationBell'
+import { StaffVoiceSyncListener } from '@/components/staff/StaffVoiceSyncListener'
 import { getAppRole } from '@/lib/auth/app-role'
 import { getCurrentFeatureFlags } from '@/lib/feature-flags'
 import { getCurrentUser } from '@/lib/supabase/current-user'
@@ -45,6 +46,9 @@ export default async function AdminLayout({ children }: { children: ReactNode })
           actions={role !== 'super_admin' && flags?.module_family_portal ? <StaffNotificationBell /> : undefined}
         />
         <div className="flex-1 p-4 md:p-6">
+          {role === 'org_admin' && !impersonationSession && flags?.module_voice_and_reports && (
+            <StaffVoiceSyncListener key={user.id} authorId={user.id} />
+          )}
           <div className="mx-auto w-full max-w-screen-2xl">{children}</div>
         </div>
       </SidebarInset>

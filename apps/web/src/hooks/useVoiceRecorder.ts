@@ -7,7 +7,10 @@ import {
   generateClientUuid,
   enqueueOfflineVoiceItem,
   isOnline,
-  VoiceQueuePurpose,
+  isTransientCaptureStatus,
+  residentCaptureTimeoutMs,
+  type VoiceQueuePurpose,
+  type ResidentCaptureSyncState,
 } from '@/lib/voice-offline-queue'
 
 export type VoiceRecorderState = 'idle' | 'recording' | 'transcribing' | 'queued' | 'error'
@@ -60,13 +63,20 @@ export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}) {
 
   useEffect(() => {
     if (purpose !== 'resident_capture') return
-    const onSynced = (event: Event) => {
-      if ((event as CustomEvent<string>).detail !== clientUuidRef.current) return
-      setState('idle'); setError(null)
+    const onCaptureStatus = (event: Event) => {
+      const { clientUuid, status } = (event as CustomEvent<ResidentCaptureSyncState>).detail
+      if (clientUuid !== clientUuidRef.current) return
+      if (status === 'blocked') {
+        setState('error')
+        setError('Nagranie wymaga ponowienia. Wybierz „Synchronizuj teraz” na pasku nagrań.')
+        return
+      }
+      setState('idle')
+      setError(null)
       void onSuccess?.({ success: true })
     }
-    window.addEventListener('sc-resident-capture-synced', onSynced)
-    return () => window.removeEventListener('sc-resident-capture-synced', onSynced)
+    window.addEventListener('sc-resident-capture-status', onCaptureStatus)
+    return () => window.removeEventListener('sc-resident-capture-status', onCaptureStatus)
   }, [onSuccess, purpose])
 
   const reset = useCallback(() => {
@@ -124,13 +134,17 @@ export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}) {
       }
       const headers: Record<string, string> = {}
       if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`
-      const res = await fetch(endpoint, { method: 'POST', headers, body: formData })
-      if (res.status >= 500) {
+      const residentCapture = purpose === 'resident_capture'
+      const res = await fetch(endpoint, {
+        method: 'POST', headers, body: formData,
+        signal: residentCapture ? AbortSignal.timeout?.(residentCaptureTimeoutMs) : undefined,
+      })
+      if (residentCapture ? isTransientCaptureStatus(res.status) : res.status >= 500) {
         await handleQueueAudio(blob, ext, clientUuid, residentId, recordedAt, `Serwer placówki niedostępny (HTTP ${res.status}). Zapisano w kolejce offline.`)
         return
       }
       const data: TranscribeResponse = await res.json().catch((error: unknown) => {
-        if (purpose === 'resident_capture' && res.ok) throw error
+        if (residentCapture && res.ok) throw error
         return {}
       })
       if (res.status === 401 && data.error === 'Unauthorized') {

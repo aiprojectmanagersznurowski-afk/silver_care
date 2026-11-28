@@ -57,12 +57,6 @@ export const POST = withAuth(async (request, { user, supabase, accessToken }) =>
   const source = selected ? RESIDENT_ASSIGNMENT.selectedResidentReview.source : 'APP_GENERAL'
   const sourceKey = clientUuid.toLowerCase()
   const residentId = typeof resident === 'string' ? resident.toLowerCase() : null
-  if (residentId) {
-    const permitted = await supabase.from('residents').select('id')
-      .eq('id', residentId).eq('organization_id', orgId).is('archived_at', null).maybeSingle()
-    if (permitted.error) return failure('Nie udało się sprawdzić dostępu do karty podopiecznego.', 503)
-    if (!permitted.data) return failure('Podopieczny jest niedostępny w tej placówce.', 403)
-  }
   const hash = sha256(bytes)
   const path = `${orgId}/${source.toLowerCase()}/${user.id}/${sourceKey}`
   const admin = createAdminClient()
@@ -78,6 +72,13 @@ export const POST = withAuth(async (request, { user, supabase, accessToken }) =>
   const previous = await findCapture()
   if (previous.error) return failure('Nie udało się potwierdzić zapisu nagrania.', 503)
   if (previous.data) return replay(previous.data)
+
+  if (residentId) {
+    const permitted = await supabase.from('residents').select('id')
+      .eq('id', residentId).eq('organization_id', orgId).is('archived_at', null).maybeSingle()
+    if (permitted.error) return failure('Nie udało się sprawdzić dostępu do karty podopiecznego.', 503)
+    if (!permitted.data) return failure('Podopieczny jest niedostępny w tej placówce.', 403)
+  }
 
   const stored = await storage.upload(path, bytes, { contentType: mimeType, upsert: false })
   if (stored.error) {
