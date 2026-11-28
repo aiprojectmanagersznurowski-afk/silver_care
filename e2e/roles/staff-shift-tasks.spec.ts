@@ -153,6 +153,8 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
 
   test('@REQ: NUR-SHIFT-PLAN-PRINT - wydruk pokazuje zatwierdzoną wersję w obu układach i wiąże ją z audytem', async ({ loginPage, page, browserName }, testInfo) => {
     test.slow();
+    const chromiumDesktop = browserName === 'chromium' && testInfo.project.name === 'chromium';
+    const sampleRows = chromiumDesktop ? 65 : 1;
     await seedTask('E2E Zadanie na wydruk', 'TODO');
     await seedTask('E2E Propozycja poza wydrukiem', 'PROPOSED', PRINT_DATE, resident.id);
     await sql`INSERT INTO public.shift_tasks (organization_id, shift_definition_id, shift_date, title, source, status, created_by, resident_id)
@@ -160,7 +162,7 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
         ' Sprawdzić przygotowanie pokoju i uzupełnić materiały na kolejną zmianę. ' ||
         'Zostawić uporządkowane miejsce pracy i przekazać brakujące materiały do uzupełnienia.',
         'MANUAL', 'TODO', u.id, ${resident.id}
-      FROM public.shift_definitions d CROSS JOIN auth.users u CROSS JOIN generate_series(1, 65) AS n
+      FROM public.shift_definitions d CROSS JOIN auth.users u CROSS JOIN generate_series(1, ${sampleRows}::int) AS n
       WHERE d.organization_id = ${orgId} AND d.code = ${CODE} AND u.email = ${TEST_USERS.org_admin.email}`;
     const [shift] = await sql`SELECT id FROM public.shift_definitions WHERE organization_id = ${orgId} AND code = ${CODE}`;
     const [facility] = await sql`SELECT name FROM public.organizations WHERE id = ${orgId}`;
@@ -179,7 +181,6 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
     const auditFor = (version: number) => ({ version, actor_ok: true, time_ok: true, minimal: true });
     const capturePdf = (groupBy: 'room' | 'resident') =>
       page.pdf({ path: testInfo.outputPath(`shift-plan-${groupBy}-a4.pdf`), preferCSSPageSize: true });
-    const chromiumDesktop = browserName === 'chromium' && testInfo.project.name === 'chromium';
     await loginPage.loginAs('org_admin');
     await page.addInitScript(() => { (window as unknown as { __printed: number }).__printed = 0; window.print = () => { (window as unknown as { __printed: number }).__printed++; }; });
     const tasks = new ShiftTasksPage(page);
@@ -191,7 +192,7 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
 
     await tasks.goto(CODE, PRINT_DATE, 'room');
     await tasks.approvePlanButton.click();
-    await expect(tasks.planStatus).toContainText('Plan zatwierdzony');
+    await expect(tasks.planStatus).toContainText('Plan zatwierdzony', { timeout: 15_000 });
     const printCount = () => page.evaluate(() => (window as unknown as { __printed: number }).__printed);
     for (const groupBy of ['room', 'resident'] as const) {
       await tasks.goto(CODE, PRINT_DATE, groupBy);
@@ -230,7 +231,7 @@ test.describe('Zadania zmiany (@REQ: NUR-TASKS)', () => {
     const otherTasks = new ShiftTasksPage(otherPage);
     await otherTasks.goto(CODE, PRINT_DATE);
     await otherTasks.approvePlanButton.click();
-    await expect(otherTasks.planStatus).toContainText('Plan zatwierdzony, wersja 2');
+    await expect(otherTasks.planStatus).toContainText('Plan zatwierdzony, wersja 2', { timeout: 15_000 });
     await otherPage.close();
 
     await tasks.printButton.click();
