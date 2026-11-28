@@ -43,6 +43,20 @@ export class ShiftTasksPage {
     return this.groups.filter({ hasText: label });
   }
 
+  get printPreview() {
+    return this.page.getByRole('main');
+  }
+
+  get returnToApproval() {
+    return this.printPreview.getByRole('link', { name: 'Wróć do listy zadań' });
+  }
+
+  async gotoPrint(shiftCode: string, date: string, groupBy?: 'room' | 'resident') {
+    const params = new URLSearchParams({ shift: shiftCode, date });
+    if (groupBy) params.set('groupBy', groupBy);
+    await this.page.goto(`/staff/shift-plan/print?${params}`);
+  }
+
   task(title: string): Locator {
     return this.page.locator('[data-testid="task-row"]:visible').filter({ hasText: title });
   }
