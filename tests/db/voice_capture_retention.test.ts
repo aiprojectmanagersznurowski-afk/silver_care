@@ -15,8 +15,7 @@ const { minDays, ttlDays, maxDays } = VOICE_RETENTION
 afterAll(() => sql.end())
 type Connection = postgres.Sql | postgres.TransactionSql
 async function seedOrganization(db: Connection) {
-  const org = randomUUID()
-  const user = randomUUID()
+  const [org, user] = [randomUUID(), randomUUID()]
   await db`INSERT INTO public.organizations (id, name) VALUES (${org}, 'Test retencji')`
   await db`INSERT INTO auth.users (id, aud, role, raw_app_meta_data) VALUES (${user}, 'authenticated', 'authenticated',
     jsonb_build_object('role', 'org_admin', 'organization_id', ${org}::uuid))`
@@ -45,18 +44,21 @@ async function assumeRetentionRole(tx: postgres.TransactionSql, user: string, or
 it('zachowuje zatwierdzony transkrypt i bezpiecznie ponawia sprzątanie wygasłego @REQ: VOICE-RETENTION', async () => {
   await withRollback(async (tx) => {
     const { org, user } = await seedOrganization(tx)
-    const active = randomUUID()
-    const expired = randomUUID()
+    const short = await seedOrganization(tx)
+    const [active, expired] = [randomUUID(), randomUUID()]
     const upload = (key: string) => `${org}/app_general/${user}/${key}`
-    const uploadPaths = [upload(randomUUID()), upload(randomUUID()), upload(active), `${org}/fixture/${randomUUID()}`]
+    const shortUpload = `${short.org}/app_general/${short.user}/${randomUUID()}`
+    const uploadPaths = [upload(randomUUID()), upload(randomUUID()), upload(active), `${org}/legacy_device/${user}/${randomUUID()}`,
+      upload(randomUUID()), shortUpload]
+    const uploadAges = [ttlDays + 1, ttlDays, ttlDays + 1, ttlDays + 1, minDays + 1, minDays + 1]
     const transcript = (capture: string) => `${org}/transcripts/${capture}/${randomUUID()}/0`
     const [draft, committed, other, late] = [active, active, randomUUID(), expired].map(transcript)
     await seedCapture(tx, org, user, active, uploadPaths[2], { status: 'SEGMENTED' })
     await seedCapture(tx, org, user, expired, `${org}/fixture/${expired}`, { age: ttlDays + 1, status: 'SEGMENTED' })
+    await tx`INSERT INTO public.voice_retention_settings (organization_id, retention_days) VALUES (${short.org}, ${minDays})`
     await tx`INSERT INTO storage.objects (bucket_id, name, created_at)
-      SELECT ${VOICE_RETENTION.storageBucket}, path, now() - CASE WHEN path = ANY(${[uploadPaths[0], ...uploadPaths.slice(2)]}::text[])
-        THEN make_interval(days => ${ttlDays + 1}) ELSE interval '0 days' END
-      FROM unnest(${[draft, committed, ...uploadPaths]}::text[]) AS upload(path)`
+      SELECT ${VOICE_RETENTION.storageBucket}, path, now() - make_interval(days => age)
+      FROM unnest(${[draft, committed, ...uploadPaths]}::text[], ${[0, 0, ...uploadAges]}::integer[]) AS upload(path, age)`
     await tx`INSERT INTO public.voice_segments (organization_id, capture_id, ordinal, start_ms, end_ms, transcript_path)
       VALUES (${org}, ${active}, 0, 0, 1000, ${committed})`
     const signature = 'public.queue_abandoned_voice_transcripts(uuid,text[])'
@@ -67,7 +69,8 @@ it('zachowuje zatwierdzony transkrypt i bezpiecznie ponawia sprzątanie wygasłe
     expect(await tx`SELECT path FROM public.voice_storage_deletions WHERE path IN (${draft}, ${committed}, ${other})`)
       .toEqual([{ path: draft }])
     await tx`SELECT public.expire_voice_captures()`
-    expect(await tx`SELECT path FROM public.voice_storage_deletions WHERE path = ANY(${uploadPaths}::text[])`).toEqual([{ path: uploadPaths[0] }])
+    expect(await tx`SELECT path FROM public.voice_storage_deletions WHERE path = ANY(${uploadPaths}::text[]) ORDER BY path`)
+      .toEqual([uploadPaths[0], shortUpload].sort().map((path) => ({ path })))
     expect(await tx`SELECT path FROM public.voice_storage_deletions WHERE path = ${late}`).toEqual([])
     await tx`RESET ROLE`
     await tx`INSERT INTO storage.objects (bucket_id, name) VALUES (${VOICE_RETENTION.storageBucket}, ${late})`
@@ -136,8 +139,7 @@ it('stosuje retencję placówki i audytuje tylko uprawnione zmiany @REQ: VOICE-R
 it('stosuje dokładny termin 7, 30 i 90 dni, zachowując raporty i zredagowane dane @REQ: VOICE-RETENTION', async () => {
   await withRollback(async (tx) => {
     const fixtures: { id: string; paths: string[]; expired: boolean }[] = []
-    const event = randomUUID()
-    const report = randomUUID()
+    const [event, report] = [randomUUID(), randomUUID()]
     const category = OPERATIONAL_REPORT_ENGINE.defaultCategories[0].code
     for (const age of [minDays, ttlDays, maxDays]) {
       const { org, user } = await seedOrganization(tx)
@@ -189,7 +191,6 @@ it('stosuje dokładny termin 7, 30 i 90 dni, zachowując raporty i zredagowane d
       .toEqual([{ status: 'APPROVED', source_event_ids: [event] }])
   })
 })
-
 // Promotion CI provisions this Supabase project for the test job. Local runs opt in with their own disposable project.
 const storageWorkdir = process.env.SC_VOICE_RETENTION_STORAGE_WORKDIR
   || (process.env.GITHUB_ACTIONS === 'true' && process.env.RUNNER_TEMP ? join(process.env.RUNNER_TEMP, 'candidate') : '')
@@ -212,8 +213,7 @@ it.runIf(Boolean(storageWorkdir))('usuwa wygasłe pliki, potwierdza kolejkę i z
     const { removeExpiredVoiceStorage } = await import('@/lib/voice-maintenance-worker')
     const storage = createAdminClient().storage.from(VOICE_RETENTION.storageBucket)
     const { org, user } = await seedOrganization(sql)
-    const expired = randomUUID()
-    const retained = randomUUID()
+    const [expired, retained] = [randomUUID(), randomUUID()]
     const expiredAudio = `${org}/fixture/${expired}`
     const expiredTranscript = `${org}/transcripts/${expired}/fixture/0`
     const freshAudio = `${org}/fixture/${retained}`
