@@ -194,7 +194,7 @@ sequenceDiagram
 |---|---|---|---|---|
 | D1 | Aktualizacje firmware'u po zabezpieczeniu urządzeń | **Już w pilotażu ścieżka produkcyjna:** aktualizacja przez Wi-Fi z Silver Care, obraz podpisany offline, wydania w pierścieniach (sekcja 3.7). USB zostaje ścieżką serwisową. | Pilotaż sprawdza podejście docelowe, nie tymczasowe. W trybie Release nie da się już wgrać firmware'u przez `esptool`, a CRA wymaga aktualizacji bezpieczeństwa. Wymaga okna kontraktowego (protokół 1.3.0) i zadania serwerowego (#345 D4). | **decyzja Michała z 2026-11-26** |
 | D2 | Kto robi stronę serwerową (#326, CHECKIN, SMS, wydania firmware'u) | Propozycja w #345: Darek robi serwer, panel, SMS i wydania firmware'u. Michał robi firmware, stację, klucze, okno kontraktowe i formalności. | Unikamy pracy nad tym samym z dwóch stron. | do przeglądu z Darkiem (#345) |
-| D3 | Długość klucza szyfrowania flash | XTS-AES-256 (dwa bloki klucza w eFuse, łącznie 512 bitów) | Na S3 kosztuje tyle samo co AES-128, a daje wyższy margines. | do potwierdzenia |
+| D3 | Długość klucza szyfrowania flash | XTS-AES-256 (dwa bloki klucza w eFuse, łącznie 512 bitów) | Na S3 kosztuje tyle samo co AES-128, a daje wyższy margines. | **zdecydowane 2026-11-27 (Michał)**, wdrożone w silver-care-devices#16 |
 | D4 | Szyfrowanie każdego nagrania kluczem publicznym serwera | Po pilotażu, w oknie kontraktowym | Urządzenie nie umiałoby odczytać własnych nagrań, więc nawet złamanie chipa nie dałoby treści. Zmienia protokół i serwer. | propozycja |
 | D5 | Gdzie liczyć urządzenia | **Pilotaż: serwer ze zgłoszeń CHECKIN.** Wariant v2: stacja z wyświetlaczem albo diodami. | Stacja na pilotaż jest pasywna (ładowarka i router). Liczenie na serwerze nie wymaga nowego sprzętu. | do potwierdzenia |
 | D6 | Dostawca SMS | **SMSAPI.** Usługa jest już używana przez `api/cron/process-outbox` do SMS-ów powiadomienia `F1`. Token `SMSAPI_TOKEN` trzymamy w Vercelu (Production i Preview, osobne tokeny z samym uprawnieniem SMS), a nie w Supabase. | Wymóg `INFRA-EU-REGION`. Brakuje umowy powierzenia, potwierdzenia lokalizacji danych oraz wpisu w rejestrze podmiotów przetwarzających i w `PROVIDERS` (#345 F3). | **decyzja Michała z 2026-11-26** |
@@ -202,7 +202,7 @@ sequenceDiagram
 | D8 | Numery odbiorców | Do 5, z potwierdzeniem kodem. W pierwszej kolejności telefony służbowe: dyżurny zmiany i Kierownik placówki. | Telefon prywatny tylko za zgodą pracownika (art. 22¹a KP). Oczekiwanie reakcji na SMS wieczorem na prywatnym telefonie może być traktowane jak dyżur (art. 151⁵ KP). | do potwierdzenia |
 | D9 | Link w SMS | Bez linku | Ochrona przed smishingiem i nawyk „nie klikam linków z SMS-ów”. | do potwierdzenia |
 | D10 | Kto wprowadza urządzenie na rynek | Pilotaż: egzemplarze testowe Silver Care, po opinii prawnika. Start komercyjny: Silver Care jako producent. Opcje i uzasadnienie w sekcji 4.1. | Od tej decyzji zależą obowiązki z sekcji 7. | otwarte, pytania do prawnika w #348 (P1) |
-| D11 | Klucz testowy | Osobny klucz Secure Boot dla egzemplarzy testowych | Secure Boot V2 jest nieodwracalny. Egzemplarz testowy z kluczem produkcyjnym to dodatkowa kopia ryzyka. | do potwierdzenia |
+| D11 | Klucz testowy | Osobny klucz Secure Boot dla egzemplarzy testowych | Secure Boot V2 jest nieodwracalny. Egzemplarz testowy z kluczem produkcyjnym to dodatkowa kopia ryzyka. | **zdecydowane 2026-11-27 (Michał)**; środowisko `-secure-dev` w silver-care-devices#16 |
 | D12 | Podwójne ID `SC-ADM-24` | Przenumerować „Rejestr urządzeń nagrywających” na `SC-ADM-26` w oknie kontraktowym (`VOICE-DEVICE-REGISTRY.source`). Nowe story alertu ma `SC-ADM-27`. | W specyfikacji `SC-ADM-24` oznacza i „Źródło finansowania”, i „Rejestr urządzeń”. | do potwierdzenia |
 | D13 | Sieć stacji | Własny router z osobną siecią (rekomendacja). Alternatywa: osobny SSID w sieci placówki. | Izolacja urządzeń, kontrola ruchu wychodzącego, łatwa zmiana hasła po zgubieniu urządzenia. | silver-care-devices#14 D1 |
 | D14 | Etap 2 z #307 (transkrypcja na stacji) | Po pilotażu, z poprawionymi założeniami (sekcja 6) | Zlikwidowałby wyjątek ADR-009 (surowe audio w USA), ale nie zmienia klasyfikacji MDR. | propozycja |
@@ -233,7 +233,7 @@ Plan z rozmowy z 2026-11-26 przeszedł drugi przegląd. Poprawki:
 1. **Secure Boot V2 nie ma trybu deweloperskiego.** Raz włączony zostaje na zawsze; tryb Development dotyczy tylko szyfrowania flash. Egzemplarz testowy dostaje więc osobny klucz testowy (D11) i do końca życia przyjmuje tylko obrazy nim podpisane.
 2. **Działanie portu USB po trybie Release jest niepotwierdzone.** Dokumentacja ESP-IDF 4.4 dla S3 wymienia eFuse wypalane w trybie Release (m.in. `HARD_DIS_JTAG`, `DIS_DOWNLOAD_MANUAL_ENCRYPT`) i nie wymienia `DIS_USB_JTAG`, więc port USB aplikacji powinien działać. Konfiguracja i aktualizacja przez USB (D1) zależą od tego. Sprawdzamy to na egzemplarzu testowym **przed** wypaleniem urządzeń pilotażowych. Plan B: aktualizacja przez Wi-Fi.
 3. **Szyfrowanie NVS przy Arduino jako komponencie.** Arduino inicjuje NVS przez `nvs_flash_init()`. Czy w ESP-IDF 4.4.7 ta funkcja sama używa kluczy z `nvs_keys`, sprawdzamy na egzemplarzu: odczyt partycji `nvs` musi dać szyfrogram.
-4. **Rozmiar bootloadera.** Z Secure Boot i szyfrowaniem bootloader może się nie zmieścić przed tablicą partycji pod 0x8000. Układ partycji ustalamy przed pierwszym wypaleniem, bo potem nie da się go zmienić.
+4. **Rozmiar bootloadera.** Z Secure Boot i szyfrowaniem bootloader może się nie zmieścić przed tablicą partycji pod 0x8000. Układ partycji ustalamy przed pierwszym wypaleniem, bo potem nie da się go zmienić. **Pomiar 2026-11-28:** bootloader ma 39 632 B, a z podpisem zajmuje 0xB000, więc tablica partycji przechodzi pod 0x10000 we wszystkich buildach (silver-care-devices#16).
 5. **Zgłoszenia obecności zmieniają protokół** z 1.2.0 na 1.3.0. Firmware może je zaimplementować dopiero po zmianie kontraktu i odświeżeniu kopii `contract/device-protocol.json`. Bez otwartego okna kontraktowego krok K6 czeka.
 6. **„Jedna sesja” obejmuje firmware, konfigurację, dokumenty i test na egzemplarzu testowym.** Strona serwerowa (#326, CHECKIN, SMS) to osobne zadania Darka, z limitem 3 plików na zadanie i testami E2E. Wypalenie urządzeń pilotażowych następuje dopiero po review.
 7. **Pilotaż to 2 urządzenia i 1 stacja** (silver-care-devices#14), a nie partia. Protokół partii jest i tak wymagany (OPS-01).
@@ -244,7 +244,7 @@ Plan z rozmowy z 2026-11-26 przeszedł drugi przegląd. Poprawki:
 ### 5.2 Etapy
 
 **Etap 0. Przed sesją (człowiek)**
-- Decyzje D3, D5 i D11 oraz D2 z Darkiem (#345). D1 i D6 zapadły 2026-11-26.
+- Decyzje D5 i D2 z Darkiem (#345). D1 i D6 zapadły 2026-11-26, D3 i D11 2026-11-27.
 - PR silver-care-devices#13 scalony albo sesja na gałęzi od `feat/firmware-pilot`.
 - Klucz testowy Secure Boot wygenerowany offline: `espsecure.py generate_signing_key --version 2 --scheme rsa3072`.
 - Egzemplarz testowy z kablem USB, który można trwale zabezpieczyć.
@@ -398,7 +398,7 @@ Analiza inżynierska, do potwierdzenia przez IOD albo prawnika. Kolumna „Dotyc
 | Ryzyko | Skutek | Ograniczenie |
 |---|---|---|
 | Port USB aplikacji nie działa po trybie Release | Brak konfiguracji i aktualizacji przez USB | Test na egzemplarzu w etapie 2, plan B: Wi-Fi |
-| PlatformIO nie buduje bootloadera z Secure Boot V2 | Opóźnienie kroku K4 | Bootloader z ESP-IDF 4.4.7 |
+| ~~PlatformIO nie buduje bootloadera z Secure Boot V2~~ | Opóźnienie kroku K4 | **Zamknięte 2026-11-28:** PlatformIO buduje go z profilu `-secure` (silver-care-devices#16). |
 | Utrata produkcyjnego klucza podpisującego | Urządzeń nie da się już aktualizować | Dwie kopie offline w różnych miejscach |
 | Błąd w aktualizacji przez Wi-Fi | Urządzenia bez poprawek albo z wadliwą wersją | Pierścień `test` przed `pilot`, autotest i cofnięcie, ścieżka serwisowa USB, wstrzymanie wydania |
 | Urządzenie z prawdziwymi danymi przed zabezpieczeniem | Zgubienie oznacza zgłoszenie do UODO | Gotowość do pilotażu wymaga DEV-SEC na obu urządzeniach |
