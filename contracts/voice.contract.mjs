@@ -65,7 +65,7 @@ export const MEDICAL_CATEGORIES = [
 
 /** Etapy potoku. Każdy ma jawne wejście i wyjście — brak etapu „AI decyduje". */
 export const PIPELINE_STAGES = [
-  { id: 'CAPTURE',   actor: 'nurse',        input: 'audio oraz resident_id (UUID) wyłącznie w trybie o podopiecznym', output: 'nagranie źródłowe', desc: 'Tryb APP z wybranym podopiecznym zachowuje dotychczasowe wejście. APP_GENERAL i DEVICE przyjmują nagranie głosowe do przypisania fragmentów.' },
+  { id: 'CAPTURE',   actor: 'nurse',        input: 'audio oraz resident_id (UUID) wyłącznie w trybie o podopiecznym', output: 'nagranie źródłowe', desc: 'Tryb APP zachowuje podopiecznego wybranego przed nagraniem. APP_GENERAL i DEVICE przyjmują nagranie głosowe do przypisania fragmentów.' },
   { id: 'TRANSCRIBE', actor: 'system',      input: 'audio',                      output: 'transkrypt tekstowy', desc: 'Transkrypcja bez kontekstu tożsamości.' },
   { id: 'ASSIGN',    actor: 'nurse', automaticActor: 'system', input: 'fragment transkryptu + rejestr tej placówki', output: 'zakres fragmentu i źródło przypisania albo kolejka wyjątków', desc: 'Serwer przypisuje jedno spójne dopasowanie na potrzeby szkicu. Personel rozstrzyga wyjątki. Fragment o nieustalonym zakresie czeka przed CLASSIFY.' },
   { id: 'CLASSIFY',  actor: 'system',       input: 'transkrypt',                 output: 'trzy strumienie',   desc: 'Rozdział na MEDICAL / DISCOMFORT / BEHAVIORAL przed wejściem do LLM.' },
@@ -94,7 +94,12 @@ export const CAPTURE_SOURCES = [
  * (decyzja Michała z 2026-11-17).
  */
 export const RESIDENT_ASSIGNMENT = {
-  appliesTo: ['APP_GENERAL', 'DEVICE'],
+  appliesTo: ['APP', 'APP_GENERAL', 'DEVICE'],
+  selectedResidentReview: {
+    source: 'APP',
+    outcomes: ['RESIDENT', 'UNASSIGNABLE'],
+    rule: 'Spójny fragment pozostaje przy podopiecznym wybranym w aplikacji. Sprzeczne lub niejednoznaczne wskazanie czeka na decyzję przed klasyfikacją. Rozstrzygnięcie zachowuje wybranego podopiecznego i autora sesji albo wyłącza fragment z przetwarzania.',
+  },
   captureResource: 'voice_captures',
   segmentResource: 'voice_segments',
   queueResource: 'voice_assignment_queue',
